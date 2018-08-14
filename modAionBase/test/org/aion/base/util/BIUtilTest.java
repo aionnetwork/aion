@@ -107,17 +107,17 @@ public class BIUtilTest {
 
         assertEquals(new BigInteger("-160000000000000000000"),
                 sum(bigInt[0][0],
-                        sum(bigInt[1][0],
-                                sum(bigInt[2][0],
-                                        sum(bigInt[3][0],
-                                                sum(bigInt[4][0], bigInt[5][0]))))));
+                sum(bigInt[1][0],
+                sum(bigInt[2][0],
+                sum(bigInt[3][0],
+                sum(bigInt[4][0], bigInt[5][0]))))));
 
         assertEquals(new BigInteger("160000000000000000000"),
                 sum(bigInt[0][1],
-                        sum(bigInt[1][1],
-                                sum(bigInt[2][1],
-                                        sum(bigInt[3][1],
-                                                sum(bigInt[4][1], bigInt[5][1]))))));
+                sum(bigInt[1][1],
+                sum(bigInt[2][1],
+                sum(bigInt[3][1],
+                sum(bigInt[4][1], bigInt[5][1]))))));
     }
 
     @Test
@@ -130,16 +130,16 @@ public class BIUtilTest {
 
         assertEquals(bigInt[bigInt.length-1][0],
                 min(bigInt[0][0],
-                        min(bigInt[1][0],
-                                min(bigInt[2][0],
-                                        min(bigInt[3][0],
-                                                min(bigInt[4][0], bigInt[5][0]))))));
+                min(bigInt[1][0],
+                min(bigInt[2][0],
+                min(bigInt[3][0],
+                min(bigInt[4][0], bigInt[5][0]))))));
 
         assertEquals(bigInt[bigInt.length-1][1],
                 max(bigInt[0][1],
-                        max(bigInt[1][1],
-                                max(bigInt[2][1],
-                                        max(bigInt[3][1],
-                                                max(bigInt[4][1], bigInt[5][1]))))));
+                max(bigInt[1][1],
+                max(bigInt[2][1],
+                max(bigInt[3][1],
+                max(bigInt[4][1], bigInt[5][1]))))));
     }
 }

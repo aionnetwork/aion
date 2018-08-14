@@ -1,18 +1,45 @@
 package org.aion.base.util;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import javax.sound.midi.SysexMessage;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import static org.aion.base.util.ByteUtil.*;
 import static org.junit.Assert.*;
 
+@RunWith(JUnitParamsRunner.class)
 public class ByteUtilTest {
 
-    private final int size1 = 7;
-    private final int size2 = 6;
+    private static final Random random = new Random();
+
+    private final String[][] testNum = {
+            //{ null, null },
+            { "-00000000000000000000", "00000000000000000000" },
+            { "-00000000000000000001", "00000000000000000001" },
+            { "-10000000000000000000", "10000000000000000000" },
+            { "-20000000000000000000", "20000000000000000000" },
+            { "-30000000000000000000", "30000000000000000000" },
+            { "-99999999999999999999", "99999999999999999999" },
+    };
+
+    private final BigInteger[][] testBigInt = {
+            { null, null },
+            { new BigInteger(testNum[0][0]),  new BigInteger(testNum[0][1])},
+            { new BigInteger(testNum[1][0]),  new BigInteger(testNum[1][1])},
+            { new BigInteger(testNum[2][0]),  new BigInteger(testNum[2][1])},
+            { new BigInteger(testNum[3][0]),  new BigInteger(testNum[3][1])},
+            { new BigInteger(testNum[4][0]),  new BigInteger(testNum[4][1])},
+            { new BigInteger(testNum[5][0]),  new BigInteger(testNum[5][1])},
+
+    };
 
     private final String[] testHex = {
             null,                                                                   // 0 - Null
@@ -34,72 +61,69 @@ public class ByteUtilTest {
             hexStringToBytes(testHex[6]),
     };
 
-    private final String[][] testNum = {
-            { null, null },
-            { "-00000000000000000000", "00000000000000000000" },
-            { "-00000000000000000001", "00000000000000000001" },
-            { "-10000000000000000000", "10000000000000000000" },
-            { "-20000000000000000000", "20000000000000000000" },
-            { "-30000000000000000000", "30000000000000000000" },
-            { "-99999999999999999999", "99999999999999999999" },
-    };
+    /**
+     * @return input values for {@link #longTest(long)}
+     */
+    @SuppressWarnings("unused")
+    private Object longValues() {
 
-    private final BigInteger[][] testBigInt = {
-            { null, null },
-            { new BigInteger(testNum[1][0]), new BigInteger(testNum[1][1])},
-            { new BigInteger(testNum[2][0]), new BigInteger(testNum[2][1])},
-            { new BigInteger(testNum[3][0]), new BigInteger(testNum[3][1])},
-            { new BigInteger(testNum[4][0]), new BigInteger(testNum[4][1])},
-            { new BigInteger(testNum[5][0]), new BigInteger(testNum[5][1])},
-            { new BigInteger(testNum[6][0]), new BigInteger(testNum[6][1])},
-    };
+        List<Object> parameters = new ArrayList<>();
 
-    private final long[][] testLong = {
-            { -0000000000000000000L, 0000000000000000000L },                        // 0 - Zeroes
-            { -0000000000000000001L, 0000000000000000001L },                        // 1 - Lead Zeroes
-            { -1000000000000000000L, 1000000000000000000L },                        // 2 - Increment1
-            { -2000000000000000000L, 2000000000000000000L },                        // 3 - Increment2
-            { -3000000000000000000L, 3000000000000000000L },                        // 4 - Increment3
-            { -9223372036854775808L, 9223372036854775807L },                        // 5 - Min / Max
-    }; // 8bytes
+        // longs similar to integer values
+        parameters.add(0L);
+        parameters.add(1L);
+        parameters.add(10L);
+        parameters.add((long) random.nextInt(Integer.MAX_VALUE));
+        parameters.add((long) Integer.MAX_VALUE);
 
-    private final int[][] testInt = {
-            { -0000000000, 0000000000 },
-            { -0000000001, 0000000001 },
-            { -1000000000, 1000000000 },
-            { -1500000000, 1500000000 },
-            { -2000000000, 2000000000 },
-            { -2147483648, 2147483647 },
-    }; // 4bytes
+        // additional long values
+        parameters.add((long) Integer.MAX_VALUE + random.nextInt(Integer.MAX_VALUE));
+        parameters.add(10L * (long) Integer.MAX_VALUE);
+        parameters.add(Long.MAX_VALUE - 1L);
 
-    private final short[][] testShort = {
-            { -00000, 00000 },
-            { -00001, 00001 },
-            { -10000, 10000 },
-            { -20000, 20000 },
-            { -30000, 30000 },
-            { -32768, 32767 },
-    }; // 2bytes
-
+        return parameters.toArray();
+    }
 
     /**
-     * TEST: hex <--> Bytes
-     * hexStringToBytes(hex)
-     * toHexString(byte)
-     * toHexStringWithPrefix(byte)
+     * @return input values for {@link #intTest(int)}
      */
-    @Test
-    public void hexTest() {
-        byte[] temp0 = hexStringToBytes(testHex[0]);
-        assertEquals("", toHexString(temp0));
-        assertEquals("0x", toHexStringWithPrefix(temp0));
+    @SuppressWarnings("unused")
+    private Object intValues() {
 
-        for(int a = 1; a < testHex.length; a++) {
-            byte[] temp1 = hexStringToBytes(testHex[a]);
-            assertEquals(testHex[a].toLowerCase(), toHexString(temp1));
-            assertEquals("0x" + testHex[a].toLowerCase(), toHexStringWithPrefix(temp1));
-        }
+        List<Object> parameters = new ArrayList<>();
+
+        // integer values
+        parameters.add(0);
+        parameters.add(1);
+        parameters.add(10);
+        parameters.add(15);
+        parameters.add(20);
+        parameters.add(random.nextInt(Integer.MAX_VALUE));
+        parameters.add(Integer.MAX_VALUE);
+
+        return parameters.toArray();
     }
+
+    /**
+     * @return input values for {@link #shortTest(short)}
+     */
+    @SuppressWarnings("unused")
+    private Object shortValues() {
+
+        List<Object> parameters = new ArrayList<>();
+
+        // short values
+        parameters.add(0);
+        parameters.add(1);
+        parameters.add(10);
+        parameters.add(15);
+        parameters.add(20);
+        parameters.add(random.nextInt(Short.MAX_VALUE));
+        parameters.add(Short.MAX_VALUE);
+
+        return parameters.toArray();
+    }
+
 
     /**
      * TEST: BI <--> Bytes (+ve)
@@ -107,8 +131,8 @@ public class ByteUtilTest {
      * bigIntegerToBytes(BI, num)
      * bigIntegerToBytesSigned(BI, num)
      * bytesToBigInteger(byte)
+     * {@link #intValues()}.
      */
-
     @Test
     public void bigIntegerTest() {
         for(int b = 1; b < 2; b++) {
@@ -124,17 +148,16 @@ public class ByteUtilTest {
                     assertEquals(testBigInt[a][b], bytesToBigInteger(temp3));
                     assertEquals(bytesToBigInteger(temp1), bytesToBigInteger(temp4));
                 } catch (NullPointerException e) {
+                    System.out.println(b + " " + a);
                     System.out.println("\nNull Big Integer Test!");
                 }
             }
         }
-
     }
 
     // TODO: Object --> Bytes
     // encodeValFor32Bits(Object)
     // encodeDataList(Object)
-
     @Test
     public void objectTest() {
         for (int a = 0; a < testNum.length; a++) {
@@ -147,6 +170,24 @@ public class ByteUtilTest {
     }
 
     /**
+     * TEST: hex <--> Bytes
+     * hexStringToBytes(hex)
+     * toHexString(byte)
+     * toHexStringWithPrefix(byte)
+     */
+    @Test
+    public void hexTest() {
+        byte[] temp0 = hexStringToBytes(testHex[0]);
+        assertEquals("", toHexString(temp0));
+        assertEquals("0x", toHexStringWithPrefix(temp0));
+        for(int a = 1; a < testHex.length; a++) {
+            byte[] temp1 = hexStringToBytes(testHex[a]);
+            assertEquals(testHex[a].toLowerCase(), toHexString(temp1));
+            assertEquals("0x" + testHex[a].toLowerCase(), toHexStringWithPrefix(temp1));
+        }
+    }
+
+    /**
      * TEST: long <--> Bytes
      * longToBytes(long)
      * longToBytesNoLeadZeroes(long)
@@ -154,20 +195,19 @@ public class ByteUtilTest {
      * longToBytesLE(long)
      */
     @Test
-    public void longTest() {
-        for(int b = 0; b < 2; b++) {
-            for (int a = 0; a < testLong.length; a++) {
-                byte[] temp1 = longToBytes(testLong[a][b]);
-                byte[] temp2 = longToBytesNoLeadZeroes(testLong[a][b]);
-                byte[] temp3 = longToBytesLE(testLong[a][b]);
+    @Parameters(method = "longValues")
+    public void longTest(long testLong) {
 
-                toLEByteArray(temp3);
+        byte[] temp1 = longToBytes(testLong);
+        byte[] temp2 = longToBytesNoLeadZeroes(testLong);
+        byte[] temp3 = longToBytesLE(testLong);
 
-                assertEquals(testLong[a][b], byteArrayToLong(temp1));
-                assertEquals(testLong[a][b], byteArrayToLong(temp2));
-                assertEquals(testLong[a][b], byteArrayToLong(temp3));
-            }
-        }
+        toLEByteArray(temp3);
+
+        assertEquals(testLong, byteArrayToLong(temp1));
+        assertEquals(testLong, byteArrayToLong(temp2));
+        assertEquals(testLong, byteArrayToLong(temp3));
+
     }
 
     /**
@@ -178,13 +218,10 @@ public class ByteUtilTest {
      */
 
     @Test
-    public void shortTest() {
-        for(int b = 0; b < 2; b++) {
-            for(int a = 0; a < testShort.length; a++) {
-                byte[] temp1 = shortToBytes(testShort[a][b]);
-                assertEquals(testShort[a][b], bigEndianToShort(temp1));
-            }
-        }
+    @Parameters(method = "shortValues")
+    public void shortTest(short testShort) {
+        byte[] temp1 = shortToBytes(testShort);
+        assertEquals(testShort, bigEndianToShort(temp1));
     }
 
     /**
@@ -200,22 +237,21 @@ public class ByteUtilTest {
      * ~ bytesToInts(byte, array, BE)
      */
     @Test
-    public void intTest() {
-        for(int b = 0; b < 2; b++) {
-            for(int a = 0; a < testInt.length; a++) {
-                byte[] temp1 = intToBytes(testInt[a][b]);
-                byte[] temp2 = intToBytesLE(testInt[a][b]);
-                byte[] temp3 = intToBytesBE(testInt[a][b]);
-                byte[] temp4 = intToBytesNoLeadZeroes(testInt[a][b]);
+    @Parameters(method = "intValues")
+    public void intTest(int testInt) {
 
-                toLEByteArray(temp2);
+        byte[] temp1 = intToBytes(testInt);
+        byte[] temp2 = intToBytesLE(testInt);
+        byte[] temp3 = intToBytesBE(testInt);
+        byte[] temp4 = intToBytesNoLeadZeroes(testInt);
 
-                assertEquals(testInt[a][b], byteArrayToInt(temp1));
-                assertEquals(testInt[a][b], byteArrayToInt(temp2));
-                assertEquals(testInt[a][b], byteArrayToInt(temp3));
-                assertEquals(testInt[a][b], byteArrayToInt(temp4));
-            }
-        }
+        toLEByteArray(temp2);
+
+        assertEquals(testInt, byteArrayToInt(temp1));
+        assertEquals(testInt, byteArrayToInt(temp2));
+        assertEquals(testInt, byteArrayToInt(temp3));
+        assertEquals(testInt, byteArrayToInt(temp4));
+
     }
 
     /**
@@ -294,7 +330,7 @@ public class ByteUtilTest {
         }
 
         // Append
-        for(int a = 0; a < size1; a++) {
+        for(int a = 0; a < testHex.length; a++) {
             byte[] temp6 = hexStringToBytes(testHex[a]);
             byte temp7 = toByte(testByte[2]);
             byte[] temp8 = appendByte(temp6, temp7);
@@ -356,6 +392,18 @@ public class ByteUtilTest {
             assertEquals(BigInteger.valueOf((long) Math.pow(2, c)), bytesToBigInteger(temp6));
         }
 
+        // AND + OR with zero (+ve)
+        for(int a = 2; a < testBigInt.length; a++) {
+            byte[] temp8 = bigIntegerToBytes(testBigInt[a][1]);
+            byte[] temp9 = bigIntegerToBytes(testBigInt[1][1], temp8.length);
+            byte[] temp10 = or(temp8, temp9);
+            byte[] temp11 = and(temp8, temp9);
+            assertEquals(testBigInt[a][1], bytesToBigInteger(temp10));
+            assertEquals(testBigInt[1][1], bytesToBigInteger(temp11));
+            System.out.println(testBigInt[a][1] + " || " + testBigInt[1][1] + " --> " + bytesToBigInteger(temp10));
+            System.out.println(testBigInt[a][1] + " && " + testBigInt[1][1] + " --> " + bytesToBigInteger(temp11));
+        }
+
         // 2's compliment -ve BI --> +ve BI
         for(int a = 1; a < testBigInt.length; a++) {
             boolean found = false;
@@ -379,20 +427,6 @@ public class ByteUtilTest {
             }
             assertEquals(testBigInt[a][1], bytesToBigInteger(temp7));
             System.out.println(testBigInt[a][0] + " --> " + bytesToBigInteger(temp7));
-        }
-
-        // AND + OR with zero (+ve)
-        for(int b = 1; b < 2; b++) {
-            for(int a = 2; a < testBigInt.length; a++) {
-                byte[] temp8 = bigIntegerToBytes(testBigInt[a][b]);
-                byte[] temp9 = bigIntegerToBytes(testBigInt[1][b], temp8.length);
-                byte[] temp10 = or(temp8, temp9);
-                byte[] temp11 = and(temp8, temp9);
-                assertEquals(testBigInt[a][b], bytesToBigInteger(temp10));
-                assertEquals(testBigInt[1][b], bytesToBigInteger(temp11));
-                System.out.println(testBigInt[a][b] + " || " + testBigInt[1][b] + " --> " + bytesToBigInteger(temp10));
-                System.out.println(testBigInt[a][b] + " && " + testBigInt[1][b] + " --> " + bytesToBigInteger(temp11));
-            }
         }
 
         // 1's compliment | XOR with "FF" * numBytes
