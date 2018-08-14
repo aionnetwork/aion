@@ -288,4 +288,5 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
 
         return details;
     }
+
 }

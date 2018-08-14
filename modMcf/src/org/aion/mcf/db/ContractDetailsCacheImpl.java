@@ -27,6 +27,7 @@ import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
 
 import java.util.*;
+import org.aion.zero.db.AionContractDetailsImpl;
 
 /**
  * Contract details cache implementation.
@@ -48,6 +49,18 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
         }
     }
 
+    public static ContractDetailsCacheImpl copy(ContractDetailsCacheImpl cache) {
+        // todo get parent's contract
+        ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(cache.origContract);
+        copy.setCodes(new HashMap<>(cache.getCodes()));
+        copy.storage = new HashMap<>(cache.storage);
+        copy.setDirty(cache.isDirty());
+        copy.setDeleted(cache.isDeleted());
+        copy.prune = cache.prune;
+        copy.detailsInMemoryStorageLimit = cache.detailsInMemoryStorageLimit;
+        return copy;
+    }
+
     @Override
     public void put(IDataWord key, IDataWord value) {
         storage.put(key, value);
@@ -56,23 +69,27 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
     @Override
     public IDataWord get(IDataWord key) {
-
-        IDataWord value = storage.get(key);
-        if (value != null) {
-            value = value.copy();
-        } else {
-            if (origContract == null) {
-                return null;
+        try {
+            IDataWord value = storage.get(key);
+            if (value != null) {
+                value = value.copy();
+            } else {
+                if (origContract == null) {
+                    return null;
+                }
+                value = origContract.get(key);
+                value = (value == null) ? DataWord.ZERO : value;
+                storage.put(key.copy(), value.isZero() ? DataWord.ZERO.copy() : value.copy());
             }
-            value = origContract.get(key);
-            value = (value == null) ? DataWord.ZERO : value;
-            storage.put(key.copy(), value.isZero() ? DataWord.ZERO.copy() : value.copy());
-        }
 
-        if (value == null || value.isZero()) {
+            if (value == null || value.isZero()) {
+                return null;
+            } else {
+                return value;
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
             return null;
-        } else {
-            return value;
         }
     }
 

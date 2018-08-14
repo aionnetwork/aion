@@ -152,6 +152,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
                 loadAccountState(address);
                 lockDetails.readLock().lock();
                 // retrieves the contract details
+//                contractDetails = new ContractDetailsCacheImpl(this.cachedDetails.get(address));
                 contractDetails = this.cachedDetails.get(address);
             }
 

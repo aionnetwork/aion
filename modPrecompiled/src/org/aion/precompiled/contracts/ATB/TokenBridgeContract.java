@@ -92,14 +92,14 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
-                ErrCode code = this.controller.setNewOwner(this.context.caller().toBytes(), address);
+                ErrCode code = this.controller.setNewOwner(this.context.sender().toBytes(), address);
 
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
             }
             case SIG_ACCEPT_OWNERSHIP: {
-                ErrCode code = this.controller.acceptOwnership(this.context.caller().toBytes());
+                ErrCode code = this.controller.acceptOwnership(this.context.sender().toBytes());
                 if (code !=  ErrCode.NO_ERROR)
                     return fail();
                 return success();
@@ -110,7 +110,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (addressList == null)
                     return fail();
 
-                ErrCode code = this.controller.ringInitialize(this.context.caller().toBytes(), addressList);
+                ErrCode code = this.controller.ringInitialize(this.context.sender().toBytes(), addressList);
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
@@ -120,7 +120,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (address == null)
                     return fail();
 
-                ErrCode code = this.controller.ringAddMember(this.context.caller().toBytes(), address);
+                ErrCode code = this.controller.ringAddMember(this.context.sender().toBytes(), address);
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
@@ -131,7 +131,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (address == null)
                     return fail();
 
-                ErrCode code = this.controller.ringRemoveMember(this.context.caller().toBytes(), address);
+                ErrCode code = this.controller.ringRemoveMember(this.context.sender().toBytes(), address);
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
@@ -140,7 +140,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
-                ErrCode code = this.controller.setRelayer(this.context.caller().toBytes(), address);
+                ErrCode code = this.controller.setRelayer(this.context.sender().toBytes(), address);
 
                 if (code != ErrCode.NO_ERROR)
                     return fail();
@@ -153,7 +153,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     return fail();
 
                 BridgeController.ProcessedResults results = this.controller.processBundles(
-                        this.context.caller().toBytes(),
+                        this.context.sender().toBytes(),
                         bundleRequests.blockHash,
                         bundleRequests.bundles,
                         bundleRequests.signatures);
@@ -284,8 +284,8 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         return new AionInternalTx(parentHash,
                 deep,
                 idx,
-                new DataWord(this.track.getNonce(context.caller())).getData(),
-                context.caller(),
+                new DataWord(this.track.getNonce(context.sender())).getData(),
+                context.sender(),
                 context.address(),
                 context.callValue().getData(),
                 context.callData(),
