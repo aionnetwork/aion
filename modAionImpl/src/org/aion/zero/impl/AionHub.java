@@ -24,6 +24,7 @@ package org.aion.zero.impl;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,6 +48,7 @@ import org.aion.mcf.tx.ITransactionExecThread;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
+import org.aion.utils.TaskDumpHeap;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -99,22 +101,17 @@ public class AionHub {
 
     private AtomicBoolean start = new AtomicBoolean(true);
 
-    /** Test functionality for checking if the hub has been shut down. */
-    public boolean isRunning() {
-        return start.get();
-    }
-
     /**
      * A "cached" block that represents our local best block when the application is first booted.
      */
     private volatile AionBlock startingBlock;
 
     /**
-     * Initialize as per the <a href=
-     * "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
+     * Initialize as per the <a href= "https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom">Initialization-on-demand</a>
      * holder pattern
      */
     private static class Holder {
+
         static final AionHub INSTANCE = new AionHub();
     }
 
@@ -123,35 +120,21 @@ public class AionHub {
     }
 
     public AionHub() {
-        initializeHub(CfgAion.inst(), AionBlockchainImpl.inst(), AionRepositoryImpl.inst(), false);
-    }
 
-    private void initializeHub(
-            CfgAion _cfgAion,
-            AionBlockchainImpl _blockchain,
-            AionRepositoryImpl _repository,
-            boolean forTest) {
-
-        this.cfg = _cfgAion;
+        this.cfg = CfgAion.inst();
 
         // load event manager before init blockchain instance
-        loadEventMgr(forTest);
+        loadEventMgr();
 
-        AionBlockchainImpl blockchain = _blockchain;
+        AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
         blockchain.setEventManager(this.eventMgr);
         this.blockchain = blockchain;
 
-        this.repository = _repository;
+        this.repository = AionRepositoryImpl.inst();
 
-        this.mempool =
-                forTest
-                        ? AionPendingStateImpl.createForTesting(_cfgAion, _blockchain, _repository)
-                        : AionPendingStateImpl.inst();
+        this.mempool = AionPendingStateImpl.inst();
 
-        this.txThread =
-                forTest
-                        ? AionTransactionExecThread.createForTesting((AionPendingStateImpl) mempool)
-                        : AionTransactionExecThread.getInstance();
+        this.txThread = AionTransactionExecThread.getInstance();
 
         loadBlockchain();
 
@@ -166,6 +149,14 @@ public class AionHub {
             genLOG.info("Seed node mode enabled!");
         }
 
+        String reportsFolder = "";
+        if (cfg.getReports().isEnabled()) {
+            File rpf = new File(cfg.getBasePath(), cfg.getReports().getPath());
+            //noinspection ResultOfMethodCallIgnored
+            rpf.mkdirs();
+            reportsFolder = rpf.getAbsolutePath();
+        }
+
         /*
          * p2p hook up start sync mgr needs to be initialed after loadBlockchain()
          * method
@@ -173,74 +164,57 @@ public class AionHub {
         CfgNetP2p cfgNetP2p = this.cfg.getNet().getP2p();
 
         // there are two p2p implementation , now just point to impl1.
-        this.p2pMgr =
-                new P2pMgr(
-                        this.cfg.getNet().getId(),
-                        Version.KERNEL_VERSION,
-                        this.cfg.getId(),
-                        cfgNetP2p.getIp(),
-                        cfgNetP2p.getPort(),
-                        this.cfg.getNet().getNodes(),
-                        cfgNetP2p.getDiscover(),
-                        cfgNetP2p.getMaxTempNodes(),
-                        cfgNetP2p.getMaxActiveNodes(),
-                        cfgNetP2p.getBootlistSyncOnly(),
-                        cfgNetP2p.getErrorTolerance());
+        this.p2pMgr = new P2pMgr(this.cfg.getNet().getId(), Version.KERNEL_VERSION,
+            this.cfg.getId(), cfgNetP2p.getIp(),
+            cfgNetP2p.getPort(), this.cfg.getNet().getNodes(), cfgNetP2p.getDiscover(),
+            cfgNetP2p.getMaxTempNodes(),
+            cfgNetP2p.getMaxActiveNodes(),
+            cfgNetP2p.getBootlistSyncOnly(), cfgNetP2p.getErrorTolerance());
 
         this.syncMgr = SyncMgr.inst();
-        this.syncMgr.init(
-                blockchain,
-                p2pMgr,
-                eventMgr,
-                cfg.getSync().getBlocksQueueMax(),
-                cfg.getSync().getShowStatus());
+        this.syncMgr.init(this.p2pMgr, this.eventMgr, this.cfg.getSync().getBlocksQueueMax(),
+            this.cfg.getSync().getShowStatus(), this.cfg.getReports().isEnabled(), reportsFolder);
 
         ChainConfiguration chainConfig = new ChainConfiguration();
-        this.propHandler =
-                new BlockPropagationHandler(
-                        1024,
-                        this.blockchain,
-                        p2pMgr,
-                        chainConfig.createBlockHeaderValidator(),
-                        cfg.getNet().getP2p().inSyncOnlyMode());
+        this.propHandler = new BlockPropagationHandler(1024, this.blockchain, this.p2pMgr,
+            chainConfig.createBlockHeaderValidator(), this.cfg.getNet().getP2p().inSyncOnlyMode());
 
         registerCallback();
-        p2pMgr.run();
+        this.p2pMgr.run();
 
         ((AionPendingStateImpl) this.mempool).setP2pMgr(this.p2pMgr);
 
         this.pow = new AionPoW();
         this.pow.init(blockchain, mempool, eventMgr);
-    }
 
-    static AionHub createForTesting(
-            CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
-        return new AionHub(_cfgAion, _blockchain, _repository, true);
-    }
-
-    private AionHub(
-            CfgAion _cfgAion,
-            AionBlockchainImpl _blockchain,
-            AionRepositoryImpl _repository,
-            boolean forTest) {
-        initializeHub(_cfgAion, _blockchain, _repository, forTest);
+        if (cfg.getReports().isHeapDumpEnabled()) {
+            new Thread(
+                new TaskDumpHeap(this.start, cfg.getReports().getHeapDumpInterval(), reportsFolder),
+                "dump-heap")
+                .start();
+        }
     }
 
     private void registerCallback() {
         List<Handler> cbs = new ArrayList<>();
-        cbs.add(new ReqStatusHandler(syncLOG, blockchain, p2pMgr, cfg.getGenesis().getHash()));
-        cbs.add(new ResStatusHandler(syncLOG, p2pMgr, syncMgr));
-        boolean inSyncOnlyMode = cfg.getNet().getP2p().inSyncOnlyMode();
-        cbs.add(new ReqBlocksHeadersHandler(syncLOG, blockchain, p2pMgr, inSyncOnlyMode));
-        cbs.add(new ResBlocksHeadersHandler(syncLOG, syncMgr, p2pMgr));
-        cbs.add(new ReqBlocksBodiesHandler(syncLOG, blockchain, p2pMgr, inSyncOnlyMode));
-        cbs.add(new ResBlocksBodiesHandler(syncLOG, syncMgr, p2pMgr));
-        cbs.add(new BroadcastTxHandler(syncLOG, mempool, p2pMgr, inSyncOnlyMode));
-        cbs.add(new BroadcastNewBlockHandler(syncLOG, propHandler, p2pMgr));
+        cbs.add(new ReqStatusHandler(syncLOG, this.blockchain, this.p2pMgr,
+            cfg.getGenesis().getHash()));
+        cbs.add(new ResStatusHandler(syncLOG, this.p2pMgr, this.syncMgr));
+        cbs.add(new ReqBlocksHeadersHandler(
+            syncLOG, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().inSyncOnlyMode()));
+        cbs.add(new ResBlocksHeadersHandler(syncLOG, this.syncMgr, this.p2pMgr));
+        cbs.add(new ReqBlocksBodiesHandler(
+            syncLOG, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().inSyncOnlyMode()));
+        cbs.add(new ResBlocksBodiesHandler(syncLOG, this.syncMgr, this.p2pMgr));
+        cbs.add(new BroadcastTxHandler(
+            syncLOG, this.mempool, this.p2pMgr, this.cfg.getNet().getP2p().inSyncOnlyMode()));
+        cbs.add(new BroadcastNewBlockHandler(syncLOG, this.propHandler, this.p2pMgr));
         this.p2pMgr.register(cbs);
     }
 
-    private void loadEventMgr(boolean forTest) {
+    /**
+     */
+    private void loadEventMgr() {
 
         try {
             ServiceLoader.load(EventMgrModule.class);
@@ -262,9 +236,7 @@ public class AionHub {
             throw new NullPointerException();
         }
 
-        if (!forTest) {
-            this.eventMgr.start();
-        }
+        this.eventMgr.start();
     }
 
     public IRepository getRepository() {
@@ -298,7 +270,8 @@ public class AionHub {
 
         AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
         if (bestBlock != null) {
-            bestBlock.setCumulativeDifficulty(
+            bestBlock
+                .setCumulativeDifficulty(
                     repository.getBlockStore().getTotalDifficultyForHash(bestBlock.getHash()));
         }
 
@@ -307,18 +280,14 @@ public class AionHub {
         int countRecoveryAttempts = 0;
 
         // fix the trie if necessary
-        while (bestBlockShifted
-                && // the best block was updated after recovery attempt
-                (countRecoveryAttempts < 5)
-                && // allow 5 recovery attempts
-                bestBlock != null
-                && // recover only for non-null blocks
-                !this.repository.isValidRoot(bestBlock.getStateRoot())) {
+        while (bestBlockShifted && // the best block was updated after recovery attempt
+            (countRecoveryAttempts < 5) && // allow 5 recovery attempts
+            bestBlock != null && // recover only for non-null blocks
+            !this.repository.isValidRoot(bestBlock.getStateRoot())) {
 
             genLOG.info(
-                    "Recovery initiated due to corrupt world state at block "
-                            + bestBlock.getNumber()
-                            + ".");
+                "Recovery initiated due to corrupt world state at block " + bestBlock.getNumber()
+                    + ".");
 
             long bestBlockNumber = bestBlock.getNumber();
             byte[] bestBlockRoot = bestBlock.getStateRoot();
@@ -327,11 +296,9 @@ public class AionHub {
             AionGenesis genesis = cfg.getGenesis();
             if (!this.repository.isValidRoot(genesis.getStateRoot())) {
                 genLOG.info(
-                        "Corrupt world state for genesis block hash: "
-                                + genesis.getShortHash()
-                                + ", number: "
-                                + genesis.getNumber()
-                                + ".");
+                    "Corrupt world state for genesis block hash: " + genesis.getShortHash()
+                        + ", number: " + genesis
+                        .getNumber() + ".");
 
                 AionHubUtils.buildGenesis(genesis, repository);
 
@@ -351,22 +318,16 @@ public class AionHub {
                 long blockNumber = bestBlock.getNumber() - 1;
                 RecoveryUtils.Status status = RecoveryUtils.revertTo(this.blockchain, blockNumber);
 
-                recovered =
-                        (status == RecoveryUtils.Status.SUCCESS)
-                                && this.repository.isValidRoot(
-                                        this.repository
-                                                .getBlockStore()
-                                                .getChainBlockByNumber(blockNumber)
-                                                .getStateRoot());
+                recovered = (status == RecoveryUtils.Status.SUCCESS) && this.repository
+                    .isValidRoot(this.repository.getBlockStore().getChainBlockByNumber(blockNumber)
+                        .getStateRoot());
             }
 
             if (recovered) {
                 bestBlock = this.repository.getBlockStore().getBestBlock();
                 if (bestBlock != null) {
-                    bestBlock.setCumulativeDifficulty(
-                            repository
-                                    .getBlockStore()
-                                    .getTotalDifficultyForHash(bestBlock.getHash()));
+                    bestBlock.setCumulativeDifficulty(repository.getBlockStore()
+                        .getTotalDifficultyForHash(bestBlock.getHash()));
                 }
 
                 // checking is the best block has changed since attempting recovery
@@ -374,24 +335,21 @@ public class AionHub {
                     bestBlockShifted = true;
                 } else {
                     bestBlockShifted =
-                            !(bestBlockNumber == bestBlock.getNumber())
-                                    || // block number changed
-                                    !(Arrays.equals(
-                                            bestBlockRoot,
-                                            bestBlock.getStateRoot())); // root hash changed
+                        !(bestBlockNumber == bestBlock.getNumber()) || // block number changed
+                            !(Arrays.equals(bestBlockRoot,
+                                bestBlock.getStateRoot())); // root hash changed
                 }
 
                 if (bestBlockShifted) {
-                    genLOG.info(
-                            "Rebuilding world state SUCCEEDED by REVERTING to a previous block.");
+                    genLOG
+                        .info("Rebuilding world state SUCCEEDED by REVERTING to a previous block.");
                 } else {
                     genLOG.info("Rebuilding world state SUCCEEDED.");
                 }
             } else {
-                genLOG.error(
-                        "Rebuilding world state FAILED. "
-                                + "Stop the kernel (Ctrl+C) and use the command line revert option to move back to a valid block. "
-                                + "Check the Aion wiki for recommendations on choosing the block number.");
+                genLOG.error("Rebuilding world state FAILED. "
+                    + "Stop the kernel (Ctrl+C) and use the command line revert option to move back to a valid block. "
+                    + "Check the Aion wiki for recommendations on choosing the block number.");
             }
 
             countRecoveryAttempts++;
@@ -427,10 +385,8 @@ public class AionHub {
                 System.exit(-1);
             }
 
-            genLOG.info(
-                    "loaded genesis block <num={}, root={}>",
-                    0,
-                    ByteUtil.toHexString(genesis.getStateRoot()));
+            genLOG.info("loaded genesis block <num={}, root={}>", 0,
+                ByteUtil.toHexString(genesis.getStateRoot()));
 
         } else {
 
@@ -438,26 +394,20 @@ public class AionHub {
             blockchain.setTotalDifficulty(this.repository.getBlockStore().getTotalDifficulty());
             if (bestBlock.getCumulativeDifficulty().equals(BigInteger.ZERO)) {
                 // setting the object runtime value
-                bestBlock.setCumulativeDifficulty(
-                        this.repository.getBlockStore().getTotalDifficulty());
+                bestBlock.setCumulativeDifficulty(this.repository.getBlockStore().getTotalDifficulty());
             }
 
-            genLOG.info(
-                    "loaded block <num={}, root={}>",
-                    blockchain.getBestBlock().getNumber(),
+            genLOG.info("loaded block <num={}, root={}>", blockchain.getBestBlock().getNumber(),
                     LogUtil.toHexF8(blockchain.getBestBlock().getStateRoot()));
         }
 
         byte[] genesisHash = cfg.getGenesis().getHash();
-        byte[] databaseGenHash =
-                blockchain.getBlockByNumber(0) == null
-                        ? null
-                        : blockchain.getBlockByNumber(0).getHash();
+        byte[] databaseGenHash = blockchain.getBlockByNumber(0) == null ? null
+            : blockchain.getBlockByNumber(0).getHash();
 
         // this indicates that DB and genesis are inconsistent
-        if (genesisHash == null
-                || databaseGenHash == null
-                || (!Arrays.equals(genesisHash, databaseGenHash))) {
+        if (genesisHash == null || databaseGenHash == null || (!Arrays
+            .equals(genesisHash, databaseGenHash))) {
             if (genesisHash == null) {
                 genLOG.error("failed to load genesis from config");
             }
@@ -466,14 +416,14 @@ public class AionHub {
                 genLOG.error("failed to load block 0 from database");
             }
 
-            genLOG.error(
-                    "genesis json rootHash {} is inconsistent with database rootHash {}\n"
-                            + "your configuration and genesis are incompatible, please do the following:\n"
-                            + "\t1) Remove your database folder\n"
-                            + "\t2) Verify that your genesis is correct by re-downloading the binary or checking online\n"
-                            + "\t3) Reboot with correct genesis and empty database\n",
-                    genesisHash == null ? "null" : ByteUtil.toHexString(genesisHash),
-                    databaseGenHash == null ? "null" : ByteUtil.toHexString(databaseGenHash));
+            genLOG.error("genesis json rootHash {} is inconsistent with database rootHash {}\n" +
+                    "your configuration and genesis are incompatible, please do the following:\n" +
+                    "\t1) Remove your database folder\n" +
+                    "\t2) Verify that your genesis is correct by re-downloading the binary or checking online\n"
+                    +
+                    "\t3) Reboot with correct genesis and empty database\n",
+                genesisHash == null ? "null" : ByteUtil.toHexString(genesisHash),
+                databaseGenHash == null ? "null" : ByteUtil.toHexString(databaseGenHash));
             System.exit(-1);
         }
 
@@ -481,7 +431,7 @@ public class AionHub {
             this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
         }
 
-        //        this.repository.getBlockStore().load();
+//        this.repository.getBlockStore().load();
     }
 
     public void close() {
@@ -543,4 +493,5 @@ public class AionHub {
     public AionBlock getStartingBlock() {
         return this.startingBlock;
     }
+
 }
