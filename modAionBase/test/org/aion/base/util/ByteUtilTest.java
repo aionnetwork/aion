@@ -30,6 +30,7 @@ import org.junit.runner.RunWith;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -40,27 +41,6 @@ import static org.junit.Assert.*;
 public class ByteUtilTest {
 
     private static final Random random = new Random();
-
-    private final String[][] testNum = {
-            //{ null, null },
-            { "-00000000000000000000", "00000000000000000000" },
-            { "-00000000000000000001", "00000000000000000001" },
-            { "-10000000000000000000", "10000000000000000000" },
-            { "-20000000000000000000", "20000000000000000000" },
-            { "-30000000000000000000", "30000000000000000000" },
-            { "-99999999999999999999", "99999999999999999999" },
-    };
-
-    private final BigInteger[][] testBigInt = {
-            { null, null },
-            { new BigInteger(testNum[0][0]),  new BigInteger(testNum[0][1])},
-            { new BigInteger(testNum[1][0]),  new BigInteger(testNum[1][1])},
-            { new BigInteger(testNum[2][0]),  new BigInteger(testNum[2][1])},
-            { new BigInteger(testNum[3][0]),  new BigInteger(testNum[3][1])},
-            { new BigInteger(testNum[4][0]),  new BigInteger(testNum[4][1])},
-            { new BigInteger(testNum[5][0]),  new BigInteger(testNum[5][1])},
-
-    };
 
     private final String[] testHex = {
             null,                                                                   // 0 - Null
@@ -80,6 +60,27 @@ public class ByteUtilTest {
             hexStringToBytes(testHex[4]),
             hexStringToBytes(testHex[5]),
             hexStringToBytes(testHex[6]),
+    };
+
+    private final String[][] testNum = {
+            { null, null },
+            { "-00000000000000000000", "00000000000000000000" },
+            { "-00000000000000000001", "00000000000000000001" },
+            { "-10000000000000000000", "10000000000000000000" },
+            { "-20000000000000000000", "20000000000000000000" },
+            { "-30000000000000000000", "30000000000000000000" },
+            { "-99999999999999999999", "99999999999999999999" },
+    };
+
+    private final BigInteger[][] testBigInt = {
+            { null, null },
+            { new BigInteger(testNum[1][0]), new BigInteger(testNum[1][1])},
+            { new BigInteger(testNum[2][0]), new BigInteger(testNum[2][1])},
+            { new BigInteger(testNum[3][0]), new BigInteger(testNum[3][1])},
+            { new BigInteger(testNum[4][0]), new BigInteger(testNum[4][1])},
+            { new BigInteger(testNum[5][0]), new BigInteger(testNum[5][1])},
+            { new BigInteger(testNum[6][0]), new BigInteger(testNum[6][1])},
+
     };
 
     /**
@@ -131,18 +132,17 @@ public class ByteUtilTest {
     @SuppressWarnings("unused")
     private Object shortValues() {
 
-        List<Object> parameters = new ArrayList<>();
+        Short[] temp = {
+                0,
+                1,
+                10,
+                15,
+                20,
+                (short) random.nextInt(Integer.MAX_VALUE),
+                (short) Integer.MAX_VALUE  };
 
-        // short values
-        parameters.add(0);
-        parameters.add(1);
-        parameters.add(10);
-        parameters.add(15);
-        parameters.add(20);
-        parameters.add(random.nextInt(Short.MAX_VALUE));
-        parameters.add(Short.MAX_VALUE);
+        return temp;
 
-        return parameters.toArray();
     }
 
 
@@ -201,6 +201,7 @@ public class ByteUtilTest {
         byte[] temp0 = hexStringToBytes(testHex[0]);
         assertEquals("", toHexString(temp0));
         assertEquals("0x", toHexStringWithPrefix(temp0));
+
         for(int a = 1; a < testHex.length; a++) {
             byte[] temp1 = hexStringToBytes(testHex[a]);
             assertEquals(testHex[a].toLowerCase(), toHexString(temp1));
