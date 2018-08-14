@@ -56,11 +56,11 @@ public class Cli {
 
     private static String BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
 
-    File keystoreDir = new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
-
     private static String dstConfig = BASE_PATH_WITH_NETWORK + "/config.xml";
 
     private static String dstGenesis = BASE_PATH_WITH_NETWORK + "/genesis.json";
+
+    File keystoreDir = new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
     enum Network {
         MAINNET, CONQUEST;
@@ -75,7 +75,7 @@ public class Cli {
         }
     }
 
-    Network net = Network.MAINNET;
+    private Network net = Network.MAINNET;
 
     public int call(final String[] args, Cfg cfg) {
         return call(args, cfg, BASE_PATH);
@@ -242,7 +242,6 @@ public class Cli {
                                     CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
                                     CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK + "/genesis.json"));
 
-                                    System.out.println(net);
                                     copyNetwork(path, net);
                                     cfg.getLog().setLogPath(net.toString() + "/log");
                                     cfg.getDb().setDatabasePath(net.toString() + "/database");
@@ -293,7 +292,6 @@ public class Cli {
                         // -d [directory]
                         if (args.length == 2) {
 
-                            System.out.println(net);
                             copyNetwork(path + "/" + args[1], net);
                             cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
                             cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
@@ -308,7 +306,6 @@ public class Cli {
                             String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
                             call(newArgs, cfg);
 
-                            System.out.println(net);
                             copyNetwork(path + "/" + args[1], net);
                             cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
                             cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
