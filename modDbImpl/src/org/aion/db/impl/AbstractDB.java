@@ -129,7 +129,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     @Override
     public void check() {
         if (!isOpen()) {
-            throw new RuntimeException("Database is not opened: " + this);
+            throw new RuntimeException("Database is not opened: " + this); // XXX This cases program to hang
         }
     }
 
@@ -189,7 +189,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
 
     @Override
     public Optional<byte[]> get(byte[] k) {
-        check(k);
+        check(k); // XXX convenient breakpoint
 
         check();
 

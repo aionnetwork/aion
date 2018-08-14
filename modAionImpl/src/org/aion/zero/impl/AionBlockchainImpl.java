@@ -212,7 +212,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     private AionBlockchainImpl() {
-        this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration());
+        this(generateBCConfig(CfgAion.inst()), AionRepositoryImpl.inst(), new ChainConfiguration()); // XXX AionRepositoryImpl.inst() seems to return
     }
 
     protected AionBlockchainImpl(final A0BCConfig config,

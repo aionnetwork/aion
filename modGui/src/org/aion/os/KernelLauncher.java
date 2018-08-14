@@ -118,6 +118,9 @@ public class KernelLauncher {
             throw new KernelControlException(message, ie);
         }
 
+        if(proc.exitValue() != 0) {
+            // XXX throw KernelControlException
+        }
         String pid = null;
         try (
                 InputStream is = proc.getInputStream();

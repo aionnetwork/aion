@@ -135,7 +135,13 @@ public class Aion {
 
         genLog.info(logo);
 
-        IAionChain ac = AionFactory.create();
+        IAionChain ac;
+        try {
+            ac = AionFactory.create();
+        } catch (RuntimeException rte) {
+            System.exit(0);
+            return;
+        }
 
         IMineRunner nm = null;
 
