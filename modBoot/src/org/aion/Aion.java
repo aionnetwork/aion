@@ -124,9 +124,9 @@ public class Aion {
             System.out.println("File path is invalid; please check log setting in config.xml");
             return;
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            filePath[0] = Cfg.getBasePath() + "/" + cfg.getLog().getLogPath();
+            filePath[0] = cfg.getBasePath() + "/" + cfg.getLog().getLogPath();
         }
-        filePath[1] = Cfg.getBasePath() + "/" + cfg.getDb().getPath();
+        filePath[1] = cfg.getBasePath() + "/" + cfg.getDb().getPath();
         filePath[2] = Keystore.getKeystorePath();
         filePath[3] = Cli.getDstConfig();
         filePath[4] = Cli.getDstGenesis();

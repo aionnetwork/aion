@@ -30,6 +30,10 @@ public class CliTest {
 
     private static final Cli cli = Mockito.spy(new Cli());
 
+    CfgAion cfg = CfgAion.inst();
+
+    String BASE_PATH = cfg.getBasePath();
+
     /**
      * Sets up a spy Cli class that returns the String "password" when the cli.readPassword()
      * is called using any two params.
@@ -39,7 +43,6 @@ public class CliTest {
         doReturn("password").when(cli).readPassword(any(), any());
 
         // Copies config folder recursively
-        String BASE_PATH = Cfg.getBasePath();
         File src = new File(BASE_PATH + "/../modBoot/resource");
         File dst = new File(BASE_PATH + "/config");
         copyRecursively(src, dst);
@@ -52,7 +55,6 @@ public class CliTest {
     @After
     public void shutdown() {
         // Deletes created folders recursively
-        String BASE_PATH = Cfg.getBasePath();
         File path1 = new File(BASE_PATH + "/aaaaaaaa");
         File path2 = new File(BASE_PATH + "/abbbbbbb");
         File path3 = new File(BASE_PATH + "/abcccccc");
@@ -180,7 +182,6 @@ public class CliTest {
     @Test
     public void testDatadir() {
 
-        String BASE_PATH = Cfg.getBasePath();
         final String[][] networkArgs = new String[][] {
                 { "-d" , "" },                              // Unspecified
                 { "-d" , "{@.@}" },                         // Invalid (illegal characters)
@@ -190,7 +191,6 @@ public class CliTest {
         };
 
         Cli cli = new Cli();
-        Cfg cfg = CfgAion.inst();
 
         String logOG = cfg.getLog().getLogPath();
         String dbOG = cfg.getDb().getPath();
@@ -230,7 +230,6 @@ public class CliTest {
     @Test
     public void testNetwork() {
 
-        String BASE_PATH = Cfg.getBasePath();
         final String[][] networkArgs = new String[][] {
                 { "-n" , "" },                              // Unspecified
                 { "-n" , "{@.@}" },                         // Invalid (illegal characters)
@@ -241,7 +240,6 @@ public class CliTest {
         };
 
         Cli cli = new Cli();
-        Cfg cfg = CfgAion.inst();
 
         System.out.println("Invalid Networks:");
         assertEquals(1, cli.call(networkArgs[0], cfg) );
@@ -274,7 +272,6 @@ public class CliTest {
     @Test
     public void testMulti() {
 
-        String BASE_PATH = Cfg.getBasePath();
         final String[][] multiArgs = new String[][] {
                 { "-d" , "aaaaaaaa"     , "-n" , "mainnet"  },          // New network
                 { "-d" , "abbbbbbb"     , "-n" , "conquest" },          // New dir
