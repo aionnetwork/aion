@@ -96,7 +96,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modAionImpl/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modMcf/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
-		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="ci_build" />
 	</target>
 
 	<!--<target name="test_build" depends="build">
