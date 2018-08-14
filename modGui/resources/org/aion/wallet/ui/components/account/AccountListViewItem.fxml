@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2017-2018 Aion foundation.
+
+    This file is part of the aion network project.
+
+    The aion network project is free software: you can redistribute it
+    and/or modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation, either version 3 of
+    the License, or any later version.
+
+    The aion network project is distributed in the hope that it will
+    be useful, but WITHOUT ANY WARRANTY; without even the implied
+    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with the aion network project source files.
+    If not, see <https://www.gnu.org/licenses/>.
+
+Contributors:
+    Aion foundation.
+-->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<fx:root type="javafx.scene.control.ListCell" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+         stylesheets="@accountListViewItem.css" styleClass="account-item">
+    <graphic>
+        <HBox spacing="5">
+            <VBox prefWidth="120">
+                <TextField text="Name:" styleClass="copyable-label" editable="false"/>
+                <TextField text="Public address" styleClass="copyable-label" editable="false"/>
+                <TextField text="Balance" styleClass="copyable-label" editable="false"/>
+            </VBox>
+            <VBox>
+                <HBox fx:id="nameBox">
+                    <TextField fx:id="importedLabel" text="Imported " editable="false"
+                               styleClass="name-input-fields" prefWidth="75"/>
+                    <TextField fx:id="name" styleClass="name-input-fields" editable="false" HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <TextField fx:id="publicAddress" styleClass="copyable-label" editable="false"/>
+                <TextField fx:id="balance" styleClass="copyable-label" editable="false"/>
+            </VBox>
+            <HBox>
+                <ImageView fx:id="editNameButton" fitHeight="30.0" fitWidth="30.0"
+                           pickOnBounds="true" preserveRatio="true"
+                           styleClass="clickable"
+                           onMouseClicked="#onNameFieldClicked">
+                    <Image url="@../icons/pencil-edit-button.png"/>
+                </ImageView>
+            </HBox>
+            <HBox>
+                <ImageView fx:id="accountSelectButton" fitHeight="30.0" fitWidth="30.0"
+                           pickOnBounds="true" preserveRatio="true"
+                           styleClass="clickable"
+                           onMouseClicked="#onDisconnectedClicked">
+                    <Image url="@../icons/icon-disconnected-50.png"/>
+                </ImageView>
+            </HBox>
+            <HBox>
+                <ImageView fx:id="accountExportButton" fitHeight="30.0" fitWidth="30.0"
+                           pickOnBounds="true" preserveRatio="true"
+                           styleClass="clickable"
+                           onMouseClicked="#onExportClicked">
+                    <Image url="@../icons/icon-export.png"/>
+                </ImageView>
+            </HBox>
+        </HBox>
+    </graphic>
+</fx:root>

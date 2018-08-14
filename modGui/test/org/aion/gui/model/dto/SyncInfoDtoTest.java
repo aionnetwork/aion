@@ -58,6 +58,7 @@ public class SyncInfoDtoTest {
         long networkBest = 1141;
 
         SyncInfo syncInfo = new SyncInfo(syncing, networkBest, chainBest, 7 /*not used*/, 1 /* not used */);
+
         msg.set(syncInfo, ApiMsg.cast.OTHERS);
         when(api.isConnected()).thenReturn(true);
         unit = new SyncInfoDto(kernelConnection);

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,30 +31,25 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.rlp;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
-
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 
 /**
  * Class to encapsulate an object and provide utilities for conversion
- * 
+ *
  * @author ethereumJ 2014
  * @author modified by aion 2017
- *
  */
 public class Value {
 
     private Object value;
     private byte[] rlp;
-
-    // removed all sha3 logic in rlp
-    // private byte[] sha3;
 
     private boolean decoded = false;
 
@@ -68,10 +63,9 @@ public class Value {
         return null;
     }
 
-    public Value() {
-    }
+    private Value() {}
 
-    public void init(byte[] rlp) {
+    private void init(byte[] rlp) {
         this.rlp = rlp;
     }
 
@@ -89,9 +83,8 @@ public class Value {
         }
     }
 
-    /*
-     * ***************** Convert
-     *****************/
+    // Convert
+
     public Object asObj() {
         decode();
         return value;
@@ -103,9 +96,13 @@ public class Value {
         return Arrays.asList(valueArray);
     }
 
+    /**
+     * @return the numerical value as an {@link Integer}. If called for values that are not integers
+     *     or byte arrays it will return 0.
+     */
     public int asInt() {
         decode();
-        if (isInt()) {
+        if (value instanceof Integer) {
             return (Integer) value;
         } else if (isBytes()) {
             return new BigInteger(1, asBytes()).intValue();
@@ -113,9 +110,13 @@ public class Value {
         return 0;
     }
 
+    /**
+     * @return the numerical value as a {@link Long}. If called for values that are not integers or
+     *     byte arrays it will return 0.
+     */
     public long asLong() {
         decode();
-        if (isLong()) {
+        if (value instanceof Long) {
             return (Long) value;
         } else if (isBytes()) {
             return new BigInteger(1, asBytes()).longValue();
@@ -123,11 +124,32 @@ public class Value {
         return 0;
     }
 
+    /**
+     * @return the numerical value as a {@link BigInteger}. If called for values that are not
+     *     numbers or byte arrays it will return {@link BigInteger#ZERO}.
+     */
     public BigInteger asBigInt() {
         decode();
-        return (BigInteger) value;
+        if (value instanceof BigInteger) {
+            return (BigInteger) value;
+        } else if (isBytes()) {
+            return new BigInteger(1, asBytes());
+        } else if (value instanceof Byte) {
+            return BigInteger.valueOf((Byte) value);
+        } else if (value instanceof Short) {
+            return BigInteger.valueOf((Short) value);
+        } else if (value instanceof Integer) {
+            return BigInteger.valueOf((Integer) value);
+        } else if (value instanceof Long) {
+            return BigInteger.valueOf((Long) value);
+        }
+        return BigInteger.ZERO;
     }
 
+    /**
+     * @implNote If called for values that are not strings or byte arrays it will return an empty
+     *     string.
+     */
     public String asString() {
         decode();
         if (isBytes()) {
@@ -138,6 +160,10 @@ public class Value {
         return "";
     }
 
+    /**
+     * @implNote If called for values that are not strings or byte arrays it will return an empty
+     *     byte array.
+     */
     public byte[] asBytes() {
         decode();
         if (isBytes()) {
@@ -148,16 +174,8 @@ public class Value {
         return ByteUtil.EMPTY_BYTE_ARRAY;
     }
 
-    public String getHex() {
-        return Hex.toHexString(this.encode());
-    }
-
     public byte[] getData() {
         return this.encode();
-    }
-
-    public int[] asSlice() {
-        return (int[]) value;
     }
 
     public Value get(int index) {
@@ -175,10 +193,9 @@ public class Value {
         return new Value(null);
     }
 
-    /*
-     * ***************** Utility
-     *****************/
-    public void decode() {
+    // Utility
+
+    private void decode() {
         if (!this.decoded) {
             this.value = RLP.decode(rlp, 0).getDecoded();
             this.decoded = true;
@@ -192,15 +209,6 @@ public class Value {
         return rlp;
     }
 
-    // @REMOVED:
-    // @rational:
-    // hash is not RLP 's function, decouple from RLP.
-    // public byte[] hash() {
-    // if (sha3 == null) {
-    // sha3 = HashUtil.sha3(encode());
-    // }
-    // return sha3;
-    // }
     public boolean cmp(Value o) {
         if (o == null) {
             return false;
@@ -214,32 +222,18 @@ public class Value {
         // return DeepEquals.deepEquals(this, o);
     }
 
-    /*
-     * ***************** Checks
-     *****************/
+    // Checks
+
     public boolean isList() {
         decode();
-        return value != null && value.getClass().isArray() && !value.getClass().getComponentType().isPrimitive();
+        return value != null
+                && value.getClass().isArray()
+                && !value.getClass().getComponentType().isPrimitive();
     }
 
     public boolean isString() {
         decode();
         return value instanceof String;
-    }
-
-    public boolean isInt() {
-        decode();
-        return value instanceof Integer;
-    }
-
-    public boolean isLong() {
-        decode();
-        return value instanceof Long;
-    }
-
-    public boolean isBigInt() {
-        decode();
-        return value instanceof BigInteger;
     }
 
     public boolean isBytes() {
@@ -248,7 +242,7 @@ public class Value {
     }
 
     // it's only if the isBytes() = true;
-    public boolean isReadableString() {
+    private boolean isReadableString() {
 
         decode();
         int readableChars = 0;
@@ -267,23 +261,6 @@ public class Value {
         return (double) readableChars / (double) data.length > 0.55;
     }
 
-    // it's only if the isBytes() = true;
-    public boolean isHexString() {
-
-        decode();
-        int hexChars = 0;
-        byte[] data = (byte[]) value;
-
-        for (byte aData : data) {
-
-            if ((aData >= 48 && aData <= 57) || (aData >= 97 && aData <= 102)) {
-                ++hexChars;
-            }
-        }
-
-        return (double) hexChars / (double) data.length > 0.9;
-    }
-
     public boolean isHashCode() {
         decode();
         return this.asBytes().length == 32;
@@ -294,19 +271,12 @@ public class Value {
         return value == null;
     }
 
-    public boolean isEmpty() {
+    private boolean isEmpty() {
         decode();
-        if (isNull()) {
-            return true;
-        }
-        if (isBytes() && asBytes().length == 0) {
-            return true;
-        }
-        if (isList() && asList().isEmpty()) {
-            return true;
-        }
-        return isString() && asString().equals("");
-
+        return isNull() // null
+                || isBytes() && asBytes().length == 0 // empty byte array
+                || isList() && asList().isEmpty() // empty list
+                || isString() && asString().isEmpty(); // empty string
     }
 
     public int length() {
@@ -389,20 +359,5 @@ public class Value {
             return asString();
         }
         return "Unexpected type";
-    }
-
-    public int countBranchNodes() {
-        decode();
-        if (this.isList()) {
-            List<Object> objList = this.asList();
-            int i = 0;
-            for (Object obj : objList) {
-                i += (new Value(obj)).countBranchNodes();
-            }
-            return i;
-        } else if (this.isBytes()) {
-            this.asBytes();
-        }
-        return 0;
     }
 }

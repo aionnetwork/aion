@@ -1,0 +1,24 @@
+version: '3.1'
+
+services:
+    aion-core:
+        container_name: aion-core
+        build:
+            context: .
+            args:
+                - DEV_BUILD=true
+        ports:
+            - "8545:8545"
+            - "8547:8547"
+            - "6006:6006"
+        environment:
+            - difficulty=0x1
+            # creates a new account and assigns it's address to miner_address env var
+            - coinbase_password=p@ss
+            - rpc_listen_address=0.0.0.0
+            - java_listen_address=0.0.0.0
+            - mining=true
+            - override_peer_list=true
+            - peer_list=
+            # run ant pack_dev_docker and uncomment the line below to remote debug
+            #- JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:6006 -Xms4g

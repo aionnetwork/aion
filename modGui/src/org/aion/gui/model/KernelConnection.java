@@ -2,21 +2,20 @@ package org.aion.gui.model;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
-import org.aion.gui.events.RefreshEvent;
-import org.aion.gui.events.UnexpectedApiDisconnectedEvent;
+import org.aion.gui.events.EventPublisher;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgApi;
-import org.aion.os.UnixKernelProcessHealthChecker;
+import org.aion.wallet.console.ConsoleManager;
 import org.slf4j.Logger;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import static org.aion.wallet.console.ConsoleManager.LogType.KERNEL;
 
 /**
  * Represents a connection to the kernel; provides interface to connect/disconnect to kernel API
@@ -27,7 +26,8 @@ public class KernelConnection {
     private final ExecutorService backgroundExecutor;
     private final CfgApi cfgApi;
     private final IAionAPI api;
-    private final EventBus eventBus;
+    private final EventPublisher eventPublisher;
+    private final ConsoleManager consoleManager;
 
     private Future<?> connectionFuture;
     private Future<?> disconnectionFuture;
@@ -36,31 +36,32 @@ public class KernelConnection {
 
     /**
      * Constructor
-     *
-     * @param cfgApi Configuration
-     * @param eventBus Event bus to which notifications about connection state changes are sent
+     *  @param cfgApi Configuration
+     * @param eventPublisher Event bus to which notifications about connection state changes are sent
      */
     public KernelConnection(CfgApi cfgApi,
-                            EventBus eventBus) {
-        this(AionAPIImpl.inst(), cfgApi, eventBus, Executors.newSingleThreadExecutor());
+                            EventPublisher eventPublisher,
+                            ConsoleManager consoleManager) {
+        this(AionAPIImpl.inst(), cfgApi, eventPublisher, consoleManager, Executors.newSingleThreadExecutor());
     }
 
 
     /**
      * Constructor with injectable parameters for testing
-     *
-     * @param aionApi
+     *  @param aionApi
      * @param cfgApi
-     * @param eventBus
+     * @param eventPublisher
      * @param executorService
      */
     @VisibleForTesting KernelConnection(IAionAPI aionApi,
                                         CfgApi cfgApi,
-                                        EventBus eventBus,
+                                        EventPublisher eventPublisher,
+                                        ConsoleManager consoleManager,
                                         ExecutorService executorService) {
         this.api = aionApi;
         this.cfgApi = cfgApi;
-        this.eventBus = eventBus;
+        this.eventPublisher = eventPublisher;
+        this.consoleManager = consoleManager;
         this.backgroundExecutor = executorService;
     }
 
@@ -79,8 +80,10 @@ public class KernelConnection {
                     // log if it does.
                     LOG.error("Error connecting to Api.  ErrorCode = {}.  ErrString = {}",
                             msg.getErrorCode(), msg.getErrString());
+                    consoleManager.addLog("Error connecting to kernel", KERNEL);
                 } else {
-                    eventBus.post(new RefreshEvent(RefreshEvent.Type.OPERATION_FINISHED));
+                    consoleManager.addLog("Connected to kernel", KERNEL);
+                    eventPublisher.fireConnectionEstablished();
                 }
             }
         });
@@ -100,8 +103,10 @@ public class KernelConnection {
         disconnectionFuture = backgroundExecutor.submit(() -> {
             synchronized (api) {
                 LOG.trace("About to destroy API");
-                api.destroyApi().getObject();
+                api.destroyApi();
             }
+            eventPublisher.fireDisconnected();
+            consoleManager.addLog("Disconnected from kernel", KERNEL);
         });
 
     }
