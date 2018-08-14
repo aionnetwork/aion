@@ -7,9 +7,7 @@
 			<!--boolean, enable/disable cross origin requests (browser enforced)-->
 			<cors-enabled>false</cors-enabled>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
-			<apis-enabled>web3,eth,personal,stratum</apis-enabled>
-			<!--size of thread pool allocated for rpc requests-->
-			<threads>1</threads>
+			<apis-enabled>web3,eth,personal,stratum,ops</apis-enabled>
 		</rpc>
 		<java active="true" ip="127.0.0.1" port="8547"></java>
 		<nrg-recommendation>
@@ -77,6 +75,7 @@
 		<log-file>true</log-file>
 		<!--Sets the physical location on disk where log files will be stored.-->
 		<log-path>log</log-path>
+		<ROOT>WARN</ROOT>
 		<GEN>INFO</GEN>
 		<VM>ERROR</VM>
 		<SYNC>INFO</SYNC>

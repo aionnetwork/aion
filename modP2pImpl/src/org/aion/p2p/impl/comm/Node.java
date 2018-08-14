@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.p2p.impl.comm;
 
 import java.math.BigInteger;
@@ -44,11 +45,11 @@ public final class Node implements INode {
     private static final String REGEX_IPV4 = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])"; // Ip
     // eg.
     // 127.0.0.1
-    private static final String REGEX_PORT = "[0-9]+$"; // Port eg. 30303
+    private static final String REGEX_PORT = "[0-9]{1,5}$"; // Port eg. 30303
     private static final Pattern PATTERN_P2P = Pattern
         .compile(REGEX_PROTOCOL + REGEX_NODE_ID + "@" + REGEX_IPV4 + ":" + REGEX_PORT);
     private static final int SIZE_BYTES_IPV4 = 8;
-    public IPeerMetric peerMetric = new PeerMetric();
+    private IPeerMetric peerMetric = new PeerMetric();
     private boolean fromBootList;
     private byte[] id; // 36 bytes
     private int idHash;
@@ -76,6 +77,10 @@ public final class Node implements INode {
      * constructor for initial stage of connections from network
      */
     Node(String _ipStr, int port) {
+        if (port > 65535 || port < 1) {
+            throw new IllegalArgumentException();
+        }
+
         this.fromBootList = false;
         this.idHash = 0;
         this.ip = ipStrToBytes(_ipStr);
@@ -104,7 +109,7 @@ public final class Node implements INode {
         }
         this.ip = _ip;
         this.ipStr = ipBytesToStr(_ip);
-        this.port = _port;
+        this.port = ((_port > 65535 || _port < 1) ? 0 : _port);
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
     }
@@ -150,7 +155,7 @@ public final class Node implements INode {
 
     /**
      * @param _p2p String
-     * @return Node TODO: ugly
+     * @return Node
      */
     public static Node parseP2p(String _p2p) {
         if (!PATTERN_P2P.matcher(_p2p).matches()) {

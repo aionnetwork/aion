@@ -1,14 +1,37 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 .default{
     -fx-background-color: white;
 }
 
-.pressed{
-    -fx-border-color: #40bded;
+.header-button-pressed{
+    -fx-border-color: #4221CC;
     -fx-border-width: 0 0 5 0;
 }
 
 .header-button-label-pressed {
-    -fx-text-fill: #40bded;
+    -fx-text-fill: #4221CC;
     -fx-text-alignment: CENTER;
     -fx-font-family: 'Open Sans Regular';
     -fx-font-size: 18px;
@@ -60,6 +83,6 @@
     -fx-font-family: 'Open Sans Regular';
     -fx-font-size: 18px;
     -fx-display-caret: false;
-    -fx-border-color: #40bded;
+    -fx-border-color: #4221CC;
     -fx-border-width: 0 0 1 0;
 }

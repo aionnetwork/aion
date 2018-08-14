@@ -31,6 +31,8 @@ package org.aion.mcf.config;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+
+import com.google.common.base.Objects;
 import org.aion.base.db.IPruneConfig;
 
 /**
@@ -168,5 +170,21 @@ public class CfgPrune implements IPruneConfig {
     @Override
     public int getArchiveRate() {
         return archive_rate;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgPrune cfgPrune = (CfgPrune) o;
+        return enabled == cfgPrune.enabled &&
+                archived == cfgPrune.archived &&
+                current_count == cfgPrune.current_count &&
+                archive_rate == cfgPrune.archive_rate;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(enabled, archived, current_count, archive_rate);
     }
 }

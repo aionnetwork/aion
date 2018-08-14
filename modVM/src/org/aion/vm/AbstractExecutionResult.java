@@ -162,7 +162,7 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      */
     public void setCode(int code) {
         ResultCode resCode = ResultCode.fromInt(code);
-        this.code = resCode;
+        this.code = (resCode == null) ? this.code : resCode;
     }
 
     /**

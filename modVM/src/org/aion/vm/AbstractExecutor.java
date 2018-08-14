@@ -113,7 +113,7 @@ public abstract class AbstractExecutor {
             return true;
         }
 
-        BigInteger txNrgPrice = BigInteger.valueOf(tx.getNrgPrice()).abs();
+        BigInteger txNrgPrice = BigInteger.valueOf(tx.getNrgPrice());
         long txNrgLimit = tx.getNrg();
 
         if (tx.isContractCreation()) {

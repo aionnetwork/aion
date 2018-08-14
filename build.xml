@@ -23,7 +23,7 @@
 		<pathelement location="${dir.libfile}/commons-codec-1.10.jar" />
 		<pathelement location="${dir.libfile}/commons-collections4-4.0.jar" />
 		<pathelement location="${dir.libfile}/commons-lang3-3.4.jar" />
-		<pathelement location="${dir.libfile}/guava-19.0.jar" />
+		<pathelement location="${dir.libfile}/guava-25.1-jre.jar" />
 		<pathelement location="${dir.libfile}/h2-mvstore-1.4.196.jar" />
 		<pathelement location="${dir.libfile}/jctools-core-1.2.1.jar" />
 		<pathelement location="${dir.libfile}/leveldb-api-0.9.jar" />
@@ -63,10 +63,10 @@
 		<pathelement location="${dir.libfile}/hamcrest/hamcrest-core-1.3.jar" />
 		<pathelement location="${dir.libfile}/junit_4/junit-4.12.jar" />
 		<pathelement location="${dir.libfile}/junit_4/system-rules-1.16.0.jar" />
-		<pathelement location="${dir.libfile}/mockito-core-2.12.0.jar" />
-		<pathelement location="${dir.libfile}/truth-0.36.jar" />
-		<pathelement location="${dir.libfile}/byte-buddy-1.7.9.jar" />
-		<pathelement location="${dir.libfile}/byte-buddy-agent-1.7.9.jar" />
+		<pathelement location="${dir.libfile}/mockito-core-2.21.0.jar" />
+		<pathelement location="${dir.libfile}/truth-0.42.jar" />
+		<pathelement location="${dir.libfile}/byte-buddy-1.8.17.jar" />
+		<pathelement location="${dir.libfile}/byte-buddy-agent-1.8.17.jar" />
 		<pathelement location="${dir.libfile}/objenesis-2.6.jar" />
 		<pathelement location="${dir.libfile}/JUnitParams-1.1.1.jar" />
 	</path>
@@ -205,6 +205,25 @@
 
 	<target name="build_test" depends="build, test" />
 
+        <target name="3rd_build" depends="clean">
+                <echo message="compile debug is ${compile.debug}" />
+                <echo message="building 3rd party lib" />
+                <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libnsc/build.xml" target="build">
+                        <property name="compile.debug" value="${compile.debug}" />
+                </ant>
+                <move file="${dir.workspace}/3rdParty/libnsc/libnsc.jar" tofile="${dir.workspace}/lib/libnsc.jar" overwrite="true" />
+
+                <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libnzmq/build.xml" target="build">
+                        <property name="compile.debug" value="${compile.debug}" />
+                </ant>
+                <move file="${dir.workspace}/3rdParty/libnzmq/libnzmq.jar" tofile="${dir.workspace}/lib/libnzmq.jar" overwrite="true" />
+
+                <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libJson/build.xml" target="build">
+                        <property name="compile.debug" value="${compile.debug}" />
+                </ant>
+                <move file="${dir.workspace}/3rdParty/libJson/libJson.jar" tofile="${dir.workspace}/lib/libJson.jar" overwrite="true" />
+        </target>
+
 	<target name="mod_build">
                 <mkdir dir="${dir.modfile}" />
 		<echo message="compile debug is ${compile.debug}" />
@@ -304,23 +323,19 @@
 			<property name="compile.debug" value="${compile.debug}" />
         </ant>
 
-        <echo message="building aion_api" />
-		<ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
-			<property name="compile.debug" value="${compile.debug}" />
+        <echo message="building modApi" />
+        <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
+                <property name="compile.debug" value="${compile.debug}" />
         </ant>
+        <copy file="aion_api/pack/modAionApi.jar" todir="${dir.modfile}" overwrite="true" />
 
         <echo message="building modGui" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
-
-                <echo message="building modApi" />
-                <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
-                        <property name="compile.debug" value="${compile.debug}" />
-                </ant>
 	</target>
 
-	<target name="build" depends="mod_build">
+	<target name="build" depends="3rd_build, mod_build">
 		<mkdir dir="${dir.buildfile}" />
 		<mkdir dir="${dir.native}/linux/equihash" />
 		<mkdir dir="${dir.build.native}/linux/equihash" />
@@ -390,6 +405,9 @@
 		<delete dir="${dir.pack}/web3" />
 		<delete file="${dir.pack}/aion.tar.bz2" />
 		<delete dir="${dir.modfile}" />
+        <delete dir="${dir.libfile}/libJson.jar" />
+        <delete dir="${dir.libfile}/libnsc.jar" />
+        <delete dir="${dir.libfile}/libnzmq.jar" />
 	</target>
 
 	<target name="pack_build" depends="logenv">
@@ -423,8 +441,7 @@
 		<tar destfile="${dir.pack}/aion.tar.bz2" compression="bzip2" longfile="gnu">
 			<tarfileset dir="${dir.libfile}" filemode="755" prefix="${project.name}/lib">
 				<include name="*.jar" />
-				<include name="libminiupnp/*.jar" />
-				<include name="libminiupnp/*.so" />
+				<include name="*.so" />
 				<exclude name="byte-buddy-*.jar" />
 				<exclude name="JUnitParams-*.jar" />
 				<exclude name="mockito-*.jar" />
@@ -439,6 +456,7 @@
 			</tarfileset>
 			<tarfileset dir="${dir.workspace}" filemode="755" prefix="${project.name}">
 				<include name="aion.sh" />
+				<include name="aion_gui.sh" />
 			</tarfileset>
 			<tarfileset dir="${dir.pack}/config" filemode="755" prefix="${project.name}/config">
 				<include name="**" />
@@ -455,9 +473,26 @@
                         <tarfileset dir="${dir.pack}/clientAPI" filemode="755" prefix="${project.name}/clientAPI">
                                 <include name="**" />
                         </tarfileset>
+                        <tarfileset dir="${dir.pack}/script" filemode="755" prefix="${project.name}/script">
+                                <include name="generateSslCert.sh" />
+                                <include name="nohup_wrapper.sh" />
+                        </tarfileset>
 		</tar>
 		<exec executable="/bin/bash">
 			<arg value="${dir.workspace}/script/postpack.sh" />
 		</exec>
 	</target>
+
+	<target name="pack_docker" depends="pack_build">
+		<exec executable="/bin/bash">
+			<arg value="${dir.workspace}/script/pack_docker.sh" />
+		</exec>
+	</target>
+
+	<target name="pack_dev_docker">
+		<exec executable="/bin/bash">
+			<arg value="${dir.workspace}/script/pack_dev_docker.sh" />
+		</exec>
+	</target>
+
 </project>

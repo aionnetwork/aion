@@ -1,6 +1,31 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.p2p.impl.zero.msg;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +36,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
-import org.junit.Assert;
 import org.junit.Test;
 
 /** @author chris */
@@ -58,12 +82,12 @@ public class ResActiveNodesTest {
             INode srcNode = srcNodes.get(i);
             INode tarNode = tarNodes.get(i);
 
-            Assert.assertArrayEquals(srcNode.getId(), tarNode.getId());
-            Assert.assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
-            Assert.assertArrayEquals(srcNode.getIp(), tarNode.getIp());
+            assertArrayEquals(srcNode.getId(), tarNode.getId());
+            assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
+            assertArrayEquals(srcNode.getIp(), tarNode.getIp());
 
-            Assert.assertTrue(srcNode.getIpStr().equals(tarNode.getIpStr()));
-            Assert.assertEquals(srcNode.getPort(), tarNode.getPort());
+            assertEquals(srcNode.getIpStr(), tarNode.getIpStr());
+            assertEquals(srcNode.getPort(), tarNode.getPort());
         }
     }
 
@@ -85,12 +109,18 @@ public class ResActiveNodesTest {
             INode srcNode = srcNodes.get(i);
             INode tarNode = tarNodes.get(i);
 
-            Assert.assertArrayEquals(srcNode.getId(), tarNode.getId());
-            Assert.assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
-            Assert.assertArrayEquals(srcNode.getIp(), tarNode.getIp());
+            assertArrayEquals(srcNode.getId(), tarNode.getId());
+            assertEquals(srcNode.getIdHash(), tarNode.getIdHash());
+            assertArrayEquals(srcNode.getIp(), tarNode.getIp());
 
-            Assert.assertTrue(srcNode.getIpStr().equals(tarNode.getIpStr()));
-            Assert.assertEquals(srcNode.getPort(), tarNode.getPort());
+            assertEquals(srcNode.getIpStr(), tarNode.getIpStr());
+            assertEquals(srcNode.getPort(), tarNode.getPort());
         }
+    }
+
+    @Test
+    public void testDecodeNull() {
+        assertNull(ResHandshake.decode(null));
+        assertNull(ResHandshake.decode(new byte[0]));
     }
 }

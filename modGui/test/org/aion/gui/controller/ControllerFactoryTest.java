@@ -1,7 +1,9 @@
 package org.aion.gui.controller;
 
+import org.aion.gui.model.ConfigManipulator;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
+import org.aion.mcf.config.Cfg;
 import org.aion.os.KernelLauncher;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,12 +16,14 @@ public class ControllerFactoryTest {
     private KernelConnection kernelConnection;
     private KernelLauncher kernelLauncher;
     private KernelUpdateTimer kernelUpdateTimer;
+    private ConfigManipulator configManipulator;
 
     @Before
     public void before() {
         kernelConnection = mock(KernelConnection.class);
         kernelLauncher = mock(KernelLauncher.class);
         kernelUpdateTimer = mock(KernelUpdateTimer.class);
+        configManipulator = mock(ConfigManipulator.class);
     }
 
     @Test
@@ -27,11 +31,13 @@ public class ControllerFactoryTest {
         ControllerFactory unit = new ControllerFactory()
                 .withKernelConnection(kernelConnection)
                 .withKernelLauncher(kernelLauncher)
-                .withTimer(kernelUpdateTimer);
+                .withTimer(kernelUpdateTimer)
+                .withConfigManipulator(configManipulator);
 
         assertThat(unit.getKernelConnection(), is(kernelConnection));
         assertThat(unit.getKernelLauncher(), is(kernelLauncher));
         assertThat(unit.getTimer(), is(kernelUpdateTimer));
+        assertThat(unit.getConfigManipulator(), is(configManipulator));
     }
 
     @Test
@@ -58,8 +64,8 @@ public class ControllerFactoryTest {
                 .withKernelLauncher(kernelLauncher);
 
         assertThat(unit.call(DashboardController.class) instanceof DashboardController, is(true));
-        /*assertThat(unit.call(SettingsController.class) instanceof SettingsController, is(true));
-        assertThat(unit.call(ConnectivityStatusController.class)
+        assertThat(unit.call(SettingsController.class) instanceof SettingsController, is(true));
+        /*assertThat(unit.call(ConnectivityStatusController.class)
                 instanceof ConnectivityStatusController, is(true));
         assertThat(unit.call(PeerCountController.class) instanceof PeerCountController, is(true));
         assertThat(unit.call(SyncStatusController.class) instanceof

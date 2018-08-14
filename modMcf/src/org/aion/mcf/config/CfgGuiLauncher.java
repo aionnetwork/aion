@@ -1,5 +1,7 @@
 package org.aion.mcf.config;
 
+import javax.xml.stream.XMLOutputFactory;
+import com.google.common.base.Objects;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
@@ -187,5 +189,23 @@ public class CfgGuiLauncher {
 //            e.printStackTrace();
 //            return "";
 //        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgGuiLauncher that = (CfgGuiLauncher) o;
+        return autodetectJavaRuntime == that.autodetectJavaRuntime &&
+//                keepKernelOnExit == that.keepKernelOnExit &&
+                Objects.equal(javaHome, that.javaHome) &&
+                Objects.equal(aionSh, that.aionSh) &&
+                Objects.equal(workingDir, that.workingDir) &&
+                Objects.equal(kernelPidFile, that.kernelPidFile);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(autodetectJavaRuntime, javaHome, aionSh, workingDir, /*keepKernelOnExit,*/ kernelPidFile);
     }
 }

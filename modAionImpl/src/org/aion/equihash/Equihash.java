@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,14 +19,15 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.equihash;
 
-import java.util.concurrent.atomic.AtomicLong;
+import static org.aion.base.util.ByteUtil.merge;
+import static org.aion.base.util.ByteUtil.toLEByteArray;
+import static org.aion.base.util.Hex.toHexString;
 
-import org.aion.base.util.ByteUtil;
+import java.math.BigInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.aion.base.util.NativeLoader;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
@@ -35,26 +36,18 @@ import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
-import java.math.BigInteger;
-
-import static java.math.BigInteger.valueOf;
-import static org.aion.base.util.ByteUtil.*;
-import static org.aion.base.util.Hex.toHexString;
-
 /**
- * This class serves as the front end interface to the Tromp Equihash solver
- * accessed through JNI. This class also contains methods to verify equihash
- * solutions, either generated locally or received from peers.
+ * This class serves as the front end interface to the Tromp Equihash solver accessed through JNI.
+ * This class also contains methods to verify equihash solutions, either generated locally or
+ * received from peers.
  *
  * @author Ross Kitsis (ross@nuco.io)
  */
 public class Equihash {
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
-    private int n;
-    private int k;
     private int cBitLen; // Collision Bit Length used by equihash
-    protected AtomicLong totalSolGenerated;
+    AtomicLong totalSolGenerated;
 
     /*
      * Load native libraries
@@ -69,34 +62,27 @@ public class Equihash {
     /**
      * Create a new Equihash instance with the parameters (n,k)
      *
-     * @param n
-     *            Total number of bits over which to do XOR collisions
-     * @param k
-     *            Number of steps with which to solve.
+     * @param n Total number of bits over which to do XOR collisions
+     * @param k Number of steps with which to solve.
      */
     public Equihash(int n, int k) {
-        this.n = n;
-        this.k = k;
         this.cBitLen = n / (k + 1);
         this.totalSolGenerated = new AtomicLong(0);
     }
 
     /**
-     * Retrieves a set of possible solutions given the passed header and nonce
-     * value Any number of solutions may be returned; the maximum number of
-     * solutions observed has been 8
+     * Retrieves a set of possible solutions given the passed header and nonce value Any number of
+     * solutions may be returned; the maximum number of solutions observed has been 8
      *
-     * @param header
-     *            A 391 byte block header (header minus nonce and solutions)
-     * @param nonce
-     *            - A 32 byte header
+     * @param header A 32 byte hash of the block header (minus nonce and solutions)
+     * @param nonce - A 32 byte header
      * @return An array of equihash solutions
      */
     public int[][] getSolutionsForNonce(byte[] header, byte[] nonce) {
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Java generated headernonce: " + toHexString(merge(header, nonce)));
-            LOG.debug("Size of headernonce: " + merge(header, nonce).length);
+            LOG.debug("Java generated header nonce: " + toHexString(merge(header, nonce)));
+            LOG.debug("Size of header nonce: " + merge(header, nonce).length);
         }
 
         int[][] solutions = null;
@@ -117,7 +103,6 @@ public class Equihash {
 
         byte[] inputBytes = updateHeader.getMineHash();
 
-
         BigInteger target = updateHeader.getPowBoundaryBI();
 
         int[][] generatedSolutions;
@@ -137,10 +122,10 @@ public class Equihash {
         // Add nonce and solutions, hash and check if less than target
 
         // Check each returned solution
-        for (int i = 0; i < generatedSolutions.length; i++) {
+        for (int[] generatedSolution : generatedSolutions) {
 
             // Verify if any of the solutions pass the difficulty filter, return if true.
-            byte[] minimal = EquiUtils.getMinimalFromIndices(generatedSolutions[i], cBitLen);
+            byte[] minimal = EquiUtils.getMinimalFromIndices(generatedSolution, cBitLen);
 
             byte[] validationBytes = merge(inputBytes, nonce, minimal);
 
@@ -156,8 +141,7 @@ public class Equihash {
     /**
      * Checks if the solution meets difficulty requirements for this block.
      *
-     * @param target
-     *            Target under which hash must fall below
+     * @param target Target under which hash must fall below
      * @return True is the solution meets target conditions; false otherwise.
      */
     private boolean isValidBlock(byte[] validationBytes, BigInteger target) {

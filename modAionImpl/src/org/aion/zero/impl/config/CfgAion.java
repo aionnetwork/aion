@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import javax.xml.stream.*;
+
+import com.google.common.base.Objects;
 import org.aion.mcf.config.*;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.AionGenesis;
@@ -49,7 +51,7 @@ public final class CfgAion extends Cfg {
 
     private static final String NODE_ID_PLACEHOLDER = "[NODE-ID-PLACEHOLDER]";
 
-    private CfgAion() {
+    public CfgAion() {
         this.mode = "aion";
         this.id = UUID.randomUUID().toString();
         this.net = new CfgNet();
@@ -64,11 +66,15 @@ public final class CfgAion extends Cfg {
     }
 
     private static class CfgAionHolder {
-        private static final CfgAion inst = new CfgAion();
+        private static CfgAion inst = new CfgAion();
     }
 
     public static CfgAion inst() {
         return CfgAionHolder.inst;
+    }
+
+    public static void setInst(CfgAion cfgAion) {
+        CfgAionHolder.inst = cfgAion;
     }
 
     @Override
@@ -86,6 +92,10 @@ public final class CfgAion extends Cfg {
                 throw new RuntimeException(e2);
             }
         }
+    }
+
+    public void setGenesis(AionGenesis genesis) {
+        this.genesis = genesis;
     }
 
     public CfgConsensusPow getConsensus() {
@@ -153,20 +163,11 @@ public final class CfgAion extends Cfg {
         }
     }
 
-    @Override
-    public boolean fromXML() {
+    public boolean fromXML(final XMLStreamReader sr) throws XMLStreamException {
         boolean shouldWriteBackToFile = false;
-        File cfgFile = new File(CONF_FILE_PATH);
-        if(!cfgFile.exists())
-            return false;
-        XMLInputFactory input = XMLInputFactory.newInstance();
-        FileInputStream fis;
-        try {
-            fis = new FileInputStream(cfgFile);
-            XMLStreamReader sr = input.createXMLStreamReader(fis);
-            loop: while (sr.hasNext()) {
-                int eventType = sr.next();
-                switch (eventType) {
+        loop: while (sr.hasNext()) {
+            int eventType = sr.next();
+            switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
@@ -219,8 +220,23 @@ public final class CfgAion extends Cfg {
                         break loop;
                     else
                         break;
-                }
             }
+        }
+        return shouldWriteBackToFile;
+    }
+
+    @Override
+    public boolean fromXML() {
+        boolean shouldWriteBackToFile = false;
+        File cfgFile = new File(CONF_FILE_PATH);
+        if(!cfgFile.exists())
+            return false;
+        XMLInputFactory input = XMLInputFactory.newInstance();
+        FileInputStream fis;
+        try {
+            fis = new FileInputStream(cfgFile);
+            XMLStreamReader sr = input.createXMLStreamReader(fis);
+            shouldWriteBackToFile = fromXML(sr);
             closeFileInputStream(fis);
         } catch (Exception e) {
             System.out.println("<error on-parsing-config-xml msg=" + e.getLocalizedMessage() + ">");
@@ -331,5 +347,18 @@ public final class CfgAion extends Cfg {
                 }
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgAion cfgAion = (CfgAion) o;
+        return Objects.equal(genesis, cfgAion.genesis);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(genesis);
     }
 }
