@@ -126,6 +126,19 @@ public class DashboardController extends AbstractController {
     }
 
     @Subscribe
+    private void handleLaunchKernelFailed(final KernelProcEvent.KernelLaunchFailedEvent ev) {
+        Platform.runLater( () -> {
+            String kernelLog = kernelLauncher.getStorageLocation().getAbsolutePath() + "/aion-kernel-output";
+            consoleManager.addLog("Kernel launch failed; check kernel logs for details: " + kernelLog, ConsoleManager.LogType.KERNEL);
+            enableLaunchButton();
+            kernelStatusLabel.setText("Not running");
+            numPeersLabel.setText("--");
+            blocksLabel.setText("--");
+            isMining.setText("--");
+        });
+    }
+
+    @Subscribe
     private void handleUnexpectedApiDisconnect(UnexpectedApiDisconnectedEvent event) {
         if(!kernelLauncher.hasLaunchedInstance()) {
             // Probably in the middle of disconnecting; no action needed
@@ -162,6 +175,7 @@ public class DashboardController extends AbstractController {
             kernelLauncher.launch();
             consoleManager.addLog("Kernel launch started", ConsoleManager.LogType.KERNEL);
         } catch (RuntimeException ex) {
+            consoleManager.addLog("Kernel launch failed", ConsoleManager.LogType.KERNEL);
             enableLaunchButton();
         }
     }

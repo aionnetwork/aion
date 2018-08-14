@@ -4,4 +4,5 @@ package org.aion.gui.events;
 public class KernelProcEvent {
     public static class KernelLaunchedEvent extends KernelProcEvent {}
     public static class KernelTerminatedEvent extends KernelProcEvent {}
+    public static class KernelLaunchFailedEvent extends KernelProcEvent {}
 }
