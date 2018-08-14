@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.p2p;
 
 import java.util.List;
@@ -70,8 +71,6 @@ public interface INodeMgr {
 	boolean notActiveNode(int _nodeIdHash);
 
 	boolean notAtOutboundList(int _nodeIdHash);
-
-	INode getNodefromOutBoundList(int _nodeIdHash);
 
 	/**
 	 * move node object from the inbound or outbound list to the active list

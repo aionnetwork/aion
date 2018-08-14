@@ -22,6 +22,7 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
 import org.aion.base.util.Utils;
 import org.aion.db.impl.DBVendor;
 
@@ -255,5 +256,29 @@ public class CfgDbDetails {
         props.setProperty(Props.READ_BUFFER_SIZE, String.valueOf(this.read_buffer_size));
 
         return props;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgDbDetails that = (CfgDbDetails) o;
+        return enable_db_cache == that.enable_db_cache &&
+                enable_db_compression == that.enable_db_compression &&
+                enable_auto_commit == that.enable_auto_commit &&
+                enable_heap_cache == that.enable_heap_cache &&
+                enable_heap_cache_stats == that.enable_heap_cache_stats &&
+                block_size == that.block_size &&
+                max_fd_open_alloc == that.max_fd_open_alloc &&
+                write_buffer_size == that.write_buffer_size &&
+                read_buffer_size == that.read_buffer_size &&
+                cache_size == that.cache_size &&
+                Objects.equal(vendor, that.vendor) &&
+                Objects.equal(max_heap_cache_size, that.max_heap_cache_size);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(vendor, enable_db_cache, enable_db_compression, enable_auto_commit, enable_heap_cache, max_heap_cache_size, enable_heap_cache_stats, block_size, max_fd_open_alloc, write_buffer_size, read_buffer_size, cache_size);
     }
 }

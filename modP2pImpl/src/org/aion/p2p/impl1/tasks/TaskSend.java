@@ -127,7 +127,7 @@ public class TaskSend implements Runnable {
                     }
                 } else {
                     if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("msg-{} ->{} node-not-exit", mo.getDest().name(), mo.getDisplayId());
+                        p2pLOG.debug("msg-{} ->{} node-not-exist", mo.getDest().name(), mo.getDisplayId());
                     }
                 }
             } catch (InterruptedException e) {

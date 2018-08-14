@@ -1,5 +1,4 @@
 module aion.db.impl {
-    requires guava;
     requires slf4j.api;
     requires aion.log;
     requires aion.base;

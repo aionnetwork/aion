@@ -5,6 +5,10 @@
 /pack/
 /reports/
 /cache/
+/ssl_keystore/
+/log/
+/rt/
+/web3/
 
 # ide
 /.idea/
@@ -39,3 +43,10 @@ native/linux/fastvm
 native/linux/solidity
 
 
+# 3rd party
+3rdParty/libJson/build/
+3rdParty/libnsc/build/
+3rdParty/libnzmq/build/
+lib/libJson.jar
+lib/libnsc.jar
+lib/libnzmq.jar
