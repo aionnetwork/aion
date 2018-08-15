@@ -183,14 +183,16 @@ public class SendController extends AbstractController {
             displayStatus(e.getMessage(), true);
             return;
         }
-        sendButton.setDisable(true);
         displayStatus(PENDING_MESSAGE, false);
 
         final Task<TransactionResponseDTO> sendTransactionTask = getApiTask(this::sendTransaction, dto);
 
         runApiTask(
                 sendTransactionTask,
-                evt -> handleTransactionFinished(sendTransactionTask.getValue()),
+                evt -> {
+                    handleTransactionFinished(sendTransactionTask.getValue());
+                    sendButton.setDisable(true);
+                },
                 getErrorEvent(t -> Optional.ofNullable(t.getCause()).ifPresent(cause -> displayStatus(cause.getMessage(), true)), sendTransactionTask),
                 getEmptyEvent()
         );
@@ -201,7 +203,6 @@ public class SendController extends AbstractController {
     }
 
     private void handleTransactionFinished(final TransactionResponseDTO response) {
-        sendButton.setDisable(false);
         setTimedoutTransactionsLabelText();
         final String error = response.getError();
         if (error != null) {
@@ -218,7 +219,7 @@ public class SendController extends AbstractController {
             displayStatus(errorMessage, false);
         } else {
             LOGGER.info("{}: {}", SUCCESS_MESSAGE, response);
-            consoleManager.addLog("Transaction sent", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.WARNING);
+            consoleManager.addLog("Transaction sent", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.INFO);
             displayStatus(SUCCESS_MESSAGE, false);
             EventPublisher.fireTransactionFinished();
         }
