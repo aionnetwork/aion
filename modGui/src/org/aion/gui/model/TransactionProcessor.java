@@ -114,11 +114,13 @@ public class TransactionProcessor extends AbstractAionApiClient {
         return accountManager.getTransactions(address);
     }
 
-    public void processTransactionsOnReconnect() {
-        final Set<String> addresses = accountManager.getAddresses();
-        final BlockDTO oldestSafeBlock = accountManager.getOldestSafeBlock(addresses, i -> {
+    public void processTransactionsOnReconnectAsync() {
+        backgroundExecutor.submit(() -> {
+            final Set<String> addresses = accountManager.getAddresses();
+            final BlockDTO oldestSafeBlock = accountManager.getOldestSafeBlock(addresses, i -> {
+            });
+            processTransactionsFromBlock(oldestSafeBlock, addresses);
         });
-        processTransactionsFromBlock(oldestSafeBlock, addresses);
     }
 
     private void processTransactionsFromBlock(final BlockDTO lastSafeBlock, final Set<String> addresses) {

@@ -150,7 +150,8 @@ public class SendController extends AbstractController {
                 if (account != null) {
                     sendButton.setDisable(false);
                 }
-                transactionProcessor.processTransactionsOnReconnect();
+//                 Not needed when the wallet can only connect to one node
+                transactionProcessor.processTransactionsOnReconnectAsync();
                 break;
             case DISCONNECTED:
                 connected = false;

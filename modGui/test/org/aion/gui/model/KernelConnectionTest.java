@@ -52,7 +52,7 @@ public class KernelConnectionTest {
 
     @Test
     public void testConnect() {
-        boolean expectedReconnect = false;
+        boolean expectedReconnect = true;
         String expectedConnectionString = "tcp://someIpAddress:12345";
         ApiMsg msg = mock(ApiMsg.class);
         when(api.connect(anyString(), anyBoolean())).thenReturn(msg);
@@ -66,50 +66,7 @@ public class KernelConnectionTest {
         verify(api).connect(expectedConnectionString, expectedReconnect);
         verify(eventPublisher).fireConnectionEstablished();
     }
-
-    @Test
-    public void testConnectWhenApiFailsFirstTime() {
-        boolean expectedReconnect = false;
-        String expectedConnectionString = "tcp://someIpAddress:12345";
-        ApiMsg failMsg = mock(ApiMsg.class);
-        when(failMsg.isError()).thenReturn(true);
-        when(failMsg.getErrorCode()).thenReturn(31337); // any number
-        when(failMsg.getErrString()).thenReturn("anyString");
-        ApiMsg successMsg = mock(ApiMsg.class);
-        when(successMsg.isError()).thenReturn(false);
-        when(api.connect(anyString(), anyBoolean())).thenReturn(failMsg).thenReturn(successMsg);
-
-        unit.connect();
-        try {
-            executorService.awaitTermination(EXECUTOR_SERVICE_TIMEOUT_SEC, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            fail("Execution took too long.");
-        }
-        verify(api, times(2)).connect(expectedConnectionString, expectedReconnect);
-        verify(eventPublisher).fireConnectionEstablished();
-    }
-
-    @Test
-    public void testConnectWhenRetryAttemptsExceeded() {
-        boolean expectedReconnect = false;
-        String expectedConnectionString = "tcp://someIpAddress:12345";
-        ApiMsg failMsg = mock(ApiMsg.class);
-        when(failMsg.isError()).thenReturn(true);
-        when(failMsg.getErrorCode()).thenReturn(31337); // any number
-        when(failMsg.getErrString()).thenReturn("anyString");
-        when(api.connect(anyString(), anyBoolean())).thenReturn(failMsg);
-
-        unit.connect();
-        try {
-            executorService.awaitTermination(EXECUTOR_SERVICE_TIMEOUT_SEC, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            fail("Execution took too long.");
-        }
-        verify(api, times(2)).connect(expectedConnectionString, expectedReconnect);
-        verify(eventPublisher, never()).fireConnectionEstablished();
-        verify(eventPublisher).fireUnexpectedApiDisconnection();
-    }
-
+    
     @Test
     public void testDisconnect() {
         when(api.isConnected()).thenReturn(true);
