@@ -151,14 +151,14 @@ public class DashboardController extends AbstractController {
         } catch (KernelControlException kce) {
             // If we get here we're so broken we don't know how to proceed; either the OS
             // is in a broken state or there's a bug/defect within our code.
-            LOG.error("Detected disconnection from Kernel API, but was not able to determine state of Kernel process.  " +
+            LOG.error("Detected connection error with Kernel API, but was not able to determine state of Kernel process.  " +
                     "It is recommended that you restart the GUI.");
             return;
         }
 
         if(actuallyRunning) {
-            LOG.error("Detected disconnection from Kernel API, but Kernel process is still running.  " +
-                    "It is recommended that you terminate the kernel and re-launch it.");
+            LOG.error("Detected connection error from Kernel API, but Kernel process is still running.  " +
+                    "Please check that Java API is enabled in its configuration.");
         } else {
             LOG.info("Detected unexpected termination of Kernel process.  Internal resources will be cleaned up.");
             kernelUpdateTimer.stop();
