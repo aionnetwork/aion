@@ -236,11 +236,17 @@ public class ApiAionTest {
         assertNotNull(sync);
         assertEquals(sync.done, impl.isSyncComplete());
         if (impl.getInitialStartingBlockNumber().isPresent())
-            assertEquals(sync.chainStartingBlkNumber, (long) impl.getInitialStartingBlockNumber().get());
+            assertEquals((long) impl.getInitialStartingBlockNumber().get(), sync.chainStartingBlkNumber);
+        else
+            assertEquals(0L, sync.chainStartingBlkNumber);
         if (impl.getNetworkBestBlockNumber().isPresent())
-            assertEquals(sync.networkBestBlkNumber, (long) impl.getNetworkBestBlockNumber().get());
+            assertEquals((long) impl.getNetworkBestBlockNumber().get(), sync.networkBestBlkNumber);
+        else
+            assertEquals(0L, sync.networkBestBlkNumber);
         if (impl.getLocalBestBlockNumber().isPresent())
-            assertEquals(sync.chainBestBlkNumber, (long) impl.getLocalBestBlockNumber().get());
+            assertEquals((long) impl.getLocalBestBlockNumber().get(), sync.chainBestBlkNumber);
+        else
+            assertEquals(0L, sync.chainBestBlkNumber);
     }
 
     @Test
