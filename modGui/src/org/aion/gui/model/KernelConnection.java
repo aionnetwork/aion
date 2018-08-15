@@ -31,7 +31,7 @@ public class KernelConnection {
 
     private Future<?> connectionFuture;
     private Future<?> disconnectionFuture;
-    
+
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
     /**
@@ -73,17 +73,17 @@ public class KernelConnection {
         connectionFuture = backgroundExecutor.submit(() -> {
             synchronized (api) {
                 LOG.trace("About to connect to API");
-                ApiMsg msg = api.connect(getConnectionString(), true);
-                if (msg.isError()) {
+                ApiMsg msg =  api.connect(getConnectionString(), true);
+                if(msg.isError()) {
                     // since api.connect called with reconnect = true, it should
                     // block until msg is not error so this shouldn't happen, but
                     // log if it does.
-                    LOG.warn("Error connecting to API; will retry.  ErrorCode = {}.  ErrString = {}",
+                    LOG.error("Error connecting to Api.  ErrorCode = {}.  ErrString = {}",
                             msg.getErrorCode(), msg.getErrString());
+                    consoleManager.addLog("Error connecting to kernel", KERNEL);
                 } else {
                     consoleManager.addLog("Connected to kernel", KERNEL);
                     eventPublisher.fireConnectionEstablished();
-                    return;
                 }
             }
         });
