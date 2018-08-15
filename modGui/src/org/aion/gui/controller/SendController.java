@@ -150,7 +150,7 @@ public class SendController extends AbstractController {
                 if (account != null) {
                     sendButton.setDisable(false);
                 }
-//                transactionProcessor.processTransactionsOnReconnect();
+                transactionProcessor.processTransactionsOnReconnect();
                 break;
             case DISCONNECTED:
                 connected = false;
@@ -191,7 +191,7 @@ public class SendController extends AbstractController {
                 sendTransactionTask,
                 evt -> {
                     handleTransactionFinished(sendTransactionTask.getValue());
-                    sendButton.setDisable(true);
+                    sendButton.setDisable(false);
                 },
                 getErrorEvent(t -> Optional.ofNullable(t.getCause()).ifPresent(cause -> displayStatus(cause.getMessage(), true)), sendTransactionTask),
                 getEmptyEvent()
@@ -236,6 +236,7 @@ public class SendController extends AbstractController {
 
     private TransactionResponseDTO sendTransaction(final SendTransactionDTO sendTransactionDTO) {
         try {
+            sendButton.setDisable(true);
             return transactionProcessor.sendTransaction(sendTransactionDTO);
         } catch (ValidationException e) {
             throw new RuntimeException(e);

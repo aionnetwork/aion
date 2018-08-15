@@ -87,7 +87,6 @@ public class HistoryController extends AbstractController {
 
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd - HH.mm.ss");
 
-//    private final BlockchainConnector blockchainConnector = BlockchainConnector.getInstance();
     private final TransactionProcessor transactionProcessor;
     private final AccountManager accountManager;
     private final SyncInfoDto syncInfoDto;
