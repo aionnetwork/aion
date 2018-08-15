@@ -66,7 +66,7 @@ public class KernelConnectionTest {
         verify(api).connect(expectedConnectionString, expectedReconnect);
         verify(eventPublisher).fireConnectionEstablished();
     }
-    
+
     @Test
     public void testDisconnect() {
         when(api.isConnected()).thenReturn(true);
