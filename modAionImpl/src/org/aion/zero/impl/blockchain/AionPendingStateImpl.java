@@ -267,41 +267,28 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         backupPendingCacheAdd.clear();
         backupPendingPoolRemove.clear();
         pendingTxCache.clearCacheTxHash();
+
     }
 
-    private static AionPendingStateImpl initializeAionPendingState(
-            CfgAion _cfgAion,
-            AionRepositoryImpl _repository,
-            AionBlockchainImpl _blockchain,
-            boolean forTest) {
-        AionPendingStateImpl ps = new AionPendingStateImpl(_cfgAion, _repository);
-        ps.init(_blockchain, _cfgAion, forTest);
+    private static AionPendingStateImpl initializeAionPendingState() {
+        AionPendingStateImpl ps = new AionPendingStateImpl(AionRepositoryImpl.inst());
+        ps.init(AionBlockchainImpl.inst());
         return ps;
     }
 
     private static class Holder {
 
-        static final AionPendingStateImpl INSTANCE =
-                initializeAionPendingState(
-                        CfgAion.inst(),
-                        AionRepositoryImpl.inst(),
-                        AionBlockchainImpl.inst(),
-                        false);
+        static final AionPendingStateImpl INSTANCE = initializeAionPendingState();
     }
 
     public static AionPendingStateImpl inst() {
         return Holder.INSTANCE;
     }
 
-    public static AionPendingStateImpl createForTesting(
-            CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
-        return initializeAionPendingState(_cfgAion, _repository, _blockchain, true);
-    }
+    private AionPendingStateImpl(AionRepositoryImpl repository) {
+        this.repository = repository;
 
-    private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
-        this.repository = _repository;
-
-        this.isSeed = _cfgAion.getConsensus().isSeed();
+        this.isSeed = CfgAion.inst().getConsensus().isSeed();
 
         if (!isSeed) {
 
@@ -334,19 +321,19 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
     }
 
-    private void init(
-            final AionBlockchainImpl _blockchain, final CfgAion _cfgAion, boolean forTest) {
+    public void init(final AionBlockchainImpl blockchain) {
         if (!this.isSeed) {
-            this.blockchain = _blockchain;
+            this.blockchain = blockchain;
             this.best = new AtomicReference<>();
-            this.transactionStore = _blockchain.getTransactionStore();
+            this.transactionStore = blockchain.getTransactionStore();
 
-            this.evtMgr = _blockchain.getEventMgr();
-            this.poolBackUp = _cfgAion.getTx().getPoolBackup();
-            this.pendingTxCache = new PendingTxCache(_cfgAion.getTx().getCacheMax(), poolBackUp);
+            this.evtMgr = blockchain.getEventMgr();
+            this.poolBackUp = CfgAion.inst().getTx().getPoolBackup();
+            this.pendingTxCache = new PendingTxCache(CfgAion.inst().getTx().getCacheMax(),
+                poolBackUp);
             this.pendingState = repository.startTracking();
 
-            this.dumpPool = _cfgAion.getTx().getPoolDump();
+            this.dumpPool = CfgAion.inst().getTx().getPoolDump();
 
             ees = new EventExecuteService(1000, "EpPS", Thread.MAX_PRIORITY, LOGGER_TX);
             ees.setFilter(setEvtFilter());
@@ -370,7 +357,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 }
             }
 
-            this.bufferEnable = _cfgAion.getTx().getBuffer();
+            this.bufferEnable = CfgAion.inst().getTx().getBuffer();
             if (bufferEnable) {
                 LOGGER_TX.info("TxBuf enable!");
                 this.ex = Executors.newSingleThreadScheduledExecutor();
@@ -379,12 +366,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 this.txBuffer = Collections.synchronizedList(new ArrayList<>());
             }
 
-            if (forTest) {
-                ees = null;
-            } else {
-                ees.start(new EpPS());
-            }
+            ees.start(new EpPS());
         }
+
     }
 
     private Set<Integer> setEvtFilter() {
