@@ -277,6 +277,7 @@ public class FileDateTimeComparatorTest {
         generatedFiles.add(valid1);
         generatedFiles.add(invalid2);
 
+
         // sort
         generatedFiles.sort(COMPARE);
 
@@ -290,6 +291,49 @@ public class FileDateTimeComparatorTest {
                 String b = expectedFileNames.get(i);
                 assertThat(a, is(equalTo(b)));
                // System.out.println("Expected: " + b + "     Generated: " + a);
+            }
+        }
+    }
+
+    @Test
+    public void testInvalidTimestamp(){
+        // test that invalid timestamps are handled
+
+        // create valid file name
+        File validFile = generateFile(0, "UTC");
+        // invalid date, s: 100
+        File invalid1 = new File("UTC--2018-08-15T14:59:100.364SS--bbb");
+        // invalid date, month: 100
+        File invalid2 = new File("UTC--2018-100-15T14:59:35.364Z--bbb");
+        // invalid date, min: 100
+        File invalid3 = new File("UTC--2018-08-15T14:100:35.364Z--bbb");
+
+        List<String> expectedFileNames = new ArrayList<>();
+        expectedFileNames.add(validFile.getName());
+        expectedFileNames.add(invalid1.getName());
+        expectedFileNames.add(invalid2.getName());
+        expectedFileNames.add(invalid3.getName());
+
+        // put in random order
+        List<File> generatedFiles = new ArrayList<>();
+        generatedFiles.add(invalid1);
+        generatedFiles.add(invalid2);
+        generatedFiles.add(invalid3);
+        generatedFiles.add(validFile);
+
+        // sort
+        generatedFiles.sort(COMPARE);
+
+        // check that the sort is correct
+        System.out.println(
+                "generatedFiles size: " + generatedFiles.size() + " expectedFileName size: " + expectedFileNames.size());
+
+        for (int i = 0; i < generatedFiles.size(); i++) {
+            if (generatedFiles.get(i) != null) { // avoid null pointer exception
+                String a = generatedFiles.get(i).getName();
+                String b = expectedFileNames.get(i);
+                assertThat(a, is(equalTo(b)));
+                //System.out.println("Expected: " + b + "     Generated: " + a);
             }
         }
     }

@@ -32,12 +32,14 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class KeystoreTest {
+    private List<String> filesToRemove = new ArrayList<>();
 
     private static String randomPassword() {
         Random rand = new Random();
@@ -64,9 +66,19 @@ public class KeystoreTest {
         ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
     }
 
+    @After
+    public void clean(){
+        if(filesToRemove.size() == 0)
+            return;
+        for(int i = 0; i < filesToRemove.size(); i++){
+            cleanFiles(filesToRemove.get(i));
+            filesToRemove.remove(filesToRemove.get(i));
+        }
+        assertEquals(0, filesToRemove.size());
+    }
+
     @Test
     public void keyCreateAndRetrieve() {
-
         String password = randomPassword();
         String address = Keystore.create(password);
         assertNotNull(address);
@@ -74,7 +86,7 @@ public class KeystoreTest {
         System.out.println("new addr: " + address);
         ECKey key = Keystore.getKey(address, password);
         assertNotNull(key);
-        cleanFiles(address);
+        filesToRemove.add(address);
     }
 
     @Test
@@ -87,7 +99,7 @@ public class KeystoreTest {
         ECKey key = Keystore.getKey(address, password);
         assertNotNull(key);
         assertEquals("0x", (Keystore.create(password, key)));
-        cleanFiles(address);
+        filesToRemove.add(address);
     }
 
     @Test
@@ -99,7 +111,7 @@ public class KeystoreTest {
 
         String addr = Keystore.create(password, key);
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
-        cleanFiles(addr);
+        filesToRemove.add(addr);
     }
 
     @Test
@@ -112,7 +124,7 @@ public class KeystoreTest {
         ECKey key = Keystore.getKey(address, password);
         assertNotNull(key);
         assertTrue(Keystore.exist(address));
-        cleanFiles(address);
+        filesToRemove.add(address);
     }
 
     @Test
@@ -140,7 +152,7 @@ public class KeystoreTest {
 
         assertTrue(export.containsKey(Address.wrap(addr)));
         assertTrue(export.containsValue(ByteArrayWrapper.wrap(key.getPrivKeyBytes())));
-        cleanFiles(addr);
+        filesToRemove.add(addr);
     }
 
     @Test
@@ -168,7 +180,7 @@ public class KeystoreTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        cleanFiles(addr);
+        filesToRemove.add(addr);
     }
 
     @Test
@@ -193,7 +205,7 @@ public class KeystoreTest {
         }
 
         assertTrue(hasAddr);
-        cleanFiles(addr);
+        filesToRemove.add(addr);
     }
 
     @Test (expected = NullPointerException.class)
@@ -210,7 +222,6 @@ public class KeystoreTest {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
         File[] AllFilesInDirectory = folder.listFiles();
-        List<String> allFileNames = new ArrayList<>();
 
         // check for invalid or wrong path - should not happen
         if(AllFilesInDirectory == null)
