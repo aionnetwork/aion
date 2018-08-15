@@ -22,6 +22,8 @@
 	</path>
 
 	<path id="classpath.test">
+		<pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
+		<pathelement location="${dir.lib}/commons-codec-1.10.jar"/>
 		<pathelement location="${dir.lib}/junit_4/junit-4.12.jar" />
 		<pathelement location="${dir.lib}/hamcrest/hamcrest-all-1.3.jar" />
 		<pathelement location="${dir.lib}/mockito-core-2.21.0.jar" />
