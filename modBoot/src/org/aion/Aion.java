@@ -77,10 +77,12 @@ public class Aion {
          * return true which means should save back to xml config
          */
         if (cfg.fromXML()) {
-            cfg.toXML(new String[]{"--id=" + cfg.getId()});
+            if(args != null && args.length > 0 && !(args[0].equals("-v")||args[0].equals("--version"))) {
+                cfg.toXML(new String[]{"--id=" + cfg.getId()});
+            }
         }
 
-        // Reads CLI
+        // Reads CLI (must be after the cfg.fromXML())
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
             if (ret != 2) {
