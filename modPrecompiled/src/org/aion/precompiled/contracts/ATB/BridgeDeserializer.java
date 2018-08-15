@@ -195,9 +195,6 @@ public class BridgeDeserializer {
          * successfully parse the next meta variable (length). Since that
          * case is not handled by parseMeta().
          */
-        if (listOffset < 0 || listOffset + LIST_META > call.length) {
-            return null;
-        }
 
         final int listLength = parseMeta(call, listOffset);
         if (listLength == ERR_INT)
@@ -259,7 +256,9 @@ public class BridgeDeserializer {
                                  final int offset) {
 
         // covered by S#2, but good to have here in case (Y#3)
-        if (offset + LIST_META > call.length)
+        // check for out of bounds exceptions, each one of these is important to check since integer
+        // overflow can be taken advantage of to pass this block if one of these is omitted.
+        if ((offset < 0) || (offset > call.length) || (offset + LIST_META > call.length))
             return ERR_INT;
 
         // more minimum length checks
