@@ -195,8 +195,9 @@ public class BridgeDeserializer {
          * successfully parse the next meta variable (length). Since that
          * case is not handled by parseMeta().
          */
-        if (listOffset + LIST_META > call.length)
+        if (listOffset < 0 || listOffset + LIST_META > call.length) {
             return null;
+        }
 
         final int listLength = parseMeta(call, listOffset);
         if (listLength == ERR_INT)
@@ -206,7 +207,7 @@ public class BridgeDeserializer {
          * Covers case Y#2, if attacker tries to construct and overflow to OOM output array,
          * it will be caught here.
          */
-        int consumedLength = 0;
+        int consumedLength;
         try {
             consumedLength = Math.multiplyExact(listLength, elementLength);
         } catch (ArithmeticException e) {
@@ -233,8 +234,18 @@ public class BridgeDeserializer {
 
         final byte[][] output = new byte[listLength][];
 
+        // ensuring the range is within integer positive values
+        int start = listOffset + LIST_META;
+        if (start < 0) { // overflow
+            return null;
+        }
+        int end = start + consumedLength;
+        if (end < 0) { // overflow
+            return null;
+        }
+
         int counter = 0;
-        for (int i = listOffset + LIST_META; i < (listOffset + LIST_META) + (consumedLength); i += elementLength) {
+        for (int i = start; i < end; i += elementLength) {
             byte[] element = new byte[elementLength];
             System.arraycopy(call, i, element, 0, elementLength);
             output[counter] = element;
