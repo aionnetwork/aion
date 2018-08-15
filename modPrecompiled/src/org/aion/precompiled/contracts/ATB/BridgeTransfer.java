@@ -1,6 +1,6 @@
 package org.aion.precompiled.contracts.ATB;
 
-import org.aion.base.util.ByteUtil;
+import java.util.Arrays;
 import org.aion.precompiled.PrecompiledUtilities;
 
 import javax.annotation.Nonnull;
@@ -22,8 +22,11 @@ public class BridgeTransfer {
                    @Nonnull final byte[] recipient,
                    @Nonnull final byte[] sourceTransactionHash) {
         this.transferValue = transferValue;
-        this.recipient = recipient;
-        this.sourceTransactionHash = sourceTransactionHash;
+        this.recipient = recipient.length == 32 ? recipient : Arrays.copyOf(recipient, 32);
+        this.sourceTransactionHash =
+            sourceTransactionHash.length == 32
+                ? sourceTransactionHash
+                : Arrays.copyOf(sourceTransactionHash, 32);
     }
 
     byte[] getRecipient() {
