@@ -47,6 +47,7 @@ public final class CfgConsensusPow extends CfgConsensus {
     private final CfgEnergyStrategy cfgEnergyStrategy;
 
     CfgConsensusPow() {
+        super(ConsensusType.POW);
         this.mining = false;
         this.minerAddress = Address.ZERO_ADDRESS().toString();
         this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1); // half the available processors

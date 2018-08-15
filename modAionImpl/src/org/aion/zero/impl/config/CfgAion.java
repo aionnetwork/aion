@@ -231,6 +231,10 @@ public final class CfgAion extends Cfg {
         return shouldWriteBackToFile;
     }
 
+    public CfgConsensus.ConsensusType getConsensusType() {
+        return this.consensus.getConsensusType();
+    }
+
     @Override
     public boolean fromXML() {
         boolean shouldWriteBackToFile = false;
