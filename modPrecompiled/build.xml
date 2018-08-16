@@ -26,6 +26,7 @@
         <pathelement location="${dir.lib}/byte-buddy-1.8.17.jar"/>
         <pathelement location="${dir.lib}/byte-buddy-agent-1.8.17.jar"/>
         <pathelement location="${dir.lib}/objenesis-2.6.jar"/>
+        <pathelement location="${dir.lib}/diffutils-1.3.0.jar"/>
         <pathelement location="${dir.mod}/modMcf.jar"/>
         <pathelement location="${dir.mod}/modAionBase.jar"/>
         <pathelement location="${dir.mod}/modCrypto.jar"/>

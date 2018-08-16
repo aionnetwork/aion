@@ -313,7 +313,7 @@ public class BridgeController {
 
             // otherwise if transfer was successful
             if (result.getResultCode() == ExecutionResult.ResultCode.SUCCESS)
-                if (emitDistributed(b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue()))
+                if (!emitDistributed(b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue()))
                     return processError(ErrCode.INVALID_TRANSFER);
             results.add(result);
         }
