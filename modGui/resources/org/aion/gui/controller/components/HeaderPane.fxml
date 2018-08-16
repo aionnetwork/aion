@@ -84,8 +84,8 @@ Contributors:
         </VBox>
 
     </VBox>
-    <VBox onMouseClicked="#openAionWebSite" AnchorPane.leftAnchor="0" AnchorPane.topAnchor="0" prefWidth="100">
-        <ImageView id="logo" pickOnBounds="true" preserveRatio="true" fitHeight="95">
+    <VBox onMouseClicked="#openAionWebSite" AnchorPane.leftAnchor="0" AnchorPane.topAnchor="5" prefWidth="100">
+        <ImageView id="logo" pickOnBounds="true" preserveRatio="true" fitHeight="75">
             <Image url="@icons/aion_logo.png"/>
         </ImageView>
     </VBox>

@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -102,16 +103,24 @@ public class TransactionProcessor extends AbstractAionApiClient {
     }
 
     public Set<TransactionDTO> getLatestTransactions(final String address) {
-        backgroundExecutor.submit(this::processTransactionsFromOldestRegisteredSafeBlock);
+        try {
+            backgroundExecutor.submit(this::processTransactionsFromOldestRegisteredSafeBlock).get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
         // TODO: consider waiting on the submit Future before returning
         return accountManager.getTransactions(address);
     }
 
-    public void processTransactionsOnReconnect() {
-        final Set<String> addresses = accountManager.getAddresses();
-        final BlockDTO oldestSafeBlock = accountManager.getOldestSafeBlock(addresses, i -> {
+    public void processTransactionsOnReconnectAsync() {
+        backgroundExecutor.submit(() -> {
+            final Set<String> addresses = accountManager.getAddresses();
+            final BlockDTO oldestSafeBlock = accountManager.getOldestSafeBlock(addresses, i -> {
+            });
+            processTransactionsFromBlock(oldestSafeBlock, addresses);
         });
-        processTransactionsFromBlock(oldestSafeBlock, addresses);
     }
 
     private void processTransactionsFromBlock(final BlockDTO lastSafeBlock, final Set<String> addresses) {

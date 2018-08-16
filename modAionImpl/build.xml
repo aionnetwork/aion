@@ -21,8 +21,8 @@
         <pathelement location="${dir.lib}/mockito-core-2.21.0.jar"/>
         <pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
         <pathelement location="${dir.lib}/libnsc.jar"/>
-        <pathelement location="${dir.lib}/truth-0.36.jar"/>
-        <pathelement location="${dir.lib}/guava-19.0.jar"/>
+        <pathelement location="${dir.lib}/truth-0.42.jar"/>
+        <pathelement location="${dir.lib}/guava-25.1-jre.jar"/>
         <pathelement location="${dir.lib}/byte-buddy-1.8.17.jar"/>
         <pathelement location="${dir.lib}/byte-buddy-agent-1.8.17.jar"/>
         <pathelement location="${dir.lib}/objenesis-2.6.jar"/>
@@ -158,13 +158,13 @@
                 <pathelement location="${dir.mod}/modDbImpl.jar"/>
                 <pathelement location="${dir.mod}/modAion.jar"/>
                 <pathelement location="${dir.mod}/modTxPool.jar"/>
-	            <pathelement location="${dir.mod}/modVM.jar"/>
+	        <pathelement location="${dir.mod}/modVM.jar"/>
                 <pathelement location="${dir.mod}/modFastVM.jar"/>
                 <pathelement location="${dir.mod}/modPrecompiled.jar"/>
                 <pathelement location="${dir.lib}/libJson.jar"/>
                 <pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
                 <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
-                <pathelement location="${dir.lib}/guava-19.0.jar"/>
+                <pathelement location="${dir.lib}/guava-25.1-jre.jar"/>
                 <pathelement location="${dir.lib}/libnsc.jar"/>
                 <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
             </modulepath>

@@ -23,7 +23,7 @@
 		<pathelement location="${dir.libfile}/commons-codec-1.10.jar" />
 		<pathelement location="${dir.libfile}/commons-collections4-4.0.jar" />
 		<pathelement location="${dir.libfile}/commons-lang3-3.4.jar" />
-		<pathelement location="${dir.libfile}/guava-19.0.jar" />
+		<pathelement location="${dir.libfile}/guava-25.1-jre.jar" />
 		<pathelement location="${dir.libfile}/h2-mvstore-1.4.196.jar" />
 		<pathelement location="${dir.libfile}/jctools-core-1.2.1.jar" />
 		<pathelement location="${dir.libfile}/leveldb-api-0.9.jar" />
@@ -64,7 +64,7 @@
 		<pathelement location="${dir.libfile}/junit_4/junit-4.12.jar" />
 		<pathelement location="${dir.libfile}/junit_4/system-rules-1.16.0.jar" />
 		<pathelement location="${dir.libfile}/mockito-core-2.21.0.jar" />
-		<pathelement location="${dir.libfile}/truth-0.36.jar" />
+		<pathelement location="${dir.libfile}/truth-0.42.jar" />
 		<pathelement location="${dir.libfile}/byte-buddy-1.8.17.jar" />
 		<pathelement location="${dir.libfile}/byte-buddy-agent-1.8.17.jar" />
 		<pathelement location="${dir.libfile}/objenesis-2.6.jar" />
@@ -472,6 +472,10 @@
                         </tarfileset>
                         <tarfileset dir="${dir.pack}/clientAPI" filemode="755" prefix="${project.name}/clientAPI">
                                 <include name="**" />
+                        </tarfileset>
+                        <tarfileset dir="${dir.pack}/script" filemode="755" prefix="${project.name}/script">
+                                <include name="generateSslCert.sh" />
+                                <include name="nohup_wrapper.sh" />
                         </tarfileset>
 		</tar>
 		<exec executable="/bin/bash">

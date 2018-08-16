@@ -29,6 +29,11 @@ public class EventPublisher {
         }
     }
 
+    public void fireUnexpectedApiDisconnection() {
+        EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS)
+                .post(new UnexpectedApiDisconnectedEvent());
+    }
+
     public void fireAccountLocked(final AccountDTO account) {
         if (account != null) {
             EventBusRegistry.INSTANCE.getBus(AbstractAccountEvent.ID).post(new AccountEvent(AbstractAccountEvent.Type.LOCKED, account));
@@ -57,11 +62,6 @@ public class EventPublisher {
     public static void fireConsoleLogged(final String message) {
         EventBusRegistry.INSTANCE.getBus(UiMessageEvent.ID)
                 .post(new UiMessageEvent(UiMessageEvent.Type.CONSOLE_LOG, message));
-    }
-
-    public static void fireUnexpectedApiDisconnection() {
-        EventBusRegistry.INSTANCE.getBus(EventBusRegistry.KERNEL_BUS)
-                .post(new UnexpectedApiDisconnectedEvent());
     }
 
     public void fireDisconnected() {
