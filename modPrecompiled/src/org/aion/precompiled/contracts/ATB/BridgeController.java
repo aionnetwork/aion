@@ -313,7 +313,8 @@ public class BridgeController {
 
             // otherwise if transfer was successful
             if (result.getResultCode() == ExecutionResult.ResultCode.SUCCESS)
-                emitDistributed(b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue());
+                if (emitDistributed(b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue()))
+                    return processError(ErrCode.INVALID_TRANSFER);
             results.add(result);
         }
         this.connector.setBundle(hash, transactionHash);
@@ -341,15 +342,20 @@ public class BridgeController {
     }
 
     // events
-    private void emitDistributed(@Nonnull final byte[] sourceTransactionHash,
+    private boolean emitDistributed(@Nonnull final byte[] sourceTransactionHash,
                                  @Nonnull final byte[] recipient,
                                  @Nonnull final BigInteger value) {
+        byte[] paddedValue = PrecompiledUtilities.pad(value.toByteArray(), 32);
+        if (paddedValue == null)
+            return false;
+
         List<byte[]> topics = Arrays.asList(
                 BridgeEventSig.DISTRIBUTED.getHashed(),
                 sourceTransactionHash,
                 recipient,
-                PrecompiledUtilities.pad(value.toByteArray(), 32));
+                paddedValue);
         addLog(topics);
+        return true;
     }
 
     private void emitProcessedBundle(@Nonnull final byte[] sourceBlockHash,
