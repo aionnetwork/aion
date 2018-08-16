@@ -50,3 +50,7 @@ native/linux/solidity
 lib/libJson.jar
 lib/libnsc.jar
 lib/libnzmq.jar
+
+# test folder
+test_db/
+tmp/

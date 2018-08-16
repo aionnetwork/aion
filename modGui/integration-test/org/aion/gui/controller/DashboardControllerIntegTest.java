@@ -165,4 +165,29 @@ public class DashboardControllerIntegTest extends ApplicationTest {
         verify(kernelConnection).disconnect();
         verify(kernelLauncher).cleanUpDeadProcess();
     }
+
+    @Test
+    public void testUiTimerTickWhenNotConnected() throws Exception {
+        String labelInitialValue = "--"; // as defined in the .FXML of Dashboard
+
+        KernelInstanceId kernelInstanceId = new KernelInstanceId(123);
+        when(kernelLauncher.getLaunchedInstance()).thenReturn(kernelInstanceId);
+        when(healthChecker.checkIfKernelRunning(123)).thenReturn(false);
+
+        when(generalKernelInfoRetriever.getPeerCount()).thenReturn(null);
+        when(syncInfoDto.getNetworkBestBlkNumber()).thenReturn(0l);
+        when(syncInfoDto.getChainBestBlkNumber()).thenReturn(0l);
+        when(generalKernelInfoRetriever.isMining()).thenReturn(null);
+
+        ebr.getBus(RefreshEvent.ID).post(new RefreshEvent(RefreshEvent.Type.TIMER));
+        try {
+            controller.getExecutor().awaitTermination(1l, TimeUnit.SECONDS);
+        } catch (InterruptedException ie) {
+            fail("Api call took too long.");
+        }
+        WaitForAsyncUtils.waitForFxEvents();
+        verifyThat("#numPeersLabel", LabeledMatchers.hasText(labelInitialValue)); // should not have been updated
+        verifyThat("#blocksLabel", LabeledMatchers.hasText("0/0 total blocks"));
+        verifyThat("#isMining", LabeledMatchers.hasText(labelInitialValue)); // should not have been updated
+    }
 }
