@@ -35,7 +35,7 @@ public class SimpleApiMsgErrorHandler implements IApiMsgErrorHandler {
 
     private void notifyIfApiNotConnected(ApiMsg msg) {
         if(API_NOT_CONNECTED_ERROR == (long)msg.getErrorCode()) {
-            EventPublisher.fireUnexpectedApiDisconnection();
+            new EventPublisher().fireUnexpectedApiDisconnection();
         }
     }
 }
