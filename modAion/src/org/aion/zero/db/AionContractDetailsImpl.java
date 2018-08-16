@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,12 +17,9 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.zero.db;
 
 import org.aion.base.db.IByteArrayKeyValueStore;
@@ -110,11 +107,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
     }
 
     /**
-     * Returns a DataWord whose 16 bytes consists of all zeros if key is not in the database.
-     * Otherwise returns the IDataWord value corresponding to key in the database.
+     * Returns the value associated with key if it exists, otherwise returns a DataWord consisting
+     * entirely of zero bytes.
      *
      * @param key The key to query.
-     * @return the corresponding value or a zero DataWord if no such value.
+     * @return the corresponding value or a zero-byte DataWord if no such value.
      */
     @Override
     public IDataWord get(IDataWord key) {
@@ -130,11 +127,21 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         return result;
     }
 
+    /**
+     * Returns the storage hash.
+     *
+     * @return the storage hash.
+     */
     @Override
     public byte[] getStorageHash() {
         return storageTrie.getRootHash();
     }
 
+    /**
+     * Decodes an AionContractDetailsImpl object from the RLP encoding rlpCode.
+     *
+     * @param rlpCode The encoding to decode.
+     */
     @Override
     public void decode(byte[] rlpCode) {
         RLPList data = RLP.decode2(rlpCode);
@@ -178,6 +185,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         this.rlpEncoded = rlpCode;
     }
 
+    /**
+     * Returns an rlp encoding of this AionContractDetailsImpl object.
+     *
+     * @return an rlp encoding of this.
+     */
     @Override
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
@@ -199,6 +211,12 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         return rlpEncoded;
     }
 
+    /**
+     * Returns a mapping of all the key-value pairs who have keys in the collection keys.
+     *
+     * @param keys The keys to query for.
+     * @return The associated mappings.
+     */
     @Override
     public Map<IDataWord, IDataWord> getStorage(Collection<IDataWord> keys) {
         Map<IDataWord, IDataWord> storage = new HashMap<>();
@@ -219,6 +237,13 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         return storage;
     }
 
+    /**
+     * Sets the storage to contain the specified keys and values. This method creates pairings of
+     * the keys and values by mapping the i'th key in storageKeys to the i'th value in storageValues.
+     *
+     * @param storageKeys The keys.
+     * @param storageValues The values.
+     */
     @Override
     public void setStorage(List<IDataWord> storageKeys, List<IDataWord> storageValues) {
         for (int i = 0; i < storageKeys.size(); ++i) {
@@ -226,6 +251,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         }
     }
 
+    /**
+     * Sets the storage to contain the specified key-value mappings.
+     *
+     * @param storage The specified mappings.
+     */
     @Override
     public void setStorage(Map<IDataWord, IDataWord> storage) {
         for (IDataWord key : storage.keySet()) {
@@ -233,17 +263,30 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         }
     }
 
+    /**
+     * Get the address associated with this AionContractDetailsImpl.
+     *
+     * @return the associated address.
+     */
     @Override
     public Address getAddress() {
         return address;
     }
 
+    /**
+     * Sets the associated address to address.
+     *
+     * @param address The address to set.
+     */
     @Override
     public void setAddress(Address address) {
         this.address = address;
         this.rlpEncoded = null;
     }
 
+    /**
+     * Syncs the storage trie.
+     */
     @Override
     public void syncStorage() {
         if (externalStorage) {
@@ -251,10 +294,20 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         }
     }
 
+    /**
+     * Sets the data source to dataSource.
+     *
+     * @param dataSource The new dataSource.
+     */
     public void setDataSource(IByteArrayKeyValueStore dataSource) {
         this.dataSource = dataSource;
     }
 
+    /**
+     * Returns the external storage data source.
+     *
+     * @return the external storage data source.
+     */
     private IByteArrayKeyValueStore getExternalStorageDataSource() {
         if (externalStorageDataSource == null) {
             externalStorageDataSource = new XorDataSource(dataSource,
@@ -263,12 +316,24 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         return externalStorageDataSource;
     }
 
+    /**
+     * Sets the external storage data source to dataSource.
+     *
+     * @param dataSource The new data source.
+     */
     public void setExternalStorageDataSource(IByteArrayKeyValueStore dataSource) {
         this.externalStorageDataSource = dataSource;
         this.externalStorage = true;
         this.storageTrie = new SecureTrie(getExternalStorageDataSource());
     }
 
+    /**
+     * Returns an AionContractDetailsImpl object pertaining to a specific point in time given by the
+     * root hash hash.
+     *
+     * @param hash The root hash to search for.
+     * @return the specified AionContractDetailsImpl.
+     */
     @Override
     public IContractDetails<IDataWord> getSnapshotTo(byte[] hash) {
 
@@ -288,4 +353,5 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
 
         return details;
     }
+
 }
