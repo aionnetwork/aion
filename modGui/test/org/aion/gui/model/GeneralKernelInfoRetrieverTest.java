@@ -29,7 +29,9 @@ public class GeneralKernelInfoRetrieverTest {
     @Test
     public void testIsMining() throws Exception {
         KernelConnection kc = mock(KernelConnection.class);
+        when(kc.isConnected()).thenReturn(true);
         IAionAPI api = mock(IAionAPI.class);
+        when(api.isConnected()).thenReturn(true);
         when(kc.getApi()).thenReturn(api);
         IMine mine = mock(IMine.class);
         when(api.getMine()).thenReturn(mine);
@@ -45,7 +47,9 @@ public class GeneralKernelInfoRetrieverTest {
     @Test(expected = ApiDataRetrievalException.class)
     public void testIsMiningReturnedError() throws Exception {
         KernelConnection kc = mock(KernelConnection.class);
+        when(kc.isConnected()).thenReturn(true);
         IAionAPI api = mock(IAionAPI.class);
+        when(api.isConnected()).thenReturn(true);
         when(kc.getApi()).thenReturn(api);
         IMine mine = mock(IMine.class);
         when(api.getMine()).thenReturn(mine);
@@ -59,8 +63,10 @@ public class GeneralKernelInfoRetrieverTest {
         int peerCount = 13;
 
         KernelConnection kc = mock(KernelConnection.class);
+        when(kc.isConnected()).thenReturn(true);
         IAionAPI api = mock(IAionAPI.class);
         when(kc.getApi()).thenReturn(api);
+        when(api.isConnected()).thenReturn(true);
         INet net = mock(INet.class);
         when(api.getNet()).thenReturn(net);
         ApiMsg msg = mock(ApiMsg.class);
@@ -80,7 +86,9 @@ public class GeneralKernelInfoRetrieverTest {
     @Test(expected = ApiDataRetrievalException.class)
     public void testGetPeerCountReturnedError() throws Exception {
         KernelConnection kc = mock(KernelConnection.class);
+        when(kc.isConnected()).thenReturn(true);
         IAionAPI api = mock(IAionAPI.class);
+        when(api.isConnected()).thenReturn(true);
         when(kc.getApi()).thenReturn(api);
         INet net = mock(INet.class);
         when(api.getNet()).thenReturn(net);

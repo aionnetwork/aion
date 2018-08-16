@@ -24,6 +24,7 @@ import org.aion.wallet.console.ConsoleManager;
 import org.slf4j.Logger;
 
 import java.net.URL;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class DashboardController extends AbstractController {
@@ -81,7 +82,11 @@ public class DashboardController extends AbstractController {
         final Task<Integer> getPeerCountTask = getApiTask(o -> generalKernelInfoRetriever.getPeerCount(), null);
         runApiTask(
                 getPeerCountTask,
-                evt -> Platform.runLater(() -> numPeersLabel.setText(String.valueOf(getPeerCountTask.getValue()))),
+                evt -> Platform.runLater(() -> {
+                    if(getPeerCountTask.getValue() != null ) {
+                        numPeersLabel.setText(String.valueOf(getPeerCountTask.getValue()));
+                    }
+                }),
                 getErrorEvent(throwable -> {}, getPeerCountTask),
                 getEmptyEvent()
         );
@@ -97,7 +102,11 @@ public class DashboardController extends AbstractController {
         Task<Boolean> getMiningStatusTask = getApiTask(o -> generalKernelInfoRetriever.isMining(), null);
         runApiTask(
                 getMiningStatusTask,
-                evt -> Platform.runLater(() -> isMining.setText(String.valueOf(getMiningStatusTask.getValue()))),
+                evt -> Platform.runLater(() -> {
+                    if(getMiningStatusTask.getValue() != null) {
+                        isMining.setText(String.valueOf(getMiningStatusTask.getValue()));
+                    }
+                }),
                 getErrorEvent(throwable -> {}, getSyncInfoTask),
                 getEmptyEvent()
         );
