@@ -304,7 +304,10 @@ public class AccountManagerTest {
 
         // get a list of the files needed to be deleted, check the ending of file names with corresponding addresses
         for(String name: allFileNames){
-            String ending = name.substring(name.length()-64);
+            String ending = "";
+            if (name.length() > 64) {
+               ending = name.substring(name.length()-64);
+            }
 
             if(ending.equals(address1) || ending.equals(address2) || ending.equals(address3)) {
                 filesToBeDeleted.add(KEYSTORE_PATH + "/"+ name);

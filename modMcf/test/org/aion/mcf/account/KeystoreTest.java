@@ -229,7 +229,11 @@ public class KeystoreTest {
         
 
         for (File file: AllFilesInDirectory){
-            String ending = file.getName().substring(file.getName().length()-64);
+            String ending = "";
+            if (file.getName().length() > 64) {
+                ending = file.getName().substring(file.getName().length()-64);
+            }
+            
             if(ending.equals(address.substring(2))){
                 File f = new File(KEYSTORE_PATH + "/"+ file.getName());
                 f.delete();
