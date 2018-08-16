@@ -61,7 +61,7 @@ public class ContractFactory {
 
         switch (context.address().toString()) {
             case TOTAL_CURRENCY:
-                return new TotalCurrencyContract(track, context.caller(), Address.wrap(OWNER));
+                return new TotalCurrencyContract(track, context.sender(), Address.wrap(OWNER));
             case TOKEN_BRIDGE:
                 TokenBridgeContract contract = new TokenBridgeContract(context,
                         track, Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER), Address.wrap(TOKEN_BRIDGE));

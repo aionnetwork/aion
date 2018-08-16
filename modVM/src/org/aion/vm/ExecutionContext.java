@@ -39,9 +39,10 @@ public class ExecutionContext {
     public static int CREATE = 3;
 
     private ExecutionHelper helper;
-    private Address address;
     private Address origin;
-    private Address caller;
+
+    public  Address address;
+     public Address sender;
     private Address blockCoinbase;
     private DataWord nrgPrice;
     private DataWord callValue;
@@ -60,9 +61,9 @@ public class ExecutionContext {
      * Creates a VM execution context.
      *
      * @param txHash The transaction hash
-     * @param address The transaction address.
+     * @param destination The transaction address.
      * @param origin The sender of the original transaction.
-     * @param caller The transaction caller.
+     * @param sender The transaction caller.
      * @param nrgPrice The nrg price in current environment.
      * @param nrgLimit The nrg limit in current environment.
      * @param callValue The deposited value by instruction/trannsaction.
@@ -78,16 +79,16 @@ public class ExecutionContext {
      * @throws IllegalArgumentException if any numeric quantities are negative or txHash is not
      * length 32.
      */
-    public ExecutionContext(byte[] txHash, Address address, Address origin, Address caller,
+    public ExecutionContext(byte[] txHash, Address destination, Address origin, Address sender,
         DataWord nrgPrice, long nrgLimit, DataWord callValue, byte[] callData, int depth, int kind,
         int flags, Address blockCoinbase, long blockNumber, long blockTimestamp, long blockNrgLimit,
         DataWord blockDifficulty) {
 
         super();
 
-        this.address = address;
+        this.address = destination;
         this.origin = origin;
-        this.caller = caller;
+        this.sender = sender;
         this.nrgPrice = nrgPrice;
         this.nrgLimit = nrgLimit;
         this.callValue = callValue;
@@ -120,7 +121,7 @@ public class ExecutionContext {
         buffer.order(ByteOrder.BIG_ENDIAN);
         buffer.put(address.toBytes());
         buffer.put(origin.toBytes());
-        buffer.put(caller.toBytes());
+        buffer.put(sender.toBytes());
         buffer.put(nrgPrice.getData());
         buffer.putLong(nrgLimit);
         buffer.put(callValue.getData());
@@ -161,8 +162,8 @@ public class ExecutionContext {
     /**
      * @return the transaction caller.
      */
-    public Address caller() {
-        return caller;
+    public Address sender() {
+        return sender;
     }
 
     /**
@@ -259,10 +260,10 @@ public class ExecutionContext {
     /**
      * Sets the transaction address to address.
      *
-     * @param address The new address.
+     * @param destination The new address.
      */
-    public void setAddress(Address address) {
-        this.address = address;
+    public void setDestination(Address destination) {
+        this.address = destination;
     }
 
     /**
