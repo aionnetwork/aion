@@ -90,16 +90,28 @@ public class Cli {
                     break;
                 case "-a":
 
-                    // Switches datadir && network
-                    if(args.length > 2 && (args[2].equals("-d")||args[2].equals("-n")||args[2].equals("--datadir")||args[2].equals("--network"))) {
-                        String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-                        call(newArgs, cfg);
-                    }
+                    int index = 0;
+                    boolean multi = false;
 
                     if (args.length < 2) {
                         printHelp();
                         return 1;
+                    } else {
+                        while (index < args.length) {
+                            if(args[index].equals("-d")||args[index].equals("-n")||args[index].equals("--datadir")||args[index].equals("--network")) {
+                                multi = true;
+                                break;
+                            }
+                            index++;
+                        }
                     }
+
+                    // Switches datadir && network
+                    if(multi) {
+                        String[] newArgs = Arrays.copyOfRange(args, index, args.length);
+                        call(newArgs, cfg);
+                    }
+
 
                     switch (args[1]) {
                         case "create":

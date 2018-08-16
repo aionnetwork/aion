@@ -3,6 +3,8 @@ package org.aion.cli;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.aion.mcf.account.Keystore;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
@@ -12,6 +14,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
@@ -26,6 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+@RunWith(JUnitParamsRunner.class)
 public class CliTest {
 
     private static final Cli cli = Mockito.spy(new Cli());
@@ -270,7 +274,7 @@ public class CliTest {
     }
 
     @Test
-    public void testMulti() {
+    public void testMultiNetworkDatadir() {
 
         final String[][] multiArgs = new String[][] {
                 { "-d" , "aaaaaaaa"     , "-n" , "mainnet"  },          // New network
@@ -333,6 +337,102 @@ public class CliTest {
         assertEquals(1, cli.call(multiArgs[7], cfg));
         assertEquals(1, cli.call(multiArgs[8], cfg));
     }
+
+    // The following tests do not have assert; they are only to check which arguments work with multi CLI
+    private String[] option1 = new String[] {
+            "-h", "-i", "-v"
+    };
+
+    private String[][] option2 = new String[][] {
+            { "-a", "create" },
+            { "-a", "list" },
+            { "-s", "create" },
+            { "-r", "100" },
+            { "-c", "conquest" },
+            { "-n", "conquest" },
+            { "-d", "test_db" },
+    };
+
+    private String[][] option3 = new String[][] {
+            { "-a", "export", "9aabf5b86690ca4cae3fada8c72b280c4b9302dd8dd5e17bd788f241d7e3045c" },
+            { "-a", "import", "ab5e32b3180abc5251420aecf1cd4ed5f6014757dbdcf595d5ddf907a43ebd4af2d9cac934c028a26a681fe2127d0b602496834d7cfddd0db8a7a45079428525" },
+    };
+
+    /**
+     * @return parameters for testing
+     *         {@link #testMultiFuzz12(String, String[])}
+     */
+    @SuppressWarnings("unused")
+    private Object arg12Parameters() {
+        Object[] parameters = new Object[option1.length * option2.length];
+        int index = 0;
+        for (String arg1 : option1) {
+            for (String[] arg2 : option2) {
+                parameters[index] = new Object[]{arg1, arg2};
+                index++;
+            }
+        }
+        return parameters;
+    }
+
+    @Test
+    @Parameters(method = "arg12Parameters")
+    public void testMultiFuzz12(String arg1, String[] arg2) {
+        System.out.println("\nTest Arguments: "+arg1+" "+arg2[0]+" "+arg2[1]);
+        String[] args12 = { arg1, arg2[0], arg2[1] };
+        cli.call(args12, cfg);
+    }
+
+    /**
+     * @return parameters for testing
+     *         {@link #testMultiFuzz23(String[], String[])}
+     */
+    @SuppressWarnings("unused")
+    private Object arg23Parameters() {
+        Object[] parameters = new Object[option2.length * option3.length];
+        int index = 0;
+        for (String[] arg2 : option2) {
+            for (String[] arg3 : option3) {
+                parameters[index] = new Object[]{arg2, arg3};
+                index++;
+            }
+        }
+        return parameters;
+    }
+
+    @Test
+    @Parameters(method = "arg23Parameters")
+    public void testMultiFuzz23(String[] arg2, String[] arg3) {
+        System.out.println( "\nTest Arguments: "+arg2[0]+" "+arg2[1]+" "+arg3[0]+" "+arg3[1]+" "+arg3[2]+"\n");
+        String[] args23 = { arg2[0], arg2[1], arg3[0], arg3[1], arg3[2] };
+        cli.call(args23, cfg);
+    }
+
+    /**
+     * @return parameters for testing
+     *         {@link #testMultiFuzz31(String[], String)}
+     */
+    @SuppressWarnings("unused")
+    private Object arg31Parameters() {
+        Object[] parameters = new Object[option3.length * option1.length];
+        int index = 0;
+        for (String[] arg3 : option3) {
+            for (String arg1 : option1) {
+                parameters[index] = new Object[]{arg3, arg1};
+                index++;
+            }
+        }
+        return parameters;
+    }
+
+    @Test
+    @Parameters(method = "arg31Parameters")
+    public void testMultiFuzz31(String[] arg3, String arg1) {
+        String[] args31 = { arg3[0], arg3[1], arg3[2], arg1 };
+        System.out.println( "\nTest Arguments: "+arg3[0]+" "+arg3[1]+" "+arg3[2]+" "+arg1+"\n");
+        cli.call(args31, cfg);
+    }
+
 
     private void printPaths(String BASE_PATH, Cfg cfg) {
         System.out.println("\n-------------------------------- USED PATHS --------------------------------" +
