@@ -31,25 +31,25 @@ package org.aion.base.util;
  * So a single division and subtraction and 2 shifts are all that are needed, rendering suitable
  * for a simple microcontroller.
  */
-public class MAFast {
-    private double MAStar; // MA*[i-1]
-    private volatile double MA; // MA[i]
-    private int N;
-
-    public MAFast(int N) {
-        this.N = N;
-        this.MAStar = 0D;
-        this.MA = 0D;
-    }
-
-    public synchronized double compute(int X) { // X[i]
-        double MAStar_i = MAStar + X + (MAStar / N);
-        MA = MAStar_i/N;
-        MAStar = MAStar_i;
-        return MA;
-    }
-
-    public double get() {
-        return MA;
-    }
-}
+//public class MAFast {
+//    private double MAStar; // MA*[i-1]
+//    private volatile double MA; // MA[i]
+//    private int N;
+//
+//    public MAFast(int N) {
+//        this.N = N;
+//        this.MAStar = 0D;
+//        this.MA = 0D;
+//    }
+//
+//    public synchronized double compute(int X) { // X[i]
+//        double MAStar_i = MAStar + X + (MAStar / N);
+//        MA = MAStar_i/N;
+//        MAStar = MAStar_i;
+//        return MA;
+//    }
+//
+//    public double get() {
+//        return MA;
+//    }
+//}

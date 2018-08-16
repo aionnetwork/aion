@@ -28,6 +28,7 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.AbstractRepositoryCache;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -71,7 +72,6 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                     cleanedCacheAccounts.put(entry.getKey(), entry.getValue());
                 }
             }
-
             // determine which contracts should get stored
             for (Map.Entry<Address, IContractDetails<IDataWord>> entry : cachedDetails.entrySet()) {
                 IContractDetails<IDataWord> ctd = entry.getValue();
@@ -95,7 +95,6 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
             }
 
             repository.updateBatch(cleanedCacheAccounts, cachedDetails);
-
             cachedAccounts.clear();
             cachedDetails.clear();
         } finally {
@@ -104,7 +103,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     @Override
-    public void updateBatch(Map<Address, AccountState> accounts, Map<Address, IContractDetails<IDataWord>> details) {
+    public void updateBatch(Map<Address, AccountState> accounts,final Map<Address, IContractDetails<IDataWord>> details) {
         fullyWriteLock();
         try {
 
@@ -116,10 +115,11 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                 ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctdEntry.getValue();
                 if (contractDetailsCache.origContract != null
                         && !(contractDetailsCache.origContract instanceof AionContractDetailsImpl)) {
-                    // TODO: what's the purpose of this implementation?
-                    cachedDetails.put(ctdEntry.getKey(), contractDetailsCache.origContract);
+                    // Copying the parent because contract details changes were pushed to the parent in previous method (flush)
+                    cachedDetails.put(ctdEntry.getKey(), ContractDetailsCacheImpl.copy((ContractDetailsCacheImpl) contractDetailsCache.origContract));
                 } else {
-                    cachedDetails.put(ctdEntry.getKey(), contractDetailsCache);
+                    // Either no parent or we have Repo's AionContractDetailsImpl, which should be flushed through RepoImpl
+                    cachedDetails.put(ctdEntry.getKey(), ContractDetailsCacheImpl.copy(contractDetailsCache));
                 }
             }
         } finally {

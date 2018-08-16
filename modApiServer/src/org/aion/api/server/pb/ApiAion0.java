@@ -665,7 +665,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         Message.rsp_compile.Builder b = Message.rsp_compile.newBuilder();
 
                         for (Entry<String, CompiledContr> entry : _contrs.entrySet()) {
-                            if (entry.getKey().contains("AionCompileError")) {
+                            if (entry.getKey().contains("compile-error")) {
                                 byte[] retHeader =
                                     ApiUtil.toReturnHeader(
                                         getApiVersion(),
