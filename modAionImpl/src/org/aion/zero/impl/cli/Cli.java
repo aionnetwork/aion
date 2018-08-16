@@ -251,7 +251,7 @@ public class Cli {
                                 }
 
                                 // -n [network] -d [directory]
-                                else if (isValid(args[3])) {
+                                else if ((args[2].equals("-d")||args[2].equals("--datadir")) && isValid(args[3])) {
 
                                     CfgAion.setNetwork(net.toString());
                                     BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
@@ -261,6 +261,11 @@ public class Cli {
                                     String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
                                     call(newArgs, cfg);
                                     return 2;
+
+                                } else if (!(args[2].equals("-d")||args[2].equals("--datadir"))) {
+                                    System.out.println("\nInvalid multi arguments!\n");
+                                    printHelp();
+                                    return 1;
 
                                 } else {
                                     System.out.println("\nInvalid datadir selected!");
@@ -311,6 +316,11 @@ public class Cli {
                             cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
                             Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
                             return 2;
+
+                        } else if (!(args[2].equals("-n")||args[2].equals("--network"))) {
+                            System.out.println("\nInvalid multi arguments!\n");
+                            printHelp();
+                            return 1;
 
                         } else {
                             System.out.println("\nInvalid network selected!");
