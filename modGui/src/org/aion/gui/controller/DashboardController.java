@@ -24,7 +24,6 @@ import org.aion.wallet.console.ConsoleManager;
 import org.slf4j.Logger;
 
 import java.net.URL;
-import java.util.Optional;
 import java.util.ResourceBundle;
 
 public class DashboardController extends AbstractController {
