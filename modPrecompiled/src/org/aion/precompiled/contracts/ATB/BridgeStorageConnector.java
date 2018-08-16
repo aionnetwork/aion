@@ -108,9 +108,9 @@ public class BridgeStorageConnector {
         this.setDWORD(S_OFFSET.NEW_OWNER.offset, address);
     }
 
+
     public byte[] getNewOwner() {
-        byte[] ret = this.getDWORD(S_OFFSET.NEW_OWNER.offset);
-        return BridgeUtilities.getAddress(ret);
+        return this.getDWORD(S_OFFSET.NEW_OWNER.offset);
     }
 
     public void setRelayer(@Nonnull final byte[] address) {
@@ -119,8 +119,7 @@ public class BridgeStorageConnector {
     }
 
     public byte[] getRelayer() {
-        byte[] ret = this.getDWORD(S_OFFSET.RELAYER.offset);
-        return BridgeUtilities.getAddress(ret);
+        return this.getDWORD(S_OFFSET.RELAYER.offset);
     }
 
     public void setMemberCount(int amount) {
