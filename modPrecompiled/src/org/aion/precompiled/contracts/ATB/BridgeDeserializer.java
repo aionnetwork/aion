@@ -48,9 +48,7 @@ public class BridgeDeserializer {
      */
     static byte[] parseAddressFromCall(@Nonnull final byte[] call) {
         byte[] address = parseDwordFromCall(call);
-        if (address == null || !checkAddressValidity(address))
-            return null;
-        return address;
+        return isInvalidAddress(address) ? null : address;
     }
 
     /**
@@ -79,7 +77,7 @@ public class BridgeDeserializer {
         // considered a valid address in this contract please see the function
         // below, note the implications with regards to the bridge design
         for (final byte[] l : addressList) {
-            if (!checkAddressValidity(l))
+            if (isInvalidAddress(l))
                 return null;
         }
         return addressList;
@@ -283,21 +281,17 @@ public class BridgeDeserializer {
         }
     }
 
-    private static byte ADDRESS_HEADER = ByteUtil.hexStringToBytes("0xa0")[0];
+    private static final byte ADDRESS_HEADER = ByteUtil.hexStringToBytes("0xa0")[0];
 
     /**
      * @implNote something interesting here: enforcing 0xa0 in our address checks
      * prevents people from sending transactions to random addresses (that do not contain
-     * the header), not sure if this will cause some unintended consquences.
+     * the header), not sure if this will cause some unintended consequences.
      *
-     * @param address
-     * @return {@code true} if address valid, {@code false} otherwise
+     * @param address the address checked for validity
+     * @return {@code true} if address invalid, {@code false} otherwise
      */
-    private static boolean checkAddressValidity(byte[] address) {
-        if (address.length != 32)
-            return false;
-        if (address[0] != ADDRESS_HEADER)
-            return false;
-        return true;
+    private static boolean isInvalidAddress(byte[] address) {
+        return address == null || address.length != 32 || address[0] != ADDRESS_HEADER;
     }
 }
