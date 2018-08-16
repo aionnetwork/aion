@@ -194,7 +194,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         // throw new RuntimeException("should never reach here");
     }
 
-    private static ExecutionResult THROW =
+    private static final ExecutionResult THROW =
             new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
     private ExecutionResult fail() {
         this.context.helper().rejectInternalTransactions();
@@ -237,7 +237,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
     /**
      * Performs a transfer of value from one account to another, using a method that
-     * mimicks to the best of it's ability the {@code CALL} opcode. There are some
+     * mimics to the best of it's ability the {@code CALL} opcode. There are some
      * assumptions that become important for any caller to know:
      *
      * @implNote this method will check that the recipient account has no code. This

@@ -28,7 +28,7 @@ import org.aion.vm.ExecutionResult;
 public class BridgeController {
 
     private final BridgeStorageConnector connector;
-    private ExecutionHelper result;
+    private final ExecutionHelper result;
     private final Address contractAddress;
     private final Address ownerAddress;
     private Transferrable transferrable;
@@ -70,9 +70,7 @@ public class BridgeController {
      */
     private boolean isOwner(@Nonnull final byte[] address) {
         byte[] owner = this.connector.getOwner();
-        if (owner == null)
-            return false;
-        return Arrays.equals(owner, address);
+        return owner != null && Arrays.equals(owner, address);
     }
 
     /**
@@ -83,9 +81,7 @@ public class BridgeController {
      */
     private boolean isNewOwner(@Nonnull final byte[] address) {
         byte[] newOwner = this.connector.getNewOwner();
-        if (newOwner == null)
-            return false;
-        return Arrays.equals(newOwner, address);
+        return newOwner != null && Arrays.equals(newOwner, address);
     }
 
     // logic
@@ -111,11 +107,9 @@ public class BridgeController {
 
     // relayer
 
-    public boolean isRelayer(@Nonnull final byte[] caller) {
+    private boolean isRelayer(@Nonnull final byte[] caller) {
         byte[] relayer = this.connector.getRelayer();
-        if (relayer == null)
-            return false;
-        return Arrays.equals(caller, this.connector.getRelayer());
+        return relayer != null && Arrays.equals(caller, this.connector.getRelayer());
     }
 
     public ErrCode setRelayer(@Nonnull final byte[] caller,
@@ -269,8 +263,7 @@ public class BridgeController {
         if (bundleProcessed(hash)) {
             // ATB 6-1, fixed bug: emit stored transactionHash instead of input transaction Hash
             emitSuccessfulTransactionHash(this.connector.getBundle(hash));
-            return processSuccess(ErrCode.NO_ERROR,
-                    Collections.emptyList());
+            return processSuccess(Collections.emptyList());
         }
 
         int signed = 0;
@@ -305,7 +298,7 @@ public class BridgeController {
              * For how this is documented, check the {@code Transferrable}
              * interface documentation.
              */
-            ExecutionResult result = null;
+            ExecutionResult result;
             if ((result = transferrable.transfer(b.getRecipient(), b.getTransferValue())).getResultCode()
                     == ExecutionResult.ResultCode.FAILURE)
                 // no need to return list of transactions, since they're all being dropped
@@ -319,7 +312,7 @@ public class BridgeController {
         }
         this.connector.setBundle(hash, transactionHash);
         emitProcessedBundle(sourceBlockHash, hash);
-        return processSuccess(ErrCode.NO_ERROR, results);
+        return processSuccess(results);
     }
 
     private void addLog(List<byte[]> topics) {
@@ -375,8 +368,8 @@ public class BridgeController {
     }
 
     static class ProcessedResults {
-        ErrCode controllerResult;
-        List<ExecutionResult> internalResults;
+        final ErrCode controllerResult;
+        final List<ExecutionResult> internalResults;
 
         private ProcessedResults(ErrCode code, List<ExecutionResult> internalResults) {
             this.controllerResult = code;
@@ -387,8 +380,8 @@ public class BridgeController {
             return new ProcessedResults(code, null);
         }
 
-        static ProcessedResults processSuccess(ErrCode code, List<ExecutionResult> results) {
-            return new ProcessedResults(code, results);
+        static ProcessedResults processSuccess(List<ExecutionResult> results) {
+            return new ProcessedResults(ErrCode.NO_ERROR, results);
         }
     }
 }
