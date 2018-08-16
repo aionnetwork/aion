@@ -11,18 +11,6 @@ import java.nio.ByteBuffer;
 
 public class BridgeUtilities {
 
-    static byte[] getAddress(@Nullable byte[] addr) {
-        if (addr == null)
-            return null;
-
-        if (addr.length < 20)
-            return null;
-
-        byte[] out = new byte[20];
-        System.arraycopy(addr, addr.length - 20, out, 0, 20);
-        return addr;
-    }
-
     static byte[] toSignature(@Nonnull final String funcSignature) {
         byte[] sigChopped = new byte[4];
         byte[] full = HashUtil.keccak256(funcSignature.getBytes());

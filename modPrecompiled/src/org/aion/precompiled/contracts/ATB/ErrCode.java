@@ -19,7 +19,7 @@ public enum ErrCode {
 
     private final int errCode;
 
-    private ErrCode(int i) {
+    ErrCode(int i) {
         this.errCode = i;
     }
 }

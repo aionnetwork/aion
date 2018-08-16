@@ -54,7 +54,7 @@ public class BridgeStorageConnector {
         RELAYER(new DataWord(0x5)),
         INITIALIZED(new DataWord(0x42));
 
-        private DataWord offset;
+        private final DataWord offset;
 
         S_OFFSET(DataWord offset) {
             this.offset = offset;
@@ -65,7 +65,7 @@ public class BridgeStorageConnector {
         BUNDLE_MAP((byte) 0x1),
         ACTIVE_MAP((byte) 0x2);
 
-        private byte[] id;
+        private final byte[] id;
 
         M_ID(byte id) {
             this.id = new byte[] {id};
@@ -89,9 +89,7 @@ public class BridgeStorageConnector {
 
     public boolean getInitialized() {
         byte[] word = this.getWORD(S_OFFSET.INITIALIZED.offset);
-        if (word == null)
-            return false;
-        return (word[15] & 0x1) == 1;
+        return word != null && (word[15] & 0x1) == 1;
     }
 
     public void setOwner(@Nonnull final byte[] address) {
@@ -108,9 +106,9 @@ public class BridgeStorageConnector {
         this.setDWORD(S_OFFSET.NEW_OWNER.offset, address);
     }
 
+
     public byte[] getNewOwner() {
-        byte[] ret = this.getDWORD(S_OFFSET.NEW_OWNER.offset);
-        return BridgeUtilities.getAddress(ret);
+        return this.getDWORD(S_OFFSET.NEW_OWNER.offset);
     }
 
     public void setRelayer(@Nonnull final byte[] address) {
@@ -119,8 +117,7 @@ public class BridgeStorageConnector {
     }
 
     public byte[] getRelayer() {
-        byte[] ret = this.getDWORD(S_OFFSET.RELAYER.offset);
-        return BridgeUtilities.getAddress(ret);
+        return this.getDWORD(S_OFFSET.RELAYER.offset);
     }
 
     public void setMemberCount(int amount) {
@@ -141,7 +138,7 @@ public class BridgeStorageConnector {
     }
 
     public int getMinThresh() {
-        // C1 covere by getWORD
+        // C1 covered by getWORD
         byte[] threshWord = this.getWORD(S_OFFSET.MIN_THRESH.offset);
         if (threshWord == null)
             return 0;
@@ -176,15 +173,12 @@ public class BridgeStorageConnector {
 
     public boolean getActiveMember(@Nonnull final byte[] key) {
         assert key.length == 32;
-        byte[] h = ByteUtil.chop(
-                HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
+        byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
         DataWord hWord = new DataWord(h);
 
         // C1 covered by getWORD
         byte[] activeMemberWord = this.getWORD(hWord);
-        if (activeMemberWord == null)
-            return false;
-        return (activeMemberWord[15] & 0x01) == 1;
+        return activeMemberWord != null && (activeMemberWord[15] & 0x01) == 1;
     }
 
     /**
