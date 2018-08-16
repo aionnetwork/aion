@@ -18,17 +18,23 @@ public class BridgeTransfer {
     private final byte[] recipient;
     private final byte[] sourceTransactionHash;
 
-    BridgeTransfer(@Nonnull final BigInteger transferValue,
+    private BridgeTransfer(@Nonnull final BigInteger transferValue,
                    @Nonnull final byte[] recipient,
                    @Nonnull final byte[] sourceTransactionHash) {
-        if (transferValue.toByteArray().length > 16)
-            throw new IllegalArgumentException("transferValue to byte array exceeds maximum size.");
         this.transferValue = transferValue;
         this.recipient = recipient.length == 32 ? recipient : Arrays.copyOf(recipient, 32);
         this.sourceTransactionHash =
             sourceTransactionHash.length == 32
                 ? sourceTransactionHash
                 : Arrays.copyOf(sourceTransactionHash, 32);
+    }
+    
+    static BridgeTransfer getInstance(@Nonnull final BigInteger transferValue,
+                                      @Nonnull final byte[] recipient,
+                                      @Nonnull final byte[] sourceTransactionHash) {
+        if (transferValue.toByteArray().length > 16)
+            return null;
+        return new BridgeTransfer(transferValue, recipient, sourceTransactionHash);
     }
 
     byte[] getRecipient() {

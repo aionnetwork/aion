@@ -1,7 +1,5 @@
 package org.aion.precompiled.contracts.ATB;
 
-import org.aion.base.util.ByteArrayWrapper;
-
 import javax.annotation.Nonnull;
 
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.*;
