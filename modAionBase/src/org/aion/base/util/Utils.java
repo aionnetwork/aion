@@ -34,14 +34,14 @@
  ******************************************************************************/
 package org.aion.base.util;
 
-import java.lang.reflect.Array;
+//import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+//import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,18 +57,18 @@ public class Utils {
      *            should be in form '0x34fabd34....'
      * @return String
      */
-    public static BigInteger unifiedNumericToBigInteger(String number) {
-
-        boolean match = Pattern.matches("0[xX][0-9a-fA-F]+", number);
-        if (!match) {
-            return (new BigInteger(number));
-        } else {
-            number = number.substring(2);
-            number = number.length() % 2 != 0 ? "0".concat(number) : number;
-            byte[] numberBytes = Hex.decode(number);
-            return (new BigInteger(1, numberBytes));
-        }
-    }
+//    public static BigInteger unifiedNumericToBigInteger(String number) {
+//
+//        boolean match = Pattern.matches("0[xX][0-9a-fA-F]+", number);
+//        if (!match) {
+//            return (new BigInteger(number));
+//        } else {
+//            number = number.substring(2);
+//            number = number.length() % 2 != 0 ? "0".concat(number) : number;
+//            byte[] numberBytes = Hex.decode(number);
+//            return (new BigInteger(1, numberBytes));
+//        }
+//    }
 
     /**
      * Return formatted Date String: yyyy.MM.dd HH:mm:ss Based on Unix's time()
@@ -109,19 +109,19 @@ public class Utils {
      *            6c386a4b26f73c802f34673f7248bb118f97424a
      * @return - decode and validated address byte[]
      */
-    public static byte[] addressStringToBytes(String hex) {
-        final byte[] addr;
-        try {
-            addr = Hex.decode(hex);
-        } catch (Exception addressIsNotValid) {
-            return null;
-        }
-
-        if (isValidAddress(addr)) {
-            return addr;
-        }
-        return null;
-    }
+//    public static byte[] addressStringToBytes(String hex) {
+//        final byte[] addr;
+//        try {
+//            addr = Hex.decode(hex);
+//        } catch (Exception addressIsNotValid) {
+//            return null;
+//        }
+//
+//        if (isValidAddress(addr)) {
+//            return addr;
+//        }
+//        return null;
+//    }
 
     public static boolean isValidAddress(byte[] addr) {
         return addr != null && addr.length == 20;
@@ -154,20 +154,20 @@ public class Utils {
      *            length should be 20
      * @return short string represent 1f21c...
      */
-    public static String getAddressShortString(byte[] addr) {
-
-        if (!isValidAddress(addr)) {
-            throw new Error("not an address");
-        }
-
-        String addrShort = Hex.toHexString(addr, 0, 3);
-
-        StringBuffer sb = new StringBuffer();
-        sb.append(addrShort);
-        sb.append("...");
-
-        return sb.toString();
-    }
+//    public static String getAddressShortString(byte[] addr) {
+//
+//        if (!isValidAddress(addr)) {
+//            throw new Error("not an address");
+//        }
+//
+//        String addrShort = Hex.toHexString(addr, 0, 3);
+//
+//        StringBuffer sb = new StringBuffer();
+//        sb.append(addrShort);
+//        sb.append("...");
+//
+//        return sb.toString();
+//    }
 
     public static SecureRandom getRandom() {
         return random;
@@ -204,43 +204,43 @@ public class Utils {
         return Double.parseDouble(version.substring(0, pos - 1));
     }
 
-    public static String getHashListShort(List<byte[]> blockHashes) {
-        if (blockHashes.isEmpty()) {
-            return "[]";
-        }
-
-        StringBuilder sb = new StringBuilder();
-        String firstHash = Hex.toHexString(blockHashes.get(0));
-        String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size() - 1));
-        return sb.append(" ").append(firstHash).append("...").append(lastHash).toString();
-    }
+//    public static String getHashListShort(List<byte[]> blockHashes) {
+//        if (blockHashes.isEmpty()) {
+//            return "[]";
+//        }
+//
+//        StringBuilder sb = new StringBuilder();
+//        String firstHash = Hex.toHexString(blockHashes.get(0));
+//        String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size() - 1));
+//        return sb.append(" ").append(firstHash).append("...").append(lastHash).toString();
+//    }
 
     public static String getNodeIdShort(String nodeId) {
         return nodeId == null ? "<null>" : nodeId.substring(0, 8);
     }
 
-    public static long toUnixTime(long javaTime) {
-        return javaTime / 1000;
-    }
+//    public static long toUnixTime(long javaTime) {
+//        return javaTime / 1000;
+//    }
 
-    public static long fromUnixTime(long unixTime) {
-        return unixTime * 1000;
-    }
+//    public static long fromUnixTime(long unixTime) {
+//        return unixTime * 1000;
+//    }
 
     @SuppressWarnings("unchecked")
-    public static <T> T[] mergeArrays(T[]... arr) {
-        int size = 0;
-        for (T[] ts : arr) {
-            size += ts.length;
-        }
-        T[] ret = (T[]) Array.newInstance(arr[0].getClass().getComponentType(), size);
-        int off = 0;
-        for (T[] ts : arr) {
-            System.arraycopy(ts, 0, ret, off, ts.length);
-            off += ts.length;
-        }
-        return ret;
-    }
+//    public static <T> T[] mergeArrays(T[]... arr) {
+//        int size = 0;
+//        for (T[] ts : arr) {
+//            size += ts.length;
+//        }
+//        T[] ret = (T[]) Array.newInstance(arr[0].getClass().getComponentType(), size);
+//        int off = 0;
+//        for (T[] ts : arr) {
+//            System.arraycopy(ts, 0, ret, off, ts.length);
+//            off += ts.length;
+//        }
+//        return ret;
+//    }
 
     public static String align(String s, char fillChar, int targetLen, boolean alignRight) {
         if (targetLen <= s.length()) {

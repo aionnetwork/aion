@@ -7,6 +7,8 @@
     <property name="src.test" value="./test"/>
     <property name="test.report.dir" value="report"/>
     <property name="dir.javaAPIlib" value="../javaAPIlib"/>
+    <property name="native.dir" value="native"/>
+    <property name="native.src.dir" value="../../native"/>
 
     <path id="classpath.dependency">
         <pathelement location="${dir.mod}/modAionBase.jar"/>
@@ -30,6 +32,7 @@
         <delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/"/>
         <delete dir="${dir.test}" includeEmptyDirs="true" includes="**/*/"/>
         <delete dir="${test.report.dir}"/>
+        <delete dir="${native.dir}"/>
         <delete file="${dir.mod}/modApiServer.jar"/>
     </target>
 
@@ -45,6 +48,10 @@
     </target>
 
     <target name="test" depends="test_build">
+        <mkdir dir="${native.dir}"/>
+        <copy todir="${native.dir}">
+            <fileset dir="${native.src.dir}"/>
+        </copy>
         <mkdir dir="${test.report.dir}"/>
         <junit printsummary="yes" haltonfailure="yes" fork="yes">
             <classpath>
