@@ -143,14 +143,15 @@ public class BridgeDeserializer {
 
         BridgeTransfer[] bundles = new BridgeTransfer[uintList.length];
         for (int i = 0; i < uintList.length; i++) {
-            try {
-                bundles[i] = new BridgeTransfer(
-                    new BigInteger(1, uintList[i]),
-                    addressList[i],
-                    sourceTransactionList[i]);
-            } catch (IllegalArgumentException e) {
+            BridgeTransfer transfer = BridgeTransfer.getInstance(
+                new BigInteger(1, uintList[i]),
+                addressList[i],
+                sourceTransactionList[i]);
+
+            if (transfer == null)
                 return null;
-            }
+
+            bundles[i] = transfer;
         }
 
         return new BundleRequestCall(blockHash, bundles, mergedSignatureList);

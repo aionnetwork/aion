@@ -76,7 +76,7 @@ public class BridgeTransferTest {
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
 
-        BridgeTransfer bundle = new BridgeTransfer(BigInteger.valueOf(1), recipient, sourceTransactionHash);
+        BridgeTransfer bundle = BridgeTransfer.getInstance(BigInteger.valueOf(1), recipient, sourceTransactionHash);
         byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, new BridgeTransfer[] {bundle});
 
         byte[][] signatures = new byte[members.length][];
@@ -113,7 +113,7 @@ public class BridgeTransferTest {
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
 
-        BridgeTransfer bundle = new BridgeTransfer(BigInteger.valueOf(1), recipient, sourceTransactionHash);
+        BridgeTransfer bundle = BridgeTransfer.getInstance(BigInteger.valueOf(1), recipient, sourceTransactionHash);
         byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, new BridgeTransfer[] {bundle});
 
         byte[][] signatures = new byte[2][];
@@ -148,7 +148,7 @@ public class BridgeTransferTest {
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
 
-        BridgeTransfer bundle = new BridgeTransfer(BigInteger.valueOf(1), recipient, sourceTransactionHash);
+        BridgeTransfer bundle = BridgeTransfer.getInstance(BigInteger.valueOf(1), recipient, sourceTransactionHash);
         byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, new BridgeTransfer[] {bundle});
 
         byte[][] signatures = new byte[3][];
@@ -183,7 +183,7 @@ public class BridgeTransferTest {
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
 
-        BridgeTransfer bundle = new BridgeTransfer(BigInteger.valueOf(1), recipient, sourceTransactionHash);
+        BridgeTransfer bundle = BridgeTransfer.getInstance(BigInteger.valueOf(1), recipient, sourceTransactionHash);
         byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, new BridgeTransfer[] {bundle});
 
         byte[][] signatures = new byte[6][];
@@ -216,7 +216,7 @@ public class BridgeTransferTest {
         final byte[] aionTransactionHash = HashUtil.h256("aionTransaction".getBytes());
 
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.ONE);
-        BridgeTransfer bundle = new BridgeTransfer(BigInteger.ZERO, recipient, sourceTransactionHash);
+        BridgeTransfer bundle = BridgeTransfer.getInstance(BigInteger.ZERO, recipient, sourceTransactionHash);
         byte[] bundleHash = BridgeUtilities.computeBundleHash(blockHash, new BridgeTransfer[] {bundle});
 
         byte[][] signatures = new byte[5][];
@@ -285,7 +285,7 @@ public class BridgeTransferTest {
         // ensure we have enough balance
         this.repo.addBalance(CONTRACT_ADDR, BigInteger.TWO);
 
-        BridgeTransfer transfer = new BridgeTransfer(BigInteger.ONE, recipient, sourceTransactionHash);
+        BridgeTransfer transfer = BridgeTransfer.getInstance(BigInteger.ONE, recipient, sourceTransactionHash);
         executeSignController(senderAddress, blockHash, aionTransactionHash, new BridgeTransfer[]{ transfer });
 
         final byte[] secondAionTransactionHash = HashUtil.h256("secondAionTransactionHash".getBytes());
@@ -324,7 +324,7 @@ public class BridgeTransferTest {
         for (int i = 0; i < transferTotal; i++) {
             byte[] randomBytes = new byte[32];
             new SecureRandom().nextBytes(randomBytes);
-            transfers[i] = new BridgeTransfer(BigInteger.ONE, recipient, randomBytes);
+            transfers[i] = BridgeTransfer.getInstance(BigInteger.ONE, recipient, randomBytes);
         }
 
         ResultHashTuple tuple =
