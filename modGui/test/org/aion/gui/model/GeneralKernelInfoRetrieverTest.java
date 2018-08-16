@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,6 +43,24 @@ public class GeneralKernelInfoRetrieverTest {
 
         GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
         assertThat(unit.isMining(), is(true));
+    }
+
+    @Test
+    public void testIsMiningWhenNull() throws Exception {
+        KernelConnection kc = mock(KernelConnection.class);
+        when(kc.isConnected()).thenReturn(false);
+        IAionAPI api = mock(IAionAPI.class);
+        when(api.isConnected()).thenReturn(false);
+        when(kc.getApi()).thenReturn(api);
+        IMine mine = mock(IMine.class);
+        when(api.getMine()).thenReturn(mine);
+        ApiMsg msg = mock(ApiMsg.class);
+        when(mine.isMining()).thenReturn(msg);
+        when(msg.isError()).thenReturn(false);
+        when(msg.getObject()).thenReturn(Boolean.valueOf(true));
+
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
+        assertThat(unit.isMining(), is(nullValue()));
     }
 
     @Test(expected = ApiDataRetrievalException.class)
@@ -81,6 +100,31 @@ public class GeneralKernelInfoRetrieverTest {
 
         GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
         assertThat(unit.getPeerCount(), is(peerCount));
+    }
+
+    @Test
+    public void testGetPeerCountWhenNotConnected() throws Exception {
+        int peerCount = 13;
+
+        KernelConnection kc = mock(KernelConnection.class);
+        when(kc.isConnected()).thenReturn(false);
+        IAionAPI api = mock(IAionAPI.class);
+        when(kc.getApi()).thenReturn(api);
+        when(api.isConnected()).thenReturn(false);
+        INet net = mock(INet.class);
+        when(api.getNet()).thenReturn(net);
+        ApiMsg msg = mock(ApiMsg.class);
+        when(net.getActiveNodes()).thenReturn(msg);
+        when(msg.isError()).thenReturn(false);
+        List<Object> peerList = new LinkedList<>() {{
+            for(int ix = 0; ix < peerCount; ++ix) {
+                add(new Object());
+            }
+        }};
+        when(msg.getObject()).thenReturn(peerList);
+
+        GeneralKernelInfoRetriever unit = new GeneralKernelInfoRetriever(kc, null);
+        assertThat(unit.getPeerCount(), is(nullValue()));
     }
 
     @Test(expected = ApiDataRetrievalException.class)
