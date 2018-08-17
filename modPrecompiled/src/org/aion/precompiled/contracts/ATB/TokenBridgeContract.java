@@ -65,11 +65,16 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         if (nrgLimit < ENERGY_CONSUME)
             return THROW;
 
-        if(input.length == 0){
+        // as a preset, try to initialize before execution
+        // this should be placed before the 0 into return, rationale is that we want to
+        // activate the contract the first time the owner interacts with it. Which is
+        // exactly what sending the contract currency entails
+        this.controller.initialize();
+
+        // acts as a pseudo fallback function
+        if (input.length == 0) {
             return success();
         }
-        // as a preset, try to initialize before execution
-        this.controller.initialize();
 
         byte[] signature = getSignature(input);
         if (signature == null)
