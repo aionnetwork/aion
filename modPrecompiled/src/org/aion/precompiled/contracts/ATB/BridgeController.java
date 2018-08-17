@@ -55,6 +55,7 @@ public class BridgeController {
             return;
         // otherwise initialize
         this.connector.setOwner(ownerAddress.toBytes());
+        this.connector.setInitialized(true);
     }
 
     // owner

@@ -64,14 +64,18 @@ public class TokenBridgeContractTest {
 
     @Test
     public void testNotEnoughEnergyExecution() {
-
+        assertThat(this.connector.getInitialized()).isFalse();
+        ExecutionResult result = this.contract.execute(BridgeFuncSig.PURE_OWNER.getBytes(), 20_000L);
+        assertThat(this.connector.getInitialized()).isFalse();
     }
 
     @Test
     public void testGetOwner() {
+        assertThat(this.connector.getInitialized()).isFalse();
         ExecutionResult result = this.contract.execute(BridgeFuncSig.PURE_OWNER.getBytes(), DEFAULT_NRG);
         assertThat(result.getOutput()).isEqualTo(OWNER_ADDR.toBytes());
         assertThat(result.getNrgLeft()).isEqualTo(0L);
+        assertThat(this.connector.getInitialized()).isTrue();
     }
 
     @Test
@@ -83,12 +87,13 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         byte[] newOwner = AddressSpecs.computeA0Address(HashUtil.h256("newOwner".getBytes()));
-
         byte[] payload = new AbiEncoder(
                 BridgeFuncSig.SIG_CHANGE_OWNER.getSignature(), new AddressFVM(new ByteArrayWrapper(newOwner))).encodeBytes();
         System.out.println("encoded payload: " + ByteUtil.toHexString(payload));
 
+        assertThat(this.connector.getInitialized()).isFalse();
         ExecutionResult setResult = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(this.connector.getInitialized()).isTrue();
         assertThat(setResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
 
         ExecutionResult result = this.contract.execute(BridgeFuncSig.PURE_NEW_OWNER.getBytes(), DEFAULT_NRG);
