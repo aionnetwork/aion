@@ -1,0 +1,218 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+package org.aion.zero.impl.cli;
+
+import java.util.ArrayList;
+import java.util.List;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Help.Ansi.Style;
+import picocli.CommandLine.Help.ColorScheme;
+import picocli.CommandLine.Option;
+
+/**
+ * Command line arguments for the Aion kernel.
+ *
+ * @author Alexandra Roatis
+ */
+@Command(name = "./aion.sh", separator = " ", sortOptions = false, abbreviateSynopsis = true)
+public class Arguments {
+
+    // usage information
+    @Option(
+        names = {"-h", "--help"},
+        usageHelp = true,
+        description = "display help information"
+    )
+    private boolean help = false;
+
+    // account management
+    @Option(
+        names = {"ac", "-a create"},
+        description = "create a new account"
+    )
+    private boolean createAccount = false;
+
+    @Option(
+        names = {"al", "-a list"},
+        description = "list all existing accounts"
+    )
+    private boolean listAccounts = false;
+
+    @Option(
+        names = {"ae", "-a export"},
+        paramLabel = "<account>",
+        description = "export private key of an account"
+    )
+    private String exportAccount;
+
+    @Option(
+        names = {"ai", "-a import"},
+        paramLabel = "<key>",
+        description = "import private key"
+    )
+    private String importAccount;
+
+    // config generation
+    @Option(
+        names = {"-c", "--config"},
+        paramLabel = "<network>",
+        description = "create config for the selected network\noptions: mainnet, conquest"
+    )
+    public String config;
+
+    // get information and version
+    @Option(
+        names = {"-i", "--info"},
+        description = "display information"
+    )
+    public boolean info = false;
+
+    @Option(
+        names = {"-v"},
+        description = "display version"
+    )
+    public boolean version = false;
+
+    @Option(
+        names = {"--version"},
+        description = "display version tag"
+    )
+    public boolean versionTag = false;
+
+    // create ssl certificate
+    @Option(
+        names = {"sc", "-s create"},
+        arity = "0..2",
+        paramLabel = "<hostname> <ip>",
+        description =
+                "create an ssl certificate for:\n - localhost (when no parameters are given), or"
+                        + "\n - the given hostname and ip"
+    )
+    public String[] ssl;
+
+    // offline block management
+    @Option(
+        names = {"pb", "--prune-blocks"},
+        description = "remove blocks on side chains and update block info"
+    )
+    public boolean rebuildBlockInfo = false;
+
+    @Option(
+        names = {"-r", "--revert"},
+        arity = "1",
+        paramLabel = "<block_number>",
+        description = "revert database state to given block number"
+    )
+    private long revertToBlock;
+
+    // network and directory setup
+    @Option(
+        names = {"-n", "--network"},
+        description = "execute kernel with selected network\noptions: mainnet, conquest"
+    )
+    public String network;
+
+    @Option(
+        names = {"-d", "--datadir"},
+        description = "execute kernel with selected database directory"
+    )
+    public String directory;
+
+    // offline database query and update
+    @Option(
+        names = {"--state"},
+        paramLabel = "<prune_mode>",
+        description = "reorganize the state storage\noptions: FULL, TOP, SPREAD"
+    )
+    public String stateOption;
+
+    // print info from db
+    @Option(
+        names = {"--dump-blocks"},
+        arity = "1",
+        paramLabel = "<block_count>",
+        description = "print top blocks from database"
+    )
+    public int dumpBlocksCount = 10;
+
+    @Option(
+        names = {"--dump-state-size"},
+        paramLabel = "<block_count>",
+        description = "retrieves the state size (node count) for the top blocks"
+    )
+    public int dumpStateSizeCount = 2;
+
+    @Option(
+        names = {"--dump-state"},
+        paramLabel = "<block_count>",
+        description = "retrieves the state for the top main chain blocks"
+    )
+    public int dumpStateCount = 2;
+
+    @Option(
+        names = {"--db-compact"},
+        description = "if using leveldb, it triggers its database compaction processes"
+    )
+    public boolean dbCompact;
+
+    /** Compacts the account options into specific commands. */
+    public static String[] preprocess(String[] arguments) {
+        List<String> list = new ArrayList<>();
+
+        int i = 0;
+        while (i < arguments.length) {
+            if (arguments[i].equals("-a")
+                    || arguments[i].equals("--account")
+                    || arguments[i].equals("-s")) {
+                list.add(arguments[i] + " " + arguments[i + 1]);
+                i++;
+            } else {
+                list.add(arguments[i]);
+            }
+            i++;
+        }
+
+        return list.toArray(new String[list.size()]);
+    }
+
+    public static void main(String... args) {
+        Arguments params = new Arguments();
+        String[] argv = {"-a create", "-a list", "-a export", "0x123"};
+
+        CommandLine commandLine = new CommandLine(params);
+        ColorScheme colorScheme =
+                new ColorScheme()
+                        .commands(Style.bold, Style.underline) // combine multiple styles
+                        .options(Style.fg_yellow) // yellow foreground color
+                        .parameters(Style.fg_yellow)
+                        .optionParams(Style.italic);
+        commandLine.usage(System.out, colorScheme);
+        // commandLine.usage(System.out);
+
+        commandLine.parse(argv);
+        System.out.println(params.createAccount);
+        System.out.println(params.listAccounts);
+        System.out.println(params.exportAccount.toString());
+    }
+}
