@@ -16,7 +16,7 @@ public class ListFVM extends BaseTypeFVM {
 
     public ListFVM() {
         this.params = new ArrayList<>();
-    };
+    }
 
     public ListFVM(@Nonnull final BaseTypeFVM ...params) {
         this.params = new ArrayList<>(Arrays.asList(params));

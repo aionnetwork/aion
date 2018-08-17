@@ -18,11 +18,7 @@ import java.math.BigInteger;
 import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.*;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.*;
 
-public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferrable {
-
-    private static final int BUNDLE_PARAM_ACC = 0;
-    private static final int BUNDLE_PARAM_VAL = 1;
-    private static final int BUNDLE_PARAM_SIG = 2;
+public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferable {
 
     private static final long ENERGY_CONSUME = 21000L;
 
@@ -47,17 +43,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.track = track;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
         this.controller = new BridgeController(this.connector, this.context.helper(), contractAddress, ownerAddress);
-        this.controller.setTransferrable(this);
+        this.controller.setTransferable(this);
 
         this.contractAddress = contractAddress;
-    }
-
-    /**
-     * @implNote rationale for separating from constructor is this function may
-     * incur an I/O call to the database.
-     */
-    public void initialize() {
-        this.controller.initialize();
     }
 
     public BridgeController getController() {
@@ -68,16 +56,25 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         return this.connector;
     }
 
+    public boolean isInitialized() {
+        return this.connector.getInitialized();
+    }
+
     @Override
     public ExecutionResult execute(@Nonnull final byte[] input, final long nrgLimit) {
         if (nrgLimit < ENERGY_CONSUME)
             return THROW;
 
-        if(input.length == 0){
+        // as a preset, try to initialize before execution
+        // this should be placed before the 0 into return, rationale is that we want to
+        // activate the contract the first time the owner interacts with it. Which is
+        // exactly what sending the contract currency entails
+        this.controller.initialize();
+
+        // acts as a pseudo fallback function
+        if (input.length == 0) {
             return success();
         }
-        // as a preset, try to initialize before execution
-        this.controller.initialize();
 
         byte[] signature = getSignature(input);
         if (signature == null)
@@ -89,9 +86,13 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
         switch(sig) {
             case SIG_CHANGE_OWNER: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
+
                 ErrCode code = this.controller.setNewOwner(this.context.sender().toBytes(), address);
 
                 if (code != ErrCode.NO_ERROR)
@@ -105,6 +106,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 return success();
             }
             case SIG_RING_INITIALIZE: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[][] addressList = parseAddressList(input);
 
                 if (addressList == null)
@@ -116,6 +120,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 return success();
             }
             case SIG_RING_ADD_MEMBER: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
@@ -126,6 +133,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 return success();
             }
             case SIG_RING_REMOVE_MEMBER: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[] address = parseAddressFromCall(input);
 
                 if (address == null)
@@ -136,7 +146,10 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     return fail();
                 return success();
             }
-            case SIG_SET_RELAYER:
+            case SIG_SET_RELAYER: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
@@ -145,15 +158,23 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (code != ErrCode.NO_ERROR)
                     return fail();
                 return success();
+            }
             case SIG_SUBMIT_BUNDLE: {
-                // TODO: possible attack vector, unsecure deserialization
+                if (!isFromAddress(this.connector.getRelayer()))
+                    return fail();
+
                 BundleRequestCall bundleRequests = parseBundleRequest(input);
 
                 if (bundleRequests == null)
                     return fail();
 
+                // ATB-4, as part of the changes we now
+                // pass in the transactionHash of the call
+                // into the contract, this will be logged so that
+                // we can refer to it at a later time.
                 BridgeController.ProcessedResults results = this.controller.processBundles(
                         this.context.sender().toBytes(),
+                        this.context.transactionHash(),
                         bundleRequests.blockHash,
                         bundleRequests.bundles,
                         bundleRequests.signatures);
@@ -182,16 +203,20 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 byte[] bundleHash = parseDwordFromCall(input);
                 if (bundleHash == null)
                     return fail();
-                return success(booleanToResultBytes(this.connector.getBundle(bundleHash)));
+                return success(orDefaultDword(this.connector.getBundle(bundleHash)));
+            case PURE_RELAYER:
+                // ATB-5 Add in relayer getter
+                return success(orDefaultDword(this.connector.getRelayer()));
             default:
                 return fail();
         }
         // throw new RuntimeException("should never reach here");
     }
 
-    private static ExecutionResult THROW =
+    private static final ExecutionResult THROW =
             new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
     private ExecutionResult fail() {
+        this.context.helper().rejectInternalTransactions();
         return THROW;
     }
 
@@ -208,30 +233,15 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     }
 
 
-    private ExecutionContext assembleContext(@Nonnull final byte[] recipient,
-                                             @Nonnull final BigInteger value) {
-        return new ExecutionContext(
-                this.context.transactionHash(),
-                new Address(recipient),
-                this.context.origin(),
-                this.contractAddress,
-                this.context.nrgPrice(),
-                ENERGY_CONSUME,
-                new DataWord(value),
-                ByteUtil.EMPTY_BYTE_ARRAY,
-                this.context.depth() + 1,
-                0,
-                0,
-                this.context.blockCoinbase(),
-                this.context.blockNumber(),
-                this.context.blockTimestamp(),
-                this.context.blockNrgLimit(),
-                this.context.blockDifficulty());
+    private boolean isFromAddress(byte[] address) {
+        if (address == null)
+            return false;
+        return this.context.sender().equals(Address.wrap(address));
     }
 
     /**
      * Performs a transfer of value from one account to another, using a method that
-     * mimicks to the best of it's ability the {@code CALL} opcode. There are some
+     * mimics to the best of it's ability the {@code CALL} opcode. There are some
      * assumptions that become important for any caller to know:
      *
      * @implNote this method will check that the recipient account has no code. This
@@ -250,45 +260,37 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
             return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
 
-        byte[] code = this.track.getCode(new Address(to));
-        if (code != null && code.length != 0)
-            return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
+        // assemble an internal transaction
+        Address from = this.contractAddress;
+        Address recipient = new Address(to);
+        BigInteger nonce = this.track.getNonce(from);
+        DataWord valueToSend = new DataWord(value);
+        byte[] dataToSend = new byte[0];
+        AionInternalTx tx = newInternalTx(from, recipient, nonce, valueToSend, dataToSend, "call");
 
-        // otherwise prepare for a transfer
-        ExecutionContext innerContext = assembleContext(to, value);
-        IRepositoryCache cache = this.track;
-        AionInternalTx tx = newInternalTx(innerContext);
+        // add transaction to result
         this.context.helper().addInternalTransaction(tx);
 
-        cache.addBalance(new Address(to), value);
-        cache.addBalance(this.contractAddress, value.negate());
+        // increase the nonce and do the transfer without executing code
+        this.track.incrementNonce(from);
+        this.track.addBalance(from, value.negate());
+        this.track.addBalance(recipient, value);
+
+        // construct result
         return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, 0);
     }
 
     /**
-     * Derived from {@link org.aion.fastvm.Callback}
+     * Creates a new internal transaction.
      *
-     * TODO: best if transaction execution path is unified
-     * TODO: what is "call"?
-     *
-     * @param context execution context to generate internal transaction
-     * @return {@code internal transaction}
+     * NOTE: copied from {@link org.aion.fastvm.Callback}
      */
-    @SuppressWarnings("JavadocReference")
-    private AionInternalTx newInternalTx(ExecutionContext context) {
-
+    private AionInternalTx newInternalTx(Address from, Address to, BigInteger nonce, DataWord value, byte[] data,
+                                                String note) {
         byte[] parentHash = context.transactionHash();
-        int deep = context.depth();
-        int idx = context.helper().getInternalTransactions().size();
+        int depth = context.depth();
+        int index = context.helper().getInternalTransactions().size();
 
-        return new AionInternalTx(parentHash,
-                deep,
-                idx,
-                new DataWord(this.track.getNonce(context.sender())).getData(),
-                context.sender(),
-                context.address(),
-                context.callValue().getData(),
-                context.callData(),
-                "call");
+        return new AionInternalTx(parentHash, depth, index, new DataWord(nonce).getData(), from, to, value.getData(), data, note);
     }
 }
