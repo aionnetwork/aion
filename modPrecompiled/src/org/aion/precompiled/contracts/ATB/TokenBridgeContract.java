@@ -81,9 +81,13 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
         switch(sig) {
             case SIG_CHANGE_OWNER: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
+
                 ErrCode code = this.controller.setNewOwner(this.context.sender().toBytes(), address);
 
                 if (code != ErrCode.NO_ERROR)
@@ -97,6 +101,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 return success();
             }
             case SIG_RING_INITIALIZE: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[][] addressList = parseAddressList(input);
 
                 if (addressList == null)
@@ -108,6 +115,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 return success();
             }
             case SIG_RING_ADD_MEMBER: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
@@ -118,6 +128,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 return success();
             }
             case SIG_RING_REMOVE_MEMBER: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[] address = parseAddressFromCall(input);
 
                 if (address == null)
@@ -129,6 +142,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 return success();
             }
             case SIG_SET_RELAYER: {
+                if (!isFromAddress(this.connector.getOwner()))
+                    return fail();
+
                 byte[] address = parseAddressFromCall(input);
                 if (address == null)
                     return fail();
@@ -139,6 +155,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 return success();
             }
             case SIG_SUBMIT_BUNDLE: {
+                if (!isFromAddress(this.connector.getRelayer()))
+                    return fail();
+
                 // TODO: possible attack vector, unsecure deserialization
                 BundleRequestCall bundleRequests = parseBundleRequest(input);
 
@@ -209,6 +228,11 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, energyRemaining, response);
     }
 
+
+    private boolean isFromAddress(byte[] address) {
+        return this.context.origin().equals(
+                address == null ? Address.ZERO_ADDRESS() : Address.wrap(address));
+    }
 
     private ExecutionContext assembleContext(@Nonnull final byte[] recipient,
                                              @Nonnull final BigInteger value) {
