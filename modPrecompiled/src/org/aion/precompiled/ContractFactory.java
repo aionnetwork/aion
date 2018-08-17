@@ -65,6 +65,10 @@ public class ContractFactory {
             case TOKEN_BRIDGE:
                 TokenBridgeContract contract = new TokenBridgeContract(context,
                         track, Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER), Address.wrap(TOKEN_BRIDGE));
+
+                if (!context.origin().equals(Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER)) && !contract.isInitialized())
+                    return null;
+                
                 return contract;
             case TEST_PC:
                 return new TestPrecompiledContract();
