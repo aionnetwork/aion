@@ -18,7 +18,7 @@ import java.math.BigInteger;
 import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.*;
 import static org.aion.precompiled.contracts.ATB.BridgeUtilities.*;
 
-public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferrable {
+public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferable {
 
     private static final long ENERGY_CONSUME = 21000L;
 
@@ -43,7 +43,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.track = track;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
         this.controller = new BridgeController(this.connector, this.context.helper(), contractAddress, ownerAddress);
-        this.controller.setTransferrable(this);
+        this.controller.setTransferable(this);
 
         this.contractAddress = contractAddress;
     }

@@ -31,7 +31,7 @@ public class BridgeController {
     private final ExecutionHelper result;
     private final Address contractAddress;
     private final Address ownerAddress;
-    private Transferrable transferrable;
+    private Transferable transferable;
 
     public BridgeController(@Nonnull final BridgeStorageConnector storageConnector,
                             @Nonnull final ExecutionHelper helper,
@@ -43,8 +43,8 @@ public class BridgeController {
         this.ownerAddress = ownerAddress;
     }
 
-    public void setTransferrable(Transferrable transferrable) {
-        this.transferrable = transferrable;
+    public void setTransferable(Transferable transferable) {
+        this.transferable = transferable;
     }
 
     /**
@@ -296,11 +296,11 @@ public class BridgeController {
              * 2) Any other failure indicates that either the contract had code,
              * which means the contract is now considered null.
              *
-             * For how this is documented, check the {@code Transferrable}
+             * For how this is documented, check the {@code Transferable}
              * interface documentation.
              */
             ExecutionResult result;
-            if ((result = transferrable.transfer(b.getRecipient(), b.getTransferValue())).getResultCode()
+            if ((result = transferable.transfer(b.getRecipient(), b.getTransferValue())).getResultCode()
                     == ExecutionResult.ResultCode.FAILURE)
                 // no need to return list of transactions, since they're all being dropped
                 return processError(ErrCode.INVALID_TRANSFER);

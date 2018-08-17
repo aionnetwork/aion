@@ -5,7 +5,7 @@ import org.aion.vm.ExecutionResult;
 import javax.annotation.Nonnull;
 import java.math.BigInteger;
 
-public interface Transferrable {
+public interface Transferable {
     /**
      *
      * Performs a transfer of value from one account to another, using a method that
