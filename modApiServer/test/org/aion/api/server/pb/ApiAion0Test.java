@@ -909,6 +909,8 @@ public class ApiAion0Test {
 
         Message.req_estimateNrg reqBody = Message.req_estimateNrg.newBuilder()
                 .setFrom(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                .setNrg(1000)
                 .setNrgPrice(5000)
                 .setData(ByteString.copyFrom(msg))
                 .setValue(ByteString.copyFrom(val))
@@ -917,6 +919,15 @@ public class ApiAion0Test {
         rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_estimateNrg_VALUE, reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
+
+        Message.rsp_estimateNrg rslt = Message.rsp_estimateNrg.parseFrom(stripHeader(rsp));
+
+        AionTransaction tx = new AionTransaction(AionRepositoryImpl.inst().getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), val,
+                msg, 1000, 5000);
+        tx.sign(new ECKeyEd25519());
+
+        assertEquals(AionImpl.inst().estimateTxNrg(tx, api.getBestBlock()), rslt.getNrg());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_estimateNrg_VALUE);
 
