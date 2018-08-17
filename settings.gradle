@@ -1,0 +1,12 @@
+rootProject.name = 'aion'
+include 'modAionBase', 'modAion', 'modAionImpl',
+    'modCrypto',
+    'modLogger',
+    'modRlp',
+    'modEvtMgr', 'modEvtMgrImpl',
+    'modP2p', 'modP2pImpl',
+    'modTxPool', 'modTxPoolImpl',
+    'modDbImpl',
+    'modMcf',
+    'modPrecompiled',
+    'modVM'
