@@ -34,11 +34,11 @@ import ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy;
 import ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy;
 import ch.qos.logback.core.rolling.helper.FileNamePattern;
 import ch.qos.logback.core.util.FileSize;
-
 import java.io.File;
-import java.util.*;
-import java.util.Map.Entry;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,20 +87,22 @@ public class AionLoggerFactory {
     private static Map<LogEnum, Level> constructModuleLoglevelMap(Map<String, String> _moduleToLevelMap) {
         // condition the input hashmap so keys are all uppercase
         Map<String, String> moduleToLevelMap = new HashMap<>();
-        _moduleToLevelMap.forEach((module, level) -> {
-            moduleToLevelMap.put(module.toUpperCase(), level);
-        });
+        if (_moduleToLevelMap != null) {
+            _moduleToLevelMap.forEach((module, level) -> {
+                moduleToLevelMap.put(module.toUpperCase(), level);
+            });
+        }
 
         Map<LogEnum, Level> modules = new HashMap<>();
         for (LogEnum mod : LogEnum.values()) {
             String modName = mod.name().toUpperCase();
             String modLevel = moduleToLevelMap.get(modName);
             if (modLevel != null) {
-                // if we can't translate log-level for some reason, default to INFO
-                Level level = Level.toLevel(modLevel, Level.INFO);
+                // if we can't translate log-level for some reason, default to WARN
+                Level level = Level.toLevel(modLevel, Level.WARN);
                 modules.put(mod, level);
             } else {
-                modules.put(mod, Level.INFO);
+                modules.put(mod, Level.WARN);
             }
         }
 

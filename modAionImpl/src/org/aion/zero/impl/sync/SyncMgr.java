@@ -222,10 +222,13 @@ public final class SyncMgr {
                 log.debug("Downloaded blocks queue is full. Stop requesting headers");
             }
         } else {
-            workers.submit(
-                new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd, peerStates,
-                    log));
-            queueFull.set(false);
+            if (!workers.isShutdown()) {
+                workers.submit(
+                    new TaskGetHeaders(p2pMgr, chain.getBestBlock().getNumber(), _selfTd,
+                        peerStates,
+                        log));
+                queueFull.set(false);
+            }
         }
     }
 

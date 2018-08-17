@@ -27,7 +27,7 @@ import java.util.Map;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.PrecompiledContracts;
+import org.aion.precompiled.ContractFactory;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 
 /** {@link AionHub} functionality where a full instantiation of the class is not desirable. */
@@ -37,7 +37,7 @@ public class AionHubUtils {
         // initialization section for network balance contract
         IRepositoryCache track = repository.startTracking();
 
-        Address networkBalanceAddress = PrecompiledContracts.totalCurrencyAddress;
+        Address networkBalanceAddress = ContractFactory.getTotalCurrencyContractAddress();
         track.createAccount(networkBalanceAddress);
 
         for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {

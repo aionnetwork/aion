@@ -22,11 +22,6 @@
  */
 package org.aion;
 
-import static java.lang.System.exit;
-import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
-import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
-import static org.aion.zero.impl.Version.KERNEL_VERSION;
-
 import java.io.Console;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -55,6 +50,12 @@ import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
+import java.util.ServiceLoader;
+
+import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
+import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+import static org.aion.zero.impl.Version.KERNEL_VERSION;
+
 public class Aion {
 
     public static void main(String args[]) {
@@ -70,7 +71,7 @@ public class Aion {
         CfgAion cfg = CfgAion.inst();
         if (args != null && args.length > 0) {
             int ret = new Cli().call(args, cfg);
-            exit(ret);
+            System.exit(ret);
         }
 
         /*
@@ -88,26 +89,15 @@ public class Aion {
             throw e;
         }
 
-        /*
-         * Ensuring valid UUID in the config.xml
-         * Valid UUID: 32 Hex in 5 Groups [0-9A-F]
-         * 00000000-0000-0000-0000-000000000000
-         */
-        String UUID = cfg.getId();
-        if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
-            System.out.println("Invalid UUID; please check <id> setting in config.xml");
-            exit(-1);
-        }
-
         /* Outputs relevant logger configuration */
         if (!cfg.getLog().getLogFile()) {
             System.out
-                .println("Logger disabled; to enable please check <log> settings in config.xml");
+                .println("Logger disabled; to enable please check log settings in config.xml\n");
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Invalid file path; please check <log> setting in config.xml");
+            System.out.println("File path is invalid; please check log setting in config.xml\n");
             return;
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'");
+            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
         }
 
         // get the ssl password synchronously from the console, only if required
@@ -153,6 +143,26 @@ public class Aion {
         if (nm != null) {
             nm.delayedStartMining(10);
         }
+
+        /*
+         * Create JMX server and register in-flight config receiver MBean.  Commenting out for now
+         * because not using it yet.
+         */
+//        InFlightConfigReceiver inFlightConfigReceiver = new InFlightConfigReceiver(
+//                cfg, new DynamicConfigKeyRegistry());
+//        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
+//        ObjectName objectName = null;
+//        try {
+//            objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
+//            server.registerMBean(inFlightConfigReceiver, objectName);
+//        } catch (MalformedObjectNameException
+//                | NotCompliantMBeanException
+//                | InstanceAlreadyExistsException
+//                | MBeanRegistrationException ex) {
+//            genLog.error(
+//                    "Failed to initialize JMX server.  In-flight configuration changes will not be available.",
+//                    ex);
+//        }
 
         /*
          * Start Threads.
@@ -278,6 +288,7 @@ public class Aion {
             genLog.info("---------------------------------------------");
 
         }, "shutdown"));
+
     }
 
     private static char[] getSslPassword(CfgAion cfg) {

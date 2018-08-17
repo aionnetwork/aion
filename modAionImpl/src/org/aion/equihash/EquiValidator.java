@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,42 +19,37 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 package org.aion.equihash;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import static org.aion.base.util.ByteUtil.*;
 
+import java.util.Arrays;
 import org.aion.crypto.hash.Blake2b;
 import org.aion.crypto.hash.Blake2b.Param;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-import static org.aion.base.util.ByteUtil.*;
-
 /**
- * 
  * This class provides methods to validate Equihash solutions.
- * 
- * @author Ross Kitsis
  *
+ * @author Ross Kitsis
  */
 public class EquiValidator {
-    private int n;
-    private int k;
-    private int indicesPerHashOutput;
-    private int hashOutput;
-    private int collisionBitLength;
-    private int collisionByteLength;
-    private int hashLength;
-    private int finalFullWidth;
-    private int solutionWidth;
-    private int indicesHashLength;
-    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
+    private final int n;
+    private final int k;
+    private final int indicesPerHashOutput;
+    private final int hashOutput;
+    private final int collisionBitLength;
+    private final int collisionByteLength;
+    private final int hashLength;
+    private final int finalFullWidth;
+    private final int solutionWidth;
+    private final int indicesHashLength;
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
-    private Param initState;
+    private final Param initState;
 
     public EquiValidator(int n, int k) {
         this.n = n;
@@ -71,15 +66,15 @@ public class EquiValidator {
     }
 
     /**
-     * Initialize Equihash parameters; current implementation uses default
-     * equihash parameters. Set Personalization to "AION0PoW" + n to k where n
-     * and k are in little endian byte order.
-     * 
+     * Initialize Equihash parameters; current implementation uses default equihash parameters. Set
+     * Personalization to "AION0PoW" + n to k where n and k are in little endian byte order.
+     *
      * @return a Param object containing Blake2b parameters.
      */
     private Param InitialiseState() {
         Param p = new Param();
-        byte[] personalization = merge("AION0PoW".getBytes(), merge(intToBytesLE(n), intToBytesLE(k)));
+        byte[] personalization =
+                merge("AION0PoW".getBytes(), merge(intToBytesLE(n), intToBytesLE(k)));
         p.setPersonal(personalization);
         p.setDigestLength(hashOutput);
 
@@ -88,16 +83,14 @@ public class EquiValidator {
 
     /**
      * Determines if a received solution is valid.
-     * 
-     * @param solution
-     *            The solution in minimal form.
-     * @param blockHeader
-     *            The block header.
-     * @param nonce
-     *            The nonce for the solution.
+     *
+     * @param solution The solution in minimal form.
+     * @param blockHeader The block header.
+     * @param nonce The nonce for the solution.
      * @return True if the solution is valid for the blockHeader and nonce.
+     * @throws NullPointerException when given null input
      */
-    public boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce) throws NullPointerException {
+    public boolean isValidSolution(byte[] solution, byte[] blockHeader, byte[] nonce) {
         if (solution == null) {
             LOG.debug("Null solution passed for validation");
             throw new NullPointerException("Null solution");
@@ -140,12 +133,18 @@ public class EquiValidator {
 
             tmpHash = blake.digest();
 
-            X[j] = new FullStepRow(finalFullWidth,
-                    Arrays.copyOfRange(tmpHash, (i % indicesPerHashOutput) * indicesHashLength,
-                            ((i % indicesPerHashOutput) * indicesHashLength) + hashLength),
-                    indicesHashLength, hashLength, collisionBitLength, i);
+            X[j] =
+                    new FullStepRow(
+                            finalFullWidth,
+                            Arrays.copyOfRange(
+                                    tmpHash,
+                                    (i % indicesPerHashOutput) * indicesHashLength,
+                                    ((i % indicesPerHashOutput) * indicesHashLength) + hashLength),
+                            indicesHashLength,
+                            hashLength,
+                            collisionBitLength,
+                            i);
             j++;
-
         }
 
         int hashLen = hashLength;
@@ -189,9 +188,14 @@ public class EquiValidator {
                 // called in the constructor
                 // Xc.add(new FullStepRow(finalFullWidth, X[i], X[i + 1],
                 // hashLen, lenIndices, collisionByteLength));
-                Y[i] = new FullStepRow(finalFullWidth, X[i * 2], X[i * 2 + 1], hashLen, lenIndices,
-                        collisionByteLength);
-
+                Y[i] =
+                        new FullStepRow(
+                                finalFullWidth,
+                                X[i * 2],
+                                X[i * 2 + 1],
+                                hashLen,
+                                lenIndices,
+                                collisionByteLength);
             }
 
             hashLen -= collisionByteLength;
@@ -204,19 +208,17 @@ public class EquiValidator {
         }
 
         return X[0].isZero(hashLen);
-
     }
 
     /**
      * Get indices of solutions from minimized array format.
-     * 
-     * @param minimal
-     *            Byte array in minimal format
-     * @param cBitLen
-     *            Number of bits in a collision
+     *
+     * @param minimal Byte array in minimal format
+     * @param cBitLen Number of bits in a collision
      * @return An array containing solution indices.
+     * @throws NullPointerException when given null input
      */
-    public int[] getIndicesFromMinimal(byte[] minimal, int cBitLen) throws NullPointerException {
+    public int[] getIndicesFromMinimal(byte[] minimal, int cBitLen) {
         if (minimal == null) {
             throw new NullPointerException("null minimal bytes");
         }
@@ -232,16 +234,14 @@ public class EquiValidator {
 
     /**
      * Determines if the hashes of A and B have collisions on length l
-     * 
-     * @param a
-     *            StepRow A
-     * @param b
-     *            StepRow B
-     * @param l
-     *            Length of bytes to compare
+     *
+     * @param a StepRow A
+     * @param b StepRow B
+     * @param l Length of bytes to compare
      * @return False if no collision in hashes a,b up to l, else true.
+     * @throws NullPointerException when given null input
      */
-    public boolean hasCollision(StepRow a, StepRow b, int l) throws NullPointerException {
+    private boolean hasCollision(StepRow a, StepRow b, int l) {
         if (a == null || b == null) {
             throw new NullPointerException("null StepRow passed");
         }
@@ -256,26 +256,25 @@ public class EquiValidator {
 
     /**
      * Compare indices and ensure the intersection of hashes is empty
-     * 
-     * @param a
-     *            StepRow a
-     * @param b
-     *            StepRow b
-     * @param len
-     *            Number of elements to compare
-     * @param lenIndices
-     *            Number of indices to compare
+     *
+     * @param a StepRow a
+     * @param b StepRow b
+     * @param len Number of elements to compare
+     * @param lenIndices Number of indices to compare
      * @return true if distinct; false otherwise
+     * @throws NullPointerException when given null input
      */
-    public boolean distinctIndices(FullStepRow a, FullStepRow b, int len, int lenIndices) throws NullPointerException {
+    private boolean distinctIndices(FullStepRow a, FullStepRow b, int len, int lenIndices) {
         if (a == null || b == null) {
             throw new NullPointerException("null FullStepRow passed");
         }
 
         for (int i = 0; i < lenIndices; i = i + Integer.BYTES) {
             for (int j = 0; j < lenIndices; j = j + Integer.BYTES) {
-                if (Arrays.compare(Arrays.copyOfRange(a.getHash(), len + i, len + i + Integer.BYTES),
-                        Arrays.copyOfRange(b.getHash(), len + j, len + j + Integer.BYTES)) == 0) {
+                if (Arrays.compare(
+                                Arrays.copyOfRange(a.getHash(), len + i, len + i + Integer.BYTES),
+                                Arrays.copyOfRange(b.getHash(), len + j, len + j + Integer.BYTES))
+                        == 0) {
                     return false;
                 }
             }

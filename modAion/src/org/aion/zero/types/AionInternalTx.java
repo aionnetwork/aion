@@ -128,12 +128,13 @@ public class AionInternalTx extends AionTransaction {
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
 
+            byte[] to = (getTo() == null) ? new byte[0] : getTo().toBytes();
             byte[] nonce = getNonce();
             boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
 
             this.rlpEncoded = RLP.encodeList(RLP.encodeElement(isEmptyNonce ? null : nonce),
                     RLP.encodeElement(this.parentHash), RLP.encodeElement(getFrom().toBytes()),
-                    RLP.encodeElement(getTo().toBytes()), RLP.encodeElement(getValue()), RLP.encodeElement(getData()),
+                    RLP.encodeElement(to), RLP.encodeElement(getValue()), RLP.encodeElement(getData()),
                     RLP.encodeString(this.note), encodeInt(this.deep), encodeInt(this.index),
                     encodeInt(this.rejected ? 1 : 0));
         }
@@ -183,10 +184,11 @@ public class AionInternalTx extends AionTransaction {
 
     @Override
     public String toString() {
-        return "TransactionData [" + "  parentHash=" + toHexString(getParentHash()) + ", hash=" + toHexString(getHash())
-                + ", nonce=" + toHexString(getNonce()) + ", fromAddress=" + getFrom().toString() + ", toAddress="
-                + getTo().toString() + ", value=" + toHexString(getValue()) + ", data=" + toHexString(getData())
-                + ", note=" + getNote() + ", deep=" + getDeep() + ", index=" + getIndex() + ", rejected=" + isRejected()
-                + "]";
+        String to = (getTo() == null) ? "" : getTo().toString();
+        return "TransactionData [" + "  parentHash=" + toHexString(getParentHash()) + ", hash="
+            + toHexString(getHash()) + ", nonce=" + toHexString(getNonce()) + ", fromAddress="
+            + getFrom().toString() + ", toAddress=" + to + ", value=" + toHexString(getValue())
+            + ", data=" + toHexString(getData()) + ", note=" + getNote() + ", deep=" + getDeep()
+            + ", index=" + getIndex() + ", rejected=" + isRejected() + "]";
     }
 }

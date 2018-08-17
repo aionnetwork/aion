@@ -1,29 +1,31 @@
-/*******************************************************************************
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ *     This file is part of the aion network project.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- *******************************************************************************/
+ */
 package org.aion.mcf.db;
 
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
 
 import java.util.*;
@@ -31,13 +33,13 @@ import java.util.*;
 /**
  * Contract details cache implementation.
  */
-public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> {
+public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord> {
 
-    private Map<DataWord, DataWord> storage = new HashMap<>();
+    private Map<IDataWord, IDataWord> storage = new HashMap<>();
 
-    public IContractDetails<DataWord> origContract;
+    public IContractDetails<IDataWord> origContract;
 
-    public ContractDetailsCacheImpl(IContractDetails<DataWord> origContract) {
+    public ContractDetailsCacheImpl(IContractDetails<IDataWord> origContract) {
         this.origContract = origContract;
         if (origContract != null) {
             if (origContract instanceof AbstractContractDetails) {
@@ -48,24 +50,48 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
         }
     }
 
+    public static ContractDetailsCacheImpl copy(ContractDetailsCacheImpl cache) {
+        ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(cache.origContract);
+        copy.setCodes(new HashMap<>(cache.getCodes()));
+        copy.storage = new HashMap<>(cache.storage);
+        copy.setDirty(cache.isDirty());
+        copy.setDeleted(cache.isDeleted());
+        copy.prune = cache.prune;
+        copy.detailsInMemoryStorageLimit = cache.detailsInMemoryStorageLimit;
+        return copy;
+    }
+
+    /**
+     * Inserts the key-value pair key and value, or if value consists only of zero bytes, deletes
+     * any key-value pair whose key is key.
+     *
+     * @param key The key.
+     * @param value The value.
+     */
     @Override
-    public void put(DataWord key, DataWord value) {
+    public void put(IDataWord key, IDataWord value) {
         storage.put(key, value);
         setDirty(true);
     }
 
+    /**
+     * Returns the value associated with key if it exists, otherwise returns null.
+     *
+     * @param key The key to query.
+     * @return the associated value or null.
+     */
     @Override
-    public DataWord get(DataWord key) {
-
-        DataWord value = storage.get(key);
+    public IDataWord get(IDataWord key) {
+        IDataWord value = storage.get(key);
         if (value != null) {
-            value = value.clone();
+            value = value.copy();
         } else {
             if (origContract == null) {
                 return null;
             }
             value = origContract.get(key);
-            storage.put(key.clone(), value == null ? DataWord.ZERO.clone() : value.clone());
+            value = (value == null) ? DataWord.ZERO : value;
+            storage.put(key.copy(), value.isZero() ? DataWord.ZERO.copy() : value.copy());
         }
 
         if (value == null || value.isZero()) {
@@ -75,33 +101,50 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
         }
     }
 
+    /**
+     * Returns the storage hash.
+     *
+     * @return the storage hash.
+     */
     @Override
     public byte[] getStorageHash() {
         return origContract.getStorageHash();
     }
 
+    /**
+     * This method is not supported.
+     */
     @Override
     public void decode(byte[] rlpCode) {
         throw new RuntimeException("Not supported by this implementation.");
     }
 
+    /**
+     * This method is not supported.
+     */
     @Override
     public byte[] getEncoded() {
         throw new RuntimeException("Not supported by this implementation.");
     }
 
+    /**
+     * Returns a mapping of all the key-value pairs who have keys in the collection keys.
+     *
+     * @param keys The keys to query for.
+     * @return The associated mappings.
+     */
     @Override
-    public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
-        Map<DataWord, DataWord> storage = new HashMap<>();
+    public Map<IDataWord, IDataWord> getStorage(Collection<IDataWord> keys) {
+        Map<IDataWord, IDataWord> storage = new HashMap<>();
         if (keys == null) {
             throw new IllegalArgumentException("Input keys can't be null");
         } else {
-            for (DataWord key : keys) {
-                DataWord value = get(key);
+            for (IDataWord key : keys) {
+                IDataWord value = get(key);
 
                 // we check if the value is not null,
                 // cause we keep all historical keys
-                if (value != null) {
+                if ((value != null) && (!value.isZero())) {
                     storage.put(key, value);
                 }
             }
@@ -110,31 +153,53 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
         return storage;
     }
 
+    /**
+     * Sets the storage to contain the specified keys and values. This method creates pairings of
+     * the keys and values by mapping the i'th key in storageKeys to the i'th value in storageValues.
+     *
+     * @param storageKeys The keys.
+     * @param storageValues The values.
+     */
     @Override
-    public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
+    public void setStorage(List<IDataWord> storageKeys, List<IDataWord> storageValues) {
 
         for (int i = 0; i < storageKeys.size(); ++i) {
 
-            DataWord key = storageKeys.get(i);
-            DataWord value = storageValues.get(i);
+            IDataWord key = storageKeys.get(i);
+            IDataWord value = storageValues.get(i);
 
             put(key, value);
         }
 
     }
 
+    /**
+     * Sets the storage to contain the specified key-value mappings.
+     *
+     * @param storage The specified mappings.
+     */
     @Override
-    public void setStorage(Map<DataWord, DataWord> storage) {
-        for (Map.Entry<DataWord, DataWord> entry : storage.entrySet()) {
+    public void setStorage(Map<IDataWord, IDataWord> storage) {
+        for (Map.Entry<IDataWord, IDataWord> entry : storage.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
     }
 
+    /**
+     * Get the address associated with this ContractDetailsCacheImpl.
+     *
+     * @return the associated address.
+     */
     @Override
     public Address getAddress() {
         return (origContract == null) ? null : origContract.getAddress();
     }
 
+    /**
+     * Sets the address associated with this ContractDetailsCacheImpl.
+     *
+     * @param address The address to set.
+     */
     @Override
     public void setAddress(Address address) {
         if (origContract != null) {
@@ -142,6 +207,9 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
         }
     }
 
+    /**
+     * Syncs the storage trie.
+     */
     @Override
     public void syncStorage() {
         if (origContract != null) {
@@ -149,13 +217,18 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
         }
     }
 
+    /**
+     * Puts all of the key-value pairs in this ContractDetailsCacheImple into the original contract
+     * injected into this class' constructor, transfers over any code and sets the original contract
+     * to dirty only if it already is dirty or if this class is dirty, otherwise sets it as clean.
+     */
     public void commit() {
 
         if (origContract == null) {
             return;
         }
 
-        for (DataWord key : storage.keySet()) {
+        for (IDataWord key : storage.keySet()) {
             origContract.put(key, storage.get(key));
         }
 
@@ -167,11 +240,17 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<DataWord> 
         origContract.setDirty(this.isDirty() || origContract.isDirty());
     }
 
+    /**
+     * This method is not supported.
+     */
     @Override
-    public IContractDetails<DataWord> getSnapshotTo(byte[] hash) {
+    public IContractDetails<IDataWord> getSnapshotTo(byte[] hash) {
         throw new UnsupportedOperationException("No snapshot option during cache state");
     }
 
+    /**
+     * This method is not supported.
+     */
     @Override
     public void setDataSource(IByteArrayKeyValueStore dataSource) {
         throw new UnsupportedOperationException("Can't set datasource in cache implementation.");

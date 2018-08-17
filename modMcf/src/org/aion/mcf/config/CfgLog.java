@@ -30,6 +30,8 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+
+import com.google.common.base.Objects;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 
@@ -42,7 +44,7 @@ public class CfgLog {
 
     public CfgLog() {
         modules = new HashMap<>();
-        modules.put(LogEnum.ROOT.name(), LogLevel.INFO.name());
+        modules.put(LogEnum.ROOT.name(), LogLevel.WARN.name());
         modules.put(LogEnum.CONS.name(), LogLevel.INFO.name());
         modules.put(LogEnum.GEN.name(), LogLevel.INFO.name());
         modules.put(LogEnum.VM.name(), LogLevel.ERROR.name());
@@ -52,6 +54,7 @@ public class CfgLog {
         modules.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         modules.put(LogEnum.TX.name(), LogLevel.ERROR.name());
         modules.put(LogEnum.TXPOOL.name(), LogLevel.ERROR.name());
+        modules.put(LogEnum.GUI.name(), LogLevel.INFO.name());
         this.logFile = false;
         this.logPath = "log";
     }
@@ -162,5 +165,20 @@ public class CfgLog {
     /** Method checks folder path for illegal inputs */
     public boolean isValidPath() {
         return logPath.length() > 0 && !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgLog cfgLog = (CfgLog) o;
+        return logFile == cfgLog.logFile &&
+                Objects.equal(modules, cfgLog.modules) &&
+                Objects.equal(logPath, cfgLog.logPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(modules, logFile, logPath);
     }
 }
