@@ -113,7 +113,7 @@
       release="10"
       srcdir="./"
       destdir="${dir.dest}"
-      includes="src/**/*.java,module-info.java"
+      includes="src/**/*.java,src/module-info.java"
     >
       <modulepath>
         <pathelement location="${dir.lib}/libnsc.jar"/>

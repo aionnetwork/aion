@@ -31,9 +31,9 @@
     <target name="compile">
         <echo message="compiling with debug=${compile.debug}" />
         <mkdir dir="${main.build.dir}" />
-        <copy includeemptydirs="false" todir="${main.src.dir}">
+        <!--<copy includeemptydirs="false" todir="${main.src.dir}">
             <file file="module-info.java" />
-        </copy>
+        </copy>-->
         <javac
             debug="${compile.debug}"
             debuglevel="source,lines,vars"
@@ -43,7 +43,7 @@
             destdir="${main.build.dir}"
             includes="**/*.java, module-info.java"
             />
-        <delete file="src/module-info.java" />
+        <!--<delete file="src/module-info.java" />-->
     </target>
 
     <target name="build">
