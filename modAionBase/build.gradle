@@ -1,3 +1,7 @@
+//plugins { 
+//    id 'java'
+//}
+
 ext.moduleName = 'aion.base'
 
 dependencies {
@@ -7,3 +11,15 @@ dependencies {
     testCompile 'org.hamcrest:hamcrest-core:1.3'
     testCompile 'com.google.truth:truth:0.42'
 }
+
+//copyJarToAionMod(type: Copy) {
+//    from 'build/libs/modAionBase-1.0.jar'
+//    into "${dirModFile}/modAionBase.jar"
+//}
+
+//task deleteJarFromAionMod(type: Delete) {
+//    delete '../mod/modAionBase.jar'
+//}
+
+//build.dependsOn copyJarToAionMod
+//clean.dependsOn deleteJarFromAionMod
