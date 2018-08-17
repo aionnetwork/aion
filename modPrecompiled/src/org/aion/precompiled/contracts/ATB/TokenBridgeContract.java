@@ -163,7 +163,6 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (!isFromAddress(this.connector.getRelayer()))
                     return fail();
 
-                // TODO: possible attack vector, unsecure deserialization
                 BundleRequestCall bundleRequests = parseBundleRequest(input);
 
                 if (bundleRequests == null)
@@ -240,27 +239,6 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         return this.context.sender().equals(Address.wrap(address));
     }
 
-    private ExecutionContext assembleContext(@Nonnull final byte[] recipient,
-                                             @Nonnull final BigInteger value) {
-        return new ExecutionContext(
-                this.context.transactionHash(),
-                new Address(recipient),
-                this.context.origin(),
-                this.contractAddress,
-                this.context.nrgPrice(),
-                ENERGY_CONSUME,
-                new DataWord(value),
-                ByteUtil.EMPTY_BYTE_ARRAY,
-                this.context.depth() + 1,
-                0,
-                0,
-                this.context.blockCoinbase(),
-                this.context.blockNumber(),
-                this.context.blockTimestamp(),
-                this.context.blockNrgLimit(),
-                this.context.blockDifficulty());
-    }
-
     /**
      * Performs a transfer of value from one account to another, using a method that
      * mimics to the best of it's ability the {@code CALL} opcode. There are some
@@ -282,42 +260,37 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
             return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
 
-        // otherwise prepare for a transfer
-        ExecutionContext innerContext = assembleContext(to, value);
+        // assemble an internal transaction
+        Address from = this.contractAddress;
+        Address recipient = new Address(to);
+        BigInteger nonce = this.track.getNonce(from);
+        DataWord valueToSend = new DataWord(value);
+        byte[] dataToSend = new byte[0];
+        AionInternalTx tx = newInternalTx(from, recipient, nonce, valueToSend, dataToSend, "call");
 
-        AionInternalTx tx = newInternalTx(innerContext);
+        // add transaction to result
         this.context.helper().addInternalTransaction(tx);
 
-        IRepositoryCache cache = this.track;
-        cache.addBalance(new Address(to), value);
-        cache.addBalance(this.contractAddress, value.negate());
+        // increase the nonce and do the transfer without executing code
+        this.track.incrementNonce(from);
+        this.track.addBalance(from, value.negate());
+        this.track.addBalance(recipient, value);
+
+        // construct result
         return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, 0);
     }
 
     /**
-     * Derived from {@link org.aion.fastvm.Callback}
+     * Creates a new internal transaction.
      *
-     * TODO: best if transaction execution path is unified
-     * TODO: what is "call"?
-     *
-     * @param context execution context to generate internal transaction
-     * @return {@code internal transaction}
+     * NOTE: copied from {@link org.aion.fastvm.Callback}
      */
-    @SuppressWarnings("JavadocReference")
-    private AionInternalTx newInternalTx(ExecutionContext context) {
-
+    private AionInternalTx newInternalTx(Address from, Address to, BigInteger nonce, DataWord value, byte[] data,
+                                                String note) {
         byte[] parentHash = context.transactionHash();
-        int deep = context.depth();
-        int idx = context.helper().getInternalTransactions().size();
+        int depth = context.depth();
+        int index = context.helper().getInternalTransactions().size();
 
-        return new AionInternalTx(parentHash,
-                deep,
-                idx,
-                new DataWord(this.track.getNonce(context.sender())).getData(),
-                context.sender(),
-                context.address(),
-                context.callValue().getData(),
-                context.callData(),
-                "call");
+        return new AionInternalTx(parentHash, depth, index, new DataWord(nonce).getData(), from, to, value.getData(), data, note);
     }
 }
