@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2017-2018 Aion foundation.
+
+    This file is part of the aion network project.
+
+    The aion network project is free software: you can redistribute it
+    and/or modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation, either version 3 of
+    the License, or any later version.
+
+    The aion network project is distributed in the hope that it will
+    be useful, but WITHOUT ANY WARRANTY; without even the implied
+    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with the aion network project source files.
+    If not, see <https://www.gnu.org/licenses/>.
+
+Contributors:
+    Aion foundation.
+-->
+
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.121"
+            stylesheets="@footer-pane.css" styleClass="anchor-pane"
+            AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0.0">
+    <HBox alignment="CENTER_LEFT" AnchorPane.leftAnchor="10" prefHeight="60.0">
+        <fx:include source="partials/ConsoleTail.fxml"/>
+    </HBox>
+    <HBox alignment="CENTER_RIGHT" AnchorPane.rightAnchor="10" prefHeight="60.0">
+        <fx:include source="partials/ConnectivityStatus.fxml"/>
+    </HBox>
+</AnchorPane>

@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.p2p;
 
 import java.math.BigInteger;
@@ -72,6 +73,8 @@ public interface INode {
      */
     BigInteger getTotalDifficulty();
 
+    int getPeerId();
+
     long getTimestamp();
 
     /**
@@ -107,4 +110,5 @@ public interface INode {
 
     void setBinaryVersion(String _revision);
 
+    String toString();
 }

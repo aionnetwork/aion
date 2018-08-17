@@ -2,8 +2,27 @@
 
 <project basedir="." default="build" name="modEvtMgrImpl">
 	<property name="dir.lib" value="../lib" />
-        <property name="dir.mod" value="../mod" />
+	<property name="dir.mod" value="../mod" />
 	<property name="dir.dest" value="./build" />
+	<property name="dir.test" value="./build/test" />
+	<property name="src.test" value="./test" />
+	<property name="test.report.dir" value="report"/>
+
+	<path id="classpath.test">
+		<pathelement location="${dir.lib}/junit_4/junit-4.12.jar"/>
+		<pathelement location="${dir.lib}/hamcrest/hamcrest-all-1.3.jar"/>
+		<pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+		<pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/>
+		<pathelement location="${dir.lib}/logback-core-1.2.3.jar"/>
+		<pathelement location="${dir.lib}/guava-19.0.jar"/>
+		<pathelement location="${dir.lib}/commons-codec-1.10.jar"/>
+		<pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
+		<pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
+		<pathelement location="${dir.mod}/modEvtMgrImpl.jar"/>
+		<pathelement location="${dir.mod}/modEvtMgr.jar"/>
+		<pathelement location="${dir.mod}/modLogger.jar"/>
+		<pathelement location="${dir.lib}/mockito-core-2.12.0.jar" />
+	</path>
 
 	<target name="clean_build" depends="clean">
 		<antcall target="build">
@@ -15,6 +34,8 @@
 		<delete dir="${dir.dest}" includeEmptyDirs="true" includes="**/*/" />
 		<delete file="${dir.mod}/modEvtMgrImpl.jar" />
 	</target>
+
+
 	<target name="build">
 		<echo message="compiling with debug=${compile.debug}" />
 		<mkdir dir="${dir.dest}" />
@@ -32,4 +53,41 @@
 			<file file="modEvtMgrImpl.jar" />
 		</move>
 	</target>
+
+	<target name="test_build" depends="build">
+		<mkdir dir="${dir.test}" />
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*.java">
+			<classpath>
+				<path refid="classpath.test" />
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="ci_test_build" depends="build">
+		<mkdir dir="${dir.test}"/>
+		<javac debug="on" debuglevel="source,lines,vars" includeantruntime="false" release="9" srcdir="./test" destdir="${dir.test}" includes="**/*.java">
+			<classpath>
+				<path refid="classpath.test"/>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="test" depends="test_build">
+		<mkdir dir="${test.report.dir}" />
+
+		<junit printsummary="on" haltonfailure="yes" fork="true">
+			<classpath>
+				<path refid="classpath.test" />
+				<pathelement location="${dir.test}" />
+			</classpath>
+			<formatter type="plain" usefile="false" />
+			<formatter type="xml" />
+			<batchtest todir="${test.report.dir}">
+				<fileset dir="${src.test}">
+					<include name="**/*Test.java"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+
 </project>

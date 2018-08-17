@@ -22,7 +22,9 @@
  */
 package org.aion.p2p.impl1;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.channels.SelectionKey;
@@ -75,7 +77,6 @@ import org.slf4j.Logger;
  * @author Chris p2p://{uuid}@{ip}:{port}
  */
 public final class P2pMgr implements IP2pMgr {
-
     private static final int PERIOD_SHOW_STATUS = 10000;
     private static final int PERIOD_REQUEST_ACTIVE_NODES = 1000;
     private static final int PERIOD_UPNP_PORT_MAPPING = 3600000;
@@ -106,6 +107,8 @@ public final class P2pMgr implements IP2pMgr {
 
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
+
+    private String outGoingIP;
 
     public enum Dest {
         INBOUND,
@@ -148,7 +151,9 @@ public final class P2pMgr implements IP2pMgr {
         this.syncSeedsOnly = _bootlistSyncOnly;
         this.errTolerance = _errorTolerance;
 
-        nodeMgr = new NodeMgr(this, _maxActiveNodes, _maxTempNodes);
+        nodeMgr = new NodeMgr(this, _maxActiveNodes, _maxTempNodes, p2pLOG);
+
+        outGoingIP = checkOutGoingIP();
 
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
@@ -157,6 +162,7 @@ public final class P2pMgr implements IP2pMgr {
                 nodeMgr.seedIpAdd(node.getIpStr());
             }
         }
+
 
         // rem out for bug:
         // nodeMgr.loadPersistedNodes();
@@ -212,7 +218,7 @@ public final class P2pMgr implements IP2pMgr {
                     TimeUnit.MILLISECONDS);
             }
 
-            if (p2pLOG.isDebugEnabled()) {
+            if (p2pLOG.isInfoEnabled()) {
                 scheduledWorkers.scheduleWithFixedDelay(
                     getStatusInstance(),
                     2,
@@ -222,7 +228,7 @@ public final class P2pMgr implements IP2pMgr {
 
             if (!syncSeedsOnly) {
                 scheduledWorkers.scheduleWithFixedDelay(
-                    new TaskRequestActiveNodes(this),
+                    new TaskRequestActiveNodes(this, p2pLOG),
                     5000,
                     PERIOD_REQUEST_ACTIVE_NODES,
                     TimeUnit.MILLISECONDS);
@@ -348,8 +354,8 @@ public final class P2pMgr implements IP2pMgr {
             boolean notSelfId = !Arrays.equals(_node.getId(), this.selfNodeId);
             boolean notSameIpOrPort =
                 !(Arrays.equals(selfIp, _node.getIp()) && selfPort == _node.getPort());
-            boolean notActive = nodeMgr.notActiveNode(_node.getIdHash());
-            boolean notOutbound = !nodeMgr.getOutboundNodes().containsKey(_node.getIdHash());
+            boolean notActive = nodeMgr.notActiveNode(_node.getPeerId());
+            boolean notOutbound = nodeMgr.notAtOutboundList(_node.getPeerId());
             return notSelfId && notSameIpOrPort && notActive && notOutbound;
         } else {
             return false;
@@ -414,6 +420,11 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     @Override
+    public String getOutGoingIP() {
+        return outGoingIP;
+    }
+
+    @Override
     public boolean isSyncSeedsOnly() {
         return this.syncSeedsOnly;
     }
@@ -458,7 +469,7 @@ public final class P2pMgr implements IP2pMgr {
     }
 
     private TaskClear getClearInstance() {
-        return new TaskClear(this, this.nodeMgr, this.start);
+        return new TaskClear(this.nodeMgr, this.start);
     }
 
     private TaskConnectPeers getConnectPeersInstance() {
@@ -480,5 +491,26 @@ public final class P2pMgr implements IP2pMgr {
             this.selfPort,
             this.selfRevision.getBytes(),
             versions);
+    }
+
+    private String checkOutGoingIP() {
+        StringBuilder output = new StringBuilder();
+        Runtime rt = Runtime.getRuntime();
+        Process pr;
+        try {
+            pr = rt.exec("wget -qO- icanhazip.com");
+            pr.waitFor();
+            BufferedReader reader =
+                new BufferedReader(new InputStreamReader(pr.getInputStream()));
+
+            String line;
+            while ((line = reader.readLine())!= null) {
+                output.append(line);
+            }
+        } catch (IOException | InterruptedException e) {
+            p2pLOG.error("get outGoingIP exception {}", e.toString());
+        }
+
+        return output.toString();
     }
 }

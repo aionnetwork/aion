@@ -92,7 +92,9 @@ final class TaskShowStatus implements Runnable {
                         Paths.get(reportFolder, System.currentTimeMillis() + "-sync-report.out"),
                         status.getBytes());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    if (p2pLOG.isDebugEnabled()) {
+                        p2pLOG.debug("sync-ss report exception {}", e.toString());
+                    }
                 }
             }
 
@@ -100,7 +102,7 @@ final class TaskShowStatus implements Runnable {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("sync-ss shutdown");
+                    p2pLOG.debug("sync-ss shutdown {}");
                 }
                 return;
             }

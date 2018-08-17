@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.p2p.impl1.tasks;
 
 import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import org.aion.p2p.Header;
 
 /**
@@ -36,36 +38,24 @@ import org.aion.p2p.Header;
  */
 class ChannelBuffer {
 
-    // buffer for buffer remaining after NIO select read.
-    byte[] remainBuffer;
-
-    int buffRemain = 0;
-
-    private int nodeIdHash;
-
-    private String displayId;
-
-    Header header = null;
-
-    private byte[] bsHead = new byte[Header.LEN];
-
     byte[] body = null;
-
-    Lock lock = new java.util.concurrent.locks.ReentrantLock();
-
-    /**
-     * Indicates whether this channel is closed.
-     */
-    AtomicBoolean isClosed = new AtomicBoolean(false);
+    Lock lock = new ReentrantLock();
+    private Header header = null;
+    // buffer for buffer remaining after NIO select read.
+    private byte[] remainBuffer;
+    private int buffRemain = 0;
+    private int nodeIdHash;
+    private String displayId;
+    private byte[] bsHead = new byte[Header.LEN];
+    private AtomicBoolean closed = new AtomicBoolean(false);
 
     private Map<Integer, RouteStatus> routes = new HashMap<>();
 
-    public String getDisplayId() {
-        return displayId;
+    ChannelBuffer() {
     }
 
-    void setNodeIdHash(int nodeIdHash) {
-        this.nodeIdHash = nodeIdHash;
+    public String getDisplayId() {
+        return displayId;
     }
 
     void setDisplayId(String displayId) {
@@ -76,19 +66,27 @@ class ChannelBuffer {
         return nodeIdHash;
     }
 
-    class RouteStatus {
-
-        long timestamp;
-        int count;
-
-        RouteStatus() {
-            this.timestamp = System.currentTimeMillis();
-            count = 0;
-        }
+    void setNodeIdHash(int nodeIdHash) {
+        this.nodeIdHash = nodeIdHash;
     }
 
+    /**
+     * Indicates whether this channel is closed.
+     */
+    boolean isClosed() {
+        return closed.get();
+    }
 
-    ChannelBuffer() {
+    void setClosed() {
+        this.closed.set(true);
+    }
+
+    int getBuffRemain() {
+        return buffRemain;
+    }
+
+    void setBuffRemain(int buffRemain) {
+        this.buffRemain = buffRemain;
     }
 
     /**
@@ -122,21 +120,47 @@ class ChannelBuffer {
         }
     }
 
-
     RouteStatus getRouteCount(int _route) {
         return routes.get(_route);
     }
 
     void readHead(ByteBuffer buf) {
+        if (buf.array().length < bsHead.length) {
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG
+                    .debug("ChannelBuffer readHead short buffer size");
+            }
+            return;
+        }
+
         buf.get(bsHead);
         try {
             header = Header.decode(bsHead);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG
+                    .debug("ChannelBuffer readHead exception. {}", e.toString());
+            }
         }
     }
 
     void readBody(ByteBuffer buf) {
+        if (isHeaderNotCompleted()) {
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG
+                    .debug("ChannelBuffer readBody no header.");
+            }
+            return;
+        }
+
+        if (buf.array().length < header.getLen()) {
+            if (p2pLOG.isDebugEnabled()) {
+                p2pLOG
+                    .debug("ChannelBuffer readBody short buffer size.");
+            }
+            return;
+        }
+
         body = new byte[header.getLen()];
         buf.get(body);
     }
@@ -160,7 +184,34 @@ class ChannelBuffer {
      * @return boolean
      */
     boolean isBodyNotCompleted() {
-        return this.header == null || this.body == null || body.length != header.getLen();
+        return header == null || body == null || body.length != header.getLen();
+    }
+
+    byte[] getRemainBuffer() {
+        return remainBuffer;
+    }
+
+    void setRemainBuffer(byte[] remainBuffer) {
+        this.remainBuffer = remainBuffer;
+    }
+
+    public Header getHeader() {
+        return header;
+    }
+
+    public void setHeader(Header _header) {
+        header = _header;
+    }
+
+    class RouteStatus {
+
+        long timestamp;
+        int count;
+
+        RouteStatus() {
+            this.timestamp = System.currentTimeMillis();
+            count = 0;
+        }
     }
 
 }

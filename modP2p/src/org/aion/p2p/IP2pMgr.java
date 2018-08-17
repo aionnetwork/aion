@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.p2p;
 
 import java.io.IOException;
@@ -74,4 +75,6 @@ public interface IP2pMgr {
     boolean validateNode(INode _node);
 
     int getSelfNetId();
+
+    String getOutGoingIP();
 }

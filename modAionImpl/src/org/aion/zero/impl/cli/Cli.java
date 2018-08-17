@@ -1,44 +1,43 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
 
 
 package org.aion.zero.impl.cli;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.db.RecoveryUtils;
 
@@ -51,6 +50,9 @@ import java.util.UUID;
  * @author chris
  */
 public class Cli {
+
+    File keystoreDir = new File(
+        System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
     public int call(final String[] args, final Cfg cfg) {
         try {
@@ -89,7 +91,7 @@ public class Cli {
                         default:
                             printHelp();
                             return 1;
-                        }
+                    }
                     break;
                 case "-c":
                     cfg.fromXML();
@@ -101,7 +103,9 @@ public class Cli {
                     cfg.fromXML();
                     System.out.println("\nInformation");
                     System.out.println("--------------------------------------------");
-                    System.out.println("current: p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+                    System.out.println(
+                        "current: p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
+                            + cfg.getNet().getP2p().getPort());
                     String[] nodes = cfg.getNet().getNodes();
                     if (nodes != null && nodes.length > 0) {
                         System.out.println("boot nodes list:");
@@ -111,7 +115,29 @@ public class Cli {
                     } else {
                         System.out.println("boot nodes list: 0");
                     }
-                    System.out.println("p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+                    System.out.println(
+                        "p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p()
+                            .getPort());
+                    break;
+                case "-s":
+                    if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
+                        createKeystoreDirIfMissing();
+                        Console console = System.console();
+                        checkConsoleExists(console);
+
+                        List<String> scriptArgs = new ArrayList<>();
+                        scriptArgs.add("/bin/bash");
+                        scriptArgs.add("script/generateSslCert.sh");
+                        scriptArgs.add(getCertName(console));
+                        scriptArgs.add(getCertPass(console));
+                        // add the hostname and ip optionally passed in as cli args
+                        scriptArgs.addAll(Arrays.asList(Arrays.copyOfRange(args, 2, args.length)));
+                        new ProcessBuilder(scriptArgs).inheritIO().start().waitFor();
+                    } else {
+                        System.out.println("Incorrect usage of -s create command.\n" +
+                            "Command must enter both hostname AND ip or else neither one.");
+                        return 1;
+                    }
                     break;
                 case "-r":
                     if (args.length < 2) {
@@ -120,15 +146,18 @@ public class Cli {
                         System.out.println("Finished database clean-up.");
                     } else {
                         switch (revertTo(args[1])) {
-                        case SUCCESS:
-                            System.out.println("Blockchain successfully reverted to block number " + args[1] + ".");
-                            break;
-                        case FAILURE:
-                            System.out.println("Unable to revert to block number " + args[1] + ".");
-                            return 1;
-                        case ILLEGAL_ARGUMENT:
-                        default:
-                            return 1;
+                            case SUCCESS:
+                                System.out.println(
+                                    "Blockchain successfully reverted to block number " + args[1]
+                                        + ".");
+                                break;
+                            case FAILURE:
+                                System.out
+                                    .println("Unable to revert to block number " + args[1] + ".");
+                                return 1;
+                            case ILLEGAL_ARGUMENT:
+                            default:
+                                return 1;
                         }
                     }
                     break;
@@ -150,20 +179,24 @@ public class Cli {
                     long block_count = 2L;
 
                     if (args.length < 2) {
-                        System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                        System.out
+                            .println("Retrieving state size for top " + block_count + " blocks.");
                         RecoveryUtils.printStateTrieSize(block_count);
                     } else {
                         try {
                             block_count = Long.parseLong(args[1]);
                         } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                            System.out.println("The given argument <" + args[1]
+                                + "> cannot be converted to a number.");
                         }
                         if (block_count < 1) {
-                            System.out.println("The given argument <" + args[1] + "> is not valid.");
+                            System.out
+                                .println("The given argument <" + args[1] + "> is not valid.");
                             block_count = 2L;
                         }
 
-                        System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                        System.out
+                            .println("Retrieving state size for top " + block_count + " blocks.");
                         RecoveryUtils.printStateTrieSize(block_count);
                     }
                     break;
@@ -177,12 +210,14 @@ public class Cli {
                         try {
                             level = Long.parseLong(args[1]);
                         } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                            System.out.println("The given argument <" + args[1]
+                                + "> cannot be converted to a number.");
                         }
                         if (level == -1L) {
                             System.out.println("Retrieving state for top main chain block...");
                         } else {
-                            System.out.println("Retrieving state for main chain block at level " + level + "...");
+                            System.out.println(
+                                "Retrieving state for main chain block at level " + level + "...");
                         }
                         RecoveryUtils.printStateTrieDump(level);
                     }
@@ -200,10 +235,12 @@ public class Cli {
                         try {
                             count = Long.parseLong(args[1]);
                         } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1] + "> cannot be converted to a number.");
+                            System.out.println("The given argument <" + args[1]
+                                + "> cannot be converted to a number.");
                         }
                         if (count < 1) {
-                            System.out.println("The given argument <" + args[1] + "> is not valid.");
+                            System.out
+                                .println("The given argument <" + args[1] + "> is not valid.");
                             count = 10L;
                         }
 
@@ -238,21 +275,31 @@ public class Cli {
     private void printHelp() {
         System.out.println("Usage: ./aion.sh [options] [arguments]");
         System.out.println();
-        System.out.println("  -h                           show help info");
+        System.out.println("  -h                                            show help info");
         System.out.println();
-        System.out.println("  -a create                    create a new account");
-        System.out.println("  -a list                      list all existing accounts");
-        System.out.println("  -a export [address]          export private key of an account");
-        System.out.println("  -a import [private_key]      import private key");
+        System.out.println("  -a create                                     create a new account");
+        System.out
+            .println("  -a list                                       list all existing accounts");
+        System.out.println(
+            "  -a export [address]                           export private key of an account");
+        System.out.println("  -a import [private_key]                       import private key");
         System.out.println();
-        System.out.println("  -c                           create config with default values");
+        System.out.println(
+            "  -c                                            create config with default values");
         System.out.println();
-        System.out.println("  -i                           show information");
+        System.out.println("  -i                                            show information");
         System.out.println();
-        System.out.println("  -r                           remove blocks on side chains and correct block info");
-        System.out.println("  -r [block_number]            revert db up to specific block number");
+        System.out.println(
+            "  -s create                                     create an ssl certificate for localhost");
+        System.out.println(
+            "  -s create [[hostname] [ip]]                   create an ssl certificate for a custom hostname and ip");
         System.out.println();
-        System.out.println("  -v                           show version");
+        System.out.println(
+            "  -r                                            remove blocks on side chains and correct block info");
+        System.out.println(
+            "  -r [block_number]                             revert db up to specific block number");
+        System.out.println();
+        System.out.println("  -v                                            show version");
     }
 
     /**
@@ -302,8 +349,7 @@ public class Cli {
     /**
      * Dumps the private of the given account.
      *
-     * @param address
-     *            address of the account
+     * @param address address of the account
      * @return boolean
      */
     private boolean exportPrivateKey(String address) {
@@ -333,8 +379,7 @@ public class Cli {
     /**
      * Imports a private key.
      *
-     * @param privateKey
-     *            private key in hex string
+     * @param privateKey private key in hex string
      * @return boolean
      */
     private boolean importPrivateKey(String privateKey) {
@@ -349,7 +394,7 @@ public class Cli {
         ECKey key = ECKeyFac.inst().fromPrivate(raw);
         if (key == null) {
             System.out.println("Unable to recover private key."
-                    + "Are you sure you did not import a public key?");
+                + "Are you sure you did not import a public key?");
             return false;
         }
 
@@ -382,9 +427,9 @@ public class Cli {
      * user input from a console evironment and if one is not available it instead attempts to read
      * from reader.
      *
-     * @throws NullPointerException if prompt is null or if console unavailable and reader is null.
      * @param prompt The read-password prompt to display to the user.
      * @return The user-entered password.
+     * @throws NullPointerException if prompt is null or if console unavailable and reader is null.
      */
     public String readPassword(String prompt, BufferedReader reader) {
         if (prompt == null) {
@@ -401,10 +446,10 @@ public class Cli {
     /**
      * Returns a password after prompting the user to enter it from reader.
      *
-     * @throws NullPointerException if reader is null.
      * @param prompt The read-password prompt to display to the user.
      * @param reader The BufferedReader to read input from.
      * @return The user-entered password.
+     * @throws NullPointerException if reader is null.
      */
     private String readPasswordFromReader(String prompt, BufferedReader reader) {
         if (reader == null) {
@@ -428,11 +473,59 @@ public class Cli {
         try {
             block = Long.parseLong(blockNumber);
         } catch (NumberFormatException e) {
-            System.out.println("The given argument <" + blockNumber + "> cannot be converted to a number.");
+            System.out.println(
+                "The given argument <" + blockNumber + "> cannot be converted to a number.");
             return RecoveryUtils.Status.ILLEGAL_ARGUMENT;
         }
 
         return RecoveryUtils.revertTo(block);
+    }
+
+    private void createKeystoreDirIfMissing() {
+        if (!keystoreDir.isDirectory()) {
+            if (!keystoreDir.mkdir()) {
+                System.out.println("Ssl keystore directory could not be created. " +
+                    "Please check user permissions or create directory manually.");
+                System.exit(1);
+            }
+            System.out.println();
+        }
+    }
+
+    /**
+     * For security reasons we only want the ssl option to run in a console environment.
+     */
+    private void checkConsoleExists(Console console) {
+        if (console == null) {
+            System.out.println(
+                "No console found. This command can only be run interactively in a console environment.");
+            System.exit(1);
+        }
+    }
+
+    private String getCertName(Console console) {
+        console.printf("Enter certificate name:\n");
+        String certName = console.readLine();
+        if ((certName == null) || (certName.isEmpty())) {
+            System.out.println("Error: no certificate name entered.");
+            System.exit(1);
+        }
+        return certName;
+    }
+
+    private String getCertPass(Console console) {
+        int minPassLen = 7;
+        String certPass = String.valueOf(console.readPassword(
+                "Enter certificate password (at least " + minPassLen + " characters):\n"));
+        if ((certPass == null) || (certPass.isEmpty())) {
+            System.out.println("Error: no certificate password entered.");
+            System.exit(1);
+        } else if (certPass.length() < minPassLen) {
+            System.out.println(
+                "Error: certificate password must be at least " + minPassLen + " characters long.");
+            System.exit(1);
+        }
+        return certPass;
     }
 
 }

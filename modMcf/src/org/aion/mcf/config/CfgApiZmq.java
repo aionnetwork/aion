@@ -23,6 +23,8 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -133,4 +135,21 @@ public class CfgApiZmq {
     }
     public boolean isFiltersEnabled() { return this.filtersEnabled; }
     public boolean isBlockSummaryCacheEnabled() { return this.blockSummaryCacheEnabled; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgApiZmq cfgApiZmq = (CfgApiZmq) o;
+        return active == cfgApiZmq.active &&
+                port == cfgApiZmq.port &&
+                filtersEnabled == cfgApiZmq.filtersEnabled &&
+                blockSummaryCacheEnabled == cfgApiZmq.blockSummaryCacheEnabled &&
+                Objects.equal(ip, cfgApiZmq.ip);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(active, ip, port, filtersEnabled, blockSummaryCacheEnabled);
+    }
 }

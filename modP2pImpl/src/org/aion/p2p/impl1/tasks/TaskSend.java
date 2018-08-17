@@ -127,16 +127,15 @@ public class TaskSend implements Runnable {
                     }
                 } else {
                     if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("msg-{} ->{} node-not-exit", mo.getDest().name(), mo.getDisplayId());
+                        p2pLOG.debug("msg-{} ->{} node-not-exist", mo.getDest().name(), mo.getDisplayId());
                     }
                 }
             } catch (InterruptedException e) {
-                p2pLOG.error("task-send-interrupted");
+                p2pLOG.error("task-send-interrupted", e);
                 return;
             } catch (RejectedExecutionException e) {
-                p2pLOG.warn("task-send-reached thread queue limit");
+                p2pLOG.warn("task-send-reached thread queue limit", e);
             } catch (Exception e) {
-                e.printStackTrace();
                 if (p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug("TaskSend exception {}", e.getMessage());
                 }
