@@ -41,7 +41,7 @@ public class ContractFactory implements IContractFactory {
     private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
 
     private static final String TOKEN_BRIDGE = "0000000000000000000000000000000000000000000000000000000000000200";
-    private static final String TOKEN_BRIDGE_INITIAL_OWNER = "a048613dd3cb89685cb3f9cfa410ecf606c7ec7320e721edacd194050828c6b0";
+    private static final String TOKEN_BRIDGE_INITIAL_OWNER = "a008d7b29e8d1f4bfab428adce89dc219c4714b2c6bf3fd1131b688f9ad804aa";
 
     public ContractFactory(){}
 
