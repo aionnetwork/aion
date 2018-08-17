@@ -84,6 +84,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modApiServer/build.xml" target="test" />
 	</target>
 
 	<target name="ci_test_modules">
@@ -102,6 +103,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="test" />
         <ant inheritAll="false" dir="${dir.workspace}/modGui" antfile="build.xml" target="integtest" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modApiServer/build.xml" target="test" />
 	</target>
 
 	<!--<target name="test_build" depends="build">
@@ -184,6 +186,7 @@
 		<macro_collect_reports src="aion_fastvm/modFastVM/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modPrecompiled/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modApiServer/report" dest="${test.report.dir}" />
 	</target>
 
 	<target name="ci_test_modules_collect_reports" depends="ci_test_modules">
@@ -197,6 +200,7 @@
 		<macro_collect_reports src="aion_fastvm/modFastVM/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modPrecompiled/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modApiServer/report" dest="${test.report.dir}" />
 	</target>
 
 	<target name="clean_build" depends="logenv, clean, fastbuild" />
