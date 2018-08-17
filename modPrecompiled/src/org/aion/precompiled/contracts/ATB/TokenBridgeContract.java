@@ -199,10 +199,10 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 byte[] bundleHash = parseDwordFromCall(input);
                 if (bundleHash == null)
                     return fail();
-                return success(this.connector.getBundle(bundleHash));
+                return success(orDefaultDword(this.connector.getBundle(bundleHash)));
             case PURE_RELAYER:
                 // ATB-5 Add in relayer getter
-                return success(this.connector.getRelayer());
+                return success(orDefaultDword(this.connector.getRelayer()));
             default:
                 return fail();
         }
