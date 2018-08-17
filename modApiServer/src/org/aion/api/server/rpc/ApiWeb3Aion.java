@@ -90,6 +90,7 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.TypeConverter;
 import org.aion.base.util.Utils;
+import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
@@ -503,7 +504,7 @@ public class ApiWeb3Aion extends ApiAion {
         IRepository repo = this.ac.getRepository();
 
         @SuppressWarnings("unchecked")
-        DataWord storageValue = (DataWord) repo.getStorageValue(address, key);
+        IDataWord storageValue = repo.getStorageValue(address, key);
         if (storageValue != null)
             return new RpcMsg(TypeConverter.toJsonHex(storageValue.getData()));
         else return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
