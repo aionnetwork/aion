@@ -163,7 +163,6 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 if (!isFromAddress(this.connector.getRelayer()))
                     return fail();
 
-                // TODO: possible attack vector, unsecure deserialization
                 BundleRequestCall bundleRequests = parseBundleRequest(input);
 
                 if (bundleRequests == null)
