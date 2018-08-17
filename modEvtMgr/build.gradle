@@ -1,0 +1,9 @@
+ext.moduleName = 'org.aion.evtmgr'
+
+dependencies {
+    testCompile project(':modEvtMgrImpl')
+    testCompile project(':modLogger')
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+    testCompile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
+}
