@@ -918,9 +918,6 @@ public class ApiAion0Test {
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_estimateNrg rslt = Message.rsp_estimateNrg.parseFrom(stripHeader(rsp));
-        assertNotEquals(0, rslt.getNrg());
-
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_estimateNrg_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
