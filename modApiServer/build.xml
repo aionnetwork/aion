@@ -8,17 +8,51 @@
     <property name="test.report.dir" value="report"/>
     <property name="dir.javaAPIlib" value="../javaAPIlib"/>
     <property name="native.dir" value="native"/>
-    <property name="native.src.dir" value="../../native"/>
+    <property name="native.src.dir" value="../native"/>
 
     <path id="classpath.dependency">
         <pathelement location="${dir.mod}/modAionBase.jar"/>
+        <pathelement location="${dir.mod}/modAion.jar"/>
+        <pathelement location="${dir.mod}/modAionImpl.jar"/>
+        <pathelement location="${dir.mod}/modVM.jar"/>
+        <pathelement location="${dir.mod}/modFastVM.jar"/>
+        <pathelement location="${dir.mod}/modMcf.jar"/>
+        <pathelement location="${dir.mod}/modLogger.jar"/>
+        <pathelement location="${dir.mod}/modP2p.jar"/>
+        <pathelement location="${dir.mod}/modAionApi.jar"/>
+        <pathelement location="${dir.mod}/modEvtMgr.jar"/>
+        <pathelement location="${dir.mod}/modEvtMgrImpl.jar"/>
+        <pathelement location="${dir.mod}/modCrypto.jar"/>
+        <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+        <pathelement location="${dir.lib}/libnzmq.jar"/>
         <pathelement location="${dir.lib}/libnsc.jar"/>
+        <pathelement location="${dir.lib}/libJson.jar"/>
+        <pathelement location="${dir.lib}/protobuf-java-3.5.0.jar"/>
+        <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
+        <pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
+        <pathelement location="${dir.lib}/guava-25.1-jre.jar"/>
+        <pathelement location="${dir.lib}/nanohttpd-2.3.1-with-deps.jar"/>
+        <pathelement location="${dir.lib}/jboss-logging-3.3.0.Final.jar"/>
+        <pathelement location="${dir.lib}/xnio-nio-3.3.8.Final.jar"/>
+        <pathelement location="${dir.lib}/xnio-api-3.3.8.Final.jar"/>
+        <pathelement location="${dir.lib}/undertow-core-2.0.10.Final.jar"/>
     </path>
 
     <path id="classpath.test">
         <pathelement location="${dir.lib}/junit_4/junit-4.12.jar"/>
         <pathelement location="${dir.lib}/hamcrest/hamcrest-all-1.3.jar"/>
         <pathelement location="${dir.mod}/modApiServer.jar"/>
+        <pathelement location="${dir.lib}/logback-core-1.2.3.jar"/>
+        <pathelement location="${dir.lib}/logback-classic-1.2.3.jar"/>
+        <pathelement location="${dir.lib}/leveldbjni-all-1.18.3.jar"/>
+        <pathelement location="${dir.lib}/rocksdbjni-5.11.3.jar"/>
+        <pathelement location="${dir.mod}/modAionImpl.jar"/>
+        <pathelement location="${dir.mod}/modDbImpl.jar"/>
+        <pathelement location="${dir.mod}/modTxPool.jar"/>
+        <pathelement location="${dir.mod}/modRlp.jar"/>
+        <pathelement location="${dir.mod}/modPrecompiled.jar"/>
+        <pathelement location="${dir.mod}/modP2pImpl.jar"/>
+        <pathelement location="${dir.mod}/modTxPoolImpl.jar"/>
     </path>
 
     <target name="clean_build" depends="clean">
@@ -73,30 +107,7 @@
         <javac debug="${compile.debug}" debuglevel="source,lines,vars" includeantruntime="false" release="10" srcdir="./"
                destdir="${dir.dest}" includes="src/**/*.java,module-info.java">
             <modulepath>
-                <pathelement location="${dir.mod}/modAionBase.jar"/>
-                <pathelement location="${dir.mod}/modAion.jar"/>
-                <pathelement location="${dir.mod}/modAionImpl.jar"/>
-                <pathelement location="${dir.mod}/modFastVM.jar"/>
-                <pathelement location="${dir.mod}/modMcf.jar"/>
-                <pathelement location="${dir.mod}/modLogger.jar"/>
-                <pathelement location="${dir.mod}/modP2p.jar"/>
-                <pathelement location="${dir.mod}/modAionApi.jar"/>
-                <pathelement location="${dir.mod}/modEvtMgr.jar"/>
-                <pathelement location="${dir.mod}/modEvtMgrImpl.jar"/>
-                <pathelement location="${dir.mod}/modCrypto.jar"/>
-                <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
-                <pathelement location="${dir.lib}/libnzmq.jar"/>
-                <pathelement location="${dir.lib}/libnsc.jar"/>
-                <pathelement location="${dir.lib}/libJson.jar"/>
-                <pathelement location="${dir.lib}/protobuf-java-3.5.0.jar"/>
-                <pathelement location="${dir.lib}/commons-collections4-4.0.jar"/>
-                <pathelement location="${dir.lib}/commons-lang3-3.4.jar"/>
-                <pathelement location="${dir.lib}/guava-25.1-jre.jar"/>
-                <pathelement location="${dir.lib}/nanohttpd-2.3.1-with-deps.jar"/>
-                <pathelement location="${dir.lib}/jboss-logging-3.3.0.Final.jar"/>
-                <pathelement location="${dir.lib}/xnio-nio-3.3.8.Final.jar"/>
-                <pathelement location="${dir.lib}/xnio-api-3.3.8.Final.jar"/>
-                <pathelement location="${dir.lib}/undertow-core-2.0.10.Final.jar"/>
+                <path refid="classpath.dependency" />
             </modulepath>
         </javac>
 
