@@ -97,6 +97,24 @@ public class TokenBridgeContractTest {
     }
 
     @Test
+    public void testGetNewOwnerNotOwnerAddress() {
+        // override defaults
+        this.contract = new TokenBridgeContract(context(Address.ZERO_ADDRESS(), CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        byte[] newOwner = AddressSpecs.computeA0Address(HashUtil.h256("newOwner".getBytes()));
+
+        byte[] payload = new AbiEncoder(
+                BridgeFuncSig.SIG_CHANGE_OWNER.getSignature(), new AddressFVM(new ByteArrayWrapper(newOwner))).encodeBytes();
+        System.out.println("encoded payload: " + ByteUtil.toHexString(payload));
+
+        ExecutionResult setResult = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(setResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+    }
+
+    @Test
     public void testInitializeRing() {
         // override defaults
         this.contract = new TokenBridgeContract(context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
@@ -116,6 +134,23 @@ public class TokenBridgeContractTest {
         for (ECKey k : members) {
             assertThat(this.connector.getActiveMember(k.getAddress())).isTrue();
         }
+    }
+
+    @Test
+    public void testInitializeRingNotOwner() {
+        // override defaults
+        this.contract = new TokenBridgeContract(context(Address.ZERO_ADDRESS(), CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        ListFVM encodingList = new ListFVM();
+        for (ECKey k : members) {
+            encodingList.add(new AddressFVM(new ByteArrayWrapper(k.getAddress())));
+        }
+        byte[] payload = new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList).encodeBytes();
+        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
     }
 
     @Test
@@ -269,6 +304,105 @@ public class TokenBridgeContractTest {
             assertThat(new BigInteger(1, l.getTopics().get(3))).isEqualTo(transfers[i].getTransferValue());
             i++;
         }
+    }
+
+    @Test
+    public void testTransferNotRelayer() {
+        // override defaults
+        ExecutionContext initializationContext = context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        this.contract = new TokenBridgeContract(initializationContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        ListFVM encodingList = new ListFVM();
+        for (ECKey k : members) {
+            encodingList.add(new AddressFVM(new ByteArrayWrapper(k.getAddress())));
+        }
+        byte[] payload = new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList).encodeBytes();
+        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+
+        //set relayer
+        byte[] callPayload = new AbiEncoder(BridgeFuncSig.SIG_SET_RELAYER.getSignature(),
+                new AddressFVM(new ByteArrayWrapper(members[0].getAddress()))).encodeBytes();
+
+        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+
+        // override defaults
+        this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
+
+        // we create a new token bridge contract here because we
+        // need to change the execution context
+        ExecutionContext submitBundleContext = context(new Address(members[0].getAddress()),
+                CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        this.contract = new TokenBridgeContract(submitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        // assemble the payload
+        byte[] blockHash = HashUtil.h256("blockHash".getBytes());
+
+        BridgeTransfer[] transfers = new BridgeTransfer[10];
+        for (int i = 0; i < 10; i++) {
+
+            // generate a unique sourceTransactionHash for each transfer
+            byte[] sourceTransactionHash = HashUtil.h256(Integer.toString(i).getBytes());
+            transfers[i] = BridgeTransfer.getInstance(BigInteger.ONE,
+                    AddressSpecs.computeA0Address(HashUtil.h256(Integer.toHexString(i).getBytes())),
+                    sourceTransactionHash);
+        }
+        byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
+
+        // ATB-4, do one assert here to check that transactionHash is not set
+        assertThat(this.contract.execute(
+                ByteUtil.merge(BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
+                        payloadHash), 21000L).getOutput())
+                .isEqualTo(ByteUtil.EMPTY_WORD);
+
+        byte[][] signatures = new byte[members.length][];
+        int i = 0;
+        for (ECKey k : members) {
+            signatures[i] = k.sign(payloadHash).toBytes();
+            i++;
+        }
+
+        ListFVM sourceTransactionList = new ListFVM();
+        ListFVM addressList = new ListFVM();
+        ListFVM uintList = new ListFVM();
+        for (BridgeTransfer b : transfers) {
+            sourceTransactionList.add(new AddressFVM(new ByteArrayWrapper(b.getSourceTransactionHash())));
+            addressList.add(new AddressFVM(new ByteArrayWrapper(b.getRecipient())));
+            uintList.add(new Uint128FVM(new ByteArrayWrapper(PrecompiledUtilities.pad(b.getTransferValue().toByteArray(), 16))));
+        }
+
+        ListFVM sigChunk1 = new ListFVM();
+        ListFVM sigChunk2 = new ListFVM();
+        ListFVM sigChunk3 = new ListFVM();
+        for (byte[] sig : signatures) {
+            sigChunk1.add(new AddressFVM(new ByteArrayWrapper(Arrays.copyOfRange(sig, 0, 32))));
+            sigChunk2.add(new AddressFVM(new ByteArrayWrapper(Arrays.copyOfRange(sig, 32, 64))));
+            sigChunk3.add(new AddressFVM(new ByteArrayWrapper(Arrays.copyOfRange(sig, 64, 96))));
+        }
+
+        // we create a new token bridge contract here because we
+        // need to change the execution context
+        ExecutionContext incorrectRelaySubmitBundleContext = context(Address.ZERO_ADDRESS(),
+                CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY);
+        this.contract = new TokenBridgeContract(incorrectRelaySubmitBundleContext, this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        callPayload = new AbiEncoder(BridgeFuncSig.SIG_SUBMIT_BUNDLE.getSignature(),
+                new AddressFVM(new ByteArrayWrapper(blockHash)),
+                sourceTransactionList,
+                addressList,
+                uintList,
+                sigChunk1,
+                sigChunk2,
+                sigChunk3).encodeBytes();
+        transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        assertThat(transferResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
     }
 
     @Test
@@ -1556,11 +1690,37 @@ public class TokenBridgeContractTest {
 
         ExecutionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
         assertThat(result3.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
-
     }
 
     @Test
-    public void testRemoveRingMember(){
+    public void testAddRingMemberNotOwner(){
+        // override defaults
+        this.contract = new TokenBridgeContract(context(Address.ZERO_ADDRESS(), CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        ListFVM encodingList = new ListFVM();
+        for (ECKey k : members) {
+            encodingList.add(new AddressFVM(new ByteArrayWrapper(k.getAddress())));
+        }
+
+        // lock the ring
+        this.connector.setRingLocked(true);
+
+        // add new member - success
+        byte[] sig3 = new AbiEncoder(BridgeFuncSig.SIG_RING_ADD_MEMBER.getSignature(), encodingList).encodeBytes();
+        byte[] newMember3 = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] payload3 = new byte[4 + 32];
+        System.arraycopy(sig3, 0, payload3, 0, 4);
+        System.arraycopy(newMember3, 0, payload3, 4, 32);
+
+        ExecutionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
+        assertThat(result3.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+    }
+
+    @Test
+    public void testRemoveRingMember() {
         // override defaults
         this.contract = new TokenBridgeContract(context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
                 this.repository, OWNER_ADDR, CONTRACT_ADDR);
@@ -1612,7 +1772,65 @@ public class TokenBridgeContractTest {
     }
 
     @Test
-    public void testSetReplayer(){
+    public void testRemoveRingMemberNotOwner() {
+        // override defaults
+        this.contract = new TokenBridgeContract(context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        ListFVM encodingList = new ListFVM();
+        for (ECKey k : members) {
+            encodingList.add(new AddressFVM(new ByteArrayWrapper(k.getAddress())));
+        }
+
+        // address null - fail
+        byte[] payload = new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature()).encodeBytes();
+        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+
+        // add new member - fail
+        byte[] sig = new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature(), encodingList).encodeBytes();
+        byte[] newMember = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] payload2 = new byte[4 + 32];
+        System.arraycopy(sig, 0, payload2, 0, 4);
+        System.arraycopy(newMember, 0, payload2, 4, 32);
+
+        ExecutionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
+        assertThat(result2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+
+        // initialize ring
+        byte[] ring = new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList).encodeBytes();
+        this.contract.execute(ring, DEFAULT_NRG);
+
+        // remove member - fail, member does not exist
+        byte[] sig3 = new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature(), encodingList).encodeBytes();
+        byte[] newMember3 = ECKeyFac.inst().create().getAddress(); // the new member
+        byte[] payload3 = new byte[4 + 32];
+        System.arraycopy(sig3, 0, payload3, 0, 4);
+        System.arraycopy(newMember3, 0, payload3, 4, 32);
+
+        ExecutionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
+        assertThat(result3.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+
+        // override defaults
+        this.contract = new TokenBridgeContract(context(Address.ZERO_ADDRESS(), CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
+                this.repository, OWNER_ADDR, CONTRACT_ADDR);
+        this.controller = this.contract.getController();
+        this.connector = this.contract.getConnector();
+
+        // failure, member exists but sender is no longer owner
+        byte[] sig4 = new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature(), encodingList).encodeBytes();
+        byte[] payload4 = new byte[4 + 32];
+        System.arraycopy(sig4, 0, payload4, 0, 4);
+        System.arraycopy(members[0].getAddress(), 0, payload4, 4, 32);
+
+        ExecutionResult result4 = this.contract.execute(payload4, DEFAULT_NRG);
+        assertThat(result4.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+    }
+
+    @Test
+    public void testSetReplayer() {
         // override defaults
         this.contract = new TokenBridgeContract(context(OWNER_ADDR, CONTRACT_ADDR, ByteUtil.EMPTY_BYTE_ARRAY),
                 this.repository, OWNER_ADDR, CONTRACT_ADDR);
@@ -1654,6 +1872,5 @@ public class TokenBridgeContractTest {
         System.arraycopy(newReplayer2, 0, payload2, 4, 32);
         ExecutionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
         assertThat(result2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
-
     }
 }
