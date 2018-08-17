@@ -2,6 +2,7 @@ package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
+import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.DummyRepo;
 import org.junit.Before;
@@ -54,7 +55,7 @@ public class BridgeStorageConnectorTest {
     @Test
     public void testDefaultBundleMap() {
         byte[] bundleKey = HashUtil.h256("active1".getBytes());
-        assertThat(this.connector.getBundle(bundleKey)).isFalse();
+        assertThat(this.connector.getBundle(bundleKey)).isEqualTo(ByteUtil.EMPTY_WORD);
     }
 
     @Test
@@ -66,17 +67,18 @@ public class BridgeStorageConnectorTest {
     public void testNoKeyOverlap() {
         byte[] key = HashUtil.h256("key".getBytes());
         this.connector.setActiveMember(key, true);
-        this.connector.setBundle(key, false);
+        this.connector.setBundle(key, ByteUtil.EMPTY_WORD);
 
         assertThat(this.connector.getActiveMember(key)).isTrue();
-        assertThat(this.connector.getBundle(key)).isFalse();
+        assertThat(this.connector.getBundle(key)).isEqualTo(ByteUtil.EMPTY_WORD);
 
         // test that the reverse is true
+        byte[] hash = HashUtil.h256("hash".getBytes());
         this.connector.setActiveMember(key, false);
-        this.connector.setBundle(key, true);
+        this.connector.setBundle(key, hash);
 
         assertThat(this.connector.getActiveMember(key)).isFalse();
-        assertThat(this.connector.getBundle(key)).isTrue();
+        assertThat(this.connector.getBundle(key)).isEqualTo(hash);
     }
 
     @Test

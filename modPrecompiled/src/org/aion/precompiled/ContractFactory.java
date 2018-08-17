@@ -24,27 +24,24 @@ package org.aion.precompiled;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
-import org.aion.base.type.IExecutionResult;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionContext;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 
 /**
  * A factory class that produces pre-compiled contract instances.
  */
-public class ContractFactory {
+public class ContractFactory implements IContractFactory {
     private static final String OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
     private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
 
     private static final String TOKEN_BRIDGE = "0000000000000000000000000000000000000000000000000000000000000200";
-    private static final String TOKEN_BRIDGE_INITIAL_OWNER = "a048613dd3cb89685cb3f9cfa410ecf606c7ec7320e721edacd194050828c6b0";
-    public static final String TEST_PC = "9999999999999999999999999999999999999999999999999999999999999999";
+    private static final String TOKEN_BRIDGE_INITIAL_OWNER = "a008d7b29e8d1f4bfab428adce89dc219c4714b2c6bf3fd1131b688f9ad804aa";
 
     public ContractFactory(){}
 
@@ -56,7 +53,8 @@ public class ContractFactory {
      * @param track The repo.
      * @return the specified pre-compiled address.
      */
-    public static IPrecompiledContract getPrecompiledContract(ExecutionContext context,
+    @Override
+    public IPrecompiledContract getPrecompiledContract(ExecutionContext context,
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
 
         switch (context.address().toString()) {
@@ -65,21 +63,13 @@ public class ContractFactory {
             case TOKEN_BRIDGE:
                 TokenBridgeContract contract = new TokenBridgeContract(context,
                         track, Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER), Address.wrap(TOKEN_BRIDGE));
+
+                if (!context.origin().equals(Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER)) && !contract.isInitialized())
+                    return null;
+                
                 return contract;
-            case TEST_PC:
-                return new TestPrecompiledContract();
             default: return null;
         }
-    }
-
-    /**
-     * A non-static method that is functionally equivalent to calling the static method
-     * getPrecompiledContract. This method is here to make mocking of this class easier.
-     */
-    public IPrecompiledContract fetchPrecompiledContract(ExecutionContext context,
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
-
-        return getPrecompiledContract(context, track);
     }
 
     /**
@@ -103,28 +93,6 @@ public class ContractFactory {
      */
     public static Address getTotalCurrencyContractAddress() {
         return Address.wrap(TOTAL_CURRENCY);
-    }
-
-    /**
-     * A mocked up precompiled contract to test with.
-     */
-    public static class TestPrecompiledContract implements IPrecompiledContract {
-        public static final String head = "echo: ";
-        public static boolean youCalledMe = false;
-
-        /**
-         * Returns a byte array that begins with the byte version of the characters in the public
-         * variable 'head' followed by the bytes in input.
-         */
-        @Override
-        public IExecutionResult execute(byte[] input, long nrgLimit) {
-            youCalledMe = true;
-            byte[] msg = new byte[head.getBytes().length + input.length];
-            System.arraycopy(head.getBytes(), 0, msg, 0, head.getBytes().length);
-            System.arraycopy(input, 0, msg, head.getBytes().length, input.length);
-            return new ExecutionResult(ResultCode.SUCCESS, nrgLimit, msg);
-        }
-
     }
 
 }
