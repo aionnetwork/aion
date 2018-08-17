@@ -235,8 +235,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
 
     private boolean isFromAddress(byte[] address) {
-        return this.context.origin().equals(
-                address == null ? Address.ZERO_ADDRESS() : Address.wrap(address));
+        if (address == null)
+            return false;
+        return this.context.sender().equals(Address.wrap(address));
     }
 
     private ExecutionContext assembleContext(@Nonnull final byte[] recipient,
