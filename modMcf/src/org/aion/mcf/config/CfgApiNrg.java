@@ -23,6 +23,8 @@
  ******************************************************************************/
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -52,9 +54,19 @@ public final class CfgApiNrg {
     public long getNrgPriceDefault() {
         return this.defaultPrice;
     }
+
+    public void setNrgPriceDefault(long defaultPrice) {
+        this.defaultPrice = defaultPrice;
+    }
+
     public long getNrgPriceMax() {
         return this.maxPrice;
     }
+
+    public void setNrgPriceMax(long maxPrice) {
+        this.maxPrice = maxPrice;
+    }
+
     public boolean isOracleEnabled() { return this.oracleEnabled; }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -153,5 +165,20 @@ public final class CfgApiNrg {
         } catch (IOException | XMLStreamException e) {
             return "";
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgApiNrg cfgApiNrg = (CfgApiNrg) o;
+        return defaultPrice == cfgApiNrg.defaultPrice &&
+                maxPrice == cfgApiNrg.maxPrice &&
+                oracleEnabled == cfgApiNrg.oracleEnabled;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(defaultPrice, maxPrice, oracleEnabled);
     }
 }

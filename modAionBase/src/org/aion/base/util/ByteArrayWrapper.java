@@ -82,6 +82,7 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper>, Serializa
         return Hex.toHexString(data);
     }
 
+    // toBytes() and getData() have identical functionality
     @Override
     public byte[] toBytes() {
         return data;

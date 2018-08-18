@@ -1,33 +1,34 @@
-/*
+/**
+ * *****************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ * You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * The aion network project leverages useful source code from other open source projects. We
+ * greatly appreciate the effort that was invested in these projects and we thank the individual
+ * contributors for their work. For provenance information and contributors please see
+ * <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
  * Contributors to the aion source files in decreasing order of code volume:
- * Contributors:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
+ * Aion foundation.
+ * <ether.camp> team through the ethereumJ library.
+ * Ether.Camp Inc.
+ * (US) team through Ethereum Harmony.
+ * John Tromp through the Equihash solver.
+ * Samuel Neves through the BLAKE2 implementation.
+ * Zcash project team.
+ * Bitcoinj team.
  */
 package org.aion.zero.impl;
 
@@ -77,9 +78,7 @@ public class BlockchainForkingTest {
     @Test
     public void testSameBlockDifferentNonceAndSolutionSimple() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
-        StandaloneBlockchain.Bundle b = builder
-                .withValidatorConfiguration("simple")
-                .build();
+        StandaloneBlockchain.Bundle b = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain bc = b.bc;
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
@@ -122,23 +121,21 @@ public class BlockchainForkingTest {
     @Test
     public void testInvalidFirstBlockDifficulty() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
-        StandaloneBlockchain.Bundle b = builder
-                .withValidatorConfiguration("simple")
-                .build();
+        StandaloneBlockchain.Bundle b = builder.withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain bc = b.bc;
         AionBlock bestBlock = bc.getBestBlock();
-        AionBlock standardBlock = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
+        AionBlock standardBlock =
+                bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
 
         ChainConfiguration cc = new ChainConfiguration();
         AionBlock higherDifficultyBlock = new AionBlock(standardBlock);
         higherDifficultyBlock.getHeader().setTimestamp(bestBlock.getTimestamp() + 1);
 
-        BigInteger difficulty = cc
-                .getDifficultyCalculator()
-                .calculateDifficulty(
-                        higherDifficultyBlock.getHeader(),
-                        bestBlock.getHeader());
+        BigInteger difficulty =
+                cc.getDifficultyCalculator()
+                        .calculateDifficulty(
+                                higherDifficultyBlock.getHeader(), bestBlock.getHeader());
 
         assertThat(difficulty).isGreaterThan(standardBlock.getDifficultyBI());
         higherDifficultyBlock.getHeader().setDifficulty(difficulty.toByteArray());
@@ -157,8 +154,7 @@ public class BlockchainForkingTest {
         ImportResult higherDifficultyResult = bc.tryToConnect(higherDifficultyBlock);
 
         /**
-         * With our updates to difficulty verification and calculation,
-         * this block is now invalid
+         * With our updates to difficulty verification and calculation, this block is now invalid
          */
         assertThat(higherDifficultyResult).isEqualTo(ImportResult.INVALID_BLOCK);
         assertThat(bc.getBestBlockHash()).isEqualTo(standardBlock.getHash());
@@ -230,10 +226,8 @@ public class BlockchainForkingTest {
     @Test
     public void testSecondBlockHigherDifficultyFork() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
-        StandaloneBlockchain.Bundle bundle = builder
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts()
-                .build();
+        StandaloneBlockchain.Bundle bundle =
+                builder.withValidatorConfiguration("simple").withDefaultAccounts().build();
 
         long time = System.currentTimeMillis();
 
@@ -243,48 +237,72 @@ public class BlockchainForkingTest {
         // generate three blocks, on the third block we get flexibility
         // for what difficulties can occur
 
-        BlockContext firstBlock = bc.createNewBlockInternal(
-                bc.getGenesis(), Collections.emptyList(), true, time / 1000L);
-        assertThat(bc.tryToConnectInternal(firstBlock.block, (time += 10))).isEqualTo(ImportResult.IMPORTED_BEST);
+        BlockContext firstBlock =
+                bc.createNewBlockInternal(
+                        bc.getGenesis(), Collections.emptyList(), true, time / 1000L);
+        assertThat(bc.tryToConnectInternal(firstBlock.block, (time += 10)))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now connect the second block
-        BlockContext secondBlock = bc.createNewBlockInternal(
-                firstBlock.block, Collections.emptyList(), true, time / 1000L);
-        assertThat(bc.tryToConnectInternal(secondBlock.block, time += 10)).isEqualTo(ImportResult.IMPORTED_BEST);
+        BlockContext secondBlock =
+                bc.createNewBlockInternal(
+                        firstBlock.block, Collections.emptyList(), true, time / 1000L);
+        assertThat(bc.tryToConnectInternal(secondBlock.block, time += 10))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
 
         // now on the third block, we diverge with one block having higher TD than the other
-        BlockContext fasterSecondBlock = bc.createNewBlockInternal(
-                secondBlock.block, Collections.emptyList(), true, time / 1000L);
+        BlockContext fasterSecondBlock =
+                bc.createNewBlockInternal(
+                        secondBlock.block, Collections.emptyList(), true, time / 1000L);
         AionBlock slowerSecondBlock = new AionBlock(fasterSecondBlock.block);
 
         slowerSecondBlock.getHeader().setTimestamp(time / 1000L + 100);
 
-        assertThat(bc.tryToConnectInternal(fasterSecondBlock.block, time + 100)).isEqualTo(ImportResult.IMPORTED_BEST);
-        assertThat(bc.tryToConnectInternal(slowerSecondBlock, time + 100)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        assertThat(bc.tryToConnectInternal(fasterSecondBlock.block, time + 100))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnectInternal(slowerSecondBlock, time + 100))
+                .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
 
         // represents the amount of time we would have waited for the lower TD block to come in
         long timeDelta = 1000L;
 
         // loweredDifficulty = bi - bi / 1024
-        BigInteger loweredDifficulty = BIUtil.max(
-                secondBlock.block
-                .getDifficultyBI()
-                .subtract(secondBlock.block.getDifficultyBI().divide(BigInteger.valueOf(1024L))), BigInteger.valueOf(16L));
+        BigInteger loweredDifficulty =
+                BIUtil.max(
+                        secondBlock
+                                .block
+                                .getDifficultyBI()
+                                .subtract(
+                                        secondBlock
+                                                .block
+                                                .getDifficultyBI()
+                                                .divide(BigInteger.valueOf(1024L))),
+                        BigInteger.valueOf(16L));
 
         time += 100;
 
-        BlockContext fastBlockDescendant  = bc.createNewBlockInternal(fasterSecondBlock.block, Collections.emptyList(), true, time / 1000L);
-        BlockContext slowerBlockDescendant = bc.createNewBlockInternal(slowerSecondBlock, Collections.emptyList(), true, time / 1000L + 100 + 1);
+        BlockContext fastBlockDescendant =
+                bc.createNewBlockInternal(
+                        fasterSecondBlock.block, Collections.emptyList(), true, time / 1000L);
+        BlockContext slowerBlockDescendant =
+                bc.createNewBlockInternal(
+                        slowerSecondBlock, Collections.emptyList(), true, time / 1000L + 100 + 1);
 
-        // increment by another hundred (this is supposed to be when the slower block descendant is completed)
+        // increment by another hundred (this is supposed to be when the slower block descendant is
+        // completed)
         time += 100;
 
-        assertThat(fastBlockDescendant.block.getDifficultyBI()).isGreaterThan(slowerBlockDescendant.block.getDifficultyBI());
-        System.out.println("faster block descendant TD: " + fastBlockDescendant.block.getDifficultyBI());
-        System.out.println("slower block descendant TD: " + slowerBlockDescendant.block.getDifficultyBI());
+        assertThat(fastBlockDescendant.block.getDifficultyBI())
+                .isGreaterThan(slowerBlockDescendant.block.getDifficultyBI());
+        System.out.println(
+                "faster block descendant TD: " + fastBlockDescendant.block.getDifficultyBI());
+        System.out.println(
+                "slower block descendant TD: " + slowerBlockDescendant.block.getDifficultyBI());
 
-        assertThat(bc.tryToConnectInternal(slowerBlockDescendant.block, time)).isEqualTo(ImportResult.IMPORTED_BEST);
-        assertThat(bc.tryToConnectInternal(fastBlockDescendant.block, time)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnectInternal(slowerBlockDescendant.block, time))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(bc.tryToConnectInternal(fastBlockDescendant.block, time))
+                .isEqualTo(ImportResult.IMPORTED_BEST);
 
         assertThat(bc.getBestBlock()).isEqualTo(fastBlockDescendant.block);
     }
@@ -359,7 +377,6 @@ public class BlockchainForkingTest {
     public void testRollbackWithAddInvalidBlock() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle b = builder.withValidatorConfiguration("simple").build();
-
         StandaloneBlockchain bc = b.bc;
         AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.emptyList(), true);
 
@@ -380,4 +397,8 @@ public class BlockchainForkingTest {
         assertThat(bc.getTotalDifficulty())
                 .isEqualTo(bc.getRepository().getBlockStore().getTotalDifficultyForHash(block.getHash()));
     }
+
+    /*
+     * Tests VM update behaviour from an external perspective
+     */
 }

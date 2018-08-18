@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,16 +31,24 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.equihash;
 
-import org.aion.equihash.Equihash;
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import org.aion.util.TestResources;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.A0BlockHeader;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class EquihashSolutionsGenerationTest210_9 {
     private int n = 210;
     private int k = 9;
@@ -381,5 +389,35 @@ public class EquihashSolutionsGenerationTest210_9 {
         assertEquals(sol.length, 2);
         assertArrayEquals(sol[0], expectedSol1);
         assertArrayEquals(sol[1], expectedSol2);
+    }
+
+    @Test
+    @Parameters(method = "blocks")
+    public void testMine_wBlockData(AionBlock block) {
+
+        A0BlockHeader header = block.getHeader();
+
+        Equihash spy = spy(new Equihash(n, k));
+
+        // mock return the known solution
+        when(spy.getSolutionsForNonce(header.getMineHash(), header.getNonce()))
+            .thenReturn(
+                new int[][]{
+                    EquiUtils.getIndicesFromMinimal(header.getSolution(), n / (k + 1))
+                });
+
+        // use real method for mine call
+        when(spy.mine(block, header.getNonce())).thenCallRealMethod();
+
+        Solution sol = spy.mine(block, block.getNonce());
+
+        assertNotNull(sol);
+        assertArrayEquals(header.getNonce(), sol.getNonce());
+        assertArrayEquals(header.getSolution(), sol.getSolution());
+        assertArrayEquals(header.getMineHash(), sol.getBlock().getHeader().getMineHash());
+    }
+
+    public static Object blocks() {
+        return TestResources.blocks(10);
     }
 }

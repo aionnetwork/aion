@@ -5,6 +5,7 @@ WEB3JS_PATH="${PACK_PATH}/web3"
 CONFIG_PATH="${PACK_PATH}/config"
 DOCS_PATH="${PACK_PATH}/docs"
 API_PATH="${PACK_PATH}/clientAPI"
+SCRIPT_PATH="${PACK_PATH}/script"
 JDK_VER="jdk-10.0.2"
 
 if [ ! -d "$PACK_PATH" ]; then
@@ -20,7 +21,7 @@ fi
 
 # generate aion runtime
 if [ ! -d "$JDK_RT" ]; then
-  $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management --output $JDK_RT
+  $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management,jdk.unsupported,javafx.graphics,javafx.controls,javafx.base,jdk.sctp,javafx.fxml --output $JDK_RT
   cp $JDK_PATH/bin/jstack $JDK_RT/bin
 fi
 
@@ -46,8 +47,18 @@ if [ ! -d "$DOCS_PATH" ]; then
   cp -r ./docs/** $DOCS_PATH
 fi
 
+# copy the script files if can't find the script env
+if [ ! -d "$SCRIPT_PATH" ]; then
+  mkdir $SCRIPT_PATH
+  cp -r ./script/generateSslCert.sh $SCRIPT_PATH
+  cp -r ./script/nohup_wrapper.sh $SCRIPT_PATH
+fi
+
 # copy the client API files if can't find the client API env
 if [ ! -d "$API_PATH" ]; then
   mkdir $API_PATH
   cp aion_api/pack/libAionApi-*.tar.gz $API_PATH
 fi
+
+cp aion_api/pack/Java-API*-doc.zip $DOCS_PATH
+cp aion_api/lib/gson-2.7.jar ./lib

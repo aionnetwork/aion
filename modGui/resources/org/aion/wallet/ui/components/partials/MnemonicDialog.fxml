@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2017-2018 Aion foundation.
+
+    This file is part of the aion network project.
+
+    The aion network project is free software: you can redistribute it
+    and/or modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation, either version 3 of
+    the License, or any later version.
+
+    The aion network project is distributed in the hope that it will
+    be useful, but WITHOUT ANY WARRANTY; without even the implied
+    warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    See the GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with the aion network project source files.
+    If not, see <https://www.gnu.org/licenses/>.
+
+Contributors:
+    Aion foundation.
+-->
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import java.net.URL?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextArea?>
+<AnchorPane prefHeight="350.0" prefWidth="500.0"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="org.aion.wallet.ui.components.partials.MnemonicDialog"
+            styleClass="anchor-pane">
+    <stylesheets>
+        <URL value="@dialog.css"/>
+    </stylesheets>
+
+    <Label AnchorPane.leftAnchor="25" AnchorPane.topAnchor="75" text="Please write down the following words!" styleClass="main-text" />
+
+    <TextArea AnchorPane.topAnchor="150" AnchorPane.leftAnchor="75" fx:id="mnemonicTextArea" styleClass="mnemonic-textarea" promptText="Mnemonic" wrapText="true" prefRowCount="2" prefColumnCount="25"/>
+
+    <Button AnchorPane.topAnchor="275"  AnchorPane.leftAnchor="200" styleClass="submit-button" text="Continue" onMouseClicked="#close"/>
+</AnchorPane>

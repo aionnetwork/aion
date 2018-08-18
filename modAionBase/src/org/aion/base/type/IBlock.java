@@ -72,4 +72,6 @@ public interface IBlock<TX extends ITransaction, BH extends IBlockHeader> {
      */
     byte[] getReceiptsRoot();
 
+    long getTimestamp();
+    
 }

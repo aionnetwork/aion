@@ -119,6 +119,8 @@ public class AionHub {
         return Holder.INSTANCE;
     }
 
+    private static final int INIT_ERROR_EXIT_CODE = -1;
+
     public AionHub() {
 
         this.cfg = CfgAion.inst();
@@ -152,6 +154,7 @@ public class AionHub {
         String reportsFolder = "";
         if (cfg.getReports().isEnabled()) {
             File rpf = new File(cfg.getBasePath(), cfg.getReports().getPath());
+            //noinspection ResultOfMethodCallIgnored
             rpf.mkdirs();
             reportsFolder = rpf.getAbsolutePath();
         }
@@ -176,7 +179,7 @@ public class AionHub {
 
         ChainConfiguration chainConfig = new ChainConfiguration();
         this.propHandler = new BlockPropagationHandler(1024, this.blockchain, this.p2pMgr,
-            chainConfig.createBlockHeaderValidator(), this.cfg.getNet().getP2p().isSyncOnlyNode());
+            chainConfig.createBlockHeaderValidator(), this.cfg.getNet().getP2p().inSyncOnlyMode());
 
         registerCallback();
         this.p2pMgr.run();
@@ -200,13 +203,13 @@ public class AionHub {
             cfg.getGenesis().getHash()));
         cbs.add(new ResStatusHandler(syncLOG, this.p2pMgr, this.syncMgr));
         cbs.add(new ReqBlocksHeadersHandler(
-            syncLOG, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyNode()));
+            syncLOG, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().inSyncOnlyMode()));
         cbs.add(new ResBlocksHeadersHandler(syncLOG, this.syncMgr, this.p2pMgr));
         cbs.add(new ReqBlocksBodiesHandler(
-            syncLOG, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyNode()));
+            syncLOG, this.blockchain, this.p2pMgr, this.cfg.getNet().getP2p().inSyncOnlyMode()));
         cbs.add(new ResBlocksBodiesHandler(syncLOG, this.syncMgr, this.p2pMgr));
         cbs.add(new BroadcastTxHandler(
-            syncLOG, this.mempool, this.p2pMgr, this.cfg.getNet().getP2p().isSyncOnlyNode()));
+            syncLOG, this.mempool, this.p2pMgr, this.cfg.getNet().getP2p().inSyncOnlyMode()));
         cbs.add(new BroadcastNewBlockHandler(syncLOG, this.propHandler, this.p2pMgr));
         this.p2pMgr.register(cbs);
     }
@@ -265,7 +268,12 @@ public class AionHub {
     private void loadBlockchain() {
 
         // function repurposed for integrity checks since previously not implemented
-        this.repository.getBlockStore().load();
+        try {
+            this.repository.getBlockStore().load();
+        } catch (RuntimeException re) {
+            genLOG.error("Fatal: can't load blockstore; exiting.", re);
+            System.exit(INIT_ERROR_EXIT_CODE);
+        }
 
         AionBlock bestBlock = this.repository.getBlockStore().getBestBlock();
         if (bestBlock != null) {
@@ -381,7 +389,7 @@ public class AionHub {
                 this.eventMgr.registerEvent(evts);
             } else {
                 genLOG.error("Event manager is null !!!");
-                System.exit(-1);
+                System.exit(INIT_ERROR_EXIT_CODE);
             }
 
             genLOG.info("loaded genesis block <num={}, root={}>", 0,
@@ -415,15 +423,15 @@ public class AionHub {
                 genLOG.error("failed to load block 0 from database");
             }
 
-            genLOG.error("genesis json rootHash {} is inconsistent with database rootHash {}\n" +
-                    "your configuration and genesis are incompatible, please do the following:\n" +
-                    "\t1) Remove your database folder\n" +
-                    "\t2) Verify that your genesis is correct by re-downloading the binary or checking online\n"
-                    +
-                    "\t3) Reboot with correct genesis and empty database\n",
-                genesisHash == null ? "null" : ByteUtil.toHexString(genesisHash),
-                databaseGenHash == null ? "null" : ByteUtil.toHexString(databaseGenHash));
-            System.exit(-1);
+            genLOG.error(
+                    "genesis json rootHash {} is inconsistent with database rootHash {}\n"
+                            + "your configuration and genesis are incompatible, please do the following:\n"
+                            + "\t1) Remove your database folder\n"
+                            + "\t2) Verify that your genesis is correct by re-downloading the binary or checking online\n"
+                            + "\t3) Reboot with correct genesis and empty database\n",
+                    genesisHash == null ? "null" : ByteUtil.toHexString(genesisHash),
+                    databaseGenHash == null ? "null" : ByteUtil.toHexString(databaseGenHash));
+            System.exit(INIT_ERROR_EXIT_CODE);
         }
 
         if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {

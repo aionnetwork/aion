@@ -77,7 +77,6 @@ import org.slf4j.Logger;
  * @author Chris p2p://{uuid}@{ip}:{port}
  */
 public final class P2pMgr implements IP2pMgr {
-
     private static final int PERIOD_SHOW_STATUS = 10000;
     private static final int PERIOD_REQUEST_ACTIVE_NODES = 1000;
     private static final int PERIOD_UPNP_PORT_MAPPING = 3600000;
@@ -109,7 +108,7 @@ public final class P2pMgr implements IP2pMgr {
     private static ReqHandshake1 cachedReqHandshake1;
     private static ResHandshake1 cachedResHandshake1;
 
-    private String outGoingIP = "0.0.0.0";
+    private String outGoingIP;
 
     public enum Dest {
         INBOUND,

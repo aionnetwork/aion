@@ -38,9 +38,9 @@ import java.math.BigInteger;
 
 public class TypeConverter {
 
-    public static byte[] StringNumberAsBytes(String input) {
-        return ByteUtil.bigIntegerToBytes(StringDecimalToBigInteger(input));
-    }
+//    public static byte[] StringNumberAsBytes(String input) {
+//        return ByteUtil.bigIntegerToBytes(StringDecimalToBigInteger(input));
+//    }
 
     public static BigInteger StringNumberAsBigInt(String input) {
         if (input.startsWith("0x")) {

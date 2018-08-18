@@ -25,6 +25,8 @@
 
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
+
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -167,4 +169,18 @@ public final class CfgNet {
         return this.p2p;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgNet cfgNet = (CfgNet) o;
+        return id == cfgNet.id &&
+                Objects.equal(nodes, cfgNet.nodes) &&
+                Objects.equal(p2p, cfgNet.p2p);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(id, nodes, p2p);
+    }
 }

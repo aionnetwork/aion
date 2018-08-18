@@ -61,10 +61,11 @@ public class FileDateTimeComparator implements Comparator<File> {
 
         if (arg1 == null)
             return -1;
-
+        
         String[] frag0 = arg0.getName().split("--");
         String[] frag1 = arg1.getName().split("--");
 
+        // check frag length
         if (frag0.length != 3 && frag1.length != 3)
             return 0;
 
@@ -75,6 +76,16 @@ public class FileDateTimeComparator implements Comparator<File> {
             return -1;
 
         // TODO: make sure this is the same as the pattern we use to encode
+
+        // check time zone
+        if (!frag0[0].equals("UTC") && !frag1[0].equals("UTC"))
+            return 0;
+
+        if (!frag0[0].equals("UTC"))
+            return 1;
+
+        if (!frag1[0].equals("UTC"))
+            return -1;
 
         LocalDateTime frag0DateTime = null;
         LocalDateTime frag1DateTime = null;
