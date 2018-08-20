@@ -22,14 +22,10 @@
  *     
  ******************************************************************************/
 
-package org.aion.zero.impl.query;
+package org.aion.generic.query;
 
 import java.util.Optional;
 
-public interface SyncQueryInterface {
-    Optional<Long> getLocalBestBlockNumber();
-
-    Optional<Long> getNetworkBestBlockNumber();
-
-    boolean isSyncComplete();
+public interface BlockQueryInterface {
+    Optional<Long> getInitialStartingBlockNumber();
 }

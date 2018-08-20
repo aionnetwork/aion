@@ -35,6 +35,8 @@
 package org.aion.zero.impl.sync.handler;
 
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.generic.BlockPropagationStatus;
+import org.aion.generic.IBlockPropagationHandler;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
@@ -61,14 +63,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * TODO: exists as functionality of SyncMgr, need to decouple
  */
-public class BlockPropagationHandler {
-
-    public enum PropStatus {
-        DROPPED, // block was invalid, drop no propagation
-        PROPAGATED, // block was propagated, but was not connected
-        CONNECTED, // block was ONLY connected, not propagated
-        PROP_CONNECTED // block propagated and connected
-    }
+public class BlockPropagationHandler implements IBlockPropagationHandler<AionBlock> {
 
     /**
      * Connection to blockchain
@@ -135,19 +130,19 @@ public class BlockPropagationHandler {
         });
     }
 
-    public PropStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
+    public BlockPropagationStatus processIncomingBlock(final int nodeId, final String _displayId, final AionBlock block) {
         if (block == null)
-            return PropStatus.DROPPED;
+            return BlockPropagationStatus.DROPPED;
 
         ByteArrayWrapper hashWrapped = new ByteArrayWrapper(block.getHash());
 
         if (!this.blockHeaderValidator.validate(block.getHeader(), log))
-            return PropStatus.DROPPED;
+            return BlockPropagationStatus.DROPPED;
 
         // guarantees if multiple requests of same block appears, only one goes through
         synchronized(this.cacheMap) {
             if (this.cacheMap.get(hashWrapped) != null)
-                return PropStatus.DROPPED;
+                return BlockPropagationStatus.DROPPED;
             // regardless if block processing is successful, place into cache
             this.cacheMap.put(hashWrapped, true);
         }
@@ -208,16 +203,16 @@ public class BlockPropagationHandler {
 
         // process resulting state
         if (sent && result.isSuccessful())
-            return PropStatus.PROP_CONNECTED;
+            return BlockPropagationStatus.PROP_CONNECTED;
 
         if (result.isSuccessful())
-            return PropStatus.CONNECTED;
+            return BlockPropagationStatus.CONNECTED;
 
         if (sent)
-            return PropStatus.PROPAGATED;
+            return BlockPropagationStatus.PROPAGATED;
 
         // should never reach here, but just in case
-        return PropStatus.DROPPED;
+        return BlockPropagationStatus.DROPPED;
     }
 
     private boolean send(AionBlock block, int nodeId) {

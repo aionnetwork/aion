@@ -21,18 +21,17 @@
  *     Aion foundation.
  *     
  ******************************************************************************/
-package org.aion.zero.impl.blockchain;
+package org.aion.generic;
 
 import org.aion.base.db.IRepository;
 import org.aion.base.type.Address;
-import org.aion.generic.IGenericAionChain;
-import org.aion.zero.impl.IAion0Hub;
-import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
+import org.aion.base.type.IBlock;
+import org.aion.base.type.ITransaction;
+import org.aion.generic.query.QueryInterface;
+import org.aion.mcf.core.AbstractTxInfo;
+import org.aion.mcf.core.IBlockchain;
+import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.mcf.types.AbstractTxReceipt;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -41,18 +40,22 @@ import java.util.List;
  * Aion chain interface.
  * 
  */
-public interface IAionChain extends
-        IGenericAionChain<IAionBlock, A0BlockHeader, AionTransaction, AionTxReceipt, AionTxInfo> {
+public interface IGenericAionChain<
+        BLK extends IBlock,
+        BH extends AbstractBlockHeader,
+        TX extends ITransaction,
+        TR extends AbstractTxReceipt,
+        INFO extends AbstractTxInfo> extends QueryInterface {
 
-    IAionBlockchain getBlockchain();
+    IBlockchain getBlockchain();
 
     void close();
 
-    AionTransaction createTransaction(BigInteger nonce, Address to, BigInteger value, byte[] data);
+    TX createTransaction(BigInteger nonce, Address to, BigInteger value, byte[] data);
 
-    void broadcastTransaction(AionTransaction transaction);
+    void broadcastTransaction(TX transaction);
 
-    AionTxReceipt callConstant(AionTransaction tx, IAionBlock block);
+    TR callConstant(TX tx, BLK block);
 
     IRepository<?, ?, ?> getRepository();
 
@@ -60,13 +63,13 @@ public interface IAionChain extends
 
     IRepository<?, ?, ?> getSnapshotTo(byte[] root);
 
-    List<AionTransaction> getWireTransactions();
+    List<TX> getWireTransactions();
 
-    List<AionTransaction> getPendingStateTransactions();
+    List<TX> getPendingStateTransactions();
 
-    IAion0Hub getAionHub();
+    IGenericAionHub getAionHub();
 
     void exitOn(long number);
 
-    long estimateTxNrg(AionTransaction tx, IAionBlock block);
+    long estimateTxNrg(TX tx, BLK block);
 }

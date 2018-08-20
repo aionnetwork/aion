@@ -31,6 +31,8 @@ import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
 
+import java.util.List;
+
 /**
  * Blockchain interface.
  *
@@ -49,6 +51,8 @@ public interface IBlockchain<
                 INFO extends AbstractTxInfo> {
 
     long getSize();
+
+    BLK createNewBlock(BLK parent, List<TX> transactions, boolean waitUntilBlockTime);
 
     AbstractBlockSummary add(BLK block);
 

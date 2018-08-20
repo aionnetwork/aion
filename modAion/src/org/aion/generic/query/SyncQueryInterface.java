@@ -22,20 +22,14 @@
  *     
  ******************************************************************************/
 
-package org.aion.zero.impl.query;
-
-import org.aion.base.type.Address;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.mcf.core.AccountState;
+package org.aion.generic.query;
 
 import java.util.Optional;
 
-public interface StateQueryInterface {
-    Optional<AccountState> getAccountState(Address address, long blockNumber);
+public interface SyncQueryInterface {
+    Optional<Long> getLocalBestBlockNumber();
 
-    Optional<AccountState> getAccountState(Address address, byte[] blockHash);
+    Optional<Long> getNetworkBestBlockNumber();
 
-    Optional<AccountState> getAccountState(Address address);
-
-    Optional<ByteArrayWrapper> getCode(Address address);
+    boolean isSyncComplete();
 }

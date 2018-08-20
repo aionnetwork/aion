@@ -36,6 +36,7 @@
 package org.aion.zero.impl.sync.handler;
 
 import org.aion.base.util.ByteUtil;
+import org.aion.generic.BlockPropagationStatus;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -83,7 +84,7 @@ public final class BroadcastNewBlockHandler extends Handler {
 
         AionBlock block = new AionBlock(rawdata);
 
-        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
+        BlockPropagationStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
 
         if (this.log.isDebugEnabled()) {
             String hash = block.getShortHash();

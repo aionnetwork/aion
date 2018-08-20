@@ -22,10 +22,8 @@
  *     
  ******************************************************************************/
 
-package org.aion.zero.impl.query;
+package org.aion.generic.query;
 
-import java.util.Optional;
 
-public interface BlockQueryInterface {
-    Optional<Long> getInitialStartingBlockNumber();
+public interface QueryInterface extends BlockQueryInterface, SyncQueryInterface, StateQueryInterface {
 }
