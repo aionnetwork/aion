@@ -351,10 +351,10 @@ task ciBuild {
     configure(subprojects.findAll { it.name in ciModules }) {
         it.test { testResultsDirName = "${rootProject.projectDir}/report/${project.name}" }
         dependsOn it.test
-    } 
+    }
 }
 
-idea { 
+idea {
     project {
         jdkName = '11.0'
     }
@@ -371,3 +371,71 @@ task fixIdea {
     }
 }
 
+task coldWalletDist {
+    dependsOn build
+    dependsOn collectDependentJars
+
+    doLast {
+        def destFolder = new File('./pack')
+        def nativeRoot = new File('./native')
+        def jarRoot = new File('./jars')
+        coldWalletDist_packSetup(destFolder, nativeRoot, jarRoot)
+    }
+}
+
+def grabJavaJlink(dest) {
+    def javaHome = System.getenv('JAVA_HOME')
+    if (javaHome == null) {
+        throw new GradleException("unable to find $JAVA_HOME environmental variable")
+    }
+
+    exec {
+        commandLine 'sh', '-c', "${javaHome}/bin/jlink --module-path ${javaHome}/jmods --add-modules java.base,java.xml,java.logging,java.management,jdk.unsupported,jdk.sctp --output ${dest}"
+    }
+}
+
+def coldWalletDist_packSetup(dest, nativeRoot, jarRoot) {
+    if (!dest.exists()) {
+        dest.mkdirs()
+    }
+
+    def destNativeRoot = new File(dest, "native")
+    def destJarRoot = new File(dest, "jars")
+
+    if (destNativeRoot.exists()) {
+        delete(destNativeRoot)
+    }
+    destNativeRoot.mkdirs()
+
+    if (destJarRoot.exists()) {
+        delete(destJarRoot)
+    }
+    destJarRoot.mkdirs()
+
+    copy {
+        from nativeRoot
+        into destNativeRoot
+    }
+
+    copy {
+        from jarRoot
+        into destJarRoot
+    }
+
+    // grab a java runtime
+    def javaRuntimePath = new File(dest, "rt")
+    if (!javaRuntimePath.exists()) {
+        grabJavaJlink(javaRuntimePath)
+    }
+
+    // copy the start script
+    copy {
+        from "coldwallet.sh"
+        into dest
+    }
+
+    def packTarget = new File(dest, "coldwallet.tar.gz")
+    exec {
+        commandLine 'sh', '-c', 'tar -cvzf ./pack/coldwallet.tar.gz ./pack/*'
+    }
+}

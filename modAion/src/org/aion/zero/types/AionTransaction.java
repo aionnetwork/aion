@@ -331,6 +331,12 @@ public class AionTransaction extends AbstractTransaction {
         this.rlpEncoded = null;
     }
 
+    public void signWithTimestamp(ECKey key, long timestamp) throws MissingPrivateKeyException {
+        this.timeStamp = ByteUtil.longToBytes(timestamp);
+        this.signature = key.sign(this.getRawHash());
+        this.rlpEncoded = null;
+    }
+
     @Override
     public String toString() {
         return toString(Integer.MAX_VALUE);
