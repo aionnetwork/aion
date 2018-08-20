@@ -17,7 +17,7 @@
 	<property name="test.report.dir" value="report" />
 	<property name="compile.debug" value="on" />
     <property name="vm.version" value="0.2.1" />
-
+<!--
 	<path id="cp">
 		<pathelement location="${dir.libfile}/slf4j-api-1.7.25.jar" />
 		<pathelement location="${dir.libfile}/commons-codec-1.10.jar" />
@@ -35,7 +35,7 @@
 		<pathelement location="${dir.libfile}/libJson.jar" />
 		<pathelement location="${dir.libfile}/logback-classic-1.2.3.jar" />
 		<pathelement location="${dir.libfile}/logback-core-1.2.3.jar" />
-		<pathelement location="${dir.libfile}/libminiupnp/miniupnpc_linux.jar" />
+		<pathelement location="${dir.libfile}/miniupnpc_linux.jar" />
 		<pathelement location="${dir.modfile}/modEvtMgr.jar" />
 		<pathelement location="${dir.modfile}/modEvtMgrImpl.jar" />
 		<pathelement location="${dir.modfile}/modLogger.jar" />
@@ -55,8 +55,9 @@
 		<pathelement location="${dir.modfile}/modBoot.jar" />
 		<pathelement location="${dir.modfile}/modGui.jar" />
 		<pathelement location="${dir.modfile}/modPrecompiled.jar" />
-        <pathelement location="${dir.modfile}/modVM.jar" />
+	        <pathelement location="${dir.modfile}/modVM.jar" />
 	</path>
+-->
 
 	<path id="test.lib">
 		<pathelement location="${dir.libfile}/hamcrest/hamcrest-all-1.3.jar" />
