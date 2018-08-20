@@ -42,6 +42,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -141,7 +142,8 @@ public class ApiAionTest {
         api = new ApiAionImpl(impl);
     }
 
-    private void tearDown() {
+    @After
+    public void tearDown() {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
         File[] AllFilesInDirectory = folder.listFiles();
@@ -211,15 +213,15 @@ public class ApiAionTest {
         assertEquals(blk, api.getBlock(-1));
 
         // retrieval based on block hash
-        assertEquals(blk.toString(), api.getBlockByHash(blk.getHash()).toString());
+        assertTrue(api.getBlockByHash(blk.getHash()).isEqual(blk));
 
         // retrieval based on block number
-        assertEquals(blk.toString(), api.getBlock(blk.getNumber()).toString());
-
+        assertTrue(api.getBlock(blk.getNumber()).isEqual(blk));
 
         // retrieval based on block number that also gives total difficulty
-        Map.Entry rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
-        assertEquals(rslt.getKey().toString(), blk.toString());
+        Map.Entry<AionBlock, BigInteger> rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
+
+        assertTrue(rslt.getKey().isEqual(blk));
 
         // check because blk might be the genesis block
         assertEquals(rslt.getValue(),
