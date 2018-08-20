@@ -22,7 +22,6 @@ public class ColdWallet {
         public BigInteger value; // value IN AION
         public BigInteger energyPrice;
         public BigInteger energy;
-        public ECKey account;
     }
 
     /**
@@ -40,8 +39,9 @@ public class ColdWallet {
         }
 
         /** (byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice) **/
-        AionTransaction transaction = new AionTransaction(config.nonce.toByteArray(),
-                config.accountAddress,
+        AionTransaction transaction = new AionTransaction(
+                config.nonce.toByteArray(),
+                config.recipientAddress,
                 config.value.toByteArray(),
                 ByteUtil.EMPTY_BYTE_ARRAY,
                 config.energy.longValueExact(),
@@ -64,7 +64,7 @@ public class ColdWallet {
             try {
                 config.accountAddress = Address.wrap(in);
             } catch (IllegalArgumentException e) {
-                improperAddress(config.accountAddress);
+                improperAddress(in);
                 return null;
             }
 
@@ -81,7 +81,7 @@ public class ColdWallet {
             try {
                 config.recipientAddress = Address.wrap(in);
             } catch (IllegalArgumentException e) {
-                improperAddress(config.accountAddress);
+                improperAddress(in);
                 return null;
             }
         }
@@ -106,13 +106,12 @@ public class ColdWallet {
         }
 
         config.energy = BigInteger.valueOf(21000L);
-        config.energyPrice = BigInteger.TEN.pow(19);
+        config.energyPrice = BigInteger.TEN.pow(10);
         printConfig(config);
         return config;
     }
 
     static ECKey processPassword(Config config) {
-
         Console console = System.console();
         String password = new String(console.readPassword("Password: "));
         if (!AccountManager.inst().unlockAccount(config.accountAddress, password, 120)) {
@@ -129,8 +128,8 @@ public class ColdWallet {
         return s.contains(accountAddress);
     }
 
-    static void improperAddress(Address addr) {
-        System.out.println("Improper Address formatting: " + addr);
+    static void improperAddress(String input) {
+        System.out.println("Improper Address formatting: " + input);
     }
 
     static void printConfig(Config config) {
