@@ -294,10 +294,10 @@
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 
-        <echo message="building modVM" />
-        <ant inheritAll="false" antfile="${dir.workspace}/modVM/build.xml" target="clean_build">
-            <property name="compile.debug" value="${compile.debug}" />
-        </ant>
+	        <echo message="building modVM" />
+       		<ant inheritAll="false" antfile="${dir.workspace}/modVM/build.xml" target="clean_build">
+	            <property name="compile.debug" value="${compile.debug}" />
+	        </ant>
 
 		<echo message="building modPrecompiled" />
 		<ant inheritall="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="clean_build">
@@ -322,15 +322,15 @@
 		<echo message="building modBoot" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modBoot/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
-        </ant>
+	        </ant>
 
-        <echo message="building modApi" />
-        <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
-                <property name="compile.debug" value="${compile.debug}" />
-        </ant>
-        <copy file="aion_api/pack/modAionApi.jar" todir="${dir.modfile}" overwrite="true" />
+	        <echo message="building modApi" />               
+	        <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build_from_kernel">
+	                <property name="compile.debug" value="${compile.debug}" />
+	        </ant>
+	        <copy file="aion_api/pack/modAionApi.jar" todir="${dir.modfile}" overwrite="true" />
 
-        <echo message="building modGui" />
+	        <echo message="building modGui" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
