@@ -24,48 +24,15 @@
 
 package org.aion.api.server.pb;
 
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
-
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
 import org.aion.api.server.pb.Message.Retcode;
 import org.aion.api.server.pb.Message.Servs;
-import org.aion.api.server.types.ArgTxCall;
-import org.aion.api.server.types.CompiledContr;
-import org.aion.api.server.types.EvtContract;
-import org.aion.api.server.types.EvtTx;
-import org.aion.api.server.types.Fltr;
-import org.aion.api.server.types.FltrCt;
-import org.aion.api.server.types.SyncInfo;
-import org.aion.api.server.types.TxPendingStatus;
-import org.aion.api.server.types.TxRecpt;
-import org.aion.api.server.types.TxRecptLg;
-import org.aion.base.type.Address;
-import org.aion.base.type.Hash256;
-import org.aion.base.type.IBlock;
-import org.aion.base.type.ITransaction;
-import org.aion.base.type.ITxReceipt;
+import org.aion.api.server.types.*;
+import org.aion.base.type.*;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
@@ -82,9 +49,7 @@ import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
 import org.aion.zero.impl.AionBlockchainImpl;
-import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
-import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.blockchain.IChainInstancePOW;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -94,6 +59,17 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
+
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 @SuppressWarnings("Duplicates")
 public class ApiAion0 extends ApiAion implements IApiAion {
@@ -386,7 +362,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     Message.rsp_protocolVersion
                         .newBuilder()
                         .setApi(String.valueOf(this.getApiVersion()))
-                        .setDb(AionHub.getRepoVersion())
+                        .setDb(Version.REPO_VERSION)
                         .setKernel(Version.KERNEL_VERSION)
                         .setMiner(EquihashMiner.VERSION)
                         .setNet(this.p2pProtocolVersion())

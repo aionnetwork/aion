@@ -34,10 +34,10 @@ import org.aion.equihash.EquihashMiner;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
-import org.aion.zero.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.zero.impl.IAion0Hub;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.vm.TransactionExecutor;
@@ -45,7 +45,6 @@ import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
@@ -61,7 +60,7 @@ public class AionImpl implements IChainInstancePOW {
     private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
-    public AionHub aionHub;
+    public IAion0Hub aionHub;
 
     private CfgAion cfg;
 
@@ -213,7 +212,7 @@ public class AionImpl implements IChainInstancePOW {
     }
 
     @Override
-    public AionHub getAionHub() {
+    public IAion0Hub getAionHub() {
         return aionHub;
     }
 
