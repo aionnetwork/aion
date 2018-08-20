@@ -943,7 +943,7 @@ public class ApiAion0Test {
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
 
         addressString1 = addr1.toString();
-        addressString1 = addr2.toString();
+        addressString2 = addr2.toString();
         keyCreated = true;
 
         Message.t_Key tkey1 = Message.t_Key.newBuilder()
