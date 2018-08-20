@@ -12,7 +12,7 @@ public class AionExecutorProvider implements ExecutorProvider {
 
     @Override
     public IPrecompiledContract getPrecompiledContract(ExecutionContext context, IRepositoryCache track) {
-        return ContractFactory.getPrecompiledContract(context, track);
+        return new ContractFactory().getPrecompiledContract(context, track);
     }
 
     @Override

@@ -12,6 +12,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.precompiled.PrecompiledUtilities;
 
 /**
  * Storage layout mapping as the following:
@@ -53,7 +54,7 @@ public class BridgeStorageConnector {
         RELAYER(new DataWord(0x5)),
         INITIALIZED(new DataWord(0x42));
 
-        private DataWord offset;
+        private final DataWord offset;
 
         S_OFFSET(DataWord offset) {
             this.offset = offset;
@@ -64,7 +65,7 @@ public class BridgeStorageConnector {
         BUNDLE_MAP((byte) 0x1),
         ACTIVE_MAP((byte) 0x2);
 
-        private byte[] id;
+        private final byte[] id;
 
         M_ID(byte id) {
             this.id = new byte[] {id};
@@ -88,9 +89,7 @@ public class BridgeStorageConnector {
 
     public boolean getInitialized() {
         byte[] word = this.getWORD(S_OFFSET.INITIALIZED.offset);
-        if (word == null)
-            return false;
-        return (word[15] & 0x1) == 1;
+        return word != null && (word[15] & 0x1) == 1;
     }
 
     public void setOwner(@Nonnull final byte[] address) {
@@ -107,9 +106,9 @@ public class BridgeStorageConnector {
         this.setDWORD(S_OFFSET.NEW_OWNER.offset, address);
     }
 
+
     public byte[] getNewOwner() {
-        byte[] ret = this.getDWORD(S_OFFSET.NEW_OWNER.offset);
-        return BridgeUtilities.getAddress(ret);
+        return this.getDWORD(S_OFFSET.NEW_OWNER.offset);
     }
 
     public void setRelayer(@Nonnull final byte[] address) {
@@ -118,8 +117,7 @@ public class BridgeStorageConnector {
     }
 
     public byte[] getRelayer() {
-        byte[] ret = this.getDWORD(S_OFFSET.RELAYER.offset);
-        return BridgeUtilities.getAddress(ret);
+        return this.getDWORD(S_OFFSET.RELAYER.offset);
     }
 
     public void setMemberCount(int amount) {
@@ -140,7 +138,7 @@ public class BridgeStorageConnector {
     }
 
     public int getMinThresh() {
-        // C1 covere by getWORD
+        // C1 covered by getWORD
         byte[] threshWord = this.getWORD(S_OFFSET.MIN_THRESH.offset);
         if (threshWord == null)
             return 0;
@@ -175,34 +173,61 @@ public class BridgeStorageConnector {
 
     public boolean getActiveMember(@Nonnull final byte[] key) {
         assert key.length == 32;
-        byte[] h = ByteUtil.chop(
-                HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
+        byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
         DataWord hWord = new DataWord(h);
 
         // C1 covered by getWORD
         byte[] activeMemberWord = this.getWORD(hWord);
-        if (activeMemberWord == null)
-            return false;
-        return (activeMemberWord[15] & 0x01) == 1;
+        return activeMemberWord != null && (activeMemberWord[15] & 0x01) == 1;
     }
 
+    /**
+     * @implNote ATB-4 changes, we have a new requirement in the contract
+     * to store the value (transactionHash) of when the bundle was set
+     * into the block.
+     *
+     * Therefore, where previously we were checking whether the bundle
+     * was valid based on a {@code true/false} assumption, we now check
+     * whether the bundle is valid based on whether the returned address
+     * equates to a zero word.
+     *
+     * Documentation on the change can be found as part of v0.0.4
+     * changes.
+     */
     public void setBundle(@Nonnull final byte[] key,
-                          final boolean value) {
+                          @Nonnull final byte[] value) {
         assert key.length == 32;
+        assert value.length == 32;
+
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
         DataWord hWord = new DataWord(h);
-        DataWord b = value ? new DataWord(1) : new DataWord(0);
-        this.setWORD(hWord, b);
+        this.setDWORD(hWord, value);
     }
 
-    public boolean getBundle(@Nonnull final byte[] key) {
+    /**
+     * @implNote changed as part of ATB-4, see {@link #setBundle(byte[], byte[])}
+     * above for more information.
+     *
+     * @implNote note here that we return an EMPTY_WORD, this is checked in
+     * the controller layer and equates to a false.
+     *
+     * @param key bundleHash
+     * @return {@code EMPTY_WORD (32)} if no blockHash is found, {@code transactionHash}
+     *         of the input transaction otherwise.
+     */
+    public byte[] getBundle(@Nonnull final byte[] key) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
         DataWord hWord = new DataWord(h);
-        byte[] bundleWord = this.getWORD(hWord);
-        if (bundleWord == null)
-            return false;
-        return (bundleWord[15] & 0x01) == 1;
+        byte[] bundleDoubleWord = this.getDWORD(hWord);
+        if (bundleDoubleWord == null)
+            return ByteUtil.EMPTY_WORD;
+
+        // paranoid, this should typically never happen
+        if (bundleDoubleWord.length < 32)
+            bundleDoubleWord = PrecompiledUtilities.pad(bundleDoubleWord, 32);
+
+        return bundleDoubleWord;
     }
 
     // DWORD helpers
