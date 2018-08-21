@@ -22,6 +22,7 @@ public class ColdWallet {
         public BigInteger value; // value IN AION
         public BigInteger energyPrice;
         public BigInteger energy;
+        public byte[] data;
     }
 
     /**
@@ -43,11 +44,10 @@ public class ColdWallet {
                 config.nonce.toByteArray(),
                 config.recipientAddress,
                 config.value.toByteArray(),
-                ByteUtil.EMPTY_BYTE_ARRAY,
+                config.data == null ? ByteUtil.EMPTY_BYTE_ARRAY : config.data,
                 config.energy.longValueExact(),
                 config.energyPrice.longValueExact());
         transaction.sign(key);
-
         printCurl(transaction.getEncoded());
     }
 
@@ -98,11 +98,19 @@ public class ColdWallet {
         {
             System.out.print("Value (AION): ");
             BigInteger in = sc.nextBigInteger();
-
+            sc.nextLine();
             if (in.signum() < 0) {
                 return null;
             }
             config.value = in.multiply(BigInteger.TEN.pow(18));
+        }
+
+        {
+            System.out.print("Data (Hex): ");
+            String in = sc.nextLine();
+            if (!in.isEmpty()) {
+                config.data = ByteUtil.hexStringToBytes(in);
+            }
         }
 
         config.energy = BigInteger.valueOf(21000L);
@@ -139,6 +147,7 @@ public class ColdWallet {
         System.out.println("value: " + config.value);
         System.out.println("energy: " + config.energy);
         System.out.println("energyPrice: " + config.energyPrice);
+        System.out.println("data: " + (config.data == null ? "" : ByteUtil.toHexString(config.data)));
     }
 
     static void printCurl(byte[] signedTransaction) {
