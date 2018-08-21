@@ -10,6 +10,7 @@ gradle generateSWIGsource --full-stacktrace
 gradle build --full-stacktrace
 
 pushd jni
+./compile.sh
 ./jnilib.sh
 popd
 
