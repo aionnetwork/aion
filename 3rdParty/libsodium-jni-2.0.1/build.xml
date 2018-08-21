@@ -13,10 +13,6 @@
         <arg value="./build-linux.sh" />        
     </exec>    
 
-    <exec executable="/bin/bash">
-        <arg value="./build-linux.sh" />
-    </exec>
-
 <!--
     <exec executable="/bin/bash">
         <arg value="./jni/installswig.sh" />
