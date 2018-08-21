@@ -1165,9 +1165,16 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_getBlockDetailsByLatest rslt = Message.rsp_getBlockDetailsByLatest.parseFrom(stripHeader(rsp));
-        assertEquals(20, rslt.getBlkDetailsCount());
-        Message.t_BlockDetail blksql = rslt.getBlkDetails(19);
-        assertEquals(api.getBestBlock().getNumber(), blksql.getBlockNumber());
+
+        int expectedCount = 20, bestBlkNum = (int) api.getBestBlock().getNumber();
+
+        if (bestBlkNum < 19)
+            expectedCount = bestBlkNum + 1;
+
+        assertEquals(expectedCount, rslt.getBlkDetailsCount());
+
+        Message.t_BlockDetail blksql = rslt.getBlkDetails(expectedCount - 1);
+        assertEquals(bestBlkNum, blksql.getBlockNumber());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockDetailsByLatest_VALUE);
 
