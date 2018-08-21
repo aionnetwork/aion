@@ -210,16 +210,6 @@
                 <echo message="compile debug is ${compile.debug}" />
                 <echo message="building 3rd party lib" />
 
-                <property name="sodiumjni" value="${dir.workspace}/3rdParty/libsodium-jni-2.0.1" />
-                <property name="path.libsodium" value="${sodiumjni}/libsodium/libsodium-host/lib" />
-                <property name="path.libsodiumjni" value="${sodiumjni}/jni" />
-
-                <ant inheritAll="false" antfile="${sodiumjni}/build.xml" target="build">
-                        <property name="compile.debug" value="${compile.debug}" />
-                </ant>
-                <move file="${path.libsodiumjni}/libsodiumjni.so" tofile="${dir.native}/linux/sodium" overwrite="true" />
-                <move file="${path.libsodium}/libsodium.so" tofile="${dir.native}/linux/sodium" overwrite="true" />
-
                 <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libnsc/build.xml" target="build">
                         <property name="compile.debug" value="${compile.debug}" />
                 </ant>
