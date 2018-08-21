@@ -129,8 +129,8 @@ public class Aion {
         }
         filePath[1] = cfg.getBasePath() + "/" + cfg.getDb().getPath();
         filePath[2] = Keystore.getKeystorePath();
-        filePath[3] = Cli.getDstConfig();
-        filePath[4] = Cli.getDstGenesis();
+        filePath[3] = new Cli().getDstConfig();
+        filePath[4] = new Cli().getDstGenesis();
         filePath[5] = CfgAion.getConfFilePath();
         filePath[6] = CfgAion.getGenesisFilePath();
 

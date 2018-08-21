@@ -52,13 +52,13 @@ import java.io.Console;
  */
 public class Cli {
 
-    private static final String BASE_PATH = System.getProperty("user.dir");
+    private final String BASE_PATH = System.getProperty("user.dir");
 
-    private static String BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
+    private String BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
 
-    private static String dstConfig = BASE_PATH_WITH_NETWORK + "/config.xml";
+    private String dstConfig = BASE_PATH_WITH_NETWORK + "/config.xml";
 
-    private static String dstGenesis = BASE_PATH_WITH_NETWORK + "/genesis.json";
+    private String dstGenesis = BASE_PATH_WITH_NETWORK + "/genesis.json";
 
     File keystoreDir = new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
@@ -770,11 +770,11 @@ public class Cli {
         return certPass;
     }
 
-    public static String getDstConfig() {
+    public String getDstConfig() {
         return dstConfig;
     }
 
-    public static String getDstGenesis() {
+    public String getDstGenesis() {
         return dstGenesis;
     }
 

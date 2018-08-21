@@ -210,14 +210,14 @@ public class CliTest {
         assertEquals("aaaaaaaa/mainnet/database", cfg.getDb().getPath() );
         assertEquals("aaaaaaaa/mainnet/log", cfg.getLog().getLogPath() );
         assertEquals(BASE_PATH + "/aaaaaaaa/mainnet/keystore", Keystore.getKeystorePath());
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nValid Datadir 2: " + networkArgs[4][1]);
         assertEquals(2, cli.call(networkArgs[4], cfg) );
         assertEquals("abbbbbbb/mainnet/database", cfg.getDb().getPath() );
         assertEquals("abbbbbbb/mainnet/log", cfg.getLog().getLogPath() );
         assertEquals(BASE_PATH + "/abbbbbbb/mainnet/keystore", Keystore.getKeystorePath());
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
     }
 
@@ -251,21 +251,21 @@ public class CliTest {
         assertEquals("mainnet", CfgAion.getNetwork() );
         assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath() );
         assertEquals(BASE_PATH + "/config/mainnet/genesis.json", CfgAion.getGenesisFilePath() );
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nValid Network 2: " + networkArgs[4][1]);
         assertEquals(2, cli.call(networkArgs[4], cfg) );
         assertEquals("conquest", CfgAion.getNetwork() );
         assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath() );
         assertEquals(BASE_PATH + "/config/conquest/genesis.json", CfgAion.getGenesisFilePath() );
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nValid Network 3: " + networkArgs[5][1]);
         assertEquals(2, cli.call(networkArgs[5], cfg) );
         assertEquals("conquest", CfgAion.getNetwork() );
         assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath() );
         assertEquals(BASE_PATH + "/config/conquest/genesis.json", CfgAion.getGenesisFilePath() );
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
     }
 
@@ -293,7 +293,7 @@ public class CliTest {
         assertEquals("aaaaaaaa/mainnet/log", cfg.getLog().getLogPath());
         assertEquals("aaaaaaaa/mainnet/database", cfg.getDb().getPath());
         assertEquals(BASE_PATH + "/aaaaaaaa/mainnet/keystore", Keystore.getKeystorePath());
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nNew 2: " + multiArgs[1][1] + " " + multiArgs[1][3]);
         assertEquals(2, cli.call(multiArgs[1], cfg));
@@ -301,7 +301,7 @@ public class CliTest {
         assertEquals("abbbbbbb/conquest/log", cfg.getLog().getLogPath());
         assertEquals("abbbbbbb/conquest/database", cfg.getDb().getPath());
         assertEquals(BASE_PATH + "/abbbbbbb/conquest/keystore", Keystore.getKeystorePath());
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nNew 3: " + multiArgs[2][1] + " " + multiArgs[2][3]);
         assertEquals(2, cli.call(multiArgs[2], cfg));
@@ -309,7 +309,7 @@ public class CliTest {
         assertEquals("abcccccc/conquest/log", cfg.getLog().getLogPath());
         assertEquals("abcccccc/conquest/database", cfg.getDb().getPath());
         assertEquals(BASE_PATH + "/abcccccc/conquest/keystore", Keystore.getKeystorePath());
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\n Exist 1: " + multiArgs[3][1] + " " + multiArgs[3][3]);
         assertEquals(2, cli.call(multiArgs[3], cfg));
@@ -317,7 +317,7 @@ public class CliTest {
         assertEquals("aaaaaaaa/conquest/log", cfg.getLog().getLogPath());
         assertEquals("aaaaaaaa/conquest/database", cfg.getDb().getPath());
         assertEquals(BASE_PATH + "/aaaaaaaa/conquest/keystore", Keystore.getKeystorePath());
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nExist 2: " + multiArgs[4][1] + " " + multiArgs[4][3]);
         assertEquals(2, cli.call(multiArgs[4], cfg));
@@ -325,7 +325,7 @@ public class CliTest {
         assertEquals("aaaaaaaa/conquest/log", cfg.getLog().getLogPath());
         assertEquals("aaaaaaaa/conquest/database", cfg.getDb().getPath());
         assertEquals(BASE_PATH + "/aaaaaaaa/conquest/keystore", Keystore.getKeystorePath());
-        printPaths(BASE_PATH, cfg);
+        printPaths(BASE_PATH, cfg, cli);
 
         // Invalid input
         assertEquals(1, cli.call(multiArgs[5], cfg));
@@ -334,13 +334,13 @@ public class CliTest {
         assertEquals(1, cli.call(multiArgs[8], cfg));
     }
 
-    private void printPaths(String BASE_PATH, Cfg cfg) {
+    private void printPaths(String BASE_PATH, Cfg cfg, Cli cli) {
         System.out.println("\n-------------------------------- USED PATHS --------------------------------" +
                 "\n> Logger path:   " + BASE_PATH + "/" + cfg.getLog().getLogPath() +
                 "\n> Database path: " + BASE_PATH + "/" + cfg.getDb().getPath() +
                 "\n> Keystore path: " + Keystore.getKeystorePath() +
-                "\n> Config write:  " + Cli.getDstConfig() +
-                "\n> Genesis write: " + Cli.getDstGenesis() +
+                "\n> Config write:  " + cli.getDstConfig() +
+                "\n> Genesis write: " + cli.getDstGenesis() +
                 "\n----------------------------------------------------------------------------" +
                 "\n> Config read:   " + CfgAion.getConfFilePath() +
                 "\n> Genesis read:  " + CfgAion.getGenesisFilePath() +
