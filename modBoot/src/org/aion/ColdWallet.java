@@ -113,7 +113,7 @@ public class ColdWallet {
             }
         }
 
-        config.energy = BigInteger.valueOf(21000L);
+        config.energy = BigInteger.valueOf(100000L);
         config.energyPrice = BigInteger.TEN.pow(10);
         printConfig(config);
         return config;
