@@ -44,6 +44,7 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -251,7 +252,7 @@ public class ApiAionTest {
             assertEquals(0L, sync.chainBestBlkNumber);
     }
 
-    @Test
+    @Test @Ignore
     public void testGetTransactions() {
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
         byte[] msg = "test message".getBytes();
