@@ -87,4 +87,6 @@ public interface IBlock<TX extends ITransaction, BH extends IBlockHeader> {
     long getNrgConsumed();
 
     long getNrgLimit();
+
+    byte[] getExtraData();
 }

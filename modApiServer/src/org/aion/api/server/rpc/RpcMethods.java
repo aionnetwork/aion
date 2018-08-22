@@ -17,6 +17,7 @@ public class RpcMethods {
     private Map<String, RpcMethod> enabledEndpoints;
 
     public RpcMethods(List<String> enabledGroups) {
+        //TODO: refactor THIS to pass something general!!!!
         api = new ApiWeb3Aion(AionImpl.inst());
 
         // find a way to autogen options in config using this enum, without generating circular

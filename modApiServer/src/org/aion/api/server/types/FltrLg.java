@@ -24,15 +24,18 @@
 
 package org.aion.api.server.types;
 
-import org.aion.base.type.*;
-import org.aion.mcf.vm.types.Log;
+import org.aion.base.type.IBlock;
+import org.aion.base.type.IBlockSummary;
+import org.aion.base.type.ITransaction;
+import org.aion.mcf.core.AbstractTxInfo;
+import org.aion.mcf.core.IBlockchain;
+import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.mcf.vm.types.Bloom;
+import org.aion.mcf.vm.types.Log;
 import org.aion.zero.impl.core.BloomFilter;
-import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
-import org.aion.zero.impl.core.IAionBlockchain;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -96,18 +99,20 @@ public final class FltrLg extends Fltr {
     // inelegant (distributing chain singleton ref. into here), tradeoff for efficiency and ease of impl.
     // rationale: this way, we only retrieve logs from DB for transactions that the bloom
     // filter gives a positive match for;
-    public boolean onBlock(IAionBlock blk, IAionBlockchain chain) {
+    public boolean onBlock(IBlock blk, IBlockchain chain) {
         if (matchBloom(new Bloom(blk.getLogBloom()))) {
             int txIndex = 0;
-            for (ITransaction txn : blk.getTransactionsList()) {
+            for (Object tx : blk.getTransactionsList()) {
+                ITransaction txn = (ITransaction) tx;
                 if (matchesContractAddress(txn.getTo().toBytes())) {
                     // now that we know that our filter might match with some logs in this transaction, go ahead
                     // and retrieve the txReceipt from the chain
-                    AionTxInfo txInfo = chain.getTransactionInfo(txn.getHash());
-                    AionTxReceipt receipt = txInfo.getReceipt();
+                    AbstractTxInfo txInfo = chain.getTransactionInfo(txn.getHash());
+                    AbstractTxReceipt receipt = txInfo.getReceipt();
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
-                        for (Log logInfo : receipt.getLogInfoList()) {
+                        List<Log> logList = receipt.getLogInfoList();
+                        for (Log logInfo : logList) {
                             if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
                                 add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, txn, logIndex, true)));
                             }

@@ -922,7 +922,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 try {
                     req = Message.req_getBlockByNumber.parseFrom(data);
                     long num = req.getBlockNumber();
-                    AionBlock blk = this.getBlock(num);
+                    AionBlock blk = (AionBlock) this.getBlock(num);
 
                     return createBlockMsg(blk);
                 } catch (Exception e) {
@@ -951,7 +951,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             getApiVersion(), Retcode.r_fail_function_arguments_VALUE);
                     }
 
-                    AionBlock blk = this.getBlockByHash(hash);
+                    AionBlock blk = (AionBlock) this.getBlockByHash(hash);
                     return createBlockMsg(blk);
                 } catch (Exception e) {
                     LOG.error(
@@ -1180,7 +1180,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             getApiVersion(), Retcode.r_fail_function_arguments_VALUE);
                     }
 
-                    AionTransaction tx = this.getTransactionByHash(txHash);
+                    AionTransaction tx = (AionTransaction) this.getTransactionByHash(txHash);
                     if (tx == null) {
                         return ApiUtil.toReturnHeader(
                             getApiVersion(), Retcode.r_fail_function_call_VALUE);
@@ -2444,7 +2444,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             }
 
             BigInteger td =
-                this.ac.getBlockchain().getTotalDifficultyByHash(Hash256.wrap(blk.getHash()));
+                    ((IChainInstancePOW) this.ac).getBlockchain().getTotalDifficultyByHash(Hash256.wrap(blk.getHash()));
             Message.rsp_getBlock rsp = getRsp_getBlock(blk, al, td);
 
             byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
@@ -2946,6 +2946,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             .map(
                 this::getBlockWithTotalDifficulty)
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isMining() {
+        return (this.ac instanceof IChainInstancePOW && ((IChainInstancePOW)this.ac).getBlockMiner().isMining());
     }
 
     public byte getApiVersion() {

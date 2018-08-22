@@ -56,6 +56,8 @@ public interface ITransaction extends Cloneable {
 
     byte[] getTimeStamp();
 
+    Address getContractAddress();
+
     BigInteger getTimeStampBI();
 
     /**

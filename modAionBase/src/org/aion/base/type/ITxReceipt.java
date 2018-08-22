@@ -34,4 +34,7 @@ public interface ITxReceipt<TX extends ITransaction, LOG> {
     void setNrgUsed(long nrg);
     void setExecutionResult(byte[] result);
     void setError(String error);
+
+    byte[] getExecutionResult();
+    long getEnergyUsed();
 }

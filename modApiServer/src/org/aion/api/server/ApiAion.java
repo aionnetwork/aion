@@ -25,27 +25,13 @@
 
 package org.aion.api.server;
 
-import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.type.Address;
+import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
@@ -58,6 +44,9 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.generic.IGenericAionChain;
+import org.aion.mcf.core.AbstractTxInfo;
+import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -69,9 +58,18 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
+
+import java.math.BigInteger;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
 
 public abstract class ApiAion extends Api {
 
@@ -82,7 +80,7 @@ public abstract class ApiAion extends Api {
 
     // delegate concurrency to underlying object
     protected static NrgOracle NRG_ORACLE;
-    protected IChainInstancePOW ac; // assumption: blockchainImpl et al. provide concurrency guarantee
+    protected IGenericAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
 
     // using java.util.concurrent library objects
     protected AtomicLong fltrIndex; // AtomicLong
@@ -103,7 +101,7 @@ public abstract class ApiAion extends Api {
 
     protected EventExecuteService ees;
 
-    public ApiAion(final IChainInstancePOW _ac) {
+    public ApiAion(final IGenericAionChain _ac) {
         this.ac = _ac;
         this.installedFilters = new ConcurrentHashMap<>();
         this.fltrIndex = new AtomicLong(0);
@@ -171,10 +169,14 @@ public abstract class ApiAion extends Api {
     }
 
     @Override
-    public AionBlock getBestBlock() {
+    public IBlock getBestBlock() {
         return this.ac.getBlockchain().getBestBlock();
     }
 
+    /**
+     *  TODO: refactor to be more generic or move to concrete Api implementation
+     *  This method is specific to PoW mining
+     */
     protected BlockContext getBlockTemplate() {
 
         blockTemplateLock.lock();
@@ -195,7 +197,7 @@ public abstract class ApiAion extends Api {
                 ret.addAll(ac.getAionHub().getPendingState().getPendingTransactions());
 
                 currentTemplate =
-                        ac.getAionHub()
+                        ((IChainInstancePOW) ac).getAionHub()
                                 .getBlockchain()
                                 .createNewBlockContext(bestBlock, new ArrayList<>(ret), false);
             }
@@ -206,12 +208,12 @@ public abstract class ApiAion extends Api {
         return currentTemplate;
     }
 
-    public AionBlock getBlockByHash(byte[] hash) {
+    public IBlock getBlockByHash(byte[] hash) {
         return this.ac.getBlockchain().getBlockByHash(hash);
     }
 
     @Override
-    public AionBlock getBlock(long blkNr) {
+    public IBlock getBlock(long blkNr) {
         if (blkNr == -1) {
             return this.ac.getBlockchain().getBestBlock();
         } else if (blkNr > 0) {
@@ -249,8 +251,11 @@ public abstract class ApiAion extends Api {
         return sync;
     }
 
+    /**
+     *  TODO: refactor to be more generic or move to concrete Api implementation
+     */
     protected AionTransaction getTransactionByBlockHashAndIndex(byte[] hash, long index) {
-        AionBlock pBlk = this.getBlockByHash(hash);
+        IBlock pBlk = this.getBlockByHash(hash);
         if (pBlk == null) {
             if (LOG.isErrorEnabled()) {
                 LOG.error(
@@ -259,8 +264,8 @@ public abstract class ApiAion extends Api {
             return null;
         }
 
-        List<AionTransaction> txList = pBlk.getTransactionsList();
-        AionTransaction tx = txList.get((int) index);
+        List<ITransaction> txList = pBlk.getTransactionsList();
+        AionTransaction tx = (AionTransaction) txList.get((int) index);
         if (tx == null) {
             if (LOG.isErrorEnabled()) {
                 LOG.error("Can't find the transaction!");
@@ -282,8 +287,11 @@ public abstract class ApiAion extends Api {
         return tx;
     }
 
+    /**
+     *  TODO: refactor to be more generic or move to concrete Api implementation
+     */
     protected AionTransaction getTransactionByBlockNumberAndIndex(long blkNr, long index) {
-        AionBlock pBlk = this.getBlock(blkNr);
+        IBlock pBlk = this.getBlock(blkNr);
         if (pBlk == null) {
             if (LOG.isErrorEnabled()) {
                 LOG.error(
@@ -316,7 +324,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getBlockTransactionCountByNumber(long blkNr) {
-        AionBlock pBlk = this.getBlock(blkNr);
+        IBlock pBlk = this.getBlock(blkNr);
         if (pBlk == null) {
             LOG.error(
                     "ApiAion.getTransactionByBlockNumberAndIndex - can't find the block by the block number");
@@ -327,7 +335,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getTransactionCountByHash(byte[] hash) {
-        AionBlock pBlk = this.getBlockByHash(hash);
+        IBlock pBlk = this.getBlockByHash(hash);
         if (pBlk == null) {
             LOG.error(
                     "ApiAion.getTransactionByBlockNumberAndIndex - can't find the block by the block number");
@@ -337,15 +345,15 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getTransactionCount(Address addr, long blkNr) {
-        AionBlock pBlk = this.getBlock(blkNr);
+        IBlock pBlk = this.getBlock(blkNr);
         if (pBlk == null) {
             LOG.error(
                     "ApiAion.getTransactionByBlockNumberAndIndex - can't find the block by the block number");
             return -1;
         }
         long cnt = 0;
-        List<AionTransaction> txList = pBlk.getTransactionsList();
-        for (AionTransaction tx : txList) {
+        List<ITransaction> txList = pBlk.getTransactionsList();
+        for (ITransaction tx : txList) {
             if (addr.equals(tx.getFrom())) {
                 cnt++;
             }
@@ -353,7 +361,8 @@ public abstract class ApiAion extends Api {
         return cnt;
     }
 
-    protected AionTransaction getTransactionByHash(byte[] hash) {
+
+    protected ITransaction getTransactionByHash(byte[] hash) {
         TxRecpt txRecpt = this.getTransactionReceipt(hash);
 
         if (txRecpt == null) {
@@ -362,7 +371,7 @@ public abstract class ApiAion extends Api {
             }
             return null;
         } else {
-            AionTransaction atx =
+            ITransaction atx =
                     this.getTransactionByBlockNumberAndIndex(
                             txRecpt.blockNumber, txRecpt.transactionIndex);
 
@@ -378,7 +387,7 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    public byte[] getCode(Address addr) {
+    protected byte[] getCode(Address addr) {
         return this.ac.getRepository().getCode(addr);
     }
 
@@ -395,14 +404,14 @@ public abstract class ApiAion extends Api {
             return null;
         }
 
-        AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
+        AbstractTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
         if (txInfo == null) {
             if (LOG.isErrorEnabled()) {
                 LOG.error("<get-transaction-receipt msg=tx-info-null>");
             }
             return null;
         }
-        AionBlock block =
+        IBlock block =
                 this.ac.getAionHub().getBlockchain().getBlockByHash(txInfo.getBlockHash());
 
         if (block == null) {
@@ -413,7 +422,7 @@ public abstract class ApiAion extends Api {
         }
 
         // need to return txes only from main chain
-        AionBlock mainBlock =
+        IBlock mainBlock =
                 this.ac.getAionHub().getBlockchain().getBlockByNumber(block.getNumber());
         if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
             LOG.debug("<get-transaction-receipt msg=hash-not-match>");
@@ -423,15 +432,15 @@ public abstract class ApiAion extends Api {
         // @Jay
         // TODO : think the good way to calculate the cumulated nrg use
         long cumulateNrg = 0L;
-        for (AionTransaction atx : block.getTransactionsList()) {
-
+        for (Object tx : block.getTransactionsList()) {
+            ITransaction atx = (AionTransaction) tx;
             // @Jay: This should not happen!
             byte[] hash = atx.getHash();
             if (hash == null) {
                 throw new NullPointerException();
             }
 
-            AionTxInfo info = this.ac.getAionHub().getBlockchain().getTransactionInfo(hash);
+            AbstractTxInfo info = this.ac.getAionHub().getBlockchain().getTransactionInfo(hash);
 
             // @Jay: This should not happen!
             if (info == null) {
@@ -447,6 +456,9 @@ public abstract class ApiAion extends Api {
         return new TxRecpt(block, txInfo, cumulateNrg, true);
     }
 
+    /**
+     *  TODO: refactor to be more generic or move to concrete Api implementation
+     */
     protected byte[] doCall(ArgTxCall _params) {
         AionTransaction tx =
                 new AionTransaction(
@@ -456,18 +468,24 @@ public abstract class ApiAion extends Api {
                         _params.getData(),
                         _params.getNrg(),
                         _params.getNrgPrice());
-        AionTxReceipt rec =
+        AbstractTxReceipt rec =
                 this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
         return rec.getExecutionResult();
     }
 
+    /**
+     *  TODO: refactor to be more generic or move to concrete Api implementation
+     */
     protected long estimateNrg(ArgTxCall params) {
         AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), params.getFrom(), params.getTo(),
                 params.getValue().toByteArray(), params.getData(), params.getNrg(), params.getNrgPrice());
-        AionTxReceipt receipt = this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
+        AionTxReceipt receipt = (AionTxReceipt) this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
         return receipt.getEnergyUsed();
     }
 
+    /**
+     *  TODO: refactor to be more generic or move to concrete Api implementation
+     */
     protected ContractCreateResult createContract(ArgTxCall _params) {
 
         Address from = _params.getFrom();
@@ -534,6 +552,9 @@ public abstract class ApiAion extends Api {
         return this.ac.getRepository().getNonce(_address);
     }
 
+    /**
+     *  TODO: refactor to be more generic or move to concrete Api implementation
+     */
     protected byte[] sendTransaction(ArgTxCall _params) {
 
         Address from = _params.getFrom();
@@ -578,6 +599,10 @@ public abstract class ApiAion extends Api {
         }
     }
 
+
+    /**
+     *  TODO: refactor to be more generic or move to concrete Api implementation
+     */
     protected byte[] sendTransaction(byte[] signedTx) {
         if (signedTx == null) {
             throw new NullPointerException();
@@ -607,8 +632,11 @@ public abstract class ApiAion extends Api {
     // nm.getNonce(Address.wrap(key.getAddress()));
     //    }
 
+    /**
+        Should be overwritten accordingly.
+     */
     public boolean isMining() {
-        return this.ac.getBlockMiner().isMining();
+        return false;
     }
 
     protected int peerCount() {
@@ -656,12 +684,12 @@ public abstract class ApiAion extends Api {
         return (this.ac.getAionHub().getP2pMgr().chainId() + "");
     }
 
-    public String getHashrate() {
+    protected String getHashrate() {
         double hashrate = 0;
 
         // add the the hashrate computed by the internal CPU miner
         if (isMining()) {
-            hashrate += this.ac.getBlockMiner().getHashrate();
+            hashrate += ((IChainInstancePOW)this.ac).getBlockMiner().getHashrate();
         }
 
         hashrate += reportedHashrate;
@@ -684,6 +712,9 @@ public abstract class ApiAion extends Api {
     }
 
     // Returns a fully initialized NrgOracle object.
+    /**
+     *  TODO: Maybe all references to the NrgOracle should be moved to an Aion0 implementation
+     */
     protected void initNrgOracle(IAionChain _ac) {
         if (NRG_ORACLE != null) {
             return;
