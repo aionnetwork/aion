@@ -164,6 +164,7 @@ will be built when executing the release.sh in the aion_fastvm repo or execute t
 
 libsodiumjni.so
 libsodium.so
+aion/3rdParty/libsodium-jni-2.0.1 or
 https://github.com/joshjdevl/libsodium-jni
 
 solc
