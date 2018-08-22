@@ -1191,10 +1191,15 @@ public class ApiAion0Test {
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
+        int expectedCount = 20, bestBlkNum = (int) api.getBestBlock().getNumber();
+
+        if (bestBlkNum < 19)
+            expectedCount = bestBlkNum + 1;
+
         Message.rsp_getBlocksByLatest rslt = Message.rsp_getBlocksByLatest.parseFrom(stripHeader(rsp));
-        assertEquals(20, rslt.getBlksCount());
-        Message.t_Block blksql = rslt.getBlks(19);
-        assertEquals(api.getBestBlock().getNumber(), blksql.getBlockNumber());
+        assertEquals(expectedCount, rslt.getBlksCount());
+        Message.t_Block blksql = rslt.getBlks(expectedCount - 1);
+        assertEquals(bestBlkNum, blksql.getBlockNumber());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlocksByLatest_VALUE);
 
