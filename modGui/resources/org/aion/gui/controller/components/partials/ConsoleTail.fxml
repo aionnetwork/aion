@@ -30,7 +30,7 @@ Contributors:
 <?import javafx.scene.layout.AnchorPane?>
 <VBox xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="org.aion.gui.controller.partials.ConsoleTailController" fx:id="parent"
-      prefWidth="Infinity" alignment="CENTER_LEFT" AnchorPane.leftAnchor="0.0">
+      prefWidth="700" alignment="CENTER_LEFT" AnchorPane.leftAnchor="0.0">
     <stylesheets>
         <URL value="@../footer-pane.css" />
     </stylesheets>

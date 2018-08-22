@@ -7,25 +7,9 @@ import org.aion.precompiled.PrecompiledUtilities;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 
-/**
- * Collection of minimal utilities used by the bridge contract. Some code
- * is redundant/isolated for purposes of easy auditing
- */
 public class BridgeUtilities {
-    public static final byte[] EMPTY = new byte[0];
-
-    static byte[] getAddress(@Nullable byte[] addr) {
-        if (addr == null)
-            return null;
-
-        if (addr.length < 20)
-            return null;
-
-        byte[] out = new byte[20];
-        System.arraycopy(addr, addr.length - 20, out, 0, 20);
-        return addr;
-    }
 
     static byte[] toSignature(@Nonnull final String funcSignature) {
         byte[] sigChopped = new byte[4];
@@ -62,5 +46,20 @@ public class BridgeUtilities {
 
     static byte[] intToResultBytes(final int input) {
         return PrecompiledUtilities.pad(BigInteger.valueOf(input).toByteArray(), 16);
+    }
+
+    static byte[] computeBundleHash(byte[] sourceBlockHash, BridgeTransfer[] bundles) {
+        int size = sourceBlockHash.length + bundles.length * BridgeTransfer.TRANSFER_SIZE;
+
+        ByteBuffer buf = ByteBuffer.allocate(size);
+        buf.put(sourceBlockHash);
+
+        for (BridgeTransfer b : bundles) {
+            buf.put(b.getSourceTransactionHash());
+            buf.put(b.getRecipient());
+            buf.put(b.getTransferValueByteArray());
+        }
+
+        return HashUtil.h256(buf.array());
     }
 }

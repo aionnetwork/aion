@@ -23,13 +23,21 @@ public class GeneralKernelInfoRetriever extends AbstractAionApiClient {
         super(kernelConnection, errorHandler);
     }
 
-    public boolean isMining() throws ApiDataRetrievalException {
-        ApiMsg resp = callApi(api -> api.getMine().isMining());
-        return (boolean)resp.getObject();
+    public Boolean isMining() throws ApiDataRetrievalException {
+        if(apiIsConnected()) {
+            ApiMsg resp = callApi(api -> api.getMine().isMining());
+            return (boolean) resp.getObject();
+        } else {
+            return null;
+        }
     }
 
-    public int getPeerCount() throws ApiDataRetrievalException {
-        ApiMsg resp = callApi(api -> api.getNet().getActiveNodes());
-        return ((List) resp.getObject()).size();
+    public Integer getPeerCount() throws ApiDataRetrievalException {
+        if(apiIsConnected()) {
+            ApiMsg resp = callApi(api -> api.getNet().getActiveNodes());
+            return ((List) resp.getObject()).size();
+        } else {
+            return null;
+        }
     }
 }

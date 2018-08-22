@@ -156,8 +156,8 @@ public class MainWindow extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         // Set up Cfg and Logger
-//        CfgAion cfg = CfgAion.inst();
-//        initLogger(cfg);
+        CfgAion cfg = CfgAion.inst();
+        initLogger(cfg);
         LOG.info("Starting UI");
 
         // Set up JavaFX stage and root
@@ -194,6 +194,22 @@ public class MainWindow extends Application {
         // Set up event bus
         registerEventBusConsumer();
         kernelLauncher.tryResume();
+    }
+
+    private void initLogger(CfgAion cfg) {
+        // Initialize logging.  Borrowed from Aion CLI program.
+        ServiceLoader.load(AionLoggerFactory.class);
+        // Outputs relevant logger configuration
+        // TODO the info/error println messages should be presented via GUI
+        if (!cfg.getLog().getLogFile()) {
+            System.out.println("Logger disabled; to enable please check log settings in config.xml\n");
+        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            System.out.println("File path is invalid; please check log setting in config.xml\n");
+            System.exit(1);
+        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
+        }
+        AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
     }
 
     private FXMLLoader loader() throws IOException {

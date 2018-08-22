@@ -22,8 +22,6 @@
  */
 package org.aion;
 
-
-
 import java.io.Console;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -57,7 +55,6 @@ import java.util.ServiceLoader;
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
-
 
 public class Aion {
 

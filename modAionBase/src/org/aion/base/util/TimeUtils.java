@@ -43,9 +43,9 @@ public class TimeUtils {
      *            time in minutes
      * @return corresponding millis value
      */
-    public static long minutesToMillis(long minutes) {
-        return minutes * 60 * 1000;
-    }
+//    public static long minutesToMillis(long minutes) {
+//        return minutes * 60 * 1000;
+//    }
 
     /**
      * Converts seconds to millis
@@ -65,9 +65,9 @@ public class TimeUtils {
      *            time in millis
      * @return time in minutes
      */
-    public static long millisToMinutes(long millis) {
-        return Math.round(millis / 60.0 / 1000.0);
-    }
+//    public static long millisToMinutes(long millis) {
+//        return Math.round(millis / 60.0 / 1000.0);
+//    }
 
     /**
      * Converts millis to seconds
@@ -76,9 +76,9 @@ public class TimeUtils {
      *            time in millis
      * @return time in seconds
      */
-    public static long millisToSeconds(long millis) {
-        return Math.round(millis / 1000.0);
-    }
+//    public static long millisToSeconds(long millis) {
+//        return Math.round(millis / 1000.0);
+//    }
 
     /**
      * Returns timestamp in the future after some millis passed from now
@@ -87,7 +87,8 @@ public class TimeUtils {
      *            millis count
      * @return future timestamp
      */
-    public static long timeAfterMillis(long millis) {
-        return System.currentTimeMillis() + millis;
-    }
+//    public static long timeAfterMillis(long millis) {
+//        return System.currentTimeMillis() + millis;
+//    }
+
 }
