@@ -64,6 +64,7 @@ public class ApiAion0Test {
     private static final int RSP_HEADER_LEN = RSP_HEADER_NOHASH_LEN + MSG_HASH_LEN;
 
     private static final String KEYSTORE_PATH;
+    private static final String DATABASE_PATH = "ApiServerTestPath";
 
     static {
         String storageDir = System.getProperty("local.storage.dir");
@@ -118,6 +119,7 @@ public class ApiAion0Test {
 
     @Before
     public void setup() {
+        CfgAion.inst().getDb().setPath(DATABASE_PATH);
         api = new ApiAion0(AionImpl.inst());
         testStartTime = System.currentTimeMillis();
     }
@@ -139,6 +141,12 @@ public class ApiAion0Test {
             if (file.lastModified() >= testStartTime)
                 file.delete();
         }
+        folder = new File(DATABASE_PATH);
+        AllFilesInDirectory = folder.listFiles();
+        for (File file : AllFilesInDirectory) {
+            file.delete();
+        }
+        folder.delete();
     }
 
     @Test

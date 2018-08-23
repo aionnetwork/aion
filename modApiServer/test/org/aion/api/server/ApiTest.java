@@ -28,6 +28,7 @@ import org.aion.base.type.Address;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.types.AbstractBlock;
+import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -85,12 +86,14 @@ public class ApiTest {
 
     @Before
     public void setup() {
+        CfgAion.inst().getDb().setPath(DATABASE_PATH);
         api = new ApiImpl();
         testStartTime = System.currentTimeMillis();
 
     }
 
     private static final String KEYSTORE_PATH;
+    private static final String DATABASE_PATH = "ApiServerTestPath";
     private String addr;
 
 
@@ -116,6 +119,12 @@ public class ApiTest {
             if (file.lastModified() >= testStartTime)
                 file.delete();
         }
+        folder = new File(DATABASE_PATH);
+        AllFilesInDirectory = folder.listFiles();
+        for (File file : AllFilesInDirectory) {
+            file.delete();
+        }
+        folder.delete();
     }
 
     @Test

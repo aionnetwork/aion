@@ -124,6 +124,7 @@ public class ApiAionTest {
     }
 
     private static final String KEYSTORE_PATH;
+    private static final String DATABASE_PATH = "ApiServerTestPath";
     private long testStartTime;
 
     static {
@@ -140,9 +141,9 @@ public class ApiAionTest {
 
     @Before
     public void setup() {
+        CfgAion.inst().getDb().setPath(DATABASE_PATH);
         api = new ApiAionImpl(impl);
         testStartTime = System.currentTimeMillis();
-
     }
 
     @After
@@ -159,6 +160,12 @@ public class ApiAionTest {
             if (file.lastModified() >= testStartTime)
                 file.delete();
         }
+        folder = new File(DATABASE_PATH);
+        AllFilesInDirectory = folder.listFiles();
+        for (File file : AllFilesInDirectory) {
+            file.delete();
+        }
+        folder.delete();
     }
 
     @Test
