@@ -240,6 +240,10 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessAccountsValue() throws Exception {
+        Address addr = new Address(Keystore.create("testPwd"));
+        addressString1 = addr.toString();
+        keyCreated = true;
+
         rsp = sendRequest(Message.Servs.s_wallet_VALUE, Message.Funcs.f_accounts_VALUE);
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
@@ -275,6 +279,8 @@ public class ApiAion0Test {
     public void testProcessUnlockAccount() {
         Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        addressString1 = addr.toString();
+        keyCreated = true;
 
         Message.req_unlockAccount reqBody = Message.req_unlockAccount.newBuilder()
                 .setAccount(ByteString.copyFrom(addr.toBytes()))
