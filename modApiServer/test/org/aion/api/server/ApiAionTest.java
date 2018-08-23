@@ -136,13 +136,15 @@ public class ApiAionTest {
     }
 
     private ApiAionImpl api;
-    private AionImpl impl = AionImpl.inst();
-    private AionRepositoryImpl repo = AionRepositoryImpl.inst();
+    private AionImpl impl;
+    private AionRepositoryImpl repo;
 
     @Before
     public void setup() {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
+        impl = AionImpl.inst();
         api = new ApiAionImpl(impl);
+        repo = AionRepositoryImpl.inst();
         testStartTime = System.currentTimeMillis();
     }
 
