@@ -56,6 +56,7 @@ import static org.junit.Assert.*;
 public class ApiAion0Test {
 
     private byte[] msg, socketId, hash, rsp;
+    private long testStartTime;
 
     private ApiAion0 api;
 
@@ -76,6 +77,7 @@ public class ApiAion0Test {
         }
         KEYSTORE_PATH = storageDir + "/keystore";
     }
+
     public ApiAion0Test() {
         msg = "test message".getBytes();
         socketId = RandomUtils.nextBytes(5);
@@ -123,6 +125,7 @@ public class ApiAion0Test {
     public void setup() {
         api = new ApiAion0(AionImpl.inst());
         keyCreated = false;
+        testStartTime = System.currentTimeMillis();
     }
 
     @After
@@ -130,37 +133,17 @@ public class ApiAion0Test {
         api.shutDown();
         rsp = null;
 
-        if(keyCreated) {
-            // get a list of all the files in keystore directory
-            File folder = new File(KEYSTORE_PATH);
-            File[] AllFilesInDirectory = folder.listFiles();
-            List<String> allFileNames = new ArrayList<>();
-            List<String> filesToBeDeleted = new ArrayList<>();
+        // get a list of all the files in keystore directory
+        File folder = new File(KEYSTORE_PATH);
+        File[] AllFilesInDirectory = folder.listFiles();
 
-            // check for invalid or wrong path - should not happen
-            if (AllFilesInDirectory == null)
-                return;
+        // check for invalid or wrong path - should not happen
+        if (AllFilesInDirectory == null)
+            return;
 
-            for (File file : AllFilesInDirectory) {
-                allFileNames.add(file.getName());
-            }
-
-            // get a list of the files needed to be deleted, check the ending of file names
-            // with corresponding addresses
-            for (String name : allFileNames) {
-                String ending = name.substring(name.length() - 64);
-
-                if (ending.equals(addressString1) || ending.equals(addressString2)) {
-                    filesToBeDeleted.add(KEYSTORE_PATH + "/" + name);
-                }
-            }
-
-            // iterate and delete those files
-            for (String name : filesToBeDeleted) {
-                File file = new File(name);
-                if (file.delete())
-                    System.out.println("Deleted file: " + name);
-            }
+        for (File file : AllFilesInDirectory) {
+            if (file.lastModified() >= testStartTime)
+                file.delete();
         }
     }
 
@@ -418,8 +401,8 @@ public class ApiAion0Test {
         Message.req_sendTransaction reqBody = Message.req_sendTransaction.newBuilder()
                 .setFrom(ByteString.copyFrom(addr.toBytes()))
                 .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
-                .setNrg(500)
-                .setNrgPrice(5000)
+                .setNrg(100000)
+                .setNrgPrice(1)
                 .setNonce(ByteString.copyFrom("1".getBytes()))
                 .setValue(ByteString.copyFrom("1234".getBytes()))
                 .setData(ByteString.copyFrom(msg))
@@ -461,7 +444,8 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testProcessGetTR() throws Exception {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
@@ -559,7 +543,8 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testProcessGetTxByBlockHashAndIndex() throws Exception {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
@@ -595,7 +580,8 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testProcessGetTxByBlockNumberAndIndex() throws Exception {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
@@ -631,7 +617,8 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testProcessGetBlockTxCountByNumber() throws Exception {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
@@ -664,7 +651,8 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testProcessGetBlockTxCountByHash() throws Exception {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
@@ -697,7 +685,8 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testProcessGetTxByHash() throws Exception {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
@@ -732,7 +721,8 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testProcessGetTxCount() throws Exception {
         setup();
 
@@ -1009,7 +999,8 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testProcessRawTransactions() throws Exception {
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
