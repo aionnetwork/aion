@@ -150,6 +150,10 @@ public class ApiAionTest {
     public void tearDown() {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
+
+        if (folder == null)
+            return;
+
         File[] AllFilesInDirectory = folder.listFiles();
 
         // check for invalid or wrong path - should not happen
@@ -161,7 +165,13 @@ public class ApiAionTest {
                 file.delete();
         }
         folder = new File(DATABASE_PATH);
+        if (folder == null)
+            return;
         AllFilesInDirectory = folder.listFiles();
+
+        if (AllFilesInDirectory == null)
+            return;
+
         for (File file : AllFilesInDirectory) {
             file.delete();
         }
