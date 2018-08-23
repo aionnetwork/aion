@@ -28,6 +28,7 @@ import org.aion.base.type.Address;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.types.AbstractBlock;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -98,7 +99,8 @@ public class ApiTest {
         KEYSTORE_PATH = storageDir + "/keystore";
     }
 
-    private void tearDown() {
+    @After
+    public void tearDown() {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
         File[] AllFilesInDirectory = folder.listFiles();
