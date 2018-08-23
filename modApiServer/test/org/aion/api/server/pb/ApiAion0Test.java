@@ -24,6 +24,7 @@
 package org.aion.api.server.pb;
 
 import com.google.protobuf.ByteString;
+import io.undertow.util.FileUtils;
 import org.aion.api.server.ApiUtil;
 import org.aion.base.type.Address;
 import org.aion.base.util.TypeConverter;
@@ -44,6 +45,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -146,17 +148,15 @@ public class ApiAion0Test {
                 file.delete();
         }
         folder = new File(DATABASE_PATH);
+
         if (folder == null)
             return;
-        AllFilesInDirectory = folder.listFiles();
 
-        if (AllFilesInDirectory == null)
-            return;
-
-        for (File file : AllFilesInDirectory) {
-            file.delete();
+        try {
+            FileUtils.deleteRecursive(folder.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        folder.delete();
     }
 
     @Test

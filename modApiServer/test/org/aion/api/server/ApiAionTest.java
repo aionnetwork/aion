@@ -23,6 +23,7 @@
 
 package org.aion.api.server;
 
+import io.undertow.util.FileUtils;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.base.type.Address;
@@ -48,6 +49,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -167,17 +169,15 @@ public class ApiAionTest {
                 file.delete();
         }
         folder = new File(DATABASE_PATH);
+
         if (folder == null)
             return;
-        AllFilesInDirectory = folder.listFiles();
 
-        if (AllFilesInDirectory == null)
-            return;
-
-        for (File file : AllFilesInDirectory) {
-            file.delete();
+        try {
+            FileUtils.deleteRecursive(folder.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        folder.delete();
     }
 
     @Test
