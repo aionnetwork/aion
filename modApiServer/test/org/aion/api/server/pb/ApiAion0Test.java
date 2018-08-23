@@ -46,10 +46,8 @@ import org.junit.Test;
 import java.io.File;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -66,9 +64,6 @@ public class ApiAion0Test {
     private static final int RSP_HEADER_LEN = RSP_HEADER_NOHASH_LEN + MSG_HASH_LEN;
 
     private static final String KEYSTORE_PATH;
-    private String addressString1;
-    private String addressString2;
-    private boolean keyCreated;
 
     static {
         String storageDir = System.getProperty("local.storage.dir");
@@ -124,7 +119,6 @@ public class ApiAion0Test {
     @Before
     public void setup() {
         api = new ApiAion0(AionImpl.inst());
-        keyCreated = false;
         testStartTime = System.currentTimeMillis();
     }
 
@@ -193,8 +187,6 @@ public class ApiAion0Test {
     @Test
     public void testProcessContractDeploy() throws Exception {
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString1 = addr.toString();
-        keyCreated = true;
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -224,8 +216,6 @@ public class ApiAion0Test {
     @Test
     public void testProcessAccountsValue() throws Exception {
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString1 = addr.toString();
-        keyCreated = true;
 
         rsp = sendRequest(Message.Servs.s_wallet_VALUE, Message.Funcs.f_accounts_VALUE);
 
@@ -262,8 +252,6 @@ public class ApiAion0Test {
     public void testProcessUnlockAccount() {
         Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-        addressString1 = addr.toString();
-        keyCreated = true;
 
         Message.req_unlockAccount reqBody = Message.req_unlockAccount.newBuilder()
                 .setAccount(ByteString.copyFrom(addr.toBytes()))
@@ -283,8 +271,6 @@ public class ApiAion0Test {
     @Test
     public void testProcessGetBalance() throws Exception {
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString1 = addr.toString();
-        keyCreated = true;
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -308,8 +294,6 @@ public class ApiAion0Test {
     @Test
     public void testProcessGetNonce() throws Exception {
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString1 = addr.toString();
-        keyCreated = true;
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -393,8 +377,6 @@ public class ApiAion0Test {
     @Test
     public void testProcessSendTransaction() throws Exception {
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString1 = addr.toString();
-        keyCreated = true;
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -423,8 +405,6 @@ public class ApiAion0Test {
     @Test
     public void testProcessGetCode() throws Exception {
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString1 = addr.toString();
-        keyCreated = true;
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -481,8 +461,6 @@ public class ApiAion0Test {
     @Test
     public void testProcessCall() throws Exception {
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString1 = addr.toString();
-        keyCreated = true;
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -939,10 +917,6 @@ public class ApiAion0Test {
         Address addr2 = new Address(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
 
-        addressString1 = addr1.toString();
-        addressString2 = addr2.toString();
-        keyCreated = true;
-
         Message.t_Key tkey1 = Message.t_Key.newBuilder()
                 .setAddress(ByteString.copyFrom(addr1.toBytes()))
                 .setPassword("testPwd1")
@@ -1040,10 +1014,6 @@ public class ApiAion0Test {
 
         Address addr2 = new Address(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
-
-        addressString1 = addr1.toString();
-        addressString1 = addr2.toString();
-        keyCreated = true;
 
         Message.t_FilterCt fil1 = Message.t_FilterCt.newBuilder()
                 .addAddresses(ByteString.copyFrom(addr1.toBytes()))
@@ -1208,9 +1178,6 @@ public class ApiAion0Test {
     public void testProcessAccountDetails() throws Exception {
         Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-
-        addressString1 = addr.toString();
-        keyCreated = true;
 
         Message.req_getAccountDetailsByAddressList reqBody = Message.req_getAccountDetailsByAddressList.newBuilder()
                 .addAddresses(ByteString.copyFrom(addr.toBytes()))

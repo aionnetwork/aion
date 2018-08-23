@@ -81,10 +81,13 @@ public class ApiTest {
     }
 
     private ApiImpl api;
+    private long testStartTime;
 
     @Before
     public void setup() {
         api = new ApiImpl();
+        testStartTime = System.currentTimeMillis();
+
     }
 
     private static final String KEYSTORE_PATH;
@@ -104,32 +107,14 @@ public class ApiTest {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
         File[] AllFilesInDirectory = folder.listFiles();
-        List<String> allFileNames = new ArrayList<>();
-        List<String> filesToBeDeleted = new ArrayList<>();
 
         // check for invalid or wrong path - should not happen
-        if(AllFilesInDirectory == null)
+        if (AllFilesInDirectory == null)
             return;
 
-        for(File file: AllFilesInDirectory){
-            allFileNames.add(file.getName());
-        }
-
-        // get a list of the files needed to be deleted, check the ending of file names
-        // with corresponding addresses
-        for(String name: allFileNames){
-            String ending = name.substring(name.length()-64);
-
-            if(ending.equals(addr)) {
-                filesToBeDeleted.add(KEYSTORE_PATH + "/"+ name);
-            }
-        }
-
-        // iterate and delete those files
-        for (String name: filesToBeDeleted){
-            File file = new File(name);
-            if (file.delete())
-                System.out.println("Deleted file: " + name);
+        for (File file : AllFilesInDirectory) {
+            if (file.lastModified() >= testStartTime)
+                file.delete();
         }
     }
 
