@@ -1,5 +1,6 @@
 package org.aion.api.server.rpc;
 
+import org.aion.generic.IGenericAionChain;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -16,9 +17,9 @@ public class RpcMethods {
     private final Map<String, Map<String, RpcMethod>> groupMap;
     private Map<String, RpcMethod> enabledEndpoints;
 
-    public RpcMethods(List<String> enabledGroups) {
+    public RpcMethods(IGenericAionChain aionChain, List<String> enabledGroups) {
         //TODO: refactor THIS to pass something general!!!!
-        api = new ApiWeb3Aion(AionImpl.inst());
+        api = new ApiWeb3Aion(aionChain);
 
         // find a way to autogen options in config using this enum, without generating circular
         // module dependency (right now it's manual)

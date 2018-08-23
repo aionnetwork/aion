@@ -4,6 +4,7 @@ import io.undertow.Undertow;
 import io.undertow.util.HttpString;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
+import org.aion.generic.IGenericAionChain;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
@@ -31,17 +32,24 @@ public class UndertowRpcServer extends RpcServer {
     );
 
     public static class Builder extends RpcServerBuilder<UndertowRpcServer.Builder> {
+        private IGenericAionChain aionChain;
         @Override
         public UndertowRpcServer build() {
-            return new UndertowRpcServer(this);
+            if (aionChain == null)
+                throw new IllegalStateException("Aion chain instance not set; valid instance is required to build api");
+            return new UndertowRpcServer(aionChain, this);
+        }
+
+        public void setChainInstance(IGenericAionChain aionChain) {
+            this.aionChain = aionChain;
         }
 
         @Override
         protected UndertowRpcServer.Builder self() { return this; }
     }
 
-    private UndertowRpcServer(Builder builder) {
-        super(builder);
+    private UndertowRpcServer(IGenericAionChain aionChain, Builder builder) {
+        super(aionChain, builder);
         // writes to System.error. Rationale: the alternative is to write to the slf4j facade and then manually
         // hook up all the possible loggers defined (now and in future) by this library
         // through our logback logger; this risks missing potentially important debug information from the library

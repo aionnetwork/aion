@@ -25,6 +25,7 @@ package org.aion.api.server.http.nano;
 import fi.iki.elonen.NanoHTTPD;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
+import org.aion.generic.IGenericAionChain;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
@@ -53,17 +54,25 @@ public class NanoRpcServer extends RpcServer {
     );
 
     public static class Builder extends RpcServerBuilder<Builder> {
+        private IGenericAionChain aionChain;
+
         @Override
         public NanoRpcServer build() {
-            return new NanoRpcServer(this);
+            if (aionChain == null)
+                throw new IllegalStateException("Aion chain instance not set; valid instance is required to build api");
+            return new NanoRpcServer(aionChain,this);
+        }
+
+        public void setChainInstance(IGenericAionChain aionChain) {
+            this.aionChain = aionChain;
         }
 
         @Override
         protected Builder self() { return this; }
     }
 
-    private NanoRpcServer(Builder builder) {
-        super(builder);
+    private NanoRpcServer(IGenericAionChain aionChain, Builder builder) {
+        super(aionChain, builder);
     }
 
     private void makeSecure() throws Exception {

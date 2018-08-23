@@ -109,6 +109,7 @@ public class AionPOWChainRunner {
                 switch (rpcVendor) {
                     case NANO: {
                         NanoRpcServer.Builder rpcBuilder = new NanoRpcServer.Builder();
+                        rpcBuilder.setChainInstance(ac);
                         commonRpcConfig.accept(rpcBuilder);
                         rpcServer = rpcBuilder.build();
                         break;
@@ -116,6 +117,7 @@ public class AionPOWChainRunner {
                     case UNDERTOW:
                     default: {
                         UndertowRpcServer.Builder rpcBuilder = new UndertowRpcServer.Builder();
+                        rpcBuilder.setChainInstance(ac);
                         commonRpcConfig.accept(rpcBuilder);
                         rpcServer = rpcBuilder.build();
                         break;
