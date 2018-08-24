@@ -67,7 +67,7 @@ public class Blk {
         obj.put("nrgLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
         //
         obj.put("extraData", TypeConverter.toJsonHex(block.getExtraData()));
-        obj.put("size", new NumericalValue(block.getEncoded().length).toHexString());
+        obj.put("size", new NumericalValue(block.size()).toHexString());
 
         JSONArray jsonTxs = new JSONArray();
         List<AionTransaction> txs = block.getTransactionsList();
@@ -124,7 +124,7 @@ public class Blk {
         obj.put("nrgLimit", TypeConverter.toJsonHex(block.getHeader().getEnergyLimit()));
 
         obj.put("extraData", TypeConverter.toJsonHex(block.getExtraData()));
-        obj.put("size", block.getEncoded().length);
+        obj.put("size", block.size());
         obj.put("numTransactions", block.getTransactionsList().size());
 
         return obj;

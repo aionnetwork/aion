@@ -2248,7 +2248,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
         obj.put("blocks", bestBlock.getNumber());
-        obj.put("currentblocksize", bestBlock.getEncoded().length);
+        obj.put("currentblocksize", bestBlock.size());
         obj.put("currentblocktx", bestBlock.getTransactionsList().size());
         obj.put("difficulty", bestBlock.getDifficultyBI().toString(16));
         obj.put("testnet", true);
