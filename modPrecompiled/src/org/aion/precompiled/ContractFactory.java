@@ -46,7 +46,7 @@ public class ContractFactory implements IContractFactory {
 
     private static final String ED_VERIFY = "0000000000000000000000000000000000000000000000000000000000000010";
 
-    private ContractFactory(){}
+    public ContractFactory(){}
 
     /**
      * Returns a new pre-compiled contract such that the address of the new contract is address.

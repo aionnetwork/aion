@@ -40,6 +40,7 @@ public class EDVerifyContractTest {
     private ECKey ecKey;
     private byte[] hashedMessage;
     private ISignature signature;
+    private IPrecompiledContract contract;
 
     @BeforeClass
     public static void beforeClass() {
@@ -55,9 +56,8 @@ public class EDVerifyContractTest {
     public void shouldReturnSuccessAnd1IfTheSignatureIsValid() {
         byte[] input = setupInput(INPUT_BUFFER_LENGTH);
 
-        IPrecompiledContract contract = ContractFactory.getPrecompiledContract(ctx, null);
-
         IExecutionResult result = contract.execute(input, VALID_NRG_LIMIT);
+
         assertThat(result.getOutput()).isEqualTo(ecKey.getAddress());
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
     }
@@ -67,9 +67,8 @@ public class EDVerifyContractTest {
         byte[] input = setupInput(INPUT_BUFFER_LENGTH);
         input[33] = 0;
 
-        IPrecompiledContract contract = ContractFactory.getPrecompiledContract(ctx, null);
-
         IExecutionResult result = contract.execute(input, VALID_NRG_LIMIT);
+
         assertThat(result.getOutput()).isEqualTo(Address.ZERO_ADDRESS().toBytes());
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
     }
@@ -78,9 +77,8 @@ public class EDVerifyContractTest {
     public void shouldFailureAnd0IfInputIsNotValid() {
         byte[] input = setupInput(127);
 
-        IPrecompiledContract contract = ContractFactory.getPrecompiledContract(ctx, null);
-
         IExecutionResult result = contract.execute(input, VALID_NRG_LIMIT);
+
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.INTERNAL_ERROR.toInt());
         assertThat(result.getOutput()).isEqualTo(Address.ZERO_ADDRESS().toBytes());
     }
@@ -89,9 +87,8 @@ public class EDVerifyContractTest {
     public void shouldReturnOutOfEnergyAnd0IfNotEnoughEnergy() {
         byte[] input = setupInput(INPUT_BUFFER_LENGTH);
 
-        IPrecompiledContract contract = ContractFactory.getPrecompiledContract(ctx, null);
-
         IExecutionResult result = contract.execute(input, INVALID_NRG_LIMIT);
+
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.OUT_OF_NRG.toInt());
         assertThat(result.getOutput()).isEqualTo(Address.ZERO_ADDRESS().toBytes());
     }
@@ -110,6 +107,8 @@ public class EDVerifyContractTest {
                 nrgLimit, callValue,
                 callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
                 blockDifficulty);
+        ContractFactory factory = new ContractFactory();
+        contract = factory.getPrecompiledContract(ctx, null);
 
         ecKey = ECKeyFac.inst().create();
         ecKey = ecKey.fromPrivate(Hex.decode("5a90d8e67da5d1dfbf17916ae83bae04ef334f53ce8763932eba2c1116a62426f" +
