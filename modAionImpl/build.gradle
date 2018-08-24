@@ -27,6 +27,11 @@ dependencies {
     testCompile 'com.google.truth:truth:0.42'
 }
 
+compileJava {
+    doFirst { 
+        options.compilerArgs += ['-h', file("./build/native")]
+    }
+}
 
 // Skip unit tests when doing build task; unit tests are all mixed up with 
 // long-running integration tests in this module,so doing this to avoid 

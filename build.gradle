@@ -102,11 +102,10 @@ def dirBuildFile = ant.properties['dir.buildfile'] // = "./build/main"
 def dirBuildNative = ant.properties['dir.build.native'] // = "./build/main/native"
 def dirNative = ant.properties['dir.native'] // = "./native"
 def dirWorkspace = ant.properties['dir.workspace'] // = "./"
+def dirPack = ant.properties['dir.pack'] // = ""
+def dirLibFile = ant.properties['dir.libfile'] // = ""
 def dirModFile = ant.properties['dir.modfile']  // ="./mod"
 def javaHome = "$System.env.JAVA_HOME"
-
-task copyCpp {
-}
 
 task compileNative(type:Exec) {
     doFirst { 
@@ -114,8 +113,6 @@ task compileNative(type:Exec) {
         mkdir "${dirNative}/linux/equihash"
         mkdir "${dirNative}/linux/equihash"
         mkdir "${dirBuildNative}/linux/equihash"
-/*    }
-    doLast {*/
         ant.copy(includeemptydirs: "false", todir: "./build/native") {
             fileset(dir: "./modAionImpl/src/org/aion/equihash/native")
         }
@@ -151,18 +148,27 @@ task compileNative(type:Exec) {
     }
 }
 
-task finalize << {
-    println('finally!')
-}
-
 project.build.dependsOn("ant-3rd_build")
-//project.build.dependsOn("compileNative")
-//project.build.finalizedBy(compileNative)
-//project.build.finalizedBy(finalize)
 
 project(':modAionImpl') { 
     build.finalizedBy(compileNative)
 }
+
+def prefix = 'aion'
+
+task pack(type: Tar) { 
+    destinationDir = file('pack')
+    baseName = 'aion'
+
+    /*from("${dirLibFile}") { 
+        include "*.jar"
+        include "*.so"
+        exclude 'byte-buddy-*.jar', '
+        into prefix
+    }*/
+}
+
+build.finalizedBy(pack)
 
 /*
  3rd_build 							ANT

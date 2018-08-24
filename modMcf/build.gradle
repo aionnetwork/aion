@@ -14,7 +14,6 @@ dependencies {
 
     testCompile project(':modAion')
     testCompile project(':modAionImpl')
-    //testCompile files('../lib/.jar')
     testCompile 'junit:junit:4.12'
     testCompile 'com.google.truth:truth:0.42'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
@@ -27,4 +26,4 @@ dependencies {
 // Skip unit tests when doing build task; unit tests are all mixed up with 
 // long-running integration tests in this module,so doing this to avoid 
 // build taking too long.
-//build.dependsOn.remove("check")
+build.dependsOn.remove("check")
