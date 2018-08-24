@@ -32,16 +32,11 @@ public class UndertowRpcServer extends RpcServer {
     );
 
     public static class Builder extends RpcServerBuilder<UndertowRpcServer.Builder> {
-        private IGenericAionChain aionChain;
         @Override
         public UndertowRpcServer build() {
             if (aionChain == null)
                 throw new IllegalStateException("Aion chain instance not set; valid instance is required to build api");
             return new UndertowRpcServer(aionChain, this);
-        }
-
-        public void setChainInstance(IGenericAionChain aionChain) {
-            this.aionChain = aionChain;
         }
 
         @Override

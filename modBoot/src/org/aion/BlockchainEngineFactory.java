@@ -92,16 +92,14 @@ public class BlockchainEngineFactory {
             try {
                 switch (rpcVendor) {
                     case NANO: {
-                        NanoRpcServer.Builder rpcBuilder = new NanoRpcServer.Builder();
-                        rpcBuilder.setChainInstance(ac);
+                        NanoRpcServer.Builder rpcBuilder = new NanoRpcServer.Builder().withAionChain(ac);
                         commonRpcConfig.accept(rpcBuilder);
                         rpcServer = rpcBuilder.build();
                         break;
                     }
                     case UNDERTOW:
                     default: {
-                        UndertowRpcServer.Builder rpcBuilder = new UndertowRpcServer.Builder();
-                        rpcBuilder.setChainInstance(ac);
+                        UndertowRpcServer.Builder rpcBuilder = new UndertowRpcServer.Builder().withAionChain(ac);
                         commonRpcConfig.accept(rpcBuilder);
                         rpcServer = rpcBuilder.build();
                         break;
@@ -120,6 +118,9 @@ public class BlockchainEngineFactory {
         return rpcServer;
     }
 
+    /**
+     *  TODO: I would see this passed as a closure/Interface to `IBlockchainEngine` and structure (shutdown) hooks in a dedicated pacakge.
+     */
     private static void startShutdownThread(IChainInstancePOW ac, Logger genLog, Thread zmqThread, IMineRunner miner,
                                             ProtocolProcessor protocolProcessor, RpcServer rpcServer) {
         class ShutdownThreadHolder {

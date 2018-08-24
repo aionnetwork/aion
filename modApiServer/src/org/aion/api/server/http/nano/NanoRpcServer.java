@@ -54,17 +54,11 @@ public class NanoRpcServer extends RpcServer {
     );
 
     public static class Builder extends RpcServerBuilder<Builder> {
-        private IGenericAionChain aionChain;
-
         @Override
         public NanoRpcServer build() {
             if (aionChain == null)
                 throw new IllegalStateException("Aion chain instance not set; valid instance is required to build api");
             return new NanoRpcServer(aionChain,this);
-        }
-
-        public void setChainInstance(IGenericAionChain aionChain) {
-            this.aionChain = aionChain;
         }
 
         @Override

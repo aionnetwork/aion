@@ -720,7 +720,7 @@ public abstract class ApiAion extends Api {
             return;
         }
 
-        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
+        IAionBlockchain bc =_ac.getBlockchain();
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
 
