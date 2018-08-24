@@ -279,7 +279,7 @@ public class CfgDb {
     }
 
     public String getPath() {
-        return this.path;
+        return path;
     }
 
     public void setPath(String path) {
@@ -399,6 +399,10 @@ public class CfgDb {
                 entry.getValue().enable_heap_cache = value;
             }
         }
+    }
+  
+    public void setDatabasePath(String value) {
+        path = value;
     }
 
     @Override
