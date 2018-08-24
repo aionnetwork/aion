@@ -13,7 +13,7 @@ dependencies {
 
     testCompile project(':modMcf')
     testCompile project(':modEvtMgr')
-    testCompile project(':modAionApi')
+    testCompile project(':aion_api')
     testCompile project(':modRlp')
     testCompile project(':modPrecompiled')
     testCompile project(':modAionImpl')
