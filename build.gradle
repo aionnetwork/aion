@@ -34,8 +34,8 @@ subprojects {
     }
 
     task copyNativeLibsForModuleTests(type: Copy) { 
-        from  '../native'
-        into  file('./native')
+        from '../native'
+        into file('./native')
     }
 
     task deleteNativeLibs(type: Delete) {
@@ -105,16 +105,22 @@ def dirWorkspace = ant.properties['dir.workspace'] // = "./"
 def dirModFile = ant.properties['dir.modfile']  // ="./mod"
 def javaHome = "$System.env.JAVA_HOME"
 
+task copyCpp {
+}
+
 task compileNative(type:Exec) {
     doFirst { 
         mkdir "${dirBuildFile}"
         mkdir "${dirNative}/linux/equihash"
+        mkdir "${dirNative}/linux/equihash"
         mkdir "${dirBuildNative}/linux/equihash"
+/*    }
+    doLast {*/
         ant.copy(includeemptydirs: "false", todir: "./build/native") {
             fileset(dir: "./modAionImpl/src/org/aion/equihash/native")
         }
         ant.copy(includeemptydirs: "false", todir: "./build/native") {
-        fileset(dir: "./modAionImpl/build/native")
+            fileset(dir: "./modAionImpl/build/native")
         }
     }
     commandLine "g++", 
@@ -145,20 +151,18 @@ task compileNative(type:Exec) {
     }
 }
 
-task compileFastVm {
+task finalize << {
+    println('finally!')
 }
-
-task compileAionApi { 
-}
-
-// initial version of build: rely on ant's 3rd_build and mod_build and 
-// do the rest of the work in gradle world
-//task build { 
-//}
 
 project.build.dependsOn("ant-3rd_build")
-//project.build.dependsOn("ant-mod_build")
 //project.build.dependsOn("compileNative")
+//project.build.finalizedBy(compileNative)
+//project.build.finalizedBy(finalize)
+
+project(':modAionImpl') { 
+    build.finalizedBy(compileNative)
+}
 
 /*
  3rd_build 							ANT
