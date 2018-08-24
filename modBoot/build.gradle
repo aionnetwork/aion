@@ -1,0 +1,24 @@
+ext.moduleName = 'aion.boot'
+
+dependencies {
+    compile project(':modAionBase')
+    compile project(':modCrypto')
+    compile project(':modApiServer')
+    compile project(':modAionImpl')
+    compile project(':modLogger')
+    compile project(':modEvtMgr')
+    compile project(':modP2p')
+    compile project(':modMcf')
+    compile files('../lib/libnsc.jar')
+    compile files('../lib/libnzmq.jar')
+    compile 'org.slf4j:slf4j-api:1.7.25'
+    
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+}
+
+
+// Skip unit tests when doing build task; unit tests are all mixed up with 
+// long-running integration tests in this module,so doing this to avoid 
+// build taking too long.
+//build.dependsOn.remove("check")
