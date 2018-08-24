@@ -9,4 +9,7 @@ include 'modAionBase', 'modAion', 'modAionImpl',
     'modDbImpl',
     'modMcf',
     'modPrecompiled',
-    'modVM'
+    'modVM',
+    'modApiServer',
+    'aion_fastvm/modFastVM',
+    'aion_api'
