@@ -25,6 +25,8 @@ package org.aion.mcf.config;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.Objects;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -136,4 +138,26 @@ public class CfgSsl {
     public boolean getEnabled() { return this.enabled; }
     public String getCert() { return this.cert; }
     public char[] getPass() { return this.pass; }
+
+    /**
+     * @implNote this should theoretically work, but should be tested for correctness by any future consumer
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgSsl cfgSsl = (CfgSsl) o;
+
+        return enabled == cfgSsl.enabled &&
+                Objects.equals(cert, cfgSsl.cert) &&
+                Arrays.equals(pass, cfgSsl.pass);
+    }
+
+    /**
+     * @implNote this should theoretically work, but should be tested for correctness by any future consumer
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(enabled, cert, pass);
+    }
 }

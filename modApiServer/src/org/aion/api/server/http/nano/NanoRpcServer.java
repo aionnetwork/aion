@@ -30,26 +30,24 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 import javax.net.ssl.KeyManagerFactory;
+import javax.swing.text.html.Option;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.Optional;
+import java.util.concurrent.*;
 
 public class NanoRpcServer extends RpcServer {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     private AionHttpd server;
     private ExecutorService workers;
-    private static final int REQ_QUEUE_CAPACITY = 200;
 
     private final Map<String, String> CORS_HEADERS = Map.of(
             "Access-Control-Allow-Origin", corsOrigin,
             "Access-Control-Allow-Headers", "origin,accept,content-type",
             "Access-Control-Allow-Credentials", "true",
-            "Access-Control-Allow-Methods", "POST",
+            "Access-Control-Allow-Methods", "POST,OPTIONS",
             "Access-Control-Max-Age", "86400"
     );
 
@@ -93,14 +91,31 @@ public class NanoRpcServer extends RpcServer {
     @Override
     public void start() {
         try {
-            // default to 1 thread to minimize resource consumption by nano http
-            int tCount = 1;
+            /**
+             * default to cpu_count * 8 threads. java http servers, particularly with the servlet-type processing model
+             * (jetty, tomcat, etc.) generally default to 200-1000 count thread pools
+             *
+             * rationale: if the user want's to restrict the worker pool size, they can manually override it
+             */
+            int tCount;
             if (getWorkerPoolSize().isPresent())
                 tCount = getWorkerPoolSize().get();
+            else
+                tCount = Math.max(Runtime.getRuntime().availableProcessors(), 2) * 8;
 
-            // create fixed thread pool of size defined by user
-            workers = new ThreadPoolExecutor(tCount, tCount, 1, TimeUnit.MINUTES,
-                    new ArrayBlockingQueue<>(REQ_QUEUE_CAPACITY), new AionHttpdThreadFactory());
+            Optional<Integer> queueSize =  this.getRequestQueueSize();
+
+            /**
+             *  ArrayBlockingQueue tends to be more efficient if user is predefining the queue size,
+             *  since queue is backed by a pre-allocated array.
+             *
+             *  For unbounded queues, LinkedBlockingQueue is ideal, due to it's linked-list based impl.
+             */
+            BlockingQueue<Runnable> queue = (queueSize.isPresent() && queueSize.get() > 0) ?
+                    new ArrayBlockingQueue<>(queueSize.get()) : new LinkedBlockingQueue<>();
+
+            workers = new ThreadPoolExecutor(tCount, tCount, 10, TimeUnit.SECONDS,
+                    queue, new AionHttpdThreadFactory());
 
             server = new AionHttpd(hostName, port, rpcProcessor, corsEnabled, CORS_HEADERS);
             server.setAsyncRunner(new BoundRunner(workers));

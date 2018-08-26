@@ -65,8 +65,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.api.server.ApiAion;
-import org.aion.api.server.rpc.RpcError;
-import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.ArgFltr;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Blk;
@@ -314,6 +312,7 @@ public class ApiWeb3Aion extends ApiAion {
     private AionBlock getBlockRaw(int bn) {
         // long bn = this.parseBnOrId(_bnOrId);
         AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
+
         if (nb == null) {
             if (LOG.isDebugEnabled()) LOG.debug("<get-block-raw bn={} err=not-found>", bn);
             return null;
@@ -439,19 +438,20 @@ public class ApiWeb3Aion extends ApiAion {
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId))
             bnOrId = _bnOrId + "";
-
+        /*
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
                     null,
                     RpcError.INVALID_PARAMS,
                     "Default block parameter temporarily unsupported");
-        }
-        /*
+        }*/
+
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
-        */
-        IRepository repo = this.ac.getRepository();
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found for id / block number: "+bnOrId+". " +
+                    "State may have been pruned; please check your db pruning settings in the configuration file.");
+
+        //IRepository repo = this.ac.getRepository();
 
         BigInteger balance = repo.getBalance(address);
         return new RpcMsg(TypeConverter.toJsonHex(balance));
@@ -489,19 +489,20 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(
                     null, RpcError.INVALID_PARAMS, "Invalid storageIndex. Must be <= 16 bytes.");
         }
-
+        /*
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
                     null,
                     RpcError.INVALID_PARAMS,
                     "Default block parameter temporarily unsupported");
-        }
-        /*
+        }*/
+
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
-        */
-        IRepository repo = this.ac.getRepository();
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found for id / block number: "+bnOrId+". " +
+                    "State may have been pruned; please check your db pruning settings in the configuration file.");
+
+        //IRepository repo = this.ac.getRepository();
 
         @SuppressWarnings("unchecked")
         IDataWord storageValue = repo.getStorageValue(address, key);
@@ -528,19 +529,20 @@ public class ApiWeb3Aion extends ApiAion {
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId))
             bnOrId = _bnOrId + "";
-
+        /*
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
                     null,
                     RpcError.INVALID_PARAMS,
                     "Default block parameter temporarily unsupported");
-        }
-        /*
+        }*/
+
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
-        */
-        IRepository repo = this.ac.getRepository();
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found for id / block number: "+bnOrId+". " +
+                    "State may have been pruned; please check your db pruning settings in the configuration file.");
+
+        //IRepository repo = this.ac.getRepository();
 
         return new RpcMsg(TypeConverter.toJsonHex(repo.getNonce(address)));
     }
@@ -609,20 +611,21 @@ public class ApiWeb3Aion extends ApiAion {
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId))
             bnOrId = _bnOrId + "";
-
+        /*
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
                     null,
                     RpcError.INVALID_PARAMS,
                     "Default block parameter temporarily unsupported");
-        }
-        /*
+        }*/
+
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
-        */
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found for id / block number: "+bnOrId+". " +
+                    "State may have been pruned; please check your db pruning settings in the configuration file.");
 
-        IRepository repo = this.ac.getRepository();
+        //IRepository repo = this.ac.getRepository();
+
         byte[] code = repo.getCode(address);
         return new RpcMsg(TypeConverter.toJsonHex(code));
     }
@@ -1598,9 +1601,9 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject rpc = new JSONObject();
         rpc.put("ip", rpcConfig.getIp());
         rpc.put("port", rpcConfig.getPort());
-        rpc.put("corsEnabled", rpcConfig.getCorsEnabled());
-        rpc.put("active", rpcConfig.getActive());
-        rpc.put("maxThread", rpcConfig.getMaxthread());
+        rpc.put("corsEnabled", rpcConfig.isCorsEnabled());
+        rpc.put("active", rpcConfig.isActive());
+        rpc.put("maxThread", rpcConfig.getWorkerThreads());
         rpc.put("sslEnabled", sslConfig.getEnabled());
         rpc.put("sslCert", sslConfig.getCert());
         rpc.put("sslPass", sslConfig.getPass());
@@ -2560,7 +2563,7 @@ public class ApiWeb3Aion extends ApiAion {
     // --------------------------------------------------------------------
     // Helper Functions
     // --------------------------------------------------------------------
-    /*
+
     // potential bug introduced by .getSnapshotTo()
     // comment out until resolved
     private IRepository getRepoByJsonBlockId(String _bnOrId) {
@@ -2573,7 +2576,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         return ac.getRepository().getSnapshotTo(b.getStateRoot());
     }
-    */
+
     private Long parseBnOrId(String _bnOrId) {
         if (_bnOrId == null) return null;
 
