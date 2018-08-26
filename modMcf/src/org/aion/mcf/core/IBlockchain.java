@@ -23,10 +23,10 @@
 package org.aion.mcf.core;
 
 import java.util.List;
-import org.aion.base.type.Address;
+
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
-import org.aion.mcf.blockchain.IGenericChain;
+import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
@@ -46,8 +46,7 @@ public interface IBlockchain<
                 BH extends AbstractBlockHeader,
                 TX extends ITransaction,
                 TR extends AbstractTxReceipt,
-                INFO extends AbstractTxInfo>
-        extends IGenericChain<BLK, BH> {
+                INFO extends AbstractTxInfo> {
 
     long getSize();
 
@@ -86,4 +85,14 @@ public interface IBlockchain<
     //         BlockIdentifier identifier, int skip, int limit, boolean reverse);
 
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
+
+    BLK getBlockByNumber(long number);
+
+    BLK getBlockByHash(byte[] hash);
+
+    IBlockStoreBase<?, ?> getBlockStore();
+
+    BLK getBestBlock();
+
+    void flush();
 }
