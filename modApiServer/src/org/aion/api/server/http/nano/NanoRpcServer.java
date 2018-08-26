@@ -30,7 +30,6 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 import javax.net.ssl.KeyManagerFactory;
-import javax.swing.text.html.Option;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.util.Map;
@@ -111,7 +110,8 @@ public class NanoRpcServer extends RpcServer {
              *
              *  For unbounded queues, LinkedBlockingQueue is ideal, due to it's linked-list based impl.
              */
-            BlockingQueue<Runnable> queue = (queueSize.isPresent() && queueSize.get() > 0) ?
+            boolean isQueueBounded = queueSize.isPresent() && queueSize.get() > 0;
+            BlockingQueue<Runnable> queue = isQueueBounded ?
                     new ArrayBlockingQueue<>(queueSize.get()) : new LinkedBlockingQueue<>();
 
             workers = new ThreadPoolExecutor(tCount, tCount, 10, TimeUnit.SECONDS,
@@ -126,6 +126,17 @@ public class NanoRpcServer extends RpcServer {
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
 
             LOG.info("<rpc-server - (NANO) started on {}://{}:{}>", sslEnabled ? "https" : "http", hostName, port);
+
+            LOG.debug("------------------------------------");
+            LOG.debug("NANO RPC Server Started with Options");
+            LOG.debug("------------------------------------");
+            LOG.debug("SSL: {}", sslEnabled ? "Enabled; Certificate = "+sslCertCanonicalPath : "Not Enabled");
+            LOG.debug("CORS: {}", corsEnabled ? "Enabled; Allowed Origins = \""+corsOrigin+"\"" : "Not Enabled");
+            LOG.debug("Worker Thread Count: {}", tCount);
+            LOG.debug("I/O Thread Count:  Not Applicable");
+            LOG.debug("Request Queue Size: {}", isQueueBounded ? queueSize.get() : "Unbounded");
+            LOG.debug("------------------------------------");
+
         } catch (Exception e) {
             LOG.error("<rpc-server - failed bind on {}:{}>", hostName, port);
             LOG.error("<rpc-server - " + e.getMessage() + ">");

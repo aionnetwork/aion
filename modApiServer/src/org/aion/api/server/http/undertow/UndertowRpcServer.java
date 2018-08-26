@@ -121,7 +121,8 @@ public class UndertowRpcServer extends RpcServer {
 
             RequestLimitingConfiguration requestLimiting =
                     new RequestLimitingConfiguration(false, -1, 1);
-            if (getRequestQueueSize().isPresent() && getRequestQueueSize().get() > 0) {
+            boolean isQueueBounded = getRequestQueueSize().isPresent() && getRequestQueueSize().get() > 0;
+            if (isQueueBounded) {
                 requestLimiting = new RequestLimitingConfiguration(true, effectiveWorkerThreadCount,
                         getRequestQueueSize().get());
             }
@@ -134,6 +135,17 @@ public class UndertowRpcServer extends RpcServer {
             server.start();
 
             LOG.info("<rpc-server - (UNDERTOW) started on {}://{}:{}>", sslEnabled ? "https" : "http", hostName, port);
+
+            LOG.debug("----------------------------------------");
+            LOG.debug("UNDERTOW RPC Server Started with Options");
+            LOG.debug("----------------------------------------");
+            LOG.debug("SSL: {}", sslEnabled ? "Enabled; Certificate = "+sslCertCanonicalPath : "Not Enabled");
+            LOG.debug("CORS: {}", corsEnabled ? "Enabled; Allowed Origins = \""+corsOrigin+"\"" : "Not Enabled");
+            LOG.debug("Worker Thread Count: {}", effectiveWorkerThreadCount);
+            LOG.debug("I/O Thread Count:  Not Applicable");
+            LOG.debug("Request Queue Size: {}", isQueueBounded ? getRequestQueueSize().get() : "Unbounded");
+            LOG.debug("----------------------------------------");
+
         } catch (Exception e) {
             LOG.error("<rpc-server - failed bind on {}:{}>", hostName, port);
             LOG.error("<rpc-server - " + e.getMessage() + ">");
