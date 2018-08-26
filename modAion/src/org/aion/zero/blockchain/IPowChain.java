@@ -43,7 +43,8 @@ public interface IPowChain<
         BH extends AbstractBlockHeader,
         TX extends ITransaction,
         TR extends AbstractTxReceipt,
-        INFO extends AbstractTxInfo> extends IBlockchain<BLK, BH, TX, TR, INFO> {
+        INFO extends AbstractTxInfo>
+        extends IBlockchain<BLK, BH, TX, TR, INFO> {
 
     BigInteger getTotalDifficulty();
 
