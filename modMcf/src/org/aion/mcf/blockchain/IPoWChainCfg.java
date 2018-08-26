@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,25 +17,19 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
- *     Aion foundation.
- *
- ******************************************************************************/
-package org.aion.zero.core;
-
-import java.math.BigInteger;
-
-import org.aion.mcf.types.AbstractBlockHeader;
-
-/**
- * Calculates the rewards given for sealing a particular block, depending
- * on the implementation we may be able to swap different difficulty
- * implementations.
- *
- * @author yao
+ *     Centrys Inc. <https://centrys.io>
  */
-@FunctionalInterface
-public interface IRewardsCalculator {
-    BigInteger calculateReward(AbstractBlockHeader header);
+
+package org.aion.mcf.blockchain;
+
+import org.aion.base.type.IBlock;
+import org.aion.base.type.ITransaction;
+import org.aion.mcf.core.IDifficultyCalculator;
+import org.aion.mcf.core.IRewardsCalculator;
+
+public interface IPoWChainCfg<Blk extends IBlock<?, ?>, Tx extends ITransaction> extends IChainCfg<Blk, Tx> {
+    IDifficultyCalculator getDifficultyCalculator();
+
+    IRewardsCalculator getRewardsCalculator();
 }

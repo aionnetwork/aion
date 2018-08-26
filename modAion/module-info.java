@@ -10,6 +10,5 @@ module aion.zero {
     exports org.aion.zero.db;
     exports org.aion.zero.types;
     exports org.aion.zero.exceptions;
-    exports org.aion.zero.core;
     exports org.aion.zero.blockchain;
 }

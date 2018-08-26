@@ -32,7 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.zero.types;
+package org.aion.mcf.types;
 
 import org.aion.base.type.IBlockHeader;
 

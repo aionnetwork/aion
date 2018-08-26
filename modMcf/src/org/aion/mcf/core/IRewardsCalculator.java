@@ -22,22 +22,20 @@
  *     Aion foundation.
  *
  ******************************************************************************/
-package org.aion.zero.core;
+package org.aion.mcf.core;
 
 import java.math.BigInteger;
 
 import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.zero.types.A0BlockHeader;
 
 /**
- * Interface for retrieving difficulty calculations for a particular
- * chain configuration, note that depending on where the corresponding
- * class is generated, it will utilized different algorithms. However the
- * common interface of the current and parent blockHeader will remain.
+ * Calculates the rewards given for sealing a particular block, depending
+ * on the implementation we may be able to swap different difficulty
+ * implementations.
  *
  * @author yao
  */
 @FunctionalInterface
-public interface IDifficultyCalculator {
-    BigInteger calculateDifficulty(A0BlockHeader current, A0BlockHeader dependency);
+public interface IRewardsCalculator {
+    BigInteger calculateReward(AbstractBlockHeader header);
 }

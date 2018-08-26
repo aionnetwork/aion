@@ -37,6 +37,7 @@ import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Utils;
 import org.aion.crypto.HashUtil;
+import org.aion.mcf.types.IPowBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.mcf.types.AbstractBlockHeader;
