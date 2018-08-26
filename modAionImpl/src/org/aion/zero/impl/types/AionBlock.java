@@ -166,7 +166,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
     }
 
     public int size() {
-        return rlpEncoded.length;
+        return getEncoded().length;
     }
 
     public A0BlockHeader getHeader() {

@@ -270,25 +270,33 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     }
 
-    private static AionPendingStateImpl initializeAionPendingState() {
-        AionPendingStateImpl ps = new AionPendingStateImpl(AionRepositoryImpl.inst());
-        ps.init(AionBlockchainImpl.inst());
+    private static AionPendingStateImpl initializeAionPendingState(
+            CfgAion _cfgAion, AionRepositoryImpl _repository, AionBlockchainImpl _blockchain) {
+        AionPendingStateImpl ps = new AionPendingStateImpl(_cfgAion, _repository);
+        ps.init(_blockchain);
         return ps;
     }
 
     private static class Holder {
 
-        static final AionPendingStateImpl INSTANCE = initializeAionPendingState();
+        static final AionPendingStateImpl INSTANCE =
+                initializeAionPendingState(
+                        CfgAion.inst(), AionRepositoryImpl.inst(), AionBlockchainImpl.inst());
     }
 
     public static AionPendingStateImpl inst() {
         return Holder.INSTANCE;
     }
 
-    private AionPendingStateImpl(AionRepositoryImpl repository) {
-        this.repository = repository;
+    public static AionPendingStateImpl createForTesting(
+            CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
+        return initializeAionPendingState(_cfgAion, _repository, _blockchain);
+    }
 
-        this.isSeed = CfgAion.inst().getConsensus().isSeed();
+    private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
+        this.repository = _repository;
+
+        this.isSeed = _cfgAion.getConsensus().isSeed();
 
         if (!isSeed) {
 
