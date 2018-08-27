@@ -6,17 +6,9 @@ import io.undertow.server.handlers.BlockingHandler;
 import io.undertow.server.handlers.RequestDumpingHandler;
 import io.undertow.server.handlers.RequestLimitingHandler;
 import io.undertow.server.handlers.StuckThreadDetectionHandler;
-import io.undertow.util.Headers;
-import io.undertow.util.HttpString;
-import io.undertow.util.Methods;
-import io.undertow.util.StatusCodes;
-import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
-
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Created this handler to "collect" all handlers in the chain in one place.

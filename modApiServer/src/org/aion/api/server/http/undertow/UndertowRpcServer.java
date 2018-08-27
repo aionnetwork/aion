@@ -1,17 +1,9 @@
 package org.aion.api.server.http.undertow;
 
 import io.undertow.Undertow;
-import io.undertow.io.Receiver;
-import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
-import io.undertow.server.handlers.*;
-import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
-import io.undertow.util.Methods;
-import io.undertow.util.StatusCodes;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
-import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
@@ -22,7 +14,6 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.util.Map;
-import java.util.Optional;
 
 public class UndertowRpcServer extends RpcServer {
 

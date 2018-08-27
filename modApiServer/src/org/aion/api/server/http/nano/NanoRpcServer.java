@@ -33,8 +33,10 @@ import javax.net.ssl.KeyManagerFactory;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class NanoRpcServer extends RpcServer {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
@@ -90,7 +92,7 @@ public class NanoRpcServer extends RpcServer {
     @Override
     public void start() {
         try {
-            /**
+            /*
              * default to cpu_count * 8 threads. java http servers, particularly with the servlet-type processing model
              * (jetty, tomcat, etc.) generally default to 200-1000 count thread pools
              *
