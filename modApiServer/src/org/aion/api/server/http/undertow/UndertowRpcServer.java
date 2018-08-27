@@ -87,15 +87,24 @@ public class UndertowRpcServer extends RpcServer {
         try {
             Undertow.Builder undertowBuilder = Undertow.builder();
 
+
+
             if (sslEnabled)
                 undertowBuilder.addHttpsListener(port, hostName, sslContext());
             else
                 undertowBuilder.addHttpListener(port, hostName);
 
+            int effectiveIoThreadCount;
+
             if (getIoPoolSize().isPresent()) {
                 LOG.info("<rpc-server - setting io thread count manually not recommended. recommended io thread pool size: {}>",
                         Math.max(Runtime.getRuntime().availableProcessors(), 2));
                 undertowBuilder.setIoThreads(getIoPoolSize().get());
+
+                effectiveIoThreadCount = getIoPoolSize().get();
+            } else {
+                /** this number comes from {@link io.undertow.Undertow.Builder#Builder()} */
+                effectiveIoThreadCount = Math.max(Runtime.getRuntime().availableProcessors(), 2);
             }
 
             /** used to "remember" Undertow worker-thread count, since no getter exposed in {@link Undertow}. */
@@ -131,6 +140,7 @@ public class UndertowRpcServer extends RpcServer {
 
             undertowBuilder.setHandler(new AionUndertowRootHandler(rpcHandler, requestLimiting, stuckThreadDetector));
 
+
             server = undertowBuilder.build();
             server.start();
 
@@ -142,7 +152,7 @@ public class UndertowRpcServer extends RpcServer {
             LOG.debug("SSL: {}", sslEnabled ? "Enabled; Certificate = "+sslCertCanonicalPath : "Not Enabled");
             LOG.debug("CORS: {}", corsEnabled ? "Enabled; Allowed Origins = \""+corsOrigin+"\"" : "Not Enabled");
             LOG.debug("Worker Thread Count: {}", effectiveWorkerThreadCount);
-            LOG.debug("I/O Thread Count:  Not Applicable");
+            LOG.debug("I/O Thread Count: {}", effectiveIoThreadCount);
             LOG.debug("Request Queue Size: {}", isQueueBounded ? getRequestQueueSize().get() : "Unbounded");
             LOG.debug("----------------------------------------");
 

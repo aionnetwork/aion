@@ -133,7 +133,7 @@ public class NanoRpcServer extends RpcServer {
             LOG.debug("SSL: {}", sslEnabled ? "Enabled; Certificate = "+sslCertCanonicalPath : "Not Enabled");
             LOG.debug("CORS: {}", corsEnabled ? "Enabled; Allowed Origins = \""+corsOrigin+"\"" : "Not Enabled");
             LOG.debug("Worker Thread Count: {}", tCount);
-            LOG.debug("I/O Thread Count:  Not Applicable");
+            LOG.debug("I/O Thread Count: Not Applicable");
             LOG.debug("Request Queue Size: {}", isQueueBounded ? queueSize.get() : "Unbounded");
             LOG.debug("------------------------------------");
 
