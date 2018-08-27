@@ -28,7 +28,7 @@ class AionUndertowRpcHandler implements HttpHandler {
     }
 
     @Override
-    public void handleRequest(HttpServerExchange exchange) throws Exception {
+    public void handleRequest(HttpServerExchange exchange) {
         boolean isPost = Methods.POST.equals(exchange.getRequestMethod());
         boolean isOptions = Methods.OPTIONS.equals(exchange.getRequestMethod());
 
