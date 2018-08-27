@@ -66,7 +66,7 @@ public class NanoRpcServer extends RpcServer {
         super(builder);
     }
 
-    public void makeSecure() throws Exception {
+    private void makeSecure() throws Exception {
         if (server == null)
             throw new IllegalStateException("Server not instantiated; valid instance required to enable ssl.");
 
