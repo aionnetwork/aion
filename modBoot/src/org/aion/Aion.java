@@ -23,10 +23,6 @@
 
 package org.aion;
 
-import java.io.Console;
-import java.util.ServiceLoader;
-import java.util.function.Consumer;
-
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
 import org.aion.api.server.http.RpcServerVendor;
@@ -42,7 +38,6 @@ import org.aion.evtmgr.EventMgrModule;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.account.Keystore;
-import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
@@ -51,6 +46,10 @@ import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
+
+import java.io.Console;
+import java.util.ServiceLoader;
+import java.util.function.Consumer;
 
 import static java.lang.System.exit;
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
@@ -207,15 +206,19 @@ public class Aion {
         }
 
         RpcServer rpcServer = null;
-        if(cfg.getApi().getRpc().getActive()) {
+        if(cfg.getApi().getRpc().isActive()) {
             CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
 
             Consumer<RpcServerBuilder<? extends RpcServerBuilder<?>>> commonRpcConfig = (rpcBuilder) -> {
                 rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
-                rpcBuilder.setWorkerPoolSize(rpcCfg.getMaxthread());
                 rpcBuilder.enableEndpoints(rpcCfg.getEnabled());
 
-                if (rpcCfg.getCorsEnabled())
+                rpcBuilder.setWorkerPoolSize(rpcCfg.getWorkerThreads());
+                rpcBuilder.setIoPoolSize(rpcCfg.getIoThreads());
+                rpcBuilder.setRequestQueueSize(rpcCfg.getRequestQueueSize());
+                rpcBuilder.setStuckThreadDetectorEnabled(rpcCfg.isStuckThreadDetectorEnabled());
+
+                if (rpcCfg.isCorsEnabled())
                     rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
 
                 CfgSsl cfgSsl = rpcCfg.getSsl();

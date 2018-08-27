@@ -65,8 +65,7 @@ public class CfgLog {
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-                case XMLStreamReader.START_ELEMENT:
-
+                case XMLStreamReader.START_ELEMENT: {
                     /* XML - Takes the input in config.xml and parse as T/F */
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
@@ -77,17 +76,15 @@ public class CfgLog {
                             this.logPath = Cfg.readValue(sr);
                             break;
                         default:
+                            if (LogEnum.contains(elementName))
+                                this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
                             break;
                     }
-
-                    elementName = sr.getLocalName().toUpperCase();
-                    if (LogEnum.contains(elementName))
-                        this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
                     break;
+                }
                 case XMLStreamReader.END_ELEMENT:
                     break loop;
                 default:
-                    // Cfg.skipElement(sr);
                     break;
             }
         }
