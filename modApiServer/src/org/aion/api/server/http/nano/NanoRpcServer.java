@@ -102,24 +102,13 @@ public class NanoRpcServer extends RpcServer {
             else
                 tCount = Math.max(Runtime.getRuntime().availableProcessors(), 2) * 8;
 
-            Optional<Integer> queueSize =  this.getRequestQueueSize();
-
-            /**
-             *  ArrayBlockingQueue tends to be more efficient if user is predefining the queue size,
-             *  since queue is backed by a pre-allocated array.
-             *
-             *  For unbounded queues, LinkedBlockingQueue is ideal, due to it's linked-list based impl.
-             */
-            boolean isQueueBounded = queueSize.isPresent() && queueSize.get() > 0;
-            BlockingQueue<Runnable> queue = isQueueBounded ?
-                    new ArrayBlockingQueue<>(queueSize.get()) : new LinkedBlockingQueue<>();
-
+            // For unbounded queues, LinkedBlockingQueue is ideal, due to it's linked-list based impl.
             workers = new ThreadPoolExecutor(tCount, tCount, 10, TimeUnit.SECONDS,
-                    queue, new AionHttpdThreadFactory());
+                    new LinkedBlockingQueue<>(), new AionHttpdThreadFactory());
 
             server = new AionHttpd(hostName, port, rpcProcessor, corsEnabled, CORS_HEADERS);
             server.setAsyncRunner(new BoundRunner(workers));
-
+            
             if (this.sslEnabled)
                 makeSecure();
 
@@ -134,7 +123,7 @@ public class NanoRpcServer extends RpcServer {
             LOG.debug("CORS: {}", corsEnabled ? "Enabled; Allowed Origins = \""+corsOrigin+"\"" : "Not Enabled");
             LOG.debug("Worker Thread Count: {}", tCount);
             LOG.debug("I/O Thread Count: Not Applicable");
-            LOG.debug("Request Queue Size: {}", isQueueBounded ? queueSize.get() : "Unbounded");
+            LOG.debug("Request Queue Size: Unbounded");
             LOG.debug("------------------------------------");
 
         } catch (Exception e) {
