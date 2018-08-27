@@ -156,7 +156,7 @@ project(':modAionImpl') {
 
 def prefix = 'aion'
 
-task pack(type: Tar) { 
+task tarPack(type: Tar) { 
     destinationDir = file('pack')
     baseName = 'aion'
 
@@ -168,7 +168,17 @@ task pack(type: Tar) {
     }*/
 }
 
-build.finalizedBy(pack)
+task copyLibsToPack(type: Copy) {
+    into 'pack/libs/'
+    from subprojects.collect { it.configurations.runtime }
+}
+
+task pack_build { }
+
+pack_build.dependsOn build
+pack_build.finalizedBy(tarPack)
+tarPack.dependsOn copyLibsToPack
+
 
 /*
  3rd_build 							ANT
