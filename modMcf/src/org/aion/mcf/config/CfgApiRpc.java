@@ -206,6 +206,10 @@ public final class CfgApiRpc {
 
             Writer strWriter = new StringWriter();
             xmlWriter = output.createXMLStreamWriter(strWriter);
+
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment("rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs");
+
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("rpc");
 
@@ -213,8 +217,6 @@ public final class CfgApiRpc {
             xmlWriter.writeAttribute("ip", this.ip);
             xmlWriter.writeAttribute("port", this.port + "");
 
-            xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("boolean, enable/disable cross origin requests (browser enforced)");
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("cors-enabled");
             xmlWriter.writeCharacters(String.valueOf(this.isCorsEnabled()));
