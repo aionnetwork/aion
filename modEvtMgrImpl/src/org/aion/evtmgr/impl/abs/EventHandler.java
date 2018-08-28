@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.evtmgr.impl.abs;
@@ -33,6 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventCallback;
+import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -42,7 +43,7 @@ import org.slf4j.Logger;
  * @author jay
  *
  */
-public abstract class AbstractHandler {
+public class EventHandler implements IHandler {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
 
@@ -53,7 +54,7 @@ public abstract class AbstractHandler {
     private boolean interrupted = false;
     private int handlerType;
 
-    protected Thread dispatcher = new Thread(() -> {
+    private Thread dispatcher = new Thread(() -> {
         try {
             while (!interrupt.get()) {
                 IEvent e = queue.take();
@@ -83,8 +84,9 @@ public abstract class AbstractHandler {
         }
     });
 
-    public AbstractHandler(int value) {
-        handlerType = value;
+    public EventHandler(int value, String name) {
+        this.handlerType = value;
+        this.dispatcher.setName(name);
     }
 
     public synchronized boolean addEvent(IEvent _evt) {
@@ -176,4 +178,6 @@ public abstract class AbstractHandler {
     public int getType() {
         return handlerType;
     }
+
+    public String getName() { return this.dispatcher.getName(); }
 }

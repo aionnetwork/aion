@@ -19,23 +19,20 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.evtmgr.impl.handler;
 
-import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.abs.AbstractHandler;
+import org.aion.evtmgr.impl.abs.EventHandler;
 
 
 /**
  * @author jay
- *
  */
-public class TxHandler extends AbstractHandler implements IHandler {
+public class TxHandler extends EventHandler {
 
     public TxHandler() {
-        super(TYPE.TX0.getValue());
-        dispatcher.setName("TxHdr");
+        super(TYPE.TX0.getValue(), "TxHdr");
     }
 }

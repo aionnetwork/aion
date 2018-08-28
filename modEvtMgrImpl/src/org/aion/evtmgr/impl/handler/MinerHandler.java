@@ -25,16 +25,15 @@
 package org.aion.evtmgr.impl.handler;
 
 import org.aion.evtmgr.IHandler;
-import org.aion.evtmgr.impl.abs.AbstractHandler;
+import org.aion.evtmgr.impl.abs.EventHandler;
 
 /**
  * @author jay
  *
  */
-public class MinerHandler extends AbstractHandler implements IHandler {
+public class MinerHandler extends EventHandler implements IHandler {
 
     public MinerHandler() {
-        super(TYPE.MINER0.getValue());
-        dispatcher.setName("MinerHdr");
+        super(TYPE.MINER0.getValue(), "MinerHdr");
     }
 }
