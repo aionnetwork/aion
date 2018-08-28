@@ -22,8 +22,6 @@
  */
 package org.aion.mcf.config;
 
-import com.google.common.base.Objects;
-
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -34,7 +32,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -49,12 +47,18 @@ public final class CfgApiRpc {
         this.port = 8545;
         this.corsEnabled = false;
         this.corsOrigin = "*";
-        this.maxthread = null;
         this.filtersEnabled = true;
         // using a strings here for the following 2 properties instead of referencing the associated enum value
         // since don't want to add dependency to modApiServer just for this
         this.vendor = "undertow";
         this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum", "ops"));
+
+        // nulls for the following properties indicates to consumer of these properties
+        // to "choose reasonable defaults"
+        this.workerThreads = null;
+        this.ioThreads = null;
+        this.requestQueueSize = null; // null = unbounded queue size
+        this.stuckThreadDetectorEnabled = true;
 
         this.ssl = new CfgSsl();
     }
@@ -65,10 +69,14 @@ public final class CfgApiRpc {
     private List<String> enabled;
     private boolean corsEnabled;
     private String corsOrigin;
-    private Integer maxthread;
     private boolean filtersEnabled;
     private CfgSsl ssl;
     private String vendor;
+
+    private Integer workerThreads;
+    private Integer ioThreads;
+    private Integer requestQueueSize;
+    private boolean stuckThreadDetectorEnabled;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         // get the attributes
@@ -115,25 +123,63 @@ public final class CfgApiRpc {
                                 e.printStackTrace();
                             }
                             break;
-                        case "threads":
+                        case "worker-threads": {
                             try {
                                 int t = Integer.parseInt(Cfg.readValue(sr));
                                 // filter out negative counts
-                                if (t > 0) this.maxthread = t;
+                                if (t > 0) this.workerThreads = t;
                                 // otherwise, accept default set in constructor
                             } catch (Exception e) {
+                                System.out.println("Illegal value for aion.api.rpc.worker-threads; will select reasonable defaults.");
                                 e.printStackTrace();
                             }
 
                             break;
-                        case "filters-enabled":
+                        }
+                        case "io-threads": {
                             try {
-                                filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                                int t = Integer.parseInt(Cfg.readValue(sr));
+                                // filter out negative counts
+                                if (t > 0) this.ioThreads = t;
+                                // otherwise, accept default set in constructor
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
+                                System.out.println("Illegal value for aion.api.rpc.io-threads; will select reasonable defaults.");
+                                e.printStackTrace();
+                            }
+
+                            break;
+                        }
+                        case "request-queue-size": {
+                            try {
+                                int t = Integer.parseInt(Cfg.readValue(sr));
+                                // filter out negative counts
+                                if (t > 0) this.requestQueueSize = t;
+                                // otherwise, accept default set in constructor
+                            } catch (Exception e) {
+                                System.out.println("Illegal value for aion.api.rpc.request-queue-size; will select reasonable defaults.");
+                                e.printStackTrace();
+                            }
+
+                            break;
+                        }
+                        case "stuck-thread-detector-enabled": {
+                            try {
+                                stuckThreadDetectorEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                            } catch (Exception e) {
+                                System.out.println("failed to read config node: aion.api.rpc.stuckThreadDetectorEnabled; using preset: " + stuckThreadDetectorEnabled);
                                 e.printStackTrace();
                             }
                             break;
+                        }
+                        case "filters-enabled": {
+                            try {
+                                filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                            } catch (Exception e) {
+                                System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + filtersEnabled);
+                                e.printStackTrace();
+                            }
+                            break;
+                        }
                         case "ssl":
                             this.ssl.fromXML(sr);
                             break;
@@ -160,6 +206,10 @@ public final class CfgApiRpc {
 
             Writer strWriter = new StringWriter();
             xmlWriter = output.createXMLStreamWriter(strWriter);
+
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment("rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs");
+
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("rpc");
 
@@ -168,10 +218,8 @@ public final class CfgApiRpc {
             xmlWriter.writeAttribute("port", this.port + "");
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("boolean, enable/disable cross origin requests (browser enforced)");
-            xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("cors-enabled");
-            xmlWriter.writeCharacters(String.valueOf(this.getCorsEnabled()));
+            xmlWriter.writeCharacters(String.valueOf(this.isCorsEnabled()));
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
@@ -198,46 +246,65 @@ public final class CfgApiRpc {
         }
     }
 
-    public boolean getActive() {
-        return this.active;
-    }
-    public String getIp() {
-        return this.ip;
-    }
-    public int getPort() {
-        return this.port;
-    }
-    public boolean getCorsEnabled() {
-        return corsEnabled;
-    }
+    public boolean isActive() { return this.active; }
+    public String getIp() { return this.ip; }
+    public int getPort() { return this.port; }
+    public boolean isCorsEnabled() { return corsEnabled; }
     public String getCorsOrigin() { return corsOrigin; }
-    public List<String> getEnabled() {
-        return enabled;
-    }
-    public Integer getMaxthread() { return maxthread; }
-    public boolean isFiltersEnabled() {
-        return filtersEnabled;
-    }
+    public List<String> getEnabled() { return enabled; }
+    public boolean isFiltersEnabled() { return filtersEnabled; }
+    public CfgSsl getSsl() { return this.ssl; }
+    public String getVendor() { return vendor; }
+    public Integer getWorkerThreads() { return workerThreads; }
+    public Integer getIoThreads() { return ioThreads; }
+    public Integer getRequestQueueSize() { return requestQueueSize; }
+    public boolean isStuckThreadDetectorEnabled() { return stuckThreadDetectorEnabled; }
 
+    /**
+     * @implNote this should theoretically work, but should be tested for correctness by any future consumer
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CfgApiRpc cfgApiRpc = (CfgApiRpc) o;
-        return active == cfgApiRpc.active &&
-                port == cfgApiRpc.port &&
-                corsEnabled == cfgApiRpc.corsEnabled &&
-                maxthread == cfgApiRpc.maxthread &&
-                filtersEnabled == cfgApiRpc.filtersEnabled &&
-                Objects.equal(ip, cfgApiRpc.ip) &&
-                Objects.equal(enabled, cfgApiRpc.enabled);
+        CfgApiRpc cfg = (CfgApiRpc) o;
+
+        return active == cfg.active &&
+                Objects.equals(ip, cfg.ip) &&
+                port == cfg.port &&
+                Objects.equals(enabled, cfg.enabled) &&
+                corsEnabled == cfg.corsEnabled &&
+                Objects.equals(corsOrigin, cfg.corsOrigin) &&
+                filtersEnabled == cfg.filtersEnabled &&
+                Objects.equals(ssl, cfg.ssl) &&
+                Objects.equals(vendor, cfg.vendor) &&
+                Objects.equals(workerThreads, cfg.workerThreads) &&
+                Objects.equals(ioThreads, cfg.ioThreads) &&
+                Objects.equals(requestQueueSize, cfg.requestQueueSize) &&
+                stuckThreadDetectorEnabled == cfg.stuckThreadDetectorEnabled;
     }
 
+    /**
+     * @implNote this should theoretically work, but should be tested for correctness by any future consumer
+     *
+     * @implNote computationally slowest implementation O(n). there are faster ways of doing this if
+     * this function call ends up on a critical path (probably not)
+     */
     @Override
     public int hashCode() {
-        return Objects.hashCode(active, ip, port, enabled, corsEnabled, maxthread, filtersEnabled);
+        return java.util.Objects.hash(
+            active,
+            ip,
+            port,
+            enabled,
+            corsEnabled,
+            corsOrigin,
+            filtersEnabled,
+            ssl,
+            vendor,
+            workerThreads,
+            ioThreads,
+            requestQueueSize,
+            stuckThreadDetectorEnabled);
     }
-  
-    public CfgSsl getSsl() { return this.ssl; }
-    public String getVendor() { return vendor; }
 }
