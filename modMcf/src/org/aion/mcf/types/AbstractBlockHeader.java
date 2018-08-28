@@ -20,19 +20,19 @@
  *
  * Contributors:
  *     Aion foundation.
-
  ******************************************************************************/
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
 
 import org.aion.base.type.Address;
+import org.aion.base.type.IBlockHeader;
 import org.spongycastle.util.BigIntegers;
 
 /**
  * Abstract BlockHeader.
  */
-public abstract class AbstractBlockHeader {
+public abstract class AbstractBlockHeader implements IBlockHeader {
 
     public static final int NONCE_LENGTH = 32;
     public static final int SOLUTIONSIZE = 1408;
@@ -94,7 +94,7 @@ public abstract class AbstractBlockHeader {
     protected byte[] solution; // The equihash solution in compressed format
 
     /*
-    * A long value containing energy consumed within this block
+     * A long value containing energy consumed within this block
      */
     protected long energyConsumed;
 
