@@ -145,7 +145,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private ScheduledExecutorService ex;
 
-    private boolean closeToNetworkBest = false;
+    private boolean closeToNetworkBest = true;
 
     private static long NRGPRICE_MIN = 10_000_000_000L;  // 10 PLAT  (10 * 10 ^ -9 AION)
     private static long NRGPRICE_MAX = 9_000_000_000_000_000_000L;  //  9 AION
