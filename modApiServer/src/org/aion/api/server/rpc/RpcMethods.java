@@ -5,6 +5,7 @@ import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,9 +15,17 @@ public class RpcMethods {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
     private ApiWeb3Aion api;
     private final Map<String, Map<String, RpcMethod>> groupMap;
-    private Map<String, RpcMethod> enabledEndpoints;
+    Map<String, RpcMethod> enabledEndpoints;
 
-    public RpcMethods(List<String> enabledGroups) {
+    /**
+     * Creates a new instance of the RpcMethods class with the intersection of the enabled groups and the explicit
+     * enabled methods inside of it
+     * @param enabledGroups
+     * @param enabledMethods
+     */
+    public RpcMethods(
+            final List<String> enabledGroups, final List<String> enabledMethods, final List<String> disabledMethods) {
+
         api = new ApiWeb3Aion(AionImpl.inst());
 
         // find a way to autogen options in config using this enum, without generating circular
@@ -33,7 +42,7 @@ public class RpcMethods {
                 Map.entry("priv", priv)
         );
 
-        enabledEndpoints = composite(enabledGroups);
+        enabledEndpoints = composite(enabledGroups, enabledMethods, disabledMethods);
     }
 
     public RpcMethod get(String name) {
@@ -44,12 +53,16 @@ public class RpcMethods {
         api.shutdown();
     }
 
-    private Map<String, RpcMethod> composite(List<String> groups) {
+    private Map<String, RpcMethod> composite(List<String> groups,
+                                             final List<String> enabledMethods,
+                                             final List<String> disabledMethods) {
+
         Map<String, RpcMethod> composite = new HashMap<>();
 
         // add the ping endpoint by default
         composite.putAll(ping);
 
+        // Add all the methods which are defined by the groups
         for(String group : groups) {
             Map<String, RpcMethod> g = null;
             try {
@@ -63,8 +76,36 @@ public class RpcMethods {
                 composite.putAll(g);
         }
 
+        // Create a map combining all the available groups
+        Map<String, RpcMethod> allMethods = new HashMap<>();
+        for (Map<String, RpcMethod> group : groupMap.values()) {
+            allMethods.putAll(group);
+        }
+
+        // Add in the explicitly listed methods
+        for (String enabledMethod : enabledMethods) {
+            if (allMethods.containsKey(enabledMethod)) {
+                composite.put(enabledMethod, allMethods.get(enabledMethod));
+            } else {
+                LOG.warn("Attempted to enable unknown RPC method '{}'", enabledMethod);
+            }
+        }
+
+        // Remove the disabled methods
+        for (String disabledMethod : disabledMethods) {
+            if (composite.containsKey(disabledMethod)) {
+                // Remove the method if it was previously added to composite
+                composite.remove(disabledMethod);
+            } else if (!allMethods.containsKey(disabledMethod)) {
+                // Log a warning if this RPC method is not known
+                LOG.warn("Attempted to disable unknown RPC method '{}'", disabledMethod);
+            }
+        }
+
+
         return composite;
     }
+
 
     // jdk8 lambdas infer interface method, making our constant declaration pretty.
     public interface RpcMethod {

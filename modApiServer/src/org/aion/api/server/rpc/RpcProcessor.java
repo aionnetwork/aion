@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class RpcProcessor {
@@ -16,7 +17,7 @@ public class RpcProcessor {
     RpcMethods apiHolder;
 
     public RpcProcessor(List<String> enabled) {
-        this.apiHolder = new RpcMethods(enabled);
+        this.apiHolder = new RpcMethods(enabled, new ArrayList<>(), new ArrayList<>());
     }
 
     public String process(String _requestBody) {
