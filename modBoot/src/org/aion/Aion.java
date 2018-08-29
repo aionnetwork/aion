@@ -44,6 +44,7 @@ import org.aion.api.server.zmq.ProtocolProcessor;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.EventMgrModule;
+import org.aion.generic.IBlockchainEngine;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.account.Keystore;
@@ -166,9 +167,8 @@ public class Aion {
         genLog.info(path);
         genLog.info(logo);
 
-        if (cfg.getConsensusType().equals(CfgConsensus.ConsensusType.POW)) {
-            AionPOWChainRunner.start(cfg, sslPass, genLog);
-        }
+        IBlockchainEngine blockchainEngine = BlockchainEngineFactory.create(cfg, genLog, sslPass);
+        blockchainEngine.start();
     }
 
     public static String appendLogo(String value, String input) {

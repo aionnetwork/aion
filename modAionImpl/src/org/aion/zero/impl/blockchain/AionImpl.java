@@ -60,7 +60,7 @@ public class AionImpl implements IChainInstancePOW {
     private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOG_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
-    public IAion0Hub aionHub;
+    private IAion0Hub aionHub;
 
     private CfgAion cfg;
 
