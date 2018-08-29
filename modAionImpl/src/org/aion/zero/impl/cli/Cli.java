@@ -86,6 +86,7 @@ public class Cli {
     public int call(final String[] args, Cfg cfg, String path) {
         try {
             // the preprocess method handles arguments that are separated by space
+            // parsing populates the options object
             parser.parse(Arguments.preprocess(args));
         } catch (Exception e) {
             System.out.println("Unable to parse the input arguments due to: ");
@@ -100,12 +101,31 @@ public class Cli {
         }
 
         try {
+            // the first set of options don't mix
+            if (options.isHelp()) {
+                printHelp();
+                return 0;
+            }
+
+            if (options.isVersion() || options.isVersionTag()) {
+                if (options.isVersion()) {
+                    System.out.println("\nVersion");
+                    System.out.println("--------------------------------------------");
+                }
+                System.out.println(Version.KERNEL_VERSION);
+                return 0;
+            }
+
+            if (options.isInfo()) {
+                cfg.fromXML();
+                printInfo(cfg);
+                return 0;
+            }
+
+            // the following options can be combined
             cfg.fromXML();
 
             switch (args[0].toLowerCase()) {
-                case "-h":
-                    printHelp();
-                    break;
                 case "-a":
 
                     int index = 0;
@@ -190,26 +210,6 @@ public class Cli {
                     cfg.fromXML();
                     cfg.setId(UUID.randomUUID().toString());
                     cfg.toXML(null);
-                    break;
-                case "-i":
-                    cfg.fromXML();
-                    System.out.println("\nInformation");
-                    System.out.println("--------------------------------------------");
-                    System.out.println(
-                        "current: p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
-                            + cfg.getNet().getP2p().getPort());
-                    String[] nodes = cfg.getNet().getNodes();
-                    if (nodes != null && nodes.length > 0) {
-                        System.out.println("boot nodes list:");
-                        for (String node : nodes) {
-                            System.out.println("            " + node);
-                        }
-                    } else {
-                        System.out.println("boot nodes list: 0");
-                    }
-                    System.out.println(
-                        "p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p()
-                            .getPort());
                     break;
                 case "-s":
                     if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
@@ -453,13 +453,6 @@ public class Cli {
                         RecoveryUtils.dumpBlocks(count);
                     }
                     break;
-                case "-v":
-                    System.out.println("\nVersion");
-                    System.out.println("--------------------------------------------");
-                    // Don't put break here!!
-                case "--version":
-                    System.out.println(Version.KERNEL_VERSION);
-                    break;
                 default:
                     System.out.println("Unable to parse the input arguments");
                     printHelp();
@@ -475,9 +468,7 @@ public class Cli {
         return 0;
     }
 
-    /**
-     * Print the CLI help info.
-     */
+    /** Print the CLI help info. */
     private void printHelp() {
         String usage = parser.getUsageMessage();
 
@@ -488,6 +479,30 @@ public class Cli {
         usage = usage.replaceFirst(" \\[[^ ]*<hostname> <ip>.*]", "]");
 
         System.out.println(usage.toString());
+    }
+
+    private void printInfo(Cfg cfg) {
+        System.out.println("\nInformation");
+        System.out.println(
+                "----------------------------------------------------------------------------");
+        System.out.println(
+                "current: p2p://"
+                        + cfg.getId()
+                        + "@"
+                        + cfg.getNet().getP2p().getIp()
+                        + ":"
+                        + cfg.getNet().getP2p().getPort());
+        String[] nodes = cfg.getNet().getNodes();
+        if (nodes != null && nodes.length > 0) {
+            System.out.println("boot nodes list:");
+            for (String node : nodes) {
+                System.out.println("            " + node);
+            }
+        } else {
+            System.out.println("boot nodes list is empty");
+        }
+        System.out.println(
+                "p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
     }
 
     /**

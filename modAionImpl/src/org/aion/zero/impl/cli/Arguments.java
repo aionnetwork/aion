@@ -196,6 +196,82 @@ public class Arguments {
         return list.toArray(new String[list.size()]);
     }
 
+    public boolean isHelp() {
+        return help;
+    }
+
+    public boolean isCreateAccount() {
+        return createAccount;
+    }
+
+    public boolean isListAccounts() {
+        return listAccounts;
+    }
+
+    public String getExportAccount() {
+        return exportAccount;
+    }
+
+    public String getImportAccount() {
+        return importAccount;
+    }
+
+    public String getConfig() {
+        return config;
+    }
+
+    public boolean isInfo() {
+        return info;
+    }
+
+    public boolean isVersion() {
+        return version;
+    }
+
+    public boolean isVersionTag() {
+        return versionTag;
+    }
+
+    public String[] getSsl() {
+        return ssl;
+    }
+
+    public boolean isRebuildBlockInfo() {
+        return rebuildBlockInfo;
+    }
+
+    public long getRevertToBlock() {
+        return revertToBlock;
+    }
+
+    public String getNetwork() {
+        return network;
+    }
+
+    public String getDirectory() {
+        return directory;
+    }
+
+    public String getStateOption() {
+        return stateOption;
+    }
+
+    public int getDumpBlocksCount() {
+        return dumpBlocksCount;
+    }
+
+    public int getDumpStateSizeCount() {
+        return dumpStateSizeCount;
+    }
+
+    public int getDumpStateCount() {
+        return dumpStateCount;
+    }
+
+    public boolean isDbCompact() {
+        return dbCompact;
+    }
+
     public static void main(String... args) {
         Arguments params = new Arguments();
         String[] argv = {"-a create", "-a list", "-a export", "0x123"};
