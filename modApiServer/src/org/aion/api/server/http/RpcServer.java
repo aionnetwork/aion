@@ -35,7 +35,9 @@ public abstract class RpcServer {
         corsOrigin = builder.corsOrigin;
 
         List<String> enabledEndpoints = Collections.unmodifiableList(Objects.requireNonNull(builder.enabledEndpoints));
-        rpcProcessor = new RpcProcessor(enabledEndpoints);
+        List<String> enabledMethods = Collections.unmodifiableList(Objects.requireNonNull(builder.enabledMethods));
+        List<String> disabledMethods = Collections.unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
+        rpcProcessor = new RpcProcessor(enabledEndpoints, enabledMethods, disabledMethods);
 
         sslEnabled = builder.sslEnabled;
         if (sslEnabled) {

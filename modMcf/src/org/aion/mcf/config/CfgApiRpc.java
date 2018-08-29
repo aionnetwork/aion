@@ -63,6 +63,8 @@ public final class CfgApiRpc {
     private String ip;
     private int port;
     private List<String> enabled;
+    private List<String> enabledMethods;
+    private List<String> disabledMethods;
     private boolean corsEnabled;
     private String corsOrigin;
     private Integer maxthread;
@@ -104,6 +106,22 @@ public final class CfgApiRpc {
                             String cs = Cfg.readValue(sr).trim();
                             this.enabled = new ArrayList<>(
                                     Stream.of(cs.split(","))
+                                    .map(String::trim)
+                                    .collect(Collectors.toList())
+                            );
+                            break;
+                        case "api-methods-enabled":
+                            String enabledMethods = Cfg.readValue(sr).trim();
+                            this.enabledMethods = new ArrayList<>(
+                                Stream.of(enabledMethods.split(","))
+                                    .map(String::trim)
+                                    .collect(Collectors.toList())
+                            );
+                            break;
+                        case "api-methods-disabled":
+                            String disabledMethods = Cfg.readValue(sr).trim();
+                            this.disabledMethods = new ArrayList<>(
+                                Stream.of(disabledMethods.split(","))
                                     .map(String::trim)
                                     .collect(Collectors.toList())
                             );
@@ -181,6 +199,18 @@ public final class CfgApiRpc {
             xmlWriter.writeCharacters(String.join(",", this.getEnabled()));
             xmlWriter.writeEndElement();
 
+            if (this.getEnabledMethods() != null) {
+                xmlWriter.writeStartElement("api-methods-enabled");
+                xmlWriter.writeCharacters(String.join(",", this.getEnabledMethods()));
+                xmlWriter.writeEndElement();
+            }
+
+            if (this.getDisabledMethods() != null) {
+                xmlWriter.writeStartElement("api-methods-disabled");
+                xmlWriter.writeCharacters(String.join(",", this.getDisabledMethods()));
+                xmlWriter.writeEndElement();
+            }
+
             // don't write-back ssl. (keep it hidden for now)
             // xmlWriter.writeCharacters(this.ssl.toXML());
 
@@ -214,6 +244,8 @@ public final class CfgApiRpc {
     public List<String> getEnabled() {
         return enabled;
     }
+    public List<String> getEnabledMethods() { return enabledMethods; }
+    public List<String> getDisabledMethods() { return disabledMethods; }
     public Integer getMaxthread() { return maxthread; }
     public boolean isFiltersEnabled() {
         return filtersEnabled;

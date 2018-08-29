@@ -18,13 +18,18 @@ public class RpcMethods {
     Map<String, RpcMethod> enabledEndpoints;
 
     /**
-     * Creates a new instance of the RpcMethods class with the intersection of the enabled groups and the explicit
-     * enabled methods inside of it
-     * @param enabledGroups
-     * @param enabledMethods
+     * Creates a new instance of the RpcMethods class with the intersection of the enabled groups
+     * and the explicit enabled methods inside of it
+     * @param enabledGroups     Groups of APIs which should be enabled.
+     * @param enabledMethods    API methods to explicitly enable in addition to the ones specified by
+     *                          the enabledGroups parameter
+     * @param disabledMethods   Methods which are explicitly disabled which will be removed from the
+     *                          combination of enabledGroups and enabledMethods
      */
     public RpcMethods(
-            final List<String> enabledGroups, final List<String> enabledMethods, final List<String> disabledMethods) {
+        final List<String> enabledGroups,
+        final List<String> enabledMethods,
+        final List<String> disabledMethods) {
 
         api = new ApiWeb3Aion(AionImpl.inst());
 
@@ -43,6 +48,8 @@ public class RpcMethods {
         );
 
         enabledEndpoints = composite(enabledGroups, enabledMethods, disabledMethods);
+
+        LOG.debug("Enabled the following apis: {}", (Object) enabledEndpoints.keySet());
     }
 
     public RpcMethod get(String name) {

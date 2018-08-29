@@ -22,6 +22,8 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
     String corsOrigin = "*";
 
     List<String> enabledEndpoints = new ArrayList<>();
+    List<String> enabledMethods = new ArrayList<>();
+    List<String> disabledMethods = new ArrayList<>();
 
     boolean sslEnabled = false;
     String sslCertPath;
@@ -54,6 +56,18 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
     public T enableEndpoints(List<String> enabledEndpoints) {
         // empty List is a valid input here.
         this.enabledEndpoints = Objects.requireNonNull(enabledEndpoints);
+        return self();
+    }
+
+    public T enableMethods(List<String> enabledMethods) {
+        // empty List is a valid input here.
+        this.enabledMethods = Objects.requireNonNullElse(enabledMethods, new ArrayList<>());
+        return self();
+    }
+
+    public T disableMethods(List<String> disabledMethods) {
+        // empty List is a valid input here.
+        this.disabledMethods = Objects.requireNonNullElse(disabledMethods, new ArrayList<>());
         return self();
     }
 

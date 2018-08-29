@@ -16,8 +16,12 @@ public class RpcProcessor {
 
     RpcMethods apiHolder;
 
-    public RpcProcessor(List<String> enabled) {
-        this.apiHolder = new RpcMethods(enabled, new ArrayList<>(), new ArrayList<>());
+    public RpcProcessor(
+        final List<String> enabledGroups,
+        final List<String> enabledMethods,
+        final List<String> disabledMethods) {
+
+        this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods);
     }
 
     public String process(String _requestBody) {

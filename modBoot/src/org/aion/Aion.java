@@ -214,6 +214,8 @@ public class Aion {
                 rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
                 rpcBuilder.setWorkerPoolSize(rpcCfg.getMaxthread());
                 rpcBuilder.enableEndpoints(rpcCfg.getEnabled());
+                rpcBuilder.enableMethods(rpcCfg.getEnabledMethods());
+                rpcBuilder.disableMethods(rpcCfg.getDisabledMethods());
 
                 if (rpcCfg.getCorsEnabled())
                     rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
