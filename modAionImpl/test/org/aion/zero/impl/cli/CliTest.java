@@ -1,4 +1,4 @@
-package org.aion.cli;
+package org.aion.zero.impl.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
