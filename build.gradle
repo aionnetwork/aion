@@ -1,3 +1,14 @@
+/*buildscript { 
+    repositories {
+        jcenter()
+    }
+    dependencies { 
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+    }
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'*/
+
 allprojects { 
     apply plugin: 'java'
 
@@ -154,31 +165,34 @@ project(':modAionImpl') {
     build.finalizedBy(compileNative)
 }
 
-def prefix = 'aion'
+/*
+task zip(type: Zip) {
+    from configurations.runtime.allArtifacts.files
+    from configurations.runtime
+    into 'myZip.zip'
+}*/
+/*
+task buildDist(type: Zip) { 
+    into 'jars'
+    from { subprojects.configurations.runtime } 
+    from { subprojects.jar}
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+*/
 
-task tarPack(type: Tar) { 
-    destinationDir = file('pack')
-    baseName = 'aion'
-
-    /*from("${dirLibFile}") { 
-        include "*.jar"
-        include "*.so"
-        exclude 'byte-buddy-*.jar', '
-        into prefix
-    }*/
+task collectJars(type: Copy) { 
+    into 'build/jars'
+    from { subprojects.configurations.runtime } 
+    from { subprojects.jar}
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-task copyLibsToPack(type: Copy) {
-    into 'pack/libs/'
-    from subprojects.collect { it.configurations.runtime }
+task pack { 
+    
 }
 
-task pack_build { }
-
-pack_build.dependsOn build
-pack_build.finalizedBy(tarPack)
-tarPack.dependsOn copyLibsToPack
-
+collectJars.dependsOn build
+pack.dependsOn collectJars
 
 /*
  3rd_build 							ANT
