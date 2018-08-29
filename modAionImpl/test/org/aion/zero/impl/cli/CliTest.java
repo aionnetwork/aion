@@ -18,7 +18,6 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
-import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Before;
@@ -76,25 +75,18 @@ public class CliTest {
         Keystore.setKeystorePath(BASE_PATH + "/keystore");
     }
 
-    /** Ensures that the <i>-h</i> argument does not fail. */
+    /** Ensures that the <i>-h</i> and <i>--help</i> arguments do not fail. */
     @Test
     public void testHelp() {
-        String args[] = {"-h"};
-        assertEquals(0, cli.call(args, CfgAion.inst()));
+        assertEquals(0, cli.call(new String[] {"-h"}, CfgAion.inst()));
+        assertEquals(0, cli.call(new String[] {"--help"}, CfgAion.inst()));
     }
 
-    /** Ensures that the <i>-v</i> argument does not fail. */
+    /** Ensures that the <i>-v</i> and <i>--version</i> arguments do not fail. */
     @Test
     public void testVersion() {
-        String args[] = {"-v"};
-        assertEquals(0, cli.call(args, CfgAion.inst()));
-    }
-
-    /** Ensures that the <i>--version</i> argument does not fail. */
-    @Test
-    public void testVersionTag() {
-        String args[] = {"--version"};
-        assertEquals(0, cli.call(args, CfgAion.inst()));
+        assertEquals(0, cli.call(new String[] {"-v"}, CfgAion.inst()));
+        assertEquals(0, cli.call(new String[] {"--version"}, CfgAion.inst()));
     }
 
     /** Ensures that the <i>-i</i> and <i>--info</i> arguments do not fail. */
@@ -102,6 +94,28 @@ public class CliTest {
     public void testInfo() {
         assertEquals(0, cli.call(new String[] {"-i"}, CfgAion.inst()));
         assertEquals(0, cli.call(new String[] {"--info"}, CfgAion.inst()));
+    }
+
+    /** Ensures correct behavior for the <i>-c</i> and <i>--config</i> arguments. */
+    @Test
+    public void testConfig() {
+        // compatibility with old kernels
+        assertEquals(0, cli.call(new String[] {"-c"}, CfgAion.inst()));
+        assertEquals(0, cli.call(new String[] {"--config"}, CfgAion.inst()));
+
+        // available networks
+        for (Cli.Network net : Cli.Network.values()) {
+            assertEquals(0, cli.call(new String[] {"-c", net.toString()}, CfgAion.inst()));
+            assertEquals(0, cli.call(new String[] {"--config", net.toString()}, CfgAion.inst()));
+        }
+
+        // accepted alias
+        assertEquals(0, cli.call(new String[] {"-c", "testnet"}, CfgAion.inst()));
+        assertEquals(0, cli.call(new String[] {"--config", "testnet"}, CfgAion.inst()));
+
+        // incorrect value
+        assertEquals(1, cli.call(new String[] {"-c", "random"}, CfgAion.inst()));
+        assertEquals(1, cli.call(new String[] {"--config", "random"}, CfgAion.inst()));
     }
 
     /** Tests the -a create arguments do not fail. */

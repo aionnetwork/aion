@@ -98,6 +98,7 @@ public class Cli {
 
             System.out.println();
             printHelp();
+            return 1;
         }
 
         try {
@@ -119,6 +120,46 @@ public class Cli {
             if (options.isInfo()) {
                 cfg.fromXML();
                 printInfo(cfg);
+                return 0;
+            }
+
+            if (options.getConfig() != null) {
+                String strNet = options.getConfig().toLowerCase();
+
+                if (strNet.isEmpty()) {
+                    // no network give; use default path
+                    // for compatibility with old kernels
+                    CfgAion.setNetwork(strNet);
+                    File dir = new File(BASE_PATH + "/config");
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+                    CfgAion.setConfFilePath(BASE_PATH + "/config/config.xml");
+                    System.out.println("\nNew config generated for default (release) network.");
+                } else {
+                    net = determineNetwork(strNet);
+
+                    if (net != null) {
+                        strNet = net.toString();
+                        CfgAion.setNetwork(strNet);
+                        File dir = new File(BASE_PATH + "/config/" + net);
+                        if (!dir.exists()) {
+                            dir.mkdirs();
+                        }
+                        CfgAion.setConfFilePath(BASE_PATH + "/config/" + strNet + "/config.xml");
+                        System.out.println("\nNew config generated for " + strNet + ".");
+                    } else {
+                        System.out.println("\nInvalid network selected!");
+                        System.out.println("--- Available Networks ---");
+                        System.out.println("    mainnet, conquest");
+                        System.out.println("--------------------------");
+                        return 1;
+                    }
+                }
+
+                cfg.fromXML();
+                cfg.setId(UUID.randomUUID().toString());
+                cfg.toXML(null);
                 return 0;
             }
 
@@ -176,40 +217,6 @@ public class Cli {
                             printHelp();
                             return 1;
                     }
-                    break;
-                case "-c":
-                    if (args.length == 2 && isValid(args[1])) {
-
-                        net = determineNetwork(args[1].toLowerCase());
-
-                        switch (net) {
-                            case MAINNET:
-                            case CONQUEST:
-                                CfgAion.setNetwork(net.toString());
-                                File dir = new File(BASE_PATH + "/config/" + net);
-                                if(!dir.exists()) {
-                                    dir.mkdirs();
-                                }
-                                CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
-                                System.out.println("\nNew config generated for " + args[1]);
-                                break;
-                            default:
-                                System.out.println("\nInvalid network selected!");
-                                System.out.println("--- Available Networks ---");
-                                System.out.println("    mainnet, conquest");
-                                System.out.println("--------------------------");
-                                return 1;
-                        }
-                    } else if (args.length == 1) {
-                        System.out.println("\nInvalid network selected!");
-                        System.out.println("--- Available Networks ---");
-                        System.out.println("    mainnet, conquest");
-                        System.out.println("--------------------------");
-                        return 1;
-                    }
-                    cfg.fromXML();
-                    cfg.setId(UUID.randomUUID().toString());
-                    cfg.toXML(null);
                     break;
                 case "-s":
                     if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
@@ -462,6 +469,7 @@ public class Cli {
             System.out.println("");
         } catch (Throwable e) {
             System.out.println("");
+            e.printStackTrace();
             return 1;
         }
 

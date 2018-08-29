@@ -76,6 +76,7 @@ public class Arguments {
     // config generation
     @Option(
         names = {"-c", "--config"},
+        arity = "0..1",
         paramLabel = "<network>",
         description = "create config for the selected network\noptions: mainnet, conquest"
     )
