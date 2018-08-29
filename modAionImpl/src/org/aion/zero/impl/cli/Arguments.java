@@ -106,7 +106,7 @@ public class Arguments {
         arity = "0..2",
         paramLabel = "<hostname> <ip>",
         description =
-                "create an ssl certificate for:\n - localhost (when no parameters are given), or"
+                "create a ssl certificate for:\n - localhost (when no parameters are given), or"
                         + "\n - the given hostname and ip"
     )
     public String[] ssl;
@@ -141,7 +141,7 @@ public class Arguments {
 
     // offline database query and update
     @Option(
-        names = {"--state"},
+        names = {"ps", "--state"},
         paramLabel = "<prune_mode>",
         description = "reorganize the state storage\noptions: FULL, TOP, SPREAD"
     )
@@ -214,5 +214,7 @@ public class Arguments {
         System.out.println(params.createAccount);
         System.out.println(params.listAccounts);
         System.out.println(params.exportAccount.toString());
+
+        System.out.println(commandLine.getUsageMessage(colorScheme));
     }
 }

@@ -24,12 +24,6 @@
 
 package org.aion.zero.impl.cli;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.*;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -42,8 +36,13 @@ import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.RecoveryUtils;
+import picocli.CommandLine;
 
-import java.io.Console;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Command line interface.
@@ -61,6 +60,9 @@ public class Cli {
     private String dstGenesis = BASE_PATH_WITH_NETWORK + "/genesis.json";
 
     File keystoreDir = new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
+
+    private Arguments options = new Arguments();
+    private CommandLine parser = new CommandLine(options);
 
     enum Network {
         MAINNET, CONQUEST;
@@ -83,7 +85,23 @@ public class Cli {
 
     public int call(final String[] args, Cfg cfg, String path) {
         try {
+            // the preprocess method handles arguments that are separated by space
+            parser.parse(Arguments.preprocess(args));
+        } catch (Exception e) {
+            System.out.println("Unable to parse the input arguments due to: ");
+            if (e.getMessage() != null) {
+                System.out.println(e.getMessage());
+            } else {
+                e.printStackTrace();
+            }
+
+            System.out.println();
+            printHelp();
+        }
+
+        try {
             cfg.fromXML();
+
             switch (args[0].toLowerCase()) {
                 case "-h":
                     printHelp();
@@ -461,30 +479,15 @@ public class Cli {
      * Print the CLI help info.
      */
     private void printHelp() {
-        System.out.println("Usage: ./aion.sh [options] [arguments]");
-        System.out.println();
-        System.out.println("  -h                                            show help info");
-        System.out.println();
-        System.out.println("  -a create                                     create a new account");
-        System.out.println("  -a list                                       list all existing accounts");
-        System.out.println("  -a export [address]                           export private key of an account");
-        System.out.println("  -a import [private_key]                       import private key");
-        System.out.println();
-        System.out.println("  -c [network]                                  create config to selected network; mainnet, conquest");
-        System.out.println();
-        System.out.println("  -n, --network [network]                       execute kernel with selected network; mainnet, conquest");
-        System.out.println();
-        System.out.println("  -d, --datadir [directory]                     execute kernel with selected database directory");
-        System.out.println();
-        System.out.println("  -i                                            show information");
-        System.out.println();
-        System.out.println("  -s create                                     create an ssl certificate for localhost");
-        System.out.println("  -s create [[hostname] [ip]]                   create an ssl certificate for a custom hostname and ip");
-        System.out.println();
-        System.out.println("  -r                                            remove blocks on side chains and correct block info");
-        System.out.println("  -r [block_number]                             revert db up to specific block number");
-        System.out.println();
-        System.out.println("  -v                                            show version");
+        String usage = parser.getUsageMessage();
+
+        usage = usage.replaceFirst("OPTIONS]", "OPTIONS] [ARGUMENTS]");
+
+        // the command line output has some styling characters in addition to the actual string
+        // making the use of a regular expression necessary here
+        usage = usage.replaceFirst(" \\[[^ ]*<hostname> <ip>.*]", "]");
+
+        System.out.println(usage.toString());
     }
 
     /**
