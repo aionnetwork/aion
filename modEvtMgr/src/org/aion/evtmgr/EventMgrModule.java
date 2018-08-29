@@ -35,7 +35,7 @@ public final class EventMgrModule {
         String moduleName = (String) config.get(MODULENAME);
         if (moduleName != null) {
             EVTMGR = (IEventMgr) getClass().getClassLoader().loadClass(moduleName)
-                    .getDeclaredConstructor(Properties.class).newInstance(config);
+                    .getDeclaredConstructor().newInstance();
             if (EVTMGR == null) {
                 throw new Exception("Can not load the event manager module!");
             }

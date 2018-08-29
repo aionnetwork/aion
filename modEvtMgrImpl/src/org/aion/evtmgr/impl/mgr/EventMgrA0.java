@@ -30,25 +30,22 @@ import org.aion.evtmgr.impl.handler.ConsensusHandler;
 import org.aion.evtmgr.impl.handler.MinerHandler;
 import org.aion.evtmgr.impl.handler.TxHandler;
 
+import java.util.Map;
+
 /**
  * @author jay
  *
  */
 public class EventMgrA0 extends EventManager {
 
+    private static final Map<String, IHandler> aion0Handlers = Map.ofEntries(
+            Map.entry(TxHandler.NAME, new TxHandler()),
+            Map.entry(ConsensusHandler.NAME, new ConsensusHandler()),
+            Map.entry(BlockHandler.NAME, new BlockHandler()),
+            Map.entry(MinerHandler.NAME, new MinerHandler())
+    );
+
     public EventMgrA0() {
-        super();
-
-        IHandler txHdr = new TxHandler();
-        this.handlers.put(((TxHandler) txHdr).getName(), txHdr);
-
-        IHandler consHdr = new ConsensusHandler();
-        this.handlers.put(((ConsensusHandler) consHdr).getName(), consHdr);
-
-        IHandler blkHdr = new BlockHandler();
-        this.handlers.put(((BlockHandler) blkHdr).getName(), blkHdr);
-
-        IHandler minerHdr = new MinerHandler();
-        this.handlers.put(((MinerHandler) minerHdr).getName(), minerHdr);
+        super(aion0Handlers);
     }
 }

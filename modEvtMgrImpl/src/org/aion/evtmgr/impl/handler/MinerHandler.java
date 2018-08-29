@@ -33,7 +33,9 @@ import org.aion.evtmgr.impl.abs.EventHandler;
  */
 public class MinerHandler extends EventHandler implements IHandler {
 
+    public static final String NAME = "MinerHdr";
+
     public MinerHandler() {
-        super(TYPE.MINER0.getValue(), "MinerHdr");
+        super(TYPE.MINER0.getValue(), NAME);
     }
 }

@@ -32,7 +32,9 @@ import org.aion.evtmgr.impl.abs.EventHandler;
  */
 public class TxHandler extends EventHandler {
 
+    public static final String NAME = "TxHdr";
+
     public TxHandler() {
-        super(TYPE.TX0.getValue(), "TxHdr");
+        super(TYPE.TX0.getValue(), NAME);
     }
 }

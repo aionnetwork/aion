@@ -26,6 +26,7 @@ package org.aion.evtmgr;
 
 import org.aion.evtmgr.impl.mgr.EventMgrA0;
 import org.junit.Test;
+
 import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
@@ -33,14 +34,14 @@ import static org.junit.Assert.assertEquals;
 public class EventMgrModuleTest {
 
     @Test
-    public void orderedCoverageTest() throws Throwable{
+    public void orderedCoverageTest() throws Throwable {
         EventMgrModule singletonEventMgrModule;
         Properties prop = new Properties();
 
         // try initialize with null input
         try {
             singletonEventMgrModule = EventMgrModule.getSingleton(null);
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e.toString());
         }
 

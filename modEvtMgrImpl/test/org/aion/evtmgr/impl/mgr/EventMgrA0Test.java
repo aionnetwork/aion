@@ -36,16 +36,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class EventMgrA0Test {
-    private Properties properties = new Properties();
-
-    @Test (expected = NullPointerException.class)
-    public void testNullConfig(){
-        EventMgrA0 testManager = new EventMgrA0(null);
-    }
 
     @Test
     public void testRegisterEvent(){
-        EventMgrA0 testManager = new EventMgrA0(properties);
+        EventMgrA0 testManager = new EventMgrA0();
 
         boolean res = testManager.registerEvent(getEventsList());
         assertFalse(res);
@@ -56,7 +50,7 @@ public class EventMgrA0Test {
 
     @Test
     public void tesUnregisterEvent(){
-        EventMgrA0 testManager = new EventMgrA0(properties);
+        EventMgrA0 testManager = new EventMgrA0();
 
         boolean res = testManager.unregisterEvent(getEventsList());
         assertFalse(res);
@@ -67,7 +61,7 @@ public class EventMgrA0Test {
 
     @Test
     public void testNewEvent(){
-        EventMgrA0 testManager = new EventMgrA0(properties);
+        EventMgrA0 testManager = new EventMgrA0();
 
         boolean res = testManager.newEvent(new EventDummy());
         assertTrue(res);
@@ -78,7 +72,7 @@ public class EventMgrA0Test {
 
     @Test
     public void testNewEvents(){
-        EventMgrA0 testManager = new EventMgrA0(properties);
+        EventMgrA0 testManager = new EventMgrA0();
 
         boolean res = testManager.newEvents(getEventsList());
         assertTrue(res);

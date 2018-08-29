@@ -43,14 +43,11 @@ import org.slf4j.Logger;
 public class EventManager implements IEventMgr {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
-    protected Map<String, IHandler> handlers;
+
+    private  Map<String, IHandler> handlers;
 
     public EventManager(Map<String, IHandler> handlers) {
         this.handlers = new ConcurrentHashMap<>(handlers);
-    }
-
-    protected EventManager() {
-        this.handlers = new ConcurrentHashMap<>();
     }
 
     public void start() {

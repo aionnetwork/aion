@@ -34,8 +34,10 @@ import org.aion.evtmgr.impl.abs.EventHandler;
  */
 public class BlockHandler extends EventHandler implements IHandler {
 
+    public static final String NAME = "BlkHdr";
+
     // Default constructor to set name of the thread, simplifies troubleshooting
     public BlockHandler() {
-        super(TYPE.BLOCK0.getValue(), "BlkHdr");
+        super(TYPE.BLOCK0.getValue(), NAME);
     }
 }

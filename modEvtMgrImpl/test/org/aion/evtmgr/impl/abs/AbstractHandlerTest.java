@@ -25,6 +25,7 @@
 package org.aion.evtmgr.impl.abs;
 
 import org.aion.evtmgr.IEventCallback;
+import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
@@ -44,11 +45,11 @@ public class AbstractHandlerTest {
     private static final Logger LOGGER_EVENT = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
     private EventExecuteService eventExecuteService = new EventExecuteService(100, "TestEES", Thread.NORM_PRIORITY, LOGGER_EVENT);
     private IEventCallback callback = new EventCallback(eventExecuteService, LOGGER_EVENT);
-    private AbstractHandler handler = new BlockHandler();
+    private IHandler handler = new BlockHandler();
 
     @Test
     public void testStart() throws InterruptedException {
-        AbstractHandler handler = new BlockHandler();
+        IHandler handler = new BlockHandler();
         handler.addEvent(new EventBlock(EventBlock.CALLBACK.ONTRACE0));
         handler.addEvent(new EventBlock(EventBlock.CALLBACK.ONBLOCK0));
         handler.onEvent(new EventBlock(EventBlock.CALLBACK.ONTRACE0));
@@ -81,7 +82,7 @@ public class AbstractHandlerTest {
 
     @Test
     public void testAddEvent(){
-        AbstractHandler handler = new BlockHandler();
+        IHandler handler = new BlockHandler();
 
         boolean res = handler.addEvent(new EventDummy());
         assertTrue(res);
@@ -95,7 +96,7 @@ public class AbstractHandlerTest {
 
     @Test
     public void testRemoveEvent(){
-        AbstractHandler handler = new BlockHandler();
+        IHandler handler = new BlockHandler();
         handler.addEvent(new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE));
 
         boolean res = handler.removeEvent(new EventBlock(EventBlock.CALLBACK.ONTRACE0));

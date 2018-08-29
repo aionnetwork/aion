@@ -33,8 +33,10 @@ import org.aion.evtmgr.impl.abs.EventHandler;
  */
 public class ConsensusHandler extends EventHandler implements IHandler {
 
+    public static final String NAME = "ConsHdr";
+
     // Default constructor to set name of the thread, simplifies troubleshooting
     public ConsensusHandler() {
-        super(TYPE.CONSENSUS.getValue(), "ConsHdr");
+        super(TYPE.CONSENSUS.getValue(), NAME);
     }
 }
