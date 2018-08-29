@@ -14,6 +14,7 @@
 /.idea/
 /mod*/.idea/
 /mod*/*.iml
+ij-execution.out
 
 # build
 /build/

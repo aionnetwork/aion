@@ -22,11 +22,6 @@
  */
 package org.aion;
 
-import java.io.Console;
-import java.util.Optional;
-import java.util.ServiceLoader;
-import java.util.function.Consumer;
-
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
 import org.aion.api.server.http.RpcServerVendor;
@@ -50,7 +45,9 @@ import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
+import java.io.Console;
 import java.util.ServiceLoader;
+import java.util.function.Consumer;
 
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
@@ -177,15 +174,19 @@ public class Aion {
         }
 
         RpcServer rpcServer = null;
-        if(cfg.getApi().getRpc().getActive()) {
+        if(cfg.getApi().getRpc().isActive()) {
             CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
 
             Consumer<RpcServerBuilder<? extends RpcServerBuilder<?>>> commonRpcConfig = (rpcBuilder) -> {
                 rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
-                rpcBuilder.setWorkerPoolSize(rpcCfg.getMaxthread());
                 rpcBuilder.enableEndpoints(rpcCfg.getEnabled());
 
-                if (rpcCfg.getCorsEnabled())
+                rpcBuilder.setWorkerPoolSize(rpcCfg.getWorkerThreads());
+                rpcBuilder.setIoPoolSize(rpcCfg.getIoThreads());
+                rpcBuilder.setRequestQueueSize(rpcCfg.getRequestQueueSize());
+                rpcBuilder.setStuckThreadDetectorEnabled(rpcCfg.isStuckThreadDetectorEnabled());
+
+                if (rpcCfg.isCorsEnabled())
                     rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
 
                 CfgSsl cfgSsl = rpcCfg.getSsl();
