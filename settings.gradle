@@ -13,4 +13,5 @@ include 'modAionBase', 'modAion', 'modAionImpl',
     'modApiServer',
     'aion_fastvm/modFastVM',
     'aion_api',
-    'modBoot'
+    'modBoot',
+    'modGui'

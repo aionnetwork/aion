@@ -1,9 +1,10 @@
-module aion.boot {
+module aion.gui {
     requires aion.log;
     requires aion.mcf;
     requires aion.zero.impl;
     requires aion.base;
     requires aion.crypto;
+    requires aion.api.client;
 
     requires slf4j.api;
 
@@ -13,8 +14,9 @@ module aion.boot {
     requires javafx.controls;
     requires javafx.swing;
     requires java.desktop;
-
     requires java.management;
+
+    requires BIP39;
 
     exports org.aion;
 }
