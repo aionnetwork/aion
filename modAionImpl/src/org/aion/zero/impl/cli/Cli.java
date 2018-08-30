@@ -44,6 +44,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
+import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
+import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
+
 /**
  * Command line interface.
  *
@@ -64,6 +68,19 @@ public class Cli {
     private Arguments options = new Arguments();
     private CommandLine parser = new CommandLine(options);
 
+    public enum ReturnType {
+        RUN(2), EXIT(0), ERROR(1);
+        private int value;
+
+        ReturnType(int _value) {
+            this.value = _value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
     enum Network {
         MAINNET, CONQUEST;
 
@@ -79,11 +96,11 @@ public class Cli {
 
     private Network net = Network.MAINNET;
 
-    public int call(final String[] args, Cfg cfg) {
+    public ReturnType call(final String[] args, Cfg cfg) {
         return call(args, cfg, BASE_PATH);
     }
 
-    public int call(final String[] args, Cfg cfg, String path) {
+    public ReturnType call(final String[] args, Cfg cfg, String path) {
         try {
             // the preprocess method handles arguments that are separated by space
             // parsing populates the options object
@@ -98,14 +115,14 @@ public class Cli {
 
             System.out.println();
             printHelp();
-            return 1;
+            return ERROR;
         }
 
         try {
             // the first set of options don't mix
             if (options.isHelp()) {
                 printHelp();
-                return 0;
+                return EXIT;
             }
 
             if (options.isVersion() || options.isVersionTag()) {
@@ -114,13 +131,13 @@ public class Cli {
                     System.out.println("--------------------------------------------");
                 }
                 System.out.println(Version.KERNEL_VERSION);
-                return 0;
+                return EXIT;
             }
 
             if (options.isInfo()) {
                 cfg.fromXML();
                 printInfo(cfg);
-                return 0;
+                return EXIT;
             }
 
             if (options.getConfig() != null) {
@@ -153,14 +170,14 @@ public class Cli {
                         System.out.println("--- Available Networks ---");
                         System.out.println("    mainnet, conquest");
                         System.out.println("--------------------------");
-                        return 1;
+                        return ERROR;
                     }
                 }
 
                 cfg.fromXML();
                 cfg.setId(UUID.randomUUID().toString());
                 cfg.toXML(null);
-                return 0;
+                return EXIT;
             }
 
             // the following options can be combined
@@ -174,7 +191,7 @@ public class Cli {
 
                     if (args.length < 2) {
                         printHelp();
-                        return 1;
+                        return ERROR;
                     } else {
                         while (index < args.length) {
                             if(args[index].equals("-d")||args[index].equals("-n")||args[index].equals("--datadir")||args[index].equals("--network")) {
@@ -195,27 +212,27 @@ public class Cli {
                     switch (args[1]) {
                         case "create":
                             if (!createAccount()) {
-                                return 1;
+                                return ERROR;
                             }
                             break;
                         case "list":
                             if (!listAccounts()) {
-                                return 1;
+                                return ERROR;
                             }
                             break;
                         case "export":
                             if (args.length < 3 || !exportPrivateKey(args[2])) {
-                                return 1;
+                                return ERROR;
                             }
                             break;
                         case "import":
                             if (args.length < 3 || !importPrivateKey(args[2])) {
-                                return 1;
+                                return ERROR;
                             }
                             break;
                         default:
                             printHelp();
-                            return 1;
+                            return ERROR;
                     }
                     break;
                 case "-s":
@@ -235,7 +252,7 @@ public class Cli {
                     } else {
                         System.out.println("Incorrect usage of -s create command.\n" +
                             "Command must enter both hostname AND ip or else neither one.");
-                        return 1;
+                        return ERROR;
                     }
                     break;
                 case "-r":
@@ -253,10 +270,10 @@ public class Cli {
                             case FAILURE:
                                 System.out
                                     .println("Unable to revert to block number " + args[1] + ".");
-                                return 1;
+                                return ERROR;
                             case ILLEGAL_ARGUMENT:
                             default:
-                                return 1;
+                                return ERROR;
                         }
                     }
                     break;
@@ -283,7 +300,7 @@ public class Cli {
                                     cfg.getLog().setLogPath(net.toString() + "/log");
                                     cfg.getDb().setDatabasePath(net.toString() + "/database");
                                     Keystore.setKeystorePath(path + "/" + net.toString() + "/keystore");
-                                    return 2;
+                                    return RUN;
 
                                 }
 
@@ -297,17 +314,17 @@ public class Cli {
 
                                     String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
                                     call(newArgs, cfg);
-                                    return 2;
+                                    return RUN;
 
                                 } else if (!(args[2].equals("-d")||args[2].equals("--datadir"))) {
                                     System.out.println("\nInvalid multi arguments!\n");
                                     printHelp();
-                                    return 1;
+                                    return ERROR;
 
                                 } else {
                                     System.out.println("\nInvalid datadir selected!");
                                     System.out.println("Please choose valid directory name!\n");
-                                    return 1;
+                                    return ERROR;
                                 }
 
                             default:
@@ -315,7 +332,7 @@ public class Cli {
                                 System.out.println("--- Available Networks ---");
                                 System.out.println("    mainnet, conquest");
                                 System.out.println("--------------------------\n");
-                                return 1;
+                                return ERROR;
                         }
 
                     } else {
@@ -323,7 +340,7 @@ public class Cli {
                         System.out.println("--- Available Networks ---");
                         System.out.println("    mainnet , conquest");
                         System.out.println("--------------------------\n");
-                        return 1;
+                        return ERROR;
                     }
 
                 // Determines database folder path
@@ -338,7 +355,7 @@ public class Cli {
                             cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
                             cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
                             Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
-                            return 2;
+                            return RUN;
 
                         }
 
@@ -352,25 +369,25 @@ public class Cli {
                             cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
                             cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
                             Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
-                            return 2;
+                            return RUN;
 
                         } else if (!(args[2].equals("-n")||args[2].equals("--network"))) {
                             System.out.println("\nInvalid multi arguments!\n");
                             printHelp();
-                            return 1;
+                            return ERROR;
 
                         } else {
                             System.out.println("\nInvalid network selected!");
                             System.out.println("--- Available Networks ---");
                             System.out.println("    mainnet , conquest");
                             System.out.println("--------------------------\n");
-                            return 1;
+                            return ERROR;
                         }
 
                     } else {
                         System.out.println("\nInvalid datadir selected!");
                         System.out.println("Please choose valid directory name!\n");
-                        return 1;
+                        return ERROR;
                     }
 
                 case "--state": {
@@ -383,7 +400,7 @@ public class Cli {
                     } catch (Throwable t) {
                         System.out.println("Reorganizing the state storage FAILED due to:");
                         t.printStackTrace();
-                        return 1;
+                        return ERROR;
                     }
                     break;
                 }
@@ -463,17 +480,17 @@ public class Cli {
                 default:
                     System.out.println("Unable to parse the input arguments");
                     printHelp();
-                    return 1;
+                    return ERROR;
             }
 
             System.out.println("");
         } catch (Throwable e) {
             System.out.println("");
             e.printStackTrace();
-            return 1;
+            return ERROR;
         }
 
-        return 0;
+        return EXIT;
     }
 
     /** Print the CLI help info. */

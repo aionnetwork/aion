@@ -1,5 +1,6 @@
 package org.aion.zero.impl.cli;
 
+import static org.aion.zero.impl.cli.Cli.ReturnType.*;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -78,58 +79,58 @@ public class CliTest {
     /** Ensures that the <i>-h</i> and <i>--help</i> arguments do not fail. */
     @Test
     public void testHelp() {
-        assertEquals(0, cli.call(new String[] {"-h"}, CfgAion.inst()));
-        assertEquals(0, cli.call(new String[] {"--help"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"-h"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"--help"}, CfgAion.inst()));
     }
 
     /** Ensures that the <i>-v</i> and <i>--version</i> arguments do not fail. */
     @Test
     public void testVersion() {
-        assertEquals(0, cli.call(new String[] {"-v"}, CfgAion.inst()));
-        assertEquals(0, cli.call(new String[] {"--version"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"-v"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"--version"}, CfgAion.inst()));
     }
 
     /** Ensures that the <i>-i</i> and <i>--info</i> arguments do not fail. */
     @Test
     public void testInfo() {
-        assertEquals(0, cli.call(new String[] {"-i"}, CfgAion.inst()));
-        assertEquals(0, cli.call(new String[] {"--info"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"-i"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"--info"}, CfgAion.inst()));
     }
 
     /** Ensures correct behavior for the <i>-c</i> and <i>--config</i> arguments. */
     @Test
     public void testConfig() {
         // compatibility with old kernels
-        assertEquals(0, cli.call(new String[] {"-c"}, CfgAion.inst()));
-        assertEquals(0, cli.call(new String[] {"--config"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"-c"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"--config"}, CfgAion.inst()));
 
         // available networks
         for (Cli.Network net : Cli.Network.values()) {
-            assertEquals(0, cli.call(new String[] {"-c", net.toString()}, CfgAion.inst()));
-            assertEquals(0, cli.call(new String[] {"--config", net.toString()}, CfgAion.inst()));
+            assertEquals(EXIT, cli.call(new String[] {"-c", net.toString()}, CfgAion.inst()));
+            assertEquals(EXIT, cli.call(new String[] {"--config", net.toString()}, CfgAion.inst()));
         }
 
         // accepted alias
-        assertEquals(0, cli.call(new String[] {"-c", "testnet"}, CfgAion.inst()));
-        assertEquals(0, cli.call(new String[] {"--config", "testnet"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"-c", "testnet"}, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(new String[] {"--config", "testnet"}, CfgAion.inst()));
 
         // incorrect value
-        assertEquals(1, cli.call(new String[] {"-c", "random"}, CfgAion.inst()));
-        assertEquals(1, cli.call(new String[] {"--config", "random"}, CfgAion.inst()));
+        assertEquals(ERROR, cli.call(new String[] {"-c", "random"}, CfgAion.inst()));
+        assertEquals(ERROR, cli.call(new String[] {"--config", "random"}, CfgAion.inst()));
     }
 
     /** Tests the -a create arguments do not fail. */
     @Test
     public void testCreateAccount() {
         String args[] = {"-a", "create"};
-        assertEquals(0, cli.call(args, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
     }
 
     /** Tests the -a list arguments do not fail. */
     @Test
     public void testListAccounts() {
         String args[] = {"-a", "list"};
-        assertEquals(0, cli.call(args, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
     }
 
     /** Tests the -a export arguments do not fail on a valid account. */
@@ -138,7 +139,7 @@ public class CliTest {
         String account = Keystore.create("password");
 
         String[] args = {"-a", "export", account};
-        assertEquals(0, cli.call(args, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
     }
 
     /**
@@ -151,7 +152,7 @@ public class CliTest {
         String substrAcc = account.substring(1);
 
         String[] args = {"-a", "export", substrAcc};
-        assertEquals(1, cli.call(args, CfgAion.inst()));
+        assertEquals(ERROR, cli.call(args, CfgAion.inst()));
     }
 
     /** Tests the -a import arguments do not fail on a fail import key. */
@@ -160,7 +161,7 @@ public class CliTest {
         ECKey key = ECKeyFac.inst().create();
 
         String[] args = {"-a", "import", Hex.toHexString(key.getPrivKeyBytes())};
-        assertEquals(0, cli.call(args, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
     }
 
     /** Tests the -a import arguments fail when a non-private key is supplied. */
@@ -169,7 +170,7 @@ public class CliTest {
         String account = Keystore.create("password");
 
         String[] args = {"-a", "import", account};
-        assertEquals(1, cli.call(args, CfgAion.inst()));
+        assertEquals(ERROR, cli.call(args, CfgAion.inst()));
     }
 
     /** Tests the -a import arguments do not fail when a valid private key is supplied. */
@@ -181,7 +182,7 @@ public class CliTest {
         System.out.println("Original private key: " + Hex.toHexString(key.getPrivKeyBytes()));
 
         String[] args = {"-a", "import", Hex.toHexString(key.getPrivKeyBytes())};
-        assertEquals(0, cli.call(args, CfgAion.inst()));
+        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
 
         ECKey key2 = Keystore.getKey(Hex.toHexString(key.getAddress()), "password");
         System.out.println("Imported address    : " + Hex.toHexString(key2.getAddress()));
@@ -193,7 +194,7 @@ public class CliTest {
     @Test
     public void testImportPrivateKeyWrong() {
         String[] args = {"-a", "import", "hello"};
-        assertEquals(1, cli.call(args, CfgAion.inst()));
+        assertEquals(ERROR, cli.call(args, CfgAion.inst()));
     }
 
     /**
@@ -219,23 +220,23 @@ public class CliTest {
         System.out.println(logOG + " " + dbOG);
 
         System.out.println("Invalid Datadir:");
-        assertEquals(1, cli.call(networkArgs[0], cfg));
-        assertEquals(1, cli.call(networkArgs[1], cfg));
-        assertEquals(1, cli.call(networkArgs[2], cfg));
+        assertEquals(ERROR, cli.call(networkArgs[0], cfg));
+        assertEquals(ERROR, cli.call(networkArgs[1], cfg));
+        assertEquals(ERROR, cli.call(networkArgs[2], cfg));
 
         cfg.getLog().setLogPath(logOG);
         cfg.getDb().setPath(dbOG);
         System.out.println(cfg.getLog().getLogPath() + " " + cfg.getDb().getPath());
 
         System.out.println("\nValid Datadir 1: " + networkArgs[3][1]);
-        assertEquals(2, cli.call(networkArgs[3], cfg));
+        assertEquals(RUN, cli.call(networkArgs[3], cfg));
         assertEquals("aaaaaaaa/mainnet/database", cfg.getDb().getPath());
         assertEquals("aaaaaaaa/mainnet/log", cfg.getLog().getLogPath());
         assertEquals(BASE_PATH + "/aaaaaaaa/mainnet/keystore", Keystore.getKeystorePath());
         printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nValid Datadir 2: " + networkArgs[4][1]);
-        assertEquals(2, cli.call(networkArgs[4], cfg));
+        assertEquals(RUN, cli.call(networkArgs[4], cfg));
         assertEquals("abbbbbbb/mainnet/database", cfg.getDb().getPath());
         assertEquals("abbbbbbb/mainnet/log", cfg.getLog().getLogPath());
         assertEquals(BASE_PATH + "/abbbbbbb/mainnet/keystore", Keystore.getKeystorePath());
@@ -262,26 +263,26 @@ public class CliTest {
         Cli cli = new Cli();
 
         System.out.println("Invalid Networks:");
-        assertEquals(1, cli.call(networkArgs[0], cfg));
-        assertEquals(1, cli.call(networkArgs[1], cfg));
-        assertEquals(1, cli.call(networkArgs[2], cfg));
+        assertEquals(ERROR, cli.call(networkArgs[0], cfg));
+        assertEquals(ERROR, cli.call(networkArgs[1], cfg));
+        assertEquals(ERROR, cli.call(networkArgs[2], cfg));
 
         System.out.println("\nValid Network 1: " + networkArgs[3][1]);
-        assertEquals(2, cli.call(networkArgs[3], cfg));
+        assertEquals(RUN, cli.call(networkArgs[3], cfg));
         assertEquals("mainnet", CfgAion.getNetwork());
         assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath());
         assertEquals(BASE_PATH + "/config/mainnet/genesis.json", CfgAion.getGenesisFilePath());
         printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nValid Network 2: " + networkArgs[4][1]);
-        assertEquals(2, cli.call(networkArgs[4], cfg));
+        assertEquals(RUN, cli.call(networkArgs[4], cfg));
         assertEquals("conquest", CfgAion.getNetwork());
         assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath());
         assertEquals(BASE_PATH + "/config/conquest/genesis.json", CfgAion.getGenesisFilePath());
         printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nValid Network 3: " + networkArgs[5][1]);
-        assertEquals(2, cli.call(networkArgs[5], cfg));
+        assertEquals(RUN, cli.call(networkArgs[5], cfg));
         assertEquals("conquest", CfgAion.getNetwork());
         assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath());
         assertEquals(BASE_PATH + "/config/conquest/genesis.json", CfgAion.getGenesisFilePath());
@@ -308,7 +309,7 @@ public class CliTest {
         Cfg cfg = CfgAion.inst();
 
         System.out.println("\nNew 1: " + multiArgs[0][1] + " " + multiArgs[0][3]);
-        assertEquals(2, cli.call(multiArgs[0], cfg));
+        assertEquals(RUN, cli.call(multiArgs[0], cfg));
         assertEquals("mainnet", CfgAion.getNetwork());
         assertEquals("aaaaaaaa/mainnet/log", cfg.getLog().getLogPath());
         assertEquals("aaaaaaaa/mainnet/database", cfg.getDb().getPath());
@@ -316,7 +317,7 @@ public class CliTest {
         printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nNew 2: " + multiArgs[1][1] + " " + multiArgs[1][3]);
-        assertEquals(2, cli.call(multiArgs[1], cfg));
+        assertEquals(RUN, cli.call(multiArgs[1], cfg));
         assertEquals("conquest", CfgAion.getNetwork());
         assertEquals("abbbbbbb/conquest/log", cfg.getLog().getLogPath());
         assertEquals("abbbbbbb/conquest/database", cfg.getDb().getPath());
@@ -324,7 +325,7 @@ public class CliTest {
         printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nNew 3: " + multiArgs[2][1] + " " + multiArgs[2][3]);
-        assertEquals(2, cli.call(multiArgs[2], cfg));
+        assertEquals(RUN, cli.call(multiArgs[2], cfg));
         assertEquals("conquest", CfgAion.getNetwork());
         assertEquals("abcccccc/conquest/log", cfg.getLog().getLogPath());
         assertEquals("abcccccc/conquest/database", cfg.getDb().getPath());
@@ -332,7 +333,7 @@ public class CliTest {
         printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\n Exist 1: " + multiArgs[3][1] + " " + multiArgs[3][3]);
-        assertEquals(2, cli.call(multiArgs[3], cfg));
+        assertEquals(RUN, cli.call(multiArgs[3], cfg));
         assertEquals("conquest", CfgAion.getNetwork());
         assertEquals("aaaaaaaa/conquest/log", cfg.getLog().getLogPath());
         assertEquals("aaaaaaaa/conquest/database", cfg.getDb().getPath());
@@ -340,7 +341,7 @@ public class CliTest {
         printPaths(BASE_PATH, cfg, cli);
 
         System.out.println("\nExist 2: " + multiArgs[4][1] + " " + multiArgs[4][3]);
-        assertEquals(2, cli.call(multiArgs[4], cfg));
+        assertEquals(RUN, cli.call(multiArgs[4], cfg));
         assertEquals("conquest", CfgAion.getNetwork());
         assertEquals("aaaaaaaa/conquest/log", cfg.getLog().getLogPath());
         assertEquals("aaaaaaaa/conquest/database", cfg.getDb().getPath());
@@ -348,10 +349,10 @@ public class CliTest {
         printPaths(BASE_PATH, cfg, cli);
 
         // Invalid input
-        assertEquals(1, cli.call(multiArgs[5], cfg));
-        assertEquals(1, cli.call(multiArgs[6], cfg));
-        assertEquals(1, cli.call(multiArgs[7], cfg));
-        assertEquals(1, cli.call(multiArgs[8], cfg));
+        assertEquals(ERROR, cli.call(multiArgs[5], cfg));
+        assertEquals(ERROR, cli.call(multiArgs[6], cfg));
+        assertEquals(ERROR, cli.call(multiArgs[7], cfg));
+        assertEquals(ERROR, cli.call(multiArgs[8], cfg));
     }
 
     private void printPaths(String BASE_PATH, Cfg cfg, Cli cli) {
