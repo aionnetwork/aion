@@ -18,12 +18,12 @@ public class RpcMethods {
 
     /**
      * Creates a new instance of the RpcMethods class with the intersection of the enabled groups
-     * and the explicit enabled methods inside of it
+     * and the explicit enabled methods inside of it.
      * @param enabledGroups     Groups of APIs which should be enabled.
      * @param enabledMethods    API methods to explicitly enable in addition to the ones specified by
-     *                          the enabledGroups parameter
+     *                          the enabledGroups parameter.
      * @param disabledMethods   Methods which are explicitly disabled which will be removed from the
-     *                          combination of enabledGroups and enabledMethods
+     *                          combination of enabledGroups and enabledMethods.
      */
     public RpcMethods(
         final List<String> enabledGroups,
