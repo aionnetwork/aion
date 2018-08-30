@@ -262,12 +262,14 @@ public final class CfgApiRpc {
                 maxthread == cfgApiRpc.maxthread &&
                 filtersEnabled == cfgApiRpc.filtersEnabled &&
                 Objects.equal(ip, cfgApiRpc.ip) &&
-                Objects.equal(enabled, cfgApiRpc.enabled);
+                Objects.equal(enabled, cfgApiRpc.enabled) &&
+                Objects.equals(enabledMethods, cfg.enabledMethods) &&
+                Objects.equals(disabledMethods, cfg.disabledMethods);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(active, ip, port, enabled, corsEnabled, maxthread, filtersEnabled);
+        return Objects.hashCode(active, ip, port, enabled, enabledMethods, disabledMethods, corsEnabled, maxthread, filtersEnabled);
     }
   
     public CfgSsl getSsl() { return this.ssl; }
