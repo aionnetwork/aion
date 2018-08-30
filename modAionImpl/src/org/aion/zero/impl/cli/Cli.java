@@ -119,7 +119,8 @@ public class Cli {
         }
 
         try {
-            // the first set of options don't mix
+            // 1. the first set of options don't mix with -d and -n
+
             if (options.isHelp()) {
                 printHelp();
                 return EXIT;
@@ -134,17 +135,20 @@ public class Cli {
                 return EXIT;
             }
 
-            if (options.isInfo()) {
-                cfg.fromXML();
-                printInfo(cfg);
-                return EXIT;
+            // 2. determine the execution folder path
+
+            if (options.getDirectory() != null) {
+                setDirectory(options.getDirectory());
+                // no return -> allow for other parameters combined with -d
             }
+
+            // 3. can be influenced by the -d argument above
 
             if (options.getConfig() != null) {
                 String strNet = options.getConfig().toLowerCase();
 
                 if (strNet.isEmpty()) {
-                    // no network give; use default path
+                    // no network given; use default path
                     // for compatibility with old kernels
                     CfgAion.setNetwork(strNet);
                     File dir = new File(BASE_PATH + "/config");
@@ -166,75 +170,65 @@ public class Cli {
                         CfgAion.setConfFilePath(BASE_PATH + "/config/" + strNet + "/config.xml");
                         System.out.println("\nNew config generated for " + strNet + ".");
                     } else {
-                        System.out.println("\nInvalid network selected!");
-                        System.out.println("--- Available Networks ---");
-                        System.out.println("    mainnet, conquest");
-                        System.out.println("--------------------------");
-                        return ERROR;
+                        printInvalidNetwork();
+                        return ReturnType.ERROR;
                     }
                 }
 
                 cfg.fromXML();
                 cfg.setId(UUID.randomUUID().toString());
                 cfg.toXML(null);
-                return EXIT;
+                return ReturnType.EXIT;
             }
 
-            // the following options can be combined
-            cfg.fromXML();
+            // 4. determine the network configuration
+
+            if (options.getNetwork() != null) {
+                setNetwork(options.getConfig().toLowerCase());
+                // no return -> allow for other parameters combined with -n
+            }
+
+            // 5. options that can be influenced by the -d and -n arguments
+
+            if (options.isInfo()) {
+                cfg.fromXML();
+                printInfo(cfg);
+                return ReturnType.EXIT;
+            }
+
+            if (options.isCreateAccount()) {
+                if (!createAccount()) {
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
+            if (options.isListAccounts()) {
+                if (!listAccounts()) {
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
+            if (options.getExportAccount()!= null) {
+                if (!exportPrivateKey(options.getExportAccount())) {
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
+            if (options.getImportAccount()!= null) {
+                if (!importPrivateKey(options.getImportAccount())) {
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
 
             switch (args[0].toLowerCase()) {
-                case "-a":
-
-                    int index = 0;
-                    boolean multi = false;
-
-                    if (args.length < 2) {
-                        printHelp();
-                        return ERROR;
-                    } else {
-                        while (index < args.length) {
-                            if(args[index].equals("-d")||args[index].equals("-n")||args[index].equals("--datadir")||args[index].equals("--network")) {
-                                multi = true;
-                                break;
-                            }
-                            index++;
-                        }
-                    }
-
-                    // Switches datadir && network
-                    if(multi) {
-                        String[] newArgs = Arrays.copyOfRange(args, index, args.length);
-                        call(newArgs, cfg);
-                    }
-
-
-                    switch (args[1]) {
-                        case "create":
-                            if (!createAccount()) {
-                                return ERROR;
-                            }
-                            break;
-                        case "list":
-                            if (!listAccounts()) {
-                                return ERROR;
-                            }
-                            break;
-                        case "export":
-                            if (args.length < 3 || !exportPrivateKey(args[2])) {
-                                return ERROR;
-                            }
-                            break;
-                        case "import":
-                            if (args.length < 3 || !importPrivateKey(args[2])) {
-                                return ERROR;
-                            }
-                            break;
-                        default:
-                            printHelp();
-                            return ERROR;
-                    }
-                    break;
                 case "-s":
                     if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
                         createKeystoreDirIfMissing();
@@ -493,6 +487,14 @@ public class Cli {
         return EXIT;
     }
 
+    private void setDirectory(String directory) {
+        // TODO
+    }
+
+    private void setNetwork(String network) {
+        // TODO
+    }
+
     /** Print the CLI help info. */
     private void printHelp() {
         String usage = parser.getUsageMessage();
@@ -552,6 +554,13 @@ public class Cli {
                 net = null;
         }
         return net;
+    }
+
+    private void printInvalidNetwork(){
+        System.out.println("\nInvalid network selected!\n");
+        System.out.println("--- Available Networks ---");
+        System.out.println("    mainnet, conquest");
+        System.out.println("--------------------------\n");
     }
 
     /**
