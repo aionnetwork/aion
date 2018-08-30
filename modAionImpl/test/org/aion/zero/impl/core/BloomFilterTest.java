@@ -73,6 +73,14 @@ public class BloomFilterTest {
     }
 
     @Test
+    public void testContainsEvent2() {
+        String evt = "Created(uint128,address)";
+        byte[] someEvent = HashUtil.h256(evt.getBytes());
+        Bloom bloom = BloomFilter.create(someEvent);
+        assertThat(BloomFilter.containsEvent(bloom, someEvent)).isTrue();
+    }
+
+    @Test
     public void testCompositeBloomFiltering() {
         Address addr = new Address("BEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEFFFF");
         byte[] someEvent = HashUtil.h256(BigInteger.ONE.toByteArray());
