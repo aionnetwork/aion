@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author chris lin, ali sharif
@@ -105,7 +106,7 @@ public final class CfgApiRpc {
                         case "apis-enabled":
                             String cs = Cfg.readValue(sr).trim();
                             this.enabled = new ArrayList<>(
-                                    Stream.of(cs.split(","))
+                                    Stream.of(StringUtils.splitByWholeSeparator(cs,","))
                                     .map(String::trim)
                                     .collect(Collectors.toList())
                             );
@@ -113,7 +114,7 @@ public final class CfgApiRpc {
                         case "api-methods-enabled":
                             String enabledMethods = Cfg.readValue(sr).trim();
                             this.enabledMethods = new ArrayList<>(
-                                Stream.of(enabledMethods.split(","))
+                                Stream.of(StringUtils.splitByWholeSeparator(enabledMethods,","))
                                     .map(String::trim)
                                     .collect(Collectors.toList())
                             );
@@ -121,7 +122,7 @@ public final class CfgApiRpc {
                         case "api-methods-disabled":
                             String disabledMethods = Cfg.readValue(sr).trim();
                             this.disabledMethods = new ArrayList<>(
-                                Stream.of(disabledMethods.split(","))
+                                Stream.of(StringUtils.splitByWholeSeparator(disabledMethods,","))
                                     .map(String::trim)
                                     .collect(Collectors.toList())
                             );
