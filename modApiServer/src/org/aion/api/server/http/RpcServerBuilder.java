@@ -60,13 +60,13 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
     }
 
     public T enableMethods(List<String> enabledMethods) {
-        // empty List is a valid input here.
+        // Empty List or null are valid input here.
         this.enabledMethods = Objects.requireNonNullElse(enabledMethods, new ArrayList<>());
         return self();
     }
 
     public T disableMethods(List<String> disabledMethods) {
-        // empty List is a valid input here.
+        // Empty List or null are valid input here.
         this.disabledMethods = Objects.requireNonNullElse(disabledMethods, new ArrayList<>());
         return self();
     }

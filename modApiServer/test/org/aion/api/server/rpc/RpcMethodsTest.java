@@ -10,7 +10,7 @@ import java.util.List;
 public class RpcMethodsTest {
     @BeforeClass
     public static void setup() {
-        // Initialize this instance at the start
+        // Initialize this instance at the start to make the tests run a little faster
         AionImpl.inst();
     }
 
@@ -86,7 +86,7 @@ public class RpcMethodsTest {
         List<String> disabledMethods = Arrays.asList(CLIENT_VERSION);
         methods = new RpcMethods(enabledGroups, EMPTY, disabledMethods);
 
-        // web3_clientVersion should be disbled
+        // web3_clientVersion should be disabled
         Assert.assertNull(methods.get(CLIENT_VERSION));
 
         // sha3 should still be around because it was added by the group

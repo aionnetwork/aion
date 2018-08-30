@@ -5,7 +5,6 @@ import org.aion.log.LogEnum;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,27 +59,24 @@ public class RpcMethods {
         api.shutdown();
     }
 
-    private Map<String, RpcMethod> composite(List<String> groups,
+    private Map<String, RpcMethod> composite(final List<String> groups,
                                              final List<String> enabledMethods,
                                              final List<String> disabledMethods) {
 
         Map<String, RpcMethod> composite = new HashMap<>();
 
-        // add the ping endpoint by default
+        // Add the ping endpoint by default
         composite.putAll(ping);
 
         // Add all the methods which are defined by the groups
         for(String group : groups) {
-            Map<String, RpcMethod> g = null;
-            try {
-                g = groupMap.get(group.toLowerCase());
-            } catch (Exception e) {
-                LOG.debug("rpc-methods - unable to recognize api group name: " + group);
-                continue;
-            }
-            // ok to have overlapping method key strings (as long as they also map to the same function)
-            if (g != null)
+            Map<String, RpcMethod> g = groupMap.get(group.toLowerCase());
+            if (g == null) {
+                LOG.debug("rpc-methods - unable to recognize api group name: '{}'", group);
+            } else {
+                // ok to have overlapping method key strings (as long as they also map to the same function)
                 composite.putAll(g);
+            }
         }
 
         // Create a map combining all the available groups
@@ -94,7 +90,7 @@ public class RpcMethods {
             if (allMethods.containsKey(enabledMethod)) {
                 composite.put(enabledMethod, allMethods.get(enabledMethod));
             } else {
-                LOG.warn("Attempted to enable unknown RPC method '{}'", enabledMethod);
+                LOG.warn("rpc-methods - Attempted to enable unknown RPC method '{}'", enabledMethod);
             }
         }
 
@@ -105,14 +101,13 @@ public class RpcMethods {
                 composite.remove(disabledMethod);
             } else if (!allMethods.containsKey(disabledMethod)) {
                 // Log a warning if this RPC method is not known
-                LOG.warn("Attempted to disable unknown RPC method '{}'", disabledMethod);
+                LOG.warn("rpc-methods - Attempted to disable unknown RPC method '{}'", disabledMethod);
             }
         }
 
 
         return composite;
     }
-
 
     // jdk8 lambdas infer interface method, making our constant declaration pretty.
     public interface RpcMethod {
