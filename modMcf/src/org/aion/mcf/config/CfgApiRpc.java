@@ -34,10 +34,8 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * @author chris lin, ali sharif
@@ -106,24 +104,27 @@ public final class CfgApiRpc {
                         case "apis-enabled":
                             String cs = Cfg.readValue(sr).trim();
                             this.enabled = new ArrayList<>(
-                                    Stream.of(StringUtils.splitByWholeSeparator(cs,","))
+                                    Stream.of(cs.split(","))
                                     .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
                                     .collect(Collectors.toList())
                             );
                             break;
                         case "api-methods-enabled":
                             String enabledMethods = Cfg.readValue(sr).trim();
                             this.enabledMethods = new ArrayList<>(
-                                Stream.of(StringUtils.splitByWholeSeparator(enabledMethods,","))
+                                Stream.of(enabledMethods.split(","))
                                     .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
                                     .collect(Collectors.toList())
                             );
                             break;
                         case "api-methods-disabled":
                             String disabledMethods = Cfg.readValue(sr).trim();
                             this.disabledMethods = new ArrayList<>(
-                                Stream.of(StringUtils.splitByWholeSeparator(disabledMethods,","))
+                                Stream.of(disabledMethods.split(","))
                                     .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
                                     .collect(Collectors.toList())
                             );
                             break;
@@ -264,8 +265,8 @@ public final class CfgApiRpc {
                 filtersEnabled == cfgApiRpc.filtersEnabled &&
                 Objects.equal(ip, cfgApiRpc.ip) &&
                 Objects.equal(enabled, cfgApiRpc.enabled) &&
-                Objects.equals(enabledMethods, cfg.enabledMethods) &&
-                Objects.equals(disabledMethods, cfg.disabledMethods);
+                Objects.equal(enabledMethods, cfgApiRpc.enabledMethods) &&
+                Objects.equal(disabledMethods, cfgApiRpc.disabledMethods);
     }
 
     @Override
