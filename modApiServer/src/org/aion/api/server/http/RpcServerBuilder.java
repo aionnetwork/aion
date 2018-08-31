@@ -9,6 +9,7 @@ import java.util.Objects;
  * 1. It assumes that false is a reasonable default for sslEnabled and corsEnabled.
  * 2. It assumes empty array for enabledEndpoints is a reasonable default
  * 3. It assumes "*" is a reasonable default for corsOrigin
+ * 4. Any "unset" objects get initialized to null
  */
 public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
 
@@ -29,7 +30,10 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
     String sslCertPath;
     char[] sslCertPass;
 
-    Integer workerPoolSize;
+    Integer workerPoolSize = null;
+    Integer ioPoolSize = null;
+    Integer requestQueueSize = null;
+    boolean stuckThreadDetectorEnabled = false;
 
     public T setUrl(String hostName, int port) {
         this.hostName = Objects.requireNonNull(hostName);
@@ -81,7 +85,21 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
 
     public T setWorkerPoolSize(Integer workerPoolSize) {
         this.workerPoolSize = workerPoolSize;
+        return self();
+    }
 
+    public T setIoPoolSize(Integer x) {
+        this.ioPoolSize = x;
+        return self();
+    }
+
+    public T setRequestQueueSize(Integer x) {
+        this.requestQueueSize = x;
+        return self();
+    }
+
+    public T setStuckThreadDetectorEnabled(boolean x) {
+        this.stuckThreadDetectorEnabled = x;
         return self();
     }
 

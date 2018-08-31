@@ -1,10 +1,12 @@
 package org.aion.api.server.http;
 
 import org.aion.api.server.rpc.RpcProcessor;
-import org.aion.zero.impl.config.CfgAion;
 
 import java.io.File;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public abstract class RpcServer {
 
@@ -20,8 +22,15 @@ public abstract class RpcServer {
     protected String sslCertCanonicalPath;
     protected char[] sslCertPass;
 
-    // want to explicitly force user of this class to check for null value here.
+    protected boolean stuckThreadDetectorEnabled;
+
+    /**
+     * to explicitly force any subclasses to check for null values, access to the following variables is
+     * restricted through protected accessor methods
+     */
     private Integer workerPoolSize;
+    private Integer ioPoolSize;
+    private Integer requestQueueSize;
 
     protected RpcServer(RpcServerBuilder<?> builder) {
         // everything exposed by the builder is immutable, except for the List<String> & char[] sslCertPass
@@ -53,12 +62,18 @@ public abstract class RpcServer {
             //we want to mutate it later ourselves, so store original reference
             sslCertPass = Objects.requireNonNull(builder.sslCertPass);
         }
-        // if worker pool size is null => select best size based on system
+
+        // if worker & io pool size is null => select best size based on system
         workerPoolSize = builder.workerPoolSize;
+        ioPoolSize = builder.ioPoolSize;
+        requestQueueSize = builder.requestQueueSize;
+        stuckThreadDetectorEnabled = builder.stuckThreadDetectorEnabled;
     }
 
-    // want to explicitly force user of this class to check for null value here.
+    // want to explicitly force user of this class to check for null values here.
     protected Optional<Integer> getWorkerPoolSize() { return Optional.ofNullable(workerPoolSize); }
+    protected Optional<Integer> getIoPoolSize() { return Optional.ofNullable(ioPoolSize); }
+    protected Optional<Integer> getRequestQueueSize() { return Optional.ofNullable(requestQueueSize); }
 
     public abstract void start();
     public abstract void stop();

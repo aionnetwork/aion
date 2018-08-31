@@ -33,8 +33,8 @@ import javax.net.ssl.KeyManagerFactory;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -43,13 +43,12 @@ public class NanoRpcServer extends RpcServer {
 
     private AionHttpd server;
     private ExecutorService workers;
-    private static final int REQ_QUEUE_CAPACITY = 200;
 
     private final Map<String, String> CORS_HEADERS = Map.of(
             "Access-Control-Allow-Origin", corsOrigin,
             "Access-Control-Allow-Headers", "origin,accept,content-type",
             "Access-Control-Allow-Credentials", "true",
-            "Access-Control-Allow-Methods", "POST",
+            "Access-Control-Allow-Methods", "POST,OPTIONS",
             "Access-Control-Max-Age", "86400"
     );
 
@@ -67,7 +66,7 @@ public class NanoRpcServer extends RpcServer {
         super(builder);
     }
 
-    public void makeSecure() throws Exception {
+    private void makeSecure() throws Exception {
         if (server == null)
             throw new IllegalStateException("Server not instantiated; valid instance required to enable ssl.");
 
@@ -93,24 +92,42 @@ public class NanoRpcServer extends RpcServer {
     @Override
     public void start() {
         try {
-            // default to 1 thread to minimize resource consumption by nano http
-            int tCount = 1;
+            /*
+             * default to cpu_count * 8 threads. java http servers, particularly with the servlet-type processing model
+             * (jetty, tomcat, etc.) generally default to 200-1000 count thread pools
+             *
+             * rationale: if the user want's to restrict the worker pool size, they can manually override it
+             */
+            int tCount;
             if (getWorkerPoolSize().isPresent())
                 tCount = getWorkerPoolSize().get();
+            else
+                tCount = Math.max(Runtime.getRuntime().availableProcessors(), 2) * 8;
 
-            // create fixed thread pool of size defined by user
-            workers = new ThreadPoolExecutor(tCount, tCount, 1, TimeUnit.MINUTES,
-                    new ArrayBlockingQueue<>(REQ_QUEUE_CAPACITY), new AionHttpdThreadFactory());
+            // For unbounded queues, LinkedBlockingQueue is ideal, due to it's linked-list based impl.
+            workers = new ThreadPoolExecutor(tCount, tCount, 10, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>(), new AionHttpdThreadFactory());
 
             server = new AionHttpd(hostName, port, rpcProcessor, corsEnabled, CORS_HEADERS);
             server.setAsyncRunner(new BoundRunner(workers));
-
+            
             if (this.sslEnabled)
                 makeSecure();
 
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
 
             LOG.info("<rpc-server - (NANO) started on {}://{}:{}>", sslEnabled ? "https" : "http", hostName, port);
+
+            LOG.debug("------------------------------------");
+            LOG.debug("NANO RPC Server Started with Options");
+            LOG.debug("------------------------------------");
+            LOG.debug("SSL: {}", sslEnabled ? "Enabled; Certificate = "+sslCertCanonicalPath : "Not Enabled");
+            LOG.debug("CORS: {}", corsEnabled ? "Enabled; Allowed Origins = \""+corsOrigin+"\"" : "Not Enabled");
+            LOG.debug("Worker Thread Count: {}", tCount);
+            LOG.debug("I/O Thread Count: Not Applicable");
+            LOG.debug("Request Queue Size: Unbounded");
+            LOG.debug("------------------------------------");
+
         } catch (Exception e) {
             LOG.error("<rpc-server - failed bind on {}:{}>", hostName, port);
             LOG.error("<rpc-server - " + e.getMessage() + ">");
