@@ -21,6 +21,7 @@
 package org.aion.mcf.db;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
+import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -68,6 +69,7 @@ public abstract class AbstractRepository<
 
     protected static final String INDEX_DB = CfgDb.Names.INDEX;
     protected static final String BLOCK_DB = CfgDb.Names.BLOCK;
+    protected static final String PENDING_BLOCK_DB = CfgDb.Names.PENDING_BLOCK;
     protected static final String DETAILS_DB = CfgDb.Names.DETAILS;
     protected static final String STORAGE_DB = CfgDb.Names.STORAGE;
     protected static final String STATE_DB = CfgDb.Names.STATE;
@@ -111,6 +113,9 @@ public abstract class AbstractRepository<
 
     // Current blockstore.
     public BSB blockStore;
+
+    // pending block store
+    protected Properties pendingStoreProperties;
 
     // Flag to see if the current instance is a snapshot.
     protected boolean isSnapshot = false;
@@ -191,7 +196,7 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, STATE_DB);
-            this.stateDatabase = connectAndOpen(sharedProps);
+            this.stateDatabase = connectAndOpen(sharedProps, LOG);
             databaseGroup.add(stateDatabase);
 
             // getting transaction specific properties
@@ -199,7 +204,7 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, TRANSACTION_DB);
-            this.transactionDatabase = connectAndOpen(sharedProps);
+            this.transactionDatabase = connectAndOpen(sharedProps, LOG);
             databaseGroup.add(transactionDatabase);
 
             // getting details specific properties
@@ -207,7 +212,7 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, DETAILS_DB);
-            this.detailsDatabase = connectAndOpen(sharedProps);
+            this.detailsDatabase = connectAndOpen(sharedProps, LOG);
             databaseGroup.add(detailsDatabase);
 
             // getting storage specific properties
@@ -215,7 +220,7 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, STORAGE_DB);
-            this.storageDatabase = connectAndOpen(sharedProps);
+            this.storageDatabase = connectAndOpen(sharedProps, LOG);
             databaseGroup.add(storageDatabase);
 
             // getting index specific properties
@@ -223,7 +228,7 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, INDEX_DB);
-            this.indexDatabase = connectAndOpen(sharedProps);
+            this.indexDatabase = connectAndOpen(sharedProps, LOG);
             databaseGroup.add(indexDatabase);
 
             // getting block specific properties
@@ -231,15 +236,19 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, BLOCK_DB);
-            this.blockDatabase = connectAndOpen(sharedProps);
+            this.blockDatabase = connectAndOpen(sharedProps, LOG);
             databaseGroup.add(blockDatabase);
+
+            // using block specific properties
+            sharedProps.setProperty(Props.DB_NAME, PENDING_BLOCK_DB);
+            this.pendingStoreProperties = sharedProps;
 
             // getting pending tx pool specific properties
             sharedProps = cfg.getDatabaseConfig(PENDING_TX_POOL_DB);
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, PENDING_TX_POOL_DB);
-            this.txPoolDatabase = connectAndOpen(sharedProps);
+            this.txPoolDatabase = connectAndOpen(sharedProps, LOG);
             databaseGroup.add(txPoolDatabase);
 
             // getting pending tx cache specific properties
@@ -247,7 +256,7 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, PENDING_TX_CACHE_DB);
-            this.pendingTxCacheDatabase = connectAndOpen(sharedProps);
+            this.pendingTxCacheDatabase = connectAndOpen(sharedProps, LOG);
             databaseGroup.add(pendingTxCacheDatabase);
 
             // Setup the cache for transaction data source.
@@ -264,7 +273,7 @@ public abstract class AbstractRepository<
                 sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
                 sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
                 sharedProps.setProperty(Props.DB_NAME, STATE_ARCHIVE_DB);
-                this.stateArchiveDatabase = connectAndOpen(sharedProps);
+                this.stateArchiveDatabase = connectAndOpen(sharedProps, LOG);
                 databaseGroup.add(stateArchiveDatabase);
 
                 stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
@@ -298,32 +307,6 @@ public abstract class AbstractRepository<
     @Override
     public boolean isClosed() {
         return stateDatabase == null;
-    }
-
-    private IByteArrayKeyValueDatabase connectAndOpen(Properties info) {
-        // get the database object
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(info, LOG.isDebugEnabled());
-
-        // open the database connection
-        db.open();
-
-        // check object status
-        if (db == null) {
-            LOG.error(
-                    "Database <{}> connection could not be established for <{}>.",
-                    info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
-        }
-
-        // check persistence status
-        if (!db.isCreatedOnDisk()) {
-            LOG.error(
-                    "Database <{}> cannot be saved to disk for <{}>.",
-                    info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
-        }
-
-        return db;
     }
 
     @Override

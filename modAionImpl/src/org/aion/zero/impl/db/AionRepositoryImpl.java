@@ -62,6 +62,9 @@ public class AionRepositoryImpl
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
 
+    // pending block store
+    protected PendingBlockStore pendingStore;
+
     /**
      * used by getSnapShotTo
      *
@@ -108,11 +111,17 @@ public class AionRepositoryImpl
             // Setup block store.
             this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity);
 
+            this.pendingStore = new PendingBlockStore(pendingStoreProperties);
+
             // Setup world trie.
             worldState = createStateTrie();
         } catch (Exception e) { // TODO - If any of the connections failed.
             LOG.error("Unable to initialize repository.", e);
         }
+    }
+
+    public PendingBlockStore getPendingBlockStore() {
+        return this.pendingStore;
     }
 
     /** @implNote The transaction store is not locked within the repository implementation. */
@@ -675,6 +684,16 @@ public class AionRepositoryImpl
                 }
             } catch (Exception e) {
                 LOGGEN.error("Exception occurred while closing the block store.", e);
+            }
+
+            try {
+                if (pendingStore != null) {
+                    pendingStore.close();
+                    LOGGEN.info("Pending block store closed.");
+                    pendingStore = null;
+                }
+            } catch (Exception e) {
+                LOGGEN.error("Exception occurred while closing the pending block store.", e);
             }
 
             try {
