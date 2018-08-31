@@ -216,9 +216,7 @@ public class ApiWeb3Aion extends ApiAion {
         isFilterEnabled = CfgAion.inst().getApi().getRpc().isFiltersEnabled();
         isSeedMode = CfgAion.inst().getConsensus().isSeed();
 
-        //TODO: do we really need an NRG oracle for web3 impl?
-        if (_ac instanceof IChainInstancePOW)
-            initNrgOracle((IChainInstancePOW)_ac);
+        initNrgOracle(_ac);
 
         if (isFilterEnabled) {
             evtMgr = this.ac.getAionHub().getEventMgr();
