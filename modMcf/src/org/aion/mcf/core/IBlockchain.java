@@ -24,9 +24,11 @@ package org.aion.mcf.core;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
@@ -59,6 +61,16 @@ public interface IBlockchain<
     ImportResult tryToConnect(BLK block);
 
     void storeBlock(BLK block, List<TR> receipts);
+
+    boolean storePendingBlock(BLK block);
+
+    int storePendingBlockRange(List<BLK> blocks);
+
+    Map<ByteArrayWrapper, List<BLK>> loadPendingBlocksAtLevel(long level);
+
+    long nextBase(long current);
+
+    void dropImported(long level, List<ByteArrayWrapper> queues, Map<ByteArrayWrapper, List<BLK>> blocks);
 
     void setBestBlock(BLK block);
 
