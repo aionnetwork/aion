@@ -2,10 +2,10 @@ package org.aion.api.server.nrgprice.strategy;
 
 import org.aion.api.server.nrgprice.NrgPriceAdvisor;
 import org.aion.base.type.Address;
+import org.aion.base.type.IBlock;
+import org.aion.base.type.ITransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -28,7 +28,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  *
  * @author ali sharif
  */
-public class NrgBlockPrice extends NrgPriceAdvisor<AionBlock, AionTransaction> {
+public class NrgBlockPrice extends NrgPriceAdvisor<IBlock, ITransaction> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
     private ArrayBlockingQueue<Long> blkPriceQ;
@@ -75,16 +75,16 @@ public class NrgBlockPrice extends NrgPriceAdvisor<AionBlock, AionTransaction> {
     // notion of "block price" = lowest gas price for all transactions in a block, exluding miner's own transactions
     // returns null if block is empty, invalid input, block filled only with miner's own transactions
     @SuppressWarnings("Duplicates")
-    private Long getBlkPrice(AionBlock blk) {
+    private Long getBlkPrice(IBlock blk) {
         if (blk == null)
             return null;
 
-        List<AionTransaction> txns = blk.getTransactionsList();
+        List<ITransaction> txns = blk.getTransactionsList();
         Address coinbase = blk.getCoinbase();
 
         // there is nothing stopping nrg price to be 0. don't explicitly enforce non-zero nrg.
         Long minNrg = null;
-        for(AionTransaction txn : txns) {
+        for(ITransaction txn : txns) {
             if (coinbase.compareTo(txn.getFrom()) != 0) {
                 long nrg = txn.getNrgPrice();
                 if (minNrg == null || nrg < minNrg)
@@ -107,7 +107,7 @@ public class NrgBlockPrice extends NrgPriceAdvisor<AionBlock, AionTransaction> {
     */
     @Override
     @SuppressWarnings("Duplicates")
-    public void processBlock(AionBlock blk) {
+    public void processBlock(IBlock blk) {
         if (blk == null) return;
 
         Long blkPrice = getBlkPrice(blk);
