@@ -101,6 +101,7 @@ public abstract class ApiAion extends Api {
     protected EventExecuteService ees;
 
     public ApiAion(final IGenericAionChain _ac) {
+        super(_ac);
         this.ac = _ac;
         this.installedFilters = new ConcurrentHashMap<>();
         this.fltrIndex = new AtomicLong(0);
@@ -740,6 +741,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getDefaultNrgLimit() {
+        //TODO: this should be in the config
         return 2_000_000L;
     }
 

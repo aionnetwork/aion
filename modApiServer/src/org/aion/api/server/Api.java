@@ -24,19 +24,18 @@
 package org.aion.api.server;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.aion.mcf.account.AccountManager;
-import org.aion.mcf.account.Keystore;
 import org.aion.api.server.types.CompiContrInfo;
 import org.aion.api.server.types.CompiledContr;
 import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
+import org.aion.generic.IGenericAionChain;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
-import org.aion.mcf.blockchain.IPendingState;
+import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
@@ -54,7 +53,11 @@ public abstract class Api<B extends IBlock<?, ?>> {
 
     private final AccountManager ACCOUNT_MANAGER = AccountManager.inst();
     private final Compiler solc = Compiler.getInstance();
-    protected final IPendingState pendingState;
+    protected final IPendingStateInternal pendingState;
+
+    protected Api(IGenericAionChain aionChain) {
+        this.pendingState = aionChain.getAionHub().getPendingState();
+    }
 
     // This is the constructor that should always be used, unless testing
     Api() {
