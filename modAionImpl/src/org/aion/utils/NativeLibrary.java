@@ -10,7 +10,8 @@ public enum NativeLibrary {
     EQUIHASH("equihash"),
     ZMQ("zmq"),
     BLAKE2B("blake2b"),
-    FASTVM("fastvm");
+    FASTVM("fastvm"),
+    SOLIDITY("solidity");
 
     private final String name;
     NativeLibrary(String name) {
