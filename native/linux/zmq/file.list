@@ -1,6 +1,2 @@
-libgcc_s.so.1
-libstdc++.so.6
-libpgm-5.2.so.0
-libnorm.so.1
 libzmq.so.5
 libjzmq.so

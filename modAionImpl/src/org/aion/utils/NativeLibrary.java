@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum NativeLibrary {
+    COMMON("common"),
     SODIUM("sodium"),
     EQUIHASH("equihash"),
     ZMQ("zmq"),
