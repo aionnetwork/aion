@@ -31,20 +31,19 @@ import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.Objects;
 
 import org.aion.base.type.Address;
-import org.aion.base.type.IPowBlockHeader;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Utils;
 import org.aion.crypto.HashUtil;
+import org.aion.mcf.types.IPowBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONObject;
+import org.spongycastle.util.BigIntegers;
 
 /**
  * aion zero block header class.
@@ -60,6 +59,19 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             RPL_BH_TIMESTAMP = 12, RPL_BH_NONCE = 13, RPL_BH_SOLUTION = 14;
 
     private byte[] mineHashBytes;
+
+    /*
+     * A scalar value corresponding to the difficulty level of this block. This
+     * can be calculated from the previous block’s difficulty level and the
+     * timestamp
+     */
+    protected byte[] difficulty;
+
+    /*
+     * A 256-bit hash which proves that a sufficient amount of computation has
+     * been carried out on this block
+     */
+    protected byte[] nonce;
 
     //TODO: Update this
     public JSONObject toJSON() {
@@ -232,6 +244,35 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         this.energyConsumed = energyConsumed;
         this.energyLimit = energyLimit;
     }
+
+    public byte[] getDifficulty() {
+        return difficulty;
+    }
+
+    public BigInteger getDifficultyBI() {
+        return new BigInteger(1, difficulty);
+    }
+
+    public void setDifficulty(byte[] difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    public byte[] getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(byte[] nonce) {
+        this.nonce = nonce;
+    }
+
+    public byte[] getPowBoundary() {
+        return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
+    }
+
+    public BigInteger getPowBoundaryBI() {
+        return BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI());
+    }
+
 
     public byte[] getHash() {
         return HashUtil.h256(getEncoded());

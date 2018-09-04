@@ -31,7 +31,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Event Hub.
  */
-public class EventHub<D extends EvtData> {
+public class EventHub<D> {
 
     List<EvtCb<D>> subs[];
 

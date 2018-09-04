@@ -60,7 +60,7 @@ import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.db.IBlockStorePow;
+import org.aion.zero.db.IBlockStorePow;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.manager.ChainStatistics;
 import org.aion.mcf.trie.Trie;

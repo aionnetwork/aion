@@ -115,6 +115,7 @@ import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.zero.impl.blockchain.IChainInstancePOW;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.config.CfgConsensusPow;
 import org.aion.zero.impl.config.CfgEnergyStrategy;
@@ -218,7 +219,7 @@ public class ApiWeb3Aion extends ApiAion {
         */
     }
 
-    public ApiWeb3Aion(final IAionChain _ac) {
+    public ApiWeb3Aion(final IChainInstancePOW _ac) {
         super(_ac);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
         templateMap = new HashMap<>();

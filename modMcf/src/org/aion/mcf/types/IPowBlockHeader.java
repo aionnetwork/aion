@@ -32,7 +32,9 @@
  *     Zcash project team.
  *     Bitcoinj team.
  ******************************************************************************/
-package org.aion.base.type;
+package org.aion.mcf.types;
+
+import org.aion.base.type.IBlockHeader;
 
 import java.math.BigInteger;
 
@@ -49,4 +51,8 @@ public interface IPowBlockHeader extends IBlockHeader {
     void setDifficulty(byte[] _diff);
 
     byte[] getPowBoundary();
+
+    byte[] getNonce();
+
+    void setNonce(byte[] _nc);
 }

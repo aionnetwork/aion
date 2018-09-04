@@ -30,6 +30,7 @@ import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxExecSummary;
 
+import org.aion.mcf.evt.IListenerBase;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
 

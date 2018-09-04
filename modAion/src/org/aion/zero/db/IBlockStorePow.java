@@ -21,11 +21,12 @@
  * Contributors:
  *     Aion foundation.
  ******************************************************************************/
-package org.aion.mcf.db;
+package org.aion.zero.db;
 
 import java.math.BigInteger;
 
 import org.aion.base.type.IBlock;
+import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.types.AbstractBlockHeader;
 
 /**

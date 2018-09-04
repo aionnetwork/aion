@@ -39,8 +39,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.aion.zero.api.BlockConstants;
-import org.aion.zero.impl.core.DiffCalc;
-import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.zero.types.A0BlockHeader;
 import org.junit.runner.RunWith;
 import org.junit.Before;
 import org.junit.Test;
@@ -67,10 +66,10 @@ public class OriginalDifficultyFunctionTest {
     }
 
     @Mock
-    protected AbstractBlockHeader mockHeader;
+    protected A0BlockHeader mockHeader;
 
     @Mock
-    protected AbstractBlockHeader parentMockHeader;
+    protected A0BlockHeader parentMockHeader;
     
     @Parameter
     public InputParameters inputParameters;

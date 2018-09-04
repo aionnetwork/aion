@@ -20,19 +20,19 @@
  *
  * Contributors:
  *     Aion foundation.
-
  ******************************************************************************/
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
 
 import org.aion.base.type.Address;
+import org.aion.base.type.IBlockHeader;
 import org.spongycastle.util.BigIntegers;
 
 /**
  * Abstract BlockHeader.
  */
-public abstract class AbstractBlockHeader {
+public abstract class AbstractBlockHeader implements IBlockHeader {
 
     public static final int NONCE_LENGTH = 32;
     public static final int SOLUTIONSIZE = 1408;
@@ -68,12 +68,7 @@ public abstract class AbstractBlockHeader {
 
     /* todo: comment it when you know what the fuck it is */
     protected byte[] logsBloom;
-    /*
-     * A scalar value corresponding to the difficulty level of this block. This
-     * can be calculated from the previous block’s difficulty level and the
-     * timestamp
-     */
-    protected byte[] difficulty;
+
 
     /*
      * A scalar value equal to the reasonable output of Unix's time() at this
@@ -92,18 +87,14 @@ public abstract class AbstractBlockHeader {
      * exception of the genesis block, this must be 32 bytes or fewer
      */
     protected byte[] extraData;
-    /*
-     * A 256-bit hash which proves that a sufficient amount of computation has
-     * been carried out on this block
-     */
-    protected byte[] nonce;
+
 
     /////////////////////////////////////////////////////////////////
     // (1344 in 200-9, 1408 in 210,9)
     protected byte[] solution; // The equihash solution in compressed format
 
     /*
-    * A long value containing energy consumed within this block
+     * A long value containing energy consumed within this block
      */
     protected long energyConsumed;
 
@@ -167,18 +158,6 @@ public abstract class AbstractBlockHeader {
         return logsBloom;
     }
 
-    public byte[] getDifficulty() {
-        return difficulty;
-    }
-
-    public BigInteger getDifficultyBI() {
-        return new BigInteger(1, difficulty);
-    }
-
-    public void setDifficulty(byte[] difficulty) {
-        this.difficulty = difficulty;
-    }
-
     public long getTimestamp() {
         return timestamp;
     }
@@ -199,14 +178,6 @@ public abstract class AbstractBlockHeader {
         return extraData;
     }
 
-    public byte[] getNonce() {
-        return nonce;
-    }
-
-    public void setNonce(byte[] nonce) {
-        this.nonce = nonce;
-    }
-
     public void setLogsBloom(byte[] logsBloom) {
         this.logsBloom = logsBloom;
     }
@@ -217,14 +188,6 @@ public abstract class AbstractBlockHeader {
 
     public boolean isGenesis() {
         return this.number == 0;
-    }
-
-    public byte[] getPowBoundary() {
-        return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
-    }
-
-    public BigInteger getPowBoundaryBI() {
-        return BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI());
     }
 
     public byte getVersion() {

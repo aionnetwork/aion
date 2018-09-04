@@ -33,6 +33,7 @@ import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.zero.types.A0BlockHeader;
 
 public class DiffCalc {
 
@@ -44,7 +45,7 @@ public class DiffCalc {
         this.constants = constants;
     }
 
-    public BigInteger calcDifficulty(AbstractBlockHeader curBlock, AbstractBlockHeader parent) {
+    public BigInteger calcDifficulty(AbstractBlockHeader curBlock, A0BlockHeader parent) {
         BigInteger pd = parent.getDifficultyBI();
         BigInteger quotient = pd.divide(this.constants.getDifficultyBoundDivisor());
 

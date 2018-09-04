@@ -26,10 +26,9 @@ package org.aion.zero.impl.blockchain;
 import org.aion.base.type.Address;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
-import org.aion.mcf.blockchain.IChainCfg;
+import org.aion.mcf.blockchain.IPoWChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;
-import org.aion.mcf.mine.IMiner;
 import org.aion.mcf.valid.*;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
@@ -51,10 +50,9 @@ import java.util.Arrays;
  * @author yao
  *
  */
-public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction> {
+public class ChainConfiguration implements IPoWChainCfg<IAionBlock, AionTransaction> {
 
     protected BlockConstants constants;
-    protected IMiner<?, ?> miner;
     protected IDifficultyCalculator difficultyCalculatorAdapter;
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;

@@ -34,10 +34,11 @@ import org.aion.equihash.EquihashMiner;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
-import org.aion.mcf.blockchain.IPowChain;
+import org.aion.zero.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.vm.TransactionExecutor;
 import org.aion.zero.impl.AionHub;
@@ -54,7 +55,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
-public class AionImpl implements IAionChain {
+public class AionImpl implements IChainInstancePOW {
 
     private static final Logger LOG_GEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
     private static final Logger LOG_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
@@ -85,7 +86,7 @@ public class AionImpl implements IAionChain {
 
 
     @Override
-    public IPowChain<AionBlock, A0BlockHeader> getBlockchain() {
+    public IAionBlockchain getBlockchain() {
         return aionHub.getBlockchain();
     }
 

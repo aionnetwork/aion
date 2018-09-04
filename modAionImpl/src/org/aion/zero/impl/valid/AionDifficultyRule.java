@@ -30,12 +30,11 @@ import java.math.BigInteger;
 import java.util.List;
 
 import org.aion.mcf.blockchain.IChainCfg;
+import org.aion.mcf.blockchain.IPoWChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
-import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.zero.types.IAionBlock;
 
 /**
@@ -45,7 +44,7 @@ public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule<A0Bl
 
     IDifficultyCalculator diffCalc;
 
-    public AionDifficultyRule(IChainCfg<IAionBlock, AionTransaction> configuration) {
+    public AionDifficultyRule(IPoWChainCfg<IAionBlock, AionTransaction> configuration) {
         this.diffCalc = configuration.getDifficultyCalculator();
     }
 

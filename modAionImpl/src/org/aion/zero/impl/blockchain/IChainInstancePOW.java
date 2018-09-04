@@ -21,10 +21,15 @@
  *     Aion foundation.
  *
  ******************************************************************************/
-package org.aion.mcf.blockchain;
+
+package org.aion.zero.impl.blockchain;
+
+import org.aion.mcf.mine.IMineRunner;
+import org.aion.zero.impl.core.IAionBlockchain;
 
 /**
- * Chain instance base interface.
+ * Chain instance pow interface.
  */
-public interface IChainInstanceBase {
+public interface IChainInstancePOW extends IAionChain{
+    IMineRunner getBlockMiner();
 }

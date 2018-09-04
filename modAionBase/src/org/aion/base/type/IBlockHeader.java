@@ -53,8 +53,6 @@ public interface IBlockHeader {
 
     byte[] getExtraData();
 
-    byte[] getNonce();
-
     byte[] getHash();
 
     byte[] getEncoded();
@@ -78,7 +76,6 @@ public interface IBlockHeader {
 
     void setNumber(long _nb);
 
-    void setNonce(byte[] _nc);
 
     void setLogsBloom(byte[] _lb);
 
