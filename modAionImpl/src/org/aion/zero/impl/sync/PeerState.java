@@ -1,16 +1,31 @@
 package org.aion.zero.impl.sync;
 
+import static org.aion.p2p.P2pConstant.STEP_COUNT;
+
 public class PeerState {
 
     public enum Mode {
-        /** The peer is in main-chain; use normal syncing strategy. */
+        /** The peer is in main-chain. Use normal syncing strategy. */
         NORMAL,
 
-        /** The peer is in side-chain; sync backward to find the fork point. */
+        /** The peer is in side-chain. Sync backward to find the fork point. */
         BACKWARD,
 
-        /** The peer is in side-chain; sync forward to catch up. */
-        FORWARD
+        /** The peer is in side-chain. Sync forward to catch up. */
+        FORWARD,
+
+        /**
+         * The peer is far ahead of the local chain. Use lightning sync strategy of jumping forward
+         * to request blocks out-of-order ahead of import time. Continue by filling the gap to the
+         * next jump step.
+         */
+        LIGHTNING,
+
+        /**
+         * The peer was far ahead of the local chain and made a sync jump. Gradually return to
+         * normal syncing strategy, allowing time for old lightning sync requests to come in.
+         */
+        THUNDER
     }
 
     // TODO: enforce rules on this
@@ -35,23 +50,35 @@ public class PeerState {
     // used in FORWARD mode to prevent endlessly importing EXISTing blocks
     // compute how many times to go forward without importing a new block
     private int repeated;
-    private int maxRepeats;
 
     // The syncing status
     private State state;
+    private long lastBestBlock = 0;
     private long lastHeaderRequest;
 
-    /**
-     * Creates a new peer state.
-     *
-     * @param mode
-     * @param base
-     */
+    /** Creates a new peer state. */
     public PeerState(Mode mode, long base) {
         this.mode = mode;
         this.base = base;
 
         this.state = State.INITIAL;
+    }
+
+    public void copy(PeerState _state) {
+        this.mode = _state.mode;
+        this.base = _state.base;
+        this.repeated = _state.repeated;
+        this.state = _state.state;
+        this.lastBestBlock = _state.lastBestBlock;
+        this.lastHeaderRequest = _state.lastHeaderRequest;
+    }
+
+    public long getLastBestBlock() {
+        return lastBestBlock;
+    }
+
+    public void setLastBestBlock(long lastBestBlock) {
+        this.lastBestBlock = lastBestBlock;
     }
 
     public Mode getMode() {
@@ -60,6 +87,7 @@ public class PeerState {
 
     public void setMode(Mode mode) {
         this.mode = mode;
+        this.resetRepeated();
     }
 
     public long getBase() {
@@ -83,18 +111,20 @@ public class PeerState {
     }
 
     public void setLastHeaderRequest(long lastStatusRequest) {
+        this.state = State.HEADERS_REQUESTED;
         this.lastHeaderRequest = lastStatusRequest;
     }
 
     public void resetLastHeaderRequest() {
+        this.state = State.INITIAL;
         this.lastHeaderRequest = 0;
     }
 
-    public int getRepeated() {
-        return repeated;
+    public boolean isOverRepeatThreshold() {
+        return repeated >= STEP_COUNT;
     }
 
-    public void resetRepeated() {
+    private void resetRepeated() {
         this.repeated = 0;
     }
 
@@ -102,20 +132,7 @@ public class PeerState {
         this.repeated++;
     }
 
-    /**
-     * This number is set based on the BACKWARD step size and the size of each requested batch in
-     * FORWARD mode. Passing the number of repeats allowed means that we have entered in the
-     * previous BACKWARD step. If that step would have been viable, we never would have made another
-     * step back, so it effectively ends the FORWARD pass.
-     *
-     * @return The number of times that a node in FORWARD mode can import only blocks that already
-     *     EXIST.
-     */
-    public int getMaxRepeats() {
-        return maxRepeats;
-    }
-
-    public void setMaxRepeats(int maxRepeats) {
-        this.maxRepeats = maxRepeats;
+    public int getRepeated() {
+        return repeated;
     }
 }

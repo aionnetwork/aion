@@ -29,6 +29,14 @@
 
 package org.aion.zero.impl.sync;
 
+import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
+import static org.aion.zero.impl.sync.PeerState.Mode.BACKWARD;
+import static org.aion.zero.impl.sync.PeerState.Mode.FORWARD;
+import static org.aion.zero.impl.sync.PeerState.Mode.LIGHTNING;
+import static org.aion.zero.impl.sync.PeerState.Mode.NORMAL;
+import static org.aion.zero.impl.sync.PeerState.Mode.THUNDER;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -36,8 +44,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.ImportResult;
-import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.P2pConstant;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.sync.PeerState.Mode;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
@@ -64,28 +73,65 @@ final class TaskImportBlocks implements Runnable {
 
     private final Logger log;
 
+    private List<Long> baseList;
+    private PeerState state;
+
     TaskImportBlocks(
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
             final SyncStatics _statis,
-            final BlockingQueue<BlocksWrapper> downloadedBlocks,
-            final Map<ByteArrayWrapper, Object> importedBlockHashes,
-            final Map<Integer, PeerState> peerStates,
-            final Logger log) {
+            final BlockingQueue<BlocksWrapper> _downloadedBlocks,
+            final Map<ByteArrayWrapper, Object> _importedBlockHashes,
+            final Map<Integer, PeerState> _peerStates,
+            final Logger _log) {
         this.chain = _chain;
         this.start = _start;
         this.statis = _statis;
-        this.downloadedBlocks = downloadedBlocks;
-        this.importedBlockHashes = importedBlockHashes;
-        this.peerStates = peerStates;
-        this.log = log;
+        this.downloadedBlocks = _downloadedBlocks;
+        this.importedBlockHashes = _importedBlockHashes;
+        this.peerStates = _peerStates;
+        this.log = _log;
+        this.baseList = new ArrayList<>();
+        this.state = new PeerState(NORMAL, 0L);
+    }
+
+    private boolean isNotImported(AionBlock b) {
+        return importedBlockHashes.get(ByteArrayWrapper.wrap(b.getHash())) == null;
+    }
+
+    private boolean isNotRestricted(AionBlock b) {
+        return !chain.isPruneRestricted(b.getNumber());
+    }
+
+    private long getStateCount(Mode mode) {
+        return peerStates.values().stream().filter(s -> s.getMode() == mode).count();
+    }
+
+    /** Returns either a recycled base or generates a new one. */
+    private long getNextBase() {
+        long best = getBestBlockNumber();
+
+        // remove bases that are no longer relevant
+        while (!baseList.isEmpty() && baseList.get(0) <= best) {
+            baseList.remove(0);
+        }
+
+        if (baseList.isEmpty()) {
+            return chain.nextBase(best);
+        } else {
+            return baseList.remove(0);
+        }
+    }
+
+    /** Add an unused base to the list. */
+    private void recycleNextBase(long base) {
+        baseList.add(base);
     }
 
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         while (start.get()) {
-
             BlocksWrapper bw;
             try {
                 bw = downloadedBlocks.take();
@@ -93,134 +139,278 @@ final class TaskImportBlocks implements Runnable {
                 return;
             }
 
-            List<AionBlock> batch = bw.getBlocks().stream()
-                    .filter(b -> importedBlockHashes.get(ByteArrayWrapper.wrap(b.getHash())) == null)
-                    .filter(b -> !chain.isPruneRestricted(b.getNumber()))
-                    .collect(Collectors.toList());
+            List<AionBlock> batch;
 
-            PeerState state = peerStates.get(bw.getNodeIdHash());
-            if (state == null) {
-                log.warn("Peer {} sent blocks that were not requested.", bw.getDisplayId());
+            if (chain.checkPruneRestriction()) {
+                // filter out restricted blocks if prune restrictions enabled
+                batch =
+                        bw.getBlocks()
+                                .stream()
+                                .filter(this::isNotImported)
+                                .filter(this::isNotRestricted)
+                                .collect(Collectors.toList());
+            } else {
+                // filter out only imported blocks
+                batch =
+                        bw.getBlocks()
+                                .stream()
+                                .filter(this::isNotImported)
+                                .collect(Collectors.toList());
+            }
+
+            PeerState peerState = peerStates.get(bw.getNodeIdHash());
+            if (peerState == null) {
                 // ignoring these blocks
+                log.warn("Peer {} sent blocks that were not requested.", bw.getDisplayId());
+            } else { // the peerState is not null after this
+                if (log.isDebugEnabled()) {
+                    log.debug(
+                            "<import-mode-before: node = {}, sync mode = {}, base = {}>",
+                            bw.getDisplayId(),
+                            peerState.getMode(),
+                            peerState.getBase());
+                }
+
+                // process batch and update the peer state
+                peerState.copy(processBatch(peerState, batch, bw.getDisplayId()));
+
+                // so we can continue immediately
+                peerState.resetLastHeaderRequest();
+
+                if (log.isDebugEnabled()) {
+                    log.debug(
+                            "<import-mode-after: node = {}, sync mode = {}, base = {}>",
+                            bw.getDisplayId(),
+                            peerState.getMode(),
+                            peerState.getBase());
+                }
+
+                statis.update(getBestBlockNumber());
+            }
+        }
+        log.info(Thread.currentThread().getName() + " RIP.");
+    }
+
+    /** @implNote Typically called when state.getMode() in { NORMAL, LIGHTNING, THUNDER }. */
+    private PeerState attemptLightningJump(PeerState state) {
+        long normalStates = getStateCount(NORMAL) + getStateCount(THUNDER);
+        long fastStates = getStateCount(LIGHTNING);
+
+        // in NORMAL mode and blocks filtered out
+        if (normalStates > 4 && fastStates < normalStates - 1) {
+            // targeting around same number of LIGHTNING and NORMAL sync nodes
+            // with a minimum of 4 NORMAL nodes
+            long nextBase = getNextBase();
+            if (state.getLastBestBlock() > nextBase + LARGE_REQUEST_SIZE) {
+                state.setMode(LIGHTNING);
+                state.setBase(nextBase);
+            } else {
+                recycleNextBase(nextBase);
+                if (state.getMode() == LIGHTNING) {
+                    // can't jump so ramp down
+                    state.setMode(THUNDER);
+                }
+            }
+        }
+        return state;
+    }
+
+    private boolean wasPreviouslyStored(AionBlock block) {
+        return chain.getBlockStore().getMaxNumber() >= block.getNumber()
+                && chain.getBlockStore().isBlockExist(block.getHash());
+    }
+
+    /** @implNote This method is called only when state is not null. */
+    private PeerState processBatch(PeerState givenState, List<AionBlock> batch, String displayId) {
+        // make a copy of the original state
+        state.copy(givenState);
+
+        // all blocks were filtered out
+        // interpreted as repeated work
+        if (batch.isEmpty()) {
+            if (log.isDebugEnabled()) {
+                log.debug(
+                        "Empty batch received from node = {} in mode = {} with base = {}.",
+                        displayId,
+                        givenState.getMode(),
+                        givenState.getBase());
+            }
+
+            if (state.getMode() == BACKWARD || state.getMode() == FORWARD) {
+                // multiple peers are doing the same BACKWARD/FORWARD pass
+                // TODO: verify that this improves efficiency
+                // TODO: impact of allowing the LIGHTNING jump instead?
+                state.setMode(NORMAL);
+                return state;
+            } else {
+                // for the case where mode = NORMAL
+                // and cannot do the LIGHTNING jump
+                state.incRepeated();
+                return attemptLightningJump(state);
+            }
+        }
+
+        // the batch cannot be empty henceforth
+        // check last block in batch to see if we can skip batch
+        if (givenState.getMode() != BACKWARD) {
+            AionBlock b = batch.get(batch.size() - 1);
+            Mode mode = givenState.getMode();
+
+            // last block exists when in FORWARD mode
+            if ((mode == FORWARD && wasPreviouslyStored(b))
+                    // late returns on main chain requests
+                    // where the blocks are behind the local chain and can be discarded
+                    || (mode != FORWARD && b.getNumber() < getBestBlockNumber())) {
+
+                // keeping track of the last block check
+                importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
+
+                // skipping the batch
+                batch.clear();
+                if (log.isDebugEnabled()) {
+                    log.debug(
+                            "Skip batch for node = {} in mode = {} with base = {}.",
+                            displayId,
+                            givenState.getMode(),
+                            givenState.getBase());
+                }
+
+                // updating the state
+                if (mode == FORWARD) {
+                    return forwardModeUpdate(
+                            state, b.getNumber(), ImportResult.EXIST, b.getNumber());
+                } else {
+                    // mode in { NORMAL, LIGHTNING, THUNDER }
+                    return attemptLightningJump(state);
+                }
+            }
+        }
+
+        // remembering imported range
+        long first = -1L, last = -1L;
+        ImportResult importResult;
+
+        for (AionBlock b : batch) {
+            try {
+                importResult = importBlock(b, displayId, givenState);
+
+                if (importResult.isStored()) {
+                    importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
+
+                    if (last <= b.getNumber()) {
+                        last = b.getNumber() + 1;
+                    }
+                }
+            } catch (Throwable e) {
+                log.error("<import-block throw> {}", e.toString());
+                if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
+                    log.error("Shutdown due to lack of disk space.");
+                    System.exit(0);
+                }
+                // TODO test and determine consequences: continue or break?
                 continue;
             }
 
-            ImportResult importResult = ImportResult.IMPORTED_NOT_BEST;
-
-            // importing last block in batch to see if we can skip batch
-            if (state != null && state.getMode() == PeerState.Mode.FORWARD && !batch.isEmpty()) {
-                AionBlock b = batch.get(batch.size() - 1);
-
-                try {
-                    importResult = importBlock(b, bw.getDisplayId(), state);
-                } catch (Throwable e) {
-                    log.error("<import-block throw> {}", e.toString());
-                    if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
-                        log.error("Shutdown due to lack of disk space.");
-                        System.exit(0);
-                    }
-                    continue;
-                }
-
-                switch (importResult) {
-                    case IMPORTED_BEST:
-                    case IMPORTED_NOT_BEST:
-                    case EXIST:
-                        {
-                            importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
-
-                            long lastBlock = batch.get(batch.size() - 1).getNumber();
-
-                            forwardModeUpdate(state, lastBlock, importResult, b.getNumber());
-
-                            // since last import worked skipping the batch
-                            batch.clear();
-                            log.info("Forward skip.");
-                            break;
-                        }
-                    default:
-                        break;
-                }
-            }
-
-            for (AionBlock b : batch) {
-                try {
-                    importResult = importBlock(b, bw.getDisplayId(), state);
-                } catch (Throwable e) {
-                    log.error("<import-block throw> {}", e.toString());
-                    if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
-                        log.error("Shutdown due to lack of disk space.");
-                        System.exit(0);
-                    }
-                    continue;
-                }
-
-                switch (importResult) {
-                    case IMPORTED_BEST:
-                    case IMPORTED_NOT_BEST:
-                    case EXIST:
-                        importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
-                        break;
-                    default:
-                        break;
-                }
-
-                // decide whether to change mode based on the first
-                if (b == batch.get(0) && state != null) {
-
-                    PeerState.Mode mode = state.getMode();
-
-                    switch (importResult) {
-                        case IMPORTED_BEST:
-                        case IMPORTED_NOT_BEST:
-                        case EXIST:
-                            // assuming the remaining blocks will be imported. if not, the state
-                            // and base will be corrected by the next cycle
-                            long lastBlock = batch.get(batch.size() - 1).getNumber();
-
-                            if (mode == PeerState.Mode.BACKWARD) {
-                                // we found the fork point
-                                state.setMode(PeerState.Mode.FORWARD);
-                                state.setBase(lastBlock);
-                                state.resetRepeated();
-                            } else if (mode == PeerState.Mode.FORWARD) {
-                                forwardModeUpdate(state, lastBlock, importResult, b.getNumber());
-                            }
-                            break;
-                        case NO_PARENT:
-                            if (mode == PeerState.Mode.BACKWARD) {
-                                // update base
-                                state.setBase(b.getNumber());
-                            } else {
-                                // switch to backward mode
-                                state.setMode(PeerState.Mode.BACKWARD);
-                                state.setBase(b.getNumber());
-                            }
-                            break;
-                    }
-                }
+            // decide whether to change mode based on the first
+            if (b == batch.get(0)) {
+                first = b.getNumber();
+                Mode mode = givenState.getMode();
 
                 // if any block results in NO_PARENT, all subsequent blocks will too
                 if (importResult == ImportResult.NO_PARENT) {
-                    log.debug("Stopped importing batch due to NO_PARENT result.");
+                    int stored = chain.storePendingBlockRange(batch);
+
+                    if (log.isDebugEnabled()) {
+                        log.debug(
+                                "Stopped importing batch due to NO_PARENT result.\n"
+                                        + "Stored {} out of {} blocks starting at hash = {}, number = {} from node = {}.",
+                                stored,
+                                batch.size(),
+                                b.getShortHash(),
+                                b.getNumber(),
+                                displayId);
+                    }
+
+                    switch (mode) {
+                        case FORWARD:
+                        case NORMAL:
+                            {
+                                // switch to backward mode
+                                state.setMode(BACKWARD);
+                            }
+                        case BACKWARD:
+                            {
+                                // update base
+                                state.setBase(b.getNumber());
+                                break;
+                            }
+                        case LIGHTNING:
+                            {
+                                if (stored < batch.size()) {
+                                    state = attemptLightningJump(state);
+                                } else {
+                                    state.incRepeated();
+                                    state.setBase(b.getNumber() + batch.size());
+                                }
+                                break;
+                            }
+                        case THUNDER:
+                            {
+                                state.incRepeated();
+                                break;
+                            }
+                    }
+                    // exit loop after NO_PARENT result
                     break;
+                } else if (importResult.isStored()) {
+                    // assuming the remaining blocks will be imported. if not, the state
+                    // and base will be corrected by the next cycle
+                    long lastBlock = batch.get(batch.size() - 1).getNumber();
+
+                    switch (mode) {
+                        case BACKWARD:
+                            // we found the fork point
+                            state.setMode(FORWARD);
+                            state.setBase(lastBlock);
+                            break;
+                        case FORWARD:
+                            state =
+                                    forwardModeUpdate(
+                                            state, lastBlock, importResult, b.getNumber());
+                            break;
+                        case LIGHTNING:
+                        case THUNDER:
+                            state = attemptLightningJump(state);
+                            break;
+                        case NORMAL:
+                        default:
+                            break;
+                    }
                 }
             }
-
-            if (state != null
-                    && state.getMode() == PeerState.Mode.FORWARD
-                    && importResult == ImportResult.EXIST) {
-                // increment the repeat count every time
-                // we finish a batch of imports with EXIST
-                state.incRepeated();
-            }
-
-            if (state != null) {
-                state.resetLastHeaderRequest(); // so we can continue immediately
-            }
-
-            this.statis.update(this.chain.getBestBlock().getNumber());
         }
+
+        // check for stored blocks
+        if (first < last) {
+            int imported = importFromStorage(state, first, last);
+            if (imported > 0) {
+                // TODO: may have already updated torrent mode
+                if (state.getMode() == LIGHTNING) {
+                    if (state.getBase() == givenState.getBase() // was not already updated
+                            || state.getBase() <= getBestBlockNumber() + P2pConstant.REQUEST_SIZE) {
+                        state = attemptLightningJump(state);
+                    } // else already updated to a correct request
+                    return state;
+                } else if (state.getMode() == BACKWARD || state.getMode() == FORWARD) {
+                    // TODO: verify that this improves efficiency
+                    // TODO: impact of allowing the LIGHTNING jump instead?
+                    state.setMode(NORMAL);
+                    return state;
+                }
+            }
+        }
+
+        return state;
     }
 
     private ImportResult importBlock(AionBlock b, String displayId, PeerState state) {
@@ -231,7 +421,7 @@ final class TaskImportBlocks implements Runnable {
         log.info(
                 "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
                 displayId,
-                (state != null ? state.getMode() : PeerState.Mode.NORMAL),
+                (state != null ? state.getMode() : NORMAL),
                 b.getShortHash(),
                 b.getNumber(),
                 b.getTransactionsList().size(),
@@ -240,17 +430,20 @@ final class TaskImportBlocks implements Runnable {
         return importResult;
     }
 
-    private void forwardModeUpdate(PeerState state, long lastBlock, ImportResult importResult, long blockNumber) {
+    private PeerState forwardModeUpdate(
+            PeerState state, long lastBlock, ImportResult importResult, long blockNumber) {
+        // TODO: check if two long values are needed
         // continue
         state.setBase(lastBlock);
+        state.incRepeated();
         // if the imported best block, switch back to normal mode
-        if (importResult == ImportResult.IMPORTED_BEST) {
-            state.setMode(PeerState.Mode.NORMAL);
+        if (importResult.isBest()) {
+            state.setMode(NORMAL);
             // switch peers to NORMAL otherwise they may never switch back
             for (PeerState peerState : peerStates.values()) {
-                if (peerState.getMode() != PeerState.Mode.NORMAL) {
-                    peerState.setMode(PeerState.Mode.NORMAL);
-                    peerState.setBase(blockNumber);
+                if (peerState.getMode() != NORMAL) {
+                    peerState.setMode(NORMAL);
+                    state.setBase(blockNumber);
                     peerState.resetLastHeaderRequest();
                 }
             }
@@ -258,10 +451,124 @@ final class TaskImportBlocks implements Runnable {
         // if the maximum number of repeats is passed
         // then the peer is stuck endlessly importing old blocks
         // otherwise it would have found an IMPORTED block already
-        if (state.getRepeated() >= state.getMaxRepeats()) {
-            state.setMode(PeerState.Mode.NORMAL);
-            state.setBase(chain.getBestBlock().getNumber());
+        if (state.isOverRepeatThreshold()) {
+            state.setMode(NORMAL);
+            state.setBase(getBestBlockNumber());
             state.resetLastHeaderRequest();
         }
+
+        return state;
+    }
+
+    /**
+     * Imports blocks from storage as long as there are blocks to import.
+     *
+     * @return the total number of imported blocks from all iterations
+     */
+    private int importFromStorage(PeerState state, long first, long last) {
+        ImportResult importResult = ImportResult.NO_PARENT;
+        int imported = 0, batch;
+        long level = first;
+
+        while (level <= last) {
+            // get blocks stored for level
+            Map<ByteArrayWrapper, List<AionBlock>> levelFromDisk =
+                    chain.loadPendingBlocksAtLevel(level);
+
+            if (levelFromDisk.isEmpty()) {
+                // move on to next level
+                level++;
+                continue;
+            }
+
+            List<ByteArrayWrapper> importedQueues = new ArrayList<>(levelFromDisk.keySet());
+
+            for (Map.Entry<ByteArrayWrapper, List<AionBlock>> entry : levelFromDisk.entrySet()) {
+                // initialize batch counter
+                batch = 0;
+
+                List<AionBlock> batchFromDisk = entry.getValue();
+
+                if (log.isDebugEnabled()) {
+                    log.debug(
+                            "Loaded {} blocks from disk from level {} queue {} before filtering.",
+                            batchFromDisk.size(),
+                            entry.getKey(),
+                            level);
+                }
+
+                // filter already imported blocks
+                batchFromDisk =
+                        batchFromDisk
+                                .stream()
+                                .filter(this::isNotImported)
+                                .collect(Collectors.toList());
+
+                if (batchFromDisk.size() > 0) {
+                    if (log.isDebugEnabled()) {
+                        log.debug(
+                                "{} {} left after filtering out imported blocks.",
+                                batchFromDisk.size(),
+                                (batchFromDisk.size() == 1 ? "block" : "blocks"));
+                    }
+                } else {
+                    if (log.isDebugEnabled()) {
+                        log.debug("No blocks left after filtering out imported blocks.");
+                    }
+                    // move on to next queue
+                    // this queue will be deleted from storage
+                    continue;
+                }
+
+                for (AionBlock b : batchFromDisk) {
+                    try {
+                        importResult = importBlock(b, "STORAGE", state);
+
+                        if (importResult.isStored()) {
+                            importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
+
+                            batch++;
+
+                            if (last <= b.getNumber()) {
+                                // can try importing more
+                                last = b.getNumber() + 1;
+                            }
+                        } else {
+                            // do not delete queue from storage
+                            importedQueues.remove(entry.getKey());
+                            // stop importing this queue
+                            break;
+                        }
+                    } catch (Throwable e) {
+                        log.error("<import-block throw> {}", e.toString());
+                        if (e.getMessage() != null
+                                && e.getMessage().contains("No space left on device")) {
+                            log.error("Shutdown due to lack of disk space.");
+                            System.exit(0);
+                        }
+                    }
+                }
+
+                imported += batch;
+            }
+
+            // remove imported data from storage
+            chain.dropImported(level, importedQueues, levelFromDisk);
+
+            // increment level
+            level++;
+        }
+
+        // switch to NORMAL if in FORWARD mode
+        if (importResult.isBest() && state.getMode() == FORWARD) {
+            state.setMode(NORMAL);
+            state.setBase(getBestBlockNumber());
+        }
+
+        return imported;
+    }
+
+    private long getBestBlockNumber() {
+        return chain.getBestBlock() == null ? 0 : chain.getBestBlock().getNumber();
     }
 }

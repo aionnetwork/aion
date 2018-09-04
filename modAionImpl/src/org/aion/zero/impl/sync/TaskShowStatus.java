@@ -168,14 +168,13 @@ final class TaskShowStatus implements Runnable {
                             "======================================================================== sync-status =========================================================================\n"));
             sb.append(
                     String.format(
-                            "%9s %16s %17s %8s %16s %2s %2s %16s\n",
+                            "%9s %16s %17s %8s %16s %2s %16s\n",
                             "id",
                             "# best block",
                             "state",
                             "mode",
                             "base",
                             "rp",
-                            "mx",
                             "last request"));
             sb.append(
                     "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
@@ -186,14 +185,13 @@ final class TaskShowStatus implements Runnable {
 
                 sb.append(
                         String.format(
-                                "id:%6s %16d %17s %8s %16d %2d %2d %16d\n",
+                                "id:%6s %16d %17s %8s %16d %2d %16d\n",
                                 n.getIdShort(),
                                 n.getBestBlockNumber(),
                                 s.getState(),
                                 s.getMode(),
                                 s.getBase(),
                                 s.getRepeated(),
-                                s.getMaxRepeats(),
                                 s.getLastHeaderRequest()));
             }
             return sb.toString();

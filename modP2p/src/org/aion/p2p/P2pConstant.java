@@ -51,11 +51,11 @@ public class P2pConstant {
     REQUEST_SIZE = 24,
 
     /** @implNote must be strictly larger than {@link #REQUEST_SIZE} */
-    LARGE_REQUEST_SIZE = 60,
+    LARGE_REQUEST_SIZE = 25,
 
     STEP_COUNT = 6,
 
     // NOTE: the 3 values below are interdependent
     // do not change one without considering the impact to the others
-    BACKWARD_SYNC_STEP = LARGE_REQUEST_SIZE * STEP_COUNT - 1;
+    BACKWARD_SYNC_STEP = REQUEST_SIZE * STEP_COUNT - 1;
 }
