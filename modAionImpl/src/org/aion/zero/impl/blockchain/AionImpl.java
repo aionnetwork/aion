@@ -30,7 +30,7 @@ import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
-import org.aion.factort.AionTransactionFactory;
+import org.aion.factory.AionTransactionFactory;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;

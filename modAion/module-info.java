@@ -15,4 +15,5 @@ module aion.zero {
     exports org.aion.zero.blockchain;
 
     exports org.aion.generic;
+    exports org.aion.factory;
 }

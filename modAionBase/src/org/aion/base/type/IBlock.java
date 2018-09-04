@@ -89,4 +89,6 @@ public interface IBlock<TX extends ITransaction, BH extends IBlockHeader> {
     long getNrgLimit();
 
     byte[] getExtraData();
+
+    int size();
 }

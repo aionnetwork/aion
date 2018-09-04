@@ -73,15 +73,19 @@ public class BlockchainEngineFactory {
 
     private static RpcServer startAion0RpcServer(IChainInstancePOW ac, CfgAion cfg, Logger genLog, char[] sslPass) {
         RpcServer rpcServer = null;
-        if(cfg.getApi().getRpc().getActive()) {
+        if(cfg.getApi().getRpc().isActive()) {
             CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
 
             Consumer<RpcServerBuilder<? extends RpcServerBuilder<?>>> commonRpcConfig = (rpcBuilder) -> {
                 rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
-                rpcBuilder.setWorkerPoolSize(rpcCfg.getMaxthread());
                 rpcBuilder.enableEndpoints(rpcCfg.getEnabled());
 
-                if (rpcCfg.getCorsEnabled())
+                rpcBuilder.setWorkerPoolSize(rpcCfg.getWorkerThreads());
+                rpcBuilder.setIoPoolSize(rpcCfg.getIoThreads());
+                rpcBuilder.setRequestQueueSize(rpcCfg.getRequestQueueSize());
+                rpcBuilder.setStuckThreadDetectorEnabled(rpcCfg.isStuckThreadDetectorEnabled());
+
+                if (rpcCfg.isCorsEnabled())
                     rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
 
                 CfgSsl cfgSsl = rpcCfg.getSsl();
@@ -119,7 +123,7 @@ public class BlockchainEngineFactory {
     }
 
     /**
-     *  TODO: I would see this passed as a closure/Interface to `IBlockchainEngine` and structure (shutdown) hooks in a dedicated pacakge.
+     *  TODO: I would see this passed as a closure/Interface to `IBlockchainEngine` and structure (shutdown) hooks in a dedicated package.
      */
     private static void startShutdownThread(IChainInstancePOW ac, Logger genLog, Thread zmqThread, IMineRunner miner,
                                             ProtocolProcessor protocolProcessor, RpcServer rpcServer) {

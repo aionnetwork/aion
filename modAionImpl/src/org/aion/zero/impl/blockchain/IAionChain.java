@@ -24,7 +24,7 @@
 package org.aion.zero.impl.blockchain;
 
 import org.aion.base.db.IRepository;
-import org.aion.factort.AionTransactionFactory;
+import org.aion.factory.AionTransactionFactory;
 import org.aion.generic.IGenericAionChain;
 import org.aion.zero.impl.IAion0Hub;
 import org.aion.zero.impl.core.IAionBlockchain;

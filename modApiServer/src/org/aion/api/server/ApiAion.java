@@ -388,7 +388,7 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    protected byte[] getCode(Address addr) {
+    public byte[] getCode(Address addr) {
         return this.ac.getRepository().getCode(addr);
     }
 

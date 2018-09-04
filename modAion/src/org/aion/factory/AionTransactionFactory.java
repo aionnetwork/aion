@@ -1,4 +1,4 @@
-package org.aion.factort;
+package org.aion.factory;
 
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;

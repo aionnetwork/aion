@@ -56,18 +56,17 @@ public abstract class Api<B extends IBlock<?, ?>> {
     protected final IPendingStateInternal pendingState;
 
     protected Api(IGenericAionChain aionChain) {
-        this.pendingState = aionChain.getAionHub().getPendingState();
+        if (aionChain != null)  {
+            this.pendingState = aionChain.getAionHub().getPendingState();
+        }
+        else {
+            pendingState = null;
+        }
     }
 
     // This is the constructor that should always be used, unless testing
     Api() {
         pendingState = AionPendingStateImpl.inst();
-    }
-
-    // Only for testing purposes
-    @VisibleForTesting
-    Api(AionPendingStateImpl ps) {
-            pendingState = ps;
     }
 
     public abstract String getCoinbase();
