@@ -24,7 +24,6 @@
 package org.aion.generic;
 
 import org.aion.base.db.IRepository;
-import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.generic.query.QueryInterface;
@@ -33,7 +32,6 @@ import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractTxReceipt;
 
-import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -49,9 +47,9 @@ public interface IGenericAionChain<
 
     IBlockchain getBlockchain();
 
-    void close();
+    ITransactionFactory<TX> getTransactionFactory();
 
-    TX createTransaction(BigInteger nonce, Address to, BigInteger value, byte[] data);
+    void close();
 
     void broadcastTransaction(TX transaction);
 

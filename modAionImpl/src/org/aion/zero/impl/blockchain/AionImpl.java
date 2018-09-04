@@ -28,9 +28,9 @@ import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
+import org.aion.factort.AionTransactionFactory;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
@@ -50,7 +50,6 @@ import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,6 +65,8 @@ public class AionImpl implements IChainInstancePOW {
 
     private TxCollector collector;
 
+    private AionTransactionFactory transactionFactory;
+
     private static class Holder {
         static final AionImpl INSTANCE = new AionImpl();
     }
@@ -79,7 +80,7 @@ public class AionImpl implements IChainInstancePOW {
         aionHub = new AionHub();
         LOG_GEN.info("<node-started endpoint=p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
                 + cfg.getNet().getP2p().getPort() + ">");
-
+        this.transactionFactory = new AionTransactionFactory();
         collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX);
     }
 
@@ -87,6 +88,11 @@ public class AionImpl implements IChainInstancePOW {
     @Override
     public IAionBlockchain getBlockchain() {
         return aionHub.getBlockchain();
+    }
+
+    @Override
+    public AionTransactionFactory getTransactionFactory() {
+        return this.transactionFactory;
     }
 
     public synchronized ImportResult addNewMinedBlock(AionBlock block) {
@@ -114,13 +120,6 @@ public class AionImpl implements IChainInstancePOW {
     @Override
     public void close() {
         aionHub.close();
-    }
-
-    @Override
-    public AionTransaction createTransaction(BigInteger nonce, Address to, BigInteger value, byte[] data) {
-        byte[] nonceBytes = ByteUtil.bigIntegerToBytes(nonce);
-        byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
-        return new AionTransaction(nonceBytes, to, valueBytes, data);
     }
 
     /**
