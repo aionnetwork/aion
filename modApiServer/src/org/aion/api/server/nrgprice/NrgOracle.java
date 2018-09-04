@@ -5,10 +5,7 @@ import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.core.IBlockchain;
-import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.mcf.types.AbstractTxReceipt;
 import org.slf4j.Logger;
 
 /**

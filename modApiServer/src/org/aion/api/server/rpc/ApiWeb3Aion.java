@@ -708,7 +708,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block id provided.");
 
         ITransaction tx =
-                new AionTransaction(
+                this.ac.getTransactionFactory().createTransaction(
                         txParams.getNonce().toByteArray(),
                         txParams.getTo(),
                         txParams.getValue().toByteArray(),
