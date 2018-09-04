@@ -3,8 +3,8 @@
 	<mode>aion</mode>
 	<id>[NODE-ID-PLACEHOLDER]</id>
 	<api>
+		<!-- rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs -->
 		<rpc active="true" ip="127.0.0.1" port="8545">
-			<!--boolean, enable/disable cross origin requests (browser enforced)-->
 			<cors-enabled>false</cors-enabled>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
 			<apis-enabled>web3,eth,personal,stratum,ops</apis-enabled>
