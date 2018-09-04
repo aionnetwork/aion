@@ -39,6 +39,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.utils.NativeLibrary;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
@@ -56,6 +57,9 @@ import static org.aion.zero.impl.Version.KERNEL_VERSION;
 public class Aion {
 
     public static void main(String args[]) {
+
+        // TODO: should we load native libraries first thing?
+        NativeLibrary.checkNativeLibrariesLoaded();
 
         /*
          * @ATTENTION: ECKey have two layer: tx layer is KeyFac optional,
