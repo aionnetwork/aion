@@ -380,9 +380,11 @@ final class TaskImportBlocks implements Runnable {
                             break;
                         case LIGHTNING:
                         case THUNDER:
+                            state.incRepeated();
                             state = attemptLightningJump(state);
                             break;
                         case NORMAL:
+                            state.incRepeated();
                         default:
                             break;
                     }
