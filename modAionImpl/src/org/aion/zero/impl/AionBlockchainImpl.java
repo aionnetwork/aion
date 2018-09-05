@@ -422,6 +422,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             byte[] txEncoding = transactions.get(i).getEncoded();
             if (txEncoding != null) {
                 txsState.update(RLP.encodeInt(i), txEncoding);
+            } else {
+                return HashUtil.EMPTY_TRIE_HASH;
             }
         }
         return txsState.getRootHash();
