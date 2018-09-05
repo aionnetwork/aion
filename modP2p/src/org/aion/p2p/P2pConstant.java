@@ -55,6 +55,10 @@ public class P2pConstant {
 
     STEP_COUNT = 6,
 
+    MIN_NORMAL_PEERS = 4,
+
+    COEFFICIENT_FAST_PEERS = 2,
+
     // NOTE: the 3 values below are interdependent
     // do not change one without considering the impact to the others
     BACKWARD_SYNC_STEP = REQUEST_SIZE * STEP_COUNT - 1;

@@ -29,7 +29,9 @@
 
 package org.aion.zero.impl.sync;
 
+import static org.aion.p2p.P2pConstant.COEFFICIENT_FAST_PEERS;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
+import static org.aion.p2p.P2pConstant.MIN_NORMAL_PEERS;
 import static org.aion.zero.impl.sync.PeerState.Mode.BACKWARD;
 import static org.aion.zero.impl.sync.PeerState.Mode.FORWARD;
 import static org.aion.zero.impl.sync.PeerState.Mode.LIGHTNING;
@@ -37,6 +39,7 @@ import static org.aion.zero.impl.sync.PeerState.Mode.NORMAL;
 import static org.aion.zero.impl.sync.PeerState.Mode.THUNDER;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -101,10 +104,6 @@ final class TaskImportBlocks implements Runnable {
 
     private boolean isNotRestricted(AionBlock b) {
         return !chain.isPruneRestricted(b.getNumber());
-    }
-
-    private long getStateCount(Mode mode) {
-        return peerStates.values().stream().filter(s -> s.getMode() == mode).count();
     }
 
     /** Returns either a recycled base or generates a new one. */
@@ -192,12 +191,13 @@ final class TaskImportBlocks implements Runnable {
     }
 
     /** @implNote Typically called when state.getMode() in { NORMAL, LIGHTNING, THUNDER }. */
-    private PeerState attemptLightningJump(PeerState state) {
-        long normalStates = getStateCount(NORMAL) + getStateCount(THUNDER);
-        long fastStates = getStateCount(LIGHTNING);
+    private PeerState attemptLightningJump(Collection<PeerState> all, PeerState state, long best) {
+        long normalStates = getStateCount(all, NORMAL, best) + getStateCount(all, THUNDER, best);
+        long fastStates = getStateCount(all, LIGHTNING, best);
 
+        state.incRepeated();
         // in NORMAL mode and blocks filtered out
-        if (normalStates > 4 && fastStates < normalStates - 1) {
+        if (normalStates > MIN_NORMAL_PEERS && COEFFICIENT_FAST_PEERS * fastStates < normalStates) {
             // targeting around same number of LIGHTNING and NORMAL sync nodes
             // with a minimum of 4 NORMAL nodes
             long nextBase = getNextBase();
@@ -213,6 +213,22 @@ final class TaskImportBlocks implements Runnable {
             }
         }
         return state;
+    }
+
+    /**
+     * Computes the number of states from the given ones that have the give mode and a last best
+     * block status larger than the given number.
+     *
+     * @param states the list of peer states to be explored
+     * @param mode the state mode we are searching for
+     * @param best the minimum accepted last best block status for the peer
+     * @return the number of states that satisfy the condition above.
+     */
+    static long getStateCount(Collection<PeerState> states, Mode mode, long best) {
+        return states.stream()
+                .filter(s -> s.getLastBestBlock() > best)
+                .filter(s -> s.getMode() == mode)
+                .count();
     }
 
     private boolean wasPreviouslyStored(AionBlock block) {
@@ -243,10 +259,7 @@ final class TaskImportBlocks implements Runnable {
                 state.setMode(NORMAL);
                 return state;
             } else {
-                // for the case where mode = NORMAL
-                // and cannot do the LIGHTNING jump
-                state.incRepeated();
-                return attemptLightningJump(state);
+                return attemptLightningJump(peerStates.values(), state, getBestBlockNumber());
             }
         }
 
@@ -281,7 +294,7 @@ final class TaskImportBlocks implements Runnable {
                             state, b.getNumber(), ImportResult.EXIST, b.getNumber());
                 } else {
                     // mode in { NORMAL, LIGHTNING, THUNDER }
-                    return attemptLightningJump(state);
+                    return attemptLightningJump(peerStates.values(), state, getBestBlockNumber());
                 }
             }
         }
@@ -347,7 +360,11 @@ final class TaskImportBlocks implements Runnable {
                         case LIGHTNING:
                             {
                                 if (stored < batch.size()) {
-                                    state = attemptLightningJump(state);
+                                    state =
+                                            attemptLightningJump(
+                                                    peerStates.values(),
+                                                    state,
+                                                    getBestBlockNumber());
                                 } else {
                                     state.incRepeated();
                                     state.setBase(b.getNumber() + batch.size());
@@ -380,8 +397,9 @@ final class TaskImportBlocks implements Runnable {
                             break;
                         case LIGHTNING:
                         case THUNDER:
-                            state.incRepeated();
-                            state = attemptLightningJump(state);
+                            state =
+                                    attemptLightningJump(
+                                            peerStates.values(), state, getBestBlockNumber());
                             break;
                         case NORMAL:
                             state.incRepeated();
@@ -400,7 +418,9 @@ final class TaskImportBlocks implements Runnable {
                 if (state.getMode() == LIGHTNING) {
                     if (state.getBase() == givenState.getBase() // was not already updated
                             || state.getBase() <= getBestBlockNumber() + P2pConstant.REQUEST_SIZE) {
-                        state = attemptLightningJump(state);
+                        state =
+                                attemptLightningJump(
+                                        peerStates.values(), state, getBestBlockNumber());
                     } // else already updated to a correct request
                     return state;
                 } else if (state.getMode() == BACKWARD || state.getMode() == FORWARD) {

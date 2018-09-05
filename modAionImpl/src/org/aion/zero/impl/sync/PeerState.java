@@ -135,4 +135,21 @@ public class PeerState {
     public int getRepeated() {
         return repeated;
     }
+
+    @Override
+    public String toString() {
+        return "PeerState{"
+                + mode
+                + ", "
+                + state
+                + ", base="
+                + base
+                + ", r="
+                + repeated
+                + ", best="
+                + lastBestBlock
+                + ", lHR="
+                + lastHeaderRequest
+                + '}';
+    }
 }
