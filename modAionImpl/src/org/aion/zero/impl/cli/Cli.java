@@ -24,25 +24,45 @@
 
 package org.aion.zero.impl.cli;
 
+import static org.aion.mcf.account.Keystore.exist;
+
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ProcessBuilder.Redirect;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.TimeZone;
+import javax.annotation.Nonnull;
+import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
+import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.account.KeystoreFormat;
 import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.CfgApiZmq;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.db.RecoveryUtils;
 
 import java.io.Console;
 import java.util.UUID;
+import org.zeromq.ZMQ;
 
 /**
  * Command line interface.
@@ -51,8 +71,11 @@ import java.util.UUID;
  */
 public class Cli {
 
-    File keystoreDir = new File(
+    private File keystoreDir = new File(
         System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
+
+    private File zmqkeyDir = new File(
+        System.getProperty("user.dir") + File.separator + CfgApiZmq.ZMQ_KEY_DIR);
 
     public int call(final String[] args, final Cfg cfg) {
         try {
@@ -139,6 +162,12 @@ public class Cli {
                         return 1;
                     }
                     break;
+                case "-zs":
+                    checkZmqKeystoreDir();
+                    ZMQ.Curve.KeyPair kp = ZMQ.Curve.generateKeyPair();
+                    genKeyFile(kp.publicKey, kp.secretKey);
+                    System.out.println("genZmqKeyPairFinished!");
+                    return 1;
                 case "-r":
                     if (args.length < 2) {
                         System.out.println("Starting database clean-up.");
@@ -269,6 +298,46 @@ public class Cli {
         return 0;
     }
 
+    private void genKeyFile(@Nonnull final String publicKey, @Nonnull final String secretKey)
+        throws IOException {
+
+        DateFormat df = new SimpleDateFormat("yy-MM-dd'T'HH:mm:ss'Z'");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String iso_date = df.format(new Date(System.currentTimeMillis()));
+
+        String fileName = "UTC--" + iso_date + "--zmqCurvePubkey";
+        getFile(fileName, publicKey);
+
+        fileName = "UTC--" + iso_date + "--zmqCurveSeckey";
+        getFile(fileName, secretKey);
+    }
+
+    private void getFile(@Nonnull final String fileName, @Nonnull final String key) throws IOException {
+        Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxr-----");
+        FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(perms);
+
+        Path p = Paths.get(zmqkeyDir.getPath());
+        Path keyFile = p.resolve(fileName);
+        if (!Files.exists(keyFile)) {
+            keyFile = Files.createFile(keyFile, attr);
+        }
+
+        FileOutputStream fos = new FileOutputStream(keyFile.toString());
+        fos.write(key.getBytes());
+        fos.close();
+    }
+
+    private void checkZmqKeystoreDir() {
+        if (!zmqkeyDir.isDirectory()) {
+            if (!zmqkeyDir.mkdir()) {
+                System.out.println("zmq keystore directory could not be created. " +
+                    "Please check user permissions or create directory manually.");
+                System.exit(1);
+            }
+            System.out.println();
+        }
+    }
+
     /**
      * Print the CLI help info.
      */
@@ -353,7 +422,7 @@ public class Cli {
      * @return boolean
      */
     private boolean exportPrivateKey(String address) {
-        if (!Keystore.exist(address)) {
+        if (!exist(address)) {
             System.out.println("The account does not exist!");
             return false;
         }

@@ -167,6 +167,8 @@
                 <pathelement location="${dir.lib}/guava-25.1-jre.jar"/>
                 <pathelement location="${dir.lib}/libnsc.jar"/>
                 <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
+	        <pathelement location="${dir.lib}/libnzmq.jar"/>
+	        <pathelement location="${dir.lib}/jsr305-3.0.2.jar"/>
             </modulepath>
         </javac>
 

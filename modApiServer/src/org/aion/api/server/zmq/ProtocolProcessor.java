@@ -90,6 +90,15 @@ public class ProtocolProcessor implements Runnable {
 
             // create router sock.
             Socket feSock = ctx.socket(ROUTER);
+            if (cfgApi.isSecureConnectEnabledEnabled()) {
+                feSock.setZAPDomain("global".getBytes());
+                feSock.setCurveServer(true);
+
+            }
+
+
+
+
             feSock.setSndHWM(zmqHWM);
             feSock.bind(bindAddr);
 
