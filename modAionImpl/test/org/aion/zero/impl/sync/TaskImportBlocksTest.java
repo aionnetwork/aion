@@ -23,6 +23,11 @@
 package org.aion.zero.impl.sync;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.zero.impl.BlockchainTestUtils.generateAccounts;
+import static org.aion.zero.impl.BlockchainTestUtils.generateNewBlock;
+import static org.aion.zero.impl.BlockchainTestUtils.generateNextBlock;
+import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChain;
+import static org.aion.zero.impl.sync.TaskImportBlocks.isAlreadyStored;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +38,11 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.aion.crypto.ECKey;
+import org.aion.mcf.core.ImportResult;
+import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.sync.PeerState.Mode;
+import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -41,7 +50,7 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class TaskImportBlocksTest {
 
-    /** @return parameters for {@link #testCountStates(long, long,Mode, Collection)} */
+    /** @return parameters for {@link #testCountStates(long, long, Mode, Collection)} */
     @SuppressWarnings("unused")
     private Object parametersForTestCountStates() {
         List<Object> parameters = new ArrayList<>();
@@ -127,5 +136,40 @@ public class TaskImportBlocksTest {
         long actual = TaskImportBlocks.selectBase(best, set);
         assertThat(actual).isEqualTo(expected);
         assertThat(set).isEqualTo(expectedSet);
+    }
+
+    @Test
+    public void testIsAlreadyStored() {
+        List<ECKey> accounts = generateAccounts(10);
+
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle =
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChain(chain, 3, 1, accounts, 10);
+
+        AionBlock current = chain.getBestBlock();
+        while (current.getNumber() > 0) {
+            // will pass both checks
+            assertThat(isAlreadyStored(chain.getBlockStore(), current)).isTrue();
+            current = chain.getBlockByHash(current.getParentHash());
+        }
+
+        // will fail the max number check
+        current = generateNextBlock(chain, accounts, 10);
+        assertThat(isAlreadyStored(chain.getBlockStore(), current)).isFalse();
+
+        assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(isAlreadyStored(chain.getBlockStore(), current)).isTrue();
+
+        // will fail the existence check
+        current = generateNewBlock(chain, chain.getGenesis(), accounts, 10);
+        assertThat(isAlreadyStored(chain.getBlockStore(), current)).isFalse();
+
+        assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        assertThat(isAlreadyStored(chain.getBlockStore(), current)).isTrue();
     }
 }

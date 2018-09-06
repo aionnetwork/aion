@@ -188,4 +188,49 @@ public class BlockchainTestUtils {
                     result.toString());
         }
     }
+
+    /**
+     * @param chain blockchain implementation to be populated
+     * @param accounts existing accounts
+     * @param txCount maximum number of transactions per block
+     */
+    public static AionBlock generateNextBlock(
+            StandaloneBlockchain chain, List<ECKey> accounts, int txCount) {
+
+        AionBlock block, parent = chain.getBestBlock();
+        AionRepositoryImpl repo = chain.getRepository();
+        List<AionTransaction> txs = generateTransactions(txCount, accounts, repo);
+
+        long time = System.currentTimeMillis();
+        block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+        block.setExtraData(String.valueOf(time).getBytes());
+        return block;
+    }
+
+    /**
+     * @param chain blockchain implementation to be populated
+     * @param parent the parent block for the newly generated block
+     * @param accounts existing accounts
+     * @param txCount maximum number of transactions per block
+     * @implNote returns {@code null} if the parent block is not part of the chain
+     */
+    public static AionBlock generateNewBlock(
+            StandaloneBlockchain chain, AionBlock parent, List<ECKey> accounts, int txCount) {
+        if (!chain.getBlockStore().isBlockExist(parent.getHash())) return null;
+
+        AionBlock block;
+        AionRepositoryImpl repo = chain.getRepository();
+        List<AionTransaction> txs;
+
+        // generate transactions for correct root
+        byte[] originalRoot = repo.getRoot();
+        repo.syncToRoot(parent.getStateRoot());
+        txs = generateTransactions(txCount, accounts, repo);
+        repo.syncToRoot(originalRoot);
+
+        long time = System.currentTimeMillis();
+        block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+        block.setExtraData(String.valueOf(time).getBytes());
+        return block;
+    }
 }

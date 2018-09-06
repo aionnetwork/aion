@@ -52,6 +52,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.ImportResult;
 import org.aion.p2p.P2pConstant;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.sync.PeerState.Mode;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
@@ -173,9 +174,10 @@ final class TaskImportBlocks implements Runnable {
     }
 
     /** @implNote Typically called when state.getMode() in { NORMAL, LIGHTNING, THUNDER }. */
-    private PeerState attemptLightningJump(Collection<PeerState> set, PeerState state, long best) {
-        long normalStates = countStates(best, NORMAL, set) + countStates(best, THUNDER, set);
-        long fastStates = countStates(best, LIGHTNING, set);
+    private PeerState attemptLightningJump(
+            Collection<PeerState> states, PeerState state, long best) {
+        long normalStates = countStates(best, NORMAL, states) + countStates(best, THUNDER, states);
+        long fastStates = countStates(best, LIGHTNING, states);
 
         state.incRepeated();
         // in NORMAL mode and blocks filtered out
@@ -200,8 +202,8 @@ final class TaskImportBlocks implements Runnable {
     }
 
     /**
-     * Computes the number of states from the given ones that have the give mode and a last best
-     * block status larger than the given number.
+     * Utility method that computes the number of states from the given ones that have the give mode
+     * and a last best block status larger than the given number.
      *
      * @param states the list of peer states to be explored
      * @param mode the state mode we are searching for
@@ -216,9 +218,9 @@ final class TaskImportBlocks implements Runnable {
     }
 
     /**
-     * Returns a number greater or equal to the given best representing the base value for the next
-     * LIGHTNING request. The returned base will be either retrieved from the set of previously
-     * generated values that have not yet been used or the best value itself.
+     * Utility method that selects a number greater or equal to the given best representing the base
+     * value for the next LIGHTNING request. The returned base will be either retrieved from the set
+     * of previously generated values that have not yet been used or the best value itself.
      *
      * @param best the starting point value for the next base
      * @param baseSet list of already generated values
@@ -240,9 +242,18 @@ final class TaskImportBlocks implements Runnable {
         }
     }
 
-    private boolean wasPreviouslyStored(AionBlock block) {
-        return chain.getBlockStore().getMaxNumber() >= block.getNumber()
-                && chain.getBlockStore().isBlockExist(block.getHash());
+    /**
+     * Utility method that determines if the given block is already stored in the given block store
+     * without going through the process of trying to import the block.
+     *
+     * @apiNote Should be used when we aim to bypass any recovery methods set in place for importing
+     *     old blocks, for example when blocks are imported in {@link PeerState.Mode#FORWARD} mode.
+     * @param store the block store that may contain the given block
+     * @param block the block for which we need to determine if it is already stored or not
+     * @return {@code true} if the given block exists in the block store, {@code false} otherwise.
+     */
+    static boolean isAlreadyStored(AionBlockStore store, AionBlock block) {
+        return store.getMaxNumber() >= block.getNumber() && store.isBlockExist(block.getHash());
     }
 
     /** @implNote This method is called only when state is not null. */
@@ -279,7 +290,7 @@ final class TaskImportBlocks implements Runnable {
             Mode mode = givenState.getMode();
 
             // last block exists when in FORWARD mode
-            if ((mode == FORWARD && wasPreviouslyStored(b))
+            if ((mode == FORWARD && isAlreadyStored(chain.getBlockStore(), b))
                     // late returns on main chain requests
                     // where the blocks are behind the local chain and can be discarded
                     || (mode != FORWARD && b.getNumber() < getBestBlockNumber())) {
