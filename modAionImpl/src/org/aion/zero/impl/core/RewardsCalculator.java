@@ -24,10 +24,10 @@
 
 package org.aion.zero.impl.core;
 
-import java.math.BigInteger;
-
+import org.aion.base.type.IBlockHeader;
 import org.aion.zero.api.BlockConstants;
-import org.aion.mcf.types.AbstractBlockHeader;
+
+import java.math.BigInteger;
 
 /**
  * Multiple implementations for calculating the rewards
@@ -54,7 +54,7 @@ public class RewardsCalculator {
     /**
      * Linear ramp function that falls off after the upper bound
      */
-    public BigInteger calculateReward(AbstractBlockHeader blockHeader) {
+    public BigInteger calculateReward(IBlockHeader blockHeader) {
         long number = blockHeader.getNumber();
         if (number <= this.constants.getRampUpUpperBound()) {
             return BigInteger.valueOf(number).multiply(m).add(this.constants.getRampUpStartValue());
