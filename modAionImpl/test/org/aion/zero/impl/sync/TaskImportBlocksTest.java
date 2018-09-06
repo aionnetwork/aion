@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -39,9 +41,9 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class TaskImportBlocksTest {
 
-    /** @return parameters for {@link #testGetStateCount(Collection, Mode, long, long)} */
+    /** @return parameters for {@link #testCountStates(long, long,Mode, Collection)} */
     @SuppressWarnings("unused")
-    private Object parametersForTestGetStateCount() {
+    private Object parametersForTestCountStates() {
         List<Object> parameters = new ArrayList<>();
 
         PeerState state;
@@ -60,34 +62,70 @@ public class TaskImportBlocksTest {
         }
 
         for (PeerState.Mode mode : PeerState.Mode.values()) {
-            parameters.add(new Object[] {Collections.EMPTY_LIST, mode, -1L, 0L});
-            parameters.add(new Object[] {set1, mode, 50L, 1L});
-            parameters.add(new Object[] {set1, mode, 100L, 0L});
-            parameters.add(new Object[] {set2, mode, 99L, 2L});
-            parameters.add(new Object[] {set2, mode, 100L, 1L});
-            parameters.add(new Object[] {set2, mode, 199L, 1L});
-            parameters.add(new Object[] {set2, mode, 200L, 0L});
+            parameters.add(new Object[] {0L, -1L, mode, Collections.emptySet()});
+            parameters.add(new Object[] {1L, 50L, mode, set1});
+            parameters.add(new Object[] {0L, 100L, mode, set1});
+            parameters.add(new Object[] {2L, 99L, mode, set2});
+            parameters.add(new Object[] {1L, 100L, mode, set2});
+            parameters.add(new Object[] {1L, 199L, mode, set2});
+            parameters.add(new Object[] {0L, 200L, mode, set2});
             List<PeerState> set3 =
                     new ArrayList<>(set2)
                             .stream()
                             .filter(s -> s.getMode() != mode)
                             .collect(Collectors.toList());
-            parameters.add(new Object[] {set3, mode, -1L, 0L});
+            parameters.add(new Object[] {0L, -1L, mode, set3});
         }
 
         return parameters.toArray();
     }
 
     @Test
-    @Parameters(method = "parametersForTestGetStateCount")
-    public void testGetStateCount(
-            Collection<PeerState> allStates, PeerState.Mode mode, long best, long expected) {
-        long actual = TaskImportBlocks.getStateCount(allStates, mode, best);
-        if (actual != expected) {
-            System.out.println(allStates);
-            System.out.println(mode);
-            System.out.println(best);
-        }
+    @Parameters(method = "parametersForTestCountStates")
+    public void testCountStates(long expected, long best, Mode mode, Collection<PeerState> set) {
+        long actual = TaskImportBlocks.countStates(best, mode, set);
         assertThat(actual).isEqualTo(expected);
+    }
+
+    /** @return parameters for {@link #testSelectBase(long, long, SortedSet, SortedSet)} */
+    @SuppressWarnings("unused")
+    private Object parametersForTestSelectBase() {
+        List<Object> parameters = new ArrayList<>();
+
+        SortedSet<Long> emptySet = new TreeSet<>();
+        parameters.add(new Object[] {100L, 100L, new TreeSet<Long>(), new TreeSet<Long>()});
+
+        SortedSet<Long> set1 = new TreeSet<>();
+        set1.add(200L);
+        parameters.add(new Object[] {200L, 100L, set1, new TreeSet<Long>()});
+
+        SortedSet<Long> set2 = new TreeSet<>();
+        set2.add(10L);
+        set2.add(50L);
+        set2.add(100L);
+        set2.add(200L);
+        set2.add(300L);
+        SortedSet<Long> expectedSet = new TreeSet<>();
+        expectedSet.add(300L);
+        parameters.add(new Object[] {200L, 100L, set2, expectedSet});
+
+        SortedSet<Long> set3 = new TreeSet<>();
+        set3.addAll(set2);
+        parameters.add(new Object[] {300L, 300L, set3, new TreeSet<Long>()});
+
+        SortedSet<Long> set4 = new TreeSet<>();
+        set3.addAll(set2);
+        parameters.add(new Object[] {310L, 310L, set4, new TreeSet<Long>()});
+
+        return parameters.toArray();
+    }
+
+    @Test
+    @Parameters(method = "parametersForTestSelectBase")
+    public void testSelectBase(
+            long expected, long best, SortedSet<Long> set, SortedSet<Long> expectedSet) {
+        long actual = TaskImportBlocks.selectBase(best, set);
+        assertThat(actual).isEqualTo(expected);
+        assertThat(set).isEqualTo(expectedSet);
     }
 }

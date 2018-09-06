@@ -43,6 +43,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -77,7 +79,7 @@ final class TaskImportBlocks implements Runnable {
 
     private final Logger log;
 
-    private List<Long> baseList;
+    private SortedSet<Long> baseList;
     private PeerState state;
 
     TaskImportBlocks(
@@ -95,7 +97,7 @@ final class TaskImportBlocks implements Runnable {
         this.importedBlockHashes = _importedBlockHashes;
         this.peerStates = _peerStates;
         this.log = _log;
-        this.baseList = new ArrayList<>();
+        this.baseList = new TreeSet<>();
         this.state = new PeerState(NORMAL, 0L);
     }
 
@@ -105,27 +107,6 @@ final class TaskImportBlocks implements Runnable {
 
     private boolean isNotRestricted(AionBlock b) {
         return !chain.isPruneRestricted(b.getNumber());
-    }
-
-    /** Returns either a recycled base or generates a new one. */
-    private long getNextBase() {
-        long best = getBestBlockNumber();
-
-        // remove bases that are no longer relevant
-        while (!baseList.isEmpty() && baseList.get(0) <= best) {
-            baseList.remove(0);
-        }
-
-        if (baseList.isEmpty()) {
-            return chain.nextBase(best);
-        } else {
-            return baseList.remove(0);
-        }
-    }
-
-    /** Add an unused base to the list. */
-    private void recycleNextBase(long base) {
-        baseList.add(base);
     }
 
     @Override
@@ -192,9 +173,9 @@ final class TaskImportBlocks implements Runnable {
     }
 
     /** @implNote Typically called when state.getMode() in { NORMAL, LIGHTNING, THUNDER }. */
-    private PeerState attemptLightningJump(Collection<PeerState> all, PeerState state, long best) {
-        long normalStates = getStateCount(all, NORMAL, best) + getStateCount(all, THUNDER, best);
-        long fastStates = getStateCount(all, LIGHTNING, best);
+    private PeerState attemptLightningJump(Collection<PeerState> set, PeerState state, long best) {
+        long normalStates = countStates(best, NORMAL, set) + countStates(best, THUNDER, set);
+        long fastStates = countStates(best, LIGHTNING, set);
 
         state.incRepeated();
         // in NORMAL mode and blocks filtered out
@@ -203,12 +184,12 @@ final class TaskImportBlocks implements Runnable {
                         || normalStates > MAX_NORMAL_PEERS)) {
             // targeting around same number of LIGHTNING and NORMAL sync nodes
             // with a minimum of 4 NORMAL nodes
-            long nextBase = getNextBase();
+            baseList.add(chain.nextBase(best));
+            long nextBase = selectBase(best, baseList);
             if (state.getLastBestBlock() > nextBase + LARGE_REQUEST_SIZE) {
                 state.setMode(LIGHTNING);
                 state.setBase(nextBase);
             } else {
-                recycleNextBase(nextBase);
                 if (state.getMode() == LIGHTNING) {
                     // can't jump so ramp down
                     state.setMode(THUNDER);
@@ -227,11 +208,36 @@ final class TaskImportBlocks implements Runnable {
      * @param best the minimum accepted last best block status for the peer
      * @return the number of states that satisfy the condition above.
      */
-    static long getStateCount(Collection<PeerState> states, Mode mode, long best) {
+    static long countStates(long best, Mode mode, Collection<PeerState> states) {
         return states.stream()
                 .filter(s -> s.getLastBestBlock() > best)
                 .filter(s -> s.getMode() == mode)
                 .count();
+    }
+
+    /**
+     * Returns a number greater or equal to the given best representing the base value for the next
+     * LIGHTNING request. The returned base will be either retrieved from the set of previously
+     * generated values that have not yet been used or the best value itself.
+     *
+     * @param best the starting point value for the next base
+     * @param baseSet list of already generated values
+     * @return the next base from the set or the given best value when the set does not contain any
+     *     values greater than it.
+     */
+    static long selectBase(long best, SortedSet<Long> baseSet) {
+        // remove bases that are no longer relevant
+        while (!baseSet.isEmpty() && baseSet.first() <= best) {
+            baseSet.remove(baseSet.first());
+        }
+
+        if (baseSet.isEmpty()) {
+            return best;
+        } else {
+            Long first = baseSet.first();
+            baseSet.remove(first);
+            return first;
+        }
     }
 
     private boolean wasPreviouslyStored(AionBlock block) {

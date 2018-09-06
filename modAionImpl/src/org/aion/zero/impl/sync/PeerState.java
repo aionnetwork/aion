@@ -138,17 +138,17 @@ public class PeerState {
 
     @Override
     public String toString() {
-        return "PeerState{"
-                + mode
+        return "{"
+                + mode.toString().charAt(0)
                 + ", "
-                + state
-                + ", base="
+                + state.toString().substring(0, 2)
+                + ", "
                 + base
-                + ", r="
+                + ", "
                 + repeated
-                + ", best="
+                + ", "
                 + lastBestBlock
-                + ", lHR="
+                + ", "
                 + lastHeaderRequest
                 + '}';
     }
