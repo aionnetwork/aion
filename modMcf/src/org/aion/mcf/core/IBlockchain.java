@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
+import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
@@ -99,4 +100,6 @@ public interface IBlockchain<
     BLK getBestBlock();
 
     void flush();
+
+    IChainCfg<?, ?> getChainConfiguration();
 }
