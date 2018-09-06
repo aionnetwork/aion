@@ -27,8 +27,15 @@ import static org.aion.api.server.pb.ApiAion0.JAVAAPI_VAR;
 import static org.zeromq.ZMQ.DEALER;
 import static org.zeromq.ZMQ.ROUTER;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -44,6 +51,7 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.account.KeystoreFormat;
 import org.aion.mcf.config.CfgApiZmq;
 import org.slf4j.Logger;
 import org.zeromq.ZMQ;
@@ -53,22 +61,39 @@ import org.zeromq.ZMQ.Socket;
 public class ProtocolProcessor implements Runnable {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
-    private final IHdlr handler;
     private static final String AION_ZMQ_WK_TH = "inproc://aionZmqWkTh";
     private static final String AION_ZMQ_CB_TH = "inproc://aionZmqCbTh";
     private static final String AION_ZMQ_EV_TH = "inproc://aionZmqEvTh";
     private static final String AION_ZMQ_HB_TH = "inproc://aionZmqHbTh";
-
-    private CfgApiZmq cfgApi;
-    private AtomicBoolean shutDown = new AtomicBoolean();
-
+    private static final String CURVEKEY_PATH;
+    private static final Path PATH;
     private static final long zmqHWM = 100_000;
     private static final int SOCKETID_LEN = 5;
     private static final int SOCKET_RECV_TIMEOUT = 3000;
 
+    static {
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.dir");
+        }
+        CURVEKEY_PATH = storageDir + "/" + CfgApiZmq.ZMQ_KEY_DIR;
+        PATH = Paths.get(CURVEKEY_PATH);
+    }
+
+    private final IHdlr handler;
+    private CfgApiZmq cfgApi;
+    private AtomicBoolean shutDown = new AtomicBoolean();
+    private byte[] curvePubKey;
+    private byte[] curveSecKey;
+
     public ProtocolProcessor(IHdlr _handler, final CfgApiZmq cfg) {
         this.handler = _handler;
         this.cfgApi = cfg;
+    }
+
+    private static List<File> getFiles() {
+        File[] files = PATH.toFile().listFiles();
+        return files != null ? Arrays.asList(files) : Collections.emptyList();
     }
 
     public void shutdown() throws InterruptedException {
@@ -91,13 +116,21 @@ public class ProtocolProcessor implements Runnable {
             // create router sock.
             Socket feSock = ctx.socket(ROUTER);
             if (cfgApi.isSecureConnectEnabledEnabled()) {
-                feSock.setZAPDomain("global".getBytes());
-                feSock.setCurveServer(true);
+                // Currently the system will only load the first pair of the key files.
+                loadCurveKeyPair();
 
+                if (curveSecKey != null && curvePubKey != null) {
+                    feSock.setZAPDomain("global".getBytes());
+                    feSock.setCurveServer(true);
+                    feSock.setCurvePublicKey(curvePubKey);
+                    feSock.setCurveSecretKey(curveSecKey);
+                    LOG.info("Secure connection enabled!");
+                } else {
+                    LOG.info("Secure connection disabled!");
+                }
+            } else {
+                LOG.info("Secure connection disabled!");
             }
-
-
-
 
             feSock.setSndHWM(zmqHWM);
             feSock.bind(bindAddr);
@@ -153,6 +186,28 @@ public class ProtocolProcessor implements Runnable {
         }
     }
 
+    private void loadCurveKeyPair() {
+        List<File> files = getFiles();
+        String nextLoad = "";
+        for (File f : files) {
+            if (f.getName().contains("zmqCurvePubkey")) {
+                try {
+                    curvePubKey = Files.readAllBytes(f.toPath());
+                    nextLoad = f.getName().replace("zmqCurvePubkey", "zmqCurveSeckey");
+                } catch (IOException e) {
+                    LOG.error("Get zmqCurvePubkey exception! {}", e.toString());
+                }
+            } else if (nextLoad.contentEquals(f.getName())){
+                try {
+                    curveSecKey = Files.readAllBytes(f.toPath());
+                } catch (IOException e) {
+                    LOG.error("Get zmqCurveSeckey exception! {}", e.toString());
+                }
+                break;
+            }
+        }
+    }
+
     private void eventRun(Context ctx) {
         Socket sock = ctx.socket(ZMQ.DEALER);
         sock.connect(AION_ZMQ_EV_TH);
@@ -177,15 +232,18 @@ public class ProtocolProcessor implements Runnable {
                     }
 
                     if (!al.isEmpty()) {
-                        Message.rsp_EventCtCallback ecb = Message.rsp_EventCtCallback.newBuilder().addAllEc(al).build();
+                        Message.rsp_EventCtCallback ecb = Message.rsp_EventCtCallback.newBuilder()
+                            .addAllEc(al).build();
                         byte[] rsp = ((HdlrZmq) this.handler).toRspEvtMsg(ecb.toByteArray());
 
                         try {
-                            byte[] socketId = ByteBuffer.allocate(5).put(ByteUtil.longToBytes(i), 3, 5).array();
+                            byte[] socketId = ByteBuffer.allocate(5)
+                                .put(ByteUtil.longToBytes(i), 3, 5).array();
                             sock.send(socketId, ZMQ.SNDMORE);
                             sock.send(rsp, ZMQ.DONTWAIT);
                         } catch (Exception e) {
-                            LOG.error("ProtocolProcessor.callbackRun sock.send exception: " + e.getMessage());
+                            LOG.error("ProtocolProcessor.callbackRun sock.send exception: " + e
+                                .getMessage());
                         }
                     }
                 }
@@ -229,19 +287,25 @@ public class ProtocolProcessor implements Runnable {
             }
 
             byte[] rsp = tps.toTxReturnCode() != 105
-                    ? ((HdlrZmq) this.handler).toRspMsg(tps.getMsgHash(), tps.toTxReturnCode(), tps.getError())
-                    : ((HdlrZmq) this.handler).toRspMsg(tps.getMsgHash(), tps.toTxReturnCode(), tps.getError(), tps.getTxResult());
+                ? ((HdlrZmq) this.handler)
+                .toRspMsg(tps.getMsgHash(), tps.toTxReturnCode(), tps.getError())
+                : ((HdlrZmq) this.handler)
+                    .toRspMsg(tps.getMsgHash(), tps.toTxReturnCode(), tps.getError(),
+                        tps.getTxResult());
             if (LOG.isTraceEnabled()) {
-                LOG.trace("callbackRun send. socketID: [{}], msgHash: [{}], txReturnCode: [{}]/n rspMsg: [{}]",
-                        Hex.toHexString(tps.getSocketId()), Hex.toHexString(tps.getMsgHash()), tps.toTxReturnCode(),
-                        Hex.toHexString(rsp));
+                LOG.trace(
+                    "callbackRun send. socketID: [{}], msgHash: [{}], txReturnCode: [{}]/n rspMsg: [{}]",
+                    Hex.toHexString(tps.getSocketId()), Hex.toHexString(tps.getMsgHash()),
+                    tps.toTxReturnCode(),
+                    Hex.toHexString(rsp));
             }
             try {
                 sock.send(tps.getSocketId(), ZMQ.SNDMORE);
                 sock.send(rsp, ZMQ.DONTWAIT);
             } catch (Exception e) {
                 if (LOG.isErrorEnabled()) {
-                    LOG.error("ProtocolProcessor.callbackRun sock.send exception: " + e.getMessage());
+                    LOG.error(
+                        "ProtocolProcessor.callbackRun sock.send exception: " + e.getMessage());
                 }
             }
         }
@@ -260,7 +324,8 @@ public class ProtocolProcessor implements Runnable {
             try {
                 byte[] socketId = sock.recv(0);
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("ProtocolProcessor.workerRun socketID: [{}]", Hex.toHexString(socketId));
+                    LOG.trace("ProtocolProcessor.workerRun socketID: [{}]",
+                        Hex.toHexString(socketId));
                 }
                 if (socketId != null && socketId.length == SOCKETID_LEN) {
                     byte[] req = sock.recv(0);

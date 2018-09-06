@@ -166,7 +166,7 @@ public class Cli {
                     checkZmqKeystoreDir();
                     ZMQ.Curve.KeyPair kp = ZMQ.Curve.generateKeyPair();
                     genKeyFile(kp.publicKey, kp.secretKey);
-                    System.out.println("genZmqKeyPairFinished!");
+                    System.out.println("Generate ZmqKeyPairFinished!");
                     return 1;
                 case "-r":
                     if (args.length < 2) {
