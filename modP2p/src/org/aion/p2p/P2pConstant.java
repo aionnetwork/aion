@@ -57,7 +57,9 @@ public class P2pConstant {
 
     MIN_NORMAL_PEERS = 4,
 
-    COEFFICIENT_FAST_PEERS = 2,
+    MAX_NORMAL_PEERS = 16,
+
+    COEFFICIENT_NORMAL_PEERS = 2,
 
     // NOTE: the 3 values below are interdependent
     // do not change one without considering the impact to the others

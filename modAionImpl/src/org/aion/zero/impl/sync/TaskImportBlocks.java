@@ -29,8 +29,9 @@
 
 package org.aion.zero.impl.sync;
 
-import static org.aion.p2p.P2pConstant.COEFFICIENT_FAST_PEERS;
+import static org.aion.p2p.P2pConstant.COEFFICIENT_NORMAL_PEERS;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
+import static org.aion.p2p.P2pConstant.MAX_NORMAL_PEERS;
 import static org.aion.p2p.P2pConstant.MIN_NORMAL_PEERS;
 import static org.aion.zero.impl.sync.PeerState.Mode.BACKWARD;
 import static org.aion.zero.impl.sync.PeerState.Mode.FORWARD;
@@ -197,7 +198,9 @@ final class TaskImportBlocks implements Runnable {
 
         state.incRepeated();
         // in NORMAL mode and blocks filtered out
-        if (normalStates > MIN_NORMAL_PEERS && COEFFICIENT_FAST_PEERS * fastStates < normalStates) {
+        if (normalStates > MIN_NORMAL_PEERS
+                && (fastStates < COEFFICIENT_NORMAL_PEERS * normalStates
+                        || normalStates > MAX_NORMAL_PEERS)) {
             // targeting around same number of LIGHTNING and NORMAL sync nodes
             // with a minimum of 4 NORMAL nodes
             long nextBase = getNextBase();
