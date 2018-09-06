@@ -88,6 +88,7 @@
                 <pathelement location="${dir.mod}/modEvtMgr.jar"/>
                 <pathelement location="${dir.mod}/modMcf.jar"/>
                 <pathelement location="${dir.mod}/modP2p.jar"/>
+                <pathelement location="${dir.mod}/modFastVM.jar"/>
                 <pathelement location="${dir.lib}/libnsc.jar"/>
                 <pathelement location="${dir.lib}/libnzmq.jar"/>
                 <pathelement location="${dir.lib}/slf4j-api-1.7.25.jar"/>
