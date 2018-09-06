@@ -44,32 +44,13 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import org.aion.api.server.ApiAion;
 import org.aion.api.server.types.*;
-import org.aion.api.server.types.ArgFltr;
-import org.aion.api.server.types.ArgTxCall;
-import org.aion.api.server.types.Blk;
-import org.aion.api.server.types.CompiledContr;
-import org.aion.api.server.types.Evt;
-import org.aion.api.server.types.Fltr;
-import org.aion.api.server.types.FltrBlk;
-import org.aion.api.server.types.FltrLg;
-import org.aion.api.server.types.FltrTx;
-import org.aion.api.server.types.NumericalValue;
-import org.aion.api.server.types.SyncInfo;
-import org.aion.api.server.types.Tx;
-import org.aion.api.server.types.TxRecpt;
 import org.aion.base.db.IRepository;
 import org.aion.base.type.Address;
-import org.aion.base.type.Hash256;
+import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.TypeConverter;
-import org.aion.base.util.Utils;
-import org.aion.base.vm.IDataWord;
-import org.aion.base.type.*;
 import org.aion.base.util.*;
+import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
@@ -86,7 +67,6 @@ import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
-import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -99,7 +79,6 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.PeerState;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.apache.commons.collections4.map.LRUMap;
@@ -765,9 +744,7 @@ public class ApiWeb3Aion extends ApiAion {
             LOG.debug("<get-block hash={} err=not-found>", _hash);
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         } else {
-            BigInteger totalDiff =
-                    ((IChainInstancePOW)this.ac).getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
-            return new RpcMsg(Blk.AionBlockToJson(block, totalDiff, _fullTx));
+            return new RpcMsg(Blk.AionBlockToJson(block, getBlockTotalDifficulty(hash), _fullTx));
         }
     }
 
@@ -795,9 +772,7 @@ public class ApiWeb3Aion extends ApiAion {
             LOG.debug("<get-block bn={} err=not-found>", bn);
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         } else {
-            BigInteger totalDiff =
-                    ((IChainInstancePOW) this.ac).getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
-            return new RpcMsg(Blk.AionBlockToJson(nb, totalDiff, _fullTx));
+            return new RpcMsg(Blk.AionBlockToJson(nb, getBlockTotalDifficulty(nb.getHash()), _fullTx));
         }
     }
 
@@ -1333,8 +1308,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         if (block == null) return new RpcMsg(JSONObject.NULL);
 
-        BigInteger totalDiff = ((IChainInstancePOW) this.ac).getBlockchain().getTotalDifficultyByHash(new Hash256(hash));
-        return new RpcMsg(dumpBlock(block, totalDiff, false));
+        return new RpcMsg(dumpBlock(block, getBlockTotalDifficulty(block.getHash()), false));
     }
 
     public RpcMsg priv_dumpBlockByNumber(Object _params) {
@@ -1358,9 +1332,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         if (block == null) return new RpcMsg(JSONObject.NULL);
 
-        BigInteger totalDiff =
-                ((IChainInstancePOW) this.ac).getBlockchain().getTotalDifficultyByHash(new Hash256(block.getHash()));
-        return new RpcMsg(dumpBlock(block, totalDiff, false));
+        return new RpcMsg(dumpBlock(block, getBlockTotalDifficulty(block.getHash()), false));
     }
 
     private static JSONObject dumpBlock(IBlock block, BigInteger totalDiff, boolean full) {
@@ -1407,9 +1379,7 @@ public class ApiWeb3Aion extends ApiAion {
         JSONObject blockchain = new JSONObject();
         blockchain.put("bestBlockhash", ByteUtil.toHexString(block.getHash()));
         blockchain.put("bestNumber", block.getNumber());
-        blockchain.put(
-                "totalDifficulty",
-                ((IChainInstancePOW) this.ac).getBlockchain().getTotalDifficultyByHash(new Hash256(block.getHash())));
+            blockchain.put("totalDifficulty",getBlockTotalDifficulty(block.getHash()));
         // end
         obj.put("local", blockchain);
 
@@ -1709,8 +1679,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         private JSONObject getJson(IBlock _b) {
-            BigInteger totalDiff = ((IChainInstancePOW) ac).getAionHub().getBlockStore().getTotalDifficultyForHash(_b.getHash());
-            return Blk.AionBlockOnlyToJson(_b, totalDiff);
+            return Blk.AionBlockOnlyToJson(_b, getBlockTotalDifficulty(_b.getHash()));
         }
 
         private JSONObject buildResponse() {
@@ -1722,8 +1691,8 @@ public class ApiWeb3Aion extends ApiAion {
                 byte[] hash = hashQueue.get(i);
                 JSONObject blk = blkList.get(hash);
                 if (i < hashQueue.size() - 1) {
-                    AionBlock blkThis = (AionBlock) blkObjList.get(hash);
-                    AionBlock blkNext = (AionBlock) blkObjList.get(hashQueue.get(i + 1));
+                    IBlock blkThis = blkObjList.get(hash);
+                    IBlock blkNext = blkObjList.get(hashQueue.get(i + 1));
                     blk.put("blockTime", blkThis.getTimestamp() - blkNext.getTimestamp());
                 }
                 blks.put(blk);
@@ -1759,21 +1728,22 @@ public class ApiWeb3Aion extends ApiAion {
 
             int count = blkObjList.size();
             Long lastBlkTimestamp = null;
-            AionBlock b = null;
+            IBlock b = null;
             ListIterator li = hashQueue.listIterator(0);
             while (li.hasNext()) {
                 byte[] hash = (byte[]) li.next();
-                b = (AionBlock) blkObjList.get(hash);
+                b = blkObjList.get(hash);
 
                 if (lastBlkTimestamp != null) {
                     blkTimeAccumulator += (lastBlkTimestamp - b.getTimestamp());
                 }
                 lastBlkTimestamp = b.getTimestamp();
 
-                difficultyAccumulator =
-                        difficultyAccumulator.add(new BigInteger(b.getDifficulty()));
-                lastDifficulty = new BigInteger(b.getDifficulty());
-
+                if (b instanceof AionBlock) {
+                    difficultyAccumulator =
+                            difficultyAccumulator.add(new BigInteger(((AionBlock)b).getDifficulty()));
+                    lastDifficulty = new BigInteger(((AionBlock) b).getDifficulty());
+                }
                 nrgConsumedAccumulator =
                         nrgConsumedAccumulator.add(
                                 new BigInteger(Long.toString(b.getNrgConsumed())));
@@ -1782,8 +1752,7 @@ public class ApiWeb3Aion extends ApiAion {
                 txnCount += b.getTransactionsList().size();
             }
 
-            BigInteger lastBlkReward =
-                    ((AionBlockchainImpl) ac.getBlockchain())
+            BigInteger lastBlkReward = ac.getBlockchain()
                             .getChainConfiguration()
                             .getRewardsCalculator()
                             .calculateReward(b.getHeader());
@@ -1811,8 +1780,8 @@ public class ApiWeb3Aion extends ApiAion {
             long currentBlockchainHead = 0;
 
             if (hashQueue.size() > 0) {
-                AionBlock startBlockObj = (AionBlock) blkObjList.get(hashQueue.peekLast());
-                AionBlock endBlockObj = (AionBlock) blkObjList.get(hashQueue.peekFirst());
+                IBlock startBlockObj = blkObjList.get(hashQueue.peekLast());
+                IBlock endBlockObj = blkObjList.get(hashQueue.peekFirst());
 
                 startBlock = startBlockObj.getNumber();
                 endBlock = endBlockObj.getNumber();
@@ -1981,16 +1950,15 @@ public class ApiWeb3Aion extends ApiAion {
 
         if (txHash == null) return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
 
-        AionTxInfo txInfo = ((IChainInstancePOW) this.ac).getAionHub().getBlockchain().getTransactionInfo(txHash);
+        AbstractTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
 
         if (txInfo == null) return new RpcMsg(JSONObject.NULL);
 
-        AionBlock block =
-                ((IChainInstancePOW) this.ac).getAionHub().getBlockchain().getBlockByHash(txInfo.getBlockHash());
+        IBlock block = this.ac.getAionHub().getBlockchain().getBlockByHash(txInfo.getBlockHash());
 
         if (block == null) return new RpcMsg(JSONObject.NULL);
 
-        AionTransaction tx = txInfo.getReceipt().getTransaction();
+        ITransaction tx = txInfo.getReceipt().getTransaction();
 
         if (tx == null) return new RpcMsg(JSONObject.NULL);
 
@@ -2009,7 +1977,8 @@ public class ApiWeb3Aion extends ApiAion {
         result.put("transactionIndex", txInfo.getIndex());
 
         JSONArray logs = new JSONArray();
-        for (Log l : txInfo.getReceipt().getLogInfoList()) {
+        for (Object logObject : txInfo.getReceipt().getLogInfoList()) {
+            Log l = (Log) logObject;
             JSONObject log = new JSONObject();
             log.put("address", l.getAddress().toString());
             log.put("data", TypeConverter.toJsonHex(l.getData()));
@@ -2038,14 +2007,14 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionBlock block = null;
+        IBlock block = null;
 
         Long bn = this.parseBnOrId(_bnOrHash);
 
         // user passed a Long block number
         if (bn != null) {
             if (bn >= 0) {
-                block = ((IChainInstancePOW) this.ac).getBlockchain().getBlockByNumber(bn);
+                block = this.ac.getBlockchain().getBlockByNumber(bn);
                 if (block == null) return new RpcMsg(JSONObject.NULL);
             } else {
                 return new RpcMsg(JSONObject.NULL);
@@ -2054,11 +2023,11 @@ public class ApiWeb3Aion extends ApiAion {
 
         // see if the user passed in a hash
         if (block == null) {
-            block = ((IChainInstancePOW) this.ac).getBlockchain().getBlockByHash(ByteUtil.hexStringToBytes(_bnOrHash));
+            block = this.ac.getBlockchain().getBlockByHash(ByteUtil.hexStringToBytes(_bnOrHash));
             if (block == null) return new RpcMsg(JSONObject.NULL);
         }
 
-        AionBlock mainBlock = ((IChainInstancePOW) this.ac).getBlockchain().getBlockByNumber(block.getNumber());
+        IBlock mainBlock = this.ac.getBlockchain().getBlockByNumber(block.getNumber());
         if (mainBlock == null) return new RpcMsg(JSONObject.NULL);
 
         if (!FastByteComparisons.equal(block.getHash(), mainBlock.getHash())) {
@@ -2068,12 +2037,11 @@ public class ApiWeb3Aion extends ApiAion {
         // ok so now we have a mainchain block
 
         BigInteger blkReward =
-                ((AionBlockchainImpl) ac.getBlockchain())
+                ac.getBlockchain()
                         .getChainConfiguration()
                         .getRewardsCalculator()
                         .calculateReward(block.getHeader());
-        BigInteger totalDiff =
-                ((IChainInstancePOW) this.ac).getAionHub().getBlockStore().getTotalDifficultyForHash(block.getHash());
+        BigInteger totalDiff = getBlockTotalDifficulty(block.getHash());
 
         JSONObject blk = new JSONObject();
         blk.put("timestampVal", block.getTimestamp());
@@ -2088,10 +2056,13 @@ public class ApiWeb3Aion extends ApiAion {
         blk.put("txTrieRoot", TypeConverter.toJsonHex(block.getTxTrieRoot()));
         blk.put("stateRoot", TypeConverter.toJsonHex(block.getStateRoot()));
 
-        blk.put("difficulty", TypeConverter.toJsonHex(block.getDifficulty()));
-        blk.put("totalDifficulty", totalDiff.toString(16));
-        blk.put("nonce", TypeConverter.toJsonHex(block.getNonce()));
 
+        if (this.ac instanceof IChainInstancePOW) {
+            blk.put("difficulty", TypeConverter.toJsonHex(((AionBlock) block).getDifficulty()));
+            blk.put("totalDifficulty", totalDiff.toString(16));
+            blk.put("nonce", TypeConverter.toJsonHex(((AionBlock) block).getNonce()));
+            blk.put("solution", TypeConverter.toJsonHex(((AionBlock) block).getHeader().getSolution()));
+        }
         blk.put("blockReward", blkReward);
         blk.put("nrgConsumed", block.getNrgConsumed());
         blk.put("nrgLimit", block.getNrgLimit());
@@ -2099,15 +2070,15 @@ public class ApiWeb3Aion extends ApiAion {
         blk.put("size", block.size());
         blk.put("bloom", TypeConverter.toJsonHex(block.getLogBloom()));
         blk.put("extraData", TypeConverter.toJsonHex(block.getExtraData()));
-        blk.put("solution", TypeConverter.toJsonHex(block.getHeader().getSolution()));
 
         JSONObject result = new JSONObject();
         result.put("blk", blk);
 
         if (_fullTx) {
             JSONArray txn = new JSONArray();
-            for (AionTransaction tx : block.getTransactionsList()) {
+            for (Object objectTx: block.getTransactionsList()) {
                 // transactionHash, fromAddr, toAddr, value, timestampVal, blockNumber, blockHash
+                ITransaction tx = (ITransaction) objectTx;
                 JSONArray t = new JSONArray();
                 t.put(TypeConverter.toJsonHex(tx.getHash()));
                 t.put(TypeConverter.toJsonHex(tx.getFrom().toBytes()));
@@ -2584,6 +2555,15 @@ public class ApiWeb3Aion extends ApiAion {
             LOG.debug("err on parsing block number #" + _bnOrId);
             return null;
         }
+    }
+
+    private BigInteger getBlockTotalDifficulty(byte[] hash) {
+        BigInteger totalDiff = null;
+        if (this.ac instanceof IChainInstancePOW) {
+            // Append total difficulty of the block if the current instance uses PoW consensus
+            totalDiff = ((IChainInstancePOW) this.ac).getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
+        }
+        return totalDiff;
     }
 
     public void shutdown() {
