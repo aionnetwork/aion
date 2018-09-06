@@ -126,7 +126,7 @@ public class ProtocolProcessor implements Runnable {
                     feSock.setCurveSecretKey(curveSecKey);
                     LOG.info("Secure connection enabled!");
                 } else {
-                    LOG.info("Secure connection disabled!");
+                    LOG.info("Can't find the keyfile for setup the connection. Secure connection disabled!");
                 }
             } else {
                 LOG.info("Secure connection disabled!");
