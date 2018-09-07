@@ -9,6 +9,7 @@ module aion.boot {
     requires  slf4j.api;
     requires  aion.p2p;
     requires  aion.zero;
+    requires  aion.fastvm;
 
     exports org.aion;
 }
