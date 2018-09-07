@@ -4,7 +4,7 @@ FROM ubuntu:${UBUNTU_VER}
 LABEL maintainers="mihai.cojan@centrys.io, alexandru.laurus@centrys.io"
 
 # prepare for java instalation
-RUN apt-get update && apt-get install -y bzip2 lsb-release wget curl jq locales net-tools libicu-dev libedit-dev
+RUN apt-get update && apt-get install -y bzip2 lsb-release wget curl jq locales net-tools libicu-dev libedit-dev libicu55 libedit2 libffi6 libtinfo5
 RUN apt-get clean
 
 # change locales to UTF-8 in order to avoid bug when changing config.xml

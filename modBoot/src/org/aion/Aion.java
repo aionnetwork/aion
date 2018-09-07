@@ -29,6 +29,7 @@ import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 import java.io.Console;
+import java.io.IOException;
 import java.util.ServiceLoader;
 import java.util.function.Consumer;
 import org.aion.api.server.http.RpcServer;
@@ -49,8 +50,9 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.CfgApiRpc;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.solidity.Compiler;
+import org.aion.utils.NativeLibrary;
 import org.aion.zero.impl.blockchain.AionFactory;
-import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.blockchain.IChainInstancePOW;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
@@ -59,6 +61,16 @@ import org.slf4j.Logger;
 public class Aion {
 
     public static void main(String args[]) {
+
+        // TODO: should we load native libraries first thing?
+        NativeLibrary.checkNativeLibrariesLoaded();
+
+        try {
+            Compiler.getInstance().compileHelloAion();
+        } catch (IOException e) {
+            System.out.println("compiler load failed!");
+            throw new ExceptionInInitializerError();
+        }
 
         /*
          * @ATTENTION: ECKey have two layer: tx layer is KeyFac optional,

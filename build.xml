@@ -16,7 +16,7 @@
 	<property name="dir.pack" value="./pack" />
 	<property name="test.report.dir" value="report" />
 	<property name="compile.debug" value="on" />
-    <property name="vm.version" value="0.2.1" />
+	<property name="vm.version" value="0.3.1" />
 
 	<path id="cp">
 		<pathelement location="${dir.libfile}/slf4j-api-1.7.25.jar" />
