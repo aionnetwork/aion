@@ -73,7 +73,7 @@ public class TaskStatusTest {
         t.start();
         assertTrue(t.isAlive());
 
-        Thread.sleep(30);
+        Thread.sleep(300);
         assertEquals("TERMINATED", t.getState().toString());
     }
 }

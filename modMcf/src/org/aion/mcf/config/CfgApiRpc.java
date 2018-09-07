@@ -59,6 +59,8 @@ public final class CfgApiRpc {
         this.ioThreads = null;
         this.requestQueueSize = null; // null = unbounded queue size
         this.stuckThreadDetectorEnabled = true;
+        this.enabledMethods = null;
+        this.disabledMethods = null;
 
         this.ssl = new CfgSsl();
     }
@@ -67,6 +69,8 @@ public final class CfgApiRpc {
     private String ip;
     private int port;
     private List<String> enabled;
+    private List<String> enabledMethods;
+    private List<String> disabledMethods;
     private boolean corsEnabled;
     private String corsOrigin;
     private boolean filtersEnabled;
@@ -113,6 +117,25 @@ public final class CfgApiRpc {
                             this.enabled = new ArrayList<>(
                                     Stream.of(cs.split(","))
                                     .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
+                                    .collect(Collectors.toList())
+                            );
+                            break;
+                        case "api-methods-enabled":
+                            String enabledMethods = Cfg.readValue(sr).trim();
+                            this.enabledMethods = new ArrayList<>(
+                                Stream.of(enabledMethods.split(","))
+                                    .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
+                                    .collect(Collectors.toList())
+                            );
+                            break;
+                        case "api-methods-disabled":
+                            String disabledMethods = Cfg.readValue(sr).trim();
+                            this.disabledMethods = new ArrayList<>(
+                                Stream.of(disabledMethods.split(","))
+                                    .map(String::trim)
+                                    .filter(s -> !s.isEmpty())
                                     .collect(Collectors.toList())
                             );
                             break;
@@ -229,6 +252,18 @@ public final class CfgApiRpc {
             xmlWriter.writeCharacters(String.join(",", this.getEnabled()));
             xmlWriter.writeEndElement();
 
+            if (this.getEnabledMethods() != null) {
+                xmlWriter.writeStartElement("api-methods-enabled");
+                xmlWriter.writeCharacters(String.join(",", this.getEnabledMethods()));
+                xmlWriter.writeEndElement();
+            }
+
+            if (this.getDisabledMethods() != null) {
+                xmlWriter.writeStartElement("api-methods-disabled");
+                xmlWriter.writeCharacters(String.join(",", this.getDisabledMethods()));
+                xmlWriter.writeEndElement();
+            }
+
             // don't write-back ssl. (keep it hidden for now)
             // xmlWriter.writeCharacters(this.ssl.toXML());
 
@@ -252,6 +287,8 @@ public final class CfgApiRpc {
     public boolean isCorsEnabled() { return corsEnabled; }
     public String getCorsOrigin() { return corsOrigin; }
     public List<String> getEnabled() { return enabled; }
+    public List<String> getEnabledMethods() { return enabledMethods; }
+    public List<String> getDisabledMethods() { return disabledMethods; }
     public boolean isFiltersEnabled() { return filtersEnabled; }
     public CfgSsl getSsl() { return this.ssl; }
     public String getVendor() { return vendor; }
@@ -273,6 +310,8 @@ public final class CfgApiRpc {
                 Objects.equals(ip, cfg.ip) &&
                 port == cfg.port &&
                 Objects.equals(enabled, cfg.enabled) &&
+                Objects.equals(enabledMethods, cfg.enabledMethods) &&
+                Objects.equals(disabledMethods, cfg.disabledMethods) &&
                 corsEnabled == cfg.corsEnabled &&
                 Objects.equals(corsOrigin, cfg.corsOrigin) &&
                 filtersEnabled == cfg.filtersEnabled &&
@@ -297,6 +336,8 @@ public final class CfgApiRpc {
             ip,
             port,
             enabled,
+            enabledMethods,
+            disabledMethods,
             corsEnabled,
             corsOrigin,
             filtersEnabled,
