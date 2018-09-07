@@ -68,7 +68,7 @@ public interface IBlockchain<
 
     Map<ByteArrayWrapper, List<BLK>> loadPendingBlocksAtLevel(long level);
 
-    long nextBase(long current);
+    long nextBase(long current, long knownStatus);
 
     void dropImported(long level, List<ByteArrayWrapper> queues, Map<ByteArrayWrapper, List<BLK>> blocks);
 

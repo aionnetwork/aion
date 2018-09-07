@@ -130,6 +130,7 @@ public class TaskImportBlocksTest {
 
         SortedSet<Long> emptySet = new TreeSet<>();
         parameters.add(new Object[] {100L, 100L, new TreeSet<Long>(), new TreeSet<Long>()});
+        parameters.add(new Object[] {200L, 100L, new TreeSet<Long>(), new TreeSet<Long>()});
 
         SortedSet<Long> set1 = new TreeSet<>();
         set1.add(200L);
@@ -149,9 +150,17 @@ public class TaskImportBlocksTest {
         set3.addAll(set2);
         parameters.add(new Object[] {300L, 300L, set3, new TreeSet<Long>()});
 
+        set3 = new TreeSet<>();
+        set3.addAll(set2);
+        parameters.add(new Object[] {400L, 300L, set3, new TreeSet<Long>()});
+
         SortedSet<Long> set4 = new TreeSet<>();
         set3.addAll(set2);
         parameters.add(new Object[] {310L, 310L, set4, new TreeSet<Long>()});
+
+        set4 = new TreeSet<>();
+        set3.addAll(set2);
+        parameters.add(new Object[] {400L, 350L, set4, new TreeSet<Long>()});
 
         return parameters.toArray();
     }
@@ -160,8 +169,10 @@ public class TaskImportBlocksTest {
     @Parameters(method = "parametersForTestSelectBase")
     public void testSelectBase(
             long expected, long best, SortedSet<Long> set, SortedSet<Long> expectedSet) {
-        long actual = TaskImportBlocks.selectBase(best, set);
-        assertThat(actual).isEqualTo(expected);
+        AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
+        when(chain.nextBase(best, 0L)).thenReturn(expected);
+
+        assertThat(TaskImportBlocks.selectBase(best, 0L, set, chain)).isEqualTo(expected);
         assertThat(set).isEqualTo(expectedSet);
     }
 
@@ -320,46 +331,79 @@ public class TaskImportBlocksTest {
     @Test
     public void testAttemptLightningJump_wLightningState_wJump() {
         long returnedBase = 60L;
+        long knownStatus = returnedBase + LARGE_REQUEST_SIZE + 1;
 
         AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
-        when(chain.nextBase(-1L)).thenReturn(returnedBase);
+        when(chain.nextBase(-1L, knownStatus)).thenReturn(returnedBase);
 
         PeerState input = new PeerState(LIGHTNING, -1L);
-        input.setLastBestBlock(returnedBase + LARGE_REQUEST_SIZE + 1);
+        input.setLastBestBlock(knownStatus);
 
         // with new jump base
         PeerState expected = new PeerState(input);
         expected.setBase(returnedBase);
 
-        assertThat(attemptLightningJump(-1L, input, null, new TreeSet<>(), chain))
-                .isEqualTo(expected);
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, null, baseSet, chain)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(0);
     }
 
     @Test
-    public void testAttemptLightningJump_wLightningState_wRampDown() {
+    public void testAttemptLightningJump_wLightningState_wRampDown_andBaseRecycling() {
         long returnedBase = 60L;
+        long knownStatus = returnedBase + LARGE_REQUEST_SIZE;
 
         AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
-        when(chain.nextBase(-1L)).thenReturn(returnedBase);
+        when(chain.nextBase(-1L, knownStatus)).thenReturn(returnedBase);
 
         PeerState input = new PeerState(LIGHTNING, -1L);
-        input.setLastBestBlock(returnedBase + LARGE_REQUEST_SIZE);
+        input.setLastBestBlock(knownStatus);
 
         // with new jump base
         PeerState expected = new PeerState(input);
         expected.setMode(THUNDER);
 
-        assertThat(attemptLightningJump(-1L, input, null, new TreeSet<>(), chain))
-                .isEqualTo(expected);
+        // expecting no change
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, null, baseSet, chain)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(1);
+        assertThat(baseSet.contains(returnedBase)).isTrue();
+    }
+
+    @Test
+    public void testAttemptLightningJump_wLightningState_wRampDown() {
+        long returnedBase = -1L;
+        long knownStatus = returnedBase + LARGE_REQUEST_SIZE;
+
+        AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
+        when(chain.nextBase(-1L, knownStatus)).thenReturn(returnedBase);
+
+        PeerState input = new PeerState(LIGHTNING, -1L);
+        input.setLastBestBlock(knownStatus);
+
+        // with new jump base
+        PeerState expected = new PeerState(input);
+        expected.setMode(THUNDER);
+
+        // expecting no change
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, null, baseSet, chain)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(0);
     }
 
     /**
-     * @return parameters for {@link #testAttemptLightningJump_wMinNormalPeers(Mode)}, {@link
-     *     #testAttemptLightningJump_wManyFastStates_wMaxNormalStates(Mode)}, {@link
-     *     #testAttemptLightningJump_wFewFastStates_wJump(Mode)}, {@link
-     *     #testAttemptLightningJump_wFewFastStates_wRampDown(Mode)}, {@link
-     *     #testAttemptLightningJump_wMoreThanMaxNormalStates_wJump(Mode)}, {@link
-     *     #testAttemptLightningJump_wMoreThanMaxNormalStates_wRampDown(Mode)}
+     * Used as parameters for:
+     *
+     * <ul>
+     *   <li>{@link #testAttemptLightningJump_wMinNormalPeers(Mode)}
+     *   <li>{@link #testAttemptLightningJump_wManyFastStates_wMaxNormalStates(Mode)}
+     *   <li>{@link #testAttemptLightningJump_wFewFastStates_wJump(Mode)}
+     *   <li>{@link #testAttemptLightningJump_wFewFastStates_wRampDown_andBaseRecycling(Mode)}
+     *   <li>{@link #testAttemptLightningJump_wFewFastStates_wRampDown(Mode)}
+     *   <li>{@link #testAttemptLightningJump_wManyNormalStates_wJump(Mode)}
+     *   <li>{@link #testAttemptLightningJump_wManyNormalStates_wRampDown_andBaseRecycling(Mode)}
+     *   <li>{@link #testAttemptLightningJump_wManyNormalStates_wRampDown(Mode)}
+     * </ul>
      */
     @SuppressWarnings("unused")
     private Object allModesExceptLightning() {
@@ -380,8 +424,9 @@ public class TaskImportBlocksTest {
         PeerState expected = new PeerState(input);
 
         // expecting no change in the input value
-        assertThat(attemptLightningJump(-1L, input, states, new TreeSet<>(), null))
-                .isEqualTo(expected);
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, states, baseSet, null)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(0);
     }
 
     @Test
@@ -401,17 +446,19 @@ public class TaskImportBlocksTest {
         PeerState expected = new PeerState(input);
 
         // expecting no change in the input value
-        assertThat(attemptLightningJump(-1L, input, states, new TreeSet<>(), null))
-                .isEqualTo(expected);
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, states, baseSet, null)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(0);
     }
 
     @Test
     @Parameters(method = "allModesExceptLightning")
     public void testAttemptLightningJump_wFewFastStates_wJump(Mode mode) {
         long returnedBase = 60L;
+        long knownStatus = returnedBase + LARGE_REQUEST_SIZE + 1;
 
         AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
-        when(chain.nextBase(-1L)).thenReturn(returnedBase);
+        when(chain.nextBase(-1L, knownStatus)).thenReturn(returnedBase);
 
         List<PeerState> states = new ArrayList<>();
 
@@ -424,24 +471,57 @@ public class TaskImportBlocksTest {
         addStates(states, fastStates, LIGHTNING, 100L);
 
         PeerState input = new PeerState(mode, 100L);
-        input.setLastBestBlock(returnedBase + LARGE_REQUEST_SIZE + 1);
+        input.setLastBestBlock(knownStatus);
 
         PeerState expected = new PeerState(input);
         expected.setMode(LIGHTNING);
         expected.setBase(returnedBase);
 
         // expecting correct jump state
-        assertThat(attemptLightningJump(-1L, input, states, new TreeSet<>(), chain))
-                .isEqualTo(expected);
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, states, baseSet, chain)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(0);
+    }
+
+    @Test
+    @Parameters(method = "allModesExceptLightning")
+    public void testAttemptLightningJump_wFewFastStates_wRampDown_andBaseRecycling(Mode mode) {
+        long returnedBase = 60L;
+        long knownStatus = returnedBase + LARGE_REQUEST_SIZE;
+
+        AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
+        when(chain.nextBase(-1L, knownStatus)).thenReturn(returnedBase);
+
+        List<PeerState> states = new ArrayList<>();
+
+        // exactly max normal states
+        long normalStates = MAX_NORMAL_PEERS;
+        addStates(states, normalStates, NORMAL, 100L);
+
+        // less than balanced fast states
+        long fastStates = COEFFICIENT_NORMAL_PEERS * normalStates - 1;
+        addStates(states, fastStates, LIGHTNING, 100L);
+
+        PeerState input = new PeerState(mode, 100L);
+        input.setLastBestBlock(knownStatus);
+
+        PeerState expected = new PeerState(input);
+
+        // expecting no change
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, states, baseSet, chain)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(1);
+        assertThat(baseSet.contains(returnedBase)).isTrue();
     }
 
     @Test
     @Parameters(method = "allModesExceptLightning")
     public void testAttemptLightningJump_wFewFastStates_wRampDown(Mode mode) {
-        long returnedBase = 60L;
+        long returnedBase = -1L;
+        long knownStatus = returnedBase + LARGE_REQUEST_SIZE;
 
         AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
-        when(chain.nextBase(-1L)).thenReturn(returnedBase);
+        when(chain.nextBase(-1L, knownStatus)).thenReturn(returnedBase);
 
         List<PeerState> states = new ArrayList<>();
 
@@ -454,22 +534,24 @@ public class TaskImportBlocksTest {
         addStates(states, fastStates, LIGHTNING, 100L);
 
         PeerState input = new PeerState(mode, 100L);
-        input.setLastBestBlock(returnedBase + LARGE_REQUEST_SIZE);
+        input.setLastBestBlock(knownStatus);
 
         PeerState expected = new PeerState(input);
 
         // expecting no change
-        assertThat(attemptLightningJump(-1L, input, states, new TreeSet<>(), chain))
-                .isEqualTo(expected);
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, states, baseSet, chain)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(0);
     }
 
     @Test
     @Parameters(method = "allModesExceptLightning")
-    public void testAttemptLightningJump_wMoreThanMaxNormalStates_wJump(Mode mode) {
+    public void testAttemptLightningJump_wManyNormalStates_wJump(Mode mode) {
         long returnedBase = 60L;
+        long knownStatus = returnedBase + LARGE_REQUEST_SIZE + 1;
 
         AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
-        when(chain.nextBase(-1L)).thenReturn(returnedBase);
+        when(chain.nextBase(-1L, knownStatus)).thenReturn(returnedBase);
 
         List<PeerState> states = new ArrayList<>();
 
@@ -482,24 +564,26 @@ public class TaskImportBlocksTest {
         addStates(states, fastStates, LIGHTNING, 100L);
 
         PeerState input = new PeerState(mode, 100L);
-        input.setLastBestBlock(returnedBase + LARGE_REQUEST_SIZE + 1);
+        input.setLastBestBlock(knownStatus);
 
         PeerState expected = new PeerState(input);
         expected.setMode(LIGHTNING);
         expected.setBase(returnedBase);
 
         // expecting correct jump state
-        assertThat(attemptLightningJump(-1L, input, states, new TreeSet<>(), chain))
-                .isEqualTo(expected);
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, states, baseSet, chain)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(0);
     }
 
     @Test
     @Parameters(method = "allModesExceptLightning")
-    public void testAttemptLightningJump_wMoreThanMaxNormalStates_wRampDown(Mode mode) {
+    public void testAttemptLightningJump_wManyNormalStates_wRampDown_andBaseRecycling(Mode mode) {
         long returnedBase = 60L;
+        long knownStatus = returnedBase + LARGE_REQUEST_SIZE;
 
         AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
-        when(chain.nextBase(-1L)).thenReturn(returnedBase);
+        when(chain.nextBase(-1L, knownStatus)).thenReturn(returnedBase);
 
         List<PeerState> states = new ArrayList<>();
 
@@ -512,13 +596,45 @@ public class TaskImportBlocksTest {
         addStates(states, fastStates, LIGHTNING, 100L);
 
         PeerState input = new PeerState(mode, 100L);
-        input.setLastBestBlock(returnedBase + LARGE_REQUEST_SIZE);
+        input.setLastBestBlock(knownStatus);
 
         PeerState expected = new PeerState(input);
 
         // expecting no change
-        assertThat(attemptLightningJump(-1L, input, states, new TreeSet<>(), chain))
-                .isEqualTo(expected);
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, states, baseSet, chain)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(1);
+        assertThat(baseSet.contains(returnedBase)).isTrue();
+    }
+
+    @Test
+    @Parameters(method = "allModesExceptLightning")
+    public void testAttemptLightningJump_wManyNormalStates_wRampDown(Mode mode) {
+        long returnedBase = -1L;
+        long knownStatus = returnedBase + LARGE_REQUEST_SIZE;
+
+        AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
+        when(chain.nextBase(-1L, knownStatus)).thenReturn(returnedBase);
+
+        List<PeerState> states = new ArrayList<>();
+
+        // more than max normal states
+        long normalStates = MAX_NORMAL_PEERS + 1;
+        addStates(states, normalStates, NORMAL, 100L);
+
+        // more than balanced fast states
+        long fastStates = COEFFICIENT_NORMAL_PEERS * normalStates;
+        addStates(states, fastStates, LIGHTNING, 100L);
+
+        PeerState input = new PeerState(mode, 100L);
+        input.setLastBestBlock(knownStatus);
+
+        PeerState expected = new PeerState(input);
+
+        // expecting no change
+        SortedSet<Long> baseSet = new TreeSet<>();
+        assertThat(attemptLightningJump(-1L, input, states, baseSet, chain)).isEqualTo(expected);
+        assertThat(baseSet.size()).isEqualTo(0);
     }
 
     /** Utility method that generates states and adds them to the given list. */

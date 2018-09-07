@@ -215,7 +215,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         return blocks;
     }
 
-    public long nextBase(long current) {
+    public long nextBase(long current, long knownBest) {
         lock.writeLock().lock();
 
         try {
@@ -225,13 +225,17 @@ public class PendingBlockStore implements Flushable, Closeable {
 
             long base;
 
+            if (knownBest > maxStatus) {
+                maxStatus = knownBest;
+            }
+
             if (maxStatus == 0) {
-                base = current + FORWARD_SKIP;
+                // optimistic jump forward
+                base = current > maxRequest ? current : maxRequest + FORWARD_SKIP;
             } else if (current + STEP_SIZE >= maxStatus) {
-                // signal to switch back to NORMAL mode
+                // signal to switch back to / stay in NORMAL mode
                 base = current;
             } else {
-
                 base = maxRequest + FORWARD_SKIP;
 
                 if (base <= current) {
