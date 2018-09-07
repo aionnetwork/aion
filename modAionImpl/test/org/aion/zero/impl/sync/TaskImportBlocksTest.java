@@ -27,20 +27,31 @@ import static org.aion.zero.impl.BlockchainTestUtils.generateAccounts;
 import static org.aion.zero.impl.BlockchainTestUtils.generateNewBlock;
 import static org.aion.zero.impl.BlockchainTestUtils.generateNextBlock;
 import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChain;
+import static org.aion.zero.impl.sync.TaskImportBlocks.filterBatch;
 import static org.aion.zero.impl.sync.TaskImportBlocks.isAlreadyStored;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.aion.base.db.IContractDetails;
+import org.aion.base.db.IPruneConfig;
+import org.aion.base.db.IRepositoryConfig;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.sync.PeerState.Mode;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
@@ -171,5 +182,130 @@ public class TaskImportBlocksTest {
 
         assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
         assertThat(isAlreadyStored(chain.getBlockStore(), current)).isTrue();
+    }
+
+    @Test
+    public void testFilterBatch_woPruningRestrictions() {
+        List<ECKey> accounts = generateAccounts(10);
+
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle =
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChain(chain, 3, 1, accounts, 10);
+
+        // populate initial input lists
+        List<AionBlock> batch = new ArrayList<>();
+        Map<ByteArrayWrapper, Object> imported = new HashMap<>();
+
+        AionBlock current = chain.getBestBlock();
+        while (current.getNumber() > 0) {
+            batch.add(current);
+            imported.put(ByteArrayWrapper.wrap(current.getHash()), true);
+            current = chain.getBlockByHash(current.getParentHash());
+        }
+        batch.add(current);
+        imported.put(ByteArrayWrapper.wrap(current.getHash()), true);
+
+        // will filter out all blocks
+        assertThat(filterBatch(batch, chain, imported)).isEmpty();
+
+        // will filter out none of the blocks
+        assertThat(filterBatch(batch, chain, new HashMap<>())).isEqualTo(batch);
+    }
+
+    @Test
+    public void testFilterBatch_wPruningRestrictions() {
+        List<ECKey> accounts = generateAccounts(10);
+        int current_count = 5, height = 10;
+
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle =
+                builder.withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .withRepoConfig(
+                                new IRepositoryConfig() {
+                                    @Override
+                                    public String getDbPath() {
+                                        return "";
+                                    }
+
+                                    @Override
+                                    public IPruneConfig getPruneConfig() {
+                                        // top pruning without archiving
+                                        return new IPruneConfig() {
+                                            @Override
+                                            public boolean isEnabled() {
+                                                return true;
+                                            }
+
+                                            @Override
+                                            public boolean isArchived() {
+                                                return false;
+                                            }
+
+                                            @Override
+                                            public int getCurrentCount() {
+                                                return current_count;
+                                            }
+
+                                            @Override
+                                            public int getArchiveRate() {
+                                                return 0;
+                                            }
+                                        };
+                                    }
+
+                                    @Override
+                                    public IContractDetails contractDetailsImpl() {
+                                        return ContractDetailsAion.createForTesting(0, 1000000)
+                                                .getDetails();
+                                    }
+
+                                    @Override
+                                    public Properties getDatabaseConfig(String db_name) {
+                                        Properties props = new Properties();
+                                        props.setProperty(
+                                                DatabaseFactory.Props.DB_TYPE,
+                                                DBVendor.MOCKDB.toValue());
+                                        props.setProperty(
+                                                DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                                        return props;
+                                    }
+                                })
+                        .build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChain(chain, height, 1, accounts, 10);
+
+        // populate initial input lists
+        List<AionBlock> allBlocks = new ArrayList<>();
+        Map<ByteArrayWrapper, Object> allHashes = new HashMap<>();
+        List<AionBlock> unrestrictedBlocks = new ArrayList<>();
+        Map<ByteArrayWrapper, Object> unrestrictedHashes = new HashMap<>();
+
+        for (long i = 0; i <= height; i++) {
+            AionBlock current = chain.getBlockByNumber(i);
+            allBlocks.add(current);
+            allHashes.put(ByteArrayWrapper.wrap(current.getHash()), true);
+            if (i >= height - current_count + 1) {
+                unrestrictedBlocks.add(current);
+                unrestrictedHashes.put(ByteArrayWrapper.wrap(current.getHash()), true);
+            }
+        }
+
+        // will filter out all blocks
+        assertThat(filterBatch(allBlocks, chain, allHashes)).isEmpty();
+
+        // will filter out all blocks
+        assertThat(filterBatch(allBlocks, chain, unrestrictedHashes)).isEmpty();
+
+        // will filter out the prune restricted blocks
+        assertThat(filterBatch(allBlocks, chain, new HashMap<>())).isEqualTo(unrestrictedBlocks);
     }
 }

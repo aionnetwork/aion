@@ -102,14 +102,6 @@ final class TaskImportBlocks implements Runnable {
         this.state = new PeerState(NORMAL, 0L);
     }
 
-    private boolean isNotImported(AionBlock b) {
-        return importedBlockHashes.get(ByteArrayWrapper.wrap(b.getHash())) == null;
-    }
-
-    private boolean isNotRestricted(AionBlock b) {
-        return !chain.isPruneRestricted(b.getNumber());
-    }
-
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
@@ -121,24 +113,7 @@ final class TaskImportBlocks implements Runnable {
                 return;
             }
 
-            List<AionBlock> batch;
-
-            if (chain.checkPruneRestriction()) {
-                // filter out restricted blocks if prune restrictions enabled
-                batch =
-                        bw.getBlocks()
-                                .stream()
-                                .filter(this::isNotImported)
-                                .filter(this::isNotRestricted)
-                                .collect(Collectors.toList());
-            } else {
-                // filter out only imported blocks
-                batch =
-                        bw.getBlocks()
-                                .stream()
-                                .filter(this::isNotImported)
-                                .collect(Collectors.toList());
-            }
+            List<AionBlock> batch = filterBatch(bw.getBlocks(), chain, importedBlockHashes);
 
             PeerState peerState = peerStates.get(bw.getNodeIdHash());
             if (peerState == null) {
@@ -171,6 +146,42 @@ final class TaskImportBlocks implements Runnable {
             }
         }
         log.info(Thread.currentThread().getName() + " RIP.");
+    }
+
+    /**
+     * Utility method that takes a list of blocks and filters out the ones that are restricted for
+     * import due to pruning and the ones that have already been imported recently.
+     *
+     * @param blocks the list of blocks to be filtered
+     * @param chain the blockchain where the blocks will be imported which may impose pruning
+     *     restrictions
+     * @param imported the collection of recently imported blocks
+     * @return the list of blocks that pass the filter conditions.
+     */
+    static List<AionBlock> filterBatch(
+            List<AionBlock> blocks,
+            AionBlockchainImpl chain,
+            Map<ByteArrayWrapper, Object> imported) {
+        if (chain.checkPruneRestriction()) {
+            // filter out restricted blocks if prune restrictions enabled
+            return blocks.stream()
+                    .filter(b -> isNotImported(b, imported))
+                    .filter(b -> isNotRestricted(b, chain))
+                    .collect(Collectors.toList());
+        } else {
+            // filter out only imported blocks
+            return blocks.stream()
+                    .filter(b -> isNotImported(b, imported))
+                    .collect(Collectors.toList());
+        }
+    }
+
+    private static boolean isNotImported(AionBlock b, Map<ByteArrayWrapper, Object> imported) {
+        return imported.get(ByteArrayWrapper.wrap(b.getHash())) == null;
+    }
+
+    private static boolean isNotRestricted(AionBlock b, AionBlockchainImpl chain) {
+        return !chain.isPruneRestricted(b.getNumber());
     }
 
     /** @implNote Typically called when state.getMode() in { NORMAL, LIGHTNING, THUNDER }. */
@@ -540,11 +551,7 @@ final class TaskImportBlocks implements Runnable {
                 }
 
                 // filter already imported blocks
-                batchFromDisk =
-                        batchFromDisk
-                                .stream()
-                                .filter(this::isNotImported)
-                                .collect(Collectors.toList());
+                batchFromDisk = filterBatch(batchFromDisk, chain, importedBlockHashes);
 
                 if (batchFromDisk.size() > 0) {
                     if (log.isDebugEnabled()) {
