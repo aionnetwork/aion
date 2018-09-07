@@ -113,13 +113,13 @@ final class TaskImportBlocks implements Runnable {
                 return;
             }
 
-            List<AionBlock> batch = filterBatch(bw.getBlocks(), chain, importedBlockHashes);
-
             PeerState peerState = peerStates.get(bw.getNodeIdHash());
             if (peerState == null) {
                 // ignoring these blocks
                 log.warn("Peer {} sent blocks that were not requested.", bw.getDisplayId());
             } else { // the peerState is not null after this
+                List<AionBlock> batch = filterBatch(bw.getBlocks(), chain, importedBlockHashes);
+
                 if (log.isDebugEnabled()) {
                     log.debug(
                             "<import-mode-before: node = {}, sync mode = {}, base = {}>",
@@ -184,93 +184,13 @@ final class TaskImportBlocks implements Runnable {
         return !chain.isPruneRestricted(b.getNumber());
     }
 
-    /** @implNote Typically called when state.getMode() in { NORMAL, LIGHTNING, THUNDER }. */
-    private PeerState attemptLightningJump(
-            Collection<PeerState> states, PeerState state, long best) {
-        long normalStates = countStates(best, NORMAL, states) + countStates(best, THUNDER, states);
-        long fastStates = countStates(best, LIGHTNING, states);
-
-        state.incRepeated();
-        // in NORMAL mode and blocks filtered out
-        if (normalStates > MIN_NORMAL_PEERS
-                && (fastStates < COEFFICIENT_NORMAL_PEERS * normalStates
-                        || normalStates > MAX_NORMAL_PEERS)) {
-            // targeting around same number of LIGHTNING and NORMAL sync nodes
-            // with a minimum of 4 NORMAL nodes
-            baseList.add(chain.nextBase(best));
-            long nextBase = selectBase(best, baseList);
-            if (state.getLastBestBlock() > nextBase + LARGE_REQUEST_SIZE) {
-                state.setMode(LIGHTNING);
-                state.setBase(nextBase);
-            } else {
-                if (state.getMode() == LIGHTNING) {
-                    // can't jump so ramp down
-                    state.setMode(THUNDER);
-                }
-            }
-        }
-        return state;
-    }
-
-    /**
-     * Utility method that computes the number of states from the given ones that have the give mode
-     * and a last best block status larger than the given number.
-     *
-     * @param states the list of peer states to be explored
-     * @param mode the state mode we are searching for
-     * @param best the minimum accepted last best block status for the peer
-     * @return the number of states that satisfy the condition above.
-     */
-    static long countStates(long best, Mode mode, Collection<PeerState> states) {
-        return states.stream()
-                .filter(s -> s.getLastBestBlock() > best)
-                .filter(s -> s.getMode() == mode)
-                .count();
-    }
-
-    /**
-     * Utility method that selects a number greater or equal to the given best representing the base
-     * value for the next LIGHTNING request. The returned base will be either retrieved from the set
-     * of previously generated values that have not yet been used or the best value itself.
-     *
-     * @param best the starting point value for the next base
-     * @param baseSet list of already generated values
-     * @return the next base from the set or the given best value when the set does not contain any
-     *     values greater than it.
-     */
-    static long selectBase(long best, SortedSet<Long> baseSet) {
-        // remove bases that are no longer relevant
-        while (!baseSet.isEmpty() && baseSet.first() <= best) {
-            baseSet.remove(baseSet.first());
-        }
-
-        if (baseSet.isEmpty()) {
-            return best;
-        } else {
-            Long first = baseSet.first();
-            baseSet.remove(first);
-            return first;
-        }
-    }
-
-    /**
-     * Utility method that determines if the given block is already stored in the given block store
-     * without going through the process of trying to import the block.
-     *
-     * @apiNote Should be used when we aim to bypass any recovery methods set in place for importing
-     *     old blocks, for example when blocks are imported in {@link PeerState.Mode#FORWARD} mode.
-     * @param store the block store that may contain the given block
-     * @param block the block for which we need to determine if it is already stored or not
-     * @return {@code true} if the given block exists in the block store, {@code false} otherwise.
-     */
-    static boolean isAlreadyStored(AionBlockStore store, AionBlock block) {
-        return store.getMaxNumber() >= block.getNumber() && store.isBlockExist(block.getHash());
-    }
-
     /** @implNote This method is called only when state is not null. */
     private PeerState processBatch(PeerState givenState, List<AionBlock> batch, String displayId) {
         // make a copy of the original state
         state.copy(givenState);
+
+        // new batch received -> add another iteration to the count
+        state.incRepeated();
 
         // all blocks were filtered out
         // interpreted as repeated work
@@ -290,7 +210,8 @@ final class TaskImportBlocks implements Runnable {
                 state.setMode(NORMAL);
                 return state;
             } else {
-                return attemptLightningJump(peerStates.values(), state, getBestBlockNumber());
+                return attemptLightningJump(
+                        getBestBlockNumber(), state, peerStates.values(), baseList, chain);
             }
         }
 
@@ -325,7 +246,8 @@ final class TaskImportBlocks implements Runnable {
                             state, b.getNumber(), ImportResult.EXIST, b.getNumber());
                 } else {
                     // mode in { NORMAL, LIGHTNING, THUNDER }
-                    return attemptLightningJump(peerStates.values(), state, getBestBlockNumber());
+                    return attemptLightningJump(
+                            getBestBlockNumber(), state, peerStates.values(), baseList, chain);
                 }
             }
         }
@@ -393,20 +315,19 @@ final class TaskImportBlocks implements Runnable {
                                 if (stored < batch.size()) {
                                     state =
                                             attemptLightningJump(
-                                                    peerStates.values(),
+                                                    getBestBlockNumber(),
                                                     state,
-                                                    getBestBlockNumber());
+                                                    peerStates.values(),
+                                                    baseList,
+                                                    chain);
+
                                 } else {
-                                    state.incRepeated();
                                     state.setBase(b.getNumber() + batch.size());
                                 }
                                 break;
                             }
                         case THUNDER:
-                            {
-                                state.incRepeated();
-                                break;
-                            }
+                            break;
                     }
                     // exit loop after NO_PARENT result
                     break;
@@ -430,10 +351,13 @@ final class TaskImportBlocks implements Runnable {
                         case THUNDER:
                             state =
                                     attemptLightningJump(
-                                            peerStates.values(), state, getBestBlockNumber());
+                                            getBestBlockNumber(),
+                                            state,
+                                            peerStates.values(),
+                                            baseList,
+                                            chain);
                             break;
                         case NORMAL:
-                            state.incRepeated();
                         default:
                             break;
                     }
@@ -451,7 +375,11 @@ final class TaskImportBlocks implements Runnable {
                             || state.getBase() <= getBestBlockNumber() + P2pConstant.REQUEST_SIZE) {
                         state =
                                 attemptLightningJump(
-                                        peerStates.values(), state, getBestBlockNumber());
+                                        getBestBlockNumber(),
+                                        state,
+                                        peerStates.values(),
+                                        baseList,
+                                        chain);
                     } // else already updated to a correct request
                     return state;
                 } else if (state.getMode() == BACKWARD || state.getMode() == FORWARD) {
@@ -466,20 +394,161 @@ final class TaskImportBlocks implements Runnable {
         return state;
     }
 
+    /**
+     * Utility method that updates the given state to a LIGHTNING jump when the jump conditions
+     * (balancing the number of fast and normal states) are met. If a jump is not possible (due to
+     * the requirement of having a best block status larger than the selected base value) for a
+     * state that is already in LIGHTNING mode, the state is changed to THUNDER mode.
+     *
+     * @implNote Typically called when {@link PeerState#getMode()} in { {@link
+     *     PeerState.Mode#NORMAL}, {@link PeerState.Mode#LIGHTNING}, {@link PeerState.Mode#THUNDER}
+     *     }, but the same behaviour of jumping ahead will be applied if the give state mode is
+     *     {@link PeerState.Mode#BACKWARD} or {@link PeerState.Mode#FORWARD}.
+     * @param best the starting point value for the attempted jump
+     * @param state the state to be modified for the jump or ramp down
+     * @param states all the existing peer states are the time of the method call used for checking
+     *     if the jump conditions are met
+     * @param baseSet sorted set of generated values that can be used as base for the jump
+     * @param chain the blockchain where the blocks will be imported which can be used to expand the
+     *     set of base value options
+     * @return a state modified for a LIGHTNING when possible, otherwise a state in THUNDER (ramp
+     *     down) mode if the state was previously in LIGHTNING mode, or an unchanged state when none
+     *     of the before mentioned conditions are met.
+     */
+    static PeerState attemptLightningJump(
+            long best,
+            PeerState state,
+            Collection<PeerState> states,
+            SortedSet<Long> baseSet,
+            AionBlockchainImpl chain) {
+
+        // no need to count states if already in LIGHTNING
+        if (state.getMode() == LIGHTNING) {
+            // expand the list of possible base values
+            baseSet.add(chain.nextBase(best));
+
+            // select the base to be used
+            long nextBase = selectBase(best, baseSet);
+
+            // determine if a jump is possible
+            if (state.getLastBestBlock() > nextBase + LARGE_REQUEST_SIZE) {
+                // new jump resets the repeated count
+                state.setMode(LIGHTNING);
+                state.setBase(nextBase);
+            } else {
+                // can't jump so ramp down
+                state.setMode(THUNDER);
+            }
+        } else {
+            // compute the relevant state count
+            long normalStates =
+                    countStates(best, NORMAL, states) + countStates(best, THUNDER, states);
+            long fastStates = countStates(best, LIGHTNING, states);
+
+            // requiring a minimum number of normal states
+            if (normalStates > MIN_NORMAL_PEERS
+                    // the fast vs normal states balance depends on the give coefficient
+                    && (fastStates < COEFFICIENT_NORMAL_PEERS * normalStates
+                            // with a maximum number of normal states
+                            || normalStates > MAX_NORMAL_PEERS)) {
+
+                // expand the list of possible base values
+                baseSet.add(chain.nextBase(best));
+
+                // select the base to be used
+                long nextBase = selectBase(best, baseSet);
+
+                // determine if a jump is possible
+                if (state.getLastBestBlock() > nextBase + LARGE_REQUEST_SIZE) {
+                    state.setMode(LIGHTNING);
+                    state.setBase(nextBase);
+                }
+            }
+        }
+        return state;
+    }
+
+    /**
+     * Utility method that computes the number of states from the given ones that have the give mode
+     * and a last best block status larger than the given number.
+     *
+     * @param states the list of peer states to be explored
+     * @param mode the state mode we are searching for
+     * @param best the minimum accepted last best block status for the peer
+     * @return the number of states that satisfy the condition above.
+     */
+    static long countStates(long best, Mode mode, Collection<PeerState> states) {
+        return states.stream()
+                .filter(s -> s.getLastBestBlock() > best)
+                .filter(s -> s.getMode() == mode)
+                .count();
+    }
+
+    /**
+     * Utility method that selects a number greater or equal to the given best representing the base
+     * value for the next LIGHTNING request. The returned base will be either retrieved from the set
+     * of previously generated values that have not yet been used or the best value itself.
+     *
+     * @param best the starting point value for the next base
+     * @param baseSet list of already generated values
+     * @return the next base from the set or the given best value when the set does not contain any
+     *     values greater than it.
+     */
+    static long selectBase(long best, SortedSet<Long> baseSet) {
+        // remove bases that are no longer relevant
+        while (!baseSet.isEmpty() && baseSet.first() <= best) {
+            baseSet.remove(baseSet.first());
+        }
+
+        if (baseSet.isEmpty()) {
+            return best;
+        } else {
+            Long first = baseSet.first();
+            baseSet.remove(first);
+            return first;
+        }
+    }
+
+    /**
+     * Utility method that determines if the given block is already stored in the given block store
+     * without going through the process of trying to import the block.
+     *
+     * @apiNote Should be used when we aim to bypass any recovery methods set in place for importing
+     *     old blocks, for example when blocks are imported in {@link PeerState.Mode#FORWARD} mode.
+     * @param store the block store that may contain the given block
+     * @param block the block for which we need to determine if it is already stored or not
+     * @return {@code true} if the given block exists in the block store, {@code false} otherwise.
+     */
+    static boolean isAlreadyStored(AionBlockStore store, AionBlock block) {
+        return store.getMaxNumber() >= block.getNumber() && store.isBlockExist(block.getHash());
+    }
+
     private ImportResult importBlock(AionBlock b, String displayId, PeerState state) {
         ImportResult importResult;
         long t1 = System.currentTimeMillis();
         importResult = this.chain.tryToConnect(b);
         long t2 = System.currentTimeMillis();
-        log.info(
-                "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
-                displayId,
-                (state != null ? state.getMode() : NORMAL),
-                b.getShortHash(),
-                b.getNumber(),
-                b.getTransactionsList().size(),
-                importResult,
-                t2 - t1);
+        if (log.isDebugEnabled()) {
+            // printing sync mode only when debug is enabled
+            log.info(
+                    "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                    displayId,
+                    (state != null ? state.getMode() : NORMAL),
+                    b.getShortHash(),
+                    b.getNumber(),
+                    b.getTransactionsList().size(),
+                    importResult,
+                    t2 - t1);
+        } else {
+            log.info(
+                    "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                    displayId,
+                    b.getShortHash(),
+                    b.getNumber(),
+                    b.getTransactionsList().size(),
+                    importResult,
+                    t2 - t1);
+        }
         return importResult;
     }
 
@@ -488,7 +557,6 @@ final class TaskImportBlocks implements Runnable {
         // TODO: check if two long values are needed
         // continue
         state.setBase(lastBlock);
-        state.incRepeated();
         // if the imported best block, switch back to normal mode
         if (importResult.isBest()) {
             state.setMode(NORMAL);

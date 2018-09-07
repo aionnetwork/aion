@@ -2,6 +2,8 @@ package org.aion.zero.impl.sync;
 
 import static org.aion.p2p.P2pConstant.STEP_COUNT;
 
+import java.util.Objects;
+
 public class PeerState {
 
     public enum Mode {
@@ -62,6 +64,11 @@ public class PeerState {
         this.base = base;
 
         this.state = State.INITIAL;
+    }
+
+    /** Copy constructor. */
+    public PeerState(PeerState _state) {
+        this.copy(_state);
     }
 
     public void copy(PeerState _state) {
@@ -134,6 +141,28 @@ public class PeerState {
 
     public int getRepeated() {
         return repeated;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        PeerState peerState = (PeerState) o;
+        return base == peerState.base
+                && repeated == peerState.repeated
+                && lastBestBlock == peerState.lastBestBlock
+                && lastHeaderRequest == peerState.lastHeaderRequest
+                && mode == peerState.mode
+                && state == peerState.state;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mode, base, repeated, state, lastBestBlock, lastHeaderRequest);
     }
 
     @Override
