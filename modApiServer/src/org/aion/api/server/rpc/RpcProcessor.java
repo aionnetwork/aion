@@ -1,5 +1,6 @@
 package org.aion.api.server.rpc;
 
+import org.aion.generic.IGenericAionChain;
 import com.google.common.base.Stopwatch;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -17,8 +18,8 @@ public class RpcProcessor {
 
     RpcMethods apiHolder;
 
-    public RpcProcessor(List<String> enabled) {
-        this.apiHolder = new RpcMethods(enabled);
+    public RpcProcessor(IGenericAionChain aionChain, List<String> enabled) {
+        this.apiHolder = new RpcMethods(aionChain, enabled);
     }
 
     public String process(String _requestBody) {

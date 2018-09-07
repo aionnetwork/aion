@@ -107,6 +107,7 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction>  {
         this.energyUsed = l;
     }
 
+    @Override
     public long getEnergyUsed() {
         return this.energyUsed;
     }

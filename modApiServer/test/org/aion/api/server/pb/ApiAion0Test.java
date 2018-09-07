@@ -737,7 +737,7 @@ public class ApiAion0Test {
                 Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().add(blk);
-        blk = api.getBlockByHash(blk.getHash());
+        blk = (AionBlock) api.getBlockByHash(blk.getHash());
 
         Message.req_getTransactionCount reqBody = Message.req_getTransactionCount.newBuilder()
                 .setBlocknumber(blk.getNumber())
@@ -920,7 +920,7 @@ public class ApiAion0Test {
                 msg, 1000, 5000);
         tx.sign(new ECKeyEd25519());
 
-        assertEquals(AionImpl.inst().estimateTxNrg(tx, api.getBestBlock()), rslt.getNrg());
+        assertEquals(AionImpl.inst().estimateTxNrg(tx, (AionBlock) api.getBestBlock()), rslt.getNrg());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_estimateNrg_VALUE);
 

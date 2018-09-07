@@ -24,9 +24,9 @@
  ******************************************************************************/
 package org.aion.mcf.core;
 
-import java.math.BigInteger;
+import org.aion.base.type.IBlockHeader;
 
-import org.aion.mcf.types.AbstractBlockHeader;
+import java.math.BigInteger;
 
 /**
  * Calculates the rewards given for sealing a particular block, depending
@@ -37,5 +37,5 @@ import org.aion.mcf.types.AbstractBlockHeader;
  */
 @FunctionalInterface
 public interface IRewardsCalculator {
-    BigInteger calculateReward(AbstractBlockHeader header);
+    BigInteger calculateReward(IBlockHeader header);
 }

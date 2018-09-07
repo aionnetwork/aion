@@ -24,20 +24,22 @@
 package org.aion.api.server;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.aion.mcf.account.AccountManager;
-import org.aion.mcf.account.Keystore;
 import org.aion.api.server.types.CompiContrInfo;
 import org.aion.api.server.types.CompiledContr;
 import org.aion.base.type.Address;
+import org.aion.base.type.IBlock;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
+import org.aion.generic.IGenericAionChain;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.account.AccountManager;
+import org.aion.mcf.account.Keystore;
+import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
-import org.aion.mcf.types.AbstractBlock;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -45,23 +47,26 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.Map.Entry;
 
-public abstract class Api<B extends AbstractBlock<?, ?>> {
+public abstract class Api<B extends IBlock<?, ?>> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     private final AccountManager ACCOUNT_MANAGER = AccountManager.inst();
     private final Compiler solc = Compiler.getInstance();
-    protected final AionPendingStateImpl pendingState;
+    protected final IPendingStateInternal pendingState;
+
+    protected Api(IGenericAionChain aionChain) {
+        if (aionChain != null)  {
+            this.pendingState = aionChain.getAionHub().getPendingState();
+        }
+        else {
+            pendingState = null;
+        }
+    }
 
     // This is the constructor that should always be used, unless testing
     Api() {
         pendingState = AionPendingStateImpl.inst();
-    }
-
-    // Only for testing purposes
-    @VisibleForTesting
-    Api(AionPendingStateImpl ps) {
-            pendingState = ps;
     }
 
     public abstract String getCoinbase();
@@ -98,7 +103,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     }
 
     @SuppressWarnings("rawtypes")
-    public abstract AbstractBlock getBestBlock();
+    public abstract IBlock getBestBlock();
 
     // --Commented out by Inspection (02/02/18 6:56 PM):public abstract B
     // getBlock(final String _bnOrId);

@@ -41,13 +41,16 @@ import org.aion.api.server.pb.ApiAion0;
 import org.aion.api.server.pb.IHdlr;
 import org.aion.api.server.zmq.HdlrZmq;
 import org.aion.api.server.zmq.ProtocolProcessor;
+
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.EventMgrModule;
+import org.aion.generic.IBlockchainEngine;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.CfgApiRpc;
+import org.aion.mcf.config.CfgConsensus;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.solidity.Compiler;
@@ -57,6 +60,13 @@ import org.aion.zero.impl.blockchain.IChainInstancePOW;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
+
+import java.io.Console;
+import java.util.ServiceLoader;
+
+import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
+import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 public class Aion {
 
@@ -173,167 +183,8 @@ public class Aion {
         genLog.info(path);
         genLog.info(logo);
 
-        IChainInstancePOW ac = AionFactory.create();
-
-        IMineRunner nm = null;
-
-        if (!cfg.getConsensus().isSeed()) {
-            nm = ac.getBlockMiner();
-        }
-
-        if (nm != null) {
-            nm.delayedStartMining(10);
-        }
-
-        /*
-         * Create JMX server and register in-flight config receiver MBean.  Commenting out for now
-         * because not using it yet.
-         */
-//        InFlightConfigReceiver inFlightConfigReceiver = new InFlightConfigReceiver(
-//                cfg, new DynamicConfigKeyRegistry());
-//        MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-//        ObjectName objectName = null;
-//        try {
-//            objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
-//            server.registerMBean(inFlightConfigReceiver, objectName);
-//        } catch (MalformedObjectNameException
-//                | NotCompliantMBeanException
-//                | InstanceAlreadyExistsException
-//                | MBeanRegistrationException ex) {
-//            genLog.error(
-//                    "Failed to initialize JMX server.  In-flight configuration changes will not be available.",
-//                    ex);
-//        }
-
-        /*
-         * Start Threads.
-         */
-        Thread zmqThread = null;
-        ProtocolProcessor processor = null;
-        if (cfg.getApi().getZmq().getActive()) {
-            IHdlr handler = new HdlrZmq(new ApiAion0(ac));
-            processor = new ProtocolProcessor(handler, cfg.getApi().getZmq());
-            zmqThread = new Thread(processor, "zmq-api");
-            zmqThread.start();
-        }
-
-        RpcServer rpcServer = null;
-        if(cfg.getApi().getRpc().isActive()) {
-            CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
-
-            Consumer<RpcServerBuilder<? extends RpcServerBuilder<?>>> commonRpcConfig = (rpcBuilder) -> {
-                rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
-                rpcBuilder.enableEndpoints(rpcCfg.getEnabled());
-
-                rpcBuilder.setWorkerPoolSize(rpcCfg.getWorkerThreads());
-                rpcBuilder.setIoPoolSize(rpcCfg.getIoThreads());
-                rpcBuilder.setRequestQueueSize(rpcCfg.getRequestQueueSize());
-                rpcBuilder.setStuckThreadDetectorEnabled(rpcCfg.isStuckThreadDetectorEnabled());
-
-                if (rpcCfg.isCorsEnabled())
-                    rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
-
-                CfgSsl cfgSsl = rpcCfg.getSsl();
-                if (cfgSsl.getEnabled())
-                    rpcBuilder.enableSsl(cfgSsl.getCert(), sslPass);
-            };
-            RpcServerVendor rpcVendor = RpcServerVendor.fromString(rpcCfg.getVendor()).orElse(RpcServerVendor.UNDERTOW);
-            try {
-                switch (rpcVendor) {
-                    case NANO: {
-                        NanoRpcServer.Builder rpcBuilder = new NanoRpcServer.Builder();
-                        commonRpcConfig.accept(rpcBuilder);
-                        rpcServer = rpcBuilder.build();
-                        break;
-                    }
-                    case UNDERTOW:
-                    default: {
-                        UndertowRpcServer.Builder rpcBuilder = new UndertowRpcServer.Builder();
-                        commonRpcConfig.accept(rpcBuilder);
-                        rpcServer = rpcBuilder.build();
-                        break;
-                    }
-                }
-            } catch (Exception e) {
-                genLog.error("Failed to instantiate RPC server.", e);
-            }
-
-            if (rpcServer == null)
-                throw new IllegalStateException("Issue with RPC settings caused server instantiation to fail. " +
-                        "Please check RPC settings in config file.");
-
-            rpcServer.start();
-        }
-
-        /*
-         * This is a hack, but used to let us pass zmqThread into thread
-         * Shutdown hook for Ctrl+C
-         */
-        class ShutdownThreadHolder {
-
-            private final Thread zmqThread;
-            private final IMineRunner miner;
-            private final ProtocolProcessor pp;
-            private final RpcServer rpc;
-
-            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, RpcServer rpc) {
-                this.zmqThread = zmqThread;
-                this.miner = nm;
-                this.pp = pp;
-                this.rpc = rpc;
-            }
-        }
-
-        ShutdownThreadHolder holder = new ShutdownThreadHolder(zmqThread, nm, processor, rpcServer);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-
-            genLog.info("Starting shutdown process...");
-
-            if (holder.rpc != null) {
-                genLog.info("Shutting down RpcServer");
-                holder.rpc.stop();
-                genLog.info("Shutdown RpcServer ... Done!");
-            }
-
-            if (holder.pp != null) {
-                genLog.info("Shutting down zmq ProtocolProcessor");
-                try {
-                    holder.pp.shutdown();
-                    genLog.info("Shutdown zmq ProtocolProcessor... Done!");
-                } catch (InterruptedException e) {
-                    genLog.info("Shutdown zmq ProtocolProcessor failed! {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            if (holder.zmqThread != null) {
-                genLog.info("Shutting down zmq thread");
-                try {
-                    holder.zmqThread.interrupt();
-                    genLog.info("Shutdown zmq thread... Done!");
-                } catch (Exception e) {
-                    genLog.info("Shutdown zmq thread failed! {}", e.getMessage());
-                    Thread.currentThread().interrupt();
-                }
-            }
-
-            if (holder.miner != null) {
-                genLog.info("Shutting down sealer");
-                holder.miner.stopMining();
-                holder.miner.shutdown();
-                genLog.info("Shutdown sealer... Done!");
-            }
-
-            genLog.info("Shutting down the AionHub...");
-            ac.getAionHub().close();
-
-            genLog.info("---------------------------------------------");
-            genLog.info("| Aion kernel graceful shutdown successful! |");
-            genLog.info("---------------------------------------------");
-
-        }, "shutdown"));
-
+        IBlockchainEngine blockchainEngine = BlockchainEngineFactory.create(cfg, genLog, sslPass);
+        blockchainEngine.start();
     }
 
     public static String appendLogo(String value, String input) {

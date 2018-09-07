@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
+import org.aion.generic.BlockPropagationStatus;
 import org.aion.p2p.Handler;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
@@ -333,7 +334,7 @@ public class BlockPropagationTest {
                 false);
 
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
+            .isEqualTo(BlockPropagationStatus.CONNECTED);
     }
 
     // given two peers, and one sends you a new block, propagate to the other
@@ -396,7 +397,7 @@ public class BlockPropagationTest {
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
+            .isEqualTo(BlockPropagationStatus.PROP_CONNECTED);
         assertThat(times.get()).isEqualTo(1);
     }
 
@@ -454,9 +455,9 @@ public class BlockPropagationTest {
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
+            .isEqualTo(BlockPropagationStatus.PROP_CONNECTED);
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
+            .isEqualTo(BlockPropagationStatus.DROPPED);
         assertThat(times.get()).isEqualTo(1);
     }
 
@@ -511,7 +512,7 @@ public class BlockPropagationTest {
         // so our blockchain should view this block as a new block
         // therefore if the filter fails, this block will actually be CONNECTED
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
+            .isEqualTo(BlockPropagationStatus.DROPPED);
 
         // we expect the counter to be incremented once (on propagation)
         assertThat(sendCount.get()).isEqualTo(1);

@@ -246,6 +246,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         return this.header.getNumber();
     }
 
+    @Override
     public byte[] getExtraData() {
         parseRLP();
         return this.header.getExtraData();

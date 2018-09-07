@@ -24,8 +24,13 @@
 
 package org.aion.api.server.types;
 
+import org.aion.base.type.IBlock;
+import org.aion.base.type.ITransaction;
+import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
+import org.aion.mcf.core.AbstractTxInfo;
+import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
@@ -39,19 +44,19 @@ import org.json.JSONObject;
  */
 public class Tx {
 
-    public static JSONObject InfoToJSON(AionTxInfo info, AionBlock b)
+    public static JSONObject InfoToJSON(AbstractTxInfo info, IBlock b)
     {
         if (info == null) return null;
 
-        AionTxReceipt receipt = info.getReceipt();
+        AbstractTxReceipt receipt = info.getReceipt();
         if (receipt == null) return null;
 
-        AionTransaction tx = receipt.getTransaction();
+        ITransaction tx = receipt.getTransaction();
 
         return (AionTransactionToJSON(tx, b, info.getIndex()));
     }
 
-    public static JSONObject AionTransactionToJSON(AionTransaction tx, AionBlock b, int index) {
+    public static JSONObject AionTransactionToJSON(ITransaction tx, IBlock b, int index) {
         if (tx == null) return null;
 
         JSONObject json = new JSONObject();

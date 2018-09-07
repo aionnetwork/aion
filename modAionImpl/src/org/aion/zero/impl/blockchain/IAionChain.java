@@ -23,33 +23,31 @@
  ******************************************************************************/
 package org.aion.zero.impl.blockchain;
 
-import java.math.BigInteger;
-import java.util.List;
-
 import org.aion.base.db.IRepository;
-import org.aion.base.type.Address;
-import org.aion.zero.blockchain.IPowChain;
-import org.aion.zero.impl.AionHub;
+import org.aion.factory.AionTransactionFactory;
+import org.aion.generic.IGenericAionChain;
+import org.aion.zero.impl.IAion0Hub;
 import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.query.QueryInterface;
-import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 
+import java.util.List;
+
 /**
  * Aion chain interface.
  * 
  */
-public interface IAionChain extends QueryInterface {
+public interface IAionChain extends
+        IGenericAionChain<IAionBlock, A0BlockHeader, AionTransaction, AionTxReceipt, AionTxInfo> {
 
     IAionBlockchain getBlockchain();
 
-    void close();
+    AionTransactionFactory getTransactionFactory();
 
-    AionTransaction createTransaction(BigInteger nonce, Address to, BigInteger value, byte[] data);
+    void close();
 
     void broadcastTransaction(AionTransaction transaction);
 
@@ -65,7 +63,7 @@ public interface IAionChain extends QueryInterface {
 
     List<AionTransaction> getPendingStateTransactions();
 
-    AionHub getAionHub();
+    IAion0Hub getAionHub();
 
     void exitOn(long number);
 

@@ -22,7 +22,7 @@
  *     
  ******************************************************************************/
 
-package org.aion.zero.impl.query;
+package org.aion.generic.query;
 
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;

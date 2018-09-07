@@ -27,6 +27,7 @@ package org.aion.mcf.types;
 
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
+import org.aion.crypto.ECKey;
 import org.aion.crypto.ISignature;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -125,4 +126,6 @@ public abstract class AbstractTransaction implements ITransaction {
     public abstract BigInteger getNonceBI();
 
     public abstract BigInteger getTimeStampBI();
+
+    public abstract void sign(ECKey key);
 }

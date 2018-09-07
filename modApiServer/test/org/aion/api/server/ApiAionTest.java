@@ -278,7 +278,7 @@ public class ApiAionTest {
         assertEquals(1, api.getBlockTransactionCountByNumber(blk.getNumber()));
         assertEquals(1, api.getTransactionCountByHash(blk.getHash()));
 
-        blk = api.getBlockByHash(blk.getHash());
+        blk = (AionBlock) api.getBlockByHash(blk.getHash());
 
         assertEquals(1, api.getTransactionCount(
                 blk.getTransactionsList().get(0).getFrom(), blk.getNumber()));
@@ -325,8 +325,8 @@ public class ApiAionTest {
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
                 msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
-        assertEquals(AionImpl.inst().estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
-        assertEquals(impl.estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
+        assertEquals(AionImpl.inst().estimateTxNrg(tx, (AionBlock) api.getBestBlock()), api.estimateNrg(txcall));
+        assertEquals(impl.estimateTxNrg(tx, (AionBlock) api.getBestBlock()), api.estimateNrg(txcall));
         tearDown();
     }
 

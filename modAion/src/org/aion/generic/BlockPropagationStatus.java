@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -18,14 +18,14 @@
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ *     Centrys Inc. <https://centrys.io>
+ */
 
-package org.aion.zero.impl.query;
+package org.aion.generic;
 
-import java.util.Optional;
-
-public interface BlockQueryInterface {
-    Optional<Long> getInitialStartingBlockNumber();
+public enum BlockPropagationStatus {
+    DROPPED, // block was invalid, drop no propagation
+    PROPAGATED, // block was propagated, but was not connected
+    CONNECTED, // block was ONLY connected, not propagated
+    PROP_CONNECTED // block propagated and connected
 }

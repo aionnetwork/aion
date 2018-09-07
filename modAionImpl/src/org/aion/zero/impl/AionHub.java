@@ -70,7 +70,7 @@ import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
-public class AionHub {
+public class AionHub implements IAion0Hub {
 
     private static final Logger genLOG = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
@@ -100,6 +100,7 @@ public class AionHub {
     private AtomicBoolean start = new AtomicBoolean(true);
 
     /** Test functionality for checking if the hub has been shut down. */
+    @Override
     public boolean isRunning() {
         return start.get();
     }
@@ -273,22 +274,27 @@ public class AionHub {
         return repository;
     }
 
+    @Override
     public IAionBlockchain getBlockchain() {
         return blockchain;
     }
 
+    @Override
     public IBlockStorePow<AionBlock, A0BlockHeader> getBlockStore() {
         return this.repository.getBlockStore();
     }
 
+    @Override
     public IPendingStateInternal<AionBlock, AionTransaction> getPendingState() {
         return mempool;
     }
 
+    @Override
     public IEventMgr getEventMgr() {
         return this.eventMgr;
     }
 
+    @Override
     public BlockPropagationHandler getPropHandler() {
         return propHandler;
     }
@@ -491,6 +497,7 @@ public class AionHub {
         //        this.repository.getBlockStore().load();
     }
 
+    @Override
     public void close() {
         genLOG.info("<KERNEL SHUTDOWN SEQUENCE>");
 
@@ -535,10 +542,12 @@ public class AionHub {
         this.start.set(false);
     }
 
+    @Override
     public SyncMgr getSyncMgr() {
         return this.syncMgr;
     }
 
+    @Override
     public IP2pMgr getP2pMgr() {
         return this.p2pMgr;
     }
@@ -547,6 +556,7 @@ public class AionHub {
         return Version.REPO_VERSION;
     }
 
+    @Override
     public AionBlock getStartingBlock() {
         return this.startingBlock;
     }

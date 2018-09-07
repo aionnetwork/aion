@@ -8,9 +8,8 @@ module aion.boot {
     requires  aion.mcf;
     requires  slf4j.api;
     requires  aion.p2p;
+    requires  aion.zero;
     requires  aion.fastvm;
-
-
 
     exports org.aion;
 }

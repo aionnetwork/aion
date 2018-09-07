@@ -26,10 +26,13 @@ import java.util.List;
 
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
+import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
+
+import java.util.List;
 
 /**
  * Blockchain interface.
@@ -49,6 +52,8 @@ public interface IBlockchain<
                 INFO extends AbstractTxInfo> {
 
     long getSize();
+
+    BLK createNewBlock(BLK parent, List<TX> transactions, boolean waitUntilBlockTime);
 
     AbstractBlockSummary add(BLK block);
 
@@ -95,4 +100,6 @@ public interface IBlockchain<
     BLK getBestBlock();
 
     void flush();
+
+    IChainCfg<?, ?> getChainConfiguration();
 }

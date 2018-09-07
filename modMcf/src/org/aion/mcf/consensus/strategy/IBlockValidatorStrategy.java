@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -18,13 +18,15 @@
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ *     Centrys Inc. <https://centrys.io>
+ */
+package org.aion.mcf.consensus.strategy;
 
-package org.aion.zero.impl.query;
+import org.aion.base.type.IBlock;
 
-import java.util.Optional;
-
-public interface QueryInterface extends BlockQueryInterface, SyncQueryInterface, StateQueryInterface {
+public interface IBlockValidatorStrategy<BLK extends IBlock> {
+    /**
+     * Validates a block
+     */
+    Boolean execute(BLK block);
 }
