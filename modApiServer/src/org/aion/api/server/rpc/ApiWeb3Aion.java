@@ -37,57 +37,19 @@
 
 package org.aion.api.server.rpc;
 
-import static org.aion.base.util.ByteUtil.hexStringToBytes;
-import static org.aion.base.util.ByteUtil.toHexString;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.api.server.ApiAion;
-import org.aion.api.server.types.ArgFltr;
-import org.aion.api.server.types.ArgTxCall;
-import org.aion.api.server.types.Blk;
-import org.aion.api.server.types.CompiledContr;
-import org.aion.api.server.types.Evt;
-import org.aion.api.server.types.Fltr;
-import org.aion.api.server.types.FltrBlk;
-import org.aion.api.server.types.FltrLg;
-import org.aion.api.server.types.FltrTx;
-import org.aion.api.server.types.NumericalValue;
-import org.aion.api.server.types.SyncInfo;
-import org.aion.api.server.types.Tx;
-import org.aion.api.server.types.TxRecpt;
+import org.aion.api.server.types.*;
 import org.aion.base.db.IRepository;
 import org.aion.base.type.Address;
 import org.aion.base.type.Hash256;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.TypeConverter;
-import org.aion.base.util.Utils;
+import org.aion.base.util.*;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -96,15 +58,7 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.Keystore;
-import org.aion.mcf.config.CfgApi;
-import org.aion.mcf.config.CfgApiNrg;
-import org.aion.mcf.config.CfgApiRpc;
-import org.aion.mcf.config.CfgApiZmq;
-import org.aion.mcf.config.CfgNet;
-import org.aion.mcf.config.CfgNetP2p;
-import org.aion.mcf.config.CfgSsl;
-import org.aion.mcf.config.CfgSync;
-import org.aion.mcf.config.CfgTx;
+import org.aion.mcf.config.*;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
@@ -130,6 +84,24 @@ import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.*;
+import java.util.HashMap;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
+import static org.aion.base.util.ByteUtil.hexStringToBytes;
+import static org.aion.base.util.ByteUtil.toHexString;
 
 /**
  * @author chris lin, ali sharif TODO: make implementation pass all spec tests:
@@ -218,6 +190,9 @@ public class ApiWeb3Aion extends ApiAion {
         */
     }
 
+    private final LoadingCache<ByteArrayWrapper, AionBlock> blockCache;
+    private final static int BLOCK_CACHE_SIZE = 1000;
+
     public ApiWeb3Aion(final IAionChain _ac) {
         super(_ac);
         pendingReceipts = Collections.synchronizedMap(new LRUMap<>(FLTRS_MAX, 100));
@@ -273,6 +248,13 @@ public class ApiWeb3Aion extends ApiAion {
         cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(1), new CacheUpdateThreadFactory());
 
+        //noinspection NullableProblems
+        blockCache = CacheBuilder.newBuilder().maximumSize(BLOCK_CACHE_SIZE).build(
+                new CacheLoader<>() {
+                    public AionBlock load(ByteArrayWrapper blockHash) {
+                        return  getBlockByHash(blockHash.getData());
+                    }
+                });
 
         MinerStats = CacheBuilder.newBuilder()
                 .maximumSize(1)
@@ -779,8 +761,7 @@ public class ApiWeb3Aion extends ApiAion {
             LOG.debug("<get-block hash={} err=not-found>", _hash);
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         } else {
-            BigInteger totalDiff =
-                    this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
+            BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(hash);
             return new RpcMsg(Blk.AionBlockToJson(block, totalDiff, _fullTx));
         }
     }
@@ -809,8 +790,9 @@ public class ApiWeb3Aion extends ApiAion {
             LOG.debug("<get-block bn={} err=not-found>", bn);
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         } else {
-            BigInteger totalDiff =
-                    this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
+            // add main chain block to cache (for use by others)
+            blockCache.put(new ByteArrayWrapper(nb.getHash()), nb);
+            BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
             return new RpcMsg(Blk.AionBlockToJson(nb, totalDiff, _fullTx));
         }
     }
@@ -925,9 +907,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
         */
 
-        if (r == null)
-            return new RpcMsg(
-                    JSONObject.NULL); // json rpc spec: 'or null when no receipt was found'
+        if (r == null) return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no receipt was found'
 
         return new RpcMsg(r.toJson());
     }
@@ -2136,6 +2116,79 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         return new RpcMsg(result);
+    }
+
+    public RpcMsg ops_getTransactionReceiptByTransactionAndBlockHash(Object _params) {
+        String _transactionHash;
+        String _blockHash;
+        if (_params instanceof JSONArray) {
+            _transactionHash = ((JSONArray) _params).get(0) + "";
+            _blockHash = ((JSONArray) _params).get(1) + "";
+        } else if (_params instanceof JSONObject) {
+            _transactionHash = ((JSONObject) _params).get("transactionHash") + "";
+            _blockHash = ((JSONObject) _params).get("blockHash") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        byte[] transactionHash = TypeConverter.StringHexToByteArray(_transactionHash);
+        byte[] blockHash = TypeConverter.StringHexToByteArray(_blockHash);
+
+        if (blockHash.length != 32 || transactionHash.length != 32)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+
+        AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(transactionHash);
+
+        if (txInfo == null) return new RpcMsg(JSONObject.NULL);
+
+        // ok to getUnchecked() since the load() implementation does not throw checked exceptions
+        AionBlock block = blockCache.getUnchecked(new ByteArrayWrapper(blockHash));
+
+        return new RpcMsg((new TxRecpt(block, txInfo, 0L, true)).toJson());
+    }
+
+    public RpcMsg ops_getTransactionReceiptListByBlockHash(Object _params) {
+        String _blockHash;
+        if (_params instanceof JSONArray) {
+            _blockHash = ((JSONArray) _params).get(0) + "";
+        } else if (_params instanceof JSONObject) {
+            _blockHash = ((JSONObject) _params).get("blockHash") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        byte[] blockHash = TypeConverter.StringHexToByteArray(_blockHash);
+
+        if (blockHash.length != 32)
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+
+        // ok to getUnchecked() since the load() implementation does not throw checked exceptions
+        AionBlock b;
+        try {
+             b = blockCache.getUnchecked(new ByteArrayWrapper(blockHash));
+        } catch (CacheLoader.InvalidCacheLoadException e) {
+            // Catch errors if send an incorrect tx hash
+            return new RpcMsg(null, RpcError.INVALID_REQUEST, "Invalid Request");
+        }
+
+        // cast will cause issues after the PoW refactor goes in
+        AionBlockchainImpl chain = (AionBlockchainImpl) this.ac.getAionHub().getBlockchain();
+
+        Function<AionTransaction, JSONObject> extractTxReceipt = t -> {
+            AionTxInfo info = chain.getTransactionInfoLite(t.getHash(), b.getHash());
+            info.setTransaction(t);
+            return((new TxRecpt(b, info, 0L, true)).toJson());
+        };
+
+        List<JSONObject> receipts;
+        // use the fork-join pool to parallelize receipt retrieval if necessary
+        int PARALLELIZE_RECEIPT_COUNT = 20;
+        if (b.getTransactionsList().size() > PARALLELIZE_RECEIPT_COUNT)
+            receipts = b.getTransactionsList().parallelStream().map(extractTxReceipt).collect(toList());
+        else
+            receipts = b.getTransactionsList().stream().map(extractTxReceipt).collect(toList());
+
+        return new RpcMsg(new JSONArray(receipts));
     }
 
     /* -------------------------------------------------------------------------

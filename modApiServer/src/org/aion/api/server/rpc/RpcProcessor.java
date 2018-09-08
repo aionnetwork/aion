@@ -10,19 +10,20 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class RpcProcessor {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     RpcMethods apiHolder;
+    ExecutorService executor;
+    CompletionService<JSONObject> batchCallCompletionService;
+    private final int MAX_SHUTDOWN_WAIT = 5;
 
-    public RpcProcessor(
-        final List<String> enabledGroups,
-        final List<String> enabledMethods,
-        final List<String> disabledMethods) {
-
+    public RpcProcessor(final List<String> enabledGroups, final List<String> enabledMethods, final List<String> disabledMethods) {
+        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        batchCallCompletionService = new ExecutorCompletionService(executor);
         this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods);
     }
 
@@ -126,14 +127,12 @@ public class RpcProcessor {
 
             JSONArray respBodies = new JSONArray();
 
-            for (int i = 0, n = reqBodies.length(); i < n; i++) {
-                try {
-                    JSONObject body = reqBodies.getJSONObject(i);
-                    respBodies.put(processObject(body));
-                } catch (Exception e) {
-                    LOG.debug("<rpc-server - invalid rpc request [5]>", e);
-                    respBodies.put(new RpcMsg(null, RpcError.INVALID_REQUEST).toJson());
-                }
+            for(int i = 0; i < reqBodies.length(); i++) {
+                batchCallCompletionService.submit(new BatchCallTask(reqBodies.getJSONObject(i)));
+            }
+
+            for(int i = 0; i < reqBodies.length(); i++) {
+                respBodies.put(batchCallCompletionService.take().get());
             }
 
             String respBody = respBodies.toString();
@@ -162,7 +161,34 @@ public class RpcProcessor {
         return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
     }
 
+
+    private class BatchCallTask implements Callable<JSONObject> {
+
+        private JSONObject task;
+
+        public BatchCallTask(JSONObject task) {
+            this.task = task;
+        }
+
+        @Override
+        public JSONObject call() {
+            try {
+                return processObject(task);
+            } catch (Exception e) {
+                return new RpcMsg(null, RpcError.INVALID_REQUEST, "INVALID_REQUEST").toJson();
+            }
+        }
+    }
+
     public void shutdown() {
         apiHolder.shutdown();
+
+        executor.shutdown();
+        try {
+            executor.awaitTermination(MAX_SHUTDOWN_WAIT, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+
+        }
+
     }
 }

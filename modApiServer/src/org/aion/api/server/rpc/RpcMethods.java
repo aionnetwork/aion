@@ -127,7 +127,9 @@ public class RpcMethods {
             Map.entry("eth_sendRawTransaction", (params) -> api.eth_sendRawTransaction(params)),
             Map.entry("eth_getBlockByNumber", (params) -> api.eth_getBlockByNumber(params)),
             Map.entry("eth_getBlockByHash", (params) -> api.eth_getBlockByHash(params)),
-            Map.entry("eth_getTransactionByHash", (params) -> api.eth_getTransactionByHash(params))
+            Map.entry("eth_getTransactionByHash", (params) -> api.eth_getTransactionByHash(params)),
+            Map.entry("ops_getTransactionReceiptListByBlockHash", (params) -> api.ops_getTransactionReceiptListByBlockHash(params)),
+            Map.entry("ops_getTransactionReceiptByTransactionAndBlockHash", (params) -> api.ops_getTransactionReceiptByTransactionAndBlockHash(params))
     );
 
     /**
