@@ -96,8 +96,10 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toList;
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
 import static org.aion.base.util.ByteUtil.toHexString;
 
@@ -2165,14 +2167,22 @@ public class ApiWeb3Aion extends ApiAion {
         // cast will cause issues after the PoW refactor goes in
         AionBlockchainImpl chain = (AionBlockchainImpl) this.ac.getAionHub().getBlockchain();
 
-        // use the fork-join pool to parallelize receipt retrieval
-        List<JSONObject> receipts = b.getTransactionsList().parallelStream().map(t -> {
+        Function<AionTransaction, JSONObject> extractTxReceipt = t -> {
             AionTxInfo info = chain.getTransactionInfoLite(t.getHash(), b.getHash());
             return((new TxRecpt(b, info, 0L, true)).toJson());
-        }).collect(Collectors.toList());
+        };
+
+        List<JSONObject> receipts;
+        // use the fork-join pool to parallelize receipt retrieval if necessary
+        int PARALLELIZE_RECEIPT_COUNT = 20;
+        if (b.getTransactionsList().size() > PARALLELIZE_RECEIPT_COUNT)
+            receipts = b.getTransactionsList().parallelStream().map(extractTxReceipt).collect(toList());
+        else
+            receipts = b.getTransactionsList().stream().map(extractTxReceipt).collect(toList());
 
         return new RpcMsg(new JSONArray(receipts));
     }
+
     /* -------------------------------------------------------------------------
      * stratum pool
      */
