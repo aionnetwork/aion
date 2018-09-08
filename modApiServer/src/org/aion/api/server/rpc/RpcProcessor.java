@@ -9,7 +9,10 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class RpcProcessor {
 
@@ -17,8 +20,13 @@ public class RpcProcessor {
 
     RpcMethods apiHolder;
 
+    ForkJoinPool customPool;
+
     public RpcProcessor(List<String> enabled) {
         this.apiHolder = new RpcMethods(enabled);
+
+        // Parallelism should be roughly equal to number of cores for best performance
+        this.customPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
     }
 
     public String process(String _requestBody) {
@@ -121,15 +129,23 @@ public class RpcProcessor {
 
             JSONArray respBodies = new JSONArray();
 
-            for (int i = 0, n = reqBodies.length(); i < n; i++) {
-                try {
-                    JSONObject body = reqBodies.getJSONObject(i);
-                    respBodies.put(processObject(body));
-                } catch (Exception e) {
-                    LOG.debug("<rpc-server - invalid rpc request [5]>", e);
-                    respBodies.put(new RpcMsg(null, RpcError.INVALID_REQUEST).toJson());
-                }
-            }
+            respBodies.put(
+                    customPool.submit( () ->
+                            reqBodies.toList().parallelStream()
+                                    .map(body -> extractBatch((JSONObject) body))
+                                    .collect(Collectors.toList())
+                    )
+            );
+
+//            for (int i = 0, n = reqBodies.length(); i < n; i++) {
+//                try {
+//                    JSONObject body = reqBodies.getJSONObject(i);
+//                    respBodies.put(processObject(body));
+//                } catch (Exception e) {
+//                    LOG.debug("<rpc-server - invalid rpc request [5]>", e);
+//                    respBodies.put(new RpcMsg(null, RpcError.INVALID_REQUEST).toJson());
+//                }
+//            }
 
             String respBody = respBodies.toString();
 
@@ -155,6 +171,14 @@ public class RpcProcessor {
         }
 
         return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
+    }
+
+    private JSONObject extractBatch(JSONObject request) {
+        try {
+            return processObject(request);
+        } catch (Exception e) {
+            return new RpcMsg(null, RpcError.INVALID_REQUEST).toJson();
+        }
     }
 
     public void shutdown() {
