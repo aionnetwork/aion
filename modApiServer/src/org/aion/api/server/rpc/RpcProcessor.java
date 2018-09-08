@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -16,16 +17,14 @@ public class RpcProcessor {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     RpcMethods apiHolder;
-
     ExecutorService executor;
     CompletionService<JSONObject> batchCallCompletionService;
     private final int MAX_SHUTDOWN_WAIT = 5;
 
-
-    public RpcProcessor(List<String> enabled) {
-        this.apiHolder = new RpcMethods(enabled);
+    public RpcProcessor(final List<String> enabledGroups, final List<String> enabledMethods, final List<String> disabledMethods) {
         executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         batchCallCompletionService = new ExecutorCompletionService(executor);
+        this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods);
     }
 
     public String process(String _requestBody) {

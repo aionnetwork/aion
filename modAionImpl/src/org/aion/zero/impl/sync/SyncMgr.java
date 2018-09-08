@@ -1,33 +1,25 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
-
 package org.aion.zero.impl.sync;
 
 import java.math.BigInteger;
@@ -64,15 +56,13 @@ import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
-/**
- * @author chris
- */
+/** @author chris */
 public final class SyncMgr {
 
     // interval - show status
     private static final int INTERVAL_SHOW_STATUS = 10000;
 
-    private final static Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
+    private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
     private final NetworkStatus networkStatus = new NetworkStatus();
     // peer syncing states
     private final Map<Integer, PeerState> peerStates = new ConcurrentHashMap<>();
@@ -168,42 +158,62 @@ public final class SyncMgr {
         }
     }
 
-    public void init(final IP2pMgr _p2pMgr, final IEventMgr _evtMgr, final int _blocksQueueMax,
-        final boolean _showStatus, final boolean _printReport, final String _reportFolder) {
-        this.p2pMgr = _p2pMgr;
-        this.chain = AionBlockchainImpl.inst();
-        this.evtMgr = _evtMgr;
+    public void init(
+            final AionBlockchainImpl _chain,
+            final IP2pMgr _p2pMgr,
+            final IEventMgr _evtMgr,
+            final int _blocksQueueMax,
+            final boolean _showStatus) {
+        p2pMgr = _p2pMgr;
+        chain = _chain;
+        evtMgr = _evtMgr;
 
-        this.blocksQueueMax = _blocksQueueMax;
+        blocksQueueMax = _blocksQueueMax;
 
-        this.blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
+        blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
-        long selfBest = this.chain.getBestBlock().getNumber();
+        long selfBest = chain.getBestBlock().getNumber();
         SyncStatics statics = new SyncStatics(selfBest);
 
-        syncGb = new Thread(new TaskGetBodies(this.p2pMgr,
-                                              this.start,
-                                              this.downloadedHeaders,
-                                              this.headersWithBodiesRequested,
-                                              this.peerStates,
-                                              log), "sync-gb");
+        syncGb =
+                new Thread(
+                        new TaskGetBodies(
+                                p2pMgr,
+                                start,
+                                downloadedHeaders,
+                                headersWithBodiesRequested,
+                                peerStates,
+                                log),
+                        "sync-gb");
         syncGb.start();
-        syncIb = new Thread(new TaskImportBlocks(this.chain,
-                                                 this.start,
-                                                 statics,
-                                                 this.downloadedBlocks,
-                                                 this.importedBlockHashes,
-                                                 this.peerStates,
-                                                 log), "sync-ib");
+        syncIb =
+                new Thread(
+                        new TaskImportBlocks(
+                                chain,
+                                start,
+                                statics,
+                                downloadedBlocks,
+                                importedBlockHashes,
+                                peerStates,
+                                log),
+                        "sync-ib");
         syncIb.start();
-        syncGs = new Thread(new TaskGetStatus(this.start, this.p2pMgr, log), "sync-gs");
+        syncGs = new Thread(new TaskGetStatus(start, p2pMgr, log), "sync-gs");
         syncGs.start();
 
         if (_showStatus) {
-            syncSs = new Thread(
-                new TaskShowStatus(this.start, INTERVAL_SHOW_STATUS, this.chain, this.networkStatus,
-                    statics, _printReport, _reportFolder,
-                    AionLoggerFactory.getLogger(LogEnum.P2P.name())), "sync-ss");
+            syncSs =
+                    new Thread(
+                            new TaskShowStatus(
+                                    start,
+                                    INTERVAL_SHOW_STATUS,
+                                    chain,
+                                    networkStatus,
+                                    statics,
+                                    false,
+                                    "", // TODO: fully remove
+                                    AionLoggerFactory.getLogger(LogEnum.P2P.name())),
+                            "sync-ss");
             syncSs.start();
         }
 

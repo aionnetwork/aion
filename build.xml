@@ -35,7 +35,7 @@
 		<pathelement location="${dir.libfile}/libJson.jar" />
 		<pathelement location="${dir.libfile}/logback-classic-1.2.3.jar" />
 		<pathelement location="${dir.libfile}/logback-core-1.2.3.jar" />
-		<pathelement location="${dir.libfile}/libminiupnp/miniupnpc_linux.jar" />
+		<pathelement location="${dir.libfile}/miniupnpc_linux.jar" />
 		<pathelement location="${dir.modfile}/modEvtMgr.jar" />
 		<pathelement location="${dir.modfile}/modEvtMgrImpl.jar" />
 		<pathelement location="${dir.modfile}/modLogger.jar" />
@@ -55,7 +55,7 @@
 		<pathelement location="${dir.modfile}/modBoot.jar" />
 		<pathelement location="${dir.modfile}/modGui.jar" />
 		<pathelement location="${dir.modfile}/modPrecompiled.jar" />
-        <pathelement location="${dir.modfile}/modVM.jar" />
+	        <pathelement location="${dir.modfile}/modVM.jar" />
 	</path>
 
 	<path id="test.lib">
@@ -84,6 +84,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/aion_fastvm/modFastVM/build.xml" target="test" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="test" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modApiServer/build.xml" target="test" />
 	</target>
 
 	<target name="ci_test_modules">
@@ -102,6 +103,7 @@
 		<ant inheritAll="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="ci_build" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="test" />
         <ant inheritAll="false" dir="${dir.workspace}/modGui" antfile="build.xml" target="integtest" />
+		<ant inheritAll="false" antfile="${dir.workspace}/modApiServer/build.xml" target="test" />
 	</target>
 
 	<!--<target name="test_build" depends="build">
@@ -184,6 +186,7 @@
 		<macro_collect_reports src="aion_fastvm/modFastVM/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modPrecompiled/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modApiServer/report" dest="${test.report.dir}" />
 	</target>
 
 	<target name="ci_test_modules_collect_reports" depends="ci_test_modules">
@@ -197,6 +200,7 @@
 		<macro_collect_reports src="aion_fastvm/modFastVM/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modAionImpl/report" dest="${test.report.dir}" />
 		<macro_collect_reports src="modPrecompiled/report" dest="${test.report.dir}" />
+		<macro_collect_reports src="modApiServer/report" dest="${test.report.dir}" />
 	</target>
 
 	<target name="clean_build" depends="logenv, clean, fastbuild" />
@@ -208,6 +212,7 @@
         <target name="3rd_build" depends="clean">
                 <echo message="compile debug is ${compile.debug}" />
                 <echo message="building 3rd party lib" />
+
                 <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libnsc/build.xml" target="build">
                         <property name="compile.debug" value="${compile.debug}" />
                 </ant>
@@ -293,10 +298,10 @@
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>
 
-        <echo message="building modVM" />
-        <ant inheritAll="false" antfile="${dir.workspace}/modVM/build.xml" target="clean_build">
-            <property name="compile.debug" value="${compile.debug}" />
-        </ant>
+	        <echo message="building modVM" />
+       		<ant inheritAll="false" antfile="${dir.workspace}/modVM/build.xml" target="clean_build">
+	            <property name="compile.debug" value="${compile.debug}" />
+	        </ant>
 
 		<echo message="building modPrecompiled" />
 		<ant inheritall="false" antfile="${dir.workspace}/modPrecompiled/build.xml" target="clean_build">
@@ -321,15 +326,15 @@
 		<echo message="building modBoot" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modBoot/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
-        </ant>
+	        </ant>
 
-        <echo message="building modApi" />
-        <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build">
-                <property name="compile.debug" value="${compile.debug}" />
-        </ant>
-        <copy file="aion_api/pack/modAionApi.jar" todir="${dir.modfile}" overwrite="true" />
+	        <echo message="building modApi" />               
+	        <ant inheritAll="false" antfile="${dir.workspace}/aion_api/build.xml" target="clean_build_from_kernel">
+	                <property name="compile.debug" value="${compile.debug}" />
+	        </ant>
+	        <copy file="aion_api/pack/modAionApi.jar" todir="${dir.modfile}" overwrite="true" />
 
-        <echo message="building modGui" />
+	        <echo message="building modGui" />
 		<ant inheritAll="false" antfile="${dir.workspace}/modGui/build.xml" target="clean_build">
 			<property name="compile.debug" value="${compile.debug}" />
 		</ant>

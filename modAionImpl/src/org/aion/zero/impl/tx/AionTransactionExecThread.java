@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl.tx;
 
 import org.aion.mcf.tx.ITransactionExecThread;
@@ -30,22 +28,25 @@ import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.types.AionTransaction;
 
 /**
- * Transaction execution thread for Aion, allows us to inject
- * AionPendingStateImpl
- * 
- * @author yao
+ * Transaction execution thread for Aion, allows us to inject AionPendingStateImpl
  *
+ * @author yao
  */
-public class AionTransactionExecThread extends TransactionExecThread<AionPendingStateImpl, AionTransaction>
+public class AionTransactionExecThread
+        extends TransactionExecThread<AionPendingStateImpl, AionTransaction>
         implements ITransactionExecThread<AionTransaction> {
 
     private static class AionTransactionExecThreadHolder {
-        public static final AionTransactionExecThread INSTANCE = new AionTransactionExecThread(
-                AionPendingStateImpl.inst());
+        public static final AionTransactionExecThread INSTANCE =
+                new AionTransactionExecThread(AionPendingStateImpl.inst());
     }
 
     private AionTransactionExecThread(AionPendingStateImpl pendingState) {
         super(pendingState);
+    }
+
+    public static AionTransactionExecThread createForTesting(AionPendingStateImpl _pendingState) {
+        return new AionTransactionExecThread(_pendingState);
     }
 
     public static AionTransactionExecThread getInstance() {
