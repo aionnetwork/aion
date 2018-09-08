@@ -2147,7 +2147,6 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg((new TxRecpt(block, txInfo, 0L, true)).toJson());
     }
 
-    private static int PARALLIZE_RECEIPT_COUNT = 20;
     public RpcMsg ops_getTransactionReceiptListByBlockHash(Object _params) {
         String _blockHash;
         if (_params instanceof JSONArray) {
@@ -2175,14 +2174,15 @@ public class ApiWeb3Aion extends ApiAion {
 
         List<JSONObject> receipts;
         // use the fork-join pool to parallelize receipt retrieval if necessary
-        if (b.getTransactionsList().size() > PARALLIZE_RECEIPT_COUNT)
+        int PARALLELIZE_RECEIPT_COUNT = 20;
+        if (b.getTransactionsList().size() > PARALLELIZE_RECEIPT_COUNT)
             receipts = b.getTransactionsList().parallelStream().map(extractTxReceipt).collect(toList());
         else
             receipts = b.getTransactionsList().stream().map(extractTxReceipt).collect(toList());
 
         return new RpcMsg(new JSONArray(receipts));
     }
-    
+
     /* -------------------------------------------------------------------------
      * stratum pool
      */
