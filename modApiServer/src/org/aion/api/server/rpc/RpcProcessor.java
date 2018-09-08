@@ -19,6 +19,7 @@ public class RpcProcessor {
 
     ExecutorService executor;
     CompletionService<JSONObject> batchCallCompletionService;
+    private final int MAX_SHUTDOWN_WAIT = 5;
 
 
     public RpcProcessor(List<String> enabled) {
@@ -185,7 +186,7 @@ public class RpcProcessor {
 
         executor.shutdown();
         try {
-            executor.awaitTermination(5, TimeUnit.SECONDS);
+            executor.awaitTermination(MAX_SHUTDOWN_WAIT, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
 
         }
