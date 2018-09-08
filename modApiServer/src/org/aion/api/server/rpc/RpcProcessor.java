@@ -9,10 +9,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.concurrent.*;
 
 public class RpcProcessor {
 
@@ -20,13 +17,14 @@ public class RpcProcessor {
 
     RpcMethods apiHolder;
 
-    ForkJoinPool customPool;
+    ExecutorService executor;
+    CompletionService<JSONObject> batchCallCompletionService;
+
 
     public RpcProcessor(List<String> enabled) {
         this.apiHolder = new RpcMethods(enabled);
-
-        // Parallelism should be roughly equal to number of cores for best performance
-        this.customPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        batchCallCompletionService = new ExecutorCompletionService(executor);
     }
 
     public String process(String _requestBody) {
@@ -129,23 +127,13 @@ public class RpcProcessor {
 
             JSONArray respBodies = new JSONArray();
 
-            respBodies.put(
-                    customPool.submit( () ->
-                            reqBodies.toList().parallelStream()
-                                    .map(body -> extractBatch((JSONObject) body))
-                                    .collect(Collectors.toList())
-                    )
-            );
+            for(int i = 0; i < reqBodies.length(); i++) {
+                batchCallCompletionService.submit(new BatchCallTask(reqBodies.getJSONObject(i)));
+            }
 
-//            for (int i = 0, n = reqBodies.length(); i < n; i++) {
-//                try {
-//                    JSONObject body = reqBodies.getJSONObject(i);
-//                    respBodies.put(processObject(body));
-//                } catch (Exception e) {
-//                    LOG.debug("<rpc-server - invalid rpc request [5]>", e);
-//                    respBodies.put(new RpcMsg(null, RpcError.INVALID_REQUEST).toJson());
-//                }
-//            }
+            for(int i = 0; i < reqBodies.length(); i++) {
+                respBodies.put(batchCallCompletionService.take().get());
+            }
 
             String respBody = respBodies.toString();
 
@@ -173,15 +161,34 @@ public class RpcProcessor {
         return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
     }
 
-    private JSONObject extractBatch(JSONObject request) {
-        try {
-            return processObject(request);
-        } catch (Exception e) {
-            return new RpcMsg(null, RpcError.INVALID_REQUEST).toJson();
+
+    private class BatchCallTask implements Callable<JSONObject> {
+
+        private JSONObject task;
+
+        public BatchCallTask(JSONObject task) {
+            this.task = task;
+        }
+
+        @Override
+        public JSONObject call() {
+            try {
+                return processObject(task);
+            } catch (Exception e) {
+                return new RpcMsg(null, RpcError.INVALID_REQUEST, "INVALID_REQUEST").toJson();
+            }
         }
     }
 
     public void shutdown() {
         apiHolder.shutdown();
+
+        executor.shutdown();
+        try {
+            executor.awaitTermination(5, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+
+        }
+
     }
 }

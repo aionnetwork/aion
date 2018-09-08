@@ -2137,7 +2137,7 @@ public class ApiWeb3Aion extends ApiAion {
         if (blockHash.length != 32 || transactionHash.length != 32)
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
 
-        AionTxInfo txInfo = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain()).getTransactionInfoLite(transactionHash, blockHash);
+        AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(transactionHash);
 
         if (txInfo == null) return new RpcMsg(JSONObject.NULL);
 
@@ -2150,7 +2150,7 @@ public class ApiWeb3Aion extends ApiAion {
     public RpcMsg ops_getTransactionReceiptListByBlockHash(Object _params) {
         String _blockHash;
         if (_params instanceof JSONArray) {
-            _blockHash = ((JSONArray) _params).get(1) + "";
+            _blockHash = ((JSONArray) _params).get(0) + "";
         } else if (_params instanceof JSONObject) {
             _blockHash = ((JSONObject) _params).get("blockHash") + "";
         } else {
@@ -2163,12 +2163,20 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
 
         // ok to getUnchecked() since the load() implementation does not throw checked exceptions
-        AionBlock b = blockCache.getUnchecked(new ByteArrayWrapper(blockHash));
+        AionBlock b;
+        try {
+             b = blockCache.getUnchecked(new ByteArrayWrapper(blockHash));
+        } catch (CacheLoader.InvalidCacheLoadException e) {
+            // Catch errors if send an incorrect tx hash
+            return new RpcMsg(null, RpcError.INVALID_REQUEST, "Invalid Request");
+        }
+
         // cast will cause issues after the PoW refactor goes in
         AionBlockchainImpl chain = (AionBlockchainImpl) this.ac.getAionHub().getBlockchain();
 
         Function<AionTransaction, JSONObject> extractTxReceipt = t -> {
             AionTxInfo info = chain.getTransactionInfoLite(t.getHash(), b.getHash());
+            info.setTransaction(t);
             return((new TxRecpt(b, info, 0L, true)).toJson());
         };
 
