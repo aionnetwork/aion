@@ -2141,6 +2141,35 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(result);
     }
 
+    /**
+     * This function runs in ~ 30ms
+     * Is an order of magnitude slower than ops_getTransactionReceiptByTransactionAndBlockHash
+     */
+    public RpcMsg ops_getTransactionReceiptByTransactionHash(Object _params) {
+        String _transactionHash;
+        if (_params instanceof JSONArray) {
+            _transactionHash = ((JSONArray) _params).get(0) + "";
+        } else if (_params instanceof JSONObject) {
+            _transactionHash = ((JSONObject) _params).get("transactionHash") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        byte[] transactionHash = TypeConverter.StringHexToByteArray(_transactionHash);
+
+        AionTxInfo info = this.ac.getAionHub().getBlockchain().getTransactionInfo(transactionHash);
+        if (info == null) return new RpcMsg(JSONObject.NULL);
+
+        // ok to getUnchecked() since the load() implementation does not throw checked exceptions
+        AionBlock block = blockCache.getUnchecked(new ByteArrayWrapper(info.getBlockHash()));
+
+        return new RpcMsg((new TxRecpt(block, info, 0L, true)).toJson());
+    }
+
+    /**
+     * This function runs as fast as is possible with the on-disk data model
+     * Use this to retrieve the Transaction Receipt if you know the block hash already
+     */
     public RpcMsg ops_getTransactionReceiptByTransactionAndBlockHash(Object _params) {
         String _transactionHash;
         String _blockHash;
@@ -2156,9 +2185,6 @@ public class ApiWeb3Aion extends ApiAion {
 
         byte[] transactionHash = TypeConverter.StringHexToByteArray(_transactionHash);
         byte[] blockHash = TypeConverter.StringHexToByteArray(_blockHash);
-
-        if (blockHash.length != 32 || transactionHash.length != 32)
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
 
         // cast will cause issues after the PoW refactor goes in
         AionBlockchainImpl chain = (AionBlockchainImpl) this.ac.getAionHub().getBlockchain();
