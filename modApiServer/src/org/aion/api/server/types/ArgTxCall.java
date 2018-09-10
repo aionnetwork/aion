@@ -28,7 +28,10 @@ import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.json.JSONObject;
+import org.slf4j.Logger;
 
 import java.math.BigInteger;
 
@@ -45,6 +48,8 @@ public final class ArgTxCall {
     private final BigInteger value;
     private final long nrg;
     private final long nrgPrice;
+
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     // @Jay
     //TODO: create a builder class for create this class
@@ -83,9 +88,9 @@ public final class ArgTxCall {
             else
                 nrgPrice = oracle.getNrgPrice();
 
-
             return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice);
-        } catch(Exception ex) {
+        } catch(Exception e) {
+            LOG.debug("Failed to parse transaction call object from input parameters", e);
             return null;
         }
     }
