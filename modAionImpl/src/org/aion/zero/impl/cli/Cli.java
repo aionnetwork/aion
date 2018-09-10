@@ -301,7 +301,7 @@ public class Cli {
     private void genKeyFile(@Nonnull final String publicKey, @Nonnull final String secretKey)
         throws IOException {
 
-        DateFormat df = new SimpleDateFormat("yy-MM-dd'T'HH:mm:ss'Z'");
+        DateFormat df = new SimpleDateFormat("yy-MM-dd'T'HH-mm-ss'Z'");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
         String iso_date = df.format(new Date(System.currentTimeMillis()));
 
