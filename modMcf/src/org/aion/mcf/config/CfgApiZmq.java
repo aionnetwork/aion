@@ -123,6 +123,12 @@ public class CfgApiZmq {
             xmlWriter.writeAttribute("ip", this.ip);
             xmlWriter.writeAttribute("port", this.port + "");
 
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("secure-connect");
+            xmlWriter.writeCharacters(String.valueOf(this.secureConnectEnabled));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeEndElement();
             xml = strWriter.toString();
             strWriter.flush();
