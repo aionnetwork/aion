@@ -197,9 +197,20 @@ public class ProtocolProcessor implements Runnable {
                 } catch (IOException e) {
                     LOG.error("Get zmqCurvePubkey exception! {}", e.toString());
                 }
-            } else if (nextLoad.contentEquals(f.getName())){
+            } else if (f.getName().contains("zmqCurveSeckey")) {
                 try {
                     curveSecKey = Files.readAllBytes(f.toPath());
+                    nextLoad = f.getName().replace("zmqCurveSeckey", "zmqCurvePubkey");
+                } catch (IOException e) {
+                    LOG.error("Get zmqCurveSeckey exception! {}", e.toString());
+                }
+            } else if (nextLoad.contentEquals(f.getName())){
+                try {
+                    if (nextLoad.contains("zmqCurveSeckey")) {
+                        curveSecKey = Files.readAllBytes(f.toPath());
+                    } else {
+                        curvePubKey = Files.readAllBytes(f.toPath());
+                    }
                 } catch (IOException e) {
                     LOG.error("Get zmqCurveSeckey exception! {}", e.toString());
                 }
