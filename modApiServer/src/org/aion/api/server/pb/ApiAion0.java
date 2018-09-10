@@ -2072,7 +2072,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     // blocks requested in the future. return empty result
                     if (blkStart > latestBlkNum) {
-                        Message.rsp_getBlockDetailsByRange rsp = Message.rsp_getBlockDetailsByRange.newBuilder()
+                        Message.rsp_getBlockDetailsByRange rsp =
+                            Message.rsp_getBlockDetailsByRange
+                                .newBuilder()
                                 .addAllBlkDetails(new ArrayList<>())
                                 .build();
 
@@ -2112,12 +2114,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     for (int i = 0; i < listLength; i++) {
                         long blkNum = blkStart + i;
-                        Map.Entry<AionBlock, BigInteger> entry = getBlockWithTotalDifficulty(blkNum);
+                        Map.Entry<AionBlock, BigInteger> entry =
+                            getBlockWithTotalDifficulty(blkNum);
                         AionBlock b = entry.getKey();
                         BigInteger td = entry.getValue();
                         long blocktime = 0;
                         if (b.getNumber() > 0 && lastBlockTimestamp == null) {
-                            lastBlockTimestamp = getBlockByHash(b.getParentHash()).getTimestamp();
+                            lastBlockTimestamp =
+                                getBlockByHash(b.getParentHash()).getTimestamp();
                         }
 
                         if (lastBlockTimestamp != null) {
@@ -2126,7 +2130,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         lastBlockTimestamp = b.getTimestamp();
 
-                        Message.t_BlockDetail.Builder blockDetails = getBlockDetailsObj(b, td, blocktime);
+                        Message.t_BlockDetail.Builder blockDetails =
+                            getBlockDetailsObj(b, td, blocktime);
 
                         List<Message.t_TxDetail> txDetails = new ArrayList<>();
 
@@ -2138,46 +2143,93 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         }
 
                         if (bs != null) {
+
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("getBlockDetailsByRange: cache HIT for #: " + b.getNumber());
+                                LOG.debug(
+                                    "getBlockDetailsByRange: cache HIT for #: "
+                                        + b.getNumber());
                             }
 
                             Map<ByteArrayWrapper, AionTxReceipt> receipts = new HashMap<>();
                             for (AionTxReceipt r : bs.getReceipts()) {
-                                receipts.put(new ByteArrayWrapper(r.getTransaction().getHash()), r);
+                                receipts.put(
+                                    new ByteArrayWrapper(r.getTransaction().getHash()), r);
                             }
 
                             List<AionTransaction> txns = b.getTransactionsList();
                             for (int j = 0; j < txns.size(); j++) {
                                 AionTransaction tx = txns.get(j);
-                                AionTxReceipt r = receipts.get(new ByteArrayWrapper(tx.getHash()));
+                                AionTxReceipt r =
+                                    receipts.get(new ByteArrayWrapper(tx.getHash()));
                                 if (r == null) {
                                     if (LOG.isDebugEnabled()) {
-                                        LOG.debug("getBlockDetailsByRange: transaction not in Block Summary: " + b.getNumber() + "." + j);
+                                        LOG.debug(
+                                            "getBlockDetailsByRange: transaction not in Block Summary: "
+                                                + b.getNumber()
+                                                + "."
+                                                + j);
                                     }
-
-                                    AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain()).getTransactionInfoLite(tx.getHash(), b.getHash());
+                                    AionTxInfo ti =
+                                        ((AionBlockchainImpl)
+                                            this.ac
+                                                .getAionHub()
+                                                .getBlockchain())
+                                            .getTransactionInfoLite(
+                                                tx.getHash(), b.getHash());
                                     r = ti.getReceipt();
                                 }
                                 if (r == null) {
-                                    LOG.error("getBlockDetailsByRange: missing DB transaction: " + ByteUtil.toHexString(tx.getHash()));
+                                    LOG.error(
+                                        "getBlockDetailsByRange: missing DB transaction: "
+                                            + ByteUtil.toHexString(tx.getHash()));
                                 } else {
-                                    txDetails.add(getTxDetailsObj(tx, r.getLogInfoList(), j, r.getEnergyUsed(), r.getError()));
+                                    txDetails.add(
+                                        getTxDetailsObj(
+                                            tx,
+                                            r.getLogInfoList(),
+                                            j,
+                                            r.getEnergyUsed(),
+                                            r.getError()));
                                 }
                             }
                         } else {
                             if (LOG.isDebugEnabled()) {
-                                LOG.debug("getBlockDetailsByRange: cache MISS for #: " + b.getNumber());
+                                LOG.debug(
+                                    "getBlockDetailsByRange: cache MISS for #: "
+                                        + b.getNumber());
                             }
                             List<AionTransaction> txs = b.getTransactionsList();
 
-                            txDetails = txs.parallelStream().filter(Objects::nonNull).map((AionTransaction tx) -> {
-                                        AionTxInfo ti = ((AionBlockchainImpl) this.ac.getAionHub().getBlockchain()).getTransactionInfoLite(tx.getHash(), b.getHash());
+                            txDetails =
+                                txs.parallelStream()
+                                    .filter(Objects::nonNull)
+                                    .map(
+                                        (AionTransaction tx) -> {
+                                            AionTxInfo ti =
+                                                ((AionBlockchainImpl)
+                                                    this.ac
+                                                        .getAionHub()
+                                                        .getBlockchain())
+                                                    .getTransactionInfoLite(
+                                                        tx.getHash(),
+                                                        b.getHash());
                                             if (ti == null) {
-                                                LOG.error("getBlockDetailsByRange: missing DB transaction: " + ByteUtil.toHexString(tx.getHash()));
+                                                LOG.error(
+                                                    "getBlockDetailsByRange: missing DB transaction: "
+                                                        + ByteUtil
+                                                        .toHexString(
+                                                            tx
+                                                                .getHash()));
                                                 return null;
                                             } else {
-                                                return getTxDetailsObj(tx, ti.getReceipt().getLogInfoList(), ti.getIndex(), ti.getReceipt().getEnergyUsed(), ti.getReceipt().getError());
+                                                return getTxDetailsObj(
+                                                    tx,
+                                                    ti.getReceipt()
+                                                        .getLogInfoList(),
+                                                    ti.getIndex(),
+                                                    ti.getReceipt()
+                                                        .getEnergyUsed(),
+                                                    ti.getReceipt().getError());
                                             }
                                         })
                                     .filter(Objects::nonNull)
@@ -2187,14 +2239,21 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         bds.add(blockDetails.addAllTx(txDetails).build());
                     }
 
-                    Message.rsp_getBlockDetailsByRange rsp = Message.rsp_getBlockDetailsByRange.newBuilder().addAllBlkDetails(bds).build();
+                    Message.rsp_getBlockDetailsByRange rsp =
+                        Message.rsp_getBlockDetailsByRange
+                            .newBuilder()
+                            .addAllBlkDetails(bds)
+                            .build();
 
-                    byte[] retHeader = ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
-
+                    byte[] retHeader =
+                        ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                     return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                 } catch (Exception e) {
-                    LOG.error("ApiAion0.process.getBlockDetailsByNumber exception: [{}]", e.getMessage());
-                    return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_function_exception_VALUE);
+                    LOG.error(
+                        "ApiAion0.process.getBlockDetailsByNumber exception: [{}]",
+                        e.getMessage());
+                    return ApiUtil.toReturnHeader(
+                        getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                 }
             }
             case Message.Funcs.f_getBlockDetailsByLatest_VALUE: {
