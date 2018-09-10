@@ -23,6 +23,12 @@
 package org.aion.zero.impl.sync;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.mcf.core.ImportResult.CONSENSUS_BREAK;
+import static org.aion.mcf.core.ImportResult.EXIST;
+import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
+import static org.aion.mcf.core.ImportResult.IMPORTED_NOT_BEST;
+import static org.aion.mcf.core.ImportResult.INVALID_BLOCK;
+import static org.aion.mcf.core.ImportResult.NO_PARENT;
 import static org.aion.p2p.P2pConstant.COEFFICIENT_NORMAL_PEERS;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.MAX_NORMAL_PEERS;
@@ -38,6 +44,7 @@ import static org.aion.zero.impl.sync.PeerState.Mode.NORMAL;
 import static org.aion.zero.impl.sync.PeerState.Mode.THUNDER;
 import static org.aion.zero.impl.sync.TaskImportBlocks.attemptLightningJump;
 import static org.aion.zero.impl.sync.TaskImportBlocks.filterBatch;
+import static org.aion.zero.impl.sync.TaskImportBlocks.forwardModeUpdate;
 import static org.aion.zero.impl.sync.TaskImportBlocks.isAlreadyStored;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -204,7 +211,7 @@ public class TaskImportBlocksTest {
         current = generateNewBlock(chain, chain.getGenesis(), accounts, 10);
         assertThat(isAlreadyStored(chain.getBlockStore(), current)).isFalse();
 
-        assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+        assertThat(chain.tryToConnect(current)).isEqualTo(IMPORTED_NOT_BEST);
         assertThat(isAlreadyStored(chain.getBlockStore(), current)).isTrue();
     }
 
@@ -642,5 +649,48 @@ public class TaskImportBlocksTest {
         for (long i = 0; i < count; i++) {
             states.add(new PeerState(mode, base));
         }
+    }
+
+    /**
+     * Used as parameters for:
+     *
+     * <ul>
+     *   <li>{@link #testForwardModeUpdate(ImportResult)}
+     * </ul>
+     */
+    @SuppressWarnings("unused")
+    private Object allImportResultsExceptImportedBest() {
+        return new Object[] {IMPORTED_NOT_BEST, EXIST, NO_PARENT, INVALID_BLOCK, CONSENSUS_BREAK};
+    }
+
+    @Test
+    @Parameters(method = "allImportResultsExceptImportedBest")
+    public void testForwardModeUpdate(ImportResult result) {
+        long initialBase = 100L, newBase = 200L;
+        PeerState input = new PeerState(FORWARD, initialBase);
+        PeerState expected = new PeerState(FORWARD, newBase);
+
+        // check when base gets updated
+        assertThat(forwardModeUpdate(input, newBase, result)).isEqualTo(expected);
+
+        input = new PeerState(FORWARD, initialBase);
+        while (!input.isOverRepeatThreshold()) {
+            input.incRepeated();
+        }
+
+        expected = new PeerState(NORMAL, initialBase);
+
+        // check with switch to NORMAL mode
+        assertThat(forwardModeUpdate(input, newBase, result)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testForwardModeUpdate() {
+        long initialBase = 100L, newBase = 200L;
+        PeerState input = new PeerState(FORWARD, initialBase);
+        PeerState expected = new PeerState(NORMAL, initialBase);
+
+        // check with switch to NORMAL mode due to IMPORTED_BEST result
+        assertThat(forwardModeUpdate(input, newBase, IMPORTED_BEST)).isEqualTo(expected);
     }
 }

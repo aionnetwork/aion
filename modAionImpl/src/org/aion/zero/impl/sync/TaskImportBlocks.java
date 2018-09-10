@@ -242,8 +242,7 @@ final class TaskImportBlocks implements Runnable {
 
                 // updating the state
                 if (mode == FORWARD) {
-                    return forwardModeUpdate(
-                            state, b.getNumber(), ImportResult.EXIST, b.getNumber());
+                    return forwardModeUpdate(state, b.getNumber(), ImportResult.EXIST);
                 } else {
                     // mode in { NORMAL, LIGHTNING, THUNDER }
                     return attemptLightningJump(
@@ -343,9 +342,7 @@ final class TaskImportBlocks implements Runnable {
                             state.setBase(lastBlock);
                             break;
                         case FORWARD:
-                            state =
-                                    forwardModeUpdate(
-                                            state, lastBlock, importResult, b.getNumber());
+                            state = forwardModeUpdate(state, lastBlock, importResult);
                             break;
                         case LIGHTNING:
                         case THUNDER:
@@ -565,30 +562,31 @@ final class TaskImportBlocks implements Runnable {
         return importResult;
     }
 
-    private PeerState forwardModeUpdate(
-            PeerState state, long lastBlock, ImportResult importResult, long blockNumber) {
-        // TODO: check if two long values are needed
-        // continue
-        state.setBase(lastBlock);
-        // if the imported best block, switch back to normal mode
-        if (importResult.isBest()) {
+    /**
+     * Utility method that sets the base for the next FORWARD request OR switches to NORMAL mode
+     * when (1) a block import resulted in an IMPORTED_BEST result or (2) the maximum number of
+     * repetitions has been reached.
+     *
+     * @implNote Reaching the maximum number of repetitions allowed means that the FORWARD requests
+     *     have covered the scope of blocks between the BACKWARD request that has had a NO_PARENT
+     *     result and the subsequent BACKWARD request that got an EXIST / IMPORTED_BEST /
+     *     IMPORTED_NOT_BEST result. Effectively covering this space without storing the blocks
+     *     means that either an error has occurred or that another peer has already imported these
+     *     blocks. The second scenario is the most likely which makes switching to NORMAL mode the
+     *     natural consequence.
+     * @param state the peer state to be updated
+     * @param lastBlock the last imported block number
+     * @param importResult the result for the last imported block
+     * @return an updated state according to the description above.
+     */
+    static PeerState forwardModeUpdate(PeerState state, long lastBlock, ImportResult importResult) {
+        // when the maximum number of repeats has passed
+        // the peer is stuck behind other peers importing the same (old) blocks
+        if (importResult.isBest() || state.isOverRepeatThreshold()) {
             state.setMode(NORMAL);
-            // switch peers to NORMAL otherwise they may never switch back
-            for (PeerState peerState : peerStates.values()) {
-                if (peerState.getMode() != NORMAL) {
-                    peerState.setMode(NORMAL);
-                    state.setBase(blockNumber);
-                    peerState.resetLastHeaderRequest();
-                }
-            }
-        }
-        // if the maximum number of repeats is passed
-        // then the peer is stuck endlessly importing old blocks
-        // otherwise it would have found an IMPORTED block already
-        if (state.isOverRepeatThreshold()) {
-            state.setMode(NORMAL);
-            state.setBase(getBestBlockNumber());
-            state.resetLastHeaderRequest();
+        } else {
+            // in case we continue as FORWARD
+            state.setBase(lastBlock);
         }
 
         return state;
@@ -692,7 +690,6 @@ final class TaskImportBlocks implements Runnable {
         // switch to NORMAL if in FORWARD mode
         if (importResult.isBest() && state.getMode() == FORWARD) {
             state.setMode(NORMAL);
-            state.setBase(getBestBlockNumber());
         }
 
         return imported;

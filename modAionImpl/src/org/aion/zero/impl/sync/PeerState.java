@@ -7,7 +7,12 @@ import java.util.Objects;
 public class PeerState {
 
     public enum Mode {
-        /** The peer is in main-chain. Use normal syncing strategy. */
+        /**
+         * The peer is in main-chain. Use normal syncing strategy.
+         *
+         * @implNote When switching to this mode it is not necessary to set the base value. The base
+         *     will automatically be set to the current best block.
+         */
         NORMAL,
 
         /** The peer is in side-chain. Sync backward to find the fork point. */
@@ -26,6 +31,9 @@ public class PeerState {
         /**
          * The peer was far ahead of the local chain and made a sync jump. Gradually return to
          * normal syncing strategy, allowing time for old lightning sync requests to come in.
+         *
+         * @implNote When switching to this mode it is not necessary to set the base value. The base
+         *     will automatically be set to the current best block.
          */
         THUNDER
     }
