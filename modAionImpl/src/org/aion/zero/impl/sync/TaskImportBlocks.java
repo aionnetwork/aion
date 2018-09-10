@@ -288,7 +288,7 @@ final class TaskImportBlocks implements Runnable {
 
                     if (log.isDebugEnabled()) {
                         log.debug(
-                                "Stopped importing batch due to NO_PARENT result.\n"
+                                "Stopped importing batch due to NO_PARENT result. "
                                         + "Stored {} out of {} blocks starting at hash = {}, number = {} from node = {}.",
                                 stored,
                                 batch.size(),

@@ -231,16 +231,14 @@ public class PendingBlockStore implements Flushable, Closeable {
 
             if (maxStatus == 0) {
                 // optimistic jump forward
-                base = current > maxRequest ? current : maxRequest + FORWARD_SKIP;
+                base = current > maxRequest ? current : maxRequest;
+                base += FORWARD_SKIP;
             } else if (current + STEP_SIZE >= maxStatus) {
                 // signal to switch back to / stay in NORMAL mode
                 base = current;
             } else {
-                base = maxRequest + FORWARD_SKIP;
-
-                if (base <= current) {
-                    base = current + FORWARD_SKIP;
-                }
+                base = current > maxRequest ? current : maxRequest;
+                base += FORWARD_SKIP;
 
                 // TODO: special logic for status imports
             }
