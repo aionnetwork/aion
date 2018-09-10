@@ -33,7 +33,8 @@ import java.util.Properties;
 
 import static junit.framework.TestCase.assertEquals;
 
-public class AbstractEventMgrTest {
+public class EventManagerTest{
+    
     private EventMgrA0 evtManager = new EventMgrA0();
 
     @Test
