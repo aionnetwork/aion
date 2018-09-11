@@ -289,16 +289,8 @@ public class PendingBlockStore implements Flushable, Closeable {
 
     /**
      * Stores a single block in the pending block store for importing later when the chain reaches
-     * the required height. Is used by the functionality receiving status blocks.
-     *
-     * <p>Steps for storing the block data:
-     *
-     * <ol>
-     *   <li>store block object in the <b>block</b> database
-     *   <li>find or create queue hash and store it in the <b>index</b> database
-     *   <li>add block hash to its queue in the <b>queue</b> database
-     *   <li>if new queue, add it to the <b>level</b> database
-     * </ol>
+     * the needed height and the parent block gets imported. Is used by the functionality receiving
+     * status blocks.
      *
      * @implNote The status blocks received impact the functionality of the base value generation
      *     {@link #nextBase(long, long)} for requesting blocks ahead of import time.
@@ -392,6 +384,23 @@ public class PendingBlockStore implements Flushable, Closeable {
             }
         } finally {
             lock.writeLock().unlock();
+        }
+    }
+
+    /** @return the number of elements stored in the status map. */
+    public int getStatusSize() {
+        return status == null ? -1 : status.size();
+    }
+
+    /**
+     * @param hash the identifier of a queue of blocks stored in the status map
+     * @return the information for that queue if it exists, {@code null} otherwise.
+     */
+    public QueueInfo getStatusItem(byte[] hash) {
+        if (hash == null) {
+            return null;
+        } else {
+            return status.get(ByteArrayWrapper.wrap(hash));
         }
     }
 
