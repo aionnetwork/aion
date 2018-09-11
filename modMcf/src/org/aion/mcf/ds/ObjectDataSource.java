@@ -96,6 +96,15 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
         return src;
     }
 
+    /**
+     * Checks that the underlying storage was correctly initialized and open.
+     *
+     * @return true if correctly initialized and the data storage is open, false otherwise.
+     */
+    public boolean isOpen() {
+        return src.isOpen();
+    }
+
     @Override
     public void close() {
         src.close();

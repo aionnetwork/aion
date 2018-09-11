@@ -167,7 +167,7 @@ public class BlockPropagationHandler {
                      block.getNumber(),
                      block.getTransactionsList().size(),
                      result);
-            boolean stored = blockchain.storePendingBlock(block);
+            boolean stored = blockchain.storePendingStatusBlock(block);
             if (log.isDebugEnabled()) {
                 log.debug("Block hash = {}, number = {}, txs = {} was {}.",
                     block.getShortHash(),

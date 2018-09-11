@@ -23,6 +23,9 @@
 package org.aion.zero.impl.db;
 
 import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
+import static org.aion.mcf.db.DatabaseUtils.verifyAndBuildPath;
+import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
+import static org.aion.p2p.P2pConstant.STEP_COUNT;
 
 import java.io.Closeable;
 import java.io.File;
@@ -42,20 +45,37 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
-import org.aion.p2p.P2pConstant;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
+/**
+ * Class for storing blocks that are correct but cannot be imported due to missing parent. Used to
+ * speed up lightning sync and backward sync to side chains.
+ *
+ * <p>The blocks are stored using three data sources:
+ *
+ * <ul>
+ *   <li><b>levels</b>: maps a blockchain height to the queue identifiers that start with blocks at
+ *       that height;
+ *   <li><b>queues</b>: maps queues identifiers to the list of blocks (in ascending order) that
+ *       belong to the queue;
+ *   <li><b>indexes</b>: maps block hashes to the identifier of the queue where the block is stored.
+ * </ul>
+ *
+ * Additionally, the class is used to optimize requests for blocks ahead of time by tracking
+ * received status blocks and proposing (mostly non-overlapping) base values for the requests.
+ *
+ * @author Alexandra Roatis
+ */
 public class PendingBlockStore implements Flushable, Closeable {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -69,79 +89,81 @@ public class PendingBlockStore implements Flushable, Closeable {
     private static final String INDEX_DB_NAME = "index";
 
     // data sources
-    /** maps a level to the queue hashes with blocks starting at that level */
+    /**
+     * Used to map a level (blockchain height) to the queue identifiers that start with blocks at
+     * that height.
+     */
     private ObjectDataSource<List<byte[]>> levelSource;
-    /** maps a queue hash to a list of consecutive block hashes */
+    /** Used to map a queue identifier to a list of consecutive blocks. */
     private ObjectDataSource<List<AionBlock>> queueSource;
-    /** maps a block hash to its current queue hash */
+    /** Used to maps a block hash to its current queue identifier. */
     private IByteArrayKeyValueDatabase indexSource;
 
     // tracking the status
     private Map<ByteArrayWrapper, QueueInfo> status;
     private long maxRequest = 0L, minStatus = Long.MAX_VALUE, maxStatus = 0L;
 
+    private static final int FORWARD_SKIP = STEP_COUNT * LARGE_REQUEST_SIZE;
+
     /**
-     * A block request in TORRENT mode must go forward at least 2 times the default REQUEST_SIZE.
+     * Constructor. Initializes the databases used for storage. If the database configuration used
+     * requires persistence, the constructor ensures the path can be accessed or throws an exception
+     * if persistence is requested but not achievable.
+     *
+     * @param props properties of the databases to be used for storage
+     * @throws InvalidFilePathException when given a persistent database vendor for which the path
+     *     cannot be created
      */
-    private static final int STEPS_FORWARD = P2pConstant.STEP_COUNT;
-
-    private static final int STEP_SIZE = P2pConstant.LARGE_REQUEST_SIZE;
-    private static final int FORWARD_SKIP = STEPS_FORWARD * STEP_SIZE;
-
     public PendingBlockStore(Properties props) throws InvalidFilePathException {
+        // check for database persistence requirements
+        DBVendor vendor = DBVendor.fromString(props.getProperty(Props.DB_TYPE));
+        if (vendor.getPersistence()) {
+            File pbFolder =
+                    new File(props.getProperty(Props.DB_PATH), props.getProperty(Props.DB_NAME));
 
-        File f = new File(props.getProperty(Props.DB_PATH), props.getProperty(Props.DB_NAME));
-        try {
-            // ask the OS if the path is valid
-            f.getCanonicalPath();
-
-            // try to create the directory
-            if (!f.exists()) {
-                f.mkdirs();
-            }
-        } catch (Exception e) {
-            throw new InvalidFilePathException(
-                    "Pending block store file path \""
-                            + f.getAbsolutePath()
-                            + "\" not valid as reported by the OS or a read/write permissions error occurred. Please provide an alternative DB file path in /config/config.xml.");
+            verifyAndBuildPath(pbFolder);
+            props.setProperty(Props.DB_PATH, pbFolder.getAbsolutePath());
         }
-        props.setProperty(Props.DB_PATH, f.getAbsolutePath());
 
         init(props);
     }
 
-    /** Constructor for testing. Using {@link org.aion.db.impl.DBVendor#MOCKDB}. */
-    public PendingBlockStore() {
-        Properties props = new Properties();
-        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-
-        init(props);
-    }
-
+    /**
+     * Initializes and opens the databases where the pending blocks will be stored.
+     *
+     * @param props the database properties to be used in initializing the underlying databases
+     */
     private void init(Properties props) {
         // initialize status
-        status = new HashMap<>();
+        this.status = new HashMap<>();
 
         IByteArrayKeyValueDatabase database;
 
         // create the level source
-
         props.setProperty(Props.DB_NAME, LEVEL_DB_NAME);
         database = connectAndOpen(props, LOG);
-
         this.levelSource = new ObjectDataSource<>(database, HASH_LIST_RLP_SERIALIZER);
 
         // create the queue source
-
         props.setProperty(Props.DB_NAME, QUEUE_DB_NAME);
         database = connectAndOpen(props, LOG);
-
         this.queueSource = new ObjectDataSource<>(database, BLOCK_LIST_RLP_SERIALIZER);
 
         // create the index source
-
         props.setProperty(Props.DB_NAME, INDEX_DB_NAME);
-        indexSource = connectAndOpen(props, LOG);
+        this.indexSource = connectAndOpen(props, LOG);
+    }
+
+    /**
+     * Checks that the underlying storage was correctly initialized and open.
+     *
+     * @return true if correctly initialized and the databases are open, false otherwise.
+     */
+    public boolean isOpen() {
+        return status != null
+                && levelSource.isOpen()
+                && queueSource.isOpen()
+                && indexSource.isOpen();
     }
 
     private static final Serializer<List<byte[]>, byte[]> HASH_LIST_RLP_SERIALIZER =
@@ -199,7 +221,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         List<byte[]> queueHashes = levelSource.get(ByteUtil.longToBytes(level));
 
         if (queueHashes == null) {
-            return Collections.EMPTY_MAP;
+            return Collections.emptyMap();
         }
 
         // get all the blocks in the given queues
@@ -233,14 +255,14 @@ public class PendingBlockStore implements Flushable, Closeable {
                 // optimistic jump forward
                 base = current > maxRequest ? current : maxRequest;
                 base += FORWARD_SKIP;
-            } else if (current + STEP_SIZE >= maxStatus) {
+            } else if (current + LARGE_REQUEST_SIZE >= maxStatus) {
                 // signal to switch back to / stay in NORMAL mode
                 base = current;
             } else {
                 base = current > maxRequest ? current : maxRequest;
                 base += FORWARD_SKIP;
 
-                // TODO: special logic for status imports
+                // TODO: enhancement: special logic for status imports
             }
 
             if (LOG_SYNC.isDebugEnabled()) {
@@ -266,7 +288,10 @@ public class PendingBlockStore implements Flushable, Closeable {
     }
 
     /**
-     * Steps for storing the block data for later importing:
+     * Stores a single block in the pending block store for importing later when the chain reaches
+     * the required height. Is used by the functionality receiving status blocks.
+     *
+     * <p>Steps for storing the block data:
      *
      * <ol>
      *   <li>store block object in the <b>block</b> database
@@ -274,8 +299,11 @@ public class PendingBlockStore implements Flushable, Closeable {
      *   <li>add block hash to its queue in the <b>queue</b> database
      *   <li>if new queue, add it to the <b>level</b> database
      * </ol>
+     *
+     * @implNote The status blocks received impact the functionality of the base value generation
+     *     {@link #nextBase(long, long)} for requesting blocks ahead of import time.
      */
-    public boolean addBlock(AionBlock block) {
+    public boolean addStatusBlock(AionBlock block) {
 
         // nothing to do with null parameter
         if (block == null) {

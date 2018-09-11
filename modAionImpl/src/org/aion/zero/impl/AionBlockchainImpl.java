@@ -1193,8 +1193,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public boolean storePendingBlock(AionBlock block) {
-        return repository.getPendingBlockStore().addBlock(block);
+    public boolean storePendingStatusBlock(AionBlock block) {
+        return repository.getPendingBlockStore().addStatusBlock(block);
     }
 
     @Override
