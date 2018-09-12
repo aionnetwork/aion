@@ -31,6 +31,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -548,9 +549,17 @@ public class PendingBlockStore implements Flushable, Closeable {
         return blocks;
     }
 
+    /**
+     * Used to delete imported queues from storage.
+     *
+     * @param level the block height of the queue starting point
+     * @param queues the identifiers for the queues to be deleted
+     * @param blocks the queue to blocks mappings to me deleted (used to ensure that if the queues
+     *     have been expanded, only the relevant blocks get deleted)
+     */
     public void dropPendingQueues(
             long level,
-            List<ByteArrayWrapper> queues,
+            Collection<ByteArrayWrapper> queues,
             Map<ByteArrayWrapper, List<AionBlock>> blocks) {
 
         lock.writeLock().lock();

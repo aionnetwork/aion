@@ -133,7 +133,7 @@ public class PendingBlockStoreTest {
     }
 
     @Test
-    public void addStatusBlock() {
+    public void testAddStatusBlock() {
         Properties props = new Properties();
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
 
@@ -207,7 +207,7 @@ public class PendingBlockStoreTest {
     }
 
     @Test
-    public void addBlockRange() {
+    public void testAddBlockRange() {
         Properties props = new Properties();
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
 
@@ -287,7 +287,7 @@ public class PendingBlockStoreTest {
     }
 
     @Test
-    public void loadBlockRange() {
+    public void testLoadBlockRange() {
         Properties props = new Properties();
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
 
@@ -352,5 +352,137 @@ public class PendingBlockStoreTest {
         actual = pb.loadBlockRange(first.getNumber());
         blocks.add(status);
         assertThat(actual.get(ByteArrayWrapper.wrap(first.getHash()))).isEqualTo(blocks);
+    }
+
+    @Test
+    public void testDropPendingQueues() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        // add first queue
+        List<AionBlock> blocks = TestResources.consecutiveBlocks(6);
+        AionBlock first = blocks.get(0);
+        pb.addBlockRange(blocks);
+
+        // add second queue
+        AionBlock altBlock = new AionBlock(first.getEncoded());
+        altBlock.setExtraData("random".getBytes());
+        List<AionBlock> sideChain = new ArrayList<>();
+        sideChain.add(altBlock);
+        pb.addBlockRange(sideChain);
+
+        // check storage updates
+        assertThat(pb.getIndexSize()).isEqualTo(7);
+        assertThat(pb.getLevelSize()).isEqualTo(1);
+        assertThat(pb.getQueueSize()).isEqualTo(2);
+        assertThat(pb.getStatusSize()).isEqualTo(0);
+
+        // test drop functionality
+        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        pb.dropPendingQueues(first.getNumber(), actual.keySet(), actual);
+
+        // check storage after drop functionality
+        assertThat(pb.getIndexSize()).isEqualTo(0);
+        assertThat(pb.getLevelSize()).isEqualTo(0);
+        assertThat(pb.getQueueSize()).isEqualTo(0);
+        assertThat(pb.getStatusSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void testDropPendingQueues_wSingleQueue() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        // add first queue
+        List<AionBlock> blocks = TestResources.consecutiveBlocks(6);
+        AionBlock first = blocks.get(0);
+        pb.addBlockRange(blocks);
+
+        // add second queue
+        AionBlock altBlock = new AionBlock(first.getEncoded());
+        altBlock.setExtraData("random".getBytes());
+        List<AionBlock> sideChain = new ArrayList<>();
+        sideChain.add(altBlock);
+        pb.addBlockRange(sideChain);
+
+        // check storage updates
+        assertThat(pb.getIndexSize()).isEqualTo(7);
+        assertThat(pb.getLevelSize()).isEqualTo(1);
+        assertThat(pb.getQueueSize()).isEqualTo(2);
+        assertThat(pb.getStatusSize()).isEqualTo(0);
+
+        // test drop functionality
+        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        List<ByteArrayWrapper> queues = new ArrayList<>();
+        queues.add(ByteArrayWrapper.wrap(first.getHash()));
+        pb.dropPendingQueues(first.getNumber(), queues, actual);
+
+        // check storage after drop functionality
+        assertThat(pb.getIndexSize()).isEqualTo(1);
+        assertThat(pb.getLevelSize()).isEqualTo(1);
+        assertThat(pb.getQueueSize()).isEqualTo(1);
+        assertThat(pb.getStatusSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void testDropPendingQueues_wSubsetOfQueueBlocks() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        // add first queue
+        List<AionBlock> blocks = TestResources.consecutiveBlocks(6);
+        AionBlock first = blocks.get(0);
+        pb.addBlockRange(blocks);
+
+        // add second queue
+        AionBlock altBlock = new AionBlock(first.getEncoded());
+        altBlock.setExtraData("random".getBytes());
+        List<AionBlock> sideChain = new ArrayList<>();
+        sideChain.add(altBlock);
+        pb.addBlockRange(sideChain);
+
+        // check storage updates
+        assertThat(pb.getIndexSize()).isEqualTo(7);
+        assertThat(pb.getLevelSize()).isEqualTo(1);
+        assertThat(pb.getQueueSize()).isEqualTo(2);
+        assertThat(pb.getStatusSize()).isEqualTo(0);
+
+        // test drop functionality
+        ByteArrayWrapper queueId = ByteArrayWrapper.wrap(first.getHash());
+        List<ByteArrayWrapper> queues = new ArrayList<>();
+        queues.add(queueId);
+        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        actual.get(queueId).remove(5);
+        pb.dropPendingQueues(first.getNumber(), queues, actual);
+
+        // check storage after drop functionality
+        assertThat(pb.getIndexSize()).isEqualTo(2);
+        assertThat(pb.getLevelSize()).isEqualTo(2);
+        assertThat(pb.getQueueSize()).isEqualTo(2);
+        assertThat(pb.getStatusSize()).isEqualTo(0);
     }
 }
