@@ -257,12 +257,12 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
     }
 
     public void setNonce(byte[] nonce) {
-        this.header.setNonce(nonce);
+        this.getHeader().setNonce(nonce);
         rlpEncoded = null;
     }
 
     public void setExtraData(byte[] data) {
-        this.header.setExtraData(data);
+        this.getHeader().setExtraData(data);
         rlpEncoded = null;
     }
 
@@ -394,7 +394,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
             return false;
         }
         AionBlock block = (AionBlock) o;
-        return Arrays.equals(rlpEncoded, block.rlpEncoded);
+        return Arrays.equals(getEncoded(), block.getEncoded());
     }
 
     @Override

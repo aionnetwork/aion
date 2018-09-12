@@ -28,7 +28,9 @@ import static org.aion.mcf.db.DatabaseUtils.deleteRecursively;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.mcf.db.exception.InvalidFilePathException;
@@ -282,5 +284,73 @@ public class PendingBlockStoreTest {
         assertThat(pb.getLevelSize()).isEqualTo(5);
         assertThat(pb.getQueueSize()).isEqualTo(5);
         assertThat(pb.getStatusSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void loadBlockRange() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        List<AionBlock> allBlocks = TestResources.consecutiveBlocks(8);
+
+        // 1. test with empty storage
+        assertThat(pb.loadBlockRange(100)).isEmpty();
+
+        // 2. test with valid range
+        List<AionBlock> blocks = allBlocks.subList(0, 6);
+        AionBlock first = blocks.get(0);
+        assertThat(blocks.size()).isEqualTo(6);
+        assertThat(pb.addBlockRange(blocks)).isEqualTo(6);
+        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        assertThat(actual.size()).isEqualTo(1);
+        assertThat(actual.get(ByteArrayWrapper.wrap(first.getHash()))).isEqualTo(blocks);
+
+        // 3. test with multiple queues
+
+        // create side chain
+        AionBlock altBlock = new AionBlock(first.getEncoded());
+        altBlock.setExtraData("random".getBytes());
+        assertThat(altBlock.equals(first)).isFalse();
+        List<AionBlock> sideChain = new ArrayList<>();
+        sideChain.add(altBlock);
+        assertThat(pb.addBlockRange(sideChain)).isEqualTo(1);
+
+        // check functionality
+        actual = pb.loadBlockRange(first.getNumber());
+        assertThat(actual.size()).isEqualTo(2);
+        assertThat(actual.get(ByteArrayWrapper.wrap(first.getHash()))).isEqualTo(blocks);
+        assertThat(actual.get(ByteArrayWrapper.wrap(altBlock.getHash()))).isEqualTo(sideChain);
+
+        // 4. test with empty level
+        long level = first.getNumber();
+        assertThat(pb.loadBlockRange(level - 1)).isEmpty();
+        assertThat(pb.loadBlockRange(level + 1)).isEmpty();
+
+        // 5. test after status import with new queue
+        AionBlock status = allBlocks.get(7);
+        assertThat(pb.addStatusBlock(status)).isTrue();
+        actual = pb.loadBlockRange(status.getNumber());
+        assertThat(actual.size()).isEqualTo(1);
+        assertThat(actual.get(ByteArrayWrapper.wrap(status.getHash())).get(0)).isEqualTo(status);
+        level = status.getNumber();
+        assertThat(pb.loadBlockRange(level - 1)).isEmpty();
+        assertThat(pb.loadBlockRange(level + 1)).isEmpty();
+
+        // 6.  test after status import with extended queue
+        status = allBlocks.get(6);
+        assertThat(pb.addStatusBlock(status)).isTrue();
+        assertThat(pb.loadBlockRange(status.getNumber())).isEmpty();
+
+        actual = pb.loadBlockRange(first.getNumber());
+        blocks.add(status);
+        assertThat(actual.get(ByteArrayWrapper.wrap(first.getHash()))).isEqualTo(blocks);
     }
 }

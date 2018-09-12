@@ -220,27 +220,6 @@ public class PendingBlockStore implements Flushable, Closeable {
                 }
             };
 
-    public Map<ByteArrayWrapper, List<AionBlock>> loadBlockRange(long level) {
-        // get the queue for the given level
-        List<byte[]> queueHashes = levelSource.get(ByteUtil.longToBytes(level));
-
-        if (queueHashes == null) {
-            return Collections.emptyMap();
-        }
-
-        // get all the blocks in the given queues
-        List<AionBlock> list;
-        Map<ByteArrayWrapper, List<AionBlock>> blocks = new HashMap<>();
-        for (byte[] queue : queueHashes) {
-            list = queueSource.get(queue);
-            if (list != null) {
-                blocks.put(ByteArrayWrapper.wrap(queue), list);
-            }
-        }
-
-        return blocks;
-    }
-
     public long nextBase(long current, long knownBest) {
         lock.writeLock().lock();
 
@@ -445,6 +424,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         }
     }
 
+    /** Stores a block ranges with the first element determining the queue placement. */
     private int addBlockRange(AionBlock first, List<AionBlock> blockRange) {
 
         // skip if already stored
@@ -538,6 +518,34 @@ public class PendingBlockStore implements Flushable, Closeable {
      */
     int getQueueSize() {
         return queueDatabase.keys().size();
+    }
+
+    /**
+     * Retrieves blocks from storage based on the height of the first block in the range.
+     *
+     * @param level the height / number of the first block in the queues to be retrieved
+     * @return a map of queue identifiers and lists of blocks containing all the separate chain
+     *     queues stored at that level.
+     */
+    public Map<ByteArrayWrapper, List<AionBlock>> loadBlockRange(long level) {
+        // get the queue for the given level
+        List<byte[]> queueHashes = levelSource.get(ByteUtil.longToBytes(level));
+
+        if (queueHashes == null) {
+            return Collections.emptyMap();
+        }
+
+        // get all the blocks in the given queues
+        List<AionBlock> list;
+        Map<ByteArrayWrapper, List<AionBlock>> blocks = new HashMap<>();
+        for (byte[] queue : queueHashes) {
+            list = queueSource.get(queue);
+            if (list != null) {
+                blocks.put(ByteArrayWrapper.wrap(queue), list);
+            }
+        }
+
+        return blocks;
     }
 
     public void dropPendingQueues(
