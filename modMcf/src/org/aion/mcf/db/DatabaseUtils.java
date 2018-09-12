@@ -23,9 +23,13 @@
 package org.aion.mcf.db;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Properties;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
@@ -100,5 +104,46 @@ public class DatabaseUtils {
         if (path == null || !Files.isWritable(path) || !Files.isDirectory(path)) {
             throw exception;
         }
+    }
+
+    public static boolean deleteRecursively(File file) {
+        Path path = file.toPath();
+        try {
+            java.nio.file.Files.walkFileTree(
+                    path,
+                    new SimpleFileVisitor<>() {
+                        @Override
+                        public FileVisitResult visitFile(
+                                final Path file, final BasicFileAttributes attrs)
+                                throws IOException {
+                            java.nio.file.Files.delete(file);
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(
+                                final Path file, final IOException e) {
+                            return handleException(e);
+                        }
+
+                        private FileVisitResult handleException(final IOException e) {
+                            // e.printStackTrace();
+                            return FileVisitResult.TERMINATE;
+                        }
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(
+                                final Path dir, final IOException e) throws IOException {
+                            if (e != null) return handleException(e);
+                            java.nio.file.Files.delete(dir);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 }

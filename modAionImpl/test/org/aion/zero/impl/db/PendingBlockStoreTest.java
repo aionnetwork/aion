@@ -23,7 +23,7 @@
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.mcf.config.CfgLogTest.deleteRecursively;
+import static org.aion.mcf.db.DatabaseUtils.deleteRecursively;
 
 import java.io.File;
 import java.util.List;
