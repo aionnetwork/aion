@@ -221,56 +221,6 @@ public class PendingBlockStore implements Flushable, Closeable {
                 }
             };
 
-    public long nextBase(long current, long knownBest) {
-        lock.writeLock().lock();
-
-        try {
-            if (LOG_SYNC.isDebugEnabled()) {
-                LOG_SYNC.debug(statusToString());
-            }
-
-            long base;
-
-            if (knownBest > maxStatus) {
-                maxStatus = knownBest;
-            }
-
-            if (maxStatus == 0) {
-                // optimistic jump forward
-                base = current > maxRequest ? current : maxRequest;
-                base += FORWARD_SKIP;
-            } else if (current + LARGE_REQUEST_SIZE >= maxStatus) {
-                // signal to switch back to / stay in NORMAL mode
-                base = current;
-            } else {
-                base = current > maxRequest ? current : maxRequest;
-                base += FORWARD_SKIP;
-
-                // TODO: enhancement: special logic for status imports
-            }
-
-            if (LOG_SYNC.isDebugEnabled()) {
-                LOG_SYNC.debug(
-                        "min status = {}, max status = {}, max requested = {}, current = {}, returned base = {}",
-                        minStatus,
-                        maxStatus,
-                        maxRequest,
-                        current,
-                        base);
-            }
-
-            // keep track of base
-            if (base > maxRequest) {
-                maxRequest = base;
-            }
-
-            // return new base
-            return base;
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
     /**
      * Stores a single block in the pending block store for importing later when the chain reaches
      * the needed height and the parent block gets imported. Is used by the functionality receiving
@@ -646,6 +596,100 @@ public class PendingBlockStore implements Flushable, Closeable {
         }
     }
 
+    /**
+     * Generates a number greater or equal to the given {@code current} number representing the base
+     * value for a subsequent LIGHTNING request. The returned base is generated taking into
+     * consideration the status updates from {@link #addStatusBlock(AionBlock)} and the {@code
+     * knownBest} value for the peer for which this functionality is requested.
+     *
+     * <p>The bases are generated in an optimistic continuous manner based on the following
+     * assumptions:
+     *
+     * <ol>
+     *   <li>the majority of peers are on the same (main) chain;
+     *   <li>bases that cannot be used are recycled in the functionality calling this method;
+     *   <li>chain continuity is ensured by employing NORMAL requests in addition to LIGHTNING ones.
+     * </ol>
+     *
+     * @param current the starting point value for the next base
+     * @param knownBest value retrieved from the last best block status update for the peer
+     *     requesting a base value for a subsequent LIGHTNING request.
+     * @return the next generated base value for the request.
+     */
+    public long nextBase(long current, long knownBest) {
+        lock.writeLock().lock();
+
+        try {
+            long base = -1;
+
+            if (knownBest > maxStatus) {
+                maxStatus = knownBest;
+            }
+
+            if (maxStatus == 0) {
+                // optimistic jump forward
+                base = current > maxRequest ? current : maxRequest;
+                base += FORWARD_SKIP;
+            } else {
+                // try to fill in the gaps between status imports
+                if (current > minStatus) {
+
+                    if (LOG_SYNC.isDebugEnabled()) {
+                        LOG_SYNC.debug("Searching for " + minStatus + " in " + statusToString());
+                    }
+
+                    // find first gap
+                    Optional<QueueInfo> info =
+                            status.values()
+                                    .stream()
+                                    .filter(s -> s.getFirst() >= minStatus)
+                                    .findFirst();
+
+                    if (info.isPresent()) {
+                        // update base to gap
+                        base = info.get().getLast() + 1;
+
+                        // update minimum status value
+                        minStatus = base - 1 + FORWARD_SKIP;
+                    }
+                }
+
+                // same as initialization => no change from gap fill functionality
+                if (base == -1) {
+                    if (current + LARGE_REQUEST_SIZE >= maxStatus) {
+                        // signal to switch back to / stay in NORMAL mode
+                        base = current;
+                    } else {
+                        // regular jump forward
+                        base = current > maxRequest ? current : maxRequest;
+                        base += FORWARD_SKIP;
+                    }
+                }
+            }
+
+            if (LOG_SYNC.isDebugEnabled()) {
+                LOG_SYNC.debug(
+                        "min status = {}, max status = {}, max requested = {}, known best = {}, current = {}, returned base = {}",
+                        minStatus,
+                        maxStatus,
+                        knownBest,
+                        maxRequest,
+                        current,
+                        base);
+            }
+
+            // keep track of base
+            if (base > maxRequest) {
+                maxRequest = base;
+            }
+
+            // return new base
+            return base;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
     @Override
     public void flush() {
         lock.writeLock().lock();
@@ -710,6 +754,7 @@ public class PendingBlockStore implements Flushable, Closeable {
             this.last = _last;
         }
 
+        /** For future functionality to store to disk. */
         public QueueInfo(byte[] data) {
             RLPList outerList = RLP.decode2(data);
 
