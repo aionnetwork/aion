@@ -94,8 +94,12 @@ public class PendingBlockStore implements Flushable, Closeable {
      * that height.
      */
     private ObjectDataSource<List<byte[]>> levelSource;
+
+    private IByteArrayKeyValueDatabase levelDatabase;
     /** Used to map a queue identifier to a list of consecutive blocks. */
     private ObjectDataSource<List<AionBlock>> queueSource;
+
+    private IByteArrayKeyValueDatabase queueDatabase;
     /** Used to maps a block hash to its current queue identifier. */
     private IByteArrayKeyValueDatabase indexSource;
 
@@ -110,22 +114,24 @@ public class PendingBlockStore implements Flushable, Closeable {
      * requires persistence, the constructor ensures the path can be accessed or throws an exception
      * if persistence is requested but not achievable.
      *
-     * @param props properties of the databases to be used for storage
+     * @param _props properties of the databases to be used for storage
      * @throws InvalidFilePathException when given a persistent database vendor for which the path
      *     cannot be created
      */
-    public PendingBlockStore(Properties props) throws InvalidFilePathException {
+    public PendingBlockStore(final Properties _props) throws InvalidFilePathException {
+        Properties local = new Properties(_props);
+
         // check for database persistence requirements
-        DBVendor vendor = DBVendor.fromString(props.getProperty(Props.DB_TYPE));
+        DBVendor vendor = DBVendor.fromString(local.getProperty(Props.DB_TYPE));
         if (vendor.getPersistence()) {
             File pbFolder =
-                    new File(props.getProperty(Props.DB_PATH), props.getProperty(Props.DB_NAME));
+                    new File(local.getProperty(Props.DB_PATH), local.getProperty(Props.DB_NAME));
 
             verifyAndBuildPath(pbFolder);
-            props.setProperty(Props.DB_PATH, pbFolder.getAbsolutePath());
+            local.setProperty(Props.DB_PATH, pbFolder.getAbsolutePath());
         }
 
-        init(props);
+        init(local);
     }
 
     /**
@@ -137,17 +143,15 @@ public class PendingBlockStore implements Flushable, Closeable {
         // initialize status
         this.status = new HashMap<>();
 
-        IByteArrayKeyValueDatabase database;
-
         // create the level source
         props.setProperty(Props.DB_NAME, LEVEL_DB_NAME);
-        database = connectAndOpen(props, LOG);
-        this.levelSource = new ObjectDataSource<>(database, HASH_LIST_RLP_SERIALIZER);
+        this.levelDatabase = connectAndOpen(props, LOG);
+        this.levelSource = new ObjectDataSource<>(levelDatabase, HASH_LIST_RLP_SERIALIZER);
 
         // create the queue source
         props.setProperty(Props.DB_NAME, QUEUE_DB_NAME);
-        database = connectAndOpen(props, LOG);
-        this.queueSource = new ObjectDataSource<>(database, BLOCK_LIST_RLP_SERIALIZER);
+        this.queueDatabase = connectAndOpen(props, LOG);
+        this.queueSource = new ObjectDataSource<>(queueDatabase, BLOCK_LIST_RLP_SERIALIZER);
 
         // create the index source
         props.setProperty(Props.DB_NAME, INDEX_DB_NAME);
@@ -387,16 +391,20 @@ public class PendingBlockStore implements Flushable, Closeable {
         }
     }
 
-    /** @return the number of elements stored in the status map. */
-    public int getStatusSize() {
+    /**
+     * @return the number of elements stored in the status map. * @implNote This method is package
+     *     private because it is meant to be used for testing.
+     */
+    int getStatusSize() {
         return status == null ? -1 : status.size();
     }
 
     /**
      * @param hash the identifier of a queue of blocks stored in the status map
-     * @return the information for that queue if it exists, {@code null} otherwise.
+     * @return the information for that queue if it exists, {@code null} otherwise. * @implNote This
+     *     method is package private because it is meant to be used for testing.
      */
-    public QueueInfo getStatusItem(byte[] hash) {
+    QueueInfo getStatusItem(byte[] hash) {
         if (hash == null) {
             return null;
         } else {
@@ -405,14 +413,9 @@ public class PendingBlockStore implements Flushable, Closeable {
     }
 
     /**
-     * Steps for storing the block data for later importing:
-     *
-     * <ol>
-     *   <li>store block object in the <b>block</b> database
-     *   <li>find or create queue hash and store it in the <b>index</b> database
-     *   <li>add block hash to its queue in the <b>queue</b> database
-     *   <li>if new queue, add it to the <b>level</b> database
-     * </ol>
+     * Stores a range of blocks in the pending block store for importing later when the chain
+     * reaches the needed height and the parent blocks gets imported. The functionality expects
+     * consecutive blocks, but ensures correct behavior even when the blocks are not consecutive.
      */
     public int addBlockRange(List<AionBlock> blocks) {
         List<AionBlock> blockRange = new ArrayList<>(blocks);
@@ -511,6 +514,30 @@ public class PendingBlockStore implements Flushable, Closeable {
 
         // the number of blocks added
         return stored;
+    }
+
+    /**
+     * @return the number of elements stored in the index database.
+     * @implNote This method is package private because it is meant to be used for testing.
+     */
+    int getIndexSize() {
+        return indexSource.keys().size();
+    }
+
+    /**
+     * @return the number of elements stored in the level database.
+     * @implNote This method is package private because it is meant to be used for testing.
+     */
+    int getLevelSize() {
+        return levelDatabase.keys().size();
+    }
+
+    /**
+     * @return the number of elements stored in the queue database.
+     * @implNote This method is package private because it is meant to be used for testing.
+     */
+    int getQueueSize() {
+        return queueDatabase.keys().size();
     }
 
     public void dropPendingQueues(
