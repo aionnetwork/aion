@@ -7,7 +7,7 @@ import java.util.*;
 
 public class MockDB extends AbstractDB {
 
-    private Map<ByteArrayWrapper, byte[]> kv;
+    protected Map<ByteArrayWrapper, byte[]> kv;
 
     public MockDB(String name) {
         super(name);
@@ -89,7 +89,7 @@ public class MockDB extends AbstractDB {
     }
 
     @Override
-    public byte[] getInternal(byte[] k) {
+    protected byte[] getInternal(byte[] k) {
         return kv.get(ByteArrayWrapper.wrap(k));
     }
 

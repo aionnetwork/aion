@@ -52,7 +52,9 @@ public enum DBVendor {
     /** Using an instance of {@link org.aion.db.impl.h2.H2MVMap}. */
     H2("h2", true), //
     /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
-    MOCKDB("mockdb", false);
+    MOCKDB("mockdb", false),
+    /** Using an instance of {@link org.aion.db.impl.mockdb.PersistentMockDB}. */
+    PERSISTENTMOCKDB("persistentmockdb", false);
 
     private static final Map<String, DBVendor> stringToTypeMap = new ConcurrentHashMap<>();
 
