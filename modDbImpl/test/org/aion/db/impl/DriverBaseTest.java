@@ -41,6 +41,7 @@ import org.aion.db.generic.LockedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.mockdb.MockDB;
+import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.utils.FileUtils;
 import org.aion.log.AionLoggerFactory;
 import org.junit.*;
@@ -122,6 +123,9 @@ public class DriverBaseTest {
                 // MockDB
                 { "MockDB", new boolean[] { false, false, false }, MockDB.class.getDeclaredConstructor(String.class),
                         new Object[] { dbNamePrefix } },
+                // PersistentMockDB
+                { "PersistentMockDB", new boolean[] { false, false, false }, PersistentMockDB.class.getDeclaredConstructor(String.class, String.class),
+                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath} },
                 // H2MVMap
                 { "H2MVMap+lock", new boolean[] { true, false, false },
                         H2MVMap.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
@@ -288,7 +292,7 @@ public class DriverBaseTest {
     @Test
     public void testOpenSecondInstance()
             throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        if (db.isPersistent()) {
+        if (db.isPersistent() && !(db instanceof PersistentMockDB)) {
             // another connection to same DB should fail on open for all persistent KVDBs
             IByteArrayKeyValueDatabase otherDatabase = this.constructor.newInstance(this.args);
             assertThat(otherDatabase.open()).isFalse();
@@ -575,8 +579,9 @@ public class DriverBaseTest {
     }
 
     @Test
+    /** This test is non-deterministic and may fail. If it does, re-run the test suite. */
     public void testApproximateDBSize() {
-        if (db.isPersistent()) {
+        if (db.isPersistent() && !(db instanceof PersistentMockDB)) {
             int repeat = 1_000_000;
             for (int i = 0; i < repeat; i++) {
                 db.put(String.format("%c%09d", 'a' + i % 26, i).getBytes(), "test".getBytes());
@@ -586,7 +591,7 @@ public class DriverBaseTest {
             long count = FileUtils.getDirectorySizeBytes(db.getPath().get());
 
             double error = Math.abs(1.0 * (est - count) / count);
-            assertTrue(error < 0.5);
+            assertTrue(error < 0.6);
         } else {
             assertTrue(db.approximateSize() == -1L);
         }
