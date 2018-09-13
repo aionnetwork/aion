@@ -635,28 +635,31 @@ public class PendingBlockStore implements Flushable, Closeable {
                 if (current > minStatus) {
 
                     if (LOG_SYNC.isDebugEnabled()) {
-                        LOG_SYNC.debug("Searching for " + minStatus + " in " + statusToString());
+                        LOG_SYNC.debug(
+                                "Searching for last > " + current + " in " + statusToString());
                     }
 
                     // find first gap
                     Optional<QueueInfo> info =
-                            status.values()
-                                    .stream()
-                                    .filter(s -> s.getFirst() >= minStatus)
-                                    .findFirst();
+                            status.values().stream().filter(s -> s.getLast() > current).findFirst();
 
                     if (info.isPresent()) {
                         // update base to gap
                         base = info.get().getLast() + 1;
 
                         // update minimum status value
+                        // since this request will take us that far forward
+                        // NOTE: minStatus does not need to be < maxStatus
                         minStatus = base - 1 + FORWARD_SKIP;
+                    } else {
+                        // since we've already passed the last min status
+                        minStatus = current;
                     }
                 }
 
                 // same as initialization => no change from gap fill functionality
                 if (base == -1) {
-                    if (current + LARGE_REQUEST_SIZE >= maxStatus) {
+                    if (maxStatus < current + LARGE_REQUEST_SIZE) {
                         // signal to switch back to / stay in NORMAL mode
                         base = current;
                     } else {

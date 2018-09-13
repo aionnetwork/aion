@@ -24,6 +24,8 @@ package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.mcf.db.DatabaseUtils.deleteRecursively;
+import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
+import static org.aion.p2p.P2pConstant.STEP_COUNT;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -484,5 +486,154 @@ public class PendingBlockStoreTest {
         assertThat(pb.getLevelSize()).isEqualTo(2);
         assertThat(pb.getQueueSize()).isEqualTo(2);
         assertThat(pb.getStatusSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void testNextBase_woStatus() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        long current = 100L;
+        long knownBest = 0L; // not yet known
+        long expected = current + STEP_COUNT * LARGE_REQUEST_SIZE;
+        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testNextBase_wSmallKnownBest() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        long current = 100L;
+        long knownBest = current + LARGE_REQUEST_SIZE - 1;
+        long expected = current;
+        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testNextBase_wSufficientKnownBest() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        long current = 100L;
+        long knownBest = current + LARGE_REQUEST_SIZE;
+        long expected = current + STEP_COUNT * LARGE_REQUEST_SIZE;
+        // current will be chosen
+        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
+
+        knownBest = expected + LARGE_REQUEST_SIZE;
+        expected = expected + STEP_COUNT * LARGE_REQUEST_SIZE;
+        // maxRequest will be chosen
+        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testNextBase_wFailedStatusSearch() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        AionBlock block = TestResources.consecutiveBlocks(1).get(0);
+
+        // setup: add status
+        assertThat(pb.addStatusBlock(block)).isTrue();
+        assertThat(pb.getStatusSize()).isEqualTo(1);
+
+        long current = block.getNumber() + 1; // above last status
+        long knownBest = 0; // not important for this test
+        long expected = current;
+        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testNextBase_wSuccessfulStatusSearch_wSingleEntry() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        List<AionBlock> blocks = TestResources.consecutiveBlocks(3);
+        assertThat(blocks.size()).isEqualTo(3);
+
+        // setup: add status entries
+        for (AionBlock block : blocks) {
+            assertThat(pb.addStatusBlock(block)).isTrue();
+            // all blocks get added to the same queue
+            assertThat(pb.getStatusSize()).isEqualTo(1);
+        }
+
+        long current = blocks.get(0).getNumber() + 1; // above last status
+        long knownBest = 0; // not important for this test
+        long expected = blocks.get(2).getNumber() + 1;
+        // last value from the status entry will be chosen
+        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testNextBase_wSuccessfulStatusSearch_wTwoEntries() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        List<AionBlock> blocks = TestResources.consecutiveBlocks(3);
+
+        // setup: add status entries
+        AionBlock status1 = blocks.get(0);
+        assertThat(pb.addStatusBlock(status1)).isTrue();
+        assertThat(pb.getStatusSize()).isEqualTo(1);
+
+        AionBlock status2 = blocks.get(2);
+        assertThat(pb.addStatusBlock(status2)).isTrue();
+        assertThat(pb.getStatusSize()).isEqualTo(2);
+
+        long current = status1.getNumber() + 1; // above last status
+        long knownBest = 0; // not important for this test
+        long expected = status2.getNumber() + 1;
+        // last value from the second status entry will be chosen
+        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
     }
 }
