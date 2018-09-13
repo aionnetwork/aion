@@ -22,6 +22,7 @@
  */
 package org.aion.zero.impl.db;
 
+import java.util.Stack;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
@@ -426,6 +427,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             // 1. First ensure that you are one the save level
             IAionBlock forkLine = forkBlock;
             if (forkBlock.getNumber() > bestBlock.getNumber()) {
+                long branchingLevel = currentLevel - bestBlock.getNumber();
+                Stack<IAionBlock> branchingBlk = new Stack<>();
 
                 while (currentLevel > bestBlock.getNumber()) {
                     List<BlockInfo> blocks = getBlockInfoForLevel(currentLevel);
@@ -433,11 +436,22 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                     if (blockInfo != null) {
                         blockInfo.setMainChain(true);
                         setBlockInfoForLevel(currentLevel, blocks);
+
+                        //For collecting branching blocks
+                        branchingBlk.push(getBlockByHash(forkLine.getHash()));
                     } else {
                         LOG.error("Null block information found at " + currentLevel + " when data should exist.");
                     }
                     forkLine = getBlockByHash(forkLine.getParentHash());
                     --currentLevel;
+                }
+
+                if (LOG_CONS.isDebugEnabled()) {
+                    LOG_CONS.debug("Branching details: level[{}]", branchingLevel);
+                    while (!branchingBlk.empty()) {
+                        IAionBlock blk = branchingBlk.pop();
+                        LOG_CONS.debug("blk: {}", blk.toString());
+                    }
                 }
             }
 
