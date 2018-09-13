@@ -19,6 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
+ *     Centrys Inc. <https://centrys.io>
  *
  ******************************************************************************/
 
@@ -40,8 +41,14 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
- * @author jay
+ * @author jay, centrys-david
  *
+ * Minimal implementation of {@link IHandler} that manages the event thread of one specific type
+ * defined by {@link IHandler.TYPE}.
+ *
+ * Subclasses should extend this class, define their event thread name passed in the constructor.
+ * If necessary, subclasses may define additional handler types in {@link IHandler.TYPE}
+ * 
  */
 public class EventHandler implements IHandler {
 
@@ -84,8 +91,8 @@ public class EventHandler implements IHandler {
         }
     });
 
-    public EventHandler(int value, String name) {
-        this.handlerType = value;
+    public EventHandler(int handlerType, String name) {
+        this.handlerType = handlerType;
         this.dispatcher.setName(name);
     }
 

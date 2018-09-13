@@ -37,7 +37,10 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
- * @author jay
+ * @author jay, centrys-david
+ *
+ * Base implementation of {@link IEventMgr} which is responsible for registering and publishing events in bulk
+ * as well as managing their respective event handler threads
  *
  */
 public class EventManager implements IEventMgr {
@@ -54,7 +57,7 @@ public class EventManager implements IEventMgr {
         for (Map.Entry<String, IHandler> m : this.handlers.entrySet()) {
             if (m.getValue() != null) {
                 if (LOG.isInfoEnabled()) {
-                    LOG.info("EventManager.start ", m.getValue().getClass().getSimpleName());
+                    LOG.info("EventManager.start {}", m.getValue().getClass().getSimpleName());
                 }
                 m.getValue().start();
             }
@@ -65,7 +68,7 @@ public class EventManager implements IEventMgr {
         for (Map.Entry<String, IHandler> m : this.handlers.entrySet()) {
             if (m.getValue() != null) {
                 if (LOG.isInfoEnabled()) {
-                    LOG.info("EventManager.shutdown ", m.getValue().getClass().getSimpleName());
+                    LOG.info("EventManager.shutdown {}", m.getValue().getClass().getSimpleName());
                 }
                 m.getValue().stop();
             }
