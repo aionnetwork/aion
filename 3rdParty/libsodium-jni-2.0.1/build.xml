@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="Native libsodiumjni">
+  <property name="so.name" value="libsodium.so, libsodiumjni.so"/>
+
+  <target name="so">
+    <echo message="packaging ${ant.project.name}, output: ${so.name}"/>
+<!--
+    <exec executable="/bin/bash">
+        <arg value="./dependencies.sh" />
+    </exec>
+-->
+    <exec executable="/bin/bash">
+        <arg value="./build-linux.sh" />        
+    </exec>    
+
+<!--
+    <exec executable="/bin/bash">
+        <arg value="./jni/installswig.sh" />
+    </exec>
+-->
+<!--
+    <exec executable="/bin/bash">
+        <arg value="./jni/jnilib.sh" />
+    </exec>
+-->
+    <property name="path.libsodium" value="libsodium/libsodium-host/lib" />
+    <property name="path.libsodiumjni" value="jni" />
+    <property name="dir.native" value="../../native/linux/sodium" />
+
+    <move file="${path.libsodiumjni}/libsodiumjni.so" tofile="${dir.native}/libsodiumjni.so" overwrite="true" />
+    <move file="${path.libsodium}/libsodium.so" tofile="${dir.native}/libsodium.so" overwrite="true" />
+
+  </target>
+
+  <!-- To keep compatibility with other build files -->
+  <target name="build" depends="so"/>
+</project>
+
