@@ -26,11 +26,10 @@ public class RpcProcessor {
         final List<String> enabledGroups,
         final List<String> enabledMethods,
         final List<String> disabledMethods) {
-  
-        executor = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 4));
-        batchCallCompletionService = new ExecutorCompletionService<>(executor);
 
         this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods);
+        executor = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 4));
+        batchCallCompletionService = new ExecutorCompletionService<>(executor);
     }
 
     public String process(String _requestBody) {
