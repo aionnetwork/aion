@@ -64,7 +64,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
     private boolean checkIntegrity = true;
 
-    private Stack<IAionBlock> branchingBlk;
+    private Stack<IAionBlock> branchingBlk, preBranchingBlk;
     private long branchingLevel;
 
     public AionBlockStore(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
@@ -457,11 +457,18 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
                 while (currentLevel > forkBlock.getNumber()) {
 
+                    if (preBranchingBlk == null) {
+                        preBranchingBlk = new Stack<>();
+                    }
+
                     List<BlockInfo> blocks = getBlockInfoForLevel(currentLevel);
                     BlockInfo blockInfo = getBlockInfoForHash(blocks, bestLine.getHash());
                     if (blockInfo != null) {
                         blockInfo.setMainChain(false);
                         setBlockInfoForLevel(currentLevel, blocks);
+
+                        //For collecting prebranching blocks
+                        preBranchingBlk.push(getBlockByHash(blockInfo.getHash()));
                     } else {
                         LOG.error("Null block information found at " + currentLevel + " when data should exist.");
                     }
@@ -483,16 +490,29 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     private void logBranchingDetails() {
         if (branchingLevel > 0 && LOG_CONS.isDebugEnabled()) {
             LOG_CONS.debug("Branching details start: level[{}]", branchingLevel);
+
+            LOG_CONS.debug("===== Block details before branch =====");
+            while (!preBranchingBlk.empty()) {
+                IAionBlock blk = preBranchingBlk.pop();
+                LOG_CONS.debug("blk: {}", blk.toString());
+            }
+
+            LOG_CONS.debug("===== Block details after branch =====");
             while (!branchingBlk.empty()) {
                 IAionBlock blk = branchingBlk.pop();
                 LOG_CONS.debug("blk: {}", blk.toString());
             }
+
             LOG_CONS.debug("Branching details end");
             branchingLevel = 0;
         }
 
         if (branchingBlk != null) {
             branchingBlk.clear();
+        }
+
+        if (preBranchingBlk != null) {
+            preBranchingBlk.clear();
         }
     }
 
@@ -513,6 +533,13 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             if (bestInfo != null) {
                 bestInfo.setMainChain(false);
                 setBlockInfoForLevel(currentLevel, levelBlocks);
+
+                if (preBranchingBlk == null) {
+                    preBranchingBlk = new Stack<>();
+                }
+
+                //For collecting preBranching blocks
+                preBranchingBlk.push(getBlockByHash(bestInfo.getHash()));
             } else {
                 LOG.error("Null block information found at " + currentLevel + " when information should exist.");
             }
@@ -521,6 +548,10 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             if (forkInfo != null) {
                 forkInfo.setMainChain(true);
                 setBlockInfoForLevel(currentLevel, levelBlocks);
+
+                if (branchingBlk == null) {
+                    branchingBlk = new Stack<>();
+                }
 
                 //For collecting branching blocks
                 branchingBlk.push(getBlockByHash(forkInfo.getHash()));
