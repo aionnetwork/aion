@@ -26,13 +26,14 @@ package org.aion.zero.impl.cli;
 
 import static org.aion.mcf.account.Keystore.exist;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.ProcessBuilder.Redirect;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
@@ -46,23 +47,20 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.UUID;
 import javax.annotation.Nonnull;
-import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
-import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
-import org.aion.mcf.account.KeystoreFormat;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgApiZmq;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.RecoveryUtils;
-
-import java.io.Console;
-import java.util.UUID;
 import org.zeromq.ZMQ;
+
 
 /**
  * Command line interface.
@@ -77,7 +75,34 @@ public class Cli {
     private File zmqkeyDir = new File(
         System.getProperty("user.dir") + File.separator + CfgApiZmq.ZMQ_KEY_DIR);
 
-    public int call(final String[] args, final Cfg cfg) {
+    private final String BASE_PATH = System.getProperty("user.dir");
+
+    private String BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
+
+    private String dstConfig = BASE_PATH_WITH_NETWORK + "/config.xml";
+
+    private String dstGenesis = BASE_PATH_WITH_NETWORK + "/genesis.json";
+
+    enum Network {
+        MAINNET, CONQUEST;
+
+        @Override
+        public String toString() {
+            switch(this) {
+                case MAINNET: return "mainnet";
+                case CONQUEST: return "conquest";
+                default: throw new IllegalArgumentException();
+            }
+        }
+    }
+
+    private Network net = Network.MAINNET;
+
+    public int call(final String[] args, Cfg cfg) {
+        return call(args, cfg, BASE_PATH);
+    }
+
+    public int call(final String[] args, Cfg cfg, String path) {
         try {
             cfg.fromXML();
             switch (args[0].toLowerCase()) {
@@ -85,10 +110,29 @@ public class Cli {
                     printHelp();
                     break;
                 case "-a":
+
+                    int index = 0;
+                    boolean multi = false;
+
                     if (args.length < 2) {
                         printHelp();
                         return 1;
+                    } else {
+                        while (index < args.length) {
+                            if(args[index].equals("-d")||args[index].equals("-n")||args[index].equals("--datadir")||args[index].equals("--network")) {
+                                multi = true;
+                                break;
+                            }
+                            index++;
+                        }
                     }
+
+                    // Switches datadir && network
+                    if(multi) {
+                        String[] newArgs = Arrays.copyOfRange(args, index, args.length);
+                        call(newArgs, cfg);
+                    }
+
 
                     switch (args[1]) {
                         case "create":
@@ -117,10 +161,38 @@ public class Cli {
                     }
                     break;
                 case "-c":
+                    if (args.length == 2 && isValid(args[1])) {
+
+                        net = determineNetwork(args[1].toLowerCase());
+
+                        switch (net) {
+                            case MAINNET:
+                            case CONQUEST:
+                                CfgAion.setNetwork(net.toString());
+                                File dir = new File(BASE_PATH + "/config/" + net);
+                                if(!dir.exists()) {
+                                    dir.mkdirs();
+                                }
+                                CfgAion.setConfFilePath(BASE_PATH + "/config/" + args[1] + "/config.xml");
+                                System.out.println("\nNew config generated for " + args[1]);
+                                break;
+                            default:
+                                System.out.println("\nInvalid network selected!");
+                                System.out.println("--- Available Networks ---");
+                                System.out.println("    mainnet, conquest");
+                                System.out.println("--------------------------");
+                                return 1;
+                        }
+                    } else if (args.length == 1) {
+                        System.out.println("\nInvalid network selected!");
+                        System.out.println("--- Available Networks ---");
+                        System.out.println("    mainnet, conquest");
+                        System.out.println("--------------------------");
+                        return 1;
+                    }
                     cfg.fromXML();
                     cfg.setId(UUID.randomUUID().toString());
                     cfg.toXML(null);
-                    System.out.println("\nNew config generated");
                     break;
                 case "-i":
                     cfg.fromXML();
@@ -190,6 +262,119 @@ public class Cli {
                         }
                     }
                     break;
+
+                case "-n":
+                case "--network":
+                    if ( (args.length == 2 || args.length == 4) && isValid(args[1])) {
+
+                        net = determineNetwork(args[1].toLowerCase());
+
+                        switch (net) {
+                            case MAINNET:
+                            case CONQUEST:
+
+                                // -n [network]
+                                if (args.length == 2) {
+
+                                    CfgAion.setNetwork(net.toString());
+                                    BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
+                                    CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
+                                    CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK + "/genesis.json"));
+
+                                    copyNetwork(path, net);
+                                    cfg.getLog().setLogPath(net.toString() + "/log");
+                                    cfg.getDb().setDatabasePath(net.toString() + "/database");
+                                    Keystore.setKeystorePath(path + "/" + net.toString() + "/keystore");
+                                    return 2;
+
+                                }
+
+                                // -n [network] -d [directory]
+                                else if ((args[2].equals("-d")||args[2].equals("--datadir")) && isValid(args[3])) {
+
+                                    CfgAion.setNetwork(net.toString());
+                                    BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
+                                    CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
+                                    CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK + "/genesis.json"));
+
+                                    String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+                                    call(newArgs, cfg);
+                                    return 2;
+
+                                } else if (!(args[2].equals("-d")||args[2].equals("--datadir"))) {
+                                    System.out.println("\nInvalid multi arguments!\n");
+                                    printHelp();
+                                    return 1;
+
+                                } else {
+                                    System.out.println("\nInvalid datadir selected!");
+                                    System.out.println("Please choose valid directory name!\n");
+                                    return 1;
+                                }
+
+                            default:
+                                System.out.println("\nInvalid network selected!\n");
+                                System.out.println("--- Available Networks ---");
+                                System.out.println("    mainnet, conquest");
+                                System.out.println("--------------------------\n");
+                                return 1;
+                        }
+
+                    } else {
+                        System.out.println("\nInvalid network selected!");
+                        System.out.println("--- Available Networks ---");
+                        System.out.println("    mainnet , conquest");
+                        System.out.println("--------------------------\n");
+                        return 1;
+                    }
+
+                // Determines database folder path
+                case "-d":
+                case "--datadir":
+                    if ( (args.length == 2 || args.length == 4) && isValid(args[1]))  {
+
+                        // -d [directory]
+                        if (args.length == 2) {
+
+                            copyNetwork(path + "/" + args[1], net);
+                            cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
+                            cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
+                            Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
+                            return 2;
+
+                        }
+
+                        // -d [directory] -n [network]
+                        else if (isValid(args[3])) {
+
+                            String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+                            call(newArgs, cfg);
+
+                            copyNetwork(path + "/" + args[1], net);
+                            cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
+                            cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
+                            Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
+                            return 2;
+
+                        } else if (!(args[2].equals("-n")||args[2].equals("--network"))) {
+                            System.out.println("\nInvalid multi arguments!\n");
+                            printHelp();
+                            return 1;
+
+                        } else {
+                            System.out.println("\nInvalid network selected!");
+                            System.out.println("--- Available Networks ---");
+                            System.out.println("    mainnet , conquest");
+                            System.out.println("--------------------------\n");
+                            return 1;
+                        }
+
+                    } else {
+                        System.out.println("\nInvalid datadir selected!");
+                        System.out.println("Please choose valid directory name!\n");
+                        return 1;
+                    }
+
                 case "--state": {
                     String pruning_type = "full";
                     if (args.length >= 2) {
@@ -289,6 +474,7 @@ public class Cli {
                     printHelp();
                     return 1;
             }
+
             System.out.println("");
         } catch (Throwable e) {
             System.out.println("");
@@ -318,8 +504,8 @@ public class Cli {
 
         Path p = Paths.get(zmqkeyDir.getPath());
         Path keyFile = p.resolve(fileName);
-        if (!Files.exists(keyFile)) {
-            keyFile = Files.createFile(keyFile, attr);
+        if (!java.nio.file.Files.exists(keyFile)) {
+            keyFile = java.nio.file.Files.createFile(keyFile, attr);
         }
 
         FileOutputStream fos = new FileOutputStream(keyFile.toString());
@@ -347,28 +533,73 @@ public class Cli {
         System.out.println("  -h                                            show help info");
         System.out.println();
         System.out.println("  -a create                                     create a new account");
-        System.out
-            .println("  -a list                                       list all existing accounts");
-        System.out.println(
-            "  -a export [address]                           export private key of an account");
+        System.out.println("  -a list                                       list all existing accounts");
+        System.out.println("  -a export [address]                           export private key of an account");
         System.out.println("  -a import [private_key]                       import private key");
         System.out.println();
-        System.out.println(
-            "  -c                                            create config with default values");
+        System.out.println("  -c [network]                                  create config to selected network; mainnet, conquest");
+        System.out.println();
+        System.out.println("  -n, --network [network]                       execute kernel with selected network; mainnet, conquest");
+        System.out.println();
+        System.out.println("  -d, --datadir [directory]                     execute kernel with selected database directory");
         System.out.println();
         System.out.println("  -i                                            show information");
         System.out.println();
-        System.out.println(
-            "  -s create                                     create an ssl certificate for localhost");
-        System.out.println(
-            "  -s create [[hostname] [ip]]                   create an ssl certificate for a custom hostname and ip");
+        System.out.println("  -s create                                     create an ssl certificate for localhost");
+        System.out.println("  -s create [[hostname] [ip]]                   create an ssl certificate for a custom hostname and ip");
         System.out.println();
-        System.out.println(
-            "  -r                                            remove blocks on side chains and correct block info");
-        System.out.println(
-            "  -r [block_number]                             revert db up to specific block number");
+        System.out.println("  -r                                            remove blocks on side chains and correct block info");
+        System.out.println("  -r [block_number]                             revert db up to specific block number");
         System.out.println();
         System.out.println("  -v                                            show version");
+    }
+
+    /**
+     * Determines the correct network (mainnet / conquest) enum based on argument
+     *
+     * @param arg CLI input of -n [network]
+     * @return Network
+     */
+    private Network determineNetwork(String arg) {
+        Network net;
+        switch(arg) {
+            case "mainnet":
+                net = Network.MAINNET;
+                break;
+            case "testnet":
+                net = Network.CONQUEST;
+                break;
+            case "conquest":
+                net = Network.CONQUEST;
+                break;
+            default:
+                net = null;
+        }
+        return net;
+    }
+
+    /**
+     * Copies the config files (config && genesis) from root to [datadir]/[network]
+     *
+     * @param path input to append base directory to copy to
+     * @param net input to determine network to copy from
+     */
+    private void copyNetwork(String path,  Network net) {
+
+        File dir1 = new File(path + "/" + net + "/config");
+        File dir2 = new File(path + "/" + net + "/keystore");
+        dir1.mkdirs();
+        dir2.mkdirs();
+
+        File src1 = new File(BASE_PATH + "/config/" + net + "/config.xml");
+        File src2 = new File(BASE_PATH + "/config/" + net + "/genesis.json");
+        File dst1 = new File(path + "/" + net + "/config/config.xml");
+        File dst2 = new File(path + "/" + net + "/config/genesis.json");
+
+        copyRecursively(src1, dst1);
+        copyRecursively(src2, dst2);
+        dstConfig = dst1.toString();
+        dstGenesis = dst2.toString();
     }
 
     /**
@@ -550,6 +781,15 @@ public class Cli {
         return RecoveryUtils.revertTo(block);
     }
 
+    /**
+     * Checks for illegal inputs (for datadir && network names)
+     * @param value
+     * @return
+     */
+    public static boolean isValid(String value) {
+        return !value.isEmpty() && !value.matches(".*[-=+,.?;:'!@#$%^&*].*");
+    }
+
     private void createKeystoreDirIfMissing() {
         if (!keystoreDir.isDirectory()) {
             if (!keystoreDir.mkdir()) {
@@ -595,6 +835,77 @@ public class Cli {
             System.exit(1);
         }
         return certPass;
+    }
+
+    public String getDstConfig() {
+        return dstConfig;
+    }
+
+    public String getDstGenesis() {
+        return dstGenesis;
+    }
+
+    // Methods below taken from FileUtils class
+    private static boolean copyRecursively(File src, File target)
+    {
+        if (src.isDirectory()) {
+            return copyDirectoryContents(src, target);
+        }
+        else {
+            try {
+                com.google.common.io.Files.copy(src, target);
+                return true;
+            }
+            catch (IOException e) {
+                return false;
+            }
+        }
+    }
+
+    private static boolean copyDirectoryContents(File src, File target)
+    {
+        Preconditions.checkArgument(src.isDirectory(), "Source dir is not a directory: %s", src);
+
+        // Don't delete symbolic link directories
+        if (isSymbolicLink(src)) {
+            return false;
+        }
+
+        target.mkdirs();
+        Preconditions.checkArgument(target.isDirectory(), "Target dir is not a directory: %s", src);
+
+        boolean success = true;
+        for (File file : listFiles(src)) {
+            success = copyRecursively(file, new File(target, file.getName())) && success;
+        }
+        return success;
+    }
+
+    private static boolean isSymbolicLink(File file)
+    {
+        try {
+            File canonicalFile = file.getCanonicalFile();
+            File absoluteFile = file.getAbsoluteFile();
+            File parentFile = file.getParentFile();
+            // a symbolic link has a different name between the canonical and absolute path
+            return !canonicalFile.getName().equals(absoluteFile.getName()) ||
+                    // or the canonical parent path is not the same as the file's parent path,
+                    // provided the file has a parent path
+                    parentFile != null && !parentFile.getCanonicalPath().equals(canonicalFile.getParent());
+        }
+        catch (IOException e) {
+            // error on the side of caution
+            return true;
+        }
+    }
+
+    private static ImmutableList<File> listFiles(File dir)
+    {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return ImmutableList.of();
+        }
+        return ImmutableList.copyOf(files);
     }
 
 }

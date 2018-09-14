@@ -2547,7 +2547,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         .setReceiptTrieRoot(
                             ByteString.copyFrom(b.getReceiptsRoot()))
                         .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
-                        .setSize(b.getEncoded().length)
+                        .setSize(b.size())
                         .setSolution(
                             ByteString.copyFrom(
                                 b.getHeader().getSolution()))
@@ -2578,7 +2578,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             .setTxTrieRoot(ByteString.copyFrom(b.getTxTrieRoot()))
             .setReceiptTrieRoot(ByteString.copyFrom(b.getReceiptsRoot()))
             .setStateRoot(ByteString.copyFrom(b.getStateRoot()))
-            .setSize(b.getEncoded().length)
+            .setSize(b.size())
             .setSolution(ByteString.copyFrom(b.getHeader().getSolution()))
             .setTotalDifficulty(ByteString.copyFrom(td.toByteArray()))
             .setBlockTime(blocktime);
@@ -2704,7 +2704,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
             + ","
             + b.getNrgLimit()
             + ","
-            + b.getEncoded().length
+            + b.size()
             + ","
             + b.getTimestamp()
             + ","
@@ -2827,7 +2827,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                     b.getReceiptsRoot()))
                             .setStateRoot(
                                 ByteString.copyFrom(b.getStateRoot()))
-                            .setSize(b.getEncoded().length)
+                            .setSize(b.size())
                             .setSolution(
                                 ByteString.copyFrom(
                                     b.getHeader().getSolution()))
