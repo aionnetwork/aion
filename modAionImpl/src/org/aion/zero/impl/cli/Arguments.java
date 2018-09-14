@@ -64,14 +64,14 @@ public class Arguments {
         paramLabel = "<account>",
         description = "export private key of an account"
     )
-    private String exportAccount;
+    private String exportAccount = null;
 
     @Option(
         names = {"ai", "-a import"},
         paramLabel = "<key>",
         description = "import private key"
     )
-    private String importAccount;
+    private String importAccount = null;
 
     // config generation
     @Option(
@@ -80,7 +80,7 @@ public class Arguments {
         paramLabel = "<network>",
         description = "create config for the selected network\noptions: mainnet, conquest"
     )
-    public String config;
+    public String config = null;
 
     // get information and version
     @Option(
@@ -110,7 +110,7 @@ public class Arguments {
                 "create a ssl certificate for:\n - localhost (when no parameters are given), or"
                         + "\n - the given hostname and ip"
     )
-    public String[] ssl;
+    public String[] ssl = null;
 
     // offline block management
     @Option(
@@ -125,20 +125,20 @@ public class Arguments {
         paramLabel = "<block_number>",
         description = "revert database state to given block number"
     )
-    private long revertToBlock;
+    private String revertToBlock = null;
 
     // network and directory setup
     @Option(
         names = {"-n", "--network"},
         description = "execute kernel with selected network\noptions: mainnet, conquest"
     )
-    public String network;
+    public String network = null;
 
     @Option(
         names = {"-d", "--datadir"},
         description = "execute kernel with selected database directory"
     )
-    public String directory;
+    public String directory = null;
 
     // offline database query and update
     @Option(
@@ -146,30 +146,32 @@ public class Arguments {
         paramLabel = "<prune_mode>",
         description = "reorganize the state storage\noptions: FULL, TOP, SPREAD"
     )
-    public String stateOption;
+    public String pruntStateOption = null;
 
     // print info from db
     @Option(
         names = {"--dump-blocks"},
-        arity = "1",
+        arity = "0..1",
         paramLabel = "<block_count>",
         description = "print top blocks from database"
     )
-    public int dumpBlocksCount = 10;
+    public String dumpBlocksCount = null;
 
     @Option(
         names = {"--dump-state-size"},
+        arity = "0..1",
         paramLabel = "<block_count>",
         description = "retrieves the state size (node count) for the top blocks"
     )
-    public int dumpStateSizeCount = 2;
+    public String dumpStateSizeCount = null;
 
     @Option(
         names = {"--dump-state"},
+        arity = "0..1",
         paramLabel = "<block_count>",
         description = "retrieves the state for the top main chain blocks"
     )
-    public int dumpStateCount = 2;
+    public String dumpStateCount = null;
 
     @Option(
         names = {"--db-compact"},
@@ -241,7 +243,7 @@ public class Arguments {
         return rebuildBlockInfo;
     }
 
-    public long getRevertToBlock() {
+    public String getRevertToBlock() {
         return revertToBlock;
     }
 
@@ -253,19 +255,19 @@ public class Arguments {
         return directory;
     }
 
-    public String getStateOption() {
-        return stateOption;
+    public String getPruneStateOption() {
+        return pruntStateOption;
     }
 
-    public int getDumpBlocksCount() {
+    public String getDumpBlocksCount() {
         return dumpBlocksCount;
     }
 
-    public int getDumpStateSizeCount() {
+    public String getDumpStateSizeCount() {
         return dumpStateSizeCount;
     }
 
-    public int getDumpStateCount() {
+    public String getDumpStateCount() {
         return dumpStateCount;
     }
 

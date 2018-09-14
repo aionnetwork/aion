@@ -21,12 +21,20 @@
  *     Aion foundation.
  */
 
-
 package org.aion.zero.impl.cli;
+
+import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
+import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
+import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -38,16 +46,6 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.RecoveryUtils;
 import picocli.CommandLine;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
-
-import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
-import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
-import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
-
 /**
  * Command line interface.
  *
@@ -57,19 +55,22 @@ public class Cli {
 
     private final String BASE_PATH = System.getProperty("user.dir");
 
-    private String BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
+    private String BASE_PATH_WITH_NETWORK = BASE_PATH + "/config/" + CfgAion.getNetwork();
 
     private String dstConfig = BASE_PATH_WITH_NETWORK + "/config.xml";
 
     private String dstGenesis = BASE_PATH_WITH_NETWORK + "/genesis.json";
 
-    File keystoreDir = new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
+    File keystoreDir =
+            new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
     private Arguments options = new Arguments();
     private CommandLine parser = new CommandLine(options);
 
     public enum ReturnType {
-        RUN(2), EXIT(0), ERROR(1);
+        RUN(2),
+        EXIT(0),
+        ERROR(1);
         private int value;
 
         ReturnType(int _value) {
@@ -82,14 +83,18 @@ public class Cli {
     }
 
     enum Network {
-        MAINNET, CONQUEST;
+        MAINNET,
+        CONQUEST;
 
         @Override
         public String toString() {
-            switch(this) {
-                case MAINNET: return "mainnet";
-                case CONQUEST: return "conquest";
-                default: throw new IllegalArgumentException();
+            switch (this) {
+                case MAINNET:
+                    return "mainnet";
+                case CONQUEST:
+                    return "conquest";
+                default:
+                    throw new IllegalArgumentException();
             }
         }
     }
@@ -212,7 +217,7 @@ public class Cli {
                 }
             }
 
-            if (options.getExportAccount()!= null) {
+            if (options.getExportAccount() != null) {
                 if (!exportPrivateKey(options.getExportAccount())) {
                     return ERROR;
                 } else {
@@ -220,7 +225,7 @@ public class Cli {
                 }
             }
 
-            if (options.getImportAccount()!= null) {
+            if (options.getImportAccount() != null) {
                 if (!importPrivateKey(options.getImportAccount())) {
                     return ERROR;
                 } else {
@@ -228,271 +233,300 @@ public class Cli {
                 }
             }
 
-            switch (args[0].toLowerCase()) {
-                case "-s":
-                    if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
-                        createKeystoreDirIfMissing();
-                        Console console = System.console();
-                        checkConsoleExists(console);
+            if (options.getSsl() != null) {
+                String[] paramters = options.getSsl();
 
-                        List<String> scriptArgs = new ArrayList<>();
-                        scriptArgs.add("/bin/bash");
-                        scriptArgs.add("script/generateSslCert.sh");
-                        scriptArgs.add(getCertName(console));
-                        scriptArgs.add(getCertPass(console));
-                        // add the hostname and ip optionally passed in as cli args
-                        scriptArgs.addAll(Arrays.asList(Arrays.copyOfRange(args, 2, args.length)));
-                        new ProcessBuilder(scriptArgs).inheritIO().start().waitFor();
-                    } else {
-                        System.out.println("Incorrect usage of -s create command.\n" +
-                            "Command must enter both hostname AND ip or else neither one.");
-                        return ERROR;
-                    }
-                    break;
-                case "-r":
-                    if (args.length < 2) {
-                        System.out.println("Starting database clean-up.");
-                        RecoveryUtils.pruneAndCorrect();
-                        System.out.println("Finished database clean-up.");
-                    } else {
-                        switch (revertTo(args[1])) {
-                            case SUCCESS:
-                                System.out.println(
-                                    "Blockchain successfully reverted to block number " + args[1]
-                                        + ".");
-                                break;
-                            case FAILURE:
-                                System.out
-                                    .println("Unable to revert to block number " + args[1] + ".");
-                                return ERROR;
-                            case ILLEGAL_ARGUMENT:
-                            default:
-                                return ERROR;
-                        }
-                    }
-                    break;
+                if (paramters.length == 0 || paramters.length == 2) {
+                    createKeystoreDirIfMissing();
+                    Console console = System.console();
+                    checkConsoleExists(console);
 
-                case "-n":
-                case "--network":
-                    if ( (args.length == 2 || args.length == 4) && isValid(args[1])) {
-
-                        net = determineNetwork(args[1].toLowerCase());
-
-                        switch (net) {
-                            case MAINNET:
-                            case CONQUEST:
-
-                                // -n [network]
-                                if (args.length == 2) {
-
-                                    CfgAion.setNetwork(net.toString());
-                                    BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
-                                    CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
-                                    CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK + "/genesis.json"));
-
-                                    copyNetwork(path, net);
-                                    cfg.getLog().setLogPath(net.toString() + "/log");
-                                    cfg.getDb().setDatabasePath(net.toString() + "/database");
-                                    Keystore.setKeystorePath(path + "/" + net.toString() + "/keystore");
-                                    return RUN;
-
-                                }
-
-                                // -n [network] -d [directory]
-                                else if ((args[2].equals("-d")||args[2].equals("--datadir")) && isValid(args[3])) {
-
-                                    CfgAion.setNetwork(net.toString());
-                                    BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" + CfgAion.getNetwork();
-                                    CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
-                                    CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK + "/genesis.json"));
-
-                                    String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-                                    call(newArgs, cfg);
-                                    return RUN;
-
-                                } else if (!(args[2].equals("-d")||args[2].equals("--datadir"))) {
-                                    System.out.println("\nInvalid multi arguments!\n");
-                                    printHelp();
-                                    return ERROR;
-
-                                } else {
-                                    System.out.println("\nInvalid datadir selected!");
-                                    System.out.println("Please choose valid directory name!\n");
-                                    return ERROR;
-                                }
-
-                            default:
-                                System.out.println("\nInvalid network selected!\n");
-                                System.out.println("--- Available Networks ---");
-                                System.out.println("    mainnet, conquest");
-                                System.out.println("--------------------------\n");
-                                return ERROR;
-                        }
-
-                    } else {
-                        System.out.println("\nInvalid network selected!");
-                        System.out.println("--- Available Networks ---");
-                        System.out.println("    mainnet , conquest");
-                        System.out.println("--------------------------\n");
-                        return ERROR;
-                    }
-
-                // Determines database folder path
-                case "-d":
-                case "--datadir":
-                    if ( (args.length == 2 || args.length == 4) && isValid(args[1]))  {
-
-                        // -d [directory]
-                        if (args.length == 2) {
-
-                            copyNetwork(path + "/" + args[1], net);
-                            cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
-                            cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
-                            Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
-                            return RUN;
-
-                        }
-
-                        // -d [directory] -n [network]
-                        else if (isValid(args[3])) {
-
-                            String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-                            call(newArgs, cfg);
-
-                            copyNetwork(path + "/" + args[1], net);
-                            cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
-                            cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
-                            Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
-                            return RUN;
-
-                        } else if (!(args[2].equals("-n")||args[2].equals("--network"))) {
-                            System.out.println("\nInvalid multi arguments!\n");
-                            printHelp();
-                            return ERROR;
-
-                        } else {
-                            System.out.println("\nInvalid network selected!");
-                            System.out.println("--- Available Networks ---");
-                            System.out.println("    mainnet , conquest");
-                            System.out.println("--------------------------\n");
-                            return ERROR;
-                        }
-
-                    } else {
-                        System.out.println("\nInvalid datadir selected!");
-                        System.out.println("Please choose valid directory name!\n");
-                        return ERROR;
-                    }
-
-                case "--state": {
-                    String pruning_type = "full";
-                    if (args.length >= 2) {
-                        pruning_type = args[1];
-                    }
-                    try {
-                        RecoveryUtils.pruneOrRecoverState(pruning_type);
-                    } catch (Throwable t) {
-                        System.out.println("Reorganizing the state storage FAILED due to:");
-                        t.printStackTrace();
-                        return ERROR;
-                    }
-                    break;
-                }
-                case "--dump-state-size":
-                    long block_count = 2L;
-
-                    if (args.length < 2) {
-                        System.out
-                            .println("Retrieving state size for top " + block_count + " blocks.");
-                        RecoveryUtils.printStateTrieSize(block_count);
-                    } else {
-                        try {
-                            block_count = Long.parseLong(args[1]);
-                        } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1]
-                                + "> cannot be converted to a number.");
-                        }
-                        if (block_count < 1) {
-                            System.out
-                                .println("The given argument <" + args[1] + "> is not valid.");
-                            block_count = 2L;
-                        }
-
-                        System.out
-                            .println("Retrieving state size for top " + block_count + " blocks.");
-                        RecoveryUtils.printStateTrieSize(block_count);
-                    }
-                    break;
-                case "--dump-state":
-                    long level = -1L;
-
-                    if (args.length < 2) {
-                        System.out.println("Retrieving state for top main chain block...");
-                        RecoveryUtils.printStateTrieDump(level);
-                    } else {
-                        try {
-                            level = Long.parseLong(args[1]);
-                        } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1]
-                                + "> cannot be converted to a number.");
-                        }
-                        if (level == -1L) {
-                            System.out.println("Retrieving state for top main chain block...");
-                        } else {
-                            System.out.println(
-                                "Retrieving state for main chain block at level " + level + "...");
-                        }
-                        RecoveryUtils.printStateTrieDump(level);
-                    }
-                    break;
-                case "--db-compact":
-                    RecoveryUtils.dbCompact();
-                    break;
-                case "--dump-blocks":
-                    long count = 10L;
-
-                    if (args.length < 2) {
-                        System.out.println("Printing top " + count + " blocks from database.");
-                        RecoveryUtils.dumpBlocks(count);
-                    } else {
-                        try {
-                            count = Long.parseLong(args[1]);
-                        } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1]
-                                + "> cannot be converted to a number.");
-                        }
-                        if (count < 1) {
-                            System.out
-                                .println("The given argument <" + args[1] + "> is not valid.");
-                            count = 10L;
-                        }
-
-                        System.out.println("Printing top " + count + " blocks from database.");
-                        RecoveryUtils.dumpBlocks(count);
-                    }
-                    break;
-                default:
-                    System.out.println("Unable to parse the input arguments");
-                    printHelp();
+                    List<String> scriptArgs = new ArrayList<>();
+                    scriptArgs.add("/bin/bash");
+                    scriptArgs.add("script/generateSslCert.sh");
+                    scriptArgs.add(getCertName(console));
+                    scriptArgs.add(getCertPass(console));
+                    // add the hostname and ip optionally passed in as cli args
+                    scriptArgs.addAll(Arrays.asList(paramters));
+                    new ProcessBuilder(scriptArgs).inheritIO().start().waitFor();
+                    return EXIT;
+                } else {
+                    System.out.println(
+                            "Incorrect usage of -s create command.\n"
+                                    + "Command must enter both hostname AND ip or else neither one.");
                     return ERROR;
+                }
             }
 
-            System.out.println("");
+            if (options.isRebuildBlockInfo()) {
+                System.out.println("Starting database clean-up.");
+                RecoveryUtils.pruneAndCorrect();
+                System.out.println("Finished database clean-up.");
+                return EXIT;
+            }
+
+            if (options.getRevertToBlock() != null) {
+                String block = options.getRevertToBlock();
+                switch (revertTo(block)) {
+                    case SUCCESS:
+                        {
+                            System.out.println(
+                                    "Blockchain successfully reverted to block number "
+                                            + block
+                                            + ".");
+                            return EXIT;
+                        }
+                    case FAILURE:
+                        {
+                            System.out.println("Unable to revert to block number " + block + ".");
+                            return ERROR;
+                        }
+                    case ILLEGAL_ARGUMENT:
+                    default:
+                        {
+                            return ERROR;
+                        }
+                }
+            }
+
+            if (options.getPruneStateOption() != null) {
+                String pruning_type = options.getPruneStateOption();
+                try {
+                    RecoveryUtils.pruneOrRecoverState(pruning_type);
+                    return EXIT;
+                } catch (Throwable t) {
+                    System.out.println("Reorganizing the state storage FAILED due to:");
+                    t.printStackTrace();
+                    return ERROR;
+                }
+            }
+
+            if (options.getDumpStateSizeCount() != null) {
+                long block_count = 2L;
+                String parameter = options.getDumpStateSizeCount();
+
+                if (parameter.isEmpty()) {
+                    System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                    RecoveryUtils.printStateTrieSize(block_count);
+                    return EXIT;
+                } else {
+                    try {
+                        block_count = Long.parseLong(parameter);
+                    } catch (NumberFormatException e) {
+                        System.out.println(
+                                "The given argument <"
+                                        + parameter
+                                        + "> cannot be converted to a number.");
+                        return ERROR;
+                    }
+                    if (block_count < 1) {
+                        System.out.println("The given argument <" + parameter + "> is not valid.");
+                        block_count = 2L;
+                    }
+
+                    System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                    RecoveryUtils.printStateTrieSize(block_count);
+                    return EXIT;
+                }
+            }
+
+            if (options.getDumpStateCount() != null) {
+                long level = -1L;
+                String parameter = options.getDumpStateCount();
+
+                if (parameter.isEmpty()) {
+                    System.out.println("Retrieving state for top main chain block...");
+                    RecoveryUtils.printStateTrieDump(level);
+                    return EXIT;
+                } else {
+                    try {
+                        level = Long.parseLong(parameter);
+                    } catch (NumberFormatException e) {
+                        System.out.println(
+                                "The given argument <"
+                                        + parameter
+                                        + "> cannot be converted to a number.");
+                        return ERROR;
+                    }
+                    if (level == -1L) {
+                        System.out.println("Retrieving state for top main chain block...");
+                    } else {
+                        System.out.println(
+                                "Retrieving state for main chain block at level " + level + "...");
+                    }
+                    RecoveryUtils.printStateTrieDump(level);
+                    return EXIT;
+                }
+            }
+
+            if (options.getDumpBlocksCount() != null) {
+                long count = 10L;
+                String parameter = options.getDumpBlocksCount();
+
+                if (parameter.isEmpty()) {
+                    System.out.println("Printing top " + count + " blocks from database.");
+                    RecoveryUtils.dumpBlocks(count);
+                    return EXIT;
+                } else {
+                    try {
+                        count = Long.parseLong(parameter);
+                    } catch (NumberFormatException e) {
+                        System.out.println(
+                                "The given argument <"
+                                        + parameter
+                                        + "> cannot be converted to a number.");
+                        return ERROR;
+                    }
+                    if (count < 1) {
+                        System.out.println("The given argument <" + parameter + "> is not valid.");
+                        count = 10L;
+                    }
+
+                    System.out.println("Printing top " + count + " blocks from database.");
+                    RecoveryUtils.dumpBlocks(count);
+                    return EXIT;
+                }
+            }
+
+            if (options.isDbCompact()) {
+                RecoveryUtils.dbCompact();
+                return EXIT;
+            }
+
+            // if no return happened earlier, run the kernel
+            return RUN;
         } catch (Throwable e) {
+            // TODO: should be moved to individual procedures
             System.out.println("");
             e.printStackTrace();
             return ERROR;
         }
-
-        return EXIT;
     }
 
     private void setDirectory(String directory) {
         // TODO
+        //        // Determines database folder path
+        //        case "-d":
+        //        case "--datadir":
+        //        if ( (args.length == 2 || args.length == 4) && isValid(args[1]))  {
+        //
+        //            // -d [directory]
+        //            if (args.length == 2) {
+        //
+        //                copyNetwork(path + "/" + args[1], net);
+        //                cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
+        //                cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
+        //                Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
+        //                return RUN;
+        //
+        //            }
+        //
+        //            // -d [directory] -n [network]
+        //            else if (isValid(args[3])) {
+        //
+        //                String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+        //                call(newArgs, cfg);
+        //
+        //                copyNetwork(path + "/" + args[1], net);
+        //                cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
+        //                cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
+        //                Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
+        //                return RUN;
+        //
+        //            } else if (!(args[2].equals("-n")||args[2].equals("--network"))) {
+        //                System.out.println("\nInvalid multi arguments!\n");
+        //                printHelp();
+        //                return ERROR;
+        //
+        //            } else {
+        //                System.out.println("\nInvalid network selected!");
+        //                System.out.println("--- Available Networks ---");
+        //                System.out.println("    mainnet , conquest");
+        //                System.out.println("--------------------------\n");
+        //                return ERROR;
+        //            }
+        //
+        //        } else {
+        //            System.out.println("\nInvalid datadir selected!");
+        //            System.out.println("Please choose valid directory name!\n");
+        //            return ERROR;
+        //        }
+
     }
 
     private void setNetwork(String network) {
         // TODO
+        //        case "-n":
+        //        case "--network":
+        //        if ( (args.length == 2 || args.length == 4) && isValid(args[1])) {
+        //
+        //            net = determineNetwork(args[1].toLowerCase());
+        //
+        //            switch (net) {
+        //                case MAINNET:
+        //                case CONQUEST:
+        //
+        //                    // -n [network]
+        //                    if (args.length == 2) {
+        //
+        //                        CfgAion.setNetwork(net.toString());
+        //                        BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" +
+        // CfgAion.getNetwork();
+        //                        CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
+        //                        CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK +
+        // "/genesis.json"));
+        //
+        //                        copyNetwork(path, net);
+        //                        cfg.getLog().setLogPath(net.toString() + "/log");
+        //                        cfg.getDb().setDatabasePath(net.toString() + "/database");
+        //                        Keystore.setKeystorePath(path + "/" + net.toString() +
+        // "/keystore");
+        //                        return RUN;
+        //
+        //                    }
+        //
+        //                    // -n [network] -d [directory]
+        //                    else if ((args[2].equals("-d")||args[2].equals("--datadir")) &&
+        // isValid(args[3])) {
+        //
+        //                        CfgAion.setNetwork(net.toString());
+        //                        BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" +
+        // CfgAion.getNetwork();
+        //                        CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
+        //                        CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK +
+        // "/genesis.json"));
+        //
+        //                        String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
+        //                        call(newArgs, cfg);
+        //                        return RUN;
+        //
+        //                    } else if (!(args[2].equals("-d")||args[2].equals("--datadir"))) {
+        //                        System.out.println("\nInvalid multi arguments!\n");
+        //                        printHelp();
+        //                        return ERROR;
+        //
+        //                    } else {
+        //                        System.out.println("\nInvalid datadir selected!");
+        //                        System.out.println("Please choose valid directory name!\n");
+        //                        return ERROR;
+        //                    }
+        //
+        //                default:
+        //                    System.out.println("\nInvalid network selected!\n");
+        //                    System.out.println("--- Available Networks ---");
+        //                    System.out.println("    mainnet, conquest");
+        //                    System.out.println("--------------------------\n");
+        //                    return ERROR;
+        //            }
+        //
+        //        } else {
+        //            System.out.println("\nInvalid network selected!");
+        //            System.out.println("--- Available Networks ---");
+        //            System.out.println("    mainnet , conquest");
+        //            System.out.println("--------------------------\n");
+        //            return ERROR;
+        //        }
+
     }
 
     /** Print the CLI help info. */
@@ -540,7 +574,7 @@ public class Cli {
      */
     private Network determineNetwork(String arg) {
         Network net;
-        switch(arg) {
+        switch (arg) {
             case "mainnet":
                 net = Network.MAINNET;
                 break;
@@ -556,7 +590,7 @@ public class Cli {
         return net;
     }
 
-    private void printInvalidNetwork(){
+    private void printInvalidNetwork() {
         System.out.println("\nInvalid network selected!\n");
         System.out.println("--- Available Networks ---");
         System.out.println("    mainnet, conquest");
@@ -569,7 +603,7 @@ public class Cli {
      * @param path input to append base directory to copy to
      * @param net input to determine network to copy from
      */
-    private void copyNetwork(String path,  Network net) {
+    private void copyNetwork(String path, Network net) {
 
         File dir1 = new File(path + "/" + net + "/config");
         File dir2 = new File(path + "/" + net + "/keystore");
@@ -678,8 +712,9 @@ public class Cli {
 
         ECKey key = ECKeyFac.inst().fromPrivate(raw);
         if (key == null) {
-            System.out.println("Unable to recover private key."
-                + "Are you sure you did not import a public key?");
+            System.out.println(
+                    "Unable to recover private key."
+                            + "Are you sure you did not import a public key?");
             return false;
         }
 
@@ -759,7 +794,7 @@ public class Cli {
             block = Long.parseLong(blockNumber);
         } catch (NumberFormatException e) {
             System.out.println(
-                "The given argument <" + blockNumber + "> cannot be converted to a number.");
+                    "The given argument <" + blockNumber + "> cannot be converted to a number.");
             return RecoveryUtils.Status.ILLEGAL_ARGUMENT;
         }
 
@@ -768,6 +803,7 @@ public class Cli {
 
     /**
      * Checks for illegal inputs (for datadir && network names)
+     *
      * @param value
      * @return
      */
@@ -778,21 +814,20 @@ public class Cli {
     private void createKeystoreDirIfMissing() {
         if (!keystoreDir.isDirectory()) {
             if (!keystoreDir.mkdir()) {
-                System.out.println("Ssl keystore directory could not be created. " +
-                    "Please check user permissions or create directory manually.");
+                System.out.println(
+                        "Ssl keystore directory could not be created. "
+                                + "Please check user permissions or create directory manually.");
                 System.exit(1);
             }
             System.out.println();
         }
     }
 
-    /**
-     * For security reasons we only want the ssl option to run in a console environment.
-     */
+    /** For security reasons we only want the ssl option to run in a console environment. */
     private void checkConsoleExists(Console console) {
         if (console == null) {
             System.out.println(
-                "No console found. This command can only be run interactively in a console environment.");
+                    "No console found. This command can only be run interactively in a console environment.");
             System.exit(1);
         }
     }
@@ -809,14 +844,20 @@ public class Cli {
 
     private String getCertPass(Console console) {
         int minPassLen = 7;
-        String certPass = String.valueOf(console.readPassword(
-                "Enter certificate password (at least " + minPassLen + " characters):\n"));
+        String certPass =
+                String.valueOf(
+                        console.readPassword(
+                                "Enter certificate password (at least "
+                                        + minPassLen
+                                        + " characters):\n"));
         if ((certPass == null) || (certPass.isEmpty())) {
             System.out.println("Error: no certificate password entered.");
             System.exit(1);
         } else if (certPass.length() < minPassLen) {
             System.out.println(
-                "Error: certificate password must be at least " + minPassLen + " characters long.");
+                    "Error: certificate password must be at least "
+                            + minPassLen
+                            + " characters long.");
             System.exit(1);
         }
         return certPass;
@@ -831,24 +872,20 @@ public class Cli {
     }
 
     // Methods below taken from FileUtils class
-    private static boolean copyRecursively(File src, File target)
-    {
+    private static boolean copyRecursively(File src, File target) {
         if (src.isDirectory()) {
             return copyDirectoryContents(src, target);
-        }
-        else {
+        } else {
             try {
                 Files.copy(src, target);
                 return true;
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 return false;
             }
         }
     }
 
-    private static boolean copyDirectoryContents(File src, File target)
-    {
+    private static boolean copyDirectoryContents(File src, File target) {
         Preconditions.checkArgument(src.isDirectory(), "Source dir is not a directory: %s", src);
 
         // Don't delete symbolic link directories
@@ -866,31 +903,29 @@ public class Cli {
         return success;
     }
 
-    private static boolean isSymbolicLink(File file)
-    {
+    private static boolean isSymbolicLink(File file) {
         try {
             File canonicalFile = file.getCanonicalFile();
             File absoluteFile = file.getAbsoluteFile();
             File parentFile = file.getParentFile();
             // a symbolic link has a different name between the canonical and absolute path
-            return !canonicalFile.getName().equals(absoluteFile.getName()) ||
+            return !canonicalFile.getName().equals(absoluteFile.getName())
+                    ||
                     // or the canonical parent path is not the same as the file's parent path,
                     // provided the file has a parent path
-                    parentFile != null && !parentFile.getCanonicalPath().equals(canonicalFile.getParent());
-        }
-        catch (IOException e) {
+                    parentFile != null
+                            && !parentFile.getCanonicalPath().equals(canonicalFile.getParent());
+        } catch (IOException e) {
             // error on the side of caution
             return true;
         }
     }
 
-    private static ImmutableList<File> listFiles(File dir)
-    {
+    private static ImmutableList<File> listFiles(File dir) {
         File[] files = dir.listFiles();
         if (files == null) {
             return ImmutableList.of();
         }
         return ImmutableList.copyOf(files);
     }
-
 }
