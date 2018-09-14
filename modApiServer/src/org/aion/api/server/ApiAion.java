@@ -584,7 +584,12 @@ public abstract class ApiAion extends Api {
         }
 
         AionTransaction tx = new AionTransaction(signedTx);
-        pendingState.addPendingTransaction(tx);
+        try {
+            pendingState.addPendingTransaction(tx);
+        } catch (Exception e) {
+            LOG.error("<send-transaction exception>", e);
+            return null;
+        }
         return tx.getHash();
     }
 

@@ -419,7 +419,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         for (int i = 0; i < transactions.size(); i++) {
-            txsState.update(RLP.encodeInt(i), transactions.get(i).getEncoded());
+            byte[] txEncoding = transactions.get(i).getEncoded();
+            if (txEncoding != null) {
+                txsState.update(RLP.encodeInt(i), txEncoding);
+            } else {
+                return HashUtil.EMPTY_TRIE_HASH;
+            }
         }
         return txsState.getRootHash();
     }
@@ -947,10 +952,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return false;
         }
 
-        boolean isValid = true;
-
         if (!block.isGenesis()) {
-            isValid = isValid(block.getHeader());
+            if (!isValid(block.getHeader())) {
+                return false;
+            }
 
             // Sanity checks
             String trieHash = toHexString(block.getTxTrieRoot());
@@ -1005,7 +1010,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
-        return isValid;
+        return true;
     }
 
     public static Set<ByteArrayWrapper> getAncestors(
