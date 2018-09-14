@@ -80,8 +80,8 @@ public class Keystore {
     private static final String ADDR_PREFIX = "0x";
     private static final String AION_PREFIX = "a0";
     private static final int IMPORT_LIMIT = 100;
-    private static final String KEYSTORE_PATH;
-    private static final Path PATH;
+    private static String KEYSTORE_PATH;
+    private static Path PATH;
 
     static {
         String storageDir = System.getProperty("local.storage.dir");
@@ -364,4 +364,11 @@ public class Keystore {
 
         return null;
     }
+
+    public static void setKeystorePath(String path) {
+        KEYSTORE_PATH = path;
+        PATH = Paths.get(KEYSTORE_PATH);
+    }
+
+    public static String getKeystorePath() { return KEYSTORE_PATH; }
 }

@@ -27,7 +27,7 @@ diffutils-1.3.0.jar
 https://mvnrepository.com/artifact/com.googlecode.java-diff-utils/diffutils/1.3.0
 
 google-java-format-1.5-all-deps.jar
-https://mvnrepository.com/artifact/com.google.googlejavaformat/google-java-format/1.5
+https://github.com/google/google-java-format/releases/tag/google-java-format-1.5
 
 gson-2.7.jar
 https://mvnrepository.com/artifact/com.google.code.gson/gson/2.7
@@ -164,6 +164,7 @@ will be built when executing the release.sh in the aion_fastvm repo or execute t
 
 libsodiumjni.so
 libsodium.so
+aion/3rdParty/libsodium-jni-2.0.1 or
 https://github.com/joshjdevl/libsodium-jni
 
 solc

@@ -1,0 +1,6 @@
+libsodium-jni:
+  build: .
+  #image: joshjdevl/libsodium-jni:latest
+  volumes:
+    - .:/installs/libsodium-jni
+  command: tail -f /dev/null
