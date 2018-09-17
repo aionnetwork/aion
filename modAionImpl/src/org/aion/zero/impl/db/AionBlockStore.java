@@ -22,9 +22,27 @@
  */
 package org.aion.zero.impl.db;
 
+import static java.math.BigInteger.ZERO;
+import static org.aion.crypto.HashUtil.shortHash;
+
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectStreamClass;
+import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
-import java.util.Stack;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
@@ -41,18 +59,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
-
-import java.io.*;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import static java.math.BigInteger.ZERO;
-import static org.aion.crypto.HashUtil.shortHash;
 
 public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHeader> {
 
