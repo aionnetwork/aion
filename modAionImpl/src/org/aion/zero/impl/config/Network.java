@@ -22,15 +22,28 @@
  */
 package org.aion.zero.impl.config;
 
+/**
+ * Defines different Aion networks.
+ *
+ * @author Alexandra Roatis
+ */
 public enum Network {
-    MAINNET("mainnet"),
-    CONQUEST("conquest"),
-    MASTERY("mastery");
+    MAINNET("mainnet", 256),
+    CONQUEST("conquest", 128),
+    MASTERY("mastery", 32);
 
     private String name;
+    private int identifier;
 
-    Network(String _name) {
+    /**
+     * Constructor.
+     *
+     * @param _name network name
+     * @param _identifier network identifier
+     */
+    Network(String _name, int _identifier) {
         this.name = _name;
+        this.identifier = _identifier;
     }
 
     @Override
@@ -38,8 +51,12 @@ public enum Network {
         return this.name;
     }
 
+    public int getIdentifier() {
+        return identifier;
+    }
+
     /**
-     * Utility method that determines the correct network based on the given argument.
+     * Utility method that determines the correct network based on the given name.
      *
      * @param network a string value representing the network name
      * @return the network object corresponding to the string value or null when the value is not
@@ -56,6 +73,23 @@ public enum Network {
 
         for (Network net : Network.values()) {
             if (netStr.equals(net.toString())) {
+                return net;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Utility method that determines the correct network based on the given identifier.
+     *
+     * @param identifier an integer value representing the network identifier
+     * @return the network object corresponding to the int value or null when the value is not
+     *     mapped to an object.
+     */
+    public static Network determineNetwork(int identifier) {
+        for (Network net : Network.values()) {
+            if (identifier == net.getIdentifier()) {
                 return net;
             }
         }

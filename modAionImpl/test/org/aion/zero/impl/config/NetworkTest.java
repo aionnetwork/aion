@@ -41,7 +41,7 @@ public class NetworkTest {
 
     /** Parameters for testing {@link #testDetermineNetwork(String, Network)}. */
     @SuppressWarnings("unused")
-    private Object networkMappings() {
+    private Object stringToNetworkMappings() {
         List<Object> parameters = new ArrayList<>();
 
         for (Network net : Network.values()) {
@@ -58,8 +58,28 @@ public class NetworkTest {
     }
 
     @Test
-    @Parameters(method = "networkMappings")
+    @Parameters(method = "stringToNetworkMappings")
     public void testDetermineNetwork(String input, Network expected) {
+        assertThat(Network.determineNetwork(input)).isEqualTo(expected);
+    }
+
+    /** Parameters for testing {@link #testDetermineNetwork(int, Network)}. */
+    @SuppressWarnings("unused")
+    private Object intToNetworkMappings() {
+        List<Object> parameters = new ArrayList<>();
+
+        for (Network net : Network.values()) {
+            parameters.add(new Object[] {net.getIdentifier(), net});
+        }
+
+        parameters.add(new Object[] {-1, null});
+
+        return parameters.toArray();
+    }
+
+    @Test
+    @Parameters(method = "intToNetworkMappings")
+    public void testDetermineNetwork(int input, Network expected) {
         assertThat(Network.determineNetwork(input)).isEqualTo(expected);
     }
 }
