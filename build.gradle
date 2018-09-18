@@ -1,16 +1,10 @@
-/*buildscript { 
-    repositories {
-        jcenter()
-    }
-    dependencies { 
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
-    }
+plugins {
+    id "de.undercouch.download" version "3.4.3"
 }
-
-apply plugin: 'com.github.johnrengelman.shadow'*/
 
 allprojects { 
     apply plugin: 'java'
+    apply plugin: 'idea'
 
     repositories {
         jcenter()
@@ -113,10 +107,13 @@ def dirBuildFile = ant.properties['dir.buildfile'] // = "./build/main"
 def dirBuildNative = ant.properties['dir.build.native'] // = "./build/main/native"
 def dirNative = ant.properties['dir.native'] // = "./native"
 def dirWorkspace = ant.properties['dir.workspace'] // = "./"
-def dirPack = ant.properties['dir.pack'] // = ""
+def dirPack = ant.properties['dir.pack'] // = "./pack"
 def dirLibFile = ant.properties['dir.libfile'] // = ""
 def dirModFile = ant.properties['dir.modfile']  // ="./mod"
 def javaHome = "$System.env.JAVA_HOME"
+def vmVersion = ant.properties['vm.version'] // = "0.2.1"
+
+def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
 task compileNative(type:Exec) {
     doFirst { 
@@ -159,40 +156,62 @@ task compileNative(type:Exec) {
     }
 }
 
+task downloadVmDeps(type: Download) { 
+    overwrite false // TODO This seems to have no effect at all...
+    src([
+        "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/fastvm_v${vmVersion}.tar.gz",
+        "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
+    ])
+    dest 'build'
+}
+
+/*task testPrint {
+    if(project.hasProperty('myProp')) { 
+        print("it's set");
+    } else { 
+        print("it's not");
+    }
+}*/
+
+
+task collectDependentJars(type: Copy) { 
+    into "jars"
+    from { subprojects.configurations.runtime } 
+    from { subprojects.jar}
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+collectDependentJars.dependsOn build
+
+task prePack(type:Exec)  { commandLine 'sh', 'script/prepack.sh' }
+task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
+task pack(type: Tar) { 
+    archiveName = 'aion.tar.bz2'
+    destinationDir = file(dirPack)
+    compression = Compression.BZIP2
+
+    into('/aion/jars') { 
+        from "runtimeJars"
+        include '*.jar'
+    }
+    into('/aion/') { 
+        from "runtimeJars"
+        include '*.jar'
+    }
+    into('/aion/') { 
+        from dirWorkspace
+        include 'aion.sh', 'aion_gui.sh'
+    }
+}
+
+
+pack.dependsOn collectDependentJars 
+
 project.build.dependsOn("ant-3rd_build")
+project.build.dependsOn("downloadVmDeps")
 
 project(':modAionImpl') { 
     build.finalizedBy(compileNative)
 }
-
-/*
-task zip(type: Zip) {
-    from configurations.runtime.allArtifacts.files
-    from configurations.runtime
-    into 'myZip.zip'
-}*/
-/*
-task buildDist(type: Zip) { 
-    into 'jars'
-    from { subprojects.configurations.runtime } 
-    from { subprojects.jar}
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-*/
-
-task collectJars(type: Copy) { 
-    into 'build/jars'
-    from { subprojects.configurations.runtime } 
-    from { subprojects.jar}
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-task pack { 
-    
-}
-
-collectJars.dependsOn build
-pack.dependsOn collectJars
 
 /*
  3rd_build 							ANT
