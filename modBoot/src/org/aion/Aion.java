@@ -129,6 +129,7 @@ public class Aion {
             .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
+        // TODO-Ale: fix
         String[] filePath = new String[7];
         // Log/Database path
         if (!cfg.getLog().getLogFile()) {
@@ -141,10 +142,10 @@ public class Aion {
         }
         filePath[1] = cfg.getBasePath() + "/" + cfg.getDb().getPath();
         filePath[2] = Keystore.getKeystorePath();
-        filePath[3] = new Cli().getDstConfig();
-        filePath[4] = new Cli().getDstGenesis();
-        filePath[5] = CfgAion.getConfFilePath();
-        filePath[6] = CfgAion.getGenesisFilePath();
+        filePath[3] = cfg.getExecConfigPath();
+        filePath[4] = cfg.getExecGenesisPath();
+        filePath[5] = cfg.getInitialConfigPath();
+        filePath[6] = cfg.getInitialGenesisPath();
 
         String path =
                 "\n-------------------------------- USED PATHS --------------------------------" +
@@ -167,7 +168,7 @@ public class Aion {
 
         // always print the version string in the center of the Aion logo
         String versionStr = "v"+KERNEL_VERSION;
-        String networkStr = CfgAion.getNetwork();
+        String networkStr = cfg.getNetwork().toString();
         logo = appendLogo(logo, versionStr);
         logo = appendLogo(logo, networkStr);
 

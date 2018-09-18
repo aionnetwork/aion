@@ -44,10 +44,7 @@ import org.aion.zero.impl.GenesisBlockLoader;
 public final class CfgAion extends Cfg {
 
     private static String NETWORK = "mainnet";
-
-    private static String CONF_FILE_PATH = BASE_PATH + "/config/" + NETWORK + "/config.xml";
-
-    private static String GENESIS_FILE_PATH = BASE_PATH + "/config/" + NETWORK + "/genesis.json";
+    private Network network = Network.MAINNET;
 
     protected AionGenesis genesis;
 
@@ -56,6 +53,7 @@ public final class CfgAion extends Cfg {
     private static final int K = 9;
 
     private static final String NODE_ID_PLACEHOLDER = "[NODE-ID-PLACEHOLDER]";
+
 
     public CfgAion() {
         this.mode = "aion";
@@ -86,7 +84,7 @@ public final class CfgAion extends Cfg {
     @Override
     public void setGenesis() {
         try {
-            this.genesis = GenesisBlockLoader.loadJSON(GENESIS_FILE_PATH);
+            this.genesis = GenesisBlockLoader.loadJSON(getInitialGenesisPath());
         } catch (IOException | HeaderStructureException e) {
             System.out.println(String.format("Genesis load exception %s", e.getMessage()));
             System.out.println("defaulting to default AionGenesis configuration");
@@ -134,7 +132,7 @@ public final class CfgAion extends Cfg {
     }
 
     public void dbFromXML() {
-        File cfgFile = new File(CONF_FILE_PATH);
+        File cfgFile = new File(getInitialConfigPath());
         XMLInputFactory input = XMLInputFactory.newInstance();
         FileInputStream fis = null;
         try {
@@ -234,7 +232,7 @@ public final class CfgAion extends Cfg {
     @Override
     public boolean fromXML() {
         boolean shouldWriteBackToFile = false;
-        File cfgFile = new File(CONF_FILE_PATH);
+        File cfgFile = new File(getInitialConfigPath());
         if(!cfgFile.exists())
             return false;
         XMLInputFactory input = XMLInputFactory.newInstance();
@@ -310,7 +308,7 @@ public final class CfgAion extends Cfg {
 
         try {
 
-            sw = output.createXMLStreamWriter(new FileWriter(CONF_FILE_PATH));
+            sw = output.createXMLStreamWriter(new FileWriter(getExecConfigPath()));
             sw.writeStartDocument("utf-8", "1.0");
             sw.writeCharacters("\r\n");
             sw.writeStartElement("aion");
@@ -355,22 +353,6 @@ public final class CfgAion extends Cfg {
         }
     }
 
-    public static String getNetwork() {
-        return NETWORK;
-    }
-    public static String getConfFilePath() { return CONF_FILE_PATH; }
-    public static String getGenesisFilePath() { return GENESIS_FILE_PATH; }
-
-    public static void setNetwork(String value) {
-        NETWORK = value;
-    }
-    public static void setConfFilePath (String value) {
-        CONF_FILE_PATH = value;
-    }
-    public static void setGenesisFilePath (String value) {
-        GENESIS_FILE_PATH = value;
-    }
-  
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

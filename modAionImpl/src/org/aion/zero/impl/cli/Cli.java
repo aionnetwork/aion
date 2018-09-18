@@ -26,11 +26,16 @@ package org.aion.zero.impl.cli;
 import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
+import static org.aion.zero.impl.config.Network.determineNetwork;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.Console;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +47,7 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
-import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.RecoveryUtils;
 import picocli.CommandLine;
 
@@ -53,13 +58,8 @@ import picocli.CommandLine;
  */
 public class Cli {
 
+    // TODO-Ale: consider using initial path from cfg
     private final String BASE_PATH = System.getProperty("user.dir");
-
-    private String BASE_PATH_WITH_NETWORK = BASE_PATH + "/config/" + CfgAion.getNetwork();
-
-    private String dstConfig = BASE_PATH_WITH_NETWORK + "/config.xml";
-
-    private String dstGenesis = BASE_PATH_WITH_NETWORK + "/genesis.json";
 
     File keystoreDir =
             new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
@@ -82,30 +82,7 @@ public class Cli {
         }
     }
 
-    enum Network {
-        MAINNET,
-        CONQUEST;
-
-        @Override
-        public String toString() {
-            switch (this) {
-                case MAINNET:
-                    return "mainnet";
-                case CONQUEST:
-                    return "conquest";
-                default:
-                    throw new IllegalArgumentException();
-            }
-        }
-    }
-
-    private Network net = Network.MAINNET;
-
     public ReturnType call(final String[] args, Cfg cfg) {
-        return call(args, cfg, BASE_PATH);
-    }
-
-    public ReturnType call(final String[] args, Cfg cfg, String path) {
         try {
             // the preprocess method handles arguments that are separated by space
             // parsing populates the options object
@@ -143,53 +120,37 @@ public class Cli {
             // 2. determine the execution folder path
 
             if (options.getDirectory() != null) {
-                setDirectory(options.getDirectory());
+                setDirectory(options.getDirectory(), cfg);
                 // no return -> allow for other parameters combined with -d
             }
 
             // 3. can be influenced by the -d argument above
 
             if (options.getConfig() != null) {
-                String strNet = options.getConfig().toLowerCase();
+                // TODO-Ale test
+                String strNet = options.getConfig();
 
-                if (strNet.isEmpty()) {
-                    // no network given; use default path
-                    // for compatibility with old kernels
-                    CfgAion.setNetwork(strNet);
-                    File dir = new File(BASE_PATH + "/config");
-                    if (!dir.exists()) {
-                        dir.mkdirs();
-                    }
-                    CfgAion.setConfFilePath(BASE_PATH + "/config/config.xml");
-                    System.out.println("\nNew config generated for default (release) network.");
-                } else {
-                    net = determineNetwork(strNet);
+                if (!strNet.isEmpty()) {
+                    setNetwork(strNet, cfg);
+                }
 
-                    if (net != null) {
-                        strNet = net.toString();
-                        CfgAion.setNetwork(strNet);
-                        File dir = new File(BASE_PATH + "/config/" + net);
-                        if (!dir.exists()) {
-                            dir.mkdirs();
-                        }
-                        CfgAion.setConfFilePath(BASE_PATH + "/config/" + strNet + "/config.xml");
-                        System.out.println("\nNew config generated for " + strNet + ".");
-                    } else {
-                        printInvalidNetwork();
-                        return ReturnType.ERROR;
-                    }
+                File dir = cfg.getExecDirectory();
+                if (!dir.exists()) {
+                    dir.mkdirs();
                 }
 
                 cfg.fromXML();
                 cfg.setId(UUID.randomUUID().toString());
                 cfg.toXML(null);
+
+                System.out.println("\nNew config generated at " + cfg.getExecConfigPath() + ".");
                 return ReturnType.EXIT;
             }
 
             // 4. determine the network configuration
 
             if (options.getNetwork() != null) {
-                setNetwork(options.getConfig().toLowerCase());
+                setNetwork(options.getConfig(), cfg);
                 // no return -> allow for other parameters combined with -n
             }
 
@@ -234,9 +195,9 @@ public class Cli {
             }
 
             if (options.getSsl() != null) {
-                String[] paramters = options.getSsl();
+                String[] parameters = options.getSsl();
 
-                if (paramters.length == 0 || paramters.length == 2) {
+                if (parameters.length == 0 || parameters.length == 2) {
                     createKeystoreDirIfMissing();
                     Console console = System.console();
                     checkConsoleExists(console);
@@ -247,7 +208,7 @@ public class Cli {
                     scriptArgs.add(getCertName(console));
                     scriptArgs.add(getCertPass(console));
                     // add the hostname and ip optionally passed in as cli args
-                    scriptArgs.addAll(Arrays.asList(paramters));
+                    scriptArgs.addAll(Arrays.asList(parameters));
                     new ProcessBuilder(scriptArgs).inheritIO().start().waitFor();
                     return EXIT;
                 } else {
@@ -403,132 +364,6 @@ public class Cli {
         }
     }
 
-    private void setDirectory(String directory) {
-        // TODO
-        //        // Determines database folder path
-        //        case "-d":
-        //        case "--datadir":
-        //        if ( (args.length == 2 || args.length == 4) && isValid(args[1]))  {
-        //
-        //            // -d [directory]
-        //            if (args.length == 2) {
-        //
-        //                copyNetwork(path + "/" + args[1], net);
-        //                cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
-        //                cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
-        //                Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
-        //                return RUN;
-        //
-        //            }
-        //
-        //            // -d [directory] -n [network]
-        //            else if (isValid(args[3])) {
-        //
-        //                String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-        //                call(newArgs, cfg);
-        //
-        //                copyNetwork(path + "/" + args[1], net);
-        //                cfg.getLog().setLogPath(args[1] + "/" + net + "/log");
-        //                cfg.getDb().setDatabasePath(args[1] + "/" + net + "/database");
-        //                Keystore.setKeystorePath(path + "/" + args[1] + "/" + net + "/keystore");
-        //                return RUN;
-        //
-        //            } else if (!(args[2].equals("-n")||args[2].equals("--network"))) {
-        //                System.out.println("\nInvalid multi arguments!\n");
-        //                printHelp();
-        //                return ERROR;
-        //
-        //            } else {
-        //                System.out.println("\nInvalid network selected!");
-        //                System.out.println("--- Available Networks ---");
-        //                System.out.println("    mainnet , conquest");
-        //                System.out.println("--------------------------\n");
-        //                return ERROR;
-        //            }
-        //
-        //        } else {
-        //            System.out.println("\nInvalid datadir selected!");
-        //            System.out.println("Please choose valid directory name!\n");
-        //            return ERROR;
-        //        }
-
-    }
-
-    private void setNetwork(String network) {
-        // TODO
-        //        case "-n":
-        //        case "--network":
-        //        if ( (args.length == 2 || args.length == 4) && isValid(args[1])) {
-        //
-        //            net = determineNetwork(args[1].toLowerCase());
-        //
-        //            switch (net) {
-        //                case MAINNET:
-        //                case CONQUEST:
-        //
-        //                    // -n [network]
-        //                    if (args.length == 2) {
-        //
-        //                        CfgAion.setNetwork(net.toString());
-        //                        BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" +
-        // CfgAion.getNetwork();
-        //                        CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
-        //                        CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK +
-        // "/genesis.json"));
-        //
-        //                        copyNetwork(path, net);
-        //                        cfg.getLog().setLogPath(net.toString() + "/log");
-        //                        cfg.getDb().setDatabasePath(net.toString() + "/database");
-        //                        Keystore.setKeystorePath(path + "/" + net.toString() +
-        // "/keystore");
-        //                        return RUN;
-        //
-        //                    }
-        //
-        //                    // -n [network] -d [directory]
-        //                    else if ((args[2].equals("-d")||args[2].equals("--datadir")) &&
-        // isValid(args[3])) {
-        //
-        //                        CfgAion.setNetwork(net.toString());
-        //                        BASE_PATH_WITH_NETWORK = BASE_PATH  + "/config/" +
-        // CfgAion.getNetwork();
-        //                        CfgAion.setConfFilePath(BASE_PATH_WITH_NETWORK + "/config.xml");
-        //                        CfgAion.setGenesisFilePath((BASE_PATH_WITH_NETWORK +
-        // "/genesis.json"));
-        //
-        //                        String[] newArgs = Arrays.copyOfRange(args, 2, args.length);
-        //                        call(newArgs, cfg);
-        //                        return RUN;
-        //
-        //                    } else if (!(args[2].equals("-d")||args[2].equals("--datadir"))) {
-        //                        System.out.println("\nInvalid multi arguments!\n");
-        //                        printHelp();
-        //                        return ERROR;
-        //
-        //                    } else {
-        //                        System.out.println("\nInvalid datadir selected!");
-        //                        System.out.println("Please choose valid directory name!\n");
-        //                        return ERROR;
-        //                    }
-        //
-        //                default:
-        //                    System.out.println("\nInvalid network selected!\n");
-        //                    System.out.println("--- Available Networks ---");
-        //                    System.out.println("    mainnet, conquest");
-        //                    System.out.println("--------------------------\n");
-        //                    return ERROR;
-        //            }
-        //
-        //        } else {
-        //            System.out.println("\nInvalid network selected!");
-        //            System.out.println("--- Available Networks ---");
-        //            System.out.println("    mainnet , conquest");
-        //            System.out.println("--------------------------\n");
-        //            return ERROR;
-        //        }
-
-    }
-
     /** Print the CLI help info. */
     private void printHelp() {
         String usage = parser.getUsageMessage();
@@ -566,35 +401,31 @@ public class Cli {
                 "p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
     }
 
-    /**
-     * Determines the correct network (mainnet / conquest) enum based on argument
-     *
-     * @param arg CLI input of -n [network]
-     * @return Network
-     */
-    private Network determineNetwork(String arg) {
-        Network net;
-        switch (arg) {
-            case "mainnet":
-                net = Network.MAINNET;
-                break;
-            case "testnet":
-                net = Network.CONQUEST;
-                break;
-            case "conquest":
-                net = Network.CONQUEST;
-                break;
-            default:
-                net = null;
+    private void setDirectory(String directory, Cfg cfg) {
+        // use the path ignoring the current base path
+        File file = new File(directory);
+        if (!file.isAbsolute()) {
+            // add the directory to the base path
+            file = new File(BASE_PATH, directory);
         }
-        return net;
+        cfg.setExecDirectory(file);
+    }
+
+    private void setNetwork(String network, Cfg cfg) {
+        Network net = determineNetwork(network.toLowerCase());
+        if (net == null) {
+            // print error message and set default value
+            printInvalidNetwork();
+            net = Network.MAINNET;
+        }
+        cfg.setNetwork(net.toString());
     }
 
     private void printInvalidNetwork() {
         System.out.println("\nInvalid network selected!\n");
-        System.out.println("--- Available Networks ---");
-        System.out.println("    mainnet, conquest");
-        System.out.println("--------------------------\n");
+        System.out.println("------ Available Networks ------");
+        System.out.println(Arrays.toString(Network.values()));
+        System.out.println("--------------------------------\n");
     }
 
     /**
@@ -617,8 +448,8 @@ public class Cli {
 
         copyRecursively(src1, dst1);
         copyRecursively(src2, dst2);
-        dstConfig = dst1.toString();
-        dstGenesis = dst2.toString();
+        //        dstConfig = dst1.toString();
+        //        dstGenesis = dst2.toString();
     }
 
     /**
@@ -864,11 +695,11 @@ public class Cli {
     }
 
     public String getDstConfig() {
-        return dstConfig;
+        return ""; // dstConfig;
     }
 
     public String getDstGenesis() {
-        return dstGenesis;
+        return ""; // dstGenesis;
     }
 
     // Methods below taken from FileUtils class
