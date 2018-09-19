@@ -157,13 +157,25 @@ subprojects {
 
 compileNative.dependsOn project(':modCrypto').getTasksByName('compileNative', false);
 
-task downloadVmDeps(type: Download) { 
+task downloadVmDepsGit(type: Download) { 
     overwrite false // TODO This seems to have no effect at all...
     src([
         "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/fastvm_v${vmVersion}.tar.gz",
         "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
     ])
     dest 'build'
+}
+
+task extractVmDepsGit(dependsOn: downloadVmDepsGit, type: Copy) { 
+    from tarTree("build/fastvm_v${vmVersion}.tar.gz") 
+    from tarTree("build/solidity_v${vmVersion}.tar.gz") 
+    into "${dirNative}/linux"
+    doLast {
+        ant.move file:  "${dirNative}/linux/fastvm_v${vmVersion}",
+                 tofile: "${dirNative}/linux/fastvm"
+        ant.move file:  "${dirNative}/linux/solidity_v${vmVersion}",
+                 tofile: "${dirNative}/linux/solidity"
+    }
 }
 
 /*task testPrint {
@@ -181,7 +193,7 @@ task collectDependentJars(type: Copy) {
     from { subprojects.jar}
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
-collectDependentJars.dependsOn build
+//collectDependentJars.dependsOn build
 
 task prePack(type:Exec)  { commandLine 'sh', 'script/prepack.sh' }
 task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
@@ -208,7 +220,8 @@ task pack(type: Tar) {
 pack.dependsOn collectDependentJars 
 
 project.build.dependsOn("ant-3rd_build")
-project.build.dependsOn("downloadVmDeps")
+project.build.dependsOn("extractVmDepsGit")
+project.build.dependsOn("collectDependentJars")
 
 project(':modAionImpl') { 
     build.finalizedBy(compileNative)

@@ -23,7 +23,6 @@
 package org.aion.gui.model;
 
 import org.aion.api.IAionAPI;
-import org.aion.api.impl.internal.Message;
 import org.aion.api.type.ApiMsg;
 import org.aion.api.type.Block;
 import org.aion.api.type.BlockDetails;
@@ -38,7 +37,6 @@ import org.aion.wallet.connector.dto.BlockDTO;
 import org.aion.wallet.connector.dto.SendTransactionDTO;
 import org.aion.wallet.connector.dto.TransactionResponseDTO;
 import org.aion.wallet.console.ConsoleManager;
-import org.aion.wallet.dto.AccountDTO;
 import org.aion.wallet.dto.TransactionDTO;
 import org.aion.wallet.exception.ValidationException;
 import org.junit.Before;
@@ -57,6 +55,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import static org.aion.gui.model.ApiReturnCodes.r_tx_Init_VALUE;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -314,7 +313,7 @@ public class TransactionProcessorTest {
         MsgRsp sendSignedTransactionMsgResp = mock(MsgRsp.class);
         when(sendSignedTransactionApiMsg.getObject()).thenReturn(sendSignedTransactionMsgResp);
 
-        when(sendSignedTransactionMsgResp.getStatus()).thenReturn((byte)Message.Retcode.r_tx_Init_VALUE);
+        when(sendSignedTransactionMsgResp.getStatus()).thenReturn((byte)r_tx_Init_VALUE);
         Hash256 txHash = new Hash256("0x8badf00d99999999999999999999999999999999999999999999999999999999");
         when(sendSignedTransactionMsgResp.getTxHash()).thenReturn(txHash);
         when(sendSignedTransactionMsgResp.getError()).thenReturn("NotAnError");
@@ -322,7 +321,7 @@ public class TransactionProcessorTest {
         TransactionProcessor unit = new TransactionProcessor(
                 kernelConnection, accountManager, balanceRetriever, executor, consoleManager);
         TransactionResponseDTO response = unit.sendTransaction(dto);
-        assertThat(response.getStatus(), is((byte)Message.Retcode.r_tx_Init_VALUE));
+        assertThat(response.getStatus(), is((byte)r_tx_Init_VALUE));
         assertThat(response.getTxHash(), is(txHash));
         assertThat(response.getError(), is("NotAnError"));
     }
