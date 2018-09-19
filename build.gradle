@@ -188,12 +188,11 @@ task extractVmDepsGit(dependsOn: downloadVmDepsGit, type: Copy) {
 
 
 task collectDependentJars(type: Copy) { 
-    into "jars"
+    into dirRuntimeJars
     from { subprojects.configurations.runtime } 
     from { subprojects.jar}
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
-//collectDependentJars.dependsOn build
 
 task prePack(type:Exec)  { commandLine 'sh', 'script/prepack.sh' }
 task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
@@ -203,29 +202,52 @@ task pack(type: Tar) {
     compression = Compression.BZIP2
 
     into('/aion/jars') { 
-        from "runtimeJars"
-        include '*.jar'
-    }
-    into('/aion/') { 
-        from "runtimeJars"
+        from dirRuntimeJars 
         include '*.jar'
     }
     into('/aion/') { 
         from dirWorkspace
         include 'aion.sh', 'aion_gui.sh'
     }
+    into('/aion/native') {
+        from dirNative
+        include '**'
+    }
+    into('/aion/config') {
+        from "${dirPack}/config"
+        include '**'
+    }
+    into('/aion/rt') {
+        from "${dirPack}/rt"
+        include '**'
+    }
+    into('/aion/web3') {
+        from "${dirPack}/web3"
+        include '**'
+    }
+    into('/aion/docs') {
+        from "${dirPack}/docs"
+        include '**'
+    }
+    into('/aion/clientAPI') {
+        from "${dirPack}/clientAPI"
+        include '**'
+    }
+    into('/aion/script') {
+        from "${dirPack}/script"
+        include 'generateSslCert.sh', 'nohup_wrapper.sh'
+    }
 }
 
-
+pack.dependsOn prePack
 pack.dependsOn collectDependentJars 
+pack.finalizedBy(postPack)
 
 project.build.dependsOn("ant-3rd_build")
 project.build.dependsOn("extractVmDepsGit")
 project.build.dependsOn("collectDependentJars")
 
-project(':modAionImpl') { 
-    build.finalizedBy(compileNative)
-}
+project(':modAionImpl') { build.finalizedBy(compileNative) }
 
 /*
  3rd_build 							ANT
