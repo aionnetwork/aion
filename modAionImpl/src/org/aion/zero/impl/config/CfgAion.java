@@ -26,12 +26,10 @@
 package org.aion.zero.impl.config;
 
 import java.io.*;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import javax.xml.stream.*;
-
 import com.google.common.base.Objects;
 import org.aion.mcf.config.*;
 import org.aion.zero.exceptions.HeaderStructureException;
@@ -231,10 +229,18 @@ public final class CfgAion extends Cfg {
 
     @Override
     public boolean fromXML() {
+        return fromXML(new File(getInitialConfigPath()));
+    }
+
+    @Override
+    public boolean fromXML(File cfgFile) {
+        // resets internal data containing network and path
+        this.resetInternal();
+
         boolean shouldWriteBackToFile = false;
-        File cfgFile = new File(getInitialConfigPath());
-        if(!cfgFile.exists())
+        if (!cfgFile.exists()) {
             return false;
+        }
         XMLInputFactory input = XMLInputFactory.newInstance();
         FileInputStream fis;
         try {

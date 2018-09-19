@@ -120,7 +120,9 @@ public class Cli {
             // 2. determine the execution folder path
 
             if (options.getDirectory() != null) {
-                setDirectory(options.getDirectory(), cfg);
+                if (!setDirectory(options.getDirectory(), cfg)) {
+                    return ERROR;
+                }
                 // no return -> allow for other parameters combined with -d
             }
 
@@ -401,14 +403,31 @@ public class Cli {
                 "p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
     }
 
-    private void setDirectory(String directory, Cfg cfg) {
+    /**
+     * Sets the directory where the kernel will be executed.
+     *
+     * @param directory the directory to be used
+     * @param cfg the configuration file containing the information
+     * @return {@code true} when the given directory is valid, {@code false} otherwise.
+     */
+    private boolean setDirectory(String directory, Cfg cfg) {
         // use the path ignoring the current base path
         File file = new File(directory);
         if (!file.isAbsolute()) {
             // add the directory to the base path
             file = new File(BASE_PATH, directory);
         }
-        cfg.setExecDirectory(file);
+
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+
+        if (file != null && file.isDirectory() && file.canWrite()) {
+            cfg.setExecDirectory(file);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void setNetwork(String network, Cfg cfg) {

@@ -150,9 +150,21 @@ public abstract class Cfg {
         return getExecDirectory().getAbsolutePath();
     }
 
+    protected void resetInternal() {
+        logDirectory = null;
+        databaseDirectory = null;
+        execDirectory = null;
+        network = null;
+
+        BASE_PATH = INITIAL_PATH;
+
+        useOldSetup = false;
+        ignoreOldSetup = false;
+    }
+
     /** Returns the directory location where the kernel configuration and persistence is managed. */
     public File getExecDirectory() {
-        if (!ignoreOldSetup && useOldSetup) {
+        if ((!ignoreOldSetup && useOldSetup) || execDirectory == null) {
             return new File(INITIAL_PATH);
         } else {
             return new File(execDirectory, network.toString());
@@ -168,6 +180,8 @@ public abstract class Cfg {
      */
     public void setExecDirectory(File _execDirectory) {
         this.execDirectory = _execDirectory;
+        // default network when only datadir is set
+        this.network = "mainnet";
         this.ignoreOldSetup = true;
     }
 
@@ -307,6 +321,8 @@ public abstract class Cfg {
      *     current config
      */
     public abstract boolean fromXML();
+
+    public abstract boolean fromXML(File configFile);
 
     public abstract void toXML(final String[] args);
 

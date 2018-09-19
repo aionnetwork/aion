@@ -22,10 +22,11 @@
  */
 package org.aion.zero.impl.cli;
 
-import static org.aion.zero.impl.cli.Cli.ReturnType.*;
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
+import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
+import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -36,113 +37,195 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
+import org.aion.zero.impl.cli.Cli.ReturnType;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
 
+/** CliTest for new version with use of different networks. */
+@RunWith(JUnitParamsRunner.class)
 public class CliTest {
 
-    private static final Cli cli = Mockito.spy(new Cli());
+    private Cli cli = new Cli();
+    private CfgAion cfg = CfgAion.inst();
 
-    CfgAion cfg = CfgAion.inst();
+    private static final String BASE_PATH = System.getProperty("user.dir");
+    private static final String module = "modAionImpl";
+    private static final String initialConfigFile = "test_resources/config.xml";
+    private static final String dataDirectory = "datadir";
+    private static final File path = new File(BASE_PATH, dataDirectory);
 
-    String BASE_PATH = cfg.getBasePath();
+    private static File config =
+            BASE_PATH.contains(module)
+                    ? new File(BASE_PATH, initialConfigFile)
+                    : new File(BASE_PATH, module + "/" + initialConfigFile);
 
-//    /**
-//     * Sets up a spy Cli class that returns the String "password" when the cli.readPassword() is
-//     * called using any two params.
-//     */
-//    @Before
-//    public void setup() throws IOException {
-//        doReturn("password").when(cli).readPassword(any(), any());
-//
-//        // Copies config folder recursively
-//        File src = new File(BASE_PATH + "/../modBoot/resource");
-//        File dst = new File(BASE_PATH + "/config");
-//        copyRecursively(src, dst);
-//
-//        CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");
-//        CfgAion.setGenesisFilePath(BASE_PATH + "/config/mainnet/genesis.json");
-//        Keystore.setKeystorePath(BASE_PATH + "/keystore");
-//    }
-//
-//    @After
-//    public void shutdown() {
-//        // Deletes created folders recursively
-//        File path1 = new File(BASE_PATH + "/aaaaaaaa");
-//        File path2 = new File(BASE_PATH + "/abbbbbbb");
-//        File path3 = new File(BASE_PATH + "/abcccccc");
-//        File path4 = new File(BASE_PATH + "/keystore");
-//        File path5 = new File(BASE_PATH + "/config");
-//        if (path1.exists()
-//                || path2.exists()
-//                || path3.exists()
-//                || path4.exists()
-//                || path5.exists()) {
-//            deleteRecursively(path1);
-//            deleteRecursively(path2);
-//            deleteRecursively(path3);
-//            deleteRecursively(path4);
-//            deleteRecursively(path5);
-//        }
-//
-//        CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");
-//        CfgAion.setGenesisFilePath(BASE_PATH + "/config/mainnet/genesis.json");
-//        Keystore.setKeystorePath(BASE_PATH + "/keystore");
-//    }
+    @Before
+    public void setup() {
+        // reset config values
+        cfg.fromXML(config);
+    }
+
+    @After
+    public void shutdown() {
+        deleteRecursively(path);
+    }
 
     /** Ensures that the <i>-h</i> and <i>--help</i> arguments do not fail. */
     @Test
     public void testHelp() {
-        assertEquals(EXIT, cli.call(new String[] {"-h"}, CfgAion.inst()));
-        assertEquals(EXIT, cli.call(new String[] {"--help"}, CfgAion.inst()));
+        assertThat(cli.call(new String[] {"-h"}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {"--help"}, cfg)).isEqualTo(EXIT);
     }
 
     /** Ensures that the <i>-v</i> and <i>--version</i> arguments do not fail. */
     @Test
     public void testVersion() {
-        assertEquals(EXIT, cli.call(new String[] {"-v"}, CfgAion.inst()));
-        assertEquals(EXIT, cli.call(new String[] {"--version"}, CfgAion.inst()));
+        assertThat(cli.call(new String[] {"-v"}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {"--version"}, cfg)).isEqualTo(EXIT);
+    }
+
+    /** Parameters for testing {@link #testDirectory(String[], ReturnType, String)}. */
+    @SuppressWarnings("unused")
+    private Object parametersWithDatadir() {
+        List<Object> parameters = new ArrayList<>();
+
+        String[] options = new String[] {"-d", "--datadir"};
+        String expected = new File(path, "mainnet").getAbsolutePath();
+
+        for (String op : options) {
+            // with relative path
+            parameters.add(new Object[] {new String[] {op, dataDirectory}, RUN, expected});
+            // with absolute path
+            parameters.add(new Object[] {new String[] {op, path.getAbsolutePath()}, RUN, expected});
+            // without value
+            parameters.add(new Object[] {new String[] {op}, ERROR, BASE_PATH});
+            // with invalid characters (Linux & Win)
+            parameters.add(new Object[] {new String[] {op, "/\\<>:\"|?*"}, ERROR, BASE_PATH});
+        }
+
+        // setup for subdirectories
+        String dir = dataDirectory + "/subfolder";
+        File path = new File(BASE_PATH, dir);
+        expected = new File(path, "mainnet").getAbsolutePath();
+
+        for (String op : options) {
+            // with relative path with subdirectories
+            parameters.add(new Object[] {new String[] {op, dir}, RUN, expected});
+            // with multiple values
+            parameters.add(new Object[] {new String[] {op, dataDirectory, dir}, ERROR, BASE_PATH});
+        }
+
+        return parameters.toArray();
+    }
+
+    /** Ensures that the <i>-d</i> and <i>--datadir</i> arguments do not fail. */
+    @Test
+    @Parameters(method = "parametersWithDatadir")
+    public void testDirectory(String[] input, ReturnType expectedReturn, String expectedPath) {
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getExecConfigPath())
+                .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
+        assertThat(cfg.getExecGenesisPath())
+                .isEqualTo(new File(expectedPath, "config/genesis.json").getAbsolutePath());
+        assertThat(cfg.getDatabasePath())
+                .isEqualTo(new File(expectedPath, "database").getAbsolutePath());
+        assertThat(cfg.getLogPath()).isEqualTo(new File(expectedPath, "log").getAbsolutePath());
+        assertThat(cfg.getKeystorePath())
+                .isEqualTo(new File(expectedPath, "keystore").getAbsolutePath());
     }
 
     /** Ensures that the <i>-i</i> and <i>--info</i> arguments do not fail. */
     @Test
+    @Ignore
     public void testInfo() {
-        assertEquals(EXIT, cli.call(new String[] {"-i"}, CfgAion.inst()));
-        assertEquals(EXIT, cli.call(new String[] {"--info"}, CfgAion.inst()));
+        assertThat(cli.call(new String[] {"-i"}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {"--info"}, cfg)).isEqualTo(EXIT);
     }
 
-//    /** Ensures correct behavior for the <i>-c</i> and <i>--config</i> arguments. */
-//    @Test
-//    public void testConfig() {
-//        // compatibility with old kernels
-//        assertEquals(EXIT, cli.call(new String[] {"-c"}, CfgAion.inst()));
-//        assertEquals(EXIT, cli.call(new String[] {"--config"}, CfgAion.inst()));
-//
-//        // available networks
-//        for (Cli.Network net : Cli.Network.values()) {
-//            assertEquals(EXIT, cli.call(new String[] {"-c", net.toString()}, CfgAion.inst()));
-//            assertEquals(EXIT, cli.call(new String[] {"--config", net.toString()}, CfgAion.inst()));
-//        }
-//
-//        // accepted alias
-//        assertEquals(EXIT, cli.call(new String[] {"-c", "testnet"}, CfgAion.inst()));
-//        assertEquals(EXIT, cli.call(new String[] {"--config", "testnet"}, CfgAion.inst()));
-//
-//        // incorrect value
-//        assertEquals(ERROR, cli.call(new String[] {"-c", "random"}, CfgAion.inst()));
-//        assertEquals(ERROR, cli.call(new String[] {"--config", "random"}, CfgAion.inst()));
-//    }
+    //    /**
+    //     * Sets up a spy Cli class that returns the String "password" when the cli.readPassword()
+    // is
+    //     * called using any two params.
+    //     */
+    //    @Before
+    //    public void setup() throws IOException {
+    //        doReturn("password").when(cli).readPassword(any(), any());
+    //
+    //        // Copies config folder recursively
+    //        File src = new File(BASE_PATH + "/../modBoot/resource");
+    //        File dst = new File(BASE_PATH + "/config");
+    //        copyRecursively(src, dst);
+    //
+    //        CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");
+    //        CfgAion.setGenesisFilePath(BASE_PATH + "/config/mainnet/genesis.json");
+    //        Keystore.setKeystorePath(BASE_PATH + "/keystore");
+    //    }
+    //
+    //    @After
+    //    public void shutdown() {
+    //        // Deletes created folders recursively
+    //        File path1 = new File(BASE_PATH + "/aaaaaaaa");
+    //        File path2 = new File(BASE_PATH + "/abbbbbbb");
+    //        File path3 = new File(BASE_PATH + "/abcccccc");
+    //        File path4 = new File(BASE_PATH + "/keystore");
+    //        File path5 = new File(BASE_PATH + "/config");
+    //        if (path1.exists()
+    //                || path2.exists()
+    //                || path3.exists()
+    //                || path4.exists()
+    //                || path5.exists()) {
+    //            deleteRecursively(path1);
+    //            deleteRecursively(path2);
+    //            deleteRecursively(path3);
+    //            deleteRecursively(path4);
+    //            deleteRecursively(path5);
+    //        }
+    //
+    //        CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");
+    //        CfgAion.setGenesisFilePath(BASE_PATH + "/config/mainnet/genesis.json");
+    //        Keystore.setKeystorePath(BASE_PATH + "/keystore");
+    //    }
+
+    //    /** Ensures correct behavior for the <i>-c</i> and <i>--config</i> arguments. */
+    //    @Test
+    //    public void testConfig() {
+    //        // compatibility with old kernels
+    //        assertEquals(EXIT, cli.call(new String[] {"-c"}, CfgAion.inst()));
+    //        assertEquals(EXIT, cli.call(new String[] {"--config"}, CfgAion.inst()));
+    //
+    //        // available networks
+    //        for (Cli.Network net : Cli.Network.values()) {
+    //            assertEquals(EXIT, cli.call(new String[] {"-c", net.toString()}, CfgAion.inst()));
+    //            assertEquals(EXIT, cli.call(new String[] {"--config", net.toString()},
+    // CfgAion.inst()));
+    //        }
+    //
+    //        // accepted alias
+    //        assertEquals(EXIT, cli.call(new String[] {"-c", "testnet"}, CfgAion.inst()));
+    //        assertEquals(EXIT, cli.call(new String[] {"--config", "testnet"}, CfgAion.inst()));
+    //
+    //        // incorrect value
+    //        assertEquals(ERROR, cli.call(new String[] {"-c", "random"}, CfgAion.inst()));
+    //        assertEquals(ERROR, cli.call(new String[] {"--config", "random"}, CfgAion.inst()));
+    //    }
 
     /** Tests the -a create arguments do not fail. */
     @Test
+    @Ignore
     public void testCreateAccount() {
         String args[] = {"-a", "create"};
         assertEquals(EXIT, cli.call(args, CfgAion.inst()));
@@ -150,6 +233,7 @@ public class CliTest {
 
     /** Tests the -a list arguments do not fail. */
     @Test
+    @Ignore
     public void testListAccounts() {
         String args[] = {"-a", "list"};
         assertEquals(EXIT, cli.call(args, CfgAion.inst()));
@@ -157,6 +241,7 @@ public class CliTest {
 
     /** Tests the -a export arguments do not fail on a valid account. */
     @Test
+    @Ignore
     public void testExportPrivateKey() {
         String account = Keystore.create("password");
 
@@ -169,6 +254,7 @@ public class CliTest {
      * valid account.
      */
     @Test
+    @Ignore
     public void testExportSubstringOfAccount() {
         String account = Keystore.create("password");
         String substrAcc = account.substring(1);
@@ -179,6 +265,7 @@ public class CliTest {
 
     /** Tests the -a import arguments do not fail on a fail import key. */
     @Test
+    @Ignore
     public void testImportPrivateKey() {
         ECKey key = ECKeyFac.inst().create();
 
@@ -188,6 +275,7 @@ public class CliTest {
 
     /** Tests the -a import arguments fail when a non-private key is supplied. */
     @Test
+    @Ignore
     public void testImportNonPrivateKey() {
         String account = Keystore.create("password");
 
@@ -197,6 +285,7 @@ public class CliTest {
 
     /** Tests the -a import arguments do not fail when a valid private key is supplied. */
     @Test
+    @Ignore
     public void testImportPrivateKey2() {
         ECKey key = ECKeyFac.inst().create();
         System.out.println("Original address    : " + Hex.toHexString(key.getAddress()));
@@ -214,104 +303,64 @@ public class CliTest {
 
     /** Tests the -a import arguments fail given an invalid private key. */
     @Test
+    @Ignore
     public void testImportPrivateKeyWrong() {
         String[] args = {"-a", "import", "hello"};
         assertEquals(ERROR, cli.call(args, CfgAion.inst()));
     }
 
-    /**
-     * Test the -d | --datadir option to see if; 1. Access the correct dbPath 2. Defaults correctly
-     * to "database"
-     */
-    @Test
-    public void testDatadir() {
-
-        final String[][] networkArgs =
-                new String[][] {
-                    {"-d", ""}, // Unspecified
-                    {"-d", "{@.@}"}, // Invalid (illegal characters)
-                    {"-d", "test_db", "test"}, // Invalid (number of arguments)
-                    {"-d", "aaaaaaaa"}, // Valid
-                    {"-d", "abbbbbbb"}, // Valid
-                };
-
-        Cli cli = new Cli();
-
-        String logOG = cfg.getLog().getLogPath();
-        String dbOG = cfg.getDb().getPath();
-        System.out.println(logOG + " " + dbOG);
-
-        System.out.println("Invalid Datadir:");
-        assertEquals(ERROR, cli.call(networkArgs[0], cfg));
-        assertEquals(ERROR, cli.call(networkArgs[1], cfg));
-        assertEquals(ERROR, cli.call(networkArgs[2], cfg));
-
-        cfg.getLog().setLogPath(logOG);
-        cfg.getDb().setPath(dbOG);
-        System.out.println(cfg.getLog().getLogPath() + " " + cfg.getDb().getPath());
-
-        System.out.println("\nValid Datadir 1: " + networkArgs[3][1]);
-        assertEquals(RUN, cli.call(networkArgs[3], cfg));
-        assertEquals("aaaaaaaa/mainnet/database", cfg.getDb().getPath());
-        assertEquals("aaaaaaaa/mainnet/log", cfg.getLog().getLogPath());
-        assertEquals(BASE_PATH + "/aaaaaaaa/mainnet/keystore", Keystore.getKeystorePath());
-        printPaths(BASE_PATH, cfg, cli);
-
-        System.out.println("\nValid Datadir 2: " + networkArgs[4][1]);
-        assertEquals(RUN, cli.call(networkArgs[4], cfg));
-        assertEquals("abbbbbbb/mainnet/database", cfg.getDb().getPath());
-        assertEquals("abbbbbbb/mainnet/log", cfg.getLog().getLogPath());
-        assertEquals(BASE_PATH + "/abbbbbbb/mainnet/keystore", Keystore.getKeystorePath());
-        printPaths(BASE_PATH, cfg, cli);
-    }
-
-//    /**
-//     * Test the -n | --network option to see if; 1. Access the correct CONF_FILE_PATH 2. Access the
-//     * correct GENESIS_FILE_PATH 3. Defaults correctly to "mainnet"
-//     */
-//    @Test
-//    public void testNetwork() {
-//
-//        final String[][] networkArgs =
-//                new String[][] {
-//                    {"-n", ""}, // Unspecified
-//                    {"-n", "{@.@}"}, // Invalid (illegal characters)
-//                    {"-n", "testnet", "test"}, // Invalid (number of arguments)
-//                    {"-n", "mainnet"}, // Mainnet
-//                    {"-n", "testnet"}, // Testnet
-//                    {"-n", "conquest"}, // Conquest
-//                };
-//
-//        Cli cli = new Cli();
-//
-//        System.out.println("Invalid Networks:");
-//        assertEquals(ERROR, cli.call(networkArgs[0], cfg));
-//        assertEquals(ERROR, cli.call(networkArgs[1], cfg));
-//        assertEquals(ERROR, cli.call(networkArgs[2], cfg));
-//
-//        System.out.println("\nValid Network 1: " + networkArgs[3][1]);
-//        assertEquals(RUN, cli.call(networkArgs[3], cfg));
-//        assertEquals("mainnet", CfgAion.getNetwork());
-//        assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath());
-//        assertEquals(BASE_PATH + "/config/mainnet/genesis.json", CfgAion.getGenesisFilePath());
-//        printPaths(BASE_PATH, cfg, cli);
-//
-//        System.out.println("\nValid Network 2: " + networkArgs[4][1]);
-//        assertEquals(RUN, cli.call(networkArgs[4], cfg));
-//        assertEquals("conquest", CfgAion.getNetwork());
-//        assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath());
-//        assertEquals(BASE_PATH + "/config/conquest/genesis.json", CfgAion.getGenesisFilePath());
-//        printPaths(BASE_PATH, cfg, cli);
-//
-//        System.out.println("\nValid Network 3: " + networkArgs[5][1]);
-//        assertEquals(RUN, cli.call(networkArgs[5], cfg));
-//        assertEquals("conquest", CfgAion.getNetwork());
-//        assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath());
-//        assertEquals(BASE_PATH + "/config/conquest/genesis.json", CfgAion.getGenesisFilePath());
-//        printPaths(BASE_PATH, cfg, cli);
-//    }
+    //    /**
+    //     * Test the -n | --network option to see if; 1. Access the correct CONF_FILE_PATH 2.
+    // Access the
+    //     * correct GENESIS_FILE_PATH 3. Defaults correctly to "mainnet"
+    //     */
+    //    @Test
+    //    public void testNetwork() {
+    //
+    //        final String[][] networkArgs =
+    //                new String[][] {
+    //                    {"-n", ""}, // Unspecified
+    //                    {"-n", "{@.@}"}, // Invalid (illegal characters)
+    //                    {"-n", "testnet", "test"}, // Invalid (number of arguments)
+    //                    {"-n", "mainnet"}, // Mainnet
+    //                    {"-n", "testnet"}, // Testnet
+    //                    {"-n", "conquest"}, // Conquest
+    //                };
+    //
+    //        Cli cli = new Cli();
+    //
+    //        System.out.println("Invalid Networks:");
+    //        assertEquals(ERROR, cli.call(networkArgs[0], cfg));
+    //        assertEquals(ERROR, cli.call(networkArgs[1], cfg));
+    //        assertEquals(ERROR, cli.call(networkArgs[2], cfg));
+    //
+    //        System.out.println("\nValid Network 1: " + networkArgs[3][1]);
+    //        assertEquals(RUN, cli.call(networkArgs[3], cfg));
+    //        assertEquals("mainnet", CfgAion.getNetwork());
+    //        assertEquals(BASE_PATH + "/config/mainnet/config.xml", CfgAion.getConfFilePath());
+    //        assertEquals(BASE_PATH + "/config/mainnet/genesis.json",
+    // CfgAion.getGenesisFilePath());
+    //        printPaths(BASE_PATH, cfg, cli);
+    //
+    //        System.out.println("\nValid Network 2: " + networkArgs[4][1]);
+    //        assertEquals(RUN, cli.call(networkArgs[4], cfg));
+    //        assertEquals("conquest", CfgAion.getNetwork());
+    //        assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath());
+    //        assertEquals(BASE_PATH + "/config/conquest/genesis.json",
+    // CfgAion.getGenesisFilePath());
+    //        printPaths(BASE_PATH, cfg, cli);
+    //
+    //        System.out.println("\nValid Network 3: " + networkArgs[5][1]);
+    //        assertEquals(RUN, cli.call(networkArgs[5], cfg));
+    //        assertEquals("conquest", CfgAion.getNetwork());
+    //        assertEquals(BASE_PATH + "/config/conquest/config.xml", CfgAion.getConfFilePath());
+    //        assertEquals(BASE_PATH + "/config/conquest/genesis.json",
+    // CfgAion.getGenesisFilePath());
+    //        printPaths(BASE_PATH, cfg, cli);
+    //    }
 
     @Test
+    @Ignore
     public void testMultiNetworkDatadir() {
 
         final String[][] multiArgs =
@@ -488,7 +537,9 @@ public class CliTest {
                         @Override
                         public FileVisitResult postVisitDirectory(
                                 final Path dir, final IOException e) throws IOException {
-                            if (e != null) return handleException(e);
+                            if (e != null) {
+                                return handleException(e);
+                            }
                             java.nio.file.Files.delete(dir);
                             return FileVisitResult.CONTINUE;
                         }
