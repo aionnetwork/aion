@@ -167,7 +167,13 @@ public class Cli {
             // 5. options that can be influenced by the -d and -n arguments
 
             if (options.isInfo()) {
-                cfg.fromXML();
+                File configFile = cfg.getExecConfigFile();
+                if (!configFile.exists()) {
+                    configFile = cfg.getInitialConfigFile();
+                }
+
+                System.out.println("Reading config file at " + configFile.getAbsolutePath() + ".");
+                cfg.fromXML(configFile);
                 printInfo(cfg);
                 return ReturnType.EXIT;
             }

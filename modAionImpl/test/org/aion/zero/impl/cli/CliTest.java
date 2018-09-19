@@ -85,7 +85,7 @@ public class CliTest {
     private static File testnetGenesis = new File(BASE_PATH, "config/mastery/genesis.json");
 
     /** @implNote set this to true to enable printing */
-    private static boolean verbose = false;
+    private static boolean verbose = true;
 
     @Before
     public void setup() {
@@ -128,18 +128,13 @@ public class CliTest {
         deleteRecursively(new File(BASE_PATH, "mastery"));
     }
 
-    /** Ensures that the <i>-h</i> and <i>--help</i> arguments do not fail. */
+    /**
+     * Ensures that the { <i>-h</i>, <i>--help</i>, <i>-v</i>, <i>--version</i> } arguments work.
+     */
     @Test
-    public void testHelp() {
-        assertThat(cli.call(new String[] {"-h"}, cfg)).isEqualTo(EXIT);
-        assertThat(cli.call(new String[] {"--help"}, cfg)).isEqualTo(EXIT);
-    }
-
-    /** Ensures that the <i>-v</i> and <i>--version</i> arguments do not fail. */
-    @Test
-    public void testVersion() {
-        assertThat(cli.call(new String[] {"-v"}, cfg)).isEqualTo(EXIT);
-        assertThat(cli.call(new String[] {"--version"}, cfg)).isEqualTo(EXIT);
+    @Parameters({"-h", "--help", "-v", "--version"})
+    public void testHelpAndVersion(String option) {
+        assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
     }
 
     /** Parameters for testing {@link #testDirectoryAndNetwork(String[], ReturnType, String)}. */
@@ -262,9 +257,9 @@ public class CliTest {
 
         return parameters.toArray();
     }
+
     /**
-     * Ensures that the <i>-d</i>, <i>--datadir</i>, <i>-n</i> and <i>--network</i> arguments do not
-     * fail.
+     * Ensures that the { <i>-d</i>, <i>--datadir</i>, <i>-n</i>, <i>--network</i> } arguments work.
      */
     @Test
     @Parameters(method = "parametersWithDirectoryAndNetwork")
@@ -281,6 +276,7 @@ public class CliTest {
         assertThat(cfg.getLogPath()).isEqualTo(new File(expectedPath, "log").getAbsolutePath());
         assertThat(cfg.getKeystorePath())
                 .isEqualTo(new File(expectedPath, "keystore").getAbsolutePath());
+
         if (verbose) {
             printPaths(cfg);
         }
@@ -307,7 +303,7 @@ public class CliTest {
                         + "\n----------------------------------------------------------------------------\n\n");
     }
 
-    /** Parameters for testing {@link #testConfig(String[], ReturnType, String)}. */
+    /** Parameters for testing {@link #testConfig(String[], String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithConfig() {
         List<Object> parameters = new ArrayList<>();
@@ -317,20 +313,20 @@ public class CliTest {
 
         for (String op : options) {
             // without parameter
-            parameters.add(new Object[] {new String[] {op}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op}, expected});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "invalid"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "invalid"}, expected});
             // mainnet as parameter
-            parameters.add(new Object[] {new String[] {op, "mainnet"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, expected});
         }
 
         expected = new File(BASE_PATH, "mastery").getAbsolutePath();
 
         for (String op : options) {
             // mastery as parameter
-            parameters.add(new Object[] {new String[] {op, "mastery"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "mastery"}, expected});
             // testnet as parameter
-            parameters.add(new Object[] {new String[] {op, "testnet"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "testnet"}, expected});
         }
 
         // config and directory
@@ -344,23 +340,21 @@ public class CliTest {
                     // with relative path
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, dataDirectory, opCfg, valNet}, EXIT, expected
+                                new String[] {opDir, dataDirectory, opCfg, valNet}, expected
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opCfg, valNet, opDir, dataDirectory}, EXIT, expected
+                                new String[] {opCfg, valNet, opDir, dataDirectory}, expected
                             });
                     // with absolute path
                     parameters.add(
                             new Object[] {
                                 new String[] {opDir, path.getAbsolutePath(), opCfg, valNet},
-                                EXIT,
                                 expected
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opCfg, valNet, opDir, path.getAbsolutePath()},
-                                EXIT,
                                 expected
                             });
                 }
@@ -376,23 +370,21 @@ public class CliTest {
                     // with relative path
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, dataDirectory, opCfg, netVal}, EXIT, expected
+                                new String[] {opDir, dataDirectory, opCfg, netVal}, expected
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opCfg, netVal, opDir, dataDirectory}, EXIT, expected
+                                new String[] {opCfg, netVal, opDir, dataDirectory}, expected
                             });
                     // with absolute path
                     parameters.add(
                             new Object[] {
                                 new String[] {opDir, path.getAbsolutePath(), opCfg, netVal},
-                                EXIT,
                                 expected
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opCfg, netVal, opDir, path.getAbsolutePath()},
-                                EXIT,
                                 expected
                             });
                 }
@@ -402,22 +394,23 @@ public class CliTest {
         return parameters.toArray();
     }
 
-    /** Ensures that the <i>-c</i> and <i>--config</i> arguments do not fail. */
+    /** Ensures that the { <i>-c</i>, <i>--config</i> } arguments work. */
     @Test
     @Parameters(method = "parametersWithConfig")
-    public void testConfig(String[] input, ReturnType expectedReturn, String expectedPath) {
-        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+    public void testConfig(String[] input, String expectedPath) {
+        assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigPath())
                 .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
         assertThat(cfg.getExecGenesisPath())
                 .isEqualTo(new File(expectedPath, "config/genesis.json").getAbsolutePath());
+
         if (verbose) {
             printPaths(cfg);
         }
     }
 
-    /** Parameters for testing {@link #testConfig_oldLocation(String[], ReturnType, String)}. */
+    /** Parameters for testing {@link #testConfig_oldLocation(String[], String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithConfigForOldLocation() {
         List<Object> parameters = new ArrayList<>();
@@ -427,33 +420,32 @@ public class CliTest {
 
         for (String op : options) {
             // without parameter
-            parameters.add(new Object[] {new String[] {op}, EXIT, BASE_PATH});
+            parameters.add(new Object[] {new String[] {op}, BASE_PATH});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "invalid"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "invalid"}, expected});
             // mainnet as parameter
-            parameters.add(new Object[] {new String[] {op, "mainnet"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, expected});
         }
 
         expected = new File(BASE_PATH, "mastery").getAbsolutePath();
 
         for (String op : options) {
             // mastery as parameter
-            parameters.add(new Object[] {new String[] {op, "mastery"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "mastery"}, expected});
             // testnet as parameter
-            parameters.add(new Object[] {new String[] {op, "testnet"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "testnet"}, expected});
         }
 
         return parameters.toArray();
     }
 
     /**
-     * Ensures that the <i>-c</i> and <i>--config</i> arguments do not fail when input uses old
-     * config location.
+     * Ensures that the { <i>-c</i>, <i>--config</i> } arguments work when using old config
+     * location.
      */
     @Test
     @Parameters(method = "parametersWithConfigForOldLocation")
-    public void testConfig_oldLocation(
-            String[] input, ReturnType expectedReturn, String expectedPath) {
+    public void testConfig_oldLocation(String[] input, String expectedPath) {
         // ensure config exists on disk at expected location for old kernel
         if (!oldConfig.exists()) {
             File configPath = new File(BASE_PATH, "config");
@@ -464,23 +456,150 @@ public class CliTest {
             Cli.copyRecursively(genesis, oldGenesis);
         }
 
-        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigPath())
                 .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
         assertThat(cfg.getExecGenesisPath())
                 .isEqualTo(new File(expectedPath, "config/genesis.json").getAbsolutePath());
+
         if (verbose) {
             printPaths(cfg);
         }
     }
 
-    /** Ensures that the <i>-i</i> and <i>--info</i> arguments do not fail. */
+    /** Parameters for testing {@link #testInfo(String[], ReturnType, String)}. */
+    @SuppressWarnings("unused")
+    private Object parametersWithInfo() {
+        List<Object> parameters = new ArrayList<>();
+
+        String[] options = new String[] {"-i", "--info"};
+        String expected = new File(BASE_PATH, "mainnet").getAbsolutePath();
+
+        // only info
+        for (String op : options) {
+            // without parameter
+            parameters.add(new Object[] {new String[] {op}, EXIT, expected});
+            // invalid parameter
+            parameters.add(new Object[] {new String[] {op, "value"}, ERROR, BASE_PATH});
+        }
+
+        // with network
+        expected = new File(BASE_PATH, "mastery").getAbsolutePath();
+        for (String op : options) {
+            // mastery as parameter
+            parameters.add(new Object[] {new String[] {op, "-n", "mastery"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {"-n", "mastery", op}, EXIT, expected});
+            // invalid parameter
+            parameters.add(
+                    new Object[] {new String[] {op, "value", "-n", "mastery"}, ERROR, BASE_PATH});
+        }
+
+        // with directory
+        expected = new File(path, "mainnet").getAbsolutePath();
+        for (String op : options) {
+            // with relative path
+            parameters.add(new Object[] {new String[] {op, "-d", dataDirectory}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {"-d", dataDirectory, op}, EXIT, expected});
+            // + invalid parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "value", "-d", dataDirectory}, ERROR, BASE_PATH
+                    });
+            // with absolute path
+            parameters.add(
+                    new Object[] {new String[] {op, "-d", path.getAbsolutePath()}, EXIT, expected});
+            parameters.add(
+                    new Object[] {new String[] {"-d", path.getAbsolutePath(), op}, EXIT, expected});
+            // + invalid parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "value", "-d", path.getAbsolutePath()}, ERROR, BASE_PATH
+                    });
+        }
+
+        // with network and directory
+        expected = new File(path, "mastery").getAbsolutePath();
+        for (String op : options) {
+            // with relative path
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "-d", dataDirectory, "-n", "mastery"}, EXIT, expected
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", "mastery", op, "-d", dataDirectory}, EXIT, expected
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", "mastery", "-d", dataDirectory, op}, EXIT, expected
+                    });
+            // with absolute path
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "-n", "mastery", "-d", path.getAbsolutePath()},
+                        EXIT,
+                        expected
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-d", path.getAbsolutePath(), op, "-n", "mastery"},
+                        EXIT,
+                        expected
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-d", path.getAbsolutePath(), "-n", "mastery", op},
+                        EXIT,
+                        expected
+                    });
+        }
+
+        return parameters.toArray();
+    }
+
+    /** Ensures that the { <i>-i</i>, <i>--info</i> } arguments work. */
     @Test
-    @Ignore
-    public void testInfo() {
-        assertThat(cli.call(new String[] {"-i"}, cfg)).isEqualTo(EXIT);
-        assertThat(cli.call(new String[] {"--info"}, cfg)).isEqualTo(EXIT);
+    @Parameters(method = "parametersWithInfo")
+    public void testInfo(String[] input, ReturnType expectedReturn, String expectedPath) {
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+    }
+
+    /**
+     * Ensures that the { <i>-i</i>, <i>--info</i> } arguments work when using old config location.
+     */
+    @Test
+    @Parameters({"-i", "--info"})
+    public void testInfo_oldLocation(String option) {
+        // ensure config exists on disk at expected location for old kernel
+        if (!oldConfig.exists()) {
+            File configPath = new File(BASE_PATH, "config");
+            if (!configPath.exists()) {
+                configPath.mkdirs();
+            }
+            cfg.toXML(null, oldConfig);
+            Cli.copyRecursively(genesis, oldGenesis);
+        }
+
+        assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
+        assertThat(cfg.getBasePath()).isEqualTo(BASE_PATH);
+    }
+
+    /**
+     * Ensures that the { <i>-i</i>, <i>--info</i> } arguments work when using the config location
+     * copied to the execution directory.
+     */
+    @Test
+    @Parameters({"-i", "--info"})
+    public void testInfo_execLocation(String option) {
+        // generates the config at the required destination
+        cli.call(new String[] {"-c", "-d", dataDirectory}, cfg);
+
+        // ensure config exists on disk at expected location for old kernel
+        assertThat(cfg.getExecConfigFile().exists()).isTrue();
+
+        assertThat(cli.call(new String[] {option, "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
     }
 
     //    /**
@@ -550,7 +669,7 @@ public class CliTest {
     //        assertEquals(ERROR, cli.call(new String[] {"--config", "random"}, CfgAion.inst()));
     //    }
 
-    /** Tests the -a create arguments do not fail. */
+    /** Tests the -a create arguments work. */
     @Test
     @Ignore
     public void testCreateAccount() {
@@ -558,7 +677,7 @@ public class CliTest {
         assertEquals(EXIT, cli.call(args, CfgAion.inst()));
     }
 
-    /** Tests the -a list arguments do not fail. */
+    /** Tests the -a list arguments work. */
     @Test
     @Ignore
     public void testListAccounts() {
@@ -566,7 +685,7 @@ public class CliTest {
         assertEquals(EXIT, cli.call(args, CfgAion.inst()));
     }
 
-    /** Tests the -a export arguments do not fail on a valid account. */
+    /** Tests the -a export arguments work on a valid account. */
     @Test
     @Ignore
     public void testExportPrivateKey() {
@@ -590,7 +709,7 @@ public class CliTest {
         assertEquals(ERROR, cli.call(args, CfgAion.inst()));
     }
 
-    /** Tests the -a import arguments do not fail on a fail import key. */
+    /** Tests the -a import arguments work on a fail import key. */
     @Test
     @Ignore
     public void testImportPrivateKey() {
@@ -610,7 +729,7 @@ public class CliTest {
         assertEquals(ERROR, cli.call(args, CfgAion.inst()));
     }
 
-    /** Tests the -a import arguments do not fail when a valid private key is supplied. */
+    /** Tests the -a import arguments work when a valid private key is supplied. */
     @Test
     @Ignore
     public void testImportPrivateKey2() {
