@@ -14,89 +14,6 @@ allprojects {
         }
     }
 }
-
-subprojects {
-    sourceSets { 
-        main {
-            java {
-                srcDirs = ['src']
-            }
-        }
-        test {
-            java {
-                srcDirs = ['test']
-            }
-        }
-    }
-
-    task copyJarToAionMod(type: Copy) { 
-        task -> from "build/libs/${task.project.name}.jar"
-        into file("../mod")
-    }
-
-    task deleteJarFromAionMod(type: Delete) { 
-        task -> delete "../mod/${task.project.name}.jar"
-    }
-
-    task copyNativeLibsForModuleTests(type: Copy) { 
-        from '../native'
-        into file('./native')
-    }
-
-    task deleteNativeLibs(type: Delete) {
-        task -> delete 'native'
-    }
-
-    build.dependsOn copyJarToAionMod
-    clean.dependsOn deleteJarFromAionMod
-
-    afterEvaluate { 
-        // Override java plug-in behaviour to make JDK9+ module logic work
-        // From: https://guides.gradle.org/building-java-9-modules/#step_2_produce_java_9_modules_for_all_subprojects
-        compileJava {
-            inputs.property("moduleName", moduleName)
-            doFirst {
-                options.compilerArgs = [
-                    '--module-path', classpath.asPath,
-                ]
-                classpath = files()
-            }
-        }
-        
-        // Need to comment this out for now, modules-info.java doesn't have 'require' declarations
-        // used by the test code.  The ant build.xml, similarly, uses module-path for build, but 
-        // classpath for building the tests (at least in modRlp).  Need to sort out how to properly set the module-path
-        // for the tests before using the stuff below.
-        /*
-        compileTestJava {
-            inputs.property("moduleName", moduleName)
-            doFirst {
-                options.compilerArgs = [
-                    '--module-path', classpath.asPath,
-                    '--add-modules', 'junit',
-                    '--add-reads', "$moduleName=junit",
-                    '--patch-module', "$moduleName=" + files(sourceSets.test.java.srcDirs).asPath,
-                ]
-                classpath = files()
-            }
-        }
-
-        test {
-            inputs.property("moduleName", moduleName)
-            doFirst {
-                jvmArgs = [
-                    '--module-path', classpath.asPath,
-                    '--add-modules', 'ALL-MODULE-PATH',
-                    '--add-reads', "$moduleName=junit",
-                    '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir).asPath,
-                ]
-                classpath = files()
-            }
-        }
-        */
-    }
-}
-
 // import ant build.xml into gradle world -- this can help us 
 // migrate over time
 ant.importBuild('build.xml') { antTargetName -> 'ant-' + antTargetName }
@@ -156,6 +73,90 @@ task compileNative(type:Exec) {
     }
 }
 
+
+subprojects {
+    sourceSets { 
+        main {
+            java {
+                srcDirs = ['src']
+            }
+        }
+        test {
+            java {
+                srcDirs = ['test']
+            }
+        }
+    }
+
+    task copyJarToAionMod(type: Copy) { 
+        task -> from "build/libs/${task.project.name}.jar" into file("../mod")
+    }
+
+    task deleteJarFromAionMod(type: Delete) { 
+        task -> delete "../mod/${task.project.name}.jar"
+    }
+
+    task copyNativeLibsForModuleTests(type: Copy) { 
+        from '../native' into file('./native')
+    }
+    copyNativeLibsForModuleTests.dependsOn rootProject.compileNative
+
+    task deleteNativeLibs(type: Delete) {
+        task -> delete 'native'
+    }
+
+    build.dependsOn copyJarToAionMod
+    clean.dependsOn deleteJarFromAionMod
+
+    afterEvaluate { 
+        // Override java plug-in behaviour to make JDK9+ module logic work
+        // From: https://guides.gradle.org/building-java-9-modules/#step_2_produce_java_9_modules_for_all_subprojects
+        compileJava {
+            inputs.property("moduleName", moduleName)
+            doFirst {
+                options.compilerArgs = [
+                    '--module-path', classpath.asPath,
+                ]
+                classpath = files()
+            }
+        }
+        
+        // Need to comment this out for now, modules-info.java doesn't have 'require' declarations
+        // used by the test code.  The ant build.xml, similarly, uses module-path for build, but 
+        // classpath for building the tests (at least in modRlp).  Need to sort out how to properly set the module-path
+        // for the tests before using the stuff below.
+        /*
+        compileTestJava {
+            inputs.property("moduleName", moduleName)
+            doFirst {
+                options.compilerArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'junit',
+                    '--add-reads', "$moduleName=junit",
+                    '--patch-module', "$moduleName=" + files(sourceSets.test.java.srcDirs).asPath,
+                ]
+                classpath = files()
+            }
+        }
+
+        test {
+            inputs.property("moduleName", moduleName)
+            doFirst {
+                jvmArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'ALL-MODULE-PATH',
+                    '--add-reads', "$moduleName=junit",
+                    '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir).asPath,
+                ]
+                classpath = files()
+            }
+        }
+        */
+    }
+}
+
+compileNative.dependsOn project(':modCrypto').getTasksByName('compileNative', false);
+
 task downloadVmDeps(type: Download) { 
     overwrite false // TODO This seems to have no effect at all...
     src([
@@ -208,8 +209,6 @@ pack.dependsOn collectDependentJars
 
 project.build.dependsOn("ant-3rd_build")
 project.build.dependsOn("downloadVmDeps")
-
-project(':modAion').test.dependsOn(compileNative);
 
 project(':modAionImpl') { 
     build.finalizedBy(compileNative)
