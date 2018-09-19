@@ -47,6 +47,12 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import static org.aion.gui.model.ApiReturnCodes.r_tx_Included_VALUE;
+import static org.aion.gui.model.ApiReturnCodes.r_tx_Init_VALUE;
+import static org.aion.gui.model.ApiReturnCodes.r_tx_NewPending_VALUE;
+import static org.aion.gui.model.ApiReturnCodes.r_tx_Pending_VALUE;
+import static org.aion.gui.model.ApiReturnCodes.r_tx_Recved_VALUE;
+
 /**
  * Provides
  */
@@ -58,11 +64,11 @@ public class TransactionProcessor extends AbstractAionApiClient {
 
     private static final int BLOCK_BATCH_SIZE = 300;
     private static final List<Integer> ACCEPTED_TRANSACTION_RESPONSE_STATUSES = Arrays.asList(
-            Message.Retcode.r_tx_Init_VALUE,
-            Message.Retcode.r_tx_Recved_VALUE,
-            Message.Retcode.r_tx_NewPending_VALUE,
-            Message.Retcode.r_tx_Pending_VALUE,
-            Message.Retcode.r_tx_Included_VALUE);
+            r_tx_Init_VALUE,
+            r_tx_Recved_VALUE,
+            r_tx_NewPending_VALUE,
+            r_tx_Pending_VALUE,
+            r_tx_Included_VALUE);
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
     /**
