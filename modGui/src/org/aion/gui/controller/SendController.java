@@ -33,7 +33,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
-import org.aion.api.impl.internal.Message;
 import org.aion.base.util.TypeConverter;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.EventPublisher;

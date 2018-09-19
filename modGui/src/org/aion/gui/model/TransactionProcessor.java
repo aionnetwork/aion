@@ -22,7 +22,6 @@
  */
 package org.aion.gui.model;
 
-import org.aion.api.impl.internal.Message;
 import org.aion.api.type.*;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
