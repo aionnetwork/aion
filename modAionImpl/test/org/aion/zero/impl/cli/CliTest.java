@@ -270,6 +270,52 @@ public class CliTest {
                 .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
     }
 
+    /** Parameters for testing {@link #testNetwork(String[], ReturnType, String)}. */
+    @SuppressWarnings("unused")
+    private Object parametersWithNetwork() {
+        List<Object> parameters = new ArrayList<>();
+
+        String[] options = new String[] {"-n", "--network"};
+        String expected = new File(BASE_PATH, "mainnet").getAbsolutePath();
+
+        for (String op : options) {
+            // without parameter
+            parameters.add(new Object[] {new String[] {op}, ERROR, BASE_PATH});
+            // invalid parameter
+            parameters.add(new Object[] {new String[] {op, "invalid"}, RUN, expected});
+            // mainnet as parameter
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, RUN, expected});
+        }
+
+        expected = new File(BASE_PATH, "mastery").getAbsolutePath();
+
+        for (String op : options) {
+            // mastery as parameter
+            parameters.add(new Object[] {new String[] {op, "mastery"}, RUN, expected});
+            // testnet as parameter
+            parameters.add(new Object[] {new String[] {op, "testnet"}, RUN, expected});
+        }
+
+        return parameters.toArray();
+    }
+
+    /** Ensures that the <i>-n</i> and <i>--network</i> arguments do not fail. */
+    @Test
+    @Parameters(method = "parametersWithNetwork")
+    public void testNetwork(String[] input, ReturnType expectedReturn, String expectedPath) {
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getExecConfigPath())
+                .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
+        assertThat(cfg.getExecGenesisPath())
+                .isEqualTo(new File(expectedPath, "config/genesis.json").getAbsolutePath());
+        assertThat(cfg.getDatabasePath())
+                .isEqualTo(new File(expectedPath, "database").getAbsolutePath());
+        assertThat(cfg.getLogPath()).isEqualTo(new File(expectedPath, "log").getAbsolutePath());
+        assertThat(cfg.getKeystorePath())
+                .isEqualTo(new File(expectedPath, "keystore").getAbsolutePath());
+    }
+
     /** Ensures that the <i>-i</i> and <i>--info</i> arguments do not fail. */
     @Test
     @Ignore

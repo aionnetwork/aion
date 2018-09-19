@@ -22,6 +22,8 @@
  */
 package org.aion.zero.impl.config;
 
+import java.util.Arrays;
+
 /**
  * Defines different Aion networks.
  *
@@ -95,5 +97,10 @@ public enum Network {
         }
 
         return null;
+    }
+
+    public static String valueString() {
+        String output = Arrays.toString(Network.values());
+        return output.substring(1, output.length() - 1);
     }
 }

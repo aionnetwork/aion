@@ -242,6 +242,7 @@ public abstract class Cfg {
         // TODO check different input
         return new File(getExecDirectory(), configDirectory);
     }
+
     /** Returns the location where the config file is saved for kernel execution. */
     public File getExecConfigFile() {
         return new File(getExecConfigDirectory(), configFile);
@@ -253,8 +254,13 @@ public abstract class Cfg {
     }
 
     /** Returns the location where the genesis file is saved for kernel execution. */
+    public File getExecGenesisFile() {
+        return new File(getExecConfigDirectory(), genesisFile);
+    }
+
+    /** Returns the location where the genesis file is saved for kernel execution. */
     public String getExecGenesisPath() {
-        return new File(getExecConfigDirectory(), genesisFile).getAbsolutePath();
+        return getExecGenesisFile().getAbsolutePath();
     }
 
     /** @implNote Maintains the old setup if the config file is present in the old location. */
@@ -281,7 +287,7 @@ public abstract class Cfg {
         return getInitialConfigFile().getAbsolutePath();
     }
 
-    public String getInitialGenesisPath() {
+    public File getInitialGenesisFile() {
         // use old genesis location for compatibility with old kernels
         File genesis = new File(oldConfigDir, genesisFile);
 
@@ -292,7 +298,12 @@ public abstract class Cfg {
             }
         }
 
-        return genesis.getAbsolutePath();
+        return genesis;
+    }
+
+    /** @implNote Maintains the old setup if the config file is present in the old location. */
+    public String getInitialGenesisPath() {
+        return getInitialGenesisFile().getAbsolutePath();
     }
 
     public static String readValue(final XMLStreamReader sr) throws XMLStreamException {

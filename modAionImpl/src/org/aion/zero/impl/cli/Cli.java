@@ -158,7 +158,7 @@ public class Cli {
             // 4. determine the network configuration
 
             if (options.getNetwork() != null) {
-                setNetwork(options.getConfig(), cfg);
+                setNetwork(options.getNetwork(), cfg);
                 // no return -> allow for other parameters combined with -n
             }
 
@@ -362,6 +362,8 @@ public class Cli {
                 return EXIT;
             }
 
+            // make directories for kernel execution
+            makeDirs(cfg);
             // if no return happened earlier, run the kernel
             return RUN;
         } catch (Throwable e) {
@@ -449,32 +451,35 @@ public class Cli {
     private void printInvalidNetwork() {
         System.out.println("\nInvalid network selected!\n");
         System.out.println("------ Available Networks ------");
-        System.out.println(Arrays.toString(Network.values()));
+        System.out.println(Network.valueString());
         System.out.println("--------------------------------\n");
     }
 
     /**
-     * Copies the config files (config && genesis) from root to [datadir]/[network]
+     * Creates the directories for persistence of the kernel data. Copies the config and genesis
+     * files from the initial path for the execution directory.
      *
-     * @param path input to append base directory to copy to
-     * @param net input to determine network to copy from
+     * @param cfg the configuration for the runtime kernel environment
      */
-    private void copyNetwork(String path, Network net) {
+    private void makeDirs(Cfg cfg) {
+        File file = cfg.getExecDirectory();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
 
-        File dir1 = new File(path + "/" + net + "/config");
-        File dir2 = new File(path + "/" + net + "/keystore");
-        dir1.mkdirs();
-        dir2.mkdirs();
+        // create target config directory
+        file = cfg.getExecConfigDirectory();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
 
-        File src1 = new File(BASE_PATH + "/config/" + net + "/config.xml");
-        File src2 = new File(BASE_PATH + "/config/" + net + "/genesis.json");
-        File dst1 = new File(path + "/" + net + "/config/config.xml");
-        File dst2 = new File(path + "/" + net + "/config/genesis.json");
+        // copy config & genesis
+        copyRecursively(cfg.getInitialConfigFile(), cfg.getExecConfigFile());
+        copyRecursively(cfg.getInitialGenesisFile(), cfg.getExecGenesisFile());
 
-        copyRecursively(src1, dst1);
-        copyRecursively(src2, dst2);
-        //        dstConfig = dst1.toString();
-        //        dstGenesis = dst2.toString();
+        // TODO-Ale: create target log directory
+        // TODO-Ale: create target database directory
+        // TODO-Ale: create target keystore directory
     }
 
     /**
