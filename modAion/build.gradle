@@ -1,5 +1,7 @@
 ext.moduleName = 'aion.zero'
 
+test.dependsOn copyNativeLibsForModuleTests
+
 dependencies {
     compile project(':modAionBase')
     compile project(':modRlp')

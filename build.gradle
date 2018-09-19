@@ -209,6 +209,8 @@ pack.dependsOn collectDependentJars
 project.build.dependsOn("ant-3rd_build")
 project.build.dependsOn("downloadVmDeps")
 
+project(':modAion').test.dependsOn(compileNative);
+
 project(':modAionImpl') { 
     build.finalizedBy(compileNative)
 }
