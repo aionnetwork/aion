@@ -291,7 +291,7 @@ public abstract class Cfg {
         // use old genesis location for compatibility with old kernels
         File genesis = new File(oldConfigDir, genesisFile);
 
-        if (!genesis.exists()) {
+        if (ignoreOldSetup || !genesis.exists()) {
             genesis = new File(newConfigDir, genesisFile);
             if (execDirectory == null) {
                 execDirectory = new File(INITIAL_PATH);

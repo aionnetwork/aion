@@ -117,7 +117,20 @@ public class Cli {
                 return EXIT;
             }
 
-            // 2. determine the execution folder path
+            // 2. determine the network configuration
+
+            if (options.getNetwork() != null
+                    || (options.getConfig() != null && !options.getConfig().isEmpty())) {
+                String strNet = options.getNetwork();
+                // the network given in config overwrites the -n option
+                if (options.getConfig() != null && !options.getConfig().isEmpty()) {
+                    strNet = options.getConfig();
+                }
+                setNetwork(strNet, cfg);
+                // no return -> allow for other parameters combined with -n
+            }
+
+            // 3. determine the execution folder path; influenced by --network
 
             if (options.getDirectory() != null) {
                 if (!setDirectory(options.getDirectory(), cfg)) {
@@ -126,14 +139,10 @@ public class Cli {
                 // no return -> allow for other parameters combined with -d
             }
 
-            // 3. can be influenced by the -d argument above
+            // 4. can be influenced by the -d argument above
 
             if (options.getConfig() != null) {
-                String strNet = options.getConfig();
-
-                if (!strNet.isEmpty()) {
-                    setNetwork(strNet, cfg);
-                }
+                // network was already set above
 
                 // TODO-Ale: handle case where cannot find initial file
                 // read from initial config
@@ -153,13 +162,6 @@ public class Cli {
 
                 System.out.println("\nNew config generated at " + cfg.getExecConfigPath() + ".");
                 return ReturnType.EXIT;
-            }
-
-            // 4. determine the network configuration
-
-            if (options.getNetwork() != null) {
-                setNetwork(options.getNetwork(), cfg);
-                // no return -> allow for other parameters combined with -n
             }
 
             // 5. options that can be influenced by the -d and -n arguments
@@ -724,16 +726,8 @@ public class Cli {
         return certPass;
     }
 
-    public String getDstConfig() {
-        return ""; // dstConfig;
-    }
-
-    public String getDstGenesis() {
-        return ""; // dstGenesis;
-    }
-
     // Methods below taken from FileUtils class
-    private static boolean copyRecursively(File src, File target) {
+    public static boolean copyRecursively(File src, File target) {
         if (src.isDirectory()) {
             return copyDirectoryContents(src, target);
         } else {
