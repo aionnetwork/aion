@@ -39,10 +39,14 @@ public abstract class Cfg {
     private File databaseDirectory = null;
     private File execDirectory = null;
 
-    private String network = null;
+    private String network = "mainnet";
 
     protected String BASE_PATH = System.getProperty("user.dir");
     protected final String INITIAL_PATH = System.getProperty("user.dir");
+    protected final File oldConfigDir = new File(INITIAL_PATH, configDirectory);
+
+    /** @implNote modified only from {@link #setNetwork(String)} */
+    protected File newConfigDir = new File(oldConfigDir, network);
 
     private boolean useOldSetup = false;
     private boolean ignoreOldSetup = false;
@@ -150,11 +154,12 @@ public abstract class Cfg {
         return getExecDirectory().getAbsolutePath();
     }
 
-    protected void resetInternal() {
+    /** Resets internal data containing network and path. */
+    public void resetInternal() {
         logDirectory = null;
         databaseDirectory = null;
         execDirectory = null;
-        network = null;
+        network = "mainnet";
 
         BASE_PATH = INITIAL_PATH;
 
@@ -181,7 +186,6 @@ public abstract class Cfg {
     public void setExecDirectory(File _execDirectory) {
         this.execDirectory = _execDirectory;
         // default network when only datadir is set
-        this.network = "mainnet";
         this.ignoreOldSetup = true;
     }
 
@@ -193,6 +197,8 @@ public abstract class Cfg {
      */
     public void setNetwork(String _network) {
         this.network = _network;
+        this.newConfigDir = new File(oldConfigDir, network);
+        this.execDirectory = new File(INITIAL_PATH);
         this.ignoreOldSetup = true;
     }
 
@@ -236,10 +242,14 @@ public abstract class Cfg {
         // TODO check different input
         return new File(getExecDirectory(), configDirectory);
     }
+    /** Returns the location where the config file is saved for kernel execution. */
+    public File getExecConfigFile() {
+        return new File(getExecConfigDirectory(), configFile);
+    }
 
     /** Returns the location where the config file is saved for kernel execution. */
     public String getExecConfigPath() {
-        return new File(getExecConfigDirectory(), configFile).getAbsolutePath();
+        return getExecConfigFile().getAbsolutePath();
     }
 
     /** Returns the location where the genesis file is saved for kernel execution. */
@@ -247,43 +257,39 @@ public abstract class Cfg {
         return new File(getExecConfigDirectory(), genesisFile).getAbsolutePath();
     }
 
-    /**
-     * Returns the configuration directory location <b>before</b> the multi-config changes made to
-     * the kernel.
-     */
-    private File getOldConfigDirectory() {
-        return new File(INITIAL_PATH, configDirectory);
-    }
-
-    /**
-     * Returns the configuration directory location <b>after</b> the multi-config changes made to
-     * the kernel.
-     */
-    private File getNewConfigDirectory() {
-        return new File(getOldConfigDirectory(), network.toString());
-    }
-
     /** @implNote Maintains the old setup if the config file is present in the old location. */
-    public String getInitialConfigPath() {
+    public File getInitialConfigFile() {
         // TODO-Ale: may want to consider exec path as well
         // use old config location for compatibility with old kernels
-        File config = new File(getOldConfigDirectory(), configFile);
+        File config = new File(oldConfigDir, configFile);
 
-        if (!config.exists()) {
-            config = new File(getNewConfigDirectory(), configFile);
+        // TODO: read mainnet config when ignore set
+        if (ignoreOldSetup || !config.exists()) {
+            config = new File(newConfigDir, configFile);
+            if (execDirectory == null) {
+                execDirectory = new File(INITIAL_PATH);
+            }
         } else {
             useOldSetup = true;
         }
 
-        return config.getAbsolutePath();
+        return config;
+    }
+
+    /** @implNote Maintains the old setup if the config file is present in the old location. */
+    public String getInitialConfigPath() {
+        return getInitialConfigFile().getAbsolutePath();
     }
 
     public String getInitialGenesisPath() {
         // use old genesis location for compatibility with old kernels
-        File genesis = new File(getOldConfigDirectory(), genesisFile);
+        File genesis = new File(oldConfigDir, genesisFile);
 
         if (!genesis.exists()) {
-            genesis = new File(getNewConfigDirectory(), genesisFile);
+            genesis = new File(newConfigDir, genesisFile);
+            if (execDirectory == null) {
+                execDirectory = new File(INITIAL_PATH);
+            }
         }
 
         return genesis.getAbsolutePath();
@@ -322,9 +328,17 @@ public abstract class Cfg {
      */
     public abstract boolean fromXML();
 
+    /**
+     * @return boolean value used return to also determine if we need to write back to file with
+     *     current config * return true which means should save back to xml config return true which
+     *     means should save back to xml config if in the config.xml id is set as default
+     *     [NODE-ID-PLACEHOLDER] return true which means should save back to xml config
+     */
     public abstract boolean fromXML(File configFile);
 
     public abstract void toXML(final String[] args);
+
+    public abstract void toXML(final String[] args, File file);
 
     public abstract void setGenesis();
 

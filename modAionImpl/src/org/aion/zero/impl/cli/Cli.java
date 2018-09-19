@@ -129,21 +129,27 @@ public class Cli {
             // 3. can be influenced by the -d argument above
 
             if (options.getConfig() != null) {
-                // TODO-Ale test
                 String strNet = options.getConfig();
 
                 if (!strNet.isEmpty()) {
                     setNetwork(strNet, cfg);
                 }
 
-                File dir = cfg.getExecDirectory();
+                // TODO-Ale: handle case where cannot find initial file
+                // read from initial config
+                if (cfg.fromXML(cfg.getInitialConfigFile())) {
+                    // set user id when not present
+                    cfg.setId(UUID.randomUUID().toString());
+                }
+
+                // ensure path exists
+                File dir = cfg.getExecConfigDirectory();
                 if (!dir.exists()) {
                     dir.mkdirs();
                 }
 
-                cfg.fromXML();
-                cfg.setId(UUID.randomUUID().toString());
-                cfg.toXML(null);
+                // save to disk
+                cfg.toXML(null, cfg.getExecConfigFile());
 
                 System.out.println("\nNew config generated at " + cfg.getExecConfigPath() + ".");
                 return ReturnType.EXIT;

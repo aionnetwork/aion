@@ -130,7 +130,7 @@ public final class CfgAion extends Cfg {
     }
 
     public void dbFromXML() {
-        File cfgFile = new File(getInitialConfigPath());
+        File cfgFile = getInitialConfigFile();
         XMLInputFactory input = XMLInputFactory.newInstance();
         FileInputStream fis = null;
         try {
@@ -229,14 +229,11 @@ public final class CfgAion extends Cfg {
 
     @Override
     public boolean fromXML() {
-        return fromXML(new File(getInitialConfigPath()));
+        return fromXML(getInitialConfigFile());
     }
 
     @Override
     public boolean fromXML(File cfgFile) {
-        // resets internal data containing network and path
-        this.resetInternal();
-
         boolean shouldWriteBackToFile = false;
         if (!cfgFile.exists()) {
             return false;
@@ -257,6 +254,11 @@ public final class CfgAion extends Cfg {
 
     @Override
     public void toXML(final String[] args) {
+        toXML(args, getExecConfigFile());
+    }
+
+    @Override
+    public void toXML(final String[] args, File file) {
         if (args != null) {
             boolean override = false;
             for (String arg : args) {
@@ -314,7 +316,7 @@ public final class CfgAion extends Cfg {
 
         try {
 
-            sw = output.createXMLStreamWriter(new FileWriter(getExecConfigPath()));
+            sw = output.createXMLStreamWriter(new FileWriter(file));
             sw.writeStartDocument("utf-8", "1.0");
             sw.writeCharacters("\r\n");
             sw.writeStartElement("aion");

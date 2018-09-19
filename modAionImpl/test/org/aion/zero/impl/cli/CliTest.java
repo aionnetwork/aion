@@ -71,16 +71,47 @@ public class CliTest {
             BASE_PATH.contains(module)
                     ? new File(BASE_PATH, initialConfigFile)
                     : new File(BASE_PATH, module + "/" + initialConfigFile);
+    private static File oldConfig = new File(BASE_PATH, "config/config.xml");
+    private static File mainnetConfig = new File(BASE_PATH, "config/mainnet/config.xml");
+    private static File testnetConfig = new File(BASE_PATH, "config/mastery/config.xml");
 
     @Before
     public void setup() {
         // reset config values
         cfg.fromXML(config);
+
+        if (BASE_PATH.contains(module) && !mainnetConfig.exists()) {
+            // save config to disk at expected location for new kernel
+            File configPath = new File(BASE_PATH, "config/mainnet");
+            if (!configPath.exists()) {
+                configPath.mkdirs();
+            }
+            cfg.toXML(null, mainnetConfig);
+        }
+
+        if (BASE_PATH.contains(module) && !testnetConfig.exists()) {
+            // save config to disk at expected location for new kernel
+            File configPath = new File(BASE_PATH, "config/mastery");
+            if (!configPath.exists()) {
+                configPath.mkdirs();
+            }
+            cfg.toXML(null, testnetConfig);
+        }
+
+        cfg.resetInternal();
     }
 
     @After
     public void shutdown() {
         deleteRecursively(path);
+
+        // to avoid deleting config for all tests
+        if (BASE_PATH.contains(module)) {
+            deleteRecursively(new File(BASE_PATH, "config"));
+        }
+
+        deleteRecursively(new File(BASE_PATH, "mainnet"));
+        deleteRecursively(new File(BASE_PATH, "mastery"));
     }
 
     /** Ensures that the <i>-h</i> and <i>--help</i> arguments do not fail. */
@@ -146,6 +177,97 @@ public class CliTest {
         assertThat(cfg.getLogPath()).isEqualTo(new File(expectedPath, "log").getAbsolutePath());
         assertThat(cfg.getKeystorePath())
                 .isEqualTo(new File(expectedPath, "keystore").getAbsolutePath());
+    }
+
+    /** Parameters for testing {@link #testConfig(String[], ReturnType, String)}. */
+    @SuppressWarnings("unused")
+    private Object parametersWithConfig() {
+        List<Object> parameters = new ArrayList<>();
+
+        String[] options = new String[] {"-c", "--config"};
+        String expected = new File(BASE_PATH, "mainnet").getAbsolutePath();
+
+        for (String op : options) {
+            // without parameter
+            parameters.add(new Object[] {new String[] {op}, EXIT, expected});
+            // invalid parameter
+            parameters.add(new Object[] {new String[] {op, "invalid"}, EXIT, expected});
+            // mainnet as parameter
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, EXIT, expected});
+        }
+
+        expected = new File(BASE_PATH, "mastery").getAbsolutePath();
+
+        for (String op : options) {
+            // mastery as parameter
+            parameters.add(new Object[] {new String[] {op, "mastery"}, EXIT, expected});
+            // testnet as parameter
+            parameters.add(new Object[] {new String[] {op, "testnet"}, EXIT, expected});
+        }
+
+        return parameters.toArray();
+    }
+
+    /** Ensures that the <i>-c</i> and <i>--config</i> arguments do not fail. */
+    @Test
+    @Parameters(method = "parametersWithConfig")
+    public void testConfig(String[] input, ReturnType expectedReturn, String expectedPath) {
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getExecConfigPath())
+                .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
+    }
+
+    /** Parameters for testing {@link #testConfig_oldLocation(String[], ReturnType, String)}. */
+    @SuppressWarnings("unused")
+    private Object parametersWithConfigForOldLocation() {
+        List<Object> parameters = new ArrayList<>();
+
+        String[] options = new String[] {"-c", "--config"};
+        String expected = new File(BASE_PATH, "mainnet").getAbsolutePath();
+
+        for (String op : options) {
+            // without parameter
+            parameters.add(new Object[] {new String[] {op}, EXIT, BASE_PATH});
+            // invalid parameter
+            parameters.add(new Object[] {new String[] {op, "invalid"}, EXIT, expected});
+            // mainnet as parameter
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, EXIT, expected});
+        }
+
+        expected = new File(BASE_PATH, "mastery").getAbsolutePath();
+
+        for (String op : options) {
+            // mastery as parameter
+            parameters.add(new Object[] {new String[] {op, "mastery"}, EXIT, expected});
+            // testnet as parameter
+            parameters.add(new Object[] {new String[] {op, "testnet"}, EXIT, expected});
+        }
+
+        return parameters.toArray();
+    }
+
+    /**
+     * Ensures that the <i>-c</i> and <i>--config</i> arguments do not fail when input uses old
+     * config location.
+     */
+    @Test
+    @Parameters(method = "parametersWithConfigForOldLocation")
+    public void testConfig_oldLocation(
+            String[] input, ReturnType expectedReturn, String expectedPath) {
+        // ensure config exists on disk at expected location for old kernel
+        if (!oldConfig.exists()) {
+            File configPath = new File(BASE_PATH, "config");
+            if (!configPath.exists()) {
+                configPath.mkdirs();
+            }
+            cfg.toXML(null, new File(configPath, "config.xml"));
+        }
+
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getExecConfigPath())
+                .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
     }
 
     /** Ensures that the <i>-i</i> and <i>--info</i> arguments do not fail. */
