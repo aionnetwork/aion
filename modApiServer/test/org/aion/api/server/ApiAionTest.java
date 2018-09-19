@@ -325,7 +325,6 @@ public class ApiAionTest {
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
                 msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
-        assertEquals(AionImpl.inst().estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
         assertEquals(impl.estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
         tearDown();
     }
