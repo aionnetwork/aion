@@ -66,7 +66,9 @@ public class CliTest {
     private static final String initialConfigFile = "test_resources/config.xml";
     private static final String initialGenesisFile = "test_resources/genesis.json";
     private static final String dataDirectory = "datadir";
+    private static final String alternativeDirectory = "random";
     private static final File path = new File(BASE_PATH, dataDirectory);
+    private static final File alternativePath = new File(BASE_PATH, alternativeDirectory);
 
     private static File config =
             BASE_PATH.contains(module)
@@ -118,6 +120,7 @@ public class CliTest {
     @After
     public void shutdown() {
         deleteRecursively(path);
+        deleteRecursively(alternativePath);
 
         // to avoid deleting config for all tests
         if (BASE_PATH.contains(module)) {
@@ -301,6 +304,40 @@ public class CliTest {
                         + "\n> Genesis read:  "
                         + cfg.getInitialGenesisPath()
                         + "\n----------------------------------------------------------------------------\n\n");
+    }
+
+    /**
+     * Ensures that the { <i>-d</i>, <i>--datadir</i>, <i>-n</i>, <i>--network</i> } arguments work
+     * with absolute paths for the database and log. The absolute path overwrites the datadir option
+     * location.
+     */
+    @Test
+    @Parameters(method = "parametersWithDirectoryAndNetwork")
+    public void testDirectoryAndNetwork_wAbsoluteDbAndLogPath(
+            String[] input, ReturnType expectedReturn, String expectedPath) {
+
+        String db = new File(alternativePath, "database").getAbsolutePath();
+        cfg.getDb().setPath(db);
+        String log = new File(alternativePath, "log").getAbsolutePath();
+        cfg.getLog().setLogPath(log);
+
+        // save and reload for changes to take effect
+        cfg.toXML(null);
+        cfg.fromXML();
+
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+
+        assertThat(cfg.getDatabasePath())
+                .isNotEqualTo(new File(expectedPath, "database").getAbsolutePath());
+        assertThat(cfg.getDatabasePath()).isEqualTo(db);
+
+        assertThat(cfg.getLogPath()).isNotEqualTo(new File(expectedPath, "log").getAbsolutePath());
+        assertThat(cfg.getLogPath()).isEqualTo(log);
+
+        if (verbose) {
+            printPaths(cfg);
+        }
     }
 
     /** Parameters for testing {@link #testConfig(String[], String)}. */
@@ -601,73 +638,6 @@ public class CliTest {
 
         assertThat(cli.call(new String[] {option, "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
     }
-
-    //    /**
-    //     * Sets up a spy Cli class that returns the String "password" when the cli.readPassword()
-    // is
-    //     * called using any two params.
-    //     */
-    //    @Before
-    //    public void setup() throws IOException {
-    //        doReturn("password").when(cli).readPassword(any(), any());
-    //
-    //        // Copies config folder recursively
-    //        File src = new File(BASE_PATH + "/../modBoot/resource");
-    //        File dst = new File(BASE_PATH + "/config");
-    //        copyRecursively(src, dst);
-    //
-    //        CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");
-    //        CfgAion.setGenesisFilePath(BASE_PATH + "/config/mainnet/genesis.json");
-    //        Keystore.setKeystorePath(BASE_PATH + "/keystore");
-    //    }
-    //
-    //    @After
-    //    public void shutdown() {
-    //        // Deletes created folders recursively
-    //        File path1 = new File(BASE_PATH + "/aaaaaaaa");
-    //        File path2 = new File(BASE_PATH + "/abbbbbbb");
-    //        File path3 = new File(BASE_PATH + "/abcccccc");
-    //        File path4 = new File(BASE_PATH + "/keystore");
-    //        File path5 = new File(BASE_PATH + "/config");
-    //        if (path1.exists()
-    //                || path2.exists()
-    //                || path3.exists()
-    //                || path4.exists()
-    //                || path5.exists()) {
-    //            deleteRecursively(path1);
-    //            deleteRecursively(path2);
-    //            deleteRecursively(path3);
-    //            deleteRecursively(path4);
-    //            deleteRecursively(path5);
-    //        }
-    //
-    //        CfgAion.setConfFilePath(BASE_PATH + "/config/mainnet/config.xml");
-    //        CfgAion.setGenesisFilePath(BASE_PATH + "/config/mainnet/genesis.json");
-    //        Keystore.setKeystorePath(BASE_PATH + "/keystore");
-    //    }
-
-    //    /** Ensures correct behavior for the <i>-c</i> and <i>--config</i> arguments. */
-    //    @Test
-    //    public void testConfig() {
-    //        // compatibility with old kernels
-    //        assertEquals(EXIT, cli.call(new String[] {"-c"}, CfgAion.inst()));
-    //        assertEquals(EXIT, cli.call(new String[] {"--config"}, CfgAion.inst()));
-    //
-    //        // available networks
-    //        for (Cli.Network net : Cli.Network.values()) {
-    //            assertEquals(EXIT, cli.call(new String[] {"-c", net.toString()}, CfgAion.inst()));
-    //            assertEquals(EXIT, cli.call(new String[] {"--config", net.toString()},
-    // CfgAion.inst()));
-    //        }
-    //
-    //        // accepted alias
-    //        assertEquals(EXIT, cli.call(new String[] {"-c", "testnet"}, CfgAion.inst()));
-    //        assertEquals(EXIT, cli.call(new String[] {"--config", "testnet"}, CfgAion.inst()));
-    //
-    //        // incorrect value
-    //        assertEquals(ERROR, cli.call(new String[] {"-c", "random"}, CfgAion.inst()));
-    //        assertEquals(ERROR, cli.call(new String[] {"--config", "random"}, CfgAion.inst()));
-    //    }
 
     /** Tests the -a create arguments work. */
     @Test
