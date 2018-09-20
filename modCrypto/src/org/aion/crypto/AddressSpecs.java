@@ -31,7 +31,13 @@ public class AddressSpecs {
         assert address != null;
         address = address.replace("0x", "");
         assert address.length() == 64;
-        byte[] h = HashUtil.h256(ByteUtil.hexStringToBytes(address));
+        byte[] h;
+        try {
+            h = HashUtil.h256(ByteUtil.hexStringToBytes(address));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
         if (h == null) return null; //address is invalid
         System.out.println(ByteUtil.toHexString(h));
         BitSet b = BitSet.valueOf(h);

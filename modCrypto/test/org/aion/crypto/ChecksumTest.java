@@ -3,7 +3,6 @@ package org.aion.crypto;
 import org.aion.base.util.ByteUtil;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import org.aion.base.type.Address;
 
 public class ChecksumTest {
 
