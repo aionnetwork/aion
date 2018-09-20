@@ -34,7 +34,17 @@
  ******************************************************************************/
 package org.aion.db.impl;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.truth.Truth;
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
@@ -44,21 +54,15 @@ import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.utils.FileUtils;
 import org.aion.log.AionLoggerFactory;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertTrue;
 
 /*
  * Unwritten Tests List:
@@ -579,6 +583,7 @@ public class DriverBaseTest {
     }
 
     @Test
+    @Ignore
     /** This test is non-deterministic and may fail. If it does, re-run the test suite. */
     public void testApproximateDBSize() {
         if (db.isPersistent() && !(db instanceof PersistentMockDB)) {
