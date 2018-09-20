@@ -64,10 +64,7 @@ public class PersistentMockDB extends MockDB {
         File dbFile = new File(path);
 
         if (dbFile.exists()) {
-            BufferedReader reader = null;
-
-            try {
-                reader = new BufferedReader(new FileReader(dbFile));
+            try (BufferedReader reader = new BufferedReader(new FileReader(dbFile))) {
                 String text;
 
                 while ((text = reader.readLine()) != null) {
@@ -80,13 +77,6 @@ public class PersistentMockDB extends MockDB {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                try {
-                    if (reader != null) {
-                        reader.close();
-                    }
-                } catch (IOException e) {
-                }
             }
         } else {
             try {
@@ -99,9 +89,8 @@ public class PersistentMockDB extends MockDB {
         return isOpen();
     }
 
-    private static final byte[] convertToByteArray(String commaSeparatedNumbers) {
-        String[] numbers =
-                commaSeparatedNumbers.substring(1, commaSeparatedNumbers.length() - 1).split(", ");
+    private static final byte[] convertToByteArray(String byteArrayString) {
+        String[] numbers = byteArrayString.substring(1, byteArrayString.length() - 1).split(", ");
         byte[] rawData = new byte[numbers.length];
         for (int i = 0; i < rawData.length; i++) {
             rawData[i] = Byte.parseByte(numbers[i]);
@@ -134,13 +123,7 @@ public class PersistentMockDB extends MockDB {
             // save data to disk
             File dbFile = new File(path);
 
-            FileWriter writer = null;
-
-            try {
-                dbFile.createNewFile();
-
-                writer = new FileWriter(dbFile, false);
-
+            try (FileWriter writer = new FileWriter(dbFile, false); ) {
                 for (Map.Entry<ByteArrayWrapper, byte[]> entry : kv.entrySet()) {
                     writer.write(
                             Arrays.toString(entry.getKey().getData())
@@ -152,13 +135,6 @@ public class PersistentMockDB extends MockDB {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                try {
-                    if (writer != null) {
-                        writer.close();
-                    }
-                } catch (IOException e) {
-                }
             }
 
             // clear data
