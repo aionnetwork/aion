@@ -83,22 +83,14 @@ public class Aion {
 
         CfgAion cfg = CfgAion.inst();
 
-        /*
-         * if in the config.xml id is set as default [NODE-ID-PLACEHOLDER]
-         * return true which means should save back to xml config
-         */
-        if (cfg.fromXML()) {
-            if(args != null && args.length > 0 && !(args[0].equals("-v")||args[0].equals("--version"))) {
-                cfg.toXML(new String[]{"--id=" + cfg.getId()});
-            }
-        }
-
-        // Reads CLI (must be after the cfg.fromXML())
-        if (args != null && args.length > 0) {
-            ReturnType ret = new Cli().call(args, cfg);
-            if (ret != ReturnType.RUN) {
-                exit(ret.getValue());
-            }
+        // true means the UUID must be set
+        boolean overwrite = cfg.fromXML();
+        ReturnType ret = new Cli().call(args, cfg);
+        if (ret != ReturnType.RUN) {
+            exit(ret.getValue());
+        } else if (overwrite) {
+            // only updating the file in case of RUN return value
+            cfg.toXML(new String[]{"--id=" + cfg.getId()});
         }
 
         // UUID check
@@ -126,7 +118,7 @@ public class Aion {
          * Logger initialize with LOGFILE and LOGPATH (user config inputs)
          */
         AionLoggerFactory
-            .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
+            .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLogPath());
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
         // TODO-Ale: fix

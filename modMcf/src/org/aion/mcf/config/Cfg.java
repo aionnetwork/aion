@@ -207,11 +207,15 @@ public abstract class Cfg {
     }
 
     public String getLogPath() {
+        return getLogDirectory().getAbsolutePath();
+    }
+
+    public File getLogDirectory() {
         if (logDirectory != null) {
             // set when using absolute paths
-            return logDirectory.getAbsolutePath();
+            return logDirectory;
         } else {
-            return new File(getExecDirectory(), getLog().getLogPath()).getAbsolutePath();
+            return new File(getExecDirectory(), getLog().getLogPath());
         }
     }
 
@@ -220,11 +224,15 @@ public abstract class Cfg {
     }
 
     public String getDatabasePath() {
+        return getDatabaseDirectory().getAbsolutePath();
+    }
+
+    public File getDatabaseDirectory() {
         if (databaseDirectory != null) {
             // set when using absolute paths
-            return databaseDirectory.getAbsolutePath();
+            return databaseDirectory;
         } else {
-            return new File(getExecDirectory(), getDb().getPath()).getAbsolutePath();
+            return new File(getExecDirectory(), getDb().getPath());
         }
     }
 
@@ -334,16 +342,22 @@ public abstract class Cfg {
     }
 
     /**
-     * @return boolean value used return to also determine if we need to write back to file with
-     *     current config
+     * Loads the configuration from the default config file. Returns a boolean value used to
+     * determine if the configuration needs to be saved back to disk with a valid peer identifier.
+     *
+     * @return {@code true} when the peer id read from the file is [NODE-ID-PLACEHOLDER] which needs
+     *     to be replaced by a valid user ID on disk, {@code false} otherwise.
      */
     public abstract boolean fromXML();
 
     /**
-     * @return boolean value used return to also determine if we need to write back to file with
-     *     current config * return true which means should save back to xml config return true which
-     *     means should save back to xml config if in the config.xml id is set as default
-     *     [NODE-ID-PLACEHOLDER] return true which means should save back to xml config
+     * Loads the configuration from the given config file.
+     *
+     * <p>Returns a boolean value used to determine if the configuration needs to be saved back to
+     * disk with a valid peer identifier.
+     *
+     * @return {@code true} when the peer id read from the file is [NODE-ID-PLACEHOLDER] which needs
+     *     to be replaced by a valid user ID on disk, {@code false} otherwise.
      */
     public abstract boolean fromXML(File configFile);
 

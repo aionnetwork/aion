@@ -178,6 +178,9 @@ public class Cli {
                 return ReturnType.EXIT;
             }
 
+            // make directories for kernel execution
+            makeDirs(cfg);
+
             if (options.isCreateAccount()) {
                 if (!createAccount()) {
                     return ERROR;
@@ -370,8 +373,6 @@ public class Cli {
                 return EXIT;
             }
 
-            // make directories for kernel execution
-            makeDirs(cfg);
             // if no return happened earlier, run the kernel
             return RUN;
         } catch (Throwable e) {
@@ -481,12 +482,32 @@ public class Cli {
             file.mkdirs();
         }
 
-        // copy config & genesis
-        copyRecursively(cfg.getInitialConfigFile(), cfg.getExecConfigFile());
-        copyRecursively(cfg.getInitialGenesisFile(), cfg.getExecGenesisFile());
+        // copy config file
+        File initial = cfg.getInitialConfigFile();
+        File target = cfg.getExecConfigFile();
+        if (!initial.equals(target)) {
+            copyRecursively(initial, target);
+        }
 
-        // TODO-Ale: create target log directory
-        // TODO-Ale: create target database directory
+        // copy genesis file
+        initial = cfg.getInitialGenesisFile();
+        target = cfg.getExecGenesisFile();
+        if (!initial.equals(target)) {
+            copyRecursively(initial, target);
+        }
+
+        // create target log directory
+        file = cfg.getLogDirectory();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+
+        // create target database directory
+        file = cfg.getDatabaseDirectory();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+
         // TODO-Ale: create target keystore directory
     }
 
