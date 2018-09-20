@@ -31,8 +31,8 @@ public class AddressSpecs {
         assert address != null;
         address = address.replace("0x", "");
         assert address.length() == 64;
-
         byte[] h = HashUtil.h256(ByteUtil.hexStringToBytes(address));
+        if (h == null) return null; //address is invalid
         System.out.println(ByteUtil.toHexString(h));
         BitSet b = BitSet.valueOf(h);
         char[] caddr = address.toCharArray();
@@ -44,7 +44,6 @@ public class AddressSpecs {
                 caddr[i] = b.get(i) ? Character.toUpperCase(caddr[i]) : Character.toLowerCase(caddr[i]);
                 continue;
             }
-            return null; // not a valid address
         }
         return String.valueOf(caddr);
     }
