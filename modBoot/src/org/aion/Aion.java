@@ -83,14 +83,9 @@ public class Aion {
 
         CfgAion cfg = CfgAion.inst();
 
-        // true means the UUID must be set
-        boolean overwrite = cfg.fromXML();
         ReturnType ret = new Cli().call(args, cfg);
         if (ret != ReturnType.RUN) {
             exit(ret.getValue());
-        } else if (overwrite) {
-            // only updating the file in case of RUN return value
-            cfg.toXML(new String[]{"--id=" + cfg.getId()});
         }
 
         // UUID check

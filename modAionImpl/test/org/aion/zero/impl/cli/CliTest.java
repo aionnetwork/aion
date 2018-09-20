@@ -100,7 +100,7 @@ public class CliTest {
             if (!configPath.exists()) {
                 configPath.mkdirs();
             }
-            cfg.toXML(null, mainnetConfig);
+            Cli.copyRecursively(config, mainnetConfig);
             Cli.copyRecursively(genesis, mainnetGenesis);
         }
 
@@ -110,7 +110,7 @@ public class CliTest {
             if (!configPath.exists()) {
                 configPath.mkdirs();
             }
-            cfg.toXML(null, testnetConfig);
+            Cli.copyRecursively(config, mainnetConfig);
             Cli.copyRecursively(genesis, testnetGenesis);
         }
 
@@ -340,34 +340,37 @@ public class CliTest {
         }
     }
 
-    /** Parameters for testing {@link #testConfig(String[], String)}. */
+    /** Parameters for testing {@link #testConfig(String[], File, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithConfig() {
         List<Object> parameters = new ArrayList<>();
 
         String[] options = new String[] {"-c", "--config"};
+        File config = new File(BASE_PATH, "config/mainnet/config.xml");
         String expected = new File(BASE_PATH, "mainnet").getAbsolutePath();
 
         for (String op : options) {
             // without parameter
-            parameters.add(new Object[] {new String[] {op}, expected});
+            parameters.add(new Object[] {new String[] {op}, config, expected});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "invalid"}, expected});
+            parameters.add(new Object[] {new String[] {op, "invalid"}, config, expected});
             // mainnet as parameter
-            parameters.add(new Object[] {new String[] {op, "mainnet"}, expected});
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, config, expected});
         }
 
+        config = new File(BASE_PATH, "config/mastery/config.xml");
         expected = new File(BASE_PATH, "mastery").getAbsolutePath();
 
         for (String op : options) {
             // mastery as parameter
-            parameters.add(new Object[] {new String[] {op, "mastery"}, expected});
+            parameters.add(new Object[] {new String[] {op, "mastery"}, config, expected});
             // testnet as parameter
-            parameters.add(new Object[] {new String[] {op, "testnet"}, expected});
+            parameters.add(new Object[] {new String[] {op, "testnet"}, config, expected});
         }
 
         // config and directory
         String[] dir_options = new String[] {"-d", "--datadir"};
+        config = new File(path, "mainnet/config/config.xml");
         expected = new File(path, "mainnet").getAbsolutePath();
 
         String[] net_values = new String[] {"mainnet", "invalid"};
@@ -377,21 +380,23 @@ public class CliTest {
                     // with relative path
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, dataDirectory, opCfg, valNet}, expected
+                                new String[] {opDir, dataDirectory, opCfg, valNet}, config, expected
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opCfg, valNet, opDir, dataDirectory}, expected
+                                new String[] {opCfg, valNet, opDir, dataDirectory}, config, expected
                             });
                     // with absolute path
                     parameters.add(
                             new Object[] {
                                 new String[] {opDir, path.getAbsolutePath(), opCfg, valNet},
+                                config,
                                 expected
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opCfg, valNet, opDir, path.getAbsolutePath()},
+                                config,
                                 expected
                             });
                 }
@@ -400,6 +405,7 @@ public class CliTest {
 
         // config and directory with testnet
         net_values = new String[] {"mastery", "testnet"};
+        config = new File(path, "mastery/config/config.xml");
         expected = new File(path, "mastery").getAbsolutePath();
         for (String opDir : dir_options) {
             for (String opCfg : options) {
@@ -407,21 +413,23 @@ public class CliTest {
                     // with relative path
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, dataDirectory, opCfg, netVal}, expected
+                                new String[] {opDir, dataDirectory, opCfg, netVal}, config, expected
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opCfg, netVal, opDir, dataDirectory}, expected
+                                new String[] {opCfg, netVal, opDir, dataDirectory}, config, expected
                             });
                     // with absolute path
                     parameters.add(
                             new Object[] {
                                 new String[] {opDir, path.getAbsolutePath(), opCfg, netVal},
+                                config,
                                 expected
                             });
                     parameters.add(
                             new Object[] {
                                 new String[] {opCfg, netVal, opDir, path.getAbsolutePath()},
+                                config,
                                 expected
                             });
                 }
@@ -434,13 +442,22 @@ public class CliTest {
     /** Ensures that the { <i>-c</i>, <i>--config</i> } arguments work. */
     @Test
     @Parameters(method = "parametersWithConfig")
-    public void testConfig(String[] input, String expectedPath) {
+    public void testConfig(String[] input, File expectedFile, String expectedPath) {
+        if (expectedFile.exists()) {
+            assertThat(cfg.fromXML(expectedFile)).isTrue();
+        }
+
         assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigPath())
                 .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
         assertThat(cfg.getExecGenesisPath())
                 .isEqualTo(new File(expectedPath, "config/genesis.json").getAbsolutePath());
+
+        //        cfg.resetInternal();
+
+        assertThat(expectedFile.exists()).isTrue();
+        assertThat(cfg.fromXML(expectedFile)).isFalse();
 
         if (verbose) {
             printPaths(cfg);

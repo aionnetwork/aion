@@ -39,7 +39,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -139,47 +138,54 @@ public class Cli {
                 // no return -> allow for other parameters combined with -d
             }
 
+            // reading from correct config file
+            File configFile = cfg.getExecConfigFile();
+            if (!configFile.exists()) {
+                configFile = cfg.getInitialConfigFile();
+            }
+
+            // true means the UUID must be set
+            boolean overwrite = cfg.fromXML(configFile);
+
             // 4. can be influenced by the -d argument above
 
             if (options.getConfig() != null) {
                 // network was already set above
 
-                // TODO-Ale: handle case where cannot find initial file
-                // read from initial config
-                if (cfg.fromXML(cfg.getInitialConfigFile())) {
-                    // set user id when not present
-                    cfg.setId(UUID.randomUUID().toString());
-                }
+                // if the directory was set we generate a new file
+                if (options.getDirectory() != null) {
+                    configFile = cfg.getExecConfigFile();
 
-                // ensure path exists
-                File dir = cfg.getExecConfigDirectory();
-                if (!dir.exists()) {
-                    dir.mkdirs();
+                    // ensure path exists
+                    File dir = cfg.getExecConfigDirectory();
+                    if (!dir.exists()) {
+                        dir.mkdirs();
+                    }
+                    configFile.createNewFile();
                 }
 
                 // save to disk
-                cfg.toXML(null, cfg.getExecConfigFile());
+                cfg.toXML(null, configFile);
 
-                System.out.println("\nNew config generated at " + cfg.getExecConfigPath() + ".");
+                System.out.println("\nNew config generated at " + configFile + ".");
                 return ReturnType.EXIT;
             }
 
             // 5. options that can be influenced by the -d and -n arguments
 
             if (options.isInfo()) {
-                File configFile = cfg.getExecConfigFile();
-                if (!configFile.exists()) {
-                    configFile = cfg.getInitialConfigFile();
-                }
-
-                System.out.println("Reading config file at " + configFile.getAbsolutePath() + ".");
-                cfg.fromXML(configFile);
+                System.out.println("Read config file at " + configFile.getAbsolutePath() + ".");
                 printInfo(cfg);
                 return ReturnType.EXIT;
             }
 
             // make directories for kernel execution
             makeDirs(cfg);
+
+            if (overwrite) {
+                // only updating the file in case the user id was not set
+                cfg.toXML(new String[] {"--id=" + cfg.getId()}, cfg.getExecConfigFile());
+            }
 
             if (options.isCreateAccount()) {
                 if (!createAccount()) {

@@ -30,20 +30,22 @@ import org.aion.mcf.types.AbstractBlock;
 /** @author chris */
 public abstract class Cfg {
 
-    private final String configFile = "config.xml";
-    private final String genesisFile = "genesis.json";
-    private final String keystoreDirectory = "keystore";
-    private final String configDirectory = "config";
+    private final String configDirectoryName = "config";
+    private final String configFileName = "config.xml";
+    private final String genesisFileName = "genesis.json";
+    private final String keystoreDirectoryName = "keystore";
 
     private File logDirectory = null;
     private File databaseDirectory = null;
     private File execDirectory = null;
+    private File configFile = null;
+    private File genesisFile = null;
 
     private String network = "mainnet";
 
     protected String BASE_PATH = System.getProperty("user.dir");
     protected final String INITIAL_PATH = System.getProperty("user.dir");
-    protected final File oldConfigDir = new File(INITIAL_PATH, configDirectory);
+    protected final File oldConfigDir = new File(INITIAL_PATH, configDirectoryName);
 
     /** @implNote modified only from {@link #setNetwork(String)} */
     protected File newConfigDir = new File(oldConfigDir, network);
@@ -159,6 +161,8 @@ public abstract class Cfg {
         logDirectory = null;
         databaseDirectory = null;
         execDirectory = null;
+        genesisFile = null;
+        configFile = null;
         network = "mainnet";
 
         BASE_PATH = INITIAL_PATH;
@@ -242,18 +246,18 @@ public abstract class Cfg {
 
     public String getKeystorePath() {
         // todo-Ale
-        return new File(getBasePath(), keystoreDirectory).getAbsolutePath();
+        return new File(getBasePath(), keystoreDirectoryName).getAbsolutePath();
     }
 
     /** Returns the configuration directory location for the kernel execution. */
     public File getExecConfigDirectory() {
         // TODO check different input
-        return new File(getExecDirectory(), configDirectory);
+        return new File(getExecDirectory(), configDirectoryName);
     }
 
     /** Returns the location where the config file is saved for kernel execution. */
     public File getExecConfigFile() {
-        return new File(getExecConfigDirectory(), configFile);
+        return new File(getExecConfigDirectory(), configFileName);
     }
 
     /** Returns the location where the config file is saved for kernel execution. */
@@ -263,7 +267,7 @@ public abstract class Cfg {
 
     /** Returns the location where the genesis file is saved for kernel execution. */
     public File getExecGenesisFile() {
-        return new File(getExecConfigDirectory(), genesisFile);
+        return new File(getExecConfigDirectory(), genesisFileName);
     }
 
     /** Returns the location where the genesis file is saved for kernel execution. */
@@ -273,21 +277,26 @@ public abstract class Cfg {
 
     /** @implNote Maintains the old setup if the config file is present in the old location. */
     public File getInitialConfigFile() {
-        // TODO-Ale: may want to consider exec path as well
-        // use old config location for compatibility with old kernels
-        File config = new File(oldConfigDir, configFile);
+        if (configFile == null) {
+            // TODO-Ale: may want to consider exec path as well
+            // use old config location for compatibility with old kernels
+            File config = new File(oldConfigDir, configFileName);
 
-        // TODO: read mainnet config when ignore set
-        if (ignoreOldSetup || !config.exists()) {
-            config = new File(newConfigDir, configFile);
-            if (execDirectory == null) {
-                execDirectory = new File(INITIAL_PATH);
+            // TODO: read mainnet config when ignore set
+            if (ignoreOldSetup || !config.exists()) {
+                if (execDirectory == null) {
+                    execDirectory = new File(INITIAL_PATH);
+                }
+                config = getExecConfigFile();
+                if (!config.exists()) {
+                    config = new File(newConfigDir, configFileName);
+                }
+            } else {
+                useOldSetup = true;
             }
-        } else {
-            useOldSetup = true;
+            configFile = config;
         }
-
-        return config;
+        return configFile;
     }
 
     /** @implNote Maintains the old setup if the config file is present in the old location. */
@@ -296,17 +305,22 @@ public abstract class Cfg {
     }
 
     public File getInitialGenesisFile() {
-        // use old genesis location for compatibility with old kernels
-        File genesis = new File(oldConfigDir, genesisFile);
+        if (genesisFile == null) {
+            // use old genesis location for compatibility with old kernels
+            File genesis = new File(oldConfigDir, genesisFileName);
 
-        if (ignoreOldSetup || !genesis.exists()) {
-            genesis = new File(newConfigDir, genesisFile);
-            if (execDirectory == null) {
-                execDirectory = new File(INITIAL_PATH);
+            if (ignoreOldSetup || !genesis.exists()) {
+                if (execDirectory == null) {
+                    execDirectory = new File(INITIAL_PATH);
+                }
+                genesis = getExecGenesisFile();
+                if (!genesis.exists()) {
+                    genesis = new File(newConfigDir, genesisFileName);
+                }
             }
+            genesisFile = genesis;
         }
-
-        return genesis;
+        return genesisFile;
     }
 
     /** @implNote Maintains the old setup if the config file is present in the old location. */
