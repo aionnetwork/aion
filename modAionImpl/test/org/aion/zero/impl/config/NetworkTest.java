@@ -52,6 +52,10 @@ public class NetworkTest {
         parameters.add(new Object[] {"testnet", Network.MASTERY});
         parameters.add(new Object[] {"TESTNET", Network.MASTERY});
 
+        parameters.add(new Object[] {"custom", Network.CUSTOM});
+        parameters.add(new Object[] {"CUSTOM", Network.CUSTOM});
+        parameters.add(new Object[] {"custom", Network.getCustomNet(1000)});
+
         parameters.add(new Object[] {"undefined", null});
 
         return parameters.toArray();
@@ -73,6 +77,7 @@ public class NetworkTest {
         }
 
         parameters.add(new Object[] {-1, null});
+        parameters.add(new Object[] {1000, Network.getCustomNet(1000)});
 
         return parameters.toArray();
     }

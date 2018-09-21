@@ -32,9 +32,10 @@ import java.util.Arrays;
 public enum Network {
     MAINNET("mainnet", 256),
     CONQUEST("conquest", 128),
-    MASTERY("mastery", 32);
+    MASTERY("mastery", 32),
+    CUSTOM("custom", 0);
 
-    private String name;
+    private final String name;
     private int identifier;
 
     /**
@@ -85,22 +86,44 @@ public enum Network {
     /**
      * Utility method that determines the correct network based on the given identifier.
      *
-     * @param identifier an integer value representing the network identifier
+     * @param identifier a positive integer value representing the network identifier
      * @return the network object corresponding to the int value or null when the value is not
      *     mapped to an object.
      */
     public static Network determineNetwork(int identifier) {
+        if (identifier < 0) {
+            return null;
+        }
+
         for (Network net : Network.values()) {
             if (identifier == net.getIdentifier()) {
                 return net;
             }
         }
 
-        return null;
+        // custom networks may have any positive identifier not already taken
+        Network net = Network.CUSTOM;
+        net.identifier = identifier;
+        return net;
     }
 
     public static String valueString() {
         String output = Arrays.toString(Network.values());
         return output.substring(1, output.length() - 1);
+    }
+
+    /**
+     * Generates a custom network with the given identifier.
+     *
+     * @param identifier a positive integer value representing the network identifier
+     * @return a custom network object with the given identifier.
+     */
+    public static Object getCustomNet(int identifier) {
+        if (identifier < 0) {
+            return null;
+        }
+        Network net = Network.CUSTOM;
+        net.identifier = identifier;
+        return net;
     }
 }
