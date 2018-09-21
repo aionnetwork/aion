@@ -52,7 +52,6 @@ import org.aion.zero.impl.cli.Cli.ReturnType;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -61,8 +60,9 @@ import org.mockito.Mockito;
 @RunWith(JUnitParamsRunner.class)
 public class CliTest {
 
-    private Cli cli = new Cli();
+    private final Cli cli = new Cli();
     private CfgAion cfg = CfgAion.inst();
+    private final Cli mockCli = Mockito.spy(new Cli());
 
     private static final String BASE_PATH = System.getProperty("user.dir");
     private static final String module = "modAionImpl";
@@ -118,6 +118,8 @@ public class CliTest {
         }
 
         cfg.resetInternal();
+
+        doReturn("password").when(mockCli).readPassword(any(), any());
     }
 
     @After
@@ -449,6 +451,7 @@ public class CliTest {
         if (expectedFile.exists()) {
             assertThat(cfg.fromXML(expectedFile)).isTrue();
         }
+        cfg.resetInternal();
 
         assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
@@ -456,8 +459,6 @@ public class CliTest {
                 .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
         assertThat(cfg.getExecGenesisPath())
                 .isEqualTo(new File(expectedPath, "config/genesis.json").getAbsolutePath());
-
-        //        cfg.resetInternal();
 
         assertThat(expectedFile.exists()).isTrue();
         assertThat(cfg.fromXML(expectedFile)).isFalse();
@@ -732,12 +733,9 @@ public class CliTest {
     @Test
     @Parameters(method = "parametersWithCreateAccount")
     public void testCreateAccount(String[] input, ReturnType expectedReturn) {
-        Cli mockCli = Mockito.spy(new Cli());
-        doReturn("password").when(mockCli).readPassword(any(), any());
-
         // number of accounts before create call
         int count = Keystore.list().length;
-        assertThat(mockCli.call(input, CfgAion.inst())).isEqualTo(expectedReturn);
+        assertThat(mockCli.call(input, cfg)).isEqualTo(expectedReturn);
         if (expectedReturn == EXIT) {
             // ensure number of accounts was incremented
             assertThat(Keystore.list().length).isEqualTo(count + 1);
@@ -749,30 +747,26 @@ public class CliTest {
 
     @Test
     public void testCreateAccount_withSplitInput() {
-        Cli mockCli = Mockito.spy(new Cli());
-        doReturn("password").when(mockCli).readPassword(any(), any());
-
         // number of accounts before create call
         int count = Keystore.list().length;
 
-        assertThat(mockCli.call(new String[] {"-a"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a"}, cfg)).isEqualTo(ERROR);
         // ensure number of accounts is unchanged
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[] {"-a", "cre"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a", "cre"}, cfg)).isEqualTo(ERROR);
         // ensure number of accounts is unchanged
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[] {"--acc", "create"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"--acc", "create"}, cfg)).isEqualTo(ERROR);
         // ensure number of accounts is unchanged
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[] {"-a", "create"}, CfgAion.inst())).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"-a", "create"}, cfg)).isEqualTo(EXIT);
         // ensure number of accounts was incremented
         assertThat(Keystore.list().length).isEqualTo(count + 1);
 
-        assertThat(mockCli.call(new String[] {"--account", "create"}, CfgAion.inst()))
-                .isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"--account", "create"}, cfg)).isEqualTo(EXIT);
         // ensure number of accounts was incremented
         assertThat(Keystore.list().length).isEqualTo(count + 2);
     }
@@ -789,7 +783,7 @@ public class CliTest {
     @Test
     @Parameters(method = "parametersWithListAccount")
     public void testListAccounts(String[] input, ReturnType expectedReturn) {
-        assertThat(cli.call(input, CfgAion.inst())).isEqualTo(expectedReturn);
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
     }
 
     @Test
@@ -797,19 +791,19 @@ public class CliTest {
         // used to ensure number of accounts is unchanged
         int count = Keystore.list().length;
 
-        assertThat(cli.call(new String[] {"-a"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(cli.call(new String[] {"-a"}, cfg)).isEqualTo(ERROR);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(cli.call(new String[] {"-a", "lis"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(cli.call(new String[] {"-a", "lis"}, cfg)).isEqualTo(ERROR);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(cli.call(new String[] {"--acc", "list"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(cli.call(new String[] {"--acc", "list"}, cfg)).isEqualTo(ERROR);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(cli.call(new String[] {"-a", "list"}, CfgAion.inst())).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {"-a", "list"}, cfg)).isEqualTo(EXIT);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(cli.call(new String[] {"--account", "list"}, CfgAion.inst())).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {"--account", "list"}, cfg)).isEqualTo(EXIT);
         assertThat(Keystore.list().length).isEqualTo(count);
     }
 
@@ -817,14 +811,11 @@ public class CliTest {
     @Test
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey(String option) {
-        Cli mockCli = Mockito.spy(new Cli());
-        doReturn("password").when(mockCli).readPassword(any(), any());
-
         // create account
-        assertThat(mockCli.call(new String[] {"ac"}, CfgAion.inst())).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(EXIT, mockCli.call(new String[] {option, account}, CfgAion.inst()));
+        assertEquals(EXIT, mockCli.call(new String[] {option, account}, cfg));
     }
 
     /**
@@ -834,20 +825,12 @@ public class CliTest {
     @Test
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey_withDataDir(String option) {
-        Cli mockCli = Mockito.spy(new Cli());
-        doReturn("password").when(mockCli).readPassword(any(), any());
-
         // create account
-        assertThat(mockCli.call(new String[] {"ac", "-d", dataDirectory}, CfgAion.inst()))
-                .isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac", "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(
-                EXIT,
-                mockCli.call(new String[] {option, account, "-d", dataDirectory}, CfgAion.inst()));
-        assertEquals(
-                EXIT,
-                mockCli.call(new String[] {"-d", dataDirectory, option, account}, CfgAion.inst()));
+        assertEquals(EXIT, mockCli.call(new String[] {option, account, "-d", dataDirectory}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, option, account}, cfg));
     }
 
     /**
@@ -857,20 +840,12 @@ public class CliTest {
     @Test
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey_withNetwork(String option) {
-        Cli mockCli = Mockito.spy(new Cli());
-        doReturn("password").when(mockCli).readPassword(any(), any());
-
         // create account
-        assertThat(mockCli.call(new String[] {"ac", "-n", "mastery"}, CfgAion.inst()))
-                .isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac", "-n", "mastery"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(
-                EXIT,
-                mockCli.call(new String[] {option, account, "-n", "mastery"}, CfgAion.inst()));
-        assertEquals(
-                EXIT,
-                mockCli.call(new String[] {"-n", "mastery", option, account}, CfgAion.inst()));
+        assertEquals(EXIT, mockCli.call(new String[] {option, account, "-n", "mastery"}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", option, account}, cfg));
     }
 
     /**
@@ -880,32 +855,23 @@ public class CliTest {
     @Test
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey_withDataDirAndNetwork(String option) {
-        Cli mockCli = Mockito.spy(new Cli());
-        doReturn("password").when(mockCli).readPassword(any(), any());
-
         // create account
-        assertThat(
-                        mockCli.call(
-                                new String[] {"ac", "-d", dataDirectory, "-n", "mastery"},
-                                CfgAion.inst()))
+        assertThat(mockCli.call(new String[] {"ac", "-d", dataDirectory, "-n", "mastery"}, cfg))
                 .isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
         assertEquals(
                 EXIT,
                 mockCli.call(
-                        new String[] {"-n", "mastery", option, account, "-d", dataDirectory},
-                        CfgAion.inst()));
+                        new String[] {"-n", "mastery", option, account, "-d", dataDirectory}, cfg));
         assertEquals(
                 EXIT,
                 mockCli.call(
-                        new String[] {"-n", "mastery", "-d", dataDirectory, option, account},
-                        CfgAion.inst()));
+                        new String[] {"-n", "mastery", "-d", dataDirectory, option, account}, cfg));
         assertEquals(
                 EXIT,
                 mockCli.call(
-                        new String[] {option, account, "-d", dataDirectory, "-n", "mastery"},
-                        CfgAion.inst()));
+                        new String[] {option, account, "-d", dataDirectory, "-n", "mastery"}, cfg));
     }
 
     /**
@@ -915,84 +881,178 @@ public class CliTest {
     @Test
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey_wSubstringOfAccount(String prefix) {
-        Cli mockCli = Mockito.spy(new Cli());
-        doReturn("password").when(mockCli).readPassword(any(), any());
-
         // create account
-        assertThat(mockCli.call(new String[] {"ac"}, CfgAion.inst())).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac"}, cfg)).isEqualTo(EXIT);
 
         String subStrAcc = Keystore.list()[0].substring(1);
 
-        assertEquals(ERROR, cli.call(new String[] {prefix, subStrAcc}, CfgAion.inst()));
+        assertEquals(ERROR, cli.call(new String[] {prefix, subStrAcc}, cfg));
     }
 
     @Test
     public void testExportPrivateKey_withSplitInput() {
-        Cli mockCli = Mockito.spy(new Cli());
-        doReturn("password").when(mockCli).readPassword(any(), any());
         // create account
-        assertThat(mockCli.call(new String[] {"ac"}, CfgAion.inst())).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac"}, cfg)).isEqualTo(EXIT);
         String account = Keystore.list()[0];
 
-        assertThat(mockCli.call(new String[] {"-a", account}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a", account}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[] {"-a", "exp", account}, CfgAion.inst()))
-                .isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a", "exp", account}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[] {"--acc", "export", account}, CfgAion.inst()))
-                .isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"--acc", "export", account}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[] {"-a", "export", account}, CfgAion.inst()))
-                .isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"-a", "export", account}, cfg)).isEqualTo(EXIT);
 
-        assertThat(mockCli.call(new String[] {"--account", "export", account}, CfgAion.inst()))
+        assertThat(mockCli.call(new String[] {"--account", "export", account}, cfg))
                 .isEqualTo(EXIT);
     }
 
-    /** Tests the -a import arguments work on a fail import key. */
+    /** Ensures that the { <i>-a import</i>, <i>a</i>, <i>--account import</i> } arguments work. */
     @Test
-    @Ignore
-    public void testImportPrivateKey() {
+    @Parameters({"-a import", "ai", "--account import"})
+    public void testImportPrivateKey(String option) {
+        // test 1: successful call
         ECKey key = ECKeyFac.inst().create();
+        String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        String[] args = {"-a", "import", Hex.toHexString(key.getPrivKeyBytes())};
-        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
+        assertEquals(EXIT, mockCli.call(new String[] {option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
+
+        // test 2: error -> known key
+        assertEquals(ERROR, mockCli.call(new String[] {option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
     }
 
-    /** Tests the -a import arguments fail when a non-private key is supplied. */
+    /**
+     * Ensures that the { <i>-a import</i>, <i>a</i>, <i>--account import</i> } arguments work in
+     * combination with the data directory option.
+     */
     @Test
-    @Ignore
-    public void testImportNonPrivateKey() {
-        String account = Keystore.create("password");
-
-        String[] args = {"-a", "import", account};
-        assertEquals(ERROR, cli.call(args, CfgAion.inst()));
-    }
-
-    /** Tests the -a import arguments work when a valid private key is supplied. */
-    @Test
-    @Ignore
-    public void testImportPrivateKey2() {
+    @Parameters({"-a import", "ai", "--account import"})
+    public void testImportPrivateKey_withDataDir(String option) {
+        // test 1: -d last
         ECKey key = ECKeyFac.inst().create();
-        System.out.println("Original address    : " + Hex.toHexString(key.getAddress()));
-        System.out.println("Original public key : " + Hex.toHexString(key.getPubKey()));
-        System.out.println("Original private key: " + Hex.toHexString(key.getPrivKeyBytes()));
+        String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        String[] args = {"-a", "import", Hex.toHexString(key.getPrivKeyBytes())};
-        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
+        assertEquals(EXIT, mockCli.call(new String[] {option, pKey, "-d", dataDirectory}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
 
-        ECKey key2 = Keystore.getKey(Hex.toHexString(key.getAddress()), "password");
-        System.out.println("Imported address    : " + Hex.toHexString(key2.getAddress()));
-        System.out.println("Imported public key : " + Hex.toHexString(key2.getPubKey()));
-        System.out.println("Imported private key: " + Hex.toHexString(key2.getPrivKeyBytes()));
+        // test 2: known key
+        assertEquals(ERROR, mockCli.call(new String[] {option, pKey, "-d", dataDirectory}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
+
+        // test 3: -d first
+        key = ECKeyFac.inst().create();
+        pKey = Hex.toHexString(key.getPrivKeyBytes());
+
+        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(2);
     }
 
-    /** Tests the -a import arguments fail given an invalid private key. */
+    /**
+     * Ensures that the { <i>-a import</i>, <i>a</i>, <i>--account import</i> } arguments work in
+     * combination with the network option.
+     */
     @Test
-    @Ignore
-    public void testImportPrivateKeyWrong() {
-        String[] args = {"-a", "import", "hello"};
-        assertEquals(ERROR, cli.call(args, CfgAion.inst()));
+    @Parameters({"-a import", "ai", "--account import"})
+    public void testImportPrivateKey_withNetwork(String option) {
+        // test 1: -n last
+        ECKey key = ECKeyFac.inst().create();
+        String pKey = Hex.toHexString(key.getPrivKeyBytes());
+
+        assertEquals(EXIT, mockCli.call(new String[] {option, pKey, "-n", "mastery"}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
+
+        // test 2: known key
+        assertEquals(ERROR, mockCli.call(new String[] {option, pKey, "-n", "mastery"}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
+
+        // test 3: -n first
+        key = ECKeyFac.inst().create();
+        pKey = Hex.toHexString(key.getPrivKeyBytes());
+
+        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(2);
+    }
+
+    /**
+     * Ensures that the { <i>-a import</i>, <i>a</i>, <i>--account import</i> } arguments work in
+     * combination with the data directory and network options.
+     */
+    @Test
+    @Parameters({"-a import", "ai", "--account import"})
+    public void testImportPrivateKey_withDataDirAndNetwork(String option) {
+        // test 1: -d -n last
+        ECKey key = ECKeyFac.inst().create();
+        String pKey = Hex.toHexString(key.getPrivKeyBytes());
+
+        assertEquals(
+                EXIT,
+                mockCli.call(
+                        new String[] {option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
+
+        // test 2: known key
+        assertEquals(
+                ERROR,
+                mockCli.call(
+                        new String[] {option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(1);
+
+        // test 3: -d -n first
+        key = ECKeyFac.inst().create();
+        pKey = Hex.toHexString(key.getPrivKeyBytes());
+
+        assertEquals(
+                EXIT,
+                mockCli.call(
+                        new String[] {"-n", "mastery", "-d", dataDirectory, option, pKey}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(2);
+
+        // test 4: ai middle
+        key = ECKeyFac.inst().create();
+        pKey = Hex.toHexString(key.getPrivKeyBytes());
+
+        assertEquals(
+                EXIT,
+                mockCli.call(
+                        new String[] {"-n", "mastery", option, pKey, "-d", dataDirectory}, cfg));
+        assertThat(Keystore.list().length).isEqualTo(3);
+    }
+
+    @Test
+    public void testImportPrivateKey_withSplitInput() {
+        // create account
+        ECKey key = ECKeyFac.inst().create();
+        String pKey = Hex.toHexString(key.getPrivKeyBytes());
+
+        assertThat(mockCli.call(new String[] {"-a", pKey}, cfg)).isEqualTo(ERROR);
+
+        assertThat(mockCli.call(new String[] {"-a", "imp", pKey}, cfg)).isEqualTo(ERROR);
+
+        assertThat(mockCli.call(new String[] {"--acc", "import", pKey}, cfg)).isEqualTo(ERROR);
+
+        assertThat(mockCli.call(new String[] {"-a", "import", pKey}, cfg)).isEqualTo(EXIT);
+        assertThat(Keystore.list().length).isEqualTo(1);
+
+        key = ECKeyFac.inst().create();
+        pKey = Hex.toHexString(key.getPrivKeyBytes());
+        assertThat(mockCli.call(new String[] {"--account", "import", pKey}, cfg)).isEqualTo(EXIT);
+        assertThat(Keystore.list().length).isEqualTo(2);
+    }
+
+    /**
+     * Ensures that the { <i>-a import</i>, <i>a</i>, <i>--account import</i> } arguments fail when
+     * a non-private key is supplied.
+     */
+    @Test
+    @Parameters({"-a import", "ai", "--account import"})
+    public void testImportNonPrivateKey(String option) {
+        String fakePKey = Hex.toHexString("random".getBytes());
+
+        assertThat(mockCli.call(new String[] {option, fakePKey}, cfg)).isEqualTo(ERROR);
+
+        assertThat(mockCli.call(new String[] {option, "hello"}, cfg)).isEqualTo(ERROR);
     }
 
     // Methods below taken from FileUtils class
