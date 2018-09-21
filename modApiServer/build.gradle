@@ -1,5 +1,10 @@
 ext.moduleName = 'aion.apiserver'
 
+// compile error in tests right now, so disable them from build
+build.dependsOn.remove("check")
+
+test.dependsOn copyNativeLibsForModuleTests
+
 dependencies {
     compile project(':modAionBase')
     compile project(':modAion')
@@ -28,7 +33,12 @@ dependencies {
 
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
+    testRuntimeOnly project(':modTxPoolImpl')
 }
 
-// compile error in tests right now, so disable them from build
-build.dependsOn.remove("check")
+test {
+    testLogging {
+        outputs.upToDateWhen {false}
+        showStandardStreams = true
+    }
+}

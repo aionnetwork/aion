@@ -38,6 +38,7 @@ public final class TxPoolModule {
     private TxPoolModule(Properties config) throws Throwable {
         String moduleName = (String) config.get(MODULENAME);
         if (moduleName != null) {
+            System.out.println("moduleName = " + moduleName );
             TXPOOL = (ITxPool<ITransaction>) getClass().getClassLoader().loadClass(moduleName)
                     .getDeclaredConstructor(Properties.class).newInstance(config);
         } else {

@@ -1,5 +1,6 @@
 ext.moduleName = 'aion.zero.impl'
 test.dependsOn copyNativeLibsForModuleTests
+clean.dependsOn deleteNativeLibs
 
 dependencies {
     compile project(':modAionBase')
@@ -27,7 +28,17 @@ dependencies {
     testCompile 'com.google.truth:truth:0.42'
 }
 
+task preBuild(type: Exec) {
+    commandLine 'sh', "${rootProject.projectDir}/script/prebuild.sh"
+}
+
+task postBuild(type: Exec) { 
+    commandLine 'sh', "${rootProject.projectDir}/script/postbuild.sh"
+}
+
 compileJava {
+    dependsOn preBuild
+    finalizedBy postBuild
     doFirst { 
         options.compilerArgs += ['-h', file("./build/native")]
     }

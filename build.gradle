@@ -32,6 +32,10 @@ def vmVersion = ant.properties['vm.version'] // = "0.2.1"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
 task compileNative(type:Exec) {
+    // seems kinda hacky, but need big reorganization to fix
+    dependsOn 'modCrypto:compileNative'
+    dependsOn 'modAionImpl:compileJava'
+
     doFirst { 
         mkdir "${dirBuildFile}"
         mkdir "${dirNative}/linux/equihash"
@@ -91,9 +95,9 @@ subprojects {
     }
 
     task copyNativeLibsForModuleTests(type: Copy) { 
-        from '../native' into file('./native')
+        dependsOn rootProject.compileNative
+        from rootProject.file('native') into file('./native')
     }
-    copyNativeLibsForModuleTests.dependsOn rootProject.compileNative
 
     task deleteNativeLibs(type: Delete) {
         task -> delete 'native'
@@ -101,6 +105,12 @@ subprojects {
 
     build.dependsOn copyJarToAionMod
     clean.dependsOn deleteJarFromAionMod
+
+    test { 
+        reports { 
+            html.enabled = true;
+        }
+    }
 
     afterEvaluate { 
         // Override java plug-in behaviour to make JDK9+ module logic work
@@ -148,8 +158,6 @@ subprojects {
         */
     }
 }
-
-compileNative.dependsOn project(':modCrypto').getTasksByName('compileNative', false);
 
 task downloadVmDepsGit(type: Download) { 
     overwrite false // TODO This seems to work only when this task is directly invoked
@@ -241,8 +249,17 @@ task packDevDocker(type: Exec) {
     commandLine 'sh', "${dirWorkspace}/script/pack_dev_docker.sh"
 }
 
-project.build.dependsOn("ant-3rd_build")
-project.build.dependsOn("extractVmDepsGit")
-project.build.dependsOn("collectDependentJars")
+clean { 
+    delete 'pack'
+}
+
+task aggregatedReport(type: TestReport) { 
+    reportOn subprojects*.test
+}
+
+build.dependsOn("ant-3rd_build")
+build.dependsOn("extractVmDepsGit")
+build.dependsOn("collectDependentJars")
+
 
 project(':modAionImpl') { build.finalizedBy(compileNative) }
