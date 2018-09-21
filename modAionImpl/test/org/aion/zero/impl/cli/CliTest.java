@@ -27,6 +27,8 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -53,6 +55,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.*;
 
 /** CliTest for new version with use of different networks. */
 @RunWith(JUnitParamsRunner.class)
@@ -70,24 +73,24 @@ public class CliTest {
     private static final File path = new File(BASE_PATH, dataDirectory);
     private static final File alternativePath = new File(BASE_PATH, alternativeDirectory);
 
-    private static File config =
+    private static final File config =
             BASE_PATH.contains(module)
                     ? new File(BASE_PATH, initialConfigFile)
                     : new File(BASE_PATH, module + "/" + initialConfigFile);
-    private static File oldConfig = new File(BASE_PATH, "config/config.xml");
-    private static File mainnetConfig = new File(BASE_PATH, "config/mainnet/config.xml");
-    private static File testnetConfig = new File(BASE_PATH, "config/mastery/config.xml");
+    private static final File oldConfig = new File(BASE_PATH, "config/config.xml");
+    private static final File mainnetConfig = new File(BASE_PATH, "config/mainnet/config.xml");
+    private static final File testnetConfig = new File(BASE_PATH, "config/mastery/config.xml");
 
-    private static File genesis =
+    private static final File genesis =
             BASE_PATH.contains(module)
                     ? new File(BASE_PATH, initialGenesisFile)
                     : new File(BASE_PATH, module + "/" + initialGenesisFile);
-    private static File oldGenesis = new File(BASE_PATH, "config/genesis.json");
-    private static File mainnetGenesis = new File(BASE_PATH, "config/mainnet/genesis.json");
-    private static File testnetGenesis = new File(BASE_PATH, "config/mastery/genesis.json");
+    private static final File oldGenesis = new File(BASE_PATH, "config/genesis.json");
+    private static final File mainnetGenesis = new File(BASE_PATH, "config/mainnet/genesis.json");
+    private static final File testnetGenesis = new File(BASE_PATH, "config/mastery/genesis.json");
 
     /** @implNote set this to true to enable printing */
-    private static boolean verbose = true;
+    private static final boolean verbose = true;
 
     @Before
     public void setup() {
@@ -656,20 +659,162 @@ public class CliTest {
         assertThat(cli.call(new String[] {option, "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
     }
 
-    /** Tests the -a create arguments work. */
-    @Test
-    @Ignore
-    public void testCreateAccount() {
-        String args[] = {"-a", "create"};
-        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
+    private List<Object> parametersWithAccount(String[] options) {
+        List<Object> parameters = new ArrayList<>();
+
+        // only info
+        for (String op : options) {
+            // without parameter
+            parameters.add(new Object[] {new String[] {op}, EXIT});
+            // invalid parameter
+            parameters.add(new Object[] {new String[] {op, "value"}, ERROR});
+        }
+
+        // with network
+        for (String op : options) {
+            // mastery as parameter
+            parameters.add(new Object[] {new String[] {op, "-n", "mastery"}, EXIT});
+            parameters.add(new Object[] {new String[] {"-n", "mastery", op}, EXIT});
+            // invalid parameter
+            parameters.add(new Object[] {new String[] {op, "value", "-n", "mastery"}, ERROR});
+        }
+
+        // with directory
+        for (String op : options) {
+            // with relative path
+            parameters.add(new Object[] {new String[] {op, "-d", dataDirectory}, EXIT});
+            parameters.add(new Object[] {new String[] {"-d", dataDirectory, op}, EXIT});
+            // + invalid parameter
+            parameters.add(new Object[] {new String[] {op, "value", "-d", dataDirectory}, ERROR});
+            // with absolute path
+            parameters.add(new Object[] {new String[] {op, "-d", path.getAbsolutePath()}, EXIT});
+            parameters.add(new Object[] {new String[] {"-d", path.getAbsolutePath(), op}, EXIT});
+            // + invalid parameter
+            parameters.add(
+                    new Object[] {new String[] {op, "value", "-d", path.getAbsolutePath()}, ERROR});
+        }
+
+        // with network and directory
+        for (String op : options) {
+            // with relative path
+            parameters.add(
+                    new Object[] {new String[] {op, "-d", dataDirectory, "-n", "mastery"}, EXIT});
+            parameters.add(
+                    new Object[] {new String[] {"-n", "mastery", op, "-d", dataDirectory}, EXIT});
+            parameters.add(
+                    new Object[] {new String[] {"-n", "mastery", "-d", dataDirectory, op}, EXIT});
+            // with absolute path
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "-n", "mastery", "-d", path.getAbsolutePath()}, EXIT
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-d", path.getAbsolutePath(), op, "-n", "mastery"}, EXIT
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-d", path.getAbsolutePath(), "-n", "mastery", op}, EXIT
+                    });
+        }
+
+        return parameters;
     }
 
-    /** Tests the -a list arguments work. */
+    /** Parameters for testing {@link #testCreateAccount(String[], ReturnType)}. */
+    @SuppressWarnings("unused")
+    private Object parametersWithCreateAccount() {
+        return parametersWithAccount(new String[] {"-a create", "ac", "--account create"})
+                .toArray();
+    }
+
+    /** Ensures that the { <i>-a create</i>, <i>ac</i> } arguments work. */
     @Test
-    @Ignore
-    public void testListAccounts() {
-        String args[] = {"-a", "list"};
-        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
+    @Parameters(method = "parametersWithCreateAccount")
+    public void testCreateAccount(String[] input, ReturnType expectedReturn) {
+        Cli mockCli = Mockito.spy(new Cli());
+        doReturn("password").when(mockCli).readPassword(any(), any());
+
+        // number of accounts before create call
+        int count = Keystore.list().length;
+        assertThat(mockCli.call(input, CfgAion.inst())).isEqualTo(expectedReturn);
+        if (expectedReturn == EXIT) {
+            // ensure number of accounts was incremented
+            assertThat(Keystore.list().length).isEqualTo(count + 1);
+        } else {
+            // ensure number of accounts is unchanged
+            assertThat(Keystore.list().length).isEqualTo(count);
+        }
+    }
+
+    @Test
+    public void testCreateAccount_withSplitInput() {
+        Cli mockCli = Mockito.spy(new Cli());
+        doReturn("password").when(mockCli).readPassword(any(), any());
+
+        // number of accounts before create call
+        int count = Keystore.list().length;
+
+        assertThat(mockCli.call(new String[] {"-a"}, CfgAion.inst())).isEqualTo(ERROR);
+        // ensure number of accounts is unchanged
+        assertThat(Keystore.list().length).isEqualTo(count);
+
+        assertThat(mockCli.call(new String[] {"-a", "cre"}, CfgAion.inst())).isEqualTo(ERROR);
+        // ensure number of accounts is unchanged
+        assertThat(Keystore.list().length).isEqualTo(count);
+
+        assertThat(mockCli.call(new String[] {"--acc", "create"}, CfgAion.inst())).isEqualTo(ERROR);
+        // ensure number of accounts is unchanged
+        assertThat(Keystore.list().length).isEqualTo(count);
+
+        assertThat(mockCli.call(new String[] {"-a", "create"}, CfgAion.inst())).isEqualTo(EXIT);
+        // ensure number of accounts was incremented
+        assertThat(Keystore.list().length).isEqualTo(count + 1);
+
+        assertThat(mockCli.call(new String[] {"--account", "create"}, CfgAion.inst()))
+                .isEqualTo(EXIT);
+        // ensure number of accounts was incremented
+        assertThat(Keystore.list().length).isEqualTo(count + 2);
+    }
+
+    // TODO: add test for create account with old config location
+
+    /** Parameters for testing {@link #testListAccounts(String[], ReturnType)}. */
+    @SuppressWarnings("unused")
+    private Object parametersWithListAccount() {
+        return parametersWithAccount(new String[] {"-a list", "al", "--account list"}).toArray();
+    }
+
+    /** Ensures that the { <i>-a list</i>, <i>al</i> } arguments work. */
+    @Test
+    @Parameters(method = "parametersWithListAccount")
+    public void testListAccounts(String[] input, ReturnType expectedReturn) {
+        assertThat(cli.call(input, CfgAion.inst())).isEqualTo(expectedReturn);
+    }
+
+    @Test
+    public void testListAccounts_withSplitInput() {
+        Cli mockCli = Mockito.spy(new Cli());
+        doReturn("password").when(mockCli).readPassword(any(), any());
+
+        // used to ensure number of accounts is unchanged
+        int count = Keystore.list().length;
+
+        assertThat(mockCli.call(new String[] {"-a"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(Keystore.list().length).isEqualTo(count);
+
+        assertThat(mockCli.call(new String[] {"-a", "lis"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(Keystore.list().length).isEqualTo(count);
+
+        assertThat(mockCli.call(new String[] {"--acc", "list"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(Keystore.list().length).isEqualTo(count);
+
+        assertThat(mockCli.call(new String[] {"-a", "list"}, CfgAion.inst())).isEqualTo(EXIT);
+        assertThat(Keystore.list().length).isEqualTo(count);
+
+        assertThat(mockCli.call(new String[] {"--account", "list"}, CfgAion.inst()))
+                .isEqualTo(EXIT);
+        assertThat(Keystore.list().length).isEqualTo(count);
     }
 
     /** Tests the -a export arguments work on a valid account. */

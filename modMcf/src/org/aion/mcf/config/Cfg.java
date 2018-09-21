@@ -245,8 +245,11 @@ public abstract class Cfg {
     }
 
     public String getKeystorePath() {
-        // todo-Ale
-        return new File(getBasePath(), keystoreDirectoryName).getAbsolutePath();
+        return getKeystoreDirectory().getAbsolutePath();
+    }
+
+    public File getKeystoreDirectory() {
+        return new File(getBasePath(), keystoreDirectoryName);
     }
 
     /** Returns the configuration directory location for the kernel execution. */

@@ -41,21 +41,21 @@ public class ArgumentsTest {
                     "-a create", "-n", "mainnet", "-d", "abc",
                 };
 
-        String[] actual = Arguments.preprocess(input);
+        String[] actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // middle parameter
         input = new String[] {"-d", "abc", "-a", "create", "-n", "mainnet"};
         expected = new String[] {"-d", "abc", "-a create", "-n", "mainnet"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // last parameter
         input = new String[] {"-n", "mainnet", "-d", "abc", "-a", "create"};
         expected = new String[] {"-n", "mainnet", "-d", "abc", "-a create"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
     }
 
@@ -71,21 +71,21 @@ public class ArgumentsTest {
                     "-a import", "0x123", "-n", "mainnet", "-d", "abc",
                 };
 
-        String[] actual = Arguments.preprocess(input);
+        String[] actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // middle parameter
         input = new String[] {"-d", "abc", "-a", "import", "0x123", "-n", "mainnet"};
         expected = new String[] {"-d", "abc", "-a import", "0x123", "-n", "mainnet"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // last parameter
         input = new String[] {"-n", "mainnet", "-d", "abc", "-a", "import", "0x123"};
         expected = new String[] {"-n", "mainnet", "-d", "abc", "-a import", "0x123"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
     }
 
@@ -101,21 +101,21 @@ public class ArgumentsTest {
                     "-a export", "0x123", "-n", "mainnet", "-d", "abc",
                 };
 
-        String[] actual = Arguments.preprocess(input);
+        String[] actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // middle parameter
         input = new String[] {"-d", "abc", "-a", "export", "0x123", "-n", "mainnet"};
         expected = new String[] {"-d", "abc", "-a export", "0x123", "-n", "mainnet"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // last parameter
         input = new String[] {"-n", "mainnet", "-d", "abc", "-a", "export", "0x123"};
         expected = new String[] {"-n", "mainnet", "-d", "abc", "-a export", "0x123"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
     }
 
@@ -131,21 +131,21 @@ public class ArgumentsTest {
                     "-a list", "-n", "mainnet", "-d", "abc",
                 };
 
-        String[] actual = Arguments.preprocess(input);
+        String[] actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // middle parameter
         input = new String[] {"-d", "abc", "-a", "list", "-n", "mainnet"};
         expected = new String[] {"-d", "abc", "-a list", "-n", "mainnet"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // last parameter
         input = new String[] {"-n", "mainnet", "-d", "abc", "-a", "list"};
         expected = new String[] {"-n", "mainnet", "-d", "abc", "-a list"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
     }
 
@@ -161,21 +161,21 @@ public class ArgumentsTest {
                     "-s create", "-n", "mainnet", "-d", "abc",
                 };
 
-        String[] actual = Arguments.preprocess(input);
+        String[] actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // middle parameter
         input = new String[] {"-d", "abc", "-s", "create", "-n", "mainnet"};
         expected = new String[] {"-d", "abc", "-s create", "-n", "mainnet"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
 
         // last parameter
         input = new String[] {"-n", "mainnet", "-d", "abc", "-s", "create"};
         expected = new String[] {"-n", "mainnet", "-d", "abc", "-s create"};
 
-        actual = Arguments.preprocess(input);
+        actual = Arguments.preProcess(input);
         assertThat(actual).isEqualTo(expected);
     }
 }

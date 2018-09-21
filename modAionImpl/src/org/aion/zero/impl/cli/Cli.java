@@ -20,7 +20,6 @@
  * Contributors:
  *     Aion foundation.
  */
-
 package org.aion.zero.impl.cli;
 
 import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
@@ -48,6 +47,7 @@ import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.RecoveryUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import picocli.CommandLine;
 
 /**
@@ -60,17 +60,17 @@ public class Cli {
     // TODO-Ale: consider using initial path from cfg
     private final String BASE_PATH = System.getProperty("user.dir");
 
-    File keystoreDir =
+    private final File keystoreDir =
             new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
-    private Arguments options = new Arguments();
-    private CommandLine parser = new CommandLine(options);
+    private final Arguments options = new Arguments();
+    private final CommandLine parser = new CommandLine(options);
 
     public enum ReturnType {
         RUN(2),
         EXIT(0),
         ERROR(1);
-        private int value;
+        private final int value;
 
         ReturnType(int _value) {
             this.value = _value;
@@ -81,11 +81,12 @@ public class Cli {
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public ReturnType call(final String[] args, Cfg cfg) {
         try {
-            // the preprocess method handles arguments that are separated by space
+            // the pre-process method handles arguments that are separated by space
             // parsing populates the options object
-            parser.parse(Arguments.preprocess(args));
+            parser.parse(Arguments.preProcess(args));
         } catch (Exception e) {
             System.out.println("Unable to parse the input arguments due to: ");
             if (e.getMessage() != null) {
@@ -159,22 +160,38 @@ public class Cli {
                     // ensure path exists
                     File dir = cfg.getExecConfigDirectory();
                     if (!dir.exists()) {
-                        dir.mkdirs();
+                        if (!dir.mkdirs()) {
+                            System.out.println(
+                                    "ERROR: Unable to create directory: "
+                                            + getRelativePath(dir.getAbsolutePath()));
+                            return ERROR;
+                        }
                     }
-                    configFile.createNewFile();
+                    try {
+                        configFile.createNewFile();
+                    } catch (IOException e) {
+                        System.out.println(
+                                "ERROR: Unable to create file: "
+                                        + getRelativePath(configFile.getAbsolutePath()));
+                        return ERROR;
+                    }
                 }
 
                 // save to disk
                 cfg.toXML(null, configFile);
 
-                System.out.println("\nNew config generated at " + configFile + ".");
+                System.out.println(
+                        "\nNew config generated at: "
+                                + getRelativePath(configFile.getAbsolutePath()));
                 return ReturnType.EXIT;
             }
 
             // 5. options that can be influenced by the -d and -n arguments
 
             if (options.isInfo()) {
-                System.out.println("Read config file at " + configFile.getAbsolutePath() + ".");
+                System.out.println(
+                        "Reading config file from: "
+                                + getRelativePath(configFile.getAbsolutePath()));
                 printInfo(cfg);
                 return ReturnType.EXIT;
             }
@@ -186,6 +203,9 @@ public class Cli {
                 // only updating the file in case the user id was not set
                 cfg.toXML(new String[] {"--id=" + cfg.getId()}, cfg.getExecConfigFile());
             }
+
+            // set correct keystore directory
+            Keystore.setKeystorePath(cfg.getKeystorePath());
 
             if (options.isCreateAccount()) {
                 if (!createAccount()) {
@@ -300,13 +320,13 @@ public class Cli {
                         block_count = Long.parseLong(parameter);
                     } catch (NumberFormatException e) {
                         System.out.println(
-                                "The given argument <"
+                                "The given argument «"
                                         + parameter
-                                        + "> cannot be converted to a number.");
+                                        + "» cannot be converted to a number.");
                         return ERROR;
                     }
                     if (block_count < 1) {
-                        System.out.println("The given argument <" + parameter + "> is not valid.");
+                        System.out.println("The given argument «" + parameter + "» is not valid.");
                         block_count = 2L;
                     }
 
@@ -329,9 +349,9 @@ public class Cli {
                         level = Long.parseLong(parameter);
                     } catch (NumberFormatException e) {
                         System.out.println(
-                                "The given argument <"
+                                "The given argument «"
                                         + parameter
-                                        + "> cannot be converted to a number.");
+                                        + "» cannot be converted to a number.");
                         return ERROR;
                     }
                     if (level == -1L) {
@@ -358,13 +378,13 @@ public class Cli {
                         count = Long.parseLong(parameter);
                     } catch (NumberFormatException e) {
                         System.out.println(
-                                "The given argument <"
+                                "The given argument «"
                                         + parameter
-                                        + "> cannot be converted to a number.");
+                                        + "» cannot be converted to a number.");
                         return ERROR;
                     }
                     if (count < 1) {
-                        System.out.println("The given argument <" + parameter + "> is not valid.");
+                        System.out.println("The given argument «" + parameter + "» is not valid.");
                         count = 10L;
                     }
 
@@ -389,6 +409,16 @@ public class Cli {
         }
     }
 
+    /**
+     * Utility method for truncating absolute paths wrt the {@link #BASE_PATH}.
+     *
+     * @return the path without the {@link #BASE_PATH} prefix.
+     */
+    private String getRelativePath(String path) {
+        // if absolute paths are given with different prefix the replacement won't work
+        return path.replaceFirst(BASE_PATH, ".");
+    }
+
     /** Print the CLI help info. */
     private void printHelp() {
         String usage = parser.getUsageMessage();
@@ -399,7 +429,7 @@ public class Cli {
         // making the use of a regular expression necessary here
         usage = usage.replaceFirst(" \\[[^ ]*<hostname> <ip>.*]", "]");
 
-        System.out.println(usage.toString());
+        System.out.println(usage);
     }
 
     private void printInfo(Cfg cfg) {
@@ -442,10 +472,12 @@ public class Cli {
         }
 
         if (!file.exists()) {
-            file.mkdirs();
+            if (!file.mkdirs()) {
+                return false;
+            }
         }
 
-        if (file != null && file.isDirectory() && file.canWrite()) {
+        if (file.isDirectory() && file.canWrite()) {
             cfg.setExecDirectory(file);
             return true;
         } else {
@@ -476,6 +508,7 @@ public class Cli {
      *
      * @param cfg the configuration for the runtime kernel environment
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private void makeDirs(Cfg cfg) {
         File file = cfg.getExecDirectory();
         if (!file.exists()) {
@@ -514,16 +547,21 @@ public class Cli {
             file.mkdirs();
         }
 
-        // TODO-Ale: create target keystore directory
+        // create target keystore directory
+        file = cfg.getKeystoreDirectory();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
     }
 
     /**
      * Creates a new account.
      *
-     * @return true only if the new account was successfully created, otherwise false.
+     * @return {@code true} only if the new account was successfully created, {@code false}
+     *     otherwise.
      */
     private boolean createAccount() {
-        String password = null, password2 = null;
+        String password, password2;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             password = readPassword("Please enter a password: ", reader);
             password2 = readPassword("Please re-enter your password: ", reader);
@@ -540,6 +578,8 @@ public class Cli {
         String address = Keystore.create(password);
         if (!address.equals("0x")) {
             System.out.println("A new account has been created: " + address);
+            System.out.println(
+                    "The account was stored in: " + getRelativePath(Keystore.getKeystorePath()));
             return true;
         } else {
             System.out.println("Failed to create an account!");
@@ -547,17 +587,22 @@ public class Cli {
         }
     }
 
-    /**
-     * List all existing account.
-     *
-     * @return boolean
-     */
+    /** List all existing accounts. */
+    @SuppressWarnings("SameReturnValue")
     private boolean listAccounts() {
         String[] accounts = Keystore.list();
-        for (String account : accounts) {
-            System.out.println(account);
-        }
 
+        if (ArrayUtils.isNotEmpty(accounts)) {
+            System.out.println(
+                    "All accounts from: " + getRelativePath(Keystore.getKeystorePath()) + "\n");
+
+            for (String account : accounts) {
+                System.out.println("\t" + account);
+            }
+        } else {
+            System.out.println(
+                    "No accounts found at: " + getRelativePath(Keystore.getKeystorePath()));
+        }
         return true;
     }
 
@@ -565,15 +610,18 @@ public class Cli {
      * Dumps the private of the given account.
      *
      * @param address address of the account
-     * @return boolean
+     * @return {@code true} if the operation was successful, {@code false} otherwise.
      */
     private boolean exportPrivateKey(String address) {
+        System.out.println(
+                "Searching for account in: " + getRelativePath(Keystore.getKeystorePath()));
+
         if (!Keystore.exist(address)) {
             System.out.println("The account does not exist!");
             return false;
         }
 
-        String password = null;
+        String password;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             password = readPassword("Please enter your password: ", reader);
         } catch (IOException e) {
@@ -595,7 +643,7 @@ public class Cli {
      * Imports a private key.
      *
      * @param privateKey private key in hex string
-     * @return boolean
+     * @return {@code true} if the operation was successful, {@code false} otherwise.
      */
     private boolean importPrivateKey(String privateKey) {
         // TODO: the Hex.decode() method catches all exceptions which may cause
@@ -614,7 +662,7 @@ public class Cli {
             return false;
         }
 
-        String password = null, password2 = null;
+        String password, password2;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             password = readPassword("Please enter a password: ", reader);
             password2 = readPassword("Please re-enter your password: ", reader);
@@ -630,17 +678,23 @@ public class Cli {
 
         String address = Keystore.create(password, key);
         if (!address.equals("0x")) {
-            System.out.println("The private key was imported, the address is: " + address);
+            System.out.println(
+                    "The private key was imported to: "
+                            + getRelativePath(Keystore.getKeystorePath())
+                            + "\nThe address is: "
+                            + address);
             return true;
         } else {
-            System.out.println("Failed to import the private key. Already exists?");
+            System.out.println(
+                    "Failed to import the private key. It may already exist in: "
+                            + getRelativePath(Keystore.getKeystorePath()));
             return false;
         }
     }
 
     /**
      * Returns a password after prompting the user to enter it. This method attempts first to read
-     * user input from a console evironment and if one is not available it instead attempts to read
+     * user input from a console environment and if one is not available it instead attempts to read
      * from reader.
      *
      * @param prompt The read-password prompt to display to the user.
@@ -690,21 +744,11 @@ public class Cli {
             block = Long.parseLong(blockNumber);
         } catch (NumberFormatException e) {
             System.out.println(
-                    "The given argument <" + blockNumber + "> cannot be converted to a number.");
+                    "The given argument «" + blockNumber + "» cannot be converted to a number.");
             return RecoveryUtils.Status.ILLEGAL_ARGUMENT;
         }
 
         return RecoveryUtils.revertTo(block);
-    }
-
-    /**
-     * Checks for illegal inputs (for datadir && network names)
-     *
-     * @param value
-     * @return
-     */
-    public static boolean isValid(String value) {
-        return !value.isEmpty() && !value.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
 
     private void createKeystoreDirIfMissing() {
@@ -746,7 +790,7 @@ public class Cli {
                                 "Enter certificate password (at least "
                                         + minPassLen
                                         + " characters):\n"));
-        if ((certPass == null) || (certPass.isEmpty())) {
+        if (certPass.isEmpty()) {
             System.out.println("Error: no certificate password entered.");
             System.exit(1);
         } else if (certPass.length() < minPassLen) {
@@ -773,6 +817,7 @@ public class Cli {
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private static boolean copyDirectoryContents(File src, File target) {
         Preconditions.checkArgument(src.isDirectory(), "Source dir is not a directory: %s", src);
 

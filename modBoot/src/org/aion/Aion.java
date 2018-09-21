@@ -121,8 +121,10 @@ public class Aion {
         // Log/Database path
         if (!cfg.getLog().getLogFile()) {
             System.out.println("Logger disabled; to enable please check log settings in config.xml");
+            filePath[0] = "« disabled »";
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             System.out.println("File path is invalid; please check log setting in config.xml");
+            // TODO set default location
             return;
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             filePath[0] = cfg.getBasePath() + "/" + cfg.getLog().getLogPath();
