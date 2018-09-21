@@ -55,7 +55,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.*;
+import org.mockito.Mockito;
 
 /** CliTest for new version with use of different networks. */
 @RunWith(JUnitParamsRunner.class)
@@ -794,51 +794,159 @@ public class CliTest {
 
     @Test
     public void testListAccounts_withSplitInput() {
-        Cli mockCli = Mockito.spy(new Cli());
-        doReturn("password").when(mockCli).readPassword(any(), any());
-
         // used to ensure number of accounts is unchanged
         int count = Keystore.list().length;
 
-        assertThat(mockCli.call(new String[] {"-a"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(cli.call(new String[] {"-a"}, CfgAion.inst())).isEqualTo(ERROR);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[] {"-a", "lis"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(cli.call(new String[] {"-a", "lis"}, CfgAion.inst())).isEqualTo(ERROR);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[] {"--acc", "list"}, CfgAion.inst())).isEqualTo(ERROR);
+        assertThat(cli.call(new String[] {"--acc", "list"}, CfgAion.inst())).isEqualTo(ERROR);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[] {"-a", "list"}, CfgAion.inst())).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {"-a", "list"}, CfgAion.inst())).isEqualTo(EXIT);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[] {"--account", "list"}, CfgAion.inst()))
-                .isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {"--account", "list"}, CfgAion.inst())).isEqualTo(EXIT);
         assertThat(Keystore.list().length).isEqualTo(count);
     }
 
-    /** Tests the -a export arguments work on a valid account. */
+    /** Ensures that the { <i>-a export</i>, <i>ae</i>, <i>--account export</i> } arguments work. */
     @Test
-    @Ignore
-    public void testExportPrivateKey() {
-        String account = Keystore.create("password");
+    @Parameters({"-a export", "ae", "--account export"})
+    public void testExportPrivateKey(String option) {
+        Cli mockCli = Mockito.spy(new Cli());
+        doReturn("password").when(mockCli).readPassword(any(), any());
 
-        String[] args = {"-a", "export", account};
-        assertEquals(EXIT, cli.call(args, CfgAion.inst()));
+        // create account
+        assertThat(mockCli.call(new String[] {"ac"}, CfgAion.inst())).isEqualTo(EXIT);
+
+        String account = Keystore.list()[0];
+        assertEquals(EXIT, mockCli.call(new String[] {option, account}, CfgAion.inst()));
     }
 
     /**
-     * Tests the -a export arguments fail when the suupplied account is a proper substring of a
-     * valid account.
+     * Ensures that the { <i>-a export</i>, <i>ae</i>, <i>--account export</i> } arguments work in
+     * combination with the data directory option.
      */
     @Test
-    @Ignore
-    public void testExportSubstringOfAccount() {
-        String account = Keystore.create("password");
-        String substrAcc = account.substring(1);
+    @Parameters({"-a export", "ae", "--account export"})
+    public void testExportPrivateKey_withDataDir(String option) {
+        Cli mockCli = Mockito.spy(new Cli());
+        doReturn("password").when(mockCli).readPassword(any(), any());
 
-        String[] args = {"-a", "export", substrAcc};
-        assertEquals(ERROR, cli.call(args, CfgAion.inst()));
+        // create account
+        assertThat(mockCli.call(new String[] {"ac", "-d", dataDirectory}, CfgAion.inst()))
+                .isEqualTo(EXIT);
+
+        String account = Keystore.list()[0];
+        assertEquals(
+                EXIT,
+                mockCli.call(new String[] {option, account, "-d", dataDirectory}, CfgAion.inst()));
+        assertEquals(
+                EXIT,
+                mockCli.call(new String[] {"-d", dataDirectory, option, account}, CfgAion.inst()));
+    }
+
+    /**
+     * Ensures that the { <i>-a export</i>, <i>ae</i>, <i>--account export</i> } arguments work in
+     * combination with the network option.
+     */
+    @Test
+    @Parameters({"-a export", "ae", "--account export"})
+    public void testExportPrivateKey_withNetwork(String option) {
+        Cli mockCli = Mockito.spy(new Cli());
+        doReturn("password").when(mockCli).readPassword(any(), any());
+
+        // create account
+        assertThat(mockCli.call(new String[] {"ac", "-n", "mastery"}, CfgAion.inst()))
+                .isEqualTo(EXIT);
+
+        String account = Keystore.list()[0];
+        assertEquals(
+                EXIT,
+                mockCli.call(new String[] {option, account, "-n", "mastery"}, CfgAion.inst()));
+        assertEquals(
+                EXIT,
+                mockCli.call(new String[] {"-n", "mastery", option, account}, CfgAion.inst()));
+    }
+
+    /**
+     * Ensures that the { <i>-a export</i>, <i>ae</i>, <i>--account export</i> } arguments work in
+     * combination with the data directory and network options.
+     */
+    @Test
+    @Parameters({"-a export", "ae", "--account export"})
+    public void testExportPrivateKey_withDataDirAndNetwork(String option) {
+        Cli mockCli = Mockito.spy(new Cli());
+        doReturn("password").when(mockCli).readPassword(any(), any());
+
+        // create account
+        assertThat(
+                        mockCli.call(
+                                new String[] {"ac", "-d", dataDirectory, "-n", "mastery"},
+                                CfgAion.inst()))
+                .isEqualTo(EXIT);
+
+        String account = Keystore.list()[0];
+        assertEquals(
+                EXIT,
+                mockCli.call(
+                        new String[] {"-n", "mastery", option, account, "-d", dataDirectory},
+                        CfgAion.inst()));
+        assertEquals(
+                EXIT,
+                mockCli.call(
+                        new String[] {"-n", "mastery", "-d", dataDirectory, option, account},
+                        CfgAion.inst()));
+        assertEquals(
+                EXIT,
+                mockCli.call(
+                        new String[] {option, account, "-d", dataDirectory, "-n", "mastery"},
+                        CfgAion.inst()));
+    }
+
+    /**
+     * Ensured that the { <i>-a export</i>, <i>ae</i>, <i>--account export</i> } arguments fail when
+     * the given an incorrect account value (proper substring of a valid account).
+     */
+    @Test
+    @Parameters({"-a export", "ae", "--account export"})
+    public void testExportPrivateKey_wSubstringOfAccount(String prefix) {
+        Cli mockCli = Mockito.spy(new Cli());
+        doReturn("password").when(mockCli).readPassword(any(), any());
+
+        // create account
+        assertThat(mockCli.call(new String[] {"ac"}, CfgAion.inst())).isEqualTo(EXIT);
+
+        String subStrAcc = Keystore.list()[0].substring(1);
+
+        assertEquals(ERROR, cli.call(new String[] {prefix, subStrAcc}, CfgAion.inst()));
+    }
+
+    @Test
+    public void testExportPrivateKey_withSplitInput() {
+        Cli mockCli = Mockito.spy(new Cli());
+        doReturn("password").when(mockCli).readPassword(any(), any());
+        // create account
+        assertThat(mockCli.call(new String[] {"ac"}, CfgAion.inst())).isEqualTo(EXIT);
+        String account = Keystore.list()[0];
+
+        assertThat(mockCli.call(new String[] {"-a", account}, CfgAion.inst())).isEqualTo(ERROR);
+
+        assertThat(mockCli.call(new String[] {"-a", "exp", account}, CfgAion.inst()))
+                .isEqualTo(ERROR);
+
+        assertThat(mockCli.call(new String[] {"--acc", "export", account}, CfgAion.inst()))
+                .isEqualTo(ERROR);
+
+        assertThat(mockCli.call(new String[] {"-a", "export", account}, CfgAion.inst()))
+                .isEqualTo(EXIT);
+
+        assertThat(mockCli.call(new String[] {"--account", "export", account}, CfgAion.inst()))
+                .isEqualTo(EXIT);
     }
 
     /** Tests the -a import arguments work on a fail import key. */
