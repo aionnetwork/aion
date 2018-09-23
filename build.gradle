@@ -255,6 +255,7 @@ clean {
 
 task aggregatedReport(type: TestReport) { 
     reportOn subprojects*.test
+    destinationDir = file("${buildDir}/reports")
 }
 
 build.dependsOn("ant-3rd_build")

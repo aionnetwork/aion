@@ -1,5 +1,8 @@
 ext.moduleName = 'aion.mcf'
 
+test.dependsOn copyNativeLibsForModuleTests
+clean.dependsOn deleteNativeLibs
+
 dependencies {
     compile project(':modAionBase')
     compile project(':modLogger')
