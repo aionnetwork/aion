@@ -35,6 +35,7 @@ task compileNative(type:Exec) {
     // seems kinda hacky, but need big reorganization to fix
     dependsOn 'modCrypto:compileNative'
     dependsOn 'modAionImpl:compileJava'
+    //dependsOn 'aion_api:compileJava'
 
     doFirst { 
         mkdir "${dirBuildFile}"

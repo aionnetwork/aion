@@ -1,5 +1,6 @@
 ext.moduleName = 'aion.gui'
 test.dependsOn copyNativeLibsForModuleTests
+clean.dependsOn deleteNativeLibs 
 
 dependencies {
     compile project(':modLogger')
