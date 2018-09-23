@@ -2,6 +2,7 @@ package org.aion;
 
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
+import org.aion.base.util.TimeInstant;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
@@ -9,10 +10,14 @@ import org.aion.zero.types.AionTransaction;
 
 import java.io.Console;
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class ColdWallet {
+
+    private static long YEAR_MICRO = 31536000 * TimeUnit.SECONDS.toMicros(1);
 
     // keep the configuration simple
     static class Config {
@@ -23,6 +28,7 @@ public class ColdWallet {
         public BigInteger energyPrice;
         public BigInteger energy;
         public byte[] data;
+        public boolean futureExpiry;
     }
 
     /**
@@ -47,12 +53,20 @@ public class ColdWallet {
                 config.data == null ? ByteUtil.EMPTY_BYTE_ARRAY : config.data,
                 config.energy.longValueExact(),
                 config.energyPrice.longValueExact());
-        transaction.sign(key);
+
+        if (config.futureExpiry) {
+            transaction.signWithTimestamp(key, TimeInstant.now().toEpochMicro() + YEAR_MICRO);
+        } else {
+            transaction.sign(key);
+        }
+
+        System.out.println("signing timestamp: " + Date.from(Instant.ofEpochMilli(transaction.getTimeStampBI().longValueExact() / 1000)));
+
         printCurl(transaction.getEncoded());
     }
 
     static Config processInput(String[] args) {
-        System.out.println("ColdWallet [v0.0.1] offline transaction creation utility");
+        System.out.println("ColdWallet [v0.0.2] offline transaction creation utility");
         // setup
         Config config = new Config();
         Scanner sc = new Scanner(System.in);
@@ -113,6 +127,21 @@ public class ColdWallet {
             }
         }
 
+        {
+            System.out.print("Year-Long Expiry (T/F): ");
+            String in = sc.nextLine();
+
+            if (in.isEmpty() || in.length() > 1) {
+                return null;
+            }
+
+            if ((!in.toLowerCase().equals("t")) && (!in.toLowerCase().equals("f"))) {
+                return null;
+            }
+
+            config.futureExpiry = in.toLowerCase().equals("t");
+        }
+
         config.energy = BigInteger.valueOf(100000L);
         config.energyPrice = BigInteger.TEN.pow(10);
         printConfig(config);
@@ -151,7 +180,7 @@ public class ColdWallet {
     }
 
     static void printCurl(byte[] signedTransaction) {
-        int randomId = new Random().nextInt();
+        int randomId = new Random().nextInt(8192);
         StringBuilder builder = new StringBuilder();
         builder.append("curl -H \"Accept: application/json\" -H \"Content-Type: application/json\" -X POST  --data ");
         builder.append("'{");
@@ -161,7 +190,7 @@ public class ColdWallet {
         builder.append(ByteUtil.toHexStringWithPrefix(signedTransaction));
         builder.append("\"],");
         builder.append("\"id\":");
-        builder.append(Integer.toString(randomId));
+        builder.append(Integer.toString(Math.abs(randomId)));
         builder.append("}'");
         System.out.println(builder.toString());
     }
