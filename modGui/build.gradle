@@ -26,7 +26,8 @@ dependencies {
 
     integTestCompile group: 'org.testfx', name: 'testfx-core', version: '4.0.13-alpha'
     integTestCompile group: 'org.testfx', name: 'testfx-junit', version: '4.0.13-alpha'
-    integTestCompile group: 'org.testfx', name: 'openjfx-monocle', version: 'jdk-11+23'
+    //integTestCompile group: 'org.testfx', name: 'openjfx-monocle', version: 'jdk-11+23'
+    integTestCompile group: 'org.testfx', name: 'openjfx-monocle', version: 'jdk-9+181'
     integTestCompile group: 'com.google.protobuf', name: 'protobuf-java', version: '3.5.0'
     integTestCompile group: 'com.google.code.gson', name: 'gson', version: '2.7'
     integTestCompile project(':modAion')
