@@ -161,17 +161,17 @@ subprojects {
 }
 
 task downloadFastVmGit(type:Download) { 
+    overwrite false // TODO This seems to work only when this task is directly invoked
     onlyIfModified true
     src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/fastvm_v${vmVersion}.tar.gz"
     dest 'build'
-    overwrite false // TODO This seems to work only when this task is directly invoked
 }
 
 task downloadSolidityGit(type:Download) { 
+    overwrite false // TODO This seems to work only when this task is directly invoked
     onlyIfModified true
     src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
     dest 'build'
-    overwrite false // TODO This seems to work only when this task is directly invoked
 }
 
 task downloadVmDepsGit { 
