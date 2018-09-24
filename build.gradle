@@ -19,15 +19,15 @@ ant.importBuild('build.xml') { antTargetName -> 'ant-' + antTargetName }
 
 // referencing the ant values for now; once everything is working,
 // use the constants instead
-def dirBuildFile = ant.properties['dir.buildfile'] // = "./build/main"
-def dirBuildNative = ant.properties['dir.build.native'] // = "./build/main/native"
-def dirNative = ant.properties['dir.native'] // = "./native"
-def dirWorkspace = ant.properties['dir.workspace'] // = "./"
-def dirPack = ant.properties['dir.pack'] // = "./pack"
-def dirLibFile = ant.properties['dir.libfile'] // = ""
-def dirModFile = ant.properties['dir.modfile']  // ="./mod"
+def dirBuildFile =  "./build/main"
+def dirBuildNative = "./build/main/native"
+def dirNative = "./native"
+def dirWorkspace = "./"
+def dirPack = "./pack"
+def dirLibFile = "lib"
+def dirModFile ="./mod"
 def javaHome = "$System.env.JAVA_HOME"
-def vmVersion = ant.properties['vm.version'] // = "0.2.1"
+def vmVersion = "0.3.1"
 
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
@@ -160,13 +160,25 @@ subprojects {
     }
 }
 
-task downloadVmDepsGit(type: Download) { 
-    overwrite false // TODO This seems to work only when this task is directly invoked
-    src([
-        "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/fastvm_v${vmVersion}.tar.gz",
-        "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
-    ])
+task downloadFastVmGit(type:Download) { 
+    onlyIfModified true
+    src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/fastvm_v${vmVersion}.tar.gz"
     dest 'build'
+    overwrite false // TODO This seems to work only when this task is directly invoked
+}
+
+task downloadSolidityGit(type:Download) { 
+    onlyIfModified true
+    src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
+    dest 'build'
+    overwrite false // TODO This seems to work only when this task is directly invoked
+}
+
+task downloadVmDepsGit { 
+    // 'overwrite' property of Download task doesn't seem to work when
+    // there's multiple files in the task, so splitting them into two
+    dependsOn downloadFastVmGit
+    dependsOn downloadSolidityGit
 }
 
 task extractVmDepsGit(dependsOn: downloadVmDepsGit, type: Copy) { 
