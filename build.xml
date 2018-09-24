@@ -6,7 +6,7 @@
     <property name="dir.workspace" value="./" />
     <property name="vm.version" value="0.3.1" />
 
-        <target name="3rd_build" depends="clean">
+        <target name="3rd_build">
                 <echo message="compile debug is ${compile.debug}" />
                 <echo message="building 3rd party lib" />
 
@@ -26,7 +26,7 @@
                 <move file="${dir.workspace}/3rdParty/libJson/libJson.jar" tofile="${dir.workspace}/lib/libJson.jar" overwrite="true" />
         </target>
 
-        <target name="sourcebuild" depends="build">
+        <target name="sourcebuild">
                 <exec executable="/bin/bash">
                         <arg value="${dir.workspace}/aion_fastvm/scripts/release.sh" />
 			<arg value="${vm.version}" />
