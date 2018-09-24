@@ -83,23 +83,9 @@ subprojects {
         }
     }
 
-    // TODO delete before push
-    /*
-    task copyJarToAionMod(type: Copy) { 
-        //from "${buildDir}/libs/${project.name}.jar" into file("{$rootProject}/mod")
-        from tasks.compileJava.outputs into file("{$rootProject}/mod")
-    }
-
-    task deleteJarFromAionMod(type: Delete) { 
-        delete "${rootProject}/mod/${project.name}.jar"
-    }
-    build.dependsOn copyJarToAionMod
-    clean.dependsOn deleteJarFromAionMod
-    */
-
     task copyNativeLibsForModuleTests(type: Copy) { 
         dependsOn rootProject.compileNative
-        from rootProject.file('native') into file('./native')
+        from rootProject.file('native') into file('native')
     }
 
     task deleteNativeLibs(type: Delete) {
@@ -164,14 +150,14 @@ task downloadFastVmGit(type:Download) {
     overwrite false // TODO This seems to work only when this task is directly invoked
     onlyIfModified true
     src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/fastvm_v${vmVersion}.tar.gz"
-    dest 'build'
+    dest buildDir
 }
 
 task downloadSolidityGit(type:Download) { 
     overwrite false // TODO This seems to work only when this task is directly invoked
     onlyIfModified true
     src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
-    dest 'build'
+    dest buildDir
 }
 
 task downloadVmDepsGit { 
@@ -266,20 +252,12 @@ task packDevDocker(type: Exec) {
 }
 
 clean { 
-    delete 'pack'
+    delete dirPack
 }
-
-/*
-task aggregatedReport(type: TestReport) { 
-    reportOn subprojects*.test
-    destinationDir = file("${buildDir}/reports")
-}
-*/
 
 build.dependsOn("ant-3rd_build")
 build.dependsOn("extractVmDepsGit")
 build.dependsOn("collectDependentJars")
-
 
 project(':modAionImpl') { build.finalizedBy(compileNative) }
 
