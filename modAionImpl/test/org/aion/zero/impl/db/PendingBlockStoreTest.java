@@ -29,19 +29,30 @@ import static org.aion.p2p.P2pConstant.STEP_COUNT;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory.Props;
+import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.util.TestResources;
 import org.aion.zero.impl.types.AionBlock;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /** @author Alexandra Roatis */
 public class PendingBlockStoreTest {
+    @BeforeClass
+    public static void setup() {
+        // logging to see errors
+        Map<String, String> cfg = new HashMap<>();
+        cfg.put("DB", "INFO");
+
+        AionLoggerFactory.init(cfg);
+    }
 
     @Test
     public void testConstructor_wMockDB() {
@@ -55,6 +66,19 @@ public class PendingBlockStoreTest {
             e.printStackTrace();
         }
         assertThat(pb.isOpen()).isTrue();
+    }
+
+    @Test(expected = Exception.class)
+    public void testConstructor_woVendor() throws Exception {
+        Properties props = new Properties();
+        new PendingBlockStore(props);
+    }
+
+    @Test(expected = Exception.class)
+    public void testConstructor_woPathAndName() throws Exception {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.PERSISTENTMOCKDB.toValue());
+        new PendingBlockStore(props);
     }
 
     @Test

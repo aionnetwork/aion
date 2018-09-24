@@ -71,11 +71,15 @@ public class DatabaseUtils {
      * are missing in the path.
      *
      * @param dbFile the path to be verified.
-     * @throws InvalidFilePathException when the given path is not valid or the directory structure
-     *     cannot be created.
+     * @throws InvalidFilePathException when:
+     *     <ol>
+     *       <li>the given path is not valid;
+     *       <li>the directory structure cannot be created;
+     *       <li>the path cannot be written to;
+     *       <li>the give file is not a directory
+     *     </ol>
      */
     public static void verifyAndBuildPath(File dbFile) throws InvalidFilePathException {
-
         // to throw in case of issues with the path
         InvalidFilePathException exception =
                 new InvalidFilePathException(
@@ -83,7 +87,6 @@ public class DatabaseUtils {
                                 + dbFile.getAbsolutePath()
                                 + "» is not valid as reported by the OS or a read/write permissions error occurred."
                                 + " Please provide an alternative DB dbFile path in /config/config.xml.");
-
         Path path;
 
         try {
@@ -91,6 +94,7 @@ public class DatabaseUtils {
             String canonicalPath = dbFile.getCanonicalPath();
             path = Paths.get(canonicalPath);
         } catch (Exception e) {
+            e.printStackTrace();
             throw exception;
         }
 

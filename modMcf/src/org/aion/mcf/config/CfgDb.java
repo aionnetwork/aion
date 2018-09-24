@@ -362,17 +362,29 @@ public class CfgDb {
         Map<String, Properties> propSet = new HashMap<>();
 
         if (expert) {
+            // set to true if any of the dbs require persistence
+            boolean isPersistent = false;
             for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
                 propSet.put(entry.getKey(), entry.getValue().asProperties());
+
+                // checks if any of the settings require persistence
+                if (!isPersistent) {
+                    DBVendor vendor = DBVendor
+                        .fromString(entry.getValue().asProperties().getProperty(Props.DB_TYPE));
+                    isPersistent = vendor.getPersistence();
+                }
             }
 
             Properties props = propSet.get(Names.DEFAULT);
             props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
+            props.setProperty(Props.PERSISTENT, String.valueOf(isPersistent));
         } else {
             Properties props = new Properties();
             props.setProperty(Props.DB_TYPE, this.vendor);
             props.setProperty(Props.ENABLE_DB_COMPRESSION, String.valueOf(this.compression));
             props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
+            boolean isPersistent = DBVendor.fromString(this.vendor).getPersistence();
+            props.setProperty(Props.PERSISTENT, String.valueOf(isPersistent));
 
             props.setProperty(Props.ENABLE_DB_CACHE, "true");
             props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(128 * (int) Utils.MEGA_BYTE));

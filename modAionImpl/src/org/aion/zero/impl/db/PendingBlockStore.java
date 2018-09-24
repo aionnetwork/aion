@@ -117,8 +117,8 @@ public class PendingBlockStore implements Flushable, Closeable {
      * if persistence is requested but not achievable.
      *
      * @param _props properties of the databases to be used for storage
-     * @throws InvalidFilePathException when given a persistent database vendor for which the path
-     *     cannot be created
+     * @throws InvalidFilePathException when given a persistent database vendor for which the data
+     *     store cannot be created or opened.
      */
     public PendingBlockStore(final Properties _props) throws InvalidFilePathException {
         Properties local = new Properties(_props);
@@ -140,24 +140,43 @@ public class PendingBlockStore implements Flushable, Closeable {
      * Initializes and opens the databases where the pending blocks will be stored.
      *
      * @param props the database properties to be used in initializing the underlying databases
+     * @throws InvalidFilePathException when any of the required databases cannot be instantiated or
+     *     opened.
      */
-    private void init(Properties props) {
+    private void init(Properties props) throws InvalidFilePathException {
         // initialize status
         this.status = new HashMap<>();
 
         // create the level source
         props.setProperty(Props.DB_NAME, LEVEL_DB_NAME);
         this.levelDatabase = connectAndOpen(props, LOG);
+        if (levelDatabase == null || levelDatabase.isClosed()) {
+            throw newException(LEVEL_DB_NAME, props);
+        }
         this.levelSource = new ObjectDataSource<>(levelDatabase, HASH_LIST_RLP_SERIALIZER);
 
         // create the queue source
         props.setProperty(Props.DB_NAME, QUEUE_DB_NAME);
         this.queueDatabase = connectAndOpen(props, LOG);
+        if (queueDatabase == null || queueDatabase.isClosed()) {
+            throw newException(QUEUE_DB_NAME, props);
+        }
         this.queueSource = new ObjectDataSource<>(queueDatabase, BLOCK_LIST_RLP_SERIALIZER);
 
         // create the index source
         props.setProperty(Props.DB_NAME, INDEX_DB_NAME);
         this.indexSource = connectAndOpen(props, LOG);
+        if (indexSource == null || indexSource.isClosed()) {
+            throw newException(INDEX_DB_NAME, props);
+        }
+    }
+
+    private InvalidFilePathException newException(String dbName, Properties props) {
+        return new InvalidFilePathException(
+                "The «"
+                        + dbName
+                        + "» database from the pending block store could not be initialized with the given parameters: "
+                        + props);
     }
 
     /**
