@@ -109,8 +109,9 @@ subprojects {
 
     test { 
         reports { 
-            html.enabled = true;
+            html.enabled = false;
         }
+        //testResultsDirName = "${rootProject.projectDir}/reports"
     }
 
     afterEvaluate { 
@@ -194,6 +195,8 @@ task prePack(type:Exec)  {
     commandLine 'sh', 'script/prepack.sh' 
 }
 task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
+
+/** Replaces `ant pack_build` */
 task pack(type: Tar) { 
     archiveName = 'aion.tar.bz2'
     destinationDir = file(dirPack)
@@ -265,3 +268,24 @@ build.dependsOn("collectDependentJars")
 
 
 project(':modAionImpl') { build.finalizedBy(compileNative) }
+
+/** Replaces `ant ci_build` */
+task ciBuild { 
+    dependsOn build
+    def ciModules = ['modAionBase', 
+        'modCrypto', 
+        'modP2pImpl', 
+        'modTxPoolImpl', 
+        'modRlp', 
+        'modDbImpl', 
+        'aion_fastvm/modFastVM', 
+        'modAionImpl', 
+        'modPrecompiled', 
+        'modApiServer'] 
+
+    configure(subprojects.findAll { it.name in ciModules }) {
+        it.test { testResultsDirName = "${rootProject.projectDir}/reports" }
+        dependsOn it.test
+    } 
+
+}
