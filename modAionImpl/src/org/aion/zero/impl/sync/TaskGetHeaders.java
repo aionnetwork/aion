@@ -30,6 +30,8 @@
 package org.aion.zero.impl.sync;
 
 import static org.aion.p2p.P2pConstant.BACKWARD_SYNC_STEP;
+import static org.aion.p2p.P2pConstant.CLOSE_OVERLAPPING_BLOCKS;
+import static org.aion.p2p.P2pConstant.FAR_OVERLAPPING_BLOCKS;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.REQUEST_SIZE;
 import static org.aion.zero.impl.sync.PeerState.Mode.NORMAL;
@@ -137,7 +139,7 @@ final class TaskGetHeaders implements Runnable {
                     if (!state.isOverRepeatThreshold()) {
                         state.setBase(selfNumber);
                         size = LARGE_REQUEST_SIZE;
-                        from = Math.max(1, selfNumber + 1 - 4);
+                        from = Math.max(1, selfNumber - FAR_OVERLAPPING_BLOCKS);
                         break;
                     } else {
                         // behave as normal
@@ -152,9 +154,9 @@ final class TaskGetHeaders implements Runnable {
                     // normal mode
                     long nodeNumber = node.getBestBlockNumber();
                     if (nodeNumber >= selfNumber + BACKWARD_SYNC_STEP) {
-                        from = Math.max(1, selfNumber + 1 - 4);
+                        from = Math.max(1, selfNumber - FAR_OVERLAPPING_BLOCKS);
                     } else if (nodeNumber >= selfNumber - BACKWARD_SYNC_STEP) {
-                        from = Math.max(1, selfNumber + 1 - 16);
+                        from = Math.max(1, selfNumber - CLOSE_OVERLAPPING_BLOCKS);
                     } else {
                         // no need to request from this node. His TD is probably corrupted.
                         return;

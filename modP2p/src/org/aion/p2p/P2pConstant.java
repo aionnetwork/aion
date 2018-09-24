@@ -50,8 +50,19 @@ public class P2pConstant {
 
     REQUEST_SIZE = 24,
 
-    /** @implNote must be strictly larger than {@link #REQUEST_SIZE} */
-    LARGE_REQUEST_SIZE = 25,
+    LARGE_REQUEST_SIZE = 40,
+
+    /**
+     * The number of blocks overlapping with the current chain requested at import when the local
+     * best block is far from the top block in the peer's chain.
+     */
+    FAR_OVERLAPPING_BLOCKS = 3,
+
+    /**
+     * The number of blocks overlapping with the current chain requested at import when the local
+     * best block is close to the top block in the peer's chain.
+     */
+    CLOSE_OVERLAPPING_BLOCKS = 15,
 
     STEP_COUNT = 6,
 
