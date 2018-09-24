@@ -81,8 +81,24 @@ subprojects {
         test {
             java.srcDirs = ['test']
         }
+        integTest { 
+            java { 
+                srcDirs = ['integration-test']
+                compileClasspath += main.output + test.output
+            }
+        }
     }
 
+    task integTest(type: Test) { 
+        testClassesDirs = sourceSets.integTest.output.classesDirs
+        classpath = sourceSets.integTest.runtimeClasspath
+    }
+
+    configurations { 
+        integTestCompile.extendsFrom testCompile
+        integTestRuntime.extendsFrom testRuntime
+    }
+ 
     task copyNativeLibsForModuleTests(type: Copy) { 
         dependsOn rootProject.compileNative
         from rootProject.file('native') into file('native')
@@ -279,5 +295,5 @@ task ciBuild {
         it.test { testResultsDirName = "${rootProject.projectDir}/report/${project.name}" }
         dependsOn it.test
     } 
-
 }
+
