@@ -39,12 +39,12 @@ pipeline {
     	stage('Test') {
 		steps {
     			timeout(60){
-    				sh "${env.ANT_HOME} ci_build"
+    				sh "./gradlew ci_build"
     			}
     		}
     		post {
                 	always {
-                    		junit "report/*"
+                    		junit "report/test/*"
                 	}
             	}
     	}
