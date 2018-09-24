@@ -33,7 +33,7 @@ package org.aion.zero.impl.sync;
 /**
  * @author chris
  */
-final class SyncStatics {
+final class SyncStats {
 
     private long start;
 
@@ -41,7 +41,7 @@ final class SyncStatics {
 
     private double avgBlocksPerSec;
 
-    SyncStatics(long _startBlock){
+    SyncStats(long _startBlock){
         this.start = System.currentTimeMillis();
         this.startBlock = _startBlock;
         this.avgBlocksPerSec = 0;

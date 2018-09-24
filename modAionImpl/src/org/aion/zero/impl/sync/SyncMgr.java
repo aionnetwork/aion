@@ -173,7 +173,7 @@ public final class SyncMgr {
         blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
         long selfBest = chain.getBestBlock().getNumber();
-        SyncStatics statics = new SyncStatics(selfBest);
+        SyncStats stats = new SyncStats(selfBest);
 
         syncGb =
                 new Thread(
@@ -191,7 +191,7 @@ public final class SyncMgr {
                         new TaskImportBlocks(
                                 chain,
                                 start,
-                                statics,
+                                stats,
                                 downloadedBlocks,
                                 importedBlockHashes,
                                 peerStates,
@@ -209,7 +209,7 @@ public final class SyncMgr {
                                     INTERVAL_SHOW_STATUS,
                                     chain,
                                     networkStatus,
-                                    statics,
+                                    stats,
                                     false,
                                     "", // TODO: fully remove
                                     this.p2pMgr,

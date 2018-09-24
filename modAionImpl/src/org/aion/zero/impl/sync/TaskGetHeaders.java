@@ -36,7 +36,6 @@ import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.REQUEST_SIZE;
 import static org.aion.zero.impl.sync.PeerState.Mode.NORMAL;
 import static org.aion.zero.impl.sync.PeerState.Mode.THUNDER;
-import static org.aion.zero.impl.sync.PeerState.State.HEADERS_REQUESTED;
 
 import java.math.BigInteger;
 import java.util.Collection;
@@ -77,8 +76,8 @@ final class TaskGetHeaders implements Runnable {
         this.log = log;
     }
 
-    /** Checks that the peer's total difficulty is higher than the local chain. */
-    private boolean isHigherTotalDifficulty(INode n) {
+    /** Checks that the peer's total difficulty is higher than or equal to the local chain. */
+    private boolean isAdequateTotalDifficulty(INode n) {
         return n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0;
     }
 
@@ -99,7 +98,7 @@ final class TaskGetHeaders implements Runnable {
         long now = System.currentTimeMillis();
         List<INode> nodesFiltered =
                 nodes.stream()
-                        .filter(n -> isHigherTotalDifficulty(n) && isTimelyRequest(now, n))
+                        .filter(n -> isAdequateTotalDifficulty(n) && isTimelyRequest(now, n))
                         .collect(Collectors.toList());
 
         if (nodesFiltered.isEmpty()) {

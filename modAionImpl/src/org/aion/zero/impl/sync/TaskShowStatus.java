@@ -52,7 +52,7 @@ final class TaskShowStatus implements Runnable {
 
     private final NetworkStatus networkStatus;
 
-    private final SyncStatics statics;
+    private final SyncStats stats;
 
     private final boolean printReport;
     private final String reportFolder;
@@ -68,7 +68,7 @@ final class TaskShowStatus implements Runnable {
             int _interval,
             final AionBlockchainImpl _chain,
             final NetworkStatus _networkStatus,
-            final SyncStatics _statics,
+            final SyncStats _stats,
             final boolean _printReport,
             final String _reportFolder,
             final IP2pMgr _p2p,
@@ -78,7 +78,7 @@ final class TaskShowStatus implements Runnable {
         this.interval = _interval;
         this.chain = _chain;
         this.networkStatus = _networkStatus;
-        this.statics = _statics;
+        this.stats = _stats;
         this.printReport = _printReport;
         this.reportFolder = _reportFolder;
         this.p2p = _p2p;
@@ -95,7 +95,7 @@ final class TaskShowStatus implements Runnable {
 
             String status =
                     "sync-status avg-import="
-                            + String.format("%.2f", this.statics.getAvgBlocksPerSec())
+                            + String.format("%.2f", this.stats.getAvgBlocksPerSec())
                             //
                             + " b/s" //
                             + " td="

@@ -39,6 +39,7 @@ import static org.aion.zero.impl.sync.PeerState.Mode.LIGHTNING;
 import static org.aion.zero.impl.sync.PeerState.Mode.NORMAL;
 import static org.aion.zero.impl.sync.PeerState.Mode.THUNDER;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -72,7 +73,7 @@ final class TaskImportBlocks implements Runnable {
 
     private final BlockingQueue<BlocksWrapper> downloadedBlocks;
 
-    private final SyncStatics statis;
+    private final SyncStats stats;
 
     private final Map<ByteArrayWrapper, Object> importedBlockHashes;
 
@@ -86,14 +87,14 @@ final class TaskImportBlocks implements Runnable {
     TaskImportBlocks(
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
-            final SyncStatics _statis,
+            final SyncStats _stats,
             final BlockingQueue<BlocksWrapper> _downloadedBlocks,
             final Map<ByteArrayWrapper, Object> _importedBlockHashes,
             final Map<Integer, PeerState> _peerStates,
             final Logger _log) {
         this.chain = _chain;
         this.start = _start;
-        this.statis = _statis;
+        this.stats = _stats;
         this.downloadedBlocks = _downloadedBlocks;
         this.importedBlockHashes = _importedBlockHashes;
         this.peerStates = _peerStates;
@@ -142,7 +143,7 @@ final class TaskImportBlocks implements Runnable {
                             peerState.getBase());
                 }
 
-                statis.update(getBestBlockNumber());
+                stats.update(getBestBlockNumber());
             }
         }
         log.info(Thread.currentThread().getName() + " RIP.");
@@ -158,6 +159,7 @@ final class TaskImportBlocks implements Runnable {
      * @param imported the collection of recently imported blocks
      * @return the list of blocks that pass the filter conditions.
      */
+    @VisibleForTesting
     static List<AionBlock> filterBatch(
             List<AionBlock> blocks,
             AionBlockchainImpl chain,
