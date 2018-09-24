@@ -240,6 +240,7 @@ task pack(type: Tar) {
     }
 }
 
+pack.dependsOn build
 pack.dependsOn prePack
 pack.dependsOn collectDependentJars 
 pack.finalizedBy(postPack)
