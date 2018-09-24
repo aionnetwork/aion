@@ -111,6 +111,9 @@ final class TaskImportBlocks implements Runnable {
             try {
                 bw = downloadedBlocks.take();
             } catch (InterruptedException ex) {
+                if (start.get()) {
+                    log.error("Import blocks thread interrupted without shutdown request.", ex);
+                }
                 return;
             }
 
@@ -146,7 +149,12 @@ final class TaskImportBlocks implements Runnable {
                 stats.update(getBestBlockNumber());
             }
         }
-        log.info(Thread.currentThread().getName() + " RIP.");
+        if (log.isDebugEnabled()) {
+            log.debug(
+                    "Thread ["
+                            + Thread.currentThread().getName()
+                            + "] performing block imports was shutdown.");
+        }
     }
 
     /**
@@ -274,8 +282,7 @@ final class TaskImportBlocks implements Runnable {
                     log.error("Shutdown due to lack of disk space.");
                     System.exit(0);
                 }
-                // TODO test and determine consequences: continue or break?
-                continue;
+                break;
             }
 
             // decide whether to change mode based on the first
@@ -542,7 +549,7 @@ final class TaskImportBlocks implements Runnable {
         long t2 = System.currentTimeMillis();
         if (log.isDebugEnabled()) {
             // printing sync mode only when debug is enabled
-            log.info(
+            log.debug(
                     "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
                     displayId,
                     (state != null ? state.getMode() : NORMAL),
@@ -659,7 +666,7 @@ final class TaskImportBlocks implements Runnable {
 
                             batch++;
 
-                            if (last <= b.getNumber()) {
+                            if (last == b.getNumber()) {
                                 // can try importing more
                                 last = b.getNumber() + 1;
                             }
