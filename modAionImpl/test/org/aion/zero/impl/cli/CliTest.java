@@ -90,7 +90,7 @@ public class CliTest {
     private static final File testnetGenesis = new File(BASE_PATH, "config/mastery/genesis.json");
 
     /** @implNote set this to true to enable printing */
-    private static final boolean verbose = true;
+    private static final boolean verbose = false;
 
     @Before
     public void setup() {

@@ -1,27 +1,45 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
 package org.aion.zero.impl;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.util.TestResources.TEST_RESOURCE_DIR;
+
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Map;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.zero.exceptions.HeaderStructureException;
-import org.aion.zero.impl.AionGenesis;
-import org.aion.zero.impl.GenesisBlockLoader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.Map;
-
-import static com.google.common.truth.Truth.assertThat;
-
 public class GenesisTestNetJsonTest {
 
-    // if we're running in the module itself
-    private static final String TESTNET_DEFAULT_LOCATION = "../modBoot/resource/conquest/genesis.json";
-
-    // if we're running in the project folder
-    private static final String TESTNET_ALT_LOCATION = "./modBoot/resource/conquest/genesis.json";
+    private static final String TESTNET_DEFAULT_LOCATION =
+            new File(TEST_RESOURCE_DIR, "testnet.json").getAbsolutePath();
 
     private static AionGenesis genesis;
 
@@ -41,13 +59,6 @@ public class GenesisTestNetJsonTest {
             }
 
             System.out.println(String.format("Failed to load genesis from: %s", TESTNET_DEFAULT_LOCATION));
-            System.out.println("trying alternative");
-            try {
-                genesis = GenesisBlockLoader.loadJSON(TESTNET_ALT_LOCATION);
-            } catch (IOException | HeaderStructureException e2) {
-                System.out.println("Failed to load from alternative location");
-                e2.printStackTrace();
-            }
         }
     }
 
