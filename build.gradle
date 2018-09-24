@@ -2,6 +2,17 @@ plugins {
     id "de.undercouch.download" version "3.4.3"
 }
 
+def dirBuildFile =  "./build/main"
+def dirBuildNative = "./build/main/native"
+def dirNative = "./native"
+def dirWorkspace = "./"
+def dirPack = "./pack"
+def dirLibFile = "lib"
+def dirModFile ="./mod"
+def javaHome = "$System.env.JAVA_HOME"
+def vmVersion = "0.3.1"
+def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
+
 allprojects { 
     apply plugin: 'java'
     apply plugin: 'idea'
@@ -15,27 +26,13 @@ allprojects {
     }
 }
 
+// used only for 3rd_build
 ant.importBuild('build.xml') { antTargetName -> 'ant-' + antTargetName }
-
-// referencing the ant values for now; once everything is working,
-// use the constants instead
-def dirBuildFile =  "./build/main"
-def dirBuildNative = "./build/main/native"
-def dirNative = "./native"
-def dirWorkspace = "./"
-def dirPack = "./pack"
-def dirLibFile = "lib"
-def dirModFile ="./mod"
-def javaHome = "$System.env.JAVA_HOME"
-def vmVersion = "0.3.1"
-
-def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
 task compileNative(type:Exec) {
     // seems kinda hacky, but need big reorganization to fix
     dependsOn 'modCrypto:compileNative'
     dependsOn 'modAionImpl:compileJava'
-    //dependsOn 'aion_api:compileJava'
 
     doFirst { 
         mkdir "${dirBuildFile}"
@@ -79,20 +76,26 @@ task compileNative(type:Exec) {
 subprojects {
     sourceSets { 
         main {
-            java { srcDirs = ['src'] }
+            java.srcDirs = ['src']
         }
         test {
-            java { srcDirs = ['test'] }
+            java.srcDirs = ['test']
         }
     }
 
+    // TODO delete before push
+    /*
     task copyJarToAionMod(type: Copy) { 
-        task -> from "build/libs/${task.project.name}.jar" into file("../mod")
+        //from "${buildDir}/libs/${project.name}.jar" into file("{$rootProject}/mod")
+        from tasks.compileJava.outputs into file("{$rootProject}/mod")
     }
 
     task deleteJarFromAionMod(type: Delete) { 
-        task -> delete "../mod/${task.project.name}.jar"
+        delete "${rootProject}/mod/${project.name}.jar"
     }
+    build.dependsOn copyJarToAionMod
+    clean.dependsOn deleteJarFromAionMod
+    */
 
     task copyNativeLibsForModuleTests(type: Copy) { 
         dependsOn rootProject.compileNative
@@ -100,17 +103,14 @@ subprojects {
     }
 
     task deleteNativeLibs(type: Delete) {
-        task -> delete 'native'
+        delete 'native'
     }
 
-    build.dependsOn copyJarToAionMod
-    clean.dependsOn deleteJarFromAionMod
 
     test { 
         reports { 
             html.enabled = false;
         }
-        //testResultsDirName = "${rootProject.projectDir}/reports"
     }
 
     afterEvaluate { 
