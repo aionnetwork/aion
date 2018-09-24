@@ -301,11 +301,9 @@ public class PendingBlockStore implements Flushable, Closeable {
                 QueueInfo info = status.get(hash);
                 if (info == null) {
                     if (Arrays.equals(currentQueueHash, block.getHash())) {
-                        info =
-                                new QueueInfo(
-                                        currentQueueHash, block.getNumber(), block.getNumber());
+                        info = QueueInfo.completeInstance(currentQueueHash, block.getNumber());
                     } else {
-                        info = new QueueInfo(currentQueueHash, block.getNumber());
+                        info = QueueInfo.partialInstance(currentQueueHash, block.getNumber());
                     }
                 } else {
                     info.setLast(block.getNumber());
@@ -802,49 +800,46 @@ public class PendingBlockStore implements Flushable, Closeable {
 
         private static final long UNKNOWN = -1;
 
-        QueueInfo(byte[] _hash, long _last) {
+        private QueueInfo(byte[] _hash, long _last) {
             this.hash = _hash;
-            this.first = UNKNOWN;
             this.last = _last;
         }
 
-        QueueInfo(byte[] _hash, long _first, long _last) {
-            this.hash = _hash;
-            this.first = _first;
-            this.last = _last;
+        static QueueInfo completeInstance(byte[] _hash, long _last) {
+            QueueInfo info = new QueueInfo(_hash, _last);
+            info.first = _last;
+            return info;
         }
 
-        /** For future functionality to store to disk. */
-        public QueueInfo(byte[] data) {
-            RLPList outerList = RLP.decode2(data);
-
-            if (outerList.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "The given data does not correspond to a QueueInfo object.");
-            }
-
-            RLPList list = (RLPList) outerList.get(0);
-            this.hash = list.get(0).getRLPData();
-            this.first = ByteUtil.byteArrayToLong(list.get(1).getRLPData());
-            this.last = ByteUtil.byteArrayToLong(list.get(2).getRLPData());
+        static QueueInfo partialInstance(byte[] _hash, long _last) {
+            QueueInfo info = new QueueInfo(_hash, _last);
+            info.first = UNKNOWN;
+            return info;
         }
+
+        //        /** For future functionality to store to disk. */
+        //        public QueueInfo(byte[] data) {
+        //            RLPList outerList = RLP.decode2(data);
+        //
+        //            if (outerList.isEmpty()) {
+        //                throw new IllegalArgumentException(
+        //                        "The given data does not correspond to a QueueInfo object.");
+        //            }
+        //
+        //            RLPList list = (RLPList) outerList.get(0);
+        //            this.hash = list.get(0).getRLPData();
+        //            this.first = ByteUtil.byteArrayToLong(list.get(1).getRLPData());
+        //            this.last = ByteUtil.byteArrayToLong(list.get(2).getRLPData());
+        //        }
 
         // the hash identifying the queue
-        private byte[] hash;
+        private final byte[] hash;
         // the number of the first block in the queue
         private long first;
         // the number of the last block in the queue
         private long last;
 
-        public byte[] getHash() {
-            return hash;
-        }
-
-        public long getFirst() {
-            return first;
-        }
-
-        public long getLast() {
+        long getLast() {
             return last;
         }
 
@@ -852,12 +847,13 @@ public class PendingBlockStore implements Flushable, Closeable {
             this.last = last;
         }
 
-        public byte[] getEncoded() {
-            byte[] hashElement = RLP.encodeElement(hash);
-            byte[] firstElement = RLP.encodeElement(ByteUtil.longToBytes(first));
-            byte[] lastElement = RLP.encodeElement(ByteUtil.longToBytes(last));
-            return RLP.encodeList(hashElement, firstElement, lastElement);
-        }
+        //        /** For future functionality to store to disk. */
+        //        public byte[] getEncoded() {
+        //            byte[] hashElement = RLP.encodeElement(hash);
+        //            byte[] firstElement = RLP.encodeElement(ByteUtil.longToBytes(first));
+        //            byte[] lastElement = RLP.encodeElement(ByteUtil.longToBytes(last));
+        //            return RLP.encodeList(hashElement, firstElement, lastElement);
+        //        }
 
         @Override
         public String toString() {
