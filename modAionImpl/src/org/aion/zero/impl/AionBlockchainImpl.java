@@ -518,7 +518,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * If using TOP pruning we need to check the pruning restriction for the block.
      * Otherwise, there is not prune restriction.
      */
-    public boolean checkPruneRestriction() {
+    public boolean hasPruneRestriction() {
         // no restriction when not in TOP pruning mode
         return repository.usesTopPruning();
     }
@@ -528,7 +528,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      */
     public boolean isPruneRestricted(long blockNumber) {
         // no restriction when not in TOP pruning mode
-        if (!checkPruneRestriction()) {
+        if (!hasPruneRestriction()) {
             return false;
         }
         return blockNumber < bestBlockNumber.get() - repository.getPruneBlockCount() + 1;
@@ -1213,8 +1213,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public void dropImported(long level, List<ByteArrayWrapper> queues, Map<ByteArrayWrapper, List<AionBlock>> blocks) {
-        repository.getPendingBlockStore().dropPendingQueues(level, queues, blocks);
+    public void dropImported(
+            long level,
+            List<ByteArrayWrapper> ranges,
+            Map<ByteArrayWrapper, List<AionBlock>> blocks) {
+        repository.getPendingBlockStore().dropPendingQueues(level, ranges, blocks);
     }
 
     public boolean hasParentOnTheChain(AionBlock block) {

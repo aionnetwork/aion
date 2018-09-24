@@ -162,7 +162,7 @@ final class TaskImportBlocks implements Runnable {
             List<AionBlock> blocks,
             AionBlockchainImpl chain,
             Map<ByteArrayWrapper, Object> imported) {
-        if (chain.checkPruneRestriction()) {
+        if (chain.hasPruneRestriction()) {
             // filter out restricted blocks if prune restrictions enabled
             return blocks.stream()
                     .filter(b -> isNotImported(b, imported))
