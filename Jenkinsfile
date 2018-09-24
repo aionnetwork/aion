@@ -39,7 +39,7 @@ pipeline {
     	stage('Test') {
 		steps {
     			timeout(60){
-    				sh "./gradlew ci_build"
+    				sh "./gradlew ciBuild"
     			}
     		}
     		post {
