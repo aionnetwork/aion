@@ -19,10 +19,6 @@ pipeline {
                 sh "git submodule update --init --recursive"
 
                 sh "./gradlew build pack"
-                
-                timeout(60) {
-                	sh "${env.ANT_HOME}"
-                }
             }
             
         }
