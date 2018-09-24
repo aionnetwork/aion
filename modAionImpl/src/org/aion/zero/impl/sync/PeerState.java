@@ -135,8 +135,8 @@ public class PeerState {
         this.lastHeaderRequest = 0;
     }
 
-    public boolean isOverRepeatThreshold() {
-        return repeated >= STEP_COUNT;
+    public boolean isUnderRepeatThreshold() {
+        return repeated < STEP_COUNT;
     }
 
     private void resetRepeated() {

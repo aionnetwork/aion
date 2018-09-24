@@ -674,7 +674,7 @@ public class TaskImportBlocksTest {
         assertThat(forwardModeUpdate(input, newBase, result)).isEqualTo(expected);
 
         input = new PeerState(FORWARD, initialBase);
-        while (!input.isOverRepeatThreshold()) {
+        while (input.isUnderRepeatThreshold()) {
             input.incRepeated();
         }
 

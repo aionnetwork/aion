@@ -591,7 +591,7 @@ final class TaskImportBlocks implements Runnable {
     static PeerState forwardModeUpdate(PeerState state, long lastBlock, ImportResult importResult) {
         // when the maximum number of repeats has passed
         // the peer is stuck behind other peers importing the same (old) blocks
-        if (importResult.isBest() || state.isOverRepeatThreshold()) {
+        if (importResult.isBest() || !state.isUnderRepeatThreshold()) {
             state.setMode(NORMAL);
         } else {
             // in case we continue as FORWARD

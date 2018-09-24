@@ -123,7 +123,7 @@ final class TaskGetHeaders implements Runnable {
                     // request far forward blocks
                     if (state.getBase() > selfNumber + LARGE_REQUEST_SIZE
                             // there have not been STEP_COUNT sequential requests
-                            && !state.isOverRepeatThreshold()) {
+                            && state.isUnderRepeatThreshold()) {
                         size = LARGE_REQUEST_SIZE;
                         from = state.getBase();
                         break;
@@ -135,7 +135,7 @@ final class TaskGetHeaders implements Runnable {
             case THUNDER:
                 {
                     // there have not been STEP_COUNT sequential requests
-                    if (!state.isOverRepeatThreshold()) {
+                    if (state.isUnderRepeatThreshold()) {
                         state.setBase(selfNumber);
                         size = LARGE_REQUEST_SIZE;
                         from = Math.max(1, selfNumber - FAR_OVERLAPPING_BLOCKS);

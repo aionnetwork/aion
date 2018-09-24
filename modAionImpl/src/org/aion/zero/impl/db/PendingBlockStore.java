@@ -27,6 +27,7 @@ import static org.aion.mcf.db.DatabaseUtils.verifyAndBuildPath;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.STEP_COUNT;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.Closeable;
 import java.io.File;
 import java.util.ArrayList;
@@ -165,10 +166,16 @@ public class PendingBlockStore implements Flushable, Closeable {
      * @return true if correctly initialized and the databases are open, false otherwise.
      */
     public boolean isOpen() {
-        return status != null
-                && levelSource.isOpen()
-                && queueSource.isOpen()
-                && indexSource.isOpen();
+        lock.readLock().lock();
+
+        try {
+            return status != null
+                    && levelSource.isOpen()
+                    && queueSource.isOpen()
+                    && indexSource.isOpen();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     private static final Serializer<List<byte[]>, byte[]> HASH_LIST_RLP_SERIALIZER =
@@ -226,6 +233,9 @@ public class PendingBlockStore implements Flushable, Closeable {
      * the needed height and the parent block gets imported. Is used by the functionality receiving
      * status blocks.
      *
+     * @param block a future block that cannot be imported due to height
+     * @return {@code true} when the block was imported, {@code false} if the block is {@code null}
+     *     or is already stored and saving it was not necessary.
      * @implNote The status blocks received impact the functionality of the base value generation
      *     {@link #nextBase(long, long)} for requesting blocks ahead of import time.
      */
@@ -302,13 +312,9 @@ public class PendingBlockStore implements Flushable, Closeable {
                 }
                 status.put(hash, info);
 
-                if (minStatus > block.getNumber()) {
-                    minStatus = block.getNumber();
-                }
+                minStatus = Math.min(minStatus, block.getNumber());
 
-                if (maxStatus < block.getNumber()) {
-                    maxStatus = block.getNumber();
-                }
+                maxStatus = Math.max(maxStatus, block.getNumber());
 
                 // the block was added
                 return true;
@@ -325,8 +331,14 @@ public class PendingBlockStore implements Flushable, Closeable {
      * @return the number of elements stored in the status map. * @implNote This method is package
      *     private because it is meant to be used for testing.
      */
+    @VisibleForTesting
     int getStatusSize() {
-        return status == null ? -1 : status.size();
+        lock.readLock().lock();
+        try {
+            return status == null ? -1 : status.size();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -334,18 +346,29 @@ public class PendingBlockStore implements Flushable, Closeable {
      * @return the information for that queue if it exists, {@code null} otherwise. * @implNote This
      *     method is package private because it is meant to be used for testing.
      */
+    @VisibleForTesting
     QueueInfo getStatusItem(byte[] hash) {
-        if (hash == null) {
-            return null;
-        } else {
-            return status.get(ByteArrayWrapper.wrap(hash));
+        lock.readLock().lock();
+        try {
+            if (hash == null) {
+                return null;
+            } else {
+                return status.get(ByteArrayWrapper.wrap(hash));
+            }
+        } finally {
+            lock.readLock().unlock();
         }
     }
 
     /**
-     * Stores a range of blocks in the pending block store for importing later when the chain
-     * reaches the needed height and the parent blocks gets imported. The functionality expects
-     * consecutive blocks, but ensures correct behavior even when the blocks are not consecutive.
+     * Attempts to store a range of blocks in the pending block store for importing later when the
+     * chain reaches the needed height and the parent blocks gets imported.
+     *
+     * @param blocks a range of blocks that cannot be imported due to height or lack of parent block
+     * @return an integer value (ranging from zero to the number of given blocks) representing the
+     *     number of blocks that were stored from the given input.
+     * @implNote The functionality is optimized for calls providing consecutive blocks, but ensures
+     *     correct behavior even when the blocks are not consecutive.
      */
     public int addBlockRange(List<AionBlock> blocks) {
         List<AionBlock> blockRange = new ArrayList<>(blocks);
@@ -375,7 +398,17 @@ public class PendingBlockStore implements Flushable, Closeable {
         }
     }
 
-    /** Stores a block ranges with the first element determining the queue placement. */
+    /**
+     * Stores a block ranges with the first element determining the queue placement.
+     *
+     * @param first the parent block to the lowest block in the given range which will be used to
+     *     determine the queue identifier
+     * @param blockRange a range of blocks that cannot be imported due to height or lack of parent
+     *     block
+     * @return an integer value (ranging from zero to the number of given blocks) representing the
+     *     number of blocks that were stored from the given input.
+     * @implNote Any method calling this functionality must first acquire the needed write lock.
+     */
     private int addBlockRange(AionBlock first, List<AionBlock> blockRange) {
 
         // skip if already stored
@@ -451,24 +484,42 @@ public class PendingBlockStore implements Flushable, Closeable {
      * @return the number of elements stored in the index database.
      * @implNote This method is package private because it is meant to be used for testing.
      */
+    @VisibleForTesting
     int getIndexSize() {
-        return indexSource.keys().size();
+        lock.readLock().lock();
+        try {
+            return indexSource.keys().size();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * @return the number of elements stored in the level database.
      * @implNote This method is package private because it is meant to be used for testing.
      */
+    @VisibleForTesting
     int getLevelSize() {
-        return levelDatabase.keys().size();
+        lock.readLock().lock();
+        try {
+            return levelDatabase.keys().size();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
      * @return the number of elements stored in the queue database.
      * @implNote This method is package private because it is meant to be used for testing.
      */
+    @VisibleForTesting
     int getQueueSize() {
-        return queueDatabase.keys().size();
+        lock.readLock().lock();
+        try {
+            return queueDatabase.keys().size();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -479,24 +530,30 @@ public class PendingBlockStore implements Flushable, Closeable {
      *     queues stored at that level.
      */
     public Map<ByteArrayWrapper, List<AionBlock>> loadBlockRange(long level) {
-        // get the queue for the given level
-        List<byte[]> queueHashes = levelSource.get(ByteUtil.longToBytes(level));
+        lock.readLock().lock();
 
-        if (queueHashes == null) {
-            return Collections.emptyMap();
-        }
+        try {
+            // get the queue for the given level
+            List<byte[]> queueHashes = levelSource.get(ByteUtil.longToBytes(level));
 
-        // get all the blocks in the given queues
-        List<AionBlock> list;
-        Map<ByteArrayWrapper, List<AionBlock>> blocks = new HashMap<>();
-        for (byte[] queue : queueHashes) {
-            list = queueSource.get(queue);
-            if (list != null) {
-                blocks.put(ByteArrayWrapper.wrap(queue), list);
+            if (queueHashes == null) {
+                return Collections.emptyMap();
             }
-        }
 
-        return blocks;
+            // get all the blocks in the given queues
+            List<AionBlock> list;
+            Map<ByteArrayWrapper, List<AionBlock>> blocks = new HashMap<>();
+            for (byte[] queue : queueHashes) {
+                list = queueSource.get(queue);
+                if (list != null) {
+                    blocks.put(ByteArrayWrapper.wrap(queue), list);
+                }
+            }
+
+            return blocks;
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     /**
@@ -570,13 +627,12 @@ public class PendingBlockStore implements Flushable, Closeable {
             } else {
                 List<byte[]> updatedLevelData = new ArrayList<>();
 
-                levelData.forEach(
-                        qHash -> {
-                            if (!queues.contains(ByteArrayWrapper.wrap(qHash))) {
-                                // this queue was not imported
-                                updatedLevelData.add(qHash);
-                            }
-                        });
+                for (byte[] qHash : levelData) {
+                    if (!queues.contains(ByteArrayWrapper.wrap(qHash))) {
+                        // this queue was not imported
+                        updatedLevelData.add(qHash);
+                    }
+                }
 
                 if (updatedLevelData.isEmpty()) {
                     // delete level
@@ -731,7 +787,7 @@ public class PendingBlockStore implements Flushable, Closeable {
             }
         }
     }
-
+    /** @implNote Any method calling this functionality must first acquire the needed read lock. */
     private String statusToString() {
         StringBuilder sb = new StringBuilder("Current status queues:\n");
         for (QueueInfo i : status.values()) {
@@ -741,6 +797,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         return sb.toString();
     }
 
+    @VisibleForTesting
     static class QueueInfo {
 
         private static final long UNKNOWN = -1;
