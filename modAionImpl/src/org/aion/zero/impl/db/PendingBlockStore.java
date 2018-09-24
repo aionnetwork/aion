@@ -257,7 +257,7 @@ public class PendingBlockStore implements Flushable, Closeable {
                 } // do not add else here!
 
                 // when no queue exists OR problem with existing queue
-                if (currentQueue == null || currentQueue.size() == 0) {
+                if (currentQueue == null || currentQueue.isEmpty()) {
                     // start new queue
 
                     // queue hash = the node hash
@@ -351,7 +351,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         List<AionBlock> blockRange = new ArrayList<>(blocks);
 
         // nothing to do when 0 blocks given
-        if (blockRange.size() == 0) {
+        if (blockRange.isEmpty()) {
             return 0;
         }
 
@@ -380,7 +380,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
         // skip if already stored
         while (indexSource.get(first.getHash()).isPresent()) {
-            if (blockRange.size() == 0) {
+            if (blockRange.isEmpty()) {
                 return 0;
             } else {
                 first = blockRange.remove(0);
@@ -415,7 +415,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
         AionBlock current;
         // process rest of block range
-        while (blockRange.size() > 0) {
+        while (!blockRange.isEmpty()) {
             current = blockRange.remove(0);
 
             // check for issues with batch continuity and storage

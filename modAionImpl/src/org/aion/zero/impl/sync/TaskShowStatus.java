@@ -158,7 +158,7 @@ final class TaskShowStatus implements Runnable {
             }
         }
 
-        if (sorted.size() > 0) {
+        if (!sorted.isEmpty()) {
             sorted.sort((n1, n2) -> ((Long) n2.getS().getBase()).compareTo(n1.getS().getBase()));
 
             StringBuilder sb = new StringBuilder();

@@ -632,7 +632,7 @@ final class TaskImportBlocks implements Runnable {
                 // filter already imported blocks
                 batchFromDisk = filterBatch(batchFromDisk, chain, importedBlockHashes);
 
-                if (batchFromDisk.size() > 0) {
+                if (!batchFromDisk.isEmpty()) {
                     if (log.isDebugEnabled()) {
                         log.debug(
                                 "{} {} left after filtering out imported blocks.",
