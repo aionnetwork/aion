@@ -1,11 +1,11 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
  *
  *     The aion network project is free software: you can redistribute it
  *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
+ *     as published by the Free Software Foundation, either versio 3 of
  *     the License, or any later version.
  *
  *     The aion network project is distributed in the hope that it will
@@ -19,22 +19,17 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CfgApiZmq {
 
@@ -52,9 +47,9 @@ public class CfgApiZmq {
     protected boolean active;
     protected String ip;
     protected int port;
-    protected boolean filtersEnabled;
-    protected boolean blockSummaryCacheEnabled;
-    protected boolean secureConnectEnabled;
+    private boolean filtersEnabled;
+    private boolean blockSummaryCacheEnabled;
+    private boolean secureConnectEnabled;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         this.active = Boolean.parseBoolean(sr.getAttributeValue(null, "active"));
@@ -73,24 +68,24 @@ public class CfgApiZmq {
                             try {
                                 filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                //System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
-                                //e.printStackTrace();
+                                System.out.println("failed to read config node: aion.api.zmq.filters-enabled; using preset: " + this.filtersEnabled);
+                                e.printStackTrace();
                             }
                             break;
                         case "block-summary-cache":
                             try {
                                 blockSummaryCacheEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                //System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
-                                //e.printStackTrace();
+                                System.out.println("failed to read config node: aion.api.zmq.block-summary-cache; using preset: " + this.blockSummaryCacheEnabled);
+                                e.printStackTrace();
                             }
                             break;
                         case "secure-connect":
                             try {
                                 secureConnectEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                //System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
-                                //e.printStackTrace();
+                                System.out.println("failed to read config node: aion.api.zmq.secure-connect; using preset: " + this.secureConnectEnabled);
+                                e.printStackTrace();
                             }
                             break;
                         default:

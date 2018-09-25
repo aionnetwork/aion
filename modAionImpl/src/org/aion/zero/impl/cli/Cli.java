@@ -509,13 +509,13 @@ public class Cli {
         String iso_date = df.format(new Date(System.currentTimeMillis()));
 
         String fileName = "UTC--" + iso_date + "--zmqCurvePubkey";
-        getFile(fileName, publicKey);
+        writeKeyToFile(fileName, publicKey);
 
         fileName = "UTC--" + iso_date + "--zmqCurveSeckey";
-        getFile(fileName, secretKey);
+        writeKeyToFile(fileName, secretKey);
     }
 
-    private void getFile(@Nonnull final String fileName, @Nonnull final String key) throws IOException {
+    private void writeKeyToFile(@Nonnull final String fileName, @Nonnull final String key) throws IOException {
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxr-----");
         FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(perms);
 
