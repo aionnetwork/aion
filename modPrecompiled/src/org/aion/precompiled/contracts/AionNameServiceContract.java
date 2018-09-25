@@ -655,7 +655,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] addressFirstPart = this.track.getStorageValue(registeredDomainNameAddress, new DataWord(blake128(domainName.getBytes()))).getData();
         byte[] addressSecondPart = this.track.getStorageValue(registeredDomainNameAddress, new DataWord(blake128(blake128(domainName.getBytes())))).getData();
         Address domainAddress = Address.wrap(combineTwoBytes(addressFirstPart, addressSecondPart));
-        if (domainAddress.equals(Address.ZERO_ADDRESS()))
+        if (domainAddress.isZeroAddress())
             return null;
         return domainAddress;
     }
