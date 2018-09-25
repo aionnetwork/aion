@@ -461,7 +461,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        Address fromAddr = (params.getFrom().equals(Address.EMPTY_ADDRESS())) ? Address.ZERO_ADDRESS() : params.getFrom();
+        Address fromAddr = (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
         AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), fromAddr, params.getTo(),
                 params.getValue().toByteArray(), params.getData(), params.getNrg(), params.getNrgPrice());
 
