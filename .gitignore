@@ -9,6 +9,7 @@
 /log/
 /rt/
 /web3/
+/zmq_keystore/
 
 # ide
 /.idea/
