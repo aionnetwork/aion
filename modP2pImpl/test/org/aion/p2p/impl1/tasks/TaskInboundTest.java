@@ -480,10 +480,10 @@ public class TaskInboundTest {
         Thread t = new Thread(ti);
         t.start();
         assertTrue(t.isAlive());
-        Thread.sleep(100);
+        Thread.sleep(300);
 
         atb.set(false);
-        Thread.sleep(100);
+        Thread.sleep(300);
         assertEquals("TERMINATED", t.getState().toString());
     }
 }
