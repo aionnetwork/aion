@@ -2,6 +2,7 @@ package org.aion.crypto;
 
 import org.aion.base.util.ByteUtil;
 import org.junit.Test;
+import java.util.Optional;
 import static org.junit.Assert.assertEquals;
 
 public class ChecksumTest {
@@ -18,12 +19,19 @@ public class ChecksumTest {
     public void testChecksum() {
         String input = "0xa08896b9366f09e5efb1fa2ed9f3820b865ae97adbc6f364d691eb17784c9b1b";
         String expected = "A08896B9366f09e5EfB1fA2ed9f3820B865AE97ADBc6f364D691eB17784c9b1b";
-        assertEquals(expected, (AddressSpecs.checksummedAddress(input)));
+        assertEquals(Optional.of(expected), (AddressSpecs.checksummedAddress(input)));
+    }
+
+    @Test
+    public void testChecksum0x() {
+        String input = "a0x896b9366f09e5efb1fa2ed9f3820b865ae97adbc6f364d691eb17784c9b1b"; //0x is not removed, h == null
+        String expected = "A08896B9366f09e5EfB1fA2ed9f3820B865AE97ADBc6f364D691eB17784c9b1b";
+        assertEquals(Optional.empty(), (AddressSpecs.checksummedAddress(input)));
     }
 
     @Test
     public void testChecksumnull() {
         String input = "0xa~8896b9366f09e5efb1fa2ed9f3820b865ae97adbc6f364d691eb17784c9b1b";
-        assertEquals(null, (AddressSpecs.checksummedAddress(input)));
+        assertEquals(Optional.empty(), (AddressSpecs.checksummedAddress(input)));
     }
 }

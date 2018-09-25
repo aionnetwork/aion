@@ -4,6 +4,7 @@ import org.aion.base.util.ByteUtil;
 
 import java.nio.ByteBuffer;
 import java.util.BitSet;
+import java.util.Optional;
 
 /**
  * A set of static functions to define the creation
@@ -27,19 +28,19 @@ public class AddressSpecs {
         return buf.array();
     }
 
-    public static String checksummedAddress(String address) {
-        assert address != null;
-        address = address.replace("0x", "");
-        assert address.length() == 64;
+    public static Optional<String> checksummedAddress(String address) {
+        if (address == null) return Optional.empty();
+        address = address.replaceFirst("^0x", "");
+        if (address.length() != 64) return Optional.empty();
+        
         byte[] h;
         try {
             h = HashUtil.h256(ByteUtil.hexStringToBytes(address));
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return Optional.empty();
         }
-        if (h == null) return null; //address is invalid
-        System.out.println(ByteUtil.toHexString(h));
+        if (h == null) return Optional.empty(); //address is invalid
         BitSet b = BitSet.valueOf(h);
         char[] caddr = address.toCharArray();
         for (int i = 0; i < 64; i++) {
@@ -51,6 +52,6 @@ public class AddressSpecs {
                 continue;
             }
         }
-        return String.valueOf(caddr);
+        return Optional.of(String.valueOf(caddr));
     }
 }
