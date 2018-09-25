@@ -30,6 +30,8 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import org.aion.log.AionLoggerFactory;
+import org.slf4j.Logger;
 
 public class CfgApiZmq {
 
@@ -51,6 +53,8 @@ public class CfgApiZmq {
     private boolean blockSummaryCacheEnabled;
     private boolean secureConnectEnabled;
 
+    private static Logger LOG_GEN = AionLoggerFactory.getLogger("GEN");
+
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         this.active = Boolean.parseBoolean(sr.getAttributeValue(null, "active"));
         this.ip = sr.getAttributeValue(null, "ip");
@@ -68,7 +72,7 @@ public class CfgApiZmq {
                             try {
                                 filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.zmq.filters-enabled; using preset: " + this.filtersEnabled);
+                                LOG_GEN.warn("failed to read config node: aion.api.zmq.filters-enabled; using preset: {}\n {}" + this.filtersEnabled, e);
                                 e.printStackTrace();
                             }
                             break;
@@ -76,16 +80,14 @@ public class CfgApiZmq {
                             try {
                                 blockSummaryCacheEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.zmq.block-summary-cache; using preset: " + this.blockSummaryCacheEnabled);
-                                e.printStackTrace();
+                                LOG_GEN.warn("failed to read config node: aion.api.zmq.block-summary-cache; using preset: {}\n {}", this.blockSummaryCacheEnabled, e);
                             }
                             break;
                         case "secure-connect":
                             try {
                                 secureConnectEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.zmq.secure-connect; using preset: " + this.secureConnectEnabled);
-                                e.printStackTrace();
+                                LOG_GEN.warn("failed to read config node: aion.api.zmq.secure-connect; using preset: {}\n {}" + this.secureConnectEnabled, e);
                             }
                             break;
                         default:

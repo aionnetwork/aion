@@ -244,7 +244,7 @@ public class Cli {
                     ZMQ.Curve.KeyPair kp = ZMQ.Curve.generateKeyPair();
                     genKeyFile(kp.publicKey, kp.secretKey);
                     System.out.println("Generate ZmqKeyPairFinished!");
-                    return 1;
+                    break;
                 case "-r":
                     if (args.length < 2) {
                         System.out.println("Starting database clean-up.");
@@ -480,9 +480,9 @@ public class Cli {
                     return 1;
             }
 
-            System.out.println("");
+            System.out.println();
         } catch (Throwable e) {
-            System.out.println("");
+            System.out.println(e.toString());
             return 1;
         }
 

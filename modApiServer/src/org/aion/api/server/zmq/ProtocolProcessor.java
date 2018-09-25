@@ -62,20 +62,10 @@ public class ProtocolProcessor implements Runnable {
     private static final String AION_ZMQ_CB_TH = "inproc://aionZmqCbTh";
     private static final String AION_ZMQ_EV_TH = "inproc://aionZmqEvTh";
     private static final String AION_ZMQ_HB_TH = "inproc://aionZmqHbTh";
-    private static final String CURVEKEY_PATH;
-    private static final Path PATH;
+    private final Path PATH;
     private static final long zmqHWM = 100_000;
     private static final int SOCKETID_LEN = 5;
     private static final int SOCKET_RECV_TIMEOUT = 3000;
-
-    static {
-        String storageDir = System.getProperty("local.storage.dir");
-        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
-            storageDir = System.getProperty("user.dir");
-        }
-        CURVEKEY_PATH = storageDir + "/" + CfgApiZmq.ZMQ_KEY_DIR;
-        PATH = Paths.get(CURVEKEY_PATH);
-    }
 
     private final IHdlr handler;
     private CfgApiZmq cfgApi;
@@ -86,6 +76,14 @@ public class ProtocolProcessor implements Runnable {
     public ProtocolProcessor(IHdlr _handler, final CfgApiZmq cfg) {
         this.handler = _handler;
         this.cfgApi = cfg;
+
+        String storageDir = System.getProperty("local.storage.dir");
+        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
+            storageDir = System.getProperty("user.dir");
+        }
+
+        String curveKeyPath = storageDir + "/" + CfgApiZmq.ZMQ_KEY_DIR;
+        PATH = Paths.get(curveKeyPath);
     }
 
     public void shutdown() throws InterruptedException {
