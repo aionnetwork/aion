@@ -80,7 +80,7 @@ public abstract class ApiAion extends Api {
     // 2. underlying datastructure provides concurrency guarntees
 
     // delegate concurrency to underlying object
-    protected static NrgOracle NRG_ORACLE;
+    private static NrgOracle NRG_ORACLE;
     protected IAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
 
     // using java.util.concurrent library objects
@@ -224,7 +224,7 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    public Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
+    protected Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
         if (blkNr > 0) {
             return ((AionBlockStore) this.ac.getBlockchain().getBlockStore())
                     .getChainBlockByNumberWithTotalDifficulty(blkNr);

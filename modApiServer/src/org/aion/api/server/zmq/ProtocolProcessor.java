@@ -34,8 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -51,7 +49,6 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.account.KeystoreFormat;
 import org.aion.mcf.config.CfgApiZmq;
 import org.slf4j.Logger;
 import org.zeromq.ZMQ;
@@ -89,11 +86,6 @@ public class ProtocolProcessor implements Runnable {
     public ProtocolProcessor(IHdlr _handler, final CfgApiZmq cfg) {
         this.handler = _handler;
         this.cfgApi = cfg;
-    }
-
-    private static List<File> getFiles() {
-        File[] files = PATH.toFile().listFiles();
-        return files != null ? Arrays.asList(files) : Collections.emptyList();
     }
 
     public void shutdown() throws InterruptedException {
@@ -187,7 +179,7 @@ public class ProtocolProcessor implements Runnable {
     }
 
     private void loadCurveKeyPair() {
-        List<File> files = getFiles();
+        List<File> files = org.aion.base.io.File.getFiles(PATH);
         String nextLoad = "";
         for (File f : files) {
             if (f.getName().contains("zmqCurvePubkey")) {

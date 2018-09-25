@@ -236,6 +236,11 @@ public class Cli {
                     break;
                 case "-zs":
                     checkZmqKeystoreDir();
+                    if (existZmqSecKeyFile()) {
+                        System.out.println("Found existing secret key file. Please backup or remove it!");
+                        return 1;
+                    }
+
                     ZMQ.Curve.KeyPair kp = ZMQ.Curve.generateKeyPair();
                     genKeyFile(kp.publicKey, kp.secretKey);
                     System.out.println("Generate ZmqKeyPairFinished!");
@@ -482,6 +487,18 @@ public class Cli {
         }
 
         return 0;
+    }
+
+    private boolean existZmqSecKeyFile() {
+        List<File> files = org.aion.base.io.File.getFiles(zmqkeyDir.toPath());
+
+        for (File file : files) {
+            if (file.getName().contains("zmqCurveSeckey")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private void genKeyFile(@Nonnull final String publicKey, @Nonnull final String secretKey)

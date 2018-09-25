@@ -1,5 +1,4 @@
 /*
- ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -18,12 +17,6 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
  *     <ether.camp> team through the ethereumJ library.
@@ -32,8 +25,9 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- *****************************************************************************
  */
+
+
 package org.aion.mcf.account;
 
 import java.io.File;
@@ -48,8 +42,6 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -90,11 +82,6 @@ public class Keystore {
         }
         KEYSTORE_PATH = storageDir + "/keystore";
         PATH = Paths.get(KEYSTORE_PATH);
-    }
-
-    private static List<File> getFiles() {
-        File[] files = PATH.toFile().listFiles();
-        return files != null ? Arrays.asList(files) : Collections.emptyList();
     }
 
     public static String create(String password) {
@@ -160,7 +147,7 @@ public class Keystore {
             throw new NullPointerException();
         }
 
-        List<File> files = getFiles();
+        List<File> files = org.aion.base.io.File.getFiles(PATH);
         if (files == null) {
             if (LOG.isWarnEnabled()) {
                 LOG.warn("No key file been stored in the kernel.");
@@ -213,7 +200,7 @@ public class Keystore {
     }
 
     public static String[] list() {
-        return addAddrs(getFiles()).toArray(new String[0]);
+        return addAddrs(org.aion.base.io.File.getFiles(PATH)).toArray(new String[0]);
     }
 
     private static List<String> addAddrs(List<File> files) {
@@ -240,7 +227,7 @@ public class Keystore {
      * @return address represent by String as a List
      */
     public static List<String> accountsSorted() {
-        List<File> files = getFiles();
+        List<File> files = org.aion.base.io.File.getFiles(PATH);
         files.sort(COMPARE);
         return addAddrs(files);
     }
@@ -252,7 +239,7 @@ public class Keystore {
 
         ECKey key = null;
         if (_address.startsWith(AION_PREFIX)) {
-            List<File> files = getFiles();
+            List<File> files = org.aion.base.io.File.getFiles(PATH);
             for (File file : files) {
                 if (HEX_64.matcher(_address).find() && file.getName().contains(_address)) {
                     try {
@@ -282,7 +269,7 @@ public class Keystore {
 
         boolean flag = false;
         if (_address.startsWith(AION_PREFIX)) {
-            List<File> files = getFiles();
+            List<File> files = org.aion.base.io.File.getFiles(PATH);
             for (File file : files) {
                 if (HEX_64.matcher(_address).find() && file.getName().contains(_address)) {
                     flag = true;
@@ -338,7 +325,7 @@ public class Keystore {
      * Test method. Don't use it for the code dev.
      */
     static File getAccountFile(String address, String password) {
-        List<File> files = getFiles();
+        List<File> files = org.aion.base.io.File.getFiles(PATH);
         if (files == null) {
             if (LOG.isWarnEnabled()) {
                 LOG.warn("No key file been stored in the kernel.");
