@@ -284,7 +284,7 @@ public class AionTransaction extends AbstractTransaction {
         if (!parsed) {
             rlpParse();
         }
-        return (this.to == null || this.to.equals(Address.EMPTY_ADDRESS()));
+        return (this.to == null || this.to.isEmptyAddress());
     }
 
     @Override

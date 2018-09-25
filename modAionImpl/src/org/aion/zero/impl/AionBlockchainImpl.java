@@ -237,7 +237,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         this.minerCoinbase = this.config.getMinerCoinbase();
 
-        if (minerCoinbase.equals(Address.EMPTY_ADDRESS())) {
+        if (minerCoinbase.isEmptyAddress()) {
             LOG.warn("No miner Coinbase!");
         }
 
