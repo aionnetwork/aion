@@ -62,7 +62,7 @@ public class PendingBlockStoreTest {
         File dir = new File(System.getProperty("user.dir"), "tmp-" + System.currentTimeMillis());
 
         Properties props = new Properties();
-        props.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
+        props.setProperty(Props.DB_TYPE, DBVendor.PERSISTENTMOCKDB.toValue());
         props.setProperty(Props.DB_PATH, dir.getAbsolutePath());
         props.setProperty(Props.DB_NAME, "pbTest");
 
