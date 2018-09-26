@@ -2,6 +2,19 @@ ext.moduleName = 'aion.gui'
 test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs 
 
+sourceSets { 
+    main { 
+        resources { 
+            srcDirs = ['resources']
+        }
+    }
+    test { 
+        resources {
+            srcDirs = ['test/resources']
+        }
+    }
+}
+
 dependencies {
     compile project(':modLogger')
     compile project(':modMcf')
@@ -26,7 +39,6 @@ dependencies {
 
     integTestCompile group: 'org.testfx', name: 'testfx-core', version: '4.0.13-alpha'
     integTestCompile group: 'org.testfx', name: 'testfx-junit', version: '4.0.13-alpha'
-    //integTestCompile group: 'org.testfx', name: 'openjfx-monocle', version: 'jdk-11+23'
     integTestCompile group: 'org.testfx', name: 'openjfx-monocle', version: 'jdk-9+181'
     integTestCompile group: 'com.google.protobuf', name: 'protobuf-java', version: '3.5.0'
     integTestCompile group: 'com.google.code.gson', name: 'gson', version: '2.7'
@@ -35,3 +47,9 @@ dependencies {
     integTestCompile project(':modRlp')
 }
 
+integTest {
+    systemProperty "testfx.robot", "glass"
+    systemProperty "testfx.headless", "true"
+    systemProperty "prism.order", "sw"
+    systemProperty "prism.text", "t2k"
+}
