@@ -177,14 +177,22 @@ task downloadSolidityGit(type:Download) {
     dest buildDir
 }
 
-task downloadVmDepsGit { 
-    // 'overwrite' property of Download task doesn't seem to work when
-    // there's multiple files in the task, so splitting them into two
-    dependsOn downloadFastVmGit
-    dependsOn downloadSolidityGit
+task buildVmDependencies(type: Exec) { 
+    commandLine 'sh', 'aion_fastvm/scripts/release.sh', vmVersion, '1'
 }
 
-task extractVmDepsGit(dependsOn: downloadVmDepsGit, type: Copy) { 
+task getVmDependencies { 
+    // 'overwrite' property of Download task doesn't seem to work when
+    // there's multiple files in the task, so splitting them into two
+    if(project.hasProperty('vmFromSource')) { 
+        getVmDependencies.dependsOn buildVmDependencies
+    } else {
+        dependsOn downloadFastVmGit
+        dependsOn downloadSolidityGit
+    }
+}
+
+task extractVmDepsGit(dependsOn: getVmDependencies, type: Copy) { 
     from tarTree("build/fastvm_v${vmVersion}.tar.gz") 
     from tarTree("build/solidity_v${vmVersion}.tar.gz") 
     into "${dirNative}/linux"
@@ -202,6 +210,12 @@ task collectDependentJars(type: Copy) {
     from { subprojects.jar}
     from { file("lib/libminiupnpc.so") } // called by a jar that expects this to be in same dir
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+build { 
+    dependsOn("ant-3rd_build")
+    dependsOn("extractVmDepsGit")
+    dependsOn("collectDependentJars")
 }
 
 task prePack(type:Exec)  { 
@@ -271,10 +285,6 @@ task packDevDocker(type: Exec) {
 clean { 
     delete dirPack
 }
-
-build.dependsOn("ant-3rd_build")
-build.dependsOn("extractVmDepsGit")
-build.dependsOn("collectDependentJars")
 
 project(':modAionImpl') { build.finalizedBy(compileNative) }
 

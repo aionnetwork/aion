@@ -45,12 +45,6 @@
         </target>
 
 	<target name="clean">
-		<delete dir="./build" />
-		<delete dir="${test.report.dir}" />
-		<delete dir="${dir.pack}/config" />
-		<delete dir="${dir.pack}/web3" />
-		<delete file="${dir.pack}/aion.tar.bz2" />
-		<delete dir="${dir.modfile}" />
         <delete dir="${dir.libfile}/libJson.jar" />
         <delete dir="${dir.libfile}/libnsc.jar" />
         <delete dir="${dir.libfile}/libnzmq.jar" />
