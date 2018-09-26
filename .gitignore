@@ -9,12 +9,14 @@
 /log/
 /rt/
 /web3/
+/jars/
 
 # ide
 /.idea/
 /mod*/.idea/
 /mod*/*.iml
 ij-execution.out
+/*/out
 
 # build
 /build/
