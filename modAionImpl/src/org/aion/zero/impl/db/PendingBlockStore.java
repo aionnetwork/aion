@@ -785,25 +785,28 @@ public class PendingBlockStore implements Flushable, Closeable {
         lock.writeLock().lock();
 
         try {
-            levelSource.close();
-        } catch (Exception e) {
-            LOG.error("Not able to close the pending blocks levels database:", e);
-        } finally {
+            try {
+                levelSource.close();
+            } catch (Exception e) {
+                LOG.error("Not able to close the pending blocks levels database:", e);
+            }
+
             try {
                 queueSource.close();
             } catch (Exception e) {
                 LOG.error("Not able to close the pending blocks queue database:", e);
-            } finally {
-                try {
-                    indexSource.close();
-                } catch (Exception e) {
-                    LOG.error("Not able to close the pending blocks index database:", e);
-                } finally {
-                    lock.writeLock().unlock();
-                }
             }
+
+            try {
+                indexSource.close();
+            } catch (Exception e) {
+                LOG.error("Not able to close the pending blocks index database:", e);
+            }
+        } finally {
+            lock.writeLock().unlock();
         }
     }
+
     /** @implNote Any method calling this functionality must first acquire the needed read lock. */
     private String statusToString() {
         StringBuilder sb = new StringBuilder("Current status queues:\n");

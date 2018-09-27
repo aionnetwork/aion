@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
@@ -197,7 +198,7 @@ final class TaskImportBlocks implements Runnable {
     /** @implNote This method is called only when state is not null. */
     private PeerState processBatch(PeerState givenState, List<AionBlock> batch, String displayId) {
         // make a copy of the original state
-        state.copy(givenState);
+        state.copy(Objects.requireNonNull(givenState));
 
         // new batch received -> add another iteration to the count
         state.incRepeated();
