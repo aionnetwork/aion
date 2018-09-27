@@ -40,7 +40,6 @@ task compileNative(type:Exec) {
     doFirst { 
         mkdir "${dirBuildFile}"
         mkdir "${dirNative}/linux/equihash"
-        mkdir "${dirNative}/linux/equihash"
         mkdir "${dirBuildNative}/linux/equihash"
         ant.copy(includeemptydirs: "false", todir: "./build/native") {
             fileset(dir: "./modAionImpl/src/org/aion/equihash/native")
