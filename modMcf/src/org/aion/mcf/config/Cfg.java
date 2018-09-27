@@ -22,6 +22,7 @@
  */
 package org.aion.mcf.config;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -29,29 +30,6 @@ import org.aion.mcf.types.AbstractBlock;
 
 /** @author chris */
 public abstract class Cfg {
-
-    private final String configDirectoryName = "config";
-    private final String configFileName = "config.xml";
-    private final String genesisFileName = "genesis.json";
-    private final String keystoreDirectoryName = "keystore";
-
-    private File logDirectory = null;
-    private File databaseDirectory = null;
-    private File execDirectory = null;
-    private File configFile = null;
-    private File genesisFile = null;
-
-    private String network = "mainnet";
-
-    protected String BASE_PATH = System.getProperty("user.dir");
-    protected final String INITIAL_PATH = System.getProperty("user.dir");
-    protected final File oldConfigDir = new File(INITIAL_PATH, configDirectoryName);
-
-    /** @implNote modified only from {@link #setNetwork(String)} */
-    protected File newConfigDir = new File(oldConfigDir, network);
-
-    private boolean useOldSetup = false;
-    private boolean ignoreOldSetup = false;
 
     protected String mode;
 
@@ -151,32 +129,113 @@ public abstract class Cfg {
         this.consensus = _consensus;
     }
 
-    /** @return the base dir where all configuration + persistence is managed */
-    public String getBasePath() {
-        return getExecDirectory().getAbsolutePath();
-    }
+    /* ------------ execution path management ------------ */
+
+    // names
+    private final String configDirName = "config";
+    private final String configFileName = "config.xml";
+    private final String genesisFileName = "genesis.json";
+    private final String keystoreDirName = "keystore";
+
+    // base path
+    private final File INITIAL_PATH = new File(System.getProperty("user.dir"));
+
+    // directories containing the configuration files
+    private final File CONFIG_DIR = new File(INITIAL_PATH, configDirName);
+    private File networkConfigDir = null;
+
+    // base configuration: old kernel OR using network config
+    private File baseConfigFile = null;
+    private File baseGenesisFile = null;
+
+    // can be absolute in config file OR depend on execution path
+    private File logDir = null;
+    private File databaseDir = null;
+    private boolean absoluteLogDir = false;
+    private boolean absoluteDatabaseDir = false;
+
+    // impact execution path
+    private String network = null;
+    private File dataDir = null;
+
+    /** Data directory with network. */
+    private File execDir = null;
+
+    private File execConfigDir = null;
+    private File execConfigFile = null;
+    private File execGenesisFile = null;
 
     /** Resets internal data containing network and path. */
+    @VisibleForTesting
     public void resetInternal() {
-        logDirectory = null;
-        databaseDirectory = null;
-        execDirectory = null;
-        genesisFile = null;
-        configFile = null;
-        network = "mainnet";
-
-        BASE_PATH = INITIAL_PATH;
-
-        useOldSetup = false;
-        ignoreOldSetup = false;
+        networkConfigDir = null;
+        baseConfigFile = null;
+        baseGenesisFile = null;
+        logDir = null;
+        databaseDir = null;
+        absoluteLogDir = false;
+        absoluteDatabaseDir = false;
+        network = null;
+        dataDir = null;
+        execDir = null;
+        execConfigDir = null;
+        execConfigFile = null;
+        execGenesisFile = null;
     }
 
-    /** Returns the directory location where the kernel configuration and persistence is managed. */
-    public File getExecDirectory() {
-        if ((!ignoreOldSetup && useOldSetup) || execDirectory == null) {
-            return new File(INITIAL_PATH);
+    /**
+     * Determines the location of the initial configuration files ensuring compatibility with old
+     * kernels.
+     */
+    protected void initializeConfiguration() {
+        // use old config location for compatibility with old kernels
+        baseConfigFile = new File(CONFIG_DIR, configFileName);
+        baseGenesisFile = new File(CONFIG_DIR, genesisFileName);
+
+        if (!baseConfigFile.exists() || !baseGenesisFile.exists()) {
+            updateNetworkExecPaths();
         } else {
-            return new File(execDirectory, network.toString());
+            execDir = INITIAL_PATH;
+            execConfigFile = baseConfigFile;
+            execGenesisFile = baseGenesisFile;
+            updateStoragePaths();
+        }
+    }
+
+    /**
+     * Updates the base configuration and execution paths as is defined by <b>new kernels</b> where
+     * the configuration is placed in folders for each network type.
+     */
+    private void updateNetworkExecPaths() {
+        if (network == null) {
+            network = "mainnet";
+        }
+        networkConfigDir = new File(CONFIG_DIR, network);
+        baseConfigFile = new File(networkConfigDir, configFileName);
+        baseGenesisFile = new File(networkConfigDir, configFileName);
+
+        if (dataDir == null) {
+            dataDir = INITIAL_PATH;
+        }
+        execDir = new File(dataDir, network);
+        execConfigDir = new File(execDir, configDirName);
+        execConfigFile = new File(execConfigDir, configFileName);
+        execGenesisFile = new File(execConfigDir, genesisFileName);
+
+        updateStoragePaths();
+    }
+
+    /** Updates the path to the log, database directories. */
+    private void updateStoragePaths() {
+        if (!absoluteLogDir) {
+            logDir = new File(execDir, getLog().getLogPath());
+        } else if (logDir == null) {
+            logDir = new File(getLog().getLogPath());
+        }
+        if (!absoluteDatabaseDir) {
+            databaseDir = new File(execDir, getDb().getPath());
+        } else if (databaseDir == null) {
+            databaseDir = new File(getDb().getPath());
         }
     }
 
@@ -184,13 +243,12 @@ public abstract class Cfg {
      * Sets the directory where the kernel data containing setup and execution information will be
      * stored.
      *
-     * @param _execDirectory the directory chosen for execution
+     * @param _dataDir the directory chosen for execution
      * @implNote Using this method overwrites the use of old kernel setup.
      */
-    public void setExecDirectory(File _execDirectory) {
-        this.execDirectory = _execDirectory;
-        // default network when only datadir is set
-        this.ignoreOldSetup = true;
+    public void setDataDirectory(File _dataDir) {
+        this.dataDir = _dataDir;
+        updateNetworkExecPaths();
     }
 
     /**
@@ -201,9 +259,20 @@ public abstract class Cfg {
      */
     public void setNetwork(String _network) {
         this.network = _network;
-        this.newConfigDir = new File(oldConfigDir, network);
-        this.execDirectory = new File(INITIAL_PATH);
-        this.ignoreOldSetup = true;
+        updateNetworkExecPaths();
+    }
+
+    /** @return the base dir where all configuration + persistence is managed */
+    public String getBasePath() {
+        return getExecDir().getAbsolutePath();
+    }
+
+    /** Returns the directory location where the kernel configuration and persistence is managed. */
+    public File getExecDir() {
+        if (execDir == null) {
+            initializeConfiguration();
+        }
+        return execDir;
     }
 
     public String getNetwork() {
@@ -211,124 +280,91 @@ public abstract class Cfg {
     }
 
     public String getLogPath() {
-        return getLogDirectory().getAbsolutePath();
+        return getLogDir().getAbsolutePath();
     }
 
-    public File getLogDirectory() {
-        if (logDirectory != null) {
-            // set when using absolute paths
-            return logDirectory;
-        } else {
-            return new File(getExecDirectory(), getLog().getLogPath());
+    public File getLogDir() {
+        if (logDir == null) {
+            // was not updated with absolute path
+            logDir = new File(getExecDir(), getLog().getLogPath());
         }
+        return logDir;
     }
 
-    public void setLogDirectory(File _logDirectory) {
-        this.logDirectory = _logDirectory;
+    /**
+     * Used to set an absolute path for the log directory.
+     *
+     * @param _logDirectory the path to be used for logging.
+     */
+    public void setLogDir(File _logDirectory) {
+        this.logDir = _logDirectory;
+        this.absoluteLogDir = true;
     }
 
     public String getDatabasePath() {
-        return getDatabaseDirectory().getAbsolutePath();
+        return getDatabaseDir().getAbsolutePath();
     }
 
-    public File getDatabaseDirectory() {
-        if (databaseDirectory != null) {
-            // set when using absolute paths
-            return databaseDirectory;
-        } else {
-            return new File(getExecDirectory(), getDb().getPath());
+    public File getDatabaseDir() {
+        if (databaseDir == null) {
+            // was not updated with absolute path
+            databaseDir = new File(getExecDir(), getDb().getPath());
         }
+        return databaseDir;
     }
 
-    public void setDatabaseDirectory(File _databaseDirectory) {
-        this.databaseDirectory = _databaseDirectory;
+    /**
+     * Used to set an absolute path for the database directory.
+     *
+     * @param _databaseDirectory the path to be used for storing the database.
+     */
+    public void setDatabaseDir(File _databaseDirectory) {
+        this.databaseDir = _databaseDirectory;
+        this.absoluteDatabaseDir = true;
     }
 
-    public String getKeystorePath() {
-        return getKeystoreDirectory().getAbsolutePath();
-    }
-
-    public File getKeystoreDirectory() {
-        return new File(getBasePath(), keystoreDirectoryName);
+    public File getKeystoreDir() {
+        return new File(getExecDir(), keystoreDirName);
     }
 
     /** Returns the configuration directory location for the kernel execution. */
     public File getExecConfigDirectory() {
-        // TODO check different input
-        return new File(getExecDirectory(), configDirectoryName);
+        if (execConfigDir == null) {
+            initializeConfiguration();
+        }
+        return execConfigDir;
     }
 
     /** Returns the location where the config file is saved for kernel execution. */
     public File getExecConfigFile() {
-        return new File(getExecConfigDirectory(), configFileName);
-    }
-
-    /** Returns the location where the config file is saved for kernel execution. */
-    public String getExecConfigPath() {
-        return getExecConfigFile().getAbsolutePath();
+        if (execConfigFile == null) {
+            initializeConfiguration();
+        }
+        return execConfigFile;
     }
 
     /** Returns the location where the genesis file is saved for kernel execution. */
     public File getExecGenesisFile() {
-        return new File(getExecConfigDirectory(), genesisFileName);
-    }
-
-    /** Returns the location where the genesis file is saved for kernel execution. */
-    public String getExecGenesisPath() {
-        return getExecGenesisFile().getAbsolutePath();
+        if (execGenesisFile == null) {
+            initializeConfiguration();
+        }
+        return execGenesisFile;
     }
 
     /** @implNote Maintains the old setup if the config file is present in the old location. */
     public File getInitialConfigFile() {
-        if (configFile == null) {
-            // TODO-Ale: may want to consider exec path as well
-            // use old config location for compatibility with old kernels
-            File config = new File(oldConfigDir, configFileName);
-
-            // TODO: read mainnet config when ignore set
-            if (ignoreOldSetup || !config.exists()) {
-                if (execDirectory == null) {
-                    execDirectory = new File(INITIAL_PATH);
-                }
-                config = getExecConfigFile();
-                if (!config.exists()) {
-                    config = new File(newConfigDir, configFileName);
-                }
-            } else {
-                useOldSetup = true;
-            }
-            configFile = config;
+        if (baseConfigFile == null) {
+            initializeConfiguration();
         }
-        return configFile;
+        return baseConfigFile;
     }
 
-    /** @implNote Maintains the old setup if the config file is present in the old location. */
-    public String getInitialConfigPath() {
-        return getInitialConfigFile().getAbsolutePath();
-    }
-
+    /** @implNote Maintains the old setup if the genesis file is present in the old location. */
     public File getInitialGenesisFile() {
-        if (genesisFile == null) {
-            // use old genesis location for compatibility with old kernels
-            File genesis = new File(oldConfigDir, genesisFileName);
-
-            if (ignoreOldSetup || !genesis.exists()) {
-                if (execDirectory == null) {
-                    execDirectory = new File(INITIAL_PATH);
-                }
-                genesis = getExecGenesisFile();
-                if (!genesis.exists()) {
-                    genesis = new File(newConfigDir, genesisFileName);
-                }
-            }
-            genesisFile = genesis;
+        if (baseGenesisFile == null) {
+            initializeConfiguration();
         }
-        return genesisFile;
-    }
-
-    /** @implNote Maintains the old setup if the config file is present in the old location. */
-    public String getInitialGenesisPath() {
-        return getInitialGenesisFile().getAbsolutePath();
+        return baseGenesisFile;
     }
 
     public static String readValue(final XMLStreamReader sr) throws XMLStreamException {

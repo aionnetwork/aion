@@ -57,6 +57,7 @@ import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.config.Network;
 import org.slf4j.Logger;
 
 public class Aion {
@@ -109,32 +110,31 @@ public class Aion {
 
         // from now on, all logging to console and file happens asynchronously
 
-        /*
-         * Logger initialize with LOGFILE and LOGPATH (user config inputs)
-         */
+        String[] filePath = new String[7];
+        // Log/Database path
+        if (!cfg.getLog().getLogFile()) {
+            System.out.println("Logger disabled; to enable please update log settings in config.xml and restart kernel.");
+            filePath[0] = "« disabled »";
+        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            System.out.println("Logger disabled due to invalid file path; to enable please update log setting in config.xml and restart kernel.");
+            cfg.getLog().disableLogging();
+            filePath[0] = "« disabled »";
+        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+            filePath[0] = cfg.getLogPath();
+        }
+
+        // Logger initialize with LOGFILE and LOGPATH (user config inputs)
         AionLoggerFactory
             .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLogPath());
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
 
-        // TODO-Ale: fix
-        String[] filePath = new String[7];
-        // Log/Database path
-        if (!cfg.getLog().getLogFile()) {
-            System.out.println("Logger disabled; to enable please check log settings in config.xml");
-            filePath[0] = "« disabled »";
-        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("File path is invalid; please check log setting in config.xml");
-            // TODO set default location
-            return;
-        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            filePath[0] = cfg.getBasePath() + "/" + cfg.getLog().getLogPath();
-        }
-        filePath[1] = cfg.getBasePath() + "/" + cfg.getDb().getPath();
+
+        filePath[1] = cfg.getDatabasePath();
         filePath[2] = Keystore.getKeystorePath();
-        filePath[3] = cfg.getExecConfigPath();
-        filePath[4] = cfg.getExecGenesisPath();
-        filePath[5] = cfg.getInitialConfigPath();
-        filePath[6] = cfg.getInitialGenesisPath();
+        filePath[3] = cfg.getExecConfigFile().getAbsolutePath();
+        filePath[4] = cfg.getExecGenesisFile().getAbsolutePath();
+        filePath[5] = cfg.getInitialConfigFile().getAbsolutePath();
+        filePath[6] = cfg.getInitialGenesisFile().getAbsolutePath();
 
         String path =
                 "\n-------------------------------- USED PATHS --------------------------------" +
@@ -156,10 +156,16 @@ public class Aion {
                 ".'           `. |  `._____.'  |          ``|\n\n";
 
         // always print the version string in the center of the Aion logo
-        String versionStr = "v"+KERNEL_VERSION;
-        String networkStr = cfg.getNetwork().toString();
+        String versionStr = "v" + KERNEL_VERSION;
+        String networkStr = cfg.getNetwork();
+        // if using old kernel configuration
+        if (networkStr == null && cfg.getNet().getId() >= 0) {
+            networkStr = Network.determineNetwork(cfg.getNet().getId()).toString();
+        }
         logo = appendLogo(logo, versionStr);
-        logo = appendLogo(logo, networkStr);
+        if (networkStr != null) {
+            logo = appendLogo(logo, networkStr);
+        }
 
         genLog.info(path);
         genLog.info(logo);

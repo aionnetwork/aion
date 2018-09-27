@@ -23,12 +23,15 @@
 package org.aion.zero.impl.cli;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.util.TestResources.TEST_RESOURCE_DIR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -54,40 +57,45 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 
 /** CliTest for new version with use of different networks. */
 @RunWith(JUnitParamsRunner.class)
 public class CliTest {
 
     private final Cli cli = new Cli();
-    private CfgAion cfg = CfgAion.inst();
-    private final Cli mockCli = Mockito.spy(new Cli());
+    private final CfgAion cfg = CfgAion.inst();
+    private final Cli mockCli = spy(cli);
 
+    // base paths
     private static final String BASE_PATH = System.getProperty("user.dir");
+    private static final File MAIN_BASE_PATH = new File(BASE_PATH, "mainnet");
+    private static final File TEST_BASE_PATH = new File(BASE_PATH, "mastery");
+
+    // config paths
+    private static final File CONFIG_PATH = new File(BASE_PATH, "config");
+    private static final File MAIN_CONFIG_PATH = new File(CONFIG_PATH, "mainnet");
+    private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, "mastery");
+
     private static final String module = "modAionImpl";
-    private static final String initialConfigFile = "test_resources/config.xml";
-    private static final String initialGenesisFile = "test_resources/genesis.json";
+
+    private static final String configFileName = "config.xml";
+    private static final String genesisFileName = "genesis.json";
+
     private static final String dataDirectory = "datadir";
     private static final String alternativeDirectory = "random";
+
     private static final File path = new File(BASE_PATH, dataDirectory);
     private static final File alternativePath = new File(BASE_PATH, alternativeDirectory);
 
-    private static final File config =
-            BASE_PATH.contains(module)
-                    ? new File(BASE_PATH, initialConfigFile)
-                    : new File(BASE_PATH, module + "/" + initialConfigFile);
-    private static final File oldConfig = new File(BASE_PATH, "config/config.xml");
-    private static final File mainnetConfig = new File(BASE_PATH, "config/mainnet/config.xml");
-    private static final File testnetConfig = new File(BASE_PATH, "config/mastery/config.xml");
+    private static final File config = new File(TEST_RESOURCE_DIR, configFileName);
+    private static final File oldConfig = new File(CONFIG_PATH, configFileName);
+    private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
+    private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
 
-    private static final File genesis =
-            BASE_PATH.contains(module)
-                    ? new File(BASE_PATH, initialGenesisFile)
-                    : new File(BASE_PATH, module + "/" + initialGenesisFile);
-    private static final File oldGenesis = new File(BASE_PATH, "config/genesis.json");
-    private static final File mainnetGenesis = new File(BASE_PATH, "config/mainnet/genesis.json");
-    private static final File testnetGenesis = new File(BASE_PATH, "config/mastery/genesis.json");
+    private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
+    private static final File oldGenesis = new File(CONFIG_PATH, genesisFileName);
+    private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
+    private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
 
     /** @implNote set this to true to enable printing */
     private static final boolean verbose = false;
@@ -99,9 +107,8 @@ public class CliTest {
 
         if (BASE_PATH.contains(module) && !mainnetConfig.exists()) {
             // save config to disk at expected location for new kernel
-            File configPath = new File(BASE_PATH, "config/mainnet");
-            if (!configPath.exists()) {
-                configPath.mkdirs();
+            if (!MAIN_CONFIG_PATH.exists()) {
+                assertThat(MAIN_CONFIG_PATH.mkdirs()).isTrue();
             }
             Cli.copyRecursively(config, mainnetConfig);
             Cli.copyRecursively(genesis, mainnetGenesis);
@@ -109,9 +116,8 @@ public class CliTest {
 
         if (BASE_PATH.contains(module) && !testnetConfig.exists()) {
             // save config to disk at expected location for new kernel
-            File configPath = new File(BASE_PATH, "config/mastery");
-            if (!configPath.exists()) {
-                configPath.mkdirs();
+            if (!TEST_CONFIG_PATH.exists()) {
+                assertThat(TEST_CONFIG_PATH.mkdirs()).isTrue();
             }
             Cli.copyRecursively(config, mainnetConfig);
             Cli.copyRecursively(genesis, testnetGenesis);
@@ -120,6 +126,7 @@ public class CliTest {
         cfg.resetInternal();
 
         doReturn("password").when(mockCli).readPassword(any(), any());
+        doCallRealMethod().when(mockCli).call(any(), any());
     }
 
     @After
@@ -129,11 +136,11 @@ public class CliTest {
 
         // to avoid deleting config for all tests
         if (BASE_PATH.contains(module)) {
-            deleteRecursively(new File(BASE_PATH, "config"));
+            deleteRecursively(CONFIG_PATH);
         }
 
-        deleteRecursively(new File(BASE_PATH, "mainnet"));
-        deleteRecursively(new File(BASE_PATH, "mastery"));
+        deleteRecursively(MAIN_BASE_PATH);
+        deleteRecursively(TEST_BASE_PATH);
     }
 
     /**
@@ -153,6 +160,7 @@ public class CliTest {
         String[] dir_options = new String[] {"-d", "--datadir"};
         String[] net_options = new String[] {"-n", "--network"};
         String expected = new File(path, "mainnet").getAbsolutePath();
+        String expOnError = MAIN_BASE_PATH.getAbsolutePath();
 
         // data directory alone
         for (String op : dir_options) {
@@ -161,9 +169,9 @@ public class CliTest {
             // with absolute path
             parameters.add(new Object[] {new String[] {op, path.getAbsolutePath()}, RUN, expected});
             // without value
-            parameters.add(new Object[] {new String[] {op}, ERROR, BASE_PATH});
+            parameters.add(new Object[] {new String[] {op}, ERROR, expOnError});
             // with invalid characters (Linux & Win)
-            parameters.add(new Object[] {new String[] {op, "/\\<>:\"|?*"}, ERROR, BASE_PATH});
+            parameters.add(new Object[] {new String[] {op, "/\\<>:\"|?*"}, ERROR, expOnError});
         }
 
         // network and directory
@@ -198,13 +206,13 @@ public class CliTest {
         }
 
         // network alone
-        expected = new File(BASE_PATH, "mainnet").getAbsolutePath();
+        expected = MAIN_BASE_PATH.getAbsolutePath();
         for (String op : net_options) {
             // without parameter
-            parameters.add(new Object[] {new String[] {op}, ERROR, BASE_PATH});
+            parameters.add(new Object[] {new String[] {op}, ERROR, expOnError});
             // with two parameters
             parameters.add(
-                    new Object[] {new String[] {op, "testnet", "mastery"}, ERROR, BASE_PATH});
+                    new Object[] {new String[] {op, "testnet", "mastery"}, ERROR, expOnError});
             // invalid parameter
             parameters.add(new Object[] {new String[] {op, "invalid"}, RUN, expected});
             // mainnet as parameter
@@ -213,7 +221,7 @@ public class CliTest {
 
         // network alone with testnet
         net_values = new String[] {"mastery", "testnet"};
-        expected = new File(BASE_PATH, "mastery").getAbsolutePath();
+        expected = TEST_BASE_PATH.getAbsolutePath();
         for (String op : net_options) {
             for (String netVal : net_values) {
                 // mastery as parameter
@@ -253,14 +261,14 @@ public class CliTest {
         }
 
         // with subdirectories
-        String dir = dataDirectory + "/subfolder";
+        String dir = dataDirectory + File.separator + "subfolder";
         File path = new File(BASE_PATH, dir);
         expected = new File(path, "mainnet").getAbsolutePath();
         for (String op : dir_options) {
             // with relative path with subdirectories
             parameters.add(new Object[] {new String[] {op, dir}, RUN, expected});
             // with multiple values
-            parameters.add(new Object[] {new String[] {op, dataDirectory, dir}, ERROR, BASE_PATH});
+            parameters.add(new Object[] {new String[] {op, dataDirectory, dir}, ERROR, expOnError});
         }
 
         return parameters.toArray();
@@ -275,15 +283,13 @@ public class CliTest {
             String[] input, ReturnType expectedReturn, String expectedPath) {
         assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
-        assertThat(cfg.getExecConfigPath())
-                .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
-        assertThat(cfg.getExecGenesisPath())
-                .isEqualTo(new File(expectedPath, "config/genesis.json").getAbsolutePath());
-        assertThat(cfg.getDatabasePath())
-                .isEqualTo(new File(expectedPath, "database").getAbsolutePath());
-        assertThat(cfg.getLogPath()).isEqualTo(new File(expectedPath, "log").getAbsolutePath());
-        assertThat(cfg.getKeystorePath())
-                .isEqualTo(new File(expectedPath, "keystore").getAbsolutePath());
+        assertThat(cfg.getExecConfigFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getExecGenesisFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
 
         if (verbose) {
             printPaths(cfg);
@@ -294,20 +300,20 @@ public class CliTest {
         System.out.println(
                 "\n-------------------------------- USED PATHS --------------------------------"
                         + "\n> Logger path:   "
-                        + cfg.getLogPath()
+                        + cfg.getLogDir().getAbsolutePath()
                         + "\n> Database path: "
-                        + cfg.getDatabasePath()
+                        + cfg.getDatabaseDir().getAbsolutePath()
                         + "\n> Keystore path: "
-                        + cfg.getKeystorePath()
+                        + cfg.getKeystoreDir().getAbsolutePath()
                         + "\n> Config write:  "
-                        + cfg.getExecConfigPath()
+                        + cfg.getExecConfigFile().getAbsolutePath()
                         + "\n> Genesis write: "
-                        + cfg.getExecGenesisPath()
+                        + cfg.getExecGenesisFile().getAbsolutePath()
                         + "\n----------------------------------------------------------------------------"
                         + "\n> Config read:   "
-                        + cfg.getInitialConfigPath()
+                        + cfg.getInitialConfigFile().getAbsolutePath()
                         + "\n> Genesis read:  "
-                        + cfg.getInitialGenesisPath()
+                        + cfg.getInitialGenesisFile().getAbsolutePath()
                         + "\n----------------------------------------------------------------------------\n\n");
     }
 
@@ -321,24 +327,23 @@ public class CliTest {
     public void testDirectoryAndNetwork_wAbsoluteDbAndLogPath(
             String[] input, ReturnType expectedReturn, String expectedPath) {
 
-        String db = new File(alternativePath, "database").getAbsolutePath();
-        cfg.getDb().setPath(db);
-        String log = new File(alternativePath, "log").getAbsolutePath();
-        cfg.getLog().setLogPath(log);
+        File db = new File(alternativePath, "database");
+        cfg.getDb().setPath(db.getAbsolutePath());
+        File log = new File(alternativePath, "log");
+        cfg.getLog().setLogPath(log.getAbsolutePath());
 
         // save and reload for changes to take effect
-        cfg.toXML(null);
+        cfg.toXML(null, cfg.getInitialConfigFile());
         cfg.fromXML();
 
         assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
 
-        assertThat(cfg.getDatabasePath())
-                .isNotEqualTo(new File(expectedPath, "database").getAbsolutePath());
-        assertThat(cfg.getDatabasePath()).isEqualTo(db);
+        assertThat(cfg.getDatabaseDir()).isNotEqualTo(new File(expectedPath, "database"));
+        assertThat(cfg.getDatabaseDir()).isEqualTo(db);
 
-        assertThat(cfg.getLogPath()).isNotEqualTo(new File(expectedPath, "log").getAbsolutePath());
-        assertThat(cfg.getLogPath()).isEqualTo(log);
+        assertThat(cfg.getLogDir()).isNotEqualTo(new File(expectedPath, "log"));
+        assertThat(cfg.getLogDir()).isEqualTo(log);
 
         if (verbose) {
             printPaths(cfg);
@@ -351,31 +356,32 @@ public class CliTest {
         List<Object> parameters = new ArrayList<>();
 
         String[] options = new String[] {"-c", "--config"};
-        File config = new File(BASE_PATH, "config/mainnet/config.xml");
-        String expected = new File(BASE_PATH, "mainnet").getAbsolutePath();
+        String expected = MAIN_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
             // without parameter
-            parameters.add(new Object[] {new String[] {op}, config, expected});
+            parameters.add(new Object[] {new String[] {op}, mainnetConfig, expected});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "invalid"}, config, expected});
+            parameters.add(new Object[] {new String[] {op, "invalid"}, mainnetConfig, expected});
             // mainnet as parameter
-            parameters.add(new Object[] {new String[] {op, "mainnet"}, config, expected});
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, mainnetConfig, expected});
         }
 
-        config = new File(BASE_PATH, "config/mastery/config.xml");
-        expected = new File(BASE_PATH, "mastery").getAbsolutePath();
+        expected = TEST_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
             // mastery as parameter
-            parameters.add(new Object[] {new String[] {op, "mastery"}, config, expected});
+            parameters.add(new Object[] {new String[] {op, "mastery"}, testnetConfig, expected});
             // testnet as parameter
-            parameters.add(new Object[] {new String[] {op, "testnet"}, config, expected});
+            parameters.add(new Object[] {new String[] {op, "testnet"}, testnetConfig, expected});
         }
 
         // config and directory
         String[] dir_options = new String[] {"-d", "--datadir"};
-        config = new File(path, "mainnet/config/config.xml");
+        File config =
+                new File(
+                        path,
+                        "mainnet" + File.separator + "config" + File.separator + configFileName);
         expected = new File(path, "mainnet").getAbsolutePath();
 
         String[] net_values = new String[] {"mainnet", "invalid"};
@@ -410,7 +416,10 @@ public class CliTest {
 
         // config and directory with testnet
         net_values = new String[] {"mastery", "testnet"};
-        config = new File(path, "mastery/config/config.xml");
+        config =
+                new File(
+                        path,
+                        "mastery" + File.separator + "config" + File.separator + configFileName);
         expected = new File(path, "mastery").getAbsolutePath();
         for (String opDir : dir_options) {
             for (String opCfg : options) {
@@ -451,14 +460,13 @@ public class CliTest {
         if (expectedFile.exists()) {
             assertThat(cfg.fromXML(expectedFile)).isTrue();
         }
-        cfg.resetInternal();
 
         assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
-        assertThat(cfg.getExecConfigPath())
-                .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
-        assertThat(cfg.getExecGenesisPath())
-                .isEqualTo(new File(expectedPath, "config/genesis.json").getAbsolutePath());
+        assertThat(cfg.getExecConfigFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getExecGenesisFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
 
         assertThat(expectedFile.exists()).isTrue();
         assertThat(cfg.fromXML(expectedFile)).isFalse();
@@ -474,7 +482,7 @@ public class CliTest {
         List<Object> parameters = new ArrayList<>();
 
         String[] options = new String[] {"-c", "--config"};
-        String expected = new File(BASE_PATH, "mainnet").getAbsolutePath();
+        String expected = MAIN_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
             // without parameter
@@ -485,7 +493,7 @@ public class CliTest {
             parameters.add(new Object[] {new String[] {op, "mainnet"}, expected});
         }
 
-        expected = new File(BASE_PATH, "mastery").getAbsolutePath();
+        expected = TEST_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
             // mastery as parameter
@@ -506,9 +514,9 @@ public class CliTest {
     public void testConfig_oldLocation(String[] input, String expectedPath) {
         // ensure config exists on disk at expected location for old kernel
         if (!oldConfig.exists()) {
-            File configPath = new File(BASE_PATH, "config");
+            File configPath = CONFIG_PATH;
             if (!configPath.exists()) {
-                configPath.mkdirs();
+                assertThat(configPath.mkdirs()).isTrue();
             }
             cfg.toXML(null, oldConfig);
             Cli.copyRecursively(genesis, oldGenesis);
@@ -516,10 +524,10 @@ public class CliTest {
 
         assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
-        assertThat(cfg.getExecConfigPath())
-                .isEqualTo(new File(expectedPath, "config/config.xml").getAbsolutePath());
-        assertThat(cfg.getExecGenesisPath())
-                .isEqualTo(new File(expectedPath, "config/genesis.json").getAbsolutePath());
+        assertThat(cfg.getExecConfigFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getExecGenesisFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
 
         if (verbose) {
             printPaths(cfg);
@@ -532,25 +540,26 @@ public class CliTest {
         List<Object> parameters = new ArrayList<>();
 
         String[] options = new String[] {"-i", "--info"};
-        String expected = new File(BASE_PATH, "mainnet").getAbsolutePath();
+        String expected = MAIN_BASE_PATH.getAbsolutePath();
+        String expOnError = expected;
 
         // only info
         for (String op : options) {
             // without parameter
             parameters.add(new Object[] {new String[] {op}, EXIT, expected});
             // invalid parameter
-            parameters.add(new Object[] {new String[] {op, "value"}, ERROR, BASE_PATH});
+            parameters.add(new Object[] {new String[] {op, "value"}, ERROR, expOnError});
         }
 
         // with network
-        expected = new File(BASE_PATH, "mastery").getAbsolutePath();
+        expected = TEST_BASE_PATH.getAbsolutePath();
         for (String op : options) {
             // mastery as parameter
             parameters.add(new Object[] {new String[] {op, "-n", "mastery"}, EXIT, expected});
             parameters.add(new Object[] {new String[] {"-n", "mastery", op}, EXIT, expected});
             // invalid parameter
             parameters.add(
-                    new Object[] {new String[] {op, "value", "-n", "mastery"}, ERROR, BASE_PATH});
+                    new Object[] {new String[] {op, "value", "-n", "mastery"}, ERROR, expOnError});
         }
 
         // with directory
@@ -562,7 +571,7 @@ public class CliTest {
             // + invalid parameter
             parameters.add(
                     new Object[] {
-                        new String[] {op, "value", "-d", dataDirectory}, ERROR, BASE_PATH
+                        new String[] {op, "value", "-d", dataDirectory}, ERROR, expOnError
                     });
             // with absolute path
             parameters.add(
@@ -572,7 +581,7 @@ public class CliTest {
             // + invalid parameter
             parameters.add(
                     new Object[] {
-                        new String[] {op, "value", "-d", path.getAbsolutePath()}, ERROR, BASE_PATH
+                        new String[] {op, "value", "-d", path.getAbsolutePath()}, ERROR, expOnError
                     });
         }
 
@@ -632,9 +641,9 @@ public class CliTest {
     public void testInfo_oldLocation(String option) {
         // ensure config exists on disk at expected location for old kernel
         if (!oldConfig.exists()) {
-            File configPath = new File(BASE_PATH, "config");
+            File configPath = CONFIG_PATH;
             if (!configPath.exists()) {
-                configPath.mkdirs();
+                assertThat(configPath.mkdirs()).isTrue();
             }
             cfg.toXML(null, oldConfig);
             Cli.copyRecursively(genesis, oldGenesis);

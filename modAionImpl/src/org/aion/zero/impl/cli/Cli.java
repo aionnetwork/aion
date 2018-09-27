@@ -192,12 +192,16 @@ public class Cli {
                 System.out.println(
                         "Reading config file from: "
                                 + getRelativePath(configFile.getAbsolutePath()));
+                if (overwrite) {
+                    // updating the file in case the user id was not set
+                    cfg.toXML(new String[] {"--id=" + cfg.getId()}, configFile);
+                }
                 printInfo(cfg);
                 return ReturnType.EXIT;
             }
 
             // make directories for kernel execution
-            makeDirs(cfg);
+            makeDirs(configFile, cfg);
 
             if (overwrite) {
                 // only updating the file in case the user id was not set
@@ -205,7 +209,7 @@ public class Cli {
             }
 
             // set correct keystore directory
-            Keystore.setKeystorePath(cfg.getKeystorePath());
+            Keystore.setKeystorePath(cfg.getKeystoreDir().getAbsolutePath());
 
             if (options.isCreateAccount()) {
                 if (!createAccount()) {
@@ -478,7 +482,7 @@ public class Cli {
         }
 
         if (file.isDirectory() && file.canWrite()) {
-            cfg.setExecDirectory(file);
+            cfg.setDataDirectory(file);
             return true;
         } else {
             return false;
@@ -498,7 +502,7 @@ public class Cli {
     private void printInvalidNetwork() {
         System.out.println("\nInvalid network selected!\n");
         System.out.println("------ Available Networks ------");
-        System.out.println(Network.valueString());
+        System.out.println(Network.valuesString());
         System.out.println("--------------------------------\n");
     }
 
@@ -509,8 +513,8 @@ public class Cli {
      * @param cfg the configuration for the runtime kernel environment
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void makeDirs(Cfg cfg) {
-        File file = cfg.getExecDirectory();
+    private void makeDirs(File startConfigFile, Cfg cfg) {
+        File file = cfg.getExecDir();
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -522,33 +526,33 @@ public class Cli {
         }
 
         // copy config file
-        File initial = cfg.getInitialConfigFile();
+        File initial = startConfigFile;
         File target = cfg.getExecConfigFile();
         if (!initial.equals(target)) {
             copyRecursively(initial, target);
-        }
 
-        // copy genesis file
-        initial = cfg.getInitialGenesisFile();
-        target = cfg.getExecGenesisFile();
-        if (!initial.equals(target)) {
-            copyRecursively(initial, target);
+            // copy genesis file
+            initial = cfg.getInitialGenesisFile();
+            target = cfg.getExecGenesisFile();
+            if (!initial.equals(target)) {
+                copyRecursively(initial, target);
+            }
         }
 
         // create target log directory
-        file = cfg.getLogDirectory();
+        file = cfg.getLogDir();
         if (!file.exists()) {
             file.mkdirs();
         }
 
         // create target database directory
-        file = cfg.getDatabaseDirectory();
+        file = cfg.getDatabaseDir();
         if (!file.exists()) {
             file.mkdirs();
         }
 
         // create target keystore directory
-        file = cfg.getKeystoreDirectory();
+        file = cfg.getKeystoreDir();
         if (!file.exists()) {
             file.mkdirs();
         }

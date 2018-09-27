@@ -107,7 +107,7 @@ public enum Network {
         return net;
     }
 
-    public static String valueString() {
+    public static String valuesString() {
         String output = Arrays.toString(Network.values());
         return output.substring(1, output.length() - 1);
     }

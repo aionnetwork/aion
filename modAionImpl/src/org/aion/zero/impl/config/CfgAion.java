@@ -54,9 +54,6 @@ import org.aion.zero.impl.GenesisBlockLoader;
 /** @author chris */
 public final class CfgAion extends Cfg {
 
-    private static String NETWORK = "mainnet";
-    private Network network = Network.MAINNET;
-
     protected AionGenesis genesis;
 
     protected static final int N = 210;
@@ -77,6 +74,7 @@ public final class CfgAion extends Cfg {
         this.tx = new CfgTx();
         this.reports = new CfgReports();
         this.gui = new CfgGui();
+        initializeConfiguration();
     }
 
     private static class CfgAionHolder {
@@ -94,7 +92,7 @@ public final class CfgAion extends Cfg {
     @Override
     public void setGenesis() {
         try {
-            this.genesis = GenesisBlockLoader.loadJSON(getInitialGenesisPath());
+            this.genesis = GenesisBlockLoader.loadJSON(getInitialGenesisFile().getAbsolutePath());
         } catch (IOException | HeaderStructureException e) {
             System.out.println(String.format("Genesis load exception %s", e.getMessage()));
             System.out.println("defaulting to default AionGenesis configuration");
@@ -262,13 +260,13 @@ public final class CfgAion extends Cfg {
         // checks for absolute path for database
         File db = new File(this.getDb().getPath());
         if (db.isAbsolute()) {
-            this.setDatabaseDirectory(db);
+            this.setDatabaseDir(db);
         }
 
         // checks for absolute path for log
         File log = new File(this.getLog().getLogPath());
         if (log.isAbsolute()) {
-            this.setLogDirectory(log);
+            this.setLogDir(log);
         }
 
         return shouldWriteBackToFile;
