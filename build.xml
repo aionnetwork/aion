@@ -44,7 +44,8 @@
                 <move file="native/linux/solidity_v${vm.version}" tofile="native/linux/solidity" overwrite="true" />
         </target>
 
-	<target name="clean">
+
+	<target name="3rd_clean">
         <delete dir="${dir.libfile}/libJson.jar" />
         <delete dir="${dir.libfile}/libnsc.jar" />
         <delete dir="${dir.libfile}/libnzmq.jar" />

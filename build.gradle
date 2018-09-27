@@ -109,13 +109,6 @@ subprojects {
         delete 'native'
     }
 
-
-    test { 
-        reports { 
-            html.enabled = false;
-        }
-    }
-
     afterEvaluate { 
         // Override java plug-in behaviour to make JDK9+ module logic work
         // From: https://guides.gradle.org/building-java-9-modules/#step_2_produce_java_9_modules_for_all_subprojects
@@ -163,6 +156,8 @@ subprojects {
     }
 }
 
+project(':modAionImpl') { build.finalizedBy(compileNative) }
+
 task downloadFastVmGit(type:Download) { 
     overwrite false // TODO This seems to work only when this task is directly invoked
     onlyIfModified true
@@ -182,11 +177,11 @@ task buildVmDependencies(type: Exec) {
 }
 
 task getVmDependencies { 
-    // 'overwrite' property of Download task doesn't seem to work when
-    // there's multiple files in the task, so splitting them into two
     if(project.hasProperty('vmFromSource')) { 
         getVmDependencies.dependsOn buildVmDependencies
     } else {
+        // 'overwrite' property of Download task doesn't seem to work when
+        // there's multiple files in the task, so splitting them into two
         dependsOn downloadFastVmGit
         dependsOn downloadSolidityGit
     }
@@ -226,6 +221,11 @@ task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
 
 /** Replaces `ant pack_build` */
 task pack(type: Tar) { 
+    dependsOn build
+    dependsOn prePack
+    dependsOn collectDependentJars 
+    finalizedBy(postPack)
+
     archiveName = 'aion.tar.bz2'
     destinationDir = file(dirPack)
     compression = Compression.BZIP2
@@ -268,11 +268,6 @@ task pack(type: Tar) {
     }
 }
 
-pack.dependsOn build
-pack.dependsOn prePack
-pack.dependsOn collectDependentJars 
-pack.finalizedBy(postPack)
-
 task packDocker(type: Exec) { 
     dependsOn pack
     commandLine 'sh', "${dirWorkspace}/script/pack_docker.sh"
@@ -283,10 +278,10 @@ task packDevDocker(type: Exec) {
 }
 
 clean { 
+    dependsOn "ant-3rd_clean"
     delete dirPack
 }
 
-project(':modAionImpl') { build.finalizedBy(compileNative) }
 
 /** Replaces `ant ci_build` */
 task ciBuild { 
