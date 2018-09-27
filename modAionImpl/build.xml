@@ -96,7 +96,7 @@
             <fileset dir="../native/linux/equihash"/>
         </copy>
 
-        <junit printsummary="on" haltonfailure="yes" fork="true">
+        <junit printsummary="on" haltonfailure="yes" fork="true" showoutput="yes">
             <classpath>
                 <path refid="classpath.test"/>
                 <path refid="classpath.dependency"/>
@@ -125,7 +125,7 @@
             <fileset dir="../native/linux/equihash"/>
         </copy>
 
-        <junit printsummary="on" haltonfailure="no" fork="true">
+        <junit printsummary="on" haltonfailure="no" fork="true" showoutput="yes">
             <classpath>
                 <path refid="classpath.test"/>
                 <path refid="classpath.dependency"/>
