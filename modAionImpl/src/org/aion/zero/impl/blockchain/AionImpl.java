@@ -104,7 +104,7 @@ public class AionImpl implements IChainInstancePOW {
 
         Address minerCoinbase = Address.wrap(this.cfg.getConsensus().getMinerAddress());
 
-        if (minerCoinbase.equals(Address.EMPTY_ADDRESS())) {
+        if (minerCoinbase.isEmptyAddress()) {
             LOG_GEN.info("Miner address is not set");
             return null;
         }
