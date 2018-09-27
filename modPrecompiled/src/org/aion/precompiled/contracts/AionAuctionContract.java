@@ -617,7 +617,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-            if (!parentAddr.equals(Address.ZERO_ADDRESS())) {
+            if (!parentAddr.isZeroAddress()) {
                 if (isActiveDomain(parentAddr)) return true;
             }
         }

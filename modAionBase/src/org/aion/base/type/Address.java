@@ -174,4 +174,8 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
     public static final Address EMPTY_ADDRESS() {
         return emptyAddr;
     }
+
+    public final boolean isEmptyAddress() { return this.equals(emptyAddr); }
+
+    public final boolean isZeroAddress() { return this.equals(zeroAddr); }
 }

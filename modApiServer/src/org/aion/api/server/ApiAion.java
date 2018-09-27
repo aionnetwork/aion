@@ -461,8 +461,10 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), params.getFrom(), params.getTo(),
+        Address fromAddr = (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
+        AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), fromAddr, params.getTo(),
                 params.getValue().toByteArray(), params.getData(), params.getNrg(), params.getNrgPrice());
+
         AionTxReceipt receipt = this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
         return receipt.getEnergyUsed();
     }
@@ -471,7 +473,7 @@ public abstract class ApiAion extends Api {
 
         Address from = _params.getFrom();
 
-        if (from == null || from.equals(Address.EMPTY_ADDRESS())) {
+        if (from == null || from.isEmptyAddress()) {
             return null;
         }
 
@@ -537,7 +539,7 @@ public abstract class ApiAion extends Api {
 
         Address from = _params.getFrom();
 
-        if (from == null || from.equals(Address.EMPTY_ADDRESS())) {
+        if (from == null || from.isEmptyAddress()) {
             LOG.error("<send-transaction msg=invalid-from-address>");
             return null;
         }
