@@ -73,7 +73,7 @@ public class NetworkTest {
         List<Object> parameters = new ArrayList<>();
 
         for (Network net : Network.values()) {
-            parameters.add(new Object[] {net.getIdentifier(), net});
+            parameters.add(new Object[] {net.getChainId(), net});
         }
 
         parameters.add(new Object[] {-1, null});

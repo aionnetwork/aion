@@ -36,17 +36,17 @@ public enum Network {
     CUSTOM("custom", 0);
 
     private final String name;
-    private int identifier;
+    private int chainId;
 
     /**
      * Constructor.
      *
      * @param _name network name
-     * @param _identifier network identifier
+     * @param _chainId chain identifier
      */
-    Network(String _name, int _identifier) {
+    Network(String _name, int _chainId) {
         this.name = _name;
-        this.identifier = _identifier;
+        this.chainId = _chainId;
     }
 
     @Override
@@ -54,8 +54,8 @@ public enum Network {
         return this.name;
     }
 
-    public int getIdentifier() {
-        return identifier;
+    public int getChainId() {
+        return chainId;
     }
 
     /**
@@ -84,26 +84,26 @@ public enum Network {
     }
 
     /**
-     * Utility method that determines the correct network based on the given identifier.
+     * Utility method that determines the correct network based on the given chain identifier.
      *
-     * @param identifier a positive integer value representing the network identifier
+     * @param chainId a positive integer value representing the network chain identifier
      * @return the network object corresponding to the int value or null when the value is not
      *     mapped to an object.
      */
-    public static Network determineNetwork(int identifier) {
-        if (identifier < 0) {
+    public static Network determineNetwork(int chainId) {
+        if (chainId < 0) {
             return null;
         }
 
         for (Network net : Network.values()) {
-            if (identifier == net.getIdentifier()) {
+            if (chainId == net.getChainId()) {
                 return net;
             }
         }
 
-        // custom networks may have any positive identifier not already taken
+        // custom networks may have any positive chainId not already taken by other defined networks
         Network net = Network.CUSTOM;
-        net.identifier = identifier;
+        net.chainId = chainId;
         return net;
     }
 
@@ -113,17 +113,17 @@ public enum Network {
     }
 
     /**
-     * Generates a custom network with the given identifier.
+     * Generates a custom network with the given chain identifier.
      *
-     * @param identifier a positive integer value representing the network identifier
-     * @return a custom network object with the given identifier.
+     * @param chainId a positive integer value representing the network chain identifier
+     * @return a custom network object with the given chain identifier.
      */
-    public static Object getCustomNet(int identifier) {
-        if (identifier < 0) {
+    public static Network getCustomNet(int chainId) {
+        if (chainId < 0) {
             return null;
         }
         Network net = Network.CUSTOM;
-        net.identifier = identifier;
+        net.chainId = chainId;
         return net;
     }
 }
