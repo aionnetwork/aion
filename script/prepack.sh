@@ -60,4 +60,3 @@ if [ ! -d "$API_PATH" ]; then
 fi
 
 cp aion_api/pack/Java-API*-doc.zip $DOCS_PATH
-cp aion_api/lib/gson-2.7.jar ./lib

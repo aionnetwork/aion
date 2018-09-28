@@ -163,7 +163,13 @@
 
 	<target name="test" depends="clean, build, test_modules_collect_reports" />
 
-	<target name="ci_build" depends="clean, build, ci_test_modules_collect_reports" />
+	<!--<target name="ci_build" depends="clean, build, ci_test_modules_collect_reports" />-->
+	<target name="ci_build" >
+                <exec executable="/bin/bash">
+                        <arg value="${dir.workspace}/gradlew" />
+			<arg value="ciBuild"/>
+                </exec>
+	</target>
 
 	<macrodef name="macro_collect_reports">
 		<attribute name="src" />

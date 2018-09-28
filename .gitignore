@@ -9,6 +9,7 @@
 /log/
 /rt/
 /web3/
+/jars/
 
 # ide
 /.idea/
@@ -55,3 +56,6 @@ lib/libnzmq.jar
 # test folder
 test_db/
 tmp/
+
+# gradle
+.gradle/**
