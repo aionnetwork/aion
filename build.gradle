@@ -121,6 +121,10 @@ subprojects {
                 classpath = files()
             }
         }
+
+        test { 
+            outputs.upToDateWhen { false } 
+        }
         
         // Need to comment this out for now, modules-info.java doesn't have 'require' declarations
         // used by the test code.  The ant build.xml, similarly, uses module-path for build, but 
