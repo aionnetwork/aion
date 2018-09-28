@@ -292,7 +292,7 @@ task ciBuild {
         'modTxPoolImpl', 
         'modRlp', 
         'modDbImpl', 
-        'aion_fastvm/modFastVM', 
+        'aion_fastvm', 
         'modAionImpl', 
         'modPrecompiled', 
         'modApiServer'] 
