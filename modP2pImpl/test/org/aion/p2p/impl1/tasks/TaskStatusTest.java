@@ -62,7 +62,7 @@ public class TaskStatusTest {
     }
 
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
 
         TaskStatus ts = new TaskStatus(nodeMgr, "1", msgOutQue, msgInQue);
@@ -73,7 +73,8 @@ public class TaskStatusTest {
         t.start();
         assertTrue(t.isAlive());
 
-        Thread.sleep(300);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 }
