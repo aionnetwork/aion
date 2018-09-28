@@ -566,7 +566,8 @@ public class Cli {
      */
     private boolean createAccount() {
         String password, password2;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+        try (InputStreamReader isr = new InputStreamReader(System.in);
+                BufferedReader reader = new BufferedReader(isr)) {
             password = readPassword("Please enter a password: ", reader);
             password2 = readPassword("Please re-enter your password: ", reader);
         } catch (IOException e) {
@@ -626,7 +627,8 @@ public class Cli {
         }
 
         String password;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+        try (InputStreamReader isr = new InputStreamReader(System.in);
+                BufferedReader reader = new BufferedReader(isr)) {
             password = readPassword("Please enter your password: ", reader);
         } catch (IOException e) {
             e.printStackTrace();
@@ -667,7 +669,8 @@ public class Cli {
         }
 
         String password, password2;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+        try (InputStreamReader isr = new InputStreamReader(System.in);
+                BufferedReader reader = new BufferedReader(isr)) {
             password = readPassword("Please enter a password: ", reader);
             password2 = readPassword("Please re-enter your password: ", reader);
         } catch (IOException e) {
