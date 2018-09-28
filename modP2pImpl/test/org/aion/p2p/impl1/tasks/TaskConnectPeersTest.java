@@ -141,7 +141,7 @@ public class TaskConnectPeersTest {
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
 
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -169,7 +169,7 @@ public class TaskConnectPeersTest {
     }
 
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
@@ -181,11 +181,12 @@ public class TaskConnectPeersTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(2000);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().equals("TERMINATED")) {
+            Thread.sleep(100);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRun1() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
@@ -220,11 +221,12 @@ public class TaskConnectPeersTest {
         Thread.sleep(2000);
 
         atb.set(false);
-        Thread.sleep(3000);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().equals("TERMINATED")) {
+            Thread.sleep(100);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
@@ -257,11 +259,12 @@ public class TaskConnectPeersTest {
         Thread.sleep(2000);
 
         atb.set(false);
-        Thread.sleep(3000);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().equals("TERMINATED")) {
+            Thread.sleep(100);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRunException2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,

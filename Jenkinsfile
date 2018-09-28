@@ -18,11 +18,7 @@ pipeline {
 
                 sh "git submodule update --init --recursive"
 
-                sh "${env.ANT_HOME} pack_build"
-                
-                timeout(60) {
-                	sh "${env.ANT_HOME}"
-                }
+                sh "./gradlew build pack"
             }
             
         }
@@ -39,12 +35,12 @@ pipeline {
     	stage('Test') {
 		steps {
     			timeout(60){
-    				sh "${env.ANT_HOME} ci_build"
+    				sh "./gradlew ciBuild"
     			}
     		}
     		post {
                 	always {
-                    		junit "report/*"
+                    		junit "report/**/*.xml"
                 	}
             	}
     	}

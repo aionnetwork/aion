@@ -99,8 +99,9 @@ public class TaskInbound implements Runnable {
 
         while (start.get()) {
             try {
+                Thread.sleep(0, 1);
+
                 if (this.selector.selectNow() == 0) {
-                    Thread.sleep(0, 1);
                     continue;
                 }
             } catch (IOException | ClosedSelectorException e) {
@@ -108,7 +109,7 @@ public class TaskInbound implements Runnable {
                 continue;
             } catch (InterruptedException e) {
                 p2pLOG.error("inbound thread sleep exception ", e);
-                return;
+                continue;
             }
 
             try {

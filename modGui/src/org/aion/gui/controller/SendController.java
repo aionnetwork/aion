@@ -33,7 +33,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
-import org.aion.api.impl.internal.Message;
 import org.aion.base.util.TypeConverter;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.EventPublisher;
@@ -62,6 +61,8 @@ import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
+
+import static org.aion.gui.model.ApiReturnCodes.r_tx_Dropped_VALUE;
 
 public class SendController extends AbstractController {
     private static final Logger LOGGER = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
@@ -209,7 +210,7 @@ public class SendController extends AbstractController {
         if (error != null) {
             final String failReason;
             final int responseStatus = response.getStatus();
-            if (Message.Retcode.r_tx_Dropped_VALUE == responseStatus) {
+            if (r_tx_Dropped_VALUE == responseStatus) {
                 failReason = String.format("dropped: %s", error);
             } else {
                 failReason = "timeout";

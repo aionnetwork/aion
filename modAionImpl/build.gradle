@@ -1,0 +1,50 @@
+ext.moduleName = 'aion.zero.impl'
+test.dependsOn copyNativeLibsForModuleTests
+clean.dependsOn deleteNativeLibs
+
+dependencies {
+    compile project(':modAionBase')
+    compile project(':modAion')
+    compile project(':modRlp')
+    compile project(':modCrypto')
+    compile project(':modMcf')
+    compile project(':modLogger')
+    compile project(':modP2pImpl')
+    compile project(':modP2p')
+    compile project(':modEvtMgr')
+    compile project(':modEvtMgrImpl')
+    compile project(':modVM')
+    compile project(':modTxPool')
+    compile project(':aion_api')
+    compile project(':aion_fastvm/modFastVM')
+    compile files('../lib/libJson.jar')
+
+    testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
+    testCompile 'junit:junit:4.12'
+    testCompile 'pl.pragmatists:JUnitParams:1.1.1'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+    testCompile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    testCompile "org.mockito:mockito-core:2.21.0"
+    testCompile 'com.google.truth:truth:0.42'
+}
+
+task preBuild(type: Exec) {
+    commandLine 'sh', "${rootProject.projectDir}/script/prebuild.sh"
+}
+
+task postBuild(type: Exec) { 
+    commandLine 'sh', "${rootProject.projectDir}/script/postbuild.sh"
+}
+
+compileJava {
+    dependsOn preBuild
+    finalizedBy postBuild
+    doFirst { 
+        options.compilerArgs += ['-h', file("./build/native")]
+    }
+}
+
+// Skip unit tests when doing build task; unit tests are all mixed up with 
+// long-running integration tests in this module,so doing this to avoid 
+// build taking too long.
+build.dependsOn.remove("check")

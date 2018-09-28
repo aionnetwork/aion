@@ -46,11 +46,11 @@ public class TaskClearTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
     }
 
-    @Test
+    @Test(timeout = 20_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskClear tc = new TaskClear(nodeMgr, atb);
@@ -61,7 +61,8 @@ public class TaskClearTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(10_100);
-        assertEquals("TERMINATED", t.getState().toString());
+        while (!t.getState().toString().equals("TERMINATED")) {
+            Thread.sleep(100);
+        }
     }
 }

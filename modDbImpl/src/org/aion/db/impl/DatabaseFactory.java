@@ -37,6 +37,7 @@ import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
+import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.aion.log.AionLoggerFactory;
@@ -162,6 +163,11 @@ public abstract class DatabaseFactory {
         }
 
         String dbPath = info.getProperty(Props.DB_PATH);
+
+        if (dbType == DBVendor.PERSISTENTMOCKDB) {
+            LOG.warn("WARNING: Active vendor is set to PersistentMockDB, data will be saved only at close!");
+            return new PersistentMockDB(dbName, dbPath);
+        }
 
         boolean enableDbCache = getBoolean(info, Props.ENABLE_DB_CACHE);
         boolean enableDbCompression = getBoolean(info, Props.ENABLE_DB_COMPRESSION);

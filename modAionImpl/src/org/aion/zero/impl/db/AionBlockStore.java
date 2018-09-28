@@ -22,6 +22,27 @@
  */
 package org.aion.zero.impl.db;
 
+import static java.math.BigInteger.ZERO;
+import static org.aion.crypto.HashUtil.shortHash;
+
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectStreamClass;
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Deque;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
@@ -62,6 +83,9 @@ public class AionBlockStore implements IBlockStorePow<AionBlock, A0BlockHeader> 
     private ObjectDataSource<AionBlock> blocks;
 
     private boolean checkIntegrity = true;
+
+    private Deque<IAionBlock> branchingBlk = new ArrayDeque<>(), preBranchingBlk= new ArrayDeque<>();
+    private long branchingLevel;
 
     public AionBlockStore(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
         init(index, blocks);
@@ -439,6 +463,7 @@ public class AionBlockStore implements IBlockStorePow<AionBlock, A0BlockHeader> 
             // 1. First ensure that you are one the save level
             IAionBlock forkLine = forkBlock;
             if (forkBlock.getNumber() > bestBlock.getNumber()) {
+                branchingLevel = currentLevel;
 
                 while (currentLevel > bestBlock.getNumber()) {
                     List<BlockInfo> blocks = getBlockInfoForLevel(currentLevel);
@@ -446,6 +471,9 @@ public class AionBlockStore implements IBlockStorePow<AionBlock, A0BlockHeader> 
                     if (blockInfo != null) {
                         blockInfo.setMainChain(true);
                         setBlockInfoForLevel(currentLevel, blocks);
+
+                        //For collecting branching blocks
+                        branchingBlk.push(getBlockByHash(blockInfo.getHash()));
                     } else {
                         LOG.error("Null block information found at " + currentLevel + " when data should exist.");
                     }
@@ -464,6 +492,9 @@ public class AionBlockStore implements IBlockStorePow<AionBlock, A0BlockHeader> 
                     if (blockInfo != null) {
                         blockInfo.setMainChain(false);
                         setBlockInfoForLevel(currentLevel, blocks);
+
+                        //For collecting prebranching blocks
+                        preBranchingBlk.push(getBlockByHash(blockInfo.getHash()));
                     } else {
                         LOG.error("Null block information found at " + currentLevel + " when data should exist.");
                     }
@@ -474,9 +505,37 @@ public class AionBlockStore implements IBlockStorePow<AionBlock, A0BlockHeader> 
 
             // 2. Loop back on each level until common block
             loopBackToCommonBlock(bestLine, forkLine);
+
+            logBranchingDetails();
+
         } finally {
             lock.writeLock().unlock();
         }
+    }
+
+    private void logBranchingDetails() {
+        if (branchingLevel > 0 && LOG_CONS.isDebugEnabled()) {
+            LOG_CONS.debug("Branching details start: level[{}]", branchingLevel);
+
+            LOG_CONS.debug("===== Block details before branch =====");
+            while (!preBranchingBlk.isEmpty()) {
+                IAionBlock blk = preBranchingBlk.pop();
+                LOG_CONS.debug("blk: {}", blk.toString());
+            }
+
+            LOG_CONS.debug("===== Block details after branch =====");
+            while (!branchingBlk.isEmpty()) {
+                IAionBlock blk = branchingBlk.pop();
+                LOG_CONS.debug("blk: {}", blk.toString());
+            }
+
+            LOG_CONS.debug("Branching details end");
+        }
+
+        //reset branching block details
+        branchingLevel = 0;
+        branchingBlk.clear();
+        preBranchingBlk.clear();
     }
 
     /**
@@ -491,12 +550,14 @@ public class AionBlockStore implements IBlockStorePow<AionBlock, A0BlockHeader> 
         }
 
         while (!bestLine.isEqual(forkLine)) {
-
             List<BlockInfo> levelBlocks = getBlockInfoForLevel(currentLevel);
             BlockInfo bestInfo = getBlockInfoForHash(levelBlocks, bestLine.getHash());
             if (bestInfo != null) {
                 bestInfo.setMainChain(false);
                 setBlockInfoForLevel(currentLevel, levelBlocks);
+
+                //For collecting preBranching blocks
+                preBranchingBlk.push(getBlockByHash(bestInfo.getHash()));
             } else {
                 LOG.error("Null block information found at " + currentLevel + " when information should exist.");
             }
@@ -505,6 +566,9 @@ public class AionBlockStore implements IBlockStorePow<AionBlock, A0BlockHeader> 
             if (forkInfo != null) {
                 forkInfo.setMainChain(true);
                 setBlockInfoForLevel(currentLevel, levelBlocks);
+
+                //For collecting branching blocks
+                branchingBlk.push(getBlockByHash(forkInfo.getHash()));
             } else {
                 LOG.error("Null block information found at " + currentLevel + " when information should exist.");
             }
@@ -515,8 +579,11 @@ public class AionBlockStore implements IBlockStorePow<AionBlock, A0BlockHeader> 
             --currentLevel;
         }
 
-        AionLoggerFactory.getLogger(LogEnum.CONS.name())
-                .info("branching: common block = {}/{}", forkLine.getNumber(), Hex.toHexString(forkLine.getHash()));
+        branchingLevel -= currentLevel;
+
+        if (LOG_CONS.isInfoEnabled()) {
+            LOG_CONS.info("branching: common block = {}/{}", forkLine.getNumber(), Hex.toHexString(forkLine.getHash()));
+        }
     }
 
     @Override

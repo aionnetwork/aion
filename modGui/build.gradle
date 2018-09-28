@@ -1,0 +1,39 @@
+ext.moduleName = 'aion.gui'
+test.dependsOn copyNativeLibsForModuleTests
+clean.dependsOn deleteNativeLibs 
+
+dependencies {
+    compile project(':modLogger')
+    compile project(':modMcf')
+    compile project(':modAionImpl')
+    compile project(':modCrypto')
+    compile project(':modAionBase')
+    compile project(':aion_api')
+    compile files('../lib/libJson.jar')
+    compile files('../lib/libnsc.jar')
+    compile 'com.google.guava:guava:25.1-jre'
+    compile 'org.slf4j:slf4j-api:1.7.25'
+    compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.9.1'
+    compile group: 'io.github.novacrypto', name: 'BIP39', version: '0.1.9'
+    compile group: 'io.github.novacrypto', name: 'SHA256', version: '0.0.1'
+    compile group: 'io.github.novacrypto', name: 'ToRuntime', version: '0.9.0'
+    compile group: 'com.google.zxing', name: 'core', version: '3.3.3'
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+    testCompile "org.mockito:mockito-core:2.21.0"
+    testCompile files('../lib/libnsc.jar')
+
+    /*
+    testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
+    testCompile 'pl.pragmatists:JUnitParams:1.1.1'
+    testCompile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    testCompile 'com.google.truth:truth:0.42'
+    */
+}
+
+/*task zip(type: Zip) {
+    from configurations.runtime.allArtifacts.files
+    from configurations.runtime
+    into 'myZip.zip'
+}*/

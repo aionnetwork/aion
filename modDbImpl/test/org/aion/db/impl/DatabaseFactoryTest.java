@@ -43,6 +43,7 @@ import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.impl.mockdb.MockDBDriver;
+import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.junit.Test;
@@ -73,6 +74,12 @@ public class DatabaseFactoryTest {
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName()).isEqualTo(MockDB.class.getSimpleName());
+
+        // PERSISTENTMOCKDB
+        props.setProperty(Props.DB_TYPE, DBVendor.PERSISTENTMOCKDB.toValue());
+        db = DatabaseFactory.connect(props);
+        assertThat(db).isNotNull();
+        assertThat(db.getClass().getSimpleName()).isEqualTo(PersistentMockDB.class.getSimpleName());
 
         // LEVELDB
         props.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
