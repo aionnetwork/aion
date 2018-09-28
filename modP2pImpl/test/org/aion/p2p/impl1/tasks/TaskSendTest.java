@@ -79,7 +79,7 @@ public class TaskSendTest {
             .min(Runtime.getRuntime().availableProcessors() << 1, 32);
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
 
         selector = Selector.open();

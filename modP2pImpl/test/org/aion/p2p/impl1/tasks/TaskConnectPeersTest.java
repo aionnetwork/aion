@@ -141,7 +141,7 @@ public class TaskConnectPeersTest {
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
 
         System.setProperty("java.net.preferIPv4Stack", "true");

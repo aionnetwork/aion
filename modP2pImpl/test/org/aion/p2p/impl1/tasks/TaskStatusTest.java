@@ -57,7 +57,7 @@ public class TaskStatusTest {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.DEBUG.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
     }
 

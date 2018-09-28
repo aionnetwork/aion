@@ -87,7 +87,7 @@ public class NodeMgrTest {
     @Before
     public void setup() {
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
         LOGGER = AionLoggerFactory.getLogger(LogEnum.P2P.name());
 
