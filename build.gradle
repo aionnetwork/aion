@@ -286,7 +286,7 @@ task ciBuild {
         'modApiServer'] 
 
     configure(subprojects.findAll { it.name in ciModules }) {
-        it.test { testResultsDirName = "${rootProject.projectDir}/report" }
+        it.test { testResultsDirName = "${rootProject.projectDir}/report/${project.name}" }
         dependsOn it.test
     } 
 
