@@ -37,8 +37,10 @@ import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.vm.ExecutionResult;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class TotalCurrencyContractTest {
     private static final Address ADDR = ContractFactory.getTotalCurrencyContractAddress();
     private static final long COST = 21000L;

@@ -59,7 +59,8 @@ public class ContractFactory implements IContractFactory {
 
         switch (context.address().toString()) {
             case TOTAL_CURRENCY:
-                return new TotalCurrencyContract(track, context.sender(), Address.wrap(OWNER));
+                //return new TotalCurrencyContract(track, context.sender(), Address.wrap(OWNER));
+                return null;
             case TOKEN_BRIDGE:
                 TokenBridgeContract contract = new TokenBridgeContract(context,
                         track, Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER), Address.wrap(TOKEN_BRIDGE));
