@@ -171,11 +171,11 @@ public class TaskInboundTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
@@ -188,11 +188,12 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(50);
         atb.set(false);
-        Thread.sleep(50);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
@@ -206,11 +207,12 @@ public class TaskInboundTest {
         Thread.sleep(50);
 
         atb.set(false);
-        Thread.sleep(50);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRunClosedSelectorException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
@@ -225,11 +227,12 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(50);
         atb.set(false);
-        Thread.sleep(50);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRun2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
@@ -263,11 +266,12 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(100);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testAccept() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
@@ -296,11 +300,12 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(100);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testAccept2() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
@@ -330,11 +335,12 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(100);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testAccept3() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
@@ -370,11 +376,12 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(100);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testReadBuffer() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
@@ -401,11 +408,12 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        Thread.sleep(100);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testReadBuffer2() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
@@ -437,11 +445,12 @@ public class TaskInboundTest {
 
 
         atb.set(false);
-        Thread.sleep(100);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testReadBuffer3() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
@@ -480,10 +489,11 @@ public class TaskInboundTest {
         Thread t = new Thread(ti);
         t.start();
         assertTrue(t.isAlive());
-        Thread.sleep(100);
+        Thread.sleep(300);
 
         atb.set(false);
-        Thread.sleep(100);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 }

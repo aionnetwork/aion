@@ -62,12 +62,12 @@ public class TaskRecvTest {
         MockitoAnnotations.initMocks(this);
 
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
     }
 
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskReceive ts = new TaskReceive(atb, recvMsgQue, handler);
@@ -78,11 +78,12 @@ public class TaskRecvTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(2000);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRunMsgIn() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskReceive ts = new TaskReceive(atb, recvMsgQue, handler);
@@ -106,11 +107,12 @@ public class TaskRecvTest {
         when(handler.get(route)).thenReturn(hdlr);
 
         atb.set(false);
-        Thread.sleep(30);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
-    @Test (expected = Exception.class)
+    @Test (expected = Exception.class, timeout = 10_000)
     public void testRunMsgIn2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskReceive ts = new TaskReceive(atb, recvMsgQue, handler);
@@ -135,8 +137,9 @@ public class TaskRecvTest {
         doThrow(new Exception("test exception!")).when(h).receive(anyInt(), anyString(), any());
 
         atb.set(false);
-        Thread.sleep(30);
-        assertEquals("TERMINATED", t.getState().toString());
+        while(!t.getState().toString().contains("TERMINATED")) {
+            Thread.sleep(10);
+        }
     }
 
 }

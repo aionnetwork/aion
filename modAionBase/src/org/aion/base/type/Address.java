@@ -105,15 +105,15 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
         this.hashCode = Arrays.hashCode(in);
     }
 
-    public static final Address wrap(final byte[] addr) {
+    public static Address wrap(final byte[] addr) {
         return new Address(addr);
     }
 
-    public static final Address wrap(final String addr) {
+    public static Address wrap(final String addr) {
         return new Address(addr);
     }
 
-    public static final Address wrap(final ByteArrayWrapper addr) {
+    public static Address wrap(final ByteArrayWrapper addr) {
         return new Address(addr);
     }
 
@@ -167,11 +167,15 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
         return new Address(bs);
     }
 
-    public static final Address ZERO_ADDRESS() {
+    public static Address ZERO_ADDRESS() {
         return zeroAddr;
     }
 
-    public static final Address EMPTY_ADDRESS() {
+    public static Address EMPTY_ADDRESS() {
         return emptyAddr;
     }
+
+    public boolean isEmptyAddress() { return  Arrays.equals(address, emptyAddr.toBytes()); }
+
+    public boolean isZeroAddress() { return Arrays.equals(address, zeroAddr.toBytes()); }
 }
