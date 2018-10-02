@@ -25,11 +25,13 @@ import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
  * Tests the MultiSignatureContract API.
  */
+@Ignore
 public class MultiSignatureContractTest {
     private static final long COST = 21000L; // must be equal to valid used in contract.
     private static final int SIG_SIZE = 96; // must be equal to valid used in contract.
