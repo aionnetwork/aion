@@ -51,6 +51,8 @@ public enum DBVendor {
     ROCKSDB("rocksdb", true),
     /** Using an instance of {@link org.aion.db.impl.h2.H2MVMap}. */
     H2("h2", true), //
+    /** Using an instance of {@Link org.aion.db.impl.mongodb.MongoDB} */
+    MONGODB("mongodb", true),
     /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
     MOCKDB("mockdb", false);
 
