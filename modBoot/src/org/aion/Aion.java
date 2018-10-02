@@ -80,7 +80,6 @@ public class Aion {
          */
         ECKeyFac.setType(ED25519);
         HashUtil.setType(BLAKE2B_256);
-        ServiceLoader.load(EventMgrModule.class);
 
         CfgAion cfg = CfgAion.inst();
 
@@ -95,6 +94,8 @@ public class Aion {
             System.out.println("Invalid UUID; please check <id> setting in config.xml");
             exit(-1);
         }
+
+        ServiceLoader.load(EventMgrModule.class);
 
         try {
             ServiceLoader.load(AionLoggerFactory.class);

@@ -196,6 +196,7 @@ public abstract class Cfg {
             updateNetworkExecPaths();
         } else {
             execDir = INITIAL_PATH;
+            execConfigDir = CONFIG_DIR;
             execConfigFile = baseConfigFile;
             execGenesisFile = baseGenesisFile;
             updateStoragePaths();
@@ -212,7 +213,7 @@ public abstract class Cfg {
         }
         networkConfigDir = new File(CONFIG_DIR, network);
         baseConfigFile = new File(networkConfigDir, configFileName);
-        baseGenesisFile = new File(networkConfigDir, configFileName);
+        baseGenesisFile = new File(networkConfigDir, genesisFileName);
 
         if (dataDir == null) {
             dataDir = INITIAL_PATH;
@@ -357,6 +358,15 @@ public abstract class Cfg {
             initializeConfiguration();
         }
         return baseConfigFile;
+    }
+
+    /**
+     * Used to updated the initial configuration to using the execution configuration files when
+     * reading the initial configuration from those files.
+     */
+    public void setReadConfigFiles(File configFile, File genesisFile) {
+        this.baseConfigFile = configFile;
+        this.baseGenesisFile = genesisFile;
     }
 
     /** @implNote Maintains the old setup if the genesis file is present in the old location. */

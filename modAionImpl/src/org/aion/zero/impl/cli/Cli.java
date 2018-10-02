@@ -143,6 +143,9 @@ public class Cli {
             File configFile = cfg.getExecConfigFile();
             if (!configFile.exists()) {
                 configFile = cfg.getInitialConfigFile();
+            } else {
+                // marks that the files were read from the execution path
+                cfg.setReadConfigFiles(configFile, cfg.getExecGenesisFile());
             }
 
             // true means the UUID must be set
