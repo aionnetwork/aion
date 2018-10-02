@@ -9,6 +9,7 @@ dependencies {
     compile project(':modEvtMgr')
     compile project(':modP2p')
     compile project(':modMcf')
+    compile project(':modTxPoolImpl')
     compile files('../lib/libnsc.jar')
     compile files('../lib/libnzmq.jar')
     compile 'org.slf4j:slf4j-api:1.7.25'
