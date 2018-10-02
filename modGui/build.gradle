@@ -1,6 +1,19 @@
 ext.moduleName = 'aion.gui'
 test.dependsOn copyNativeLibsForModuleTests
-clean.dependsOn deleteNativeLibs 
+clean.dependsOn deleteNativeLibs
+
+sourceSets {
+    main {
+        resources {
+            srcDirs = ['resources']
+        }
+    }
+    test {
+        resources {
+            srcDirs = ['test/resources']
+        }
+    }
+}
 
 sourceSets { 
     main { 

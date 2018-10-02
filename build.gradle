@@ -307,3 +307,9 @@ task ciBuild {
     } 
 }
 
+idea { 
+    project {
+        jdkName = '10.0'
+    }
+}
+

@@ -17,6 +17,10 @@ module aion.zero.impl {
     requires jdk.management;
     requires java.xml;
     requires slf4j.api;
+    requires commons.collections4;
+
+    uses org.aion.evtmgr.EventMgrModule;
+    uses org.aion.txpool.TxPoolModule;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;
