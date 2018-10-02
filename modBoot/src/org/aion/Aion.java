@@ -104,6 +104,15 @@ public class Aion {
             }
         }
 
+
+        // Reads CLI (must be after the cfg.fromXML())
+        if (args != null && args.length > 0) {
+            int ret = new Cli().call(args, cfg);
+            if (ret != 2) {
+                exit(ret);
+            }
+        }
+
         //Check ZMQ server secure connect settings, generate keypair when the settings enabled and can't find the keypair.
         if (cfg.getApi().getZmq().getActive() && cfg.getApi().getZmq()
             .isSecureConnectEnabledEnabled()) {
@@ -112,14 +121,6 @@ public class Aion {
             } catch (Exception e) {
                 System.out.println("Check zmq keypair fail! " + e.toString());
                 exit(1);
-            }
-        }
-
-        // Reads CLI (must be after the cfg.fromXML())
-        if (args != null && args.length > 0) {
-            int ret = new Cli().call(args, cfg);
-            if (ret != 2) {
-                exit(ret);
             }
         }
 
