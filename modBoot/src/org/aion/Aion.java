@@ -29,8 +29,17 @@ import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
 
 import java.io.Console;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ServiceLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.function.Consumer;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
@@ -48,6 +57,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.CfgApiRpc;
+import org.aion.mcf.config.CfgApiZmq;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.solidity.Compiler;
@@ -57,6 +67,7 @@ import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
+import org.zeromq.ZMQ;
 
 public class Aion {
 
@@ -87,8 +98,20 @@ public class Aion {
          * return true which means should save back to xml config
          */
         if (cfg.fromXML()) {
-            if(args != null && args.length > 0 && !(args[0].equals("-v")||args[0].equals("--version"))) {
+            if (args != null && args.length > 0 && !(args[0].equals("-v") || args[0]
+                .equals("--version"))) {
                 cfg.toXML(new String[]{"--id=" + cfg.getId()});
+            }
+        }
+
+        //Check ZMQ server secure connect settings, generate keypair when the settings enabled and can't find the keypair.
+        if (cfg.getApi().getZmq().getActive() && cfg.getApi().getZmq()
+            .isSecureConnectEnabledEnabled()) {
+            try {
+                checkZmqKeyPair();
+            } catch (Exception e) {
+                System.out.println("Check zmq keypair fail! " + e.toString());
+                exit(1);
             }
         }
 
@@ -104,7 +127,7 @@ public class Aion {
         String UUID = cfg.getId();
         if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
             System.out.println("Invalid UUID; please check <id> setting in config.xml");
-            exit(-1);
+            exit(1);
         }
 
         try {
@@ -131,7 +154,8 @@ public class Aion {
         String[] filePath = new String[7];
         // Log/Database path
         if (!cfg.getLog().getLogFile()) {
-            System.out.println("Logger disabled; to enable please check log settings in config.xml");
+            System.out
+                .println("Logger disabled; to enable please check log settings in config.xml");
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             System.out.println("File path is invalid; please check log setting in config.xml");
             return;
@@ -146,7 +170,7 @@ public class Aion {
         filePath[6] = CfgAion.getGenesisFilePath();
 
         String path =
-                "\n-------------------------------- USED PATHS --------------------------------" +
+            "\n-------------------------------- USED PATHS --------------------------------" +
                 "\n> Logger path:   " + filePath[0] +
                 "\n> Database path: " + filePath[1] +
                 "\n> Keystore path: " + filePath[2] +
@@ -158,14 +182,14 @@ public class Aion {
                 "\n----------------------------------------------------------------------------\n\n";
 
         String logo =
-              "\n                     _____                  \n" +
+            "\n                     _____                  \n" +
                 "      .'.       |  .~     ~.  |..          |\n" +
                 "    .'   `.     | |         | |  ``..      |\n" +
                 "  .''''''''`.   | |         | |      ``..  |\n" +
                 ".'           `. |  `._____.'  |          ``|\n\n";
 
         // always print the version string in the center of the Aion logo
-        String versionStr = "v"+KERNEL_VERSION;
+        String versionStr = "v" + KERNEL_VERSION;
         String networkStr = CfgAion.getNetwork();
         logo = appendLogo(logo, versionStr);
         logo = appendLogo(logo, networkStr);
@@ -218,8 +242,8 @@ public class Aion {
         }
 
         RpcServer rpcServer = null;
-        if(cfg.getApi().getRpc().isActive()) {
-            CfgApiRpc rpcCfg =  cfg.getApi().getRpc();
+        if (cfg.getApi().getRpc().isActive()) {
+            CfgApiRpc rpcCfg = cfg.getApi().getRpc();
 
             Consumer<RpcServerBuilder<? extends RpcServerBuilder<?>>> commonRpcConfig = (rpcBuilder) -> {
                 rpcBuilder.setUrl(rpcCfg.getIp(), rpcCfg.getPort());
@@ -232,14 +256,17 @@ public class Aion {
                 rpcBuilder.setRequestQueueSize(rpcCfg.getRequestQueueSize());
                 rpcBuilder.setStuckThreadDetectorEnabled(rpcCfg.isStuckThreadDetectorEnabled());
 
-                if (rpcCfg.isCorsEnabled())
+                if (rpcCfg.isCorsEnabled()) {
                     rpcBuilder.enableCorsWithOrigin(rpcCfg.getCorsOrigin());
+                }
 
                 CfgSsl cfgSsl = rpcCfg.getSsl();
-                if (cfgSsl.getEnabled())
+                if (cfgSsl.getEnabled()) {
                     rpcBuilder.enableSsl(cfgSsl.getCert(), sslPass);
+                }
             };
-            RpcServerVendor rpcVendor = RpcServerVendor.fromString(rpcCfg.getVendor()).orElse(RpcServerVendor.UNDERTOW);
+            RpcServerVendor rpcVendor = RpcServerVendor.fromString(rpcCfg.getVendor())
+                .orElse(RpcServerVendor.UNDERTOW);
             try {
                 switch (rpcVendor) {
                     case NANO: {
@@ -260,9 +287,11 @@ public class Aion {
                 genLog.error("Failed to instantiate RPC server.", e);
             }
 
-            if (rpcServer == null)
-                throw new IllegalStateException("Issue with RPC settings caused server instantiation to fail. " +
+            if (rpcServer == null) {
+                throw new IllegalStateException(
+                    "Issue with RPC settings caused server instantiation to fail. " +
                         "Please check RPC settings in config file.");
+            }
 
             rpcServer.start();
         }
@@ -278,7 +307,8 @@ public class Aion {
             private final ProtocolProcessor pp;
             private final RpcServer rpc;
 
-            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp, RpcServer rpc) {
+            private ShutdownThreadHolder(Thread zmqThread, IMineRunner nm, ProtocolProcessor pp,
+                RpcServer rpc) {
                 this.zmqThread = zmqThread;
                 this.miner = nm;
                 this.pp = pp;
@@ -338,10 +368,79 @@ public class Aion {
 
     }
 
-    public static String appendLogo(String value, String input) {
+    private static void checkZmqKeyPair() throws IOException {
+        File zmqkeyDir = new File(
+            System.getProperty("user.dir") + File.separator + CfgApiZmq.ZMQ_KEY_DIR);
+
+        if (!zmqkeyDir.isDirectory()) {
+            if (!zmqkeyDir.mkdir()) {
+                System.out.println("zmq keystore directory could not be created. " +
+                    "Please check user permissions or create directory manually.");
+                System.exit(1);
+            }
+            System.out.println();
+        }
+
+        if (!existZmqSecKeyFile(zmqkeyDir.toPath())) {
+            //System.out.println("Found existing secret key file. Please backup or remove it!");
+            System.out.print("Can't find zmq key pair, generate new pair! \n");
+            ZMQ.Curve.KeyPair kp = ZMQ.Curve.generateKeyPair();
+            genKeyFile(zmqkeyDir.getPath(), kp.publicKey, kp.secretKey);
+        } else {
+            System.out.print("Find zmq key pair! \n");
+        }
+
+    }
+
+    private static boolean existZmqSecKeyFile(final Path path) {
+        List<File> files = org.aion.base.io.File.getFiles(path);
+
+        for (File file : files) {
+            if (file.getName().contains("zmqCurveSeckey")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void genKeyFile(final String path, final String publicKey,
+        final String secretKey) throws IOException {
+        DateFormat df = new SimpleDateFormat("yy-MM-dd'T'HH-mm-ss'Z'");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String iso_date = df.format(new Date(System.currentTimeMillis()));
+
+        String fileName = "UTC--" + iso_date + "--zmqCurvePubkey";
+        writeKeyToFile(path, fileName, publicKey);
+
+        fileName = "UTC--" + iso_date + "--zmqCurveSeckey";
+        writeKeyToFile(path, fileName, secretKey);
+    }
+
+    private static void writeKeyToFile(final String path, final String fileName, final String key)
+        throws IOException {
+        Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxr-----");
+        FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(perms);
+
+        Path p = Paths.get(path).resolve(fileName);
+        Path keyFile;
+        if (!java.nio.file.Files.exists(p)) {
+            keyFile = java.nio.file.Files.createFile(p, attr);
+        } else {
+            keyFile = p;
+        }
+
+        FileOutputStream fos = new FileOutputStream(keyFile.toString());
+        fos.write(key.getBytes());
+        fos.close();
+    }
+
+    private static String appendLogo(String value, String input) {
         int leftPad = Math.round((44 - input.length()) / 2.0f) + 1;
         StringBuilder padInput = new StringBuilder();
-        for (int i = 0; i < leftPad; i++) padInput.append(" ");
+        for (int i = 0; i < leftPad; i++) {
+            padInput.append(" ");
+        }
         padInput.append(input);
         value += padInput.toString();
         value += "\n\n";
@@ -360,7 +459,8 @@ public class Aion {
             // 2) process started in non-interactive mode (background scheduler, redirected output, etc.)
             // don't wan't to compromise security in these scenarios
             if (console == null) {
-                System.out.println("SSL-certificate-use requested with RPC server and no console found. " +
+                System.out.println(
+                    "SSL-certificate-use requested with RPC server and no console found. " +
                         "Please set the ssl password in the config file (insecure) to run kernel non-interactively with this option.");
                 exit(1);
             } else {
@@ -368,7 +468,7 @@ public class Aion {
                 console.printf("----------- INTERACTION REQUIRED ------------\n");
                 console.printf("---------------------------------------------\n");
                 sslPass = console.readPassword("Password for SSL keystore file ["
-                        +sslCfg.getCert()+"]\n");
+                    + sslCfg.getCert() + "]\n");
             }
         }
 

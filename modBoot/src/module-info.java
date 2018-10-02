@@ -1,4 +1,6 @@
 module aion.boot {
+    uses org.aion.evtmgr.EventMgrModule;
+    uses org.aion.log.AionLoggerFactory;
 
     requires  aion.crypto;
     requires  aion.apiserver;
@@ -9,8 +11,8 @@ module aion.boot {
     requires  slf4j.api;
     requires  aion.p2p;
     requires  aion.fastvm;
-
-
+    requires aion.base;
+    requires libnzmq;
 
     exports org.aion;
 }
