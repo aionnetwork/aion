@@ -79,14 +79,22 @@ public class PersistentMockDB extends MockDB {
                 e.printStackTrace();
             }
         } else {
-            try {
-                dbFile.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            createFileAndDirectories(dbFile);
         }
 
         return isOpen();
+    }
+
+    private void createFileAndDirectories(File dbFile) {
+        try {
+            File parent = dbFile.getParentFile();
+            if (!parent.exists()) {
+                parent.mkdirs();
+            }
+            dbFile.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static final byte[] convertToByteArray(String byteArrayString) {
@@ -123,7 +131,11 @@ public class PersistentMockDB extends MockDB {
             // save data to disk
             File dbFile = new File(path);
 
-            try (FileWriter writer = new FileWriter(dbFile, false); ) {
+            if (!dbFile.exists()) {
+                createFileAndDirectories(dbFile);
+            }
+
+            try (FileWriter writer = new FileWriter(dbFile, false)) {
                 for (Map.Entry<ByteArrayWrapper, byte[]> entry : kv.entrySet()) {
                     writer.write(
                             Arrays.toString(entry.getKey().getData())

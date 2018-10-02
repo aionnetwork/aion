@@ -63,8 +63,11 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
         src.put(key, bytes);
     }
 
+    /**
+     * @apiNote A null value is interpreted as a delete of the key.
+     */
     public void putToBatch(byte[] key, V value) {
-        byte[] bytes = serializer.serialize(value);
+        byte[] bytes = value == null ? null : serializer.serialize(value);
         src.putToBatch(key, bytes);
     }
 
@@ -91,6 +94,15 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
      */
     protected IByteArrayKeyValueDatabase getSrc() {
         return src;
+    }
+
+    /**
+     * Checks that the underlying storage was correctly initialized and open.
+     *
+     * @return true if correctly initialized and the data storage is open, false otherwise.
+     */
+    public boolean isOpen() {
+        return src.isOpen();
     }
 
     @Override

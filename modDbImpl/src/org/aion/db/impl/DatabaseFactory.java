@@ -62,6 +62,7 @@ public abstract class DatabaseFactory {
         public static final String DB_PATH = "db_path";
 
         public static final String CHECK_INTEGRITY = "check_integrity";
+        public static final String PERSISTENT = "persistent";
 
         public static final String ENABLE_AUTO_COMMIT = "enable_auto_commit";
         public static final String ENABLE_DB_CACHE = "enable_db_cache";

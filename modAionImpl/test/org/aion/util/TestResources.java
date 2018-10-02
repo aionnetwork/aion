@@ -37,10 +37,12 @@ public class TestResources {
 
     private static final String userDir = System.getProperty("user.dir");
     private static final String module = "modAionImpl";
-    private static final String rawDataFile = "test_resources/raw-block-data.txt";
+    private static final String rawDataFileWithRandomBlocks = "test_resources/raw-block-data.txt";
+    private static final String rawDataFileWithConsecutiveBlocks =
+            "test_resources/consecutive-raw-block-data.txt";
 
     /** Extracts raw block data from a test resource file. */
-    public static List<byte[]> rawBlockData() {
+    public static List<byte[]> rawBlockData(String rawDataFile) {
         List<byte[]> parameters = new ArrayList<>();
 
         File file;
@@ -78,7 +80,7 @@ public class TestResources {
     }
 
     /** Extracts raw block data from a test resource file. */
-    public static List<byte[]> rawBlockData(int limit) {
+    public static List<byte[]> rawBlockData(int limit, String rawDataFile) {
         List<byte[]> parameters = new ArrayList<>();
 
         File file;
@@ -140,7 +142,7 @@ public class TestResources {
     public static List<AionBlock> blocks() {
         List<AionBlock> parameters = new ArrayList<>();
 
-        for (byte[] rawData : rawBlockData()) {
+        for (byte[] rawData : rawBlockData(rawDataFileWithRandomBlocks)) {
             parameters.add(new AionBlock(rawData));
         }
 
@@ -151,7 +153,21 @@ public class TestResources {
     public static List<AionBlock> blocks(int limit) {
         List<AionBlock> parameters = new ArrayList<>();
 
-        for (byte[] rawData : rawBlockData(limit)) {
+        for (byte[] rawData : rawBlockData(limit, rawDataFileWithRandomBlocks)) {
+            parameters.add(new AionBlock(rawData));
+        }
+
+        return parameters;
+    }
+
+    /**
+     * @return a set of consecutive blocks (in ascending order of the block number) to be used for
+     *     testing.
+     */
+    public static List<AionBlock> consecutiveBlocks(int limit) {
+        List<AionBlock> parameters = new ArrayList<>();
+
+        for (byte[] rawData : rawBlockData(limit, rawDataFileWithConsecutiveBlocks)) {
             parameters.add(new AionBlock(rawData));
         }
 

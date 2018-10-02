@@ -24,6 +24,7 @@ package org.aion.zero.impl.db;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.zero.impl.AionHub.INIT_ERROR_EXIT_CODE;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -61,6 +62,9 @@ public class AionRepositoryImpl
         extends AbstractRepository<AionBlock, A0BlockHeader, AionBlockStore> {
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
+
+    // pending block store
+    private PendingBlockStore pendingStore;
 
     /**
      * used by getSnapShotTo
@@ -108,11 +112,20 @@ public class AionRepositoryImpl
             // Setup block store.
             this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity);
 
+            this.pendingStore = new PendingBlockStore(pendingStoreProperties);
+
             // Setup world trie.
             worldState = createStateTrie();
-        } catch (Exception e) { // TODO - If any of the connections failed.
-            LOG.error("Unable to initialize repository.", e);
+        } catch (Exception e) {
+            LOGGEN.error("Shutdown due to failure to initialize repository.");
+            // the above message does not get logged without the printStackTrace below
+            e.printStackTrace();
+            System.exit(INIT_ERROR_EXIT_CODE);
         }
+    }
+
+    public PendingBlockStore getPendingBlockStore() {
+        return this.pendingStore;
     }
 
     /** @implNote The transaction store is not locked within the repository implementation. */
@@ -511,7 +524,7 @@ public class AionRepositoryImpl
             detailsDS.syncLargeStorage();
 
             if (pruneEnabled) {
-                if (blockHeader.getNumber() % archiveRate == 0 && stateDSPrune.isArchiveEnabled()) {
+                if (stateDSPrune.isArchiveEnabled() && blockHeader.getNumber() % archiveRate == 0) {
                     // archive block
                     worldState.saveDiffStateToDatabase(
                             blockHeader.getStateRoot(), stateDSPrune.getArchiveSource());
@@ -675,6 +688,16 @@ public class AionRepositoryImpl
                 }
             } catch (Exception e) {
                 LOGGEN.error("Exception occurred while closing the block store.", e);
+            }
+
+            try {
+                if (pendingStore != null) {
+                    pendingStore.close();
+                    LOGGEN.info("Pending block store closed.");
+                    pendingStore = null;
+                }
+            } catch (Exception e) {
+                LOGGEN.error("Exception occurred while closing the pending block store.", e);
             }
 
             try {
