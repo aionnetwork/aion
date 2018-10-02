@@ -26,6 +26,7 @@
 		<pathelement location="${dir.lib}/leveldbjni-all-1.18.3.jar" />
 		<pathelement location="${dir.lib}/rocksdbjni-5.11.3.jar" />
 		<pathelement location="${dir.lib}/h2-mvstore-1.4.196.jar" />
+		<pathelement location="${dir.lib}/mongo-java-driver-3.8.2.jar" />
 	</path>
 
 
