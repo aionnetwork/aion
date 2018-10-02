@@ -40,6 +40,7 @@ import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
 import com.google.common.primitives.Longs;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.aion.log.AionLoggerFactory;
@@ -286,8 +287,9 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isPersistent() {
-        return database.isPersistent();
+    public PersistenceMethod getPersistence() {
+        // no locks because the persistence flag never changes
+        return database.getPersistence();
     }
 
     @Override
@@ -486,10 +488,11 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
 
     @Override
     public void drop() {
-        check();
+        if (this.isOpen()) {
+            this.loadingCache.invalidateAll();
+            this.dirtyEntries.clear();
+        }
 
-        this.loadingCache.invalidateAll();
-        this.dirtyEntries.clear();
         this.database.drop();
     }
 

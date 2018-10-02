@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -105,6 +106,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
 
     @Override
     public void drop() {
+        boolean wasOpen = isOpen();
         close();
 
         try (Stream<Path> stream = Files.walk(new File(path).toPath())) {
@@ -113,7 +115,9 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
             LOG.error("Unable to delete path due to: ", e);
         }
 
-        open();
+        if (wasOpen) {
+            open();
+        }
     }
 
     @Override
@@ -165,9 +169,9 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isPersistent() {
-        // always persistent when not overwritten by the class
-        return true;
+    public PersistenceMethod getPersistence() {
+        // Default to file-based since most of our dbs are that
+        return PersistenceMethod.FILE_BASED;
     }
 
     /**

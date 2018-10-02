@@ -29,6 +29,7 @@
 package org.aion.db.generic;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
@@ -172,9 +173,9 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isPersistent() {
+    public PersistenceMethod getPersistence() {
         // no locks because the persistence flag never changes
-        return database.isPersistent();
+        return database.getPersistence();
     }
 
     @Override

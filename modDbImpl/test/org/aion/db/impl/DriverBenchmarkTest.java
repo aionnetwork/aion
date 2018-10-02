@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
@@ -142,7 +143,7 @@ public class DriverBenchmarkTest {
         assertTrue(db.isClosed());
 
         // for non-persistant DB's, close() should wipe the DB
-        if (db.isPersistent()) {
+        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
             File dbDir = new File(db.getPath().get());
             if (dbDir.exists()) { assertTrue(FileUtils.deleteRecursively(dbDir)); }
         }

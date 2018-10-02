@@ -37,7 +37,7 @@ import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
-import org.aion.db.impl.monogodb.MongoDB;
+import org.aion.db.impl.mongodb.MongoDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.aion.log.AionLoggerFactory;

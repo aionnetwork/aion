@@ -1,5 +1,6 @@
 package org.aion.db.impl.mockdb;
 
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 
@@ -53,8 +54,9 @@ public class MockDB extends AbstractDB {
     }
 
     @Override
-    public boolean isPersistent() {
-        return false;
+    public PersistenceMethod getPersistence() {
+        // Default to file-based since most of our dbs are that
+        return PersistenceMethod.IN_MEMORY;
     }
 
     @Override

@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -140,9 +141,9 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isPersistent() {
+    public PersistenceMethod getPersistence() {
         // no locks because the persistence flag never changes
-        return database.isPersistent();
+        return database.getPersistence();
     }
 
     @Override
