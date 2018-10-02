@@ -382,7 +382,6 @@ public class Aion {
         }
 
         if (!existZmqSecKeyFile(zmqkeyDir.toPath())) {
-            //System.out.println("Found existing secret key file. Please backup or remove it!");
             System.out.print("Can't find zmq key pair, generate new pair! \n");
             ZMQ.Curve.KeyPair kp = ZMQ.Curve.generateKeyPair();
             genKeyFile(zmqkeyDir.getPath(), kp.publicKey, kp.secretKey);
