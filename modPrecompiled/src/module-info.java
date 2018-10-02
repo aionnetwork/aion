@@ -5,6 +5,8 @@ module aion.precompiled {
     requires aion.crypto;
     requires aion.vm;
     requires slf4j.api;
+    requires commons.collections4;
+    requires com.google.common;
 
     exports org.aion.precompiled;
     exports org.aion.precompiled.type;

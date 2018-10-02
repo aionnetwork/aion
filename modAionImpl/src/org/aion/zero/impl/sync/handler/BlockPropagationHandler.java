@@ -167,6 +167,13 @@ public class BlockPropagationHandler {
                      block.getNumber(),
                      block.getTransactionsList().size(),
                      result);
+            boolean stored = blockchain.storePendingStatusBlock(block);
+            if (log.isDebugEnabled()) {
+                log.debug("Block hash = {}, number = {}, txs = {} was {}.",
+                    block.getShortHash(),
+                    block.getNumber(),
+                    block.getTransactionsList().size(), stored ? "STORED" : "NOT STORED");
+            }
         } else {
             result = this.blockchain.tryToConnect(block);
             long t2 = System.currentTimeMillis();

@@ -122,7 +122,7 @@ public class AionHub {
         return Holder.INSTANCE;
     }
 
-    private static final int INIT_ERROR_EXIT_CODE = -1;
+    public static final int INIT_ERROR_EXIT_CODE = -1;
 
     public AionHub() {
         initializeHub(CfgAion.inst(), AionBlockchainImpl.inst(), AionRepositoryImpl.inst(), false);
