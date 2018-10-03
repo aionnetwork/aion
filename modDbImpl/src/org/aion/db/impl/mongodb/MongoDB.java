@@ -1,28 +1,27 @@
 package org.aion.db.impl.mongodb;
 
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Updates.combine;
 
-import com.mongodb.bulk.BulkWriteResult;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.ClientSessionOptions;
+import com.mongodb.ReadPreference;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 import com.mongodb.ReadConcern;
+import com.mongodb.TransactionOptions;
 import com.mongodb.WriteConcern;
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.WriteModel;
 import com.mongodb.client.result.DeleteResult;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,21 +30,89 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import javax.print.Doc;
 import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
-import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.bson.types.Binary;
+import org.rocksdb.Transaction;
 
 public class MongoDB extends AbstractDB {
 
+    private static class WriteBatch {
+        private List<WriteModel<BsonDocument>> edits = new ArrayList<>();
+
+        public WriteBatch addEdit(byte[] key, byte[] value) {
+            if (value == null) {
+                DeleteOneModel deleteModel = new DeleteOneModel<>(
+                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key))
+                );
+
+                edits.add(deleteModel);
+            } else {
+                UpdateOneModel updateModel = new UpdateOneModel<>(
+                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key)),
+                    Updates.set(MongoConstants.VALUE_FIELD_NAME, new BsonBinary(value)),
+                    new UpdateOptions().upsert(true));
+
+                edits.add(updateModel);
+            }
+
+            return this;
+        }
+
+        public WriteBatch addEdit(ByteArrayWrapper key, byte[] value) {
+            return addEdit(key.getData(), value);
+        }
+
+        public WriteBatch addEdits(Map<byte[], byte[]> kvPairs) {
+            for (byte[] key : kvPairs.keySet()) {
+                addEdit(key, kvPairs.get(key));
+            }
+
+            return this;
+        }
+
+        public WriteBatch addEditsWrapper(Map<ByteArrayWrapper, byte[]> kvPairs) {
+            for (ByteArrayWrapper key : kvPairs.keySet()) {
+                addEdit(key, kvPairs.get(key));
+            }
+
+            return this;
+        }
+
+        public List<WriteModel<BsonDocument>> getEdits() {
+            return this.edits;
+        }
+
+        public long getDeleteCount() {
+            return this.edits.stream().filter(e -> e instanceof DeleteOneModel).count();
+        }
+
+        public long getUpdateCount() {
+            return this.edits.stream().filter(e -> e instanceof UpdateOneModel).count();
+        }
+    }
+
+    private static class WriteBatchResult {
+        public final long totalUpdates;
+        public final long totalDeletes;
+        public final BulkWriteResult writeResult;
+        public WriteBatchResult(BulkWriteResult writeResult) {
+            this.totalUpdates = writeResult.getInsertedCount() + writeResult.getModifiedCount() + writeResult.getUpserts().size();
+            this.totalDeletes = writeResult.getDeletedCount();
+            this.writeResult = writeResult;
+        }
+
+        public boolean matchedExpectation(WriteBatch batch) {
+            return batch.getDeleteCount() == this.totalDeletes && batch.getUpdateCount() == this.totalUpdates;
+        }
+    }
+
     private String mongoClientUri;
+    private ClientSession clientSession;
     private MongoCollection<BsonDocument> collection = null;
+    private WriteBatch batch = null;
 
     public MongoDB(String dbName, String mongoClientUri) {
         super(dbName);
@@ -60,13 +127,33 @@ public class MongoDB extends AbstractDB {
 
         LOG.info("Initializing MongoDB at {}", mongoClientUri);
 
-        // Get the database and our collection. Mongo takes care of creating these if they don't exist
-        MongoDatabase mongoDb = MongoConnectionManager.inst()
-            .getMongoDbInstance(this.mongoClientUri);
-        this.collection = mongoDb.getCollection(this.name, BsonDocument.class)
-            .withWriteConcern(WriteConcern.JOURNALED)
-            .withReadConcern(ReadConcern.DEFAULT);
+        // Get the client and create a session for this instance
+        MongoClient mongoClient = MongoConnectionManager.inst().getMongoClientInstance(this.mongoClientUri);
+        ClientSessionOptions sessionOptions = ClientSessionOptions.builder()
+            .causallyConsistent(true)
+            .defaultTransactionOptions(TransactionOptions.builder()
+                .readConcern(ReadConcern.DEFAULT)
+                .writeConcern(WriteConcern.MAJORITY)
+                .readPreference(ReadPreference.nearest())
+                .build())
+            .build();
+        this.clientSession = mongoClient.startSession(sessionOptions);
 
+        // Get the database and our collection. Mongo takes care of creating these if they don't exist
+        MongoDatabase mongoDb = mongoClient.getDatabase(MongoConstants.AION_DB_NAME);
+        boolean collectionExists = false;
+        for (String collectionName : mongoDb.listCollectionNames(this.clientSession)) {
+            if (collectionName.equals(this.name)) {
+                collectionExists = true;
+                break;
+            }
+        }
+
+        if (!collectionExists) {
+            mongoDb.createCollection(this.clientSession, this.name);
+        }
+
+        this.collection = mongoDb.getCollection(this.name, BsonDocument.class);
         return isOpen();
     }
 
@@ -97,7 +184,7 @@ public class MongoDB extends AbstractDB {
     public Set<byte[]> keys() {
         check();
 
-        MongoIterable<byte[]> iter = this.collection.find()
+        MongoIterable<byte[]> iter = this.collection.find(this.clientSession)
             .projection(Projections.fields(Projections.include(MongoConstants.ID_FIELD_NAME)))
             .map(f -> f.getBinary(MongoConstants.ID_FIELD_NAME).getData());
 
@@ -109,59 +196,35 @@ public class MongoDB extends AbstractDB {
         return keys;
     }
 
+    private WriteBatchResult doBulkWrite(WriteBatch edits) {
+        BulkWriteResult writeResult = this.collection.bulkWrite(this.clientSession, edits.getEdits());
+        WriteBatchResult result = new WriteBatchResult(writeResult);
+
+        if (result.totalDeletes != edits.getDeleteCount()) {
+            LOG.warn("Expected {} deletes but only deleted {}", edits.getDeleteCount(), result.totalDeletes);
+        }
+
+        if (result.totalUpdates != edits.getUpdateCount()) {
+            LOG.warn("Expected {} upserts but only got {}", edits.getUpdateCount(), result.totalUpdates);
+        }
+
+        return result;
+    }
+
     @Override
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
         check();
         check(cache.keySet().stream().map(k -> k.getData()).collect(Collectors.toList()));
 
-        List<WriteModel<BsonDocument>> edits = new ArrayList<>();
-        int expectedDeletes = 0;
-        int expectedUpserts = 0;
+        WriteBatch edits = new WriteBatch().addEditsWrapper(cache);
+        WriteBatchResult result = doBulkWrite(edits);
 
-        for (ByteArrayWrapper key : cache.keySet()) {
-            byte[] value = cache.get(key);
-            if (value == null) {
-                DeleteOneModel deleteModel = new DeleteOneModel<>(
-                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key.getData()))
-                );
-
-                edits.add(deleteModel);
-                expectedDeletes++;
-            } else {
-                UpdateOneModel updateModel = new UpdateOneModel<>(
-                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key.getData())),
-                    Updates.set(MongoConstants.VALUE_FIELD_NAME, new BsonBinary(value)),
-                    new UpdateOptions().upsert(true));
-
-                edits.add(updateModel);
-                expectedUpserts++;
-            }
-        }
-
-        if (!edits.isEmpty()) {
-            BulkWriteResult writeResult = this.collection.bulkWrite(edits);
-
-            if (writeResult.getDeletedCount() != expectedDeletes) {
-                LOG.warn("Expected {} deletes but only deleted {}", expectedDeletes, writeResult.getDeletedCount());
-                return false;
-            }
-
-            int totalWrites = writeResult.getInsertedCount() + writeResult.getModifiedCount() + writeResult.getUpserts().size();
-            if (totalWrites != expectedUpserts) {
-                LOG.warn("Expected {} upserts but only got {}", expectedUpserts, totalWrites);
-                return false;
-            }
-        }
-
-        return true;
+        return result.matchedExpectation(edits);
     }
 
     @Override
     protected byte[] getInternal(byte[] k) {
-        // Document searchDocument = new Document();
-        // searchDocument.put(MongoConstants.ID_FIELD_NAME, new BsonBinary(k));
-
-        BsonDocument document = this.collection.find(eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(k))).first();
+        BsonDocument document = this.collection.find(this.clientSession, eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(k))).first();
         if (document == null) {
             return null;
         } else {
@@ -175,9 +238,8 @@ public class MongoDB extends AbstractDB {
         check(key);
 
 
-        Map<byte[], byte[]> batch = new HashMap();
-        batch.put(key, value);
-        this.putBatch(batch);
+        WriteBatch edits = new WriteBatch().addEdit(key, value);
+        doBulkWrite(edits);
     }
 
     @Override
@@ -185,10 +247,9 @@ public class MongoDB extends AbstractDB {
         check();
         check(key);
 
-        DeleteResult result = this.collection.deleteOne(new MongoDocument(key));
-        if (result.getDeletedCount() < 1) {
-            LOG.warn("Nothing was actually deleted for key {}", key);
-        }
+
+        WriteBatch edits = new WriteBatch().addEdit(key, null);
+        doBulkWrite(edits);
     }
 
     @Override
@@ -196,42 +257,8 @@ public class MongoDB extends AbstractDB {
         check();
         check(inputMap.keySet());
 
-        List<WriteModel<BsonDocument>> edits = new ArrayList<>();
-        int expectedDeletes = 0;
-        int expectedUpserts = 0;
-
-        for (byte[] key : inputMap.keySet()) {
-            byte[] value = inputMap.get(key);
-            if (value == null) {
-                DeleteOneModel deleteModel = new DeleteOneModel<>(
-                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key))
-                );
-
-                edits.add(deleteModel);
-                expectedDeletes++;
-            } else {
-                UpdateOneModel updateModel = new UpdateOneModel<>(
-                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key)),
-                    Updates.set(MongoConstants.VALUE_FIELD_NAME, new BsonBinary(value)),
-                    new UpdateOptions().upsert(true));
-
-                edits.add(updateModel);
-                expectedUpserts++;
-            }
-        }
-
-        if (!edits.isEmpty()) {
-            BulkWriteResult writeResult = this.collection.bulkWrite(edits);
-
-            if (writeResult.getDeletedCount() != expectedDeletes) {
-                LOG.warn("Expected {} deletes but only deleted {}", expectedDeletes, writeResult.getDeletedCount());
-            }
-
-            int totalWrites = writeResult.getInsertedCount() + writeResult.getModifiedCount() + writeResult.getUpserts().size();
-            if (totalWrites != expectedUpserts) {
-                LOG.warn("Expected {} upserts but only got {}", expectedUpserts, totalWrites);
-            }
-        }
+        WriteBatch edits = new WriteBatch().addEdits(inputMap);
+        doBulkWrite(edits);
     }
 
     @Override
@@ -239,14 +266,22 @@ public class MongoDB extends AbstractDB {
         check();
         check(key);
 
-        Map<byte[], byte[]> batch = new HashMap();
-        batch.put(key, value);
-        this.putBatch(batch);
+        if (this.batch == null) {
+            this.batch = new WriteBatch();
+        }
+
+        batch.addEdit(key, value);
     }
 
     @Override
     public void commitBatch() {
-        // TODO - Figure out what's supposed to be in here
+        check();
+
+        if (this.batch != null) {
+            doBulkWrite(this.batch);
+        }
+
+        this.batch = null;
     }
 
     @Override
@@ -255,9 +290,9 @@ public class MongoDB extends AbstractDB {
         check(keys);
 
         if (!keys.isEmpty()) {
-            List<BsonBinary> deletes = keys.stream().map(k -> new BsonBinary(k)).collect(Collectors.toList());
-            DeleteResult result = this.collection.deleteMany(Filters.in(MongoConstants.ID_FIELD_NAME, deletes));
-            LOG.info("Expected delete count = {} actual = {}", keys.size(), result.getDeletedCount());
+            Map<byte[], byte[]> batch = new HashMap();
+            keys.forEach(key -> batch.put(key, null));
+            this.putBatch(batch);
         }
     }
 
@@ -270,15 +305,17 @@ public class MongoDB extends AbstractDB {
 
         LOG.info("Closing database " + this.toString());
 
-        MongoConnectionManager.inst().closeMongoDbInstance(this.mongoClientUri);
+        MongoConnectionManager.inst().closeMongoClientInstance(this.mongoClientUri);
         this.collection = null;
+        this.clientSession = null;
+        this.batch = null;
     }
 
 
     @Override
     public void drop() {
         check();
-        this.collection.drop();
+        this.collection.drop(this.clientSession);
     }
 
     @Override

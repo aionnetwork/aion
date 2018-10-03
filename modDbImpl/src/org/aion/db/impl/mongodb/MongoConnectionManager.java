@@ -1,7 +1,9 @@
 package org.aion.db.impl.mongodb;
 
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.DB;
 import com.mongodb.MongoClientURI;
+import com.mongodb.TransactionOptions;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
@@ -30,7 +32,7 @@ public class MongoConnectionManager {
     private Map<String, MongoClient> mongoUriToClientMap = new ConcurrentHashMap<>();
     private Map<String, AtomicInteger> activeClientCountMap = new ConcurrentHashMap<>();
 
-    public MongoDatabase getMongoDbInstance(String mongoClientUri) {
+    public MongoClient getMongoClientInstance(String mongoClientUri) {
         MongoClient mongoClient;
         if (!this.mongoUriToClientMap.containsKey(mongoClientUri)) {
             mongoClient = MongoClients.create(mongoClientUri);
@@ -41,13 +43,18 @@ public class MongoConnectionManager {
             this.activeClientCountMap.get(mongoClientUri).intValue();
         }
 
-        // No need to check for existence of the DB here or anything
-        MongoDatabase database = mongoClient.getDatabase(MongoConstants.AION_DB_NAME);
-
-        return database;
+        return mongoClient;
+//
+//        mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).defaultTransactionOptions(
+//            TransactionOptions.builder()..build()))
+//
+//        // No need to check for existence of the DB here or anything
+//        MongoDatabase database = mongoClient.getDatabase(MongoConstants.AION_DB_NAME);
+//
+//        return database;
     }
 
-    public void closeMongoDbInstance(String mongoClientUri) {
+    public void closeMongoClientInstance(String mongoClientUri) {
         if (!this.mongoUriToClientMap.containsKey(mongoClientUri) || !this.activeClientCountMap.containsKey(mongoClientUri)) {
             throw new IllegalArgumentException("Unopened client uri");
         }
