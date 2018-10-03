@@ -225,7 +225,7 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    public Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
+    protected Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
         if (blkNr > 0) {
             return ((AionBlockStore) this.ac.getBlockchain().getBlockStore())
                     .getChainBlockByNumberWithTotalDifficulty(blkNr);
