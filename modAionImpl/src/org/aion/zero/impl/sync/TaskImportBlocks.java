@@ -20,7 +20,6 @@
  * Contributors:
  *     Aion foundation.
  */
-
 package org.aion.zero.impl.sync;
 
 import static org.aion.p2p.P2pConstant.COEFFICIENT_NORMAL_PEERS;
@@ -42,6 +41,8 @@ import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.aion.base.util.ByteArrayWrapper;
@@ -98,6 +99,9 @@ final class TaskImportBlocks implements Runnable {
         this.state = new PeerState(NORMAL, 0L);
     }
 
+    ExecutorService executors =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
@@ -150,6 +154,7 @@ final class TaskImportBlocks implements Runnable {
                             + Thread.currentThread().getName()
                             + "] performing block imports was shutdown.");
         }
+        executors.shutdown();
     }
 
     /**
@@ -287,13 +292,12 @@ final class TaskImportBlocks implements Runnable {
 
                 // if any block results in NO_PARENT, all subsequent blocks will too
                 if (importResult == ImportResult.NO_PARENT) {
-                    int stored = chain.storePendingBlockRange(batch);
+                    executors.submit(new TaskStorePendingBlocks(chain, batch, displayId, log));
 
                     if (log.isDebugEnabled()) {
                         log.debug(
                                 "Stopped importing batch due to NO_PARENT result. "
-                                        + "Stored {} out of {} blocks starting at hash = {}, number = {} from node = {}.",
-                                stored,
+                                        + "Batch of {} blocks starting at hash = {}, number = {} from node = {} delegated to storage.",
                                 batch.size(),
                                 b.getShortHash(),
                                 b.getNumber(),
@@ -326,18 +330,7 @@ final class TaskImportBlocks implements Runnable {
                             }
                         case LIGHTNING:
                             {
-                                if (stored < batch.size()) {
-                                    state =
-                                            attemptLightningJump(
-                                                    getBestBlockNumber(),
-                                                    state,
-                                                    peerStates.values(),
-                                                    baseList,
-                                                    chain);
-
-                                } else {
-                                    state.setBase(b.getNumber() + batch.size());
-                                }
+                                state.setBase(b.getNumber() + batch.size());
                                 break;
                             }
                         case THUNDER:
