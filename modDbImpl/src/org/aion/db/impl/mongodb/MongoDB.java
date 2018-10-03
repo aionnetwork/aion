@@ -3,11 +3,15 @@ package org.aion.db.impl.mongodb;
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.combine;
 
+import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.ReadConcern;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
+import com.mongodb.client.model.DeleteOneModel;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Projections;
@@ -59,7 +63,9 @@ public class MongoDB extends AbstractDB {
         // Get the database and our collection. Mongo takes care of creating these if they don't exist
         MongoDatabase mongoDb = MongoConnectionManager.inst()
             .getMongoDbInstance(this.mongoClientUri);
-        this.collection = mongoDb.getCollection(this.name, BsonDocument.class);
+        this.collection = mongoDb.getCollection(this.name, BsonDocument.class)
+            .withWriteConcern(WriteConcern.JOURNALED)
+            .withReadConcern(ReadConcern.DEFAULT);
 
         return isOpen();
     }
@@ -76,6 +82,7 @@ public class MongoDB extends AbstractDB {
 
     @Override
     public long approximateSize() {
+        check();
         return -1L;
     }
 
@@ -104,7 +111,49 @@ public class MongoDB extends AbstractDB {
 
     @Override
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
-        return false;
+        check();
+        check(cache.keySet().stream().map(k -> k.getData()).collect(Collectors.toList()));
+
+        List<WriteModel<BsonDocument>> edits = new ArrayList<>();
+        int expectedDeletes = 0;
+        int expectedUpserts = 0;
+
+        for (ByteArrayWrapper key : cache.keySet()) {
+            byte[] value = cache.get(key);
+            if (value == null) {
+                DeleteOneModel deleteModel = new DeleteOneModel<>(
+                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key.getData()))
+                );
+
+                edits.add(deleteModel);
+                expectedDeletes++;
+            } else {
+                UpdateOneModel updateModel = new UpdateOneModel<>(
+                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key.getData())),
+                    Updates.set(MongoConstants.VALUE_FIELD_NAME, new BsonBinary(value)),
+                    new UpdateOptions().upsert(true));
+
+                edits.add(updateModel);
+                expectedUpserts++;
+            }
+        }
+
+        if (!edits.isEmpty()) {
+            BulkWriteResult writeResult = this.collection.bulkWrite(edits);
+
+            if (writeResult.getDeletedCount() != expectedDeletes) {
+                LOG.warn("Expected {} deletes but only deleted {}", expectedDeletes, writeResult.getDeletedCount());
+                return false;
+            }
+
+            int totalWrites = writeResult.getInsertedCount() + writeResult.getModifiedCount() + writeResult.getUpserts().size();
+            if (totalWrites != expectedUpserts) {
+                LOG.warn("Expected {} upserts but only got {}", expectedUpserts, totalWrites);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
@@ -147,26 +196,41 @@ public class MongoDB extends AbstractDB {
         check();
         check(inputMap.keySet());
 
-        List<byte[]> keysToDelete = new ArrayList<>();
-        List<WriteModel<BsonDocument>> inserts = new ArrayList<>();
+        List<WriteModel<BsonDocument>> edits = new ArrayList<>();
+        int expectedDeletes = 0;
+        int expectedUpserts = 0;
+
         for (byte[] key : inputMap.keySet()) {
             byte[] value = inputMap.get(key);
             if (value == null) {
-                keysToDelete.add(key);
+                DeleteOneModel deleteModel = new DeleteOneModel<>(
+                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key))
+                );
+
+                edits.add(deleteModel);
+                expectedDeletes++;
             } else {
                 UpdateOneModel updateModel = new UpdateOneModel<>(
                     eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key)),
                     Updates.set(MongoConstants.VALUE_FIELD_NAME, new BsonBinary(value)),
                     new UpdateOptions().upsert(true));
 
-                inserts.add(updateModel);
+                edits.add(updateModel);
+                expectedUpserts++;
             }
         }
 
-        deleteBatch(keysToDelete);
+        if (!edits.isEmpty()) {
+            BulkWriteResult writeResult = this.collection.bulkWrite(edits);
 
-        if (!inserts.isEmpty()) {
-            this.collection.bulkWrite(inserts);
+            if (writeResult.getDeletedCount() != expectedDeletes) {
+                LOG.warn("Expected {} deletes but only deleted {}", expectedDeletes, writeResult.getDeletedCount());
+            }
+
+            int totalWrites = writeResult.getInsertedCount() + writeResult.getModifiedCount() + writeResult.getUpserts().size();
+            if (totalWrites != expectedUpserts) {
+                LOG.warn("Expected {} upserts but only got {}", expectedUpserts, totalWrites);
+            }
         }
     }
 
@@ -175,11 +239,14 @@ public class MongoDB extends AbstractDB {
         check();
         check(key);
 
+        Map<byte[], byte[]> batch = new HashMap();
+        batch.put(key, value);
+        this.putBatch(batch);
     }
 
     @Override
     public void commitBatch() {
-
+        // TODO - Figure out what's supposed to be in here
     }
 
     @Override
