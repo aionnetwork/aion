@@ -36,22 +36,21 @@ import org.aion.zero.types.A0BlockHeader;
 public class TestResources {
 
     private static final String userDir = System.getProperty("user.dir");
-    private static final String module = "modAionImpl";
-    private static final String rawDataFileWithRandomBlocks = "test_resources/raw-block-data.txt";
-    private static final String rawDataFileWithConsecutiveBlocks =
-            "test_resources/consecutive-raw-block-data.txt";
+    private static final String rawDataFileWithRandomBlocks = "raw-block-data.txt";
+    private static final String rawDataFileWithConsecutiveBlocks = "consecutive-raw-block-data.txt";
+    private static final String moduleDir = "modAionImpl";
+    private static final String testResourceDir = "test_resources";
+
+    public static final File TEST_RESOURCE_DIR =
+            userDir.contains(moduleDir)
+                    ? new File(userDir, testResourceDir)
+                    : new File(userDir, moduleDir + File.separator + testResourceDir);
 
     /** Extracts raw block data from a test resource file. */
     public static List<byte[]> rawBlockData(String rawDataFile) {
         List<byte[]> parameters = new ArrayList<>();
 
-        File file;
-
-        if (userDir.contains(module)) {
-            file = new File(userDir, rawDataFile);
-        } else {
-            file = new File(userDir, module + "/" + rawDataFile);
-        }
+        File file = new File(TEST_RESOURCE_DIR, rawDataFile);
 
         BufferedReader reader = null;
 
@@ -83,13 +82,7 @@ public class TestResources {
     public static List<byte[]> rawBlockData(int limit, String rawDataFile) {
         List<byte[]> parameters = new ArrayList<>();
 
-        File file;
-
-        if (userDir.contains(module)) {
-            file = new File(userDir, rawDataFile);
-        } else {
-            file = new File(userDir, module + "/" + rawDataFile);
-        }
+        File file = new File(TEST_RESOURCE_DIR, rawDataFile);
 
         BufferedReader reader = null;
 
