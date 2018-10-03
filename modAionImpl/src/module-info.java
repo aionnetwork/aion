@@ -20,6 +20,8 @@ module aion.zero.impl {
     requires java.xml;
     requires slf4j.api;
     requires com.google.common;
+    requires info.picocli;
+    requires commons.lang3;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;
@@ -28,6 +30,7 @@ module aion.zero.impl {
     exports org.aion.zero.impl.types;
     exports org.aion.zero.impl.config;
     exports org.aion.zero.impl.cli;
+    opens org.aion.zero.impl.cli;
     exports org.aion.zero.impl.db;
     exports org.aion.zero.impl.sync;
     exports org.aion.zero.impl.config.dynamic;
