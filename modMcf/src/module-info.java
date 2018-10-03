@@ -7,6 +7,7 @@ module aion.mcf {
     requires aion.db.impl;
     requires slf4j.api;
     requires aion.p2p;
+    requires com.google.common;
 
     exports org.aion.mcf.account;
     exports org.aion.mcf.blockchain;

@@ -11,7 +11,9 @@
 			<!--size of thread pool allocated for rpc requests-->
 			<threads>1</threads>
 		</rpc>
-		<java active="false" ip="127.0.0.1" port="8547"></java>
+                <java active="false" ip="127.0.0.1" port="8547">
+                        <secure-connect>true</secure-connect>
+                </java>
 		<nrg-recommendation>
 			<!--default NRG price used by api if oracle disabled, minimum price recommended by oracle-->
 			<default>10E9</default>

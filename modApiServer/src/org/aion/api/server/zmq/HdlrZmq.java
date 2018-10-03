@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.api.server.zmq;
 
@@ -70,7 +69,7 @@ public class HdlrZmq implements IHdlr {
         }
     }
 
-    public void getTxWait() {
+    void getTxWait() {
         TxWaitingMappingUpdate txWait = null;
         try {
             txWait = this.api.takeTxWait();
@@ -107,15 +106,15 @@ public class HdlrZmq implements IHdlr {
         return this.api.getFilter();
     }
 
-    public BlockingQueue<TxPendingStatus> getTxStatusQueue() {
+    BlockingQueue<TxPendingStatus> getTxStatusQueue() {
         return this.api.getPendingStatus();
     }
 
-    public byte[] toRspMsg(byte[] msgHash, int txCode, String error) {
+    byte[] toRspMsg(byte[] msgHash, int txCode, String error) {
         return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash, error.getBytes());
     }
 
-    public byte[] toRspMsg(byte[] msgHash, int txCode, String error, byte[] result) {
+    byte[] toRspMsg(byte[] msgHash, int txCode, String error, byte[] result) {
         return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash, error.getBytes(), result);
     }
 
@@ -124,7 +123,7 @@ public class HdlrZmq implements IHdlr {
         return null;
     }
 
-    public byte[] toRspEvtMsg(byte[] ecb) {
+    byte[] toRspEvtMsg(byte[] ecb) {
         return ApiUtil.toReturnEvtHeader(this.api.getApiVersion(), ecb);
     }
 
