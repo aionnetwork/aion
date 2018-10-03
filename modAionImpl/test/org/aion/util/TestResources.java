@@ -36,20 +36,21 @@ import org.aion.zero.types.A0BlockHeader;
 public class TestResources {
 
     private static final String userDir = System.getProperty("user.dir");
-    private static final String module = "modAionImpl";
-    private static final String rawDataFile = "test_resources/raw-block-data.txt";
+    private static final String rawDataFileWithRandomBlocks = "raw-block-data.txt";
+    private static final String rawDataFileWithConsecutiveBlocks = "consecutive-raw-block-data.txt";
+    private static final String moduleDir = "modAionImpl";
+    private static final String testResourceDir = "test_resources";
+
+    public static final File TEST_RESOURCE_DIR =
+            userDir.contains(moduleDir)
+                    ? new File(userDir, testResourceDir)
+                    : new File(userDir, moduleDir + File.separator + testResourceDir);
 
     /** Extracts raw block data from a test resource file. */
-    public static List<byte[]> rawBlockData() {
+    public static List<byte[]> rawBlockData(String rawDataFile) {
         List<byte[]> parameters = new ArrayList<>();
 
-        File file;
-
-        if (userDir.contains(module)) {
-            file = new File(userDir, rawDataFile);
-        } else {
-            file = new File(userDir, module + "/" + rawDataFile);
-        }
+        File file = new File(TEST_RESOURCE_DIR, rawDataFile);
 
         BufferedReader reader = null;
 
@@ -78,16 +79,10 @@ public class TestResources {
     }
 
     /** Extracts raw block data from a test resource file. */
-    public static List<byte[]> rawBlockData(int limit) {
+    public static List<byte[]> rawBlockData(int limit, String rawDataFile) {
         List<byte[]> parameters = new ArrayList<>();
 
-        File file;
-
-        if (userDir.contains(module)) {
-            file = new File(userDir, rawDataFile);
-        } else {
-            file = new File(userDir, module + "/" + rawDataFile);
-        }
+        File file = new File(TEST_RESOURCE_DIR, rawDataFile);
 
         BufferedReader reader = null;
 
@@ -140,7 +135,7 @@ public class TestResources {
     public static List<AionBlock> blocks() {
         List<AionBlock> parameters = new ArrayList<>();
 
-        for (byte[] rawData : rawBlockData()) {
+        for (byte[] rawData : rawBlockData(rawDataFileWithRandomBlocks)) {
             parameters.add(new AionBlock(rawData));
         }
 
@@ -151,7 +146,21 @@ public class TestResources {
     public static List<AionBlock> blocks(int limit) {
         List<AionBlock> parameters = new ArrayList<>();
 
-        for (byte[] rawData : rawBlockData(limit)) {
+        for (byte[] rawData : rawBlockData(limit, rawDataFileWithRandomBlocks)) {
+            parameters.add(new AionBlock(rawData));
+        }
+
+        return parameters;
+    }
+
+    /**
+     * @return a set of consecutive blocks (in ascending order of the block number) to be used for
+     *     testing.
+     */
+    public static List<AionBlock> consecutiveBlocks(int limit) {
+        List<AionBlock> parameters = new ArrayList<>();
+
+        for (byte[] rawData : rawBlockData(limit, rawDataFileWithConsecutiveBlocks)) {
             parameters.add(new AionBlock(rawData));
         }
 

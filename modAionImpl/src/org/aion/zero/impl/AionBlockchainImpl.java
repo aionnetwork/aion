@@ -515,11 +515,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /**
+     * If using TOP pruning we need to check the pruning restriction for the block.
+     * Otherwise, there is not prune restriction.
+     */
+    public boolean hasPruneRestriction() {
+        // no restriction when not in TOP pruning mode
+        return repository.usesTopPruning();
+    }
+
+    /**
      * Heuristic for skipping the call to tryToConnect with block number that was already pruned.
      */
     public boolean isPruneRestricted(long blockNumber) {
         // no restriction when not in TOP pruning mode
-        if (!repository.usesTopPruning()) {
+        if (!hasPruneRestriction()) {
             return false;
         }
         return blockNumber < bestBlockNumber.get() - repository.getPruneBlockCount() + 1;
@@ -1181,6 +1190,34 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         setBestBlock(block);
+    }
+
+    @Override
+    public boolean storePendingStatusBlock(AionBlock block) {
+        return repository.getPendingBlockStore().addStatusBlock(block);
+    }
+
+    @Override
+    public int storePendingBlockRange(List<AionBlock> blocks) {
+       return repository.getPendingBlockStore().addBlockRange(blocks);
+    }
+
+    @Override
+    public Map<ByteArrayWrapper, List<AionBlock>> loadPendingBlocksAtLevel(long level) {
+        return repository.getPendingBlockStore().loadBlockRange(level);
+    }
+
+    @Override
+    public long nextBase(long current, long knownStatus) {
+        return repository.getPendingBlockStore().nextBase(current, knownStatus);
+    }
+
+    @Override
+    public void dropImported(
+            long level,
+            List<ByteArrayWrapper> ranges,
+            Map<ByteArrayWrapper, List<AionBlock>> blocks) {
+        repository.getPendingBlockStore().dropPendingQueues(level, ranges, blocks);
     }
 
     public boolean hasParentOnTheChain(AionBlock block) {

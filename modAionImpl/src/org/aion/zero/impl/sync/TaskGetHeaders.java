@@ -29,6 +29,14 @@
 
 package org.aion.zero.impl.sync;
 
+import static org.aion.p2p.P2pConstant.BACKWARD_SYNC_STEP;
+import static org.aion.p2p.P2pConstant.CLOSE_OVERLAPPING_BLOCKS;
+import static org.aion.p2p.P2pConstant.FAR_OVERLAPPING_BLOCKS;
+import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
+import static org.aion.p2p.P2pConstant.REQUEST_SIZE;
+import static org.aion.zero.impl.sync.PeerState.Mode.NORMAL;
+import static org.aion.zero.impl.sync.PeerState.Mode.THUNDER;
+
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
@@ -39,8 +47,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
 import org.slf4j.Logger;
-
-import static org.aion.p2p.P2pConstant.BACKWARD_SYNC_STEP;
 
 /** @author chris */
 final class TaskGetHeaders implements Runnable {
@@ -70,6 +76,19 @@ final class TaskGetHeaders implements Runnable {
         this.log = log;
     }
 
+    /** Checks that the peer's total difficulty is higher than or equal to the local chain. */
+    private boolean isAdequateTotalDifficulty(INode n) {
+        return n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0;
+    }
+
+    /** Checks that the required time has passed since the last request. */
+    private boolean isTimelyRequest(long now, INode n) {
+        return (now - 5000)
+                > peerStates
+                        .computeIfAbsent(n.getIdHash(), k -> new PeerState(NORMAL, selfNumber))
+                        .getLastHeaderRequest();
+    }
+
     @Override
     public void run() {
         // get all active nodes
@@ -77,15 +96,11 @@ final class TaskGetHeaders implements Runnable {
 
         // filter nodes by total difficulty
         long now = System.currentTimeMillis();
-        List<INode> nodesFiltered = nodes.stream()
-                .filter(n ->
-                        // higher td
-                        n.getTotalDifficulty() != null && n.getTotalDifficulty().compareTo(this.selfTd) >= 0
-                                // not recently requested
-                                && (now - 5000) > peerStates
-                                .computeIfAbsent(n.getIdHash(), k -> new PeerState(PeerState.Mode.NORMAL, selfNumber))
-                                .getLastHeaderRequest())
-                .collect(Collectors.toList());
+        List<INode> nodesFiltered =
+                nodes.stream()
+                        .filter(n -> isAdequateTotalDifficulty(n) && isTimelyRequest(now, n))
+                        .collect(Collectors.toList());
+
         if (nodesFiltered.isEmpty()) {
             return;
         }
@@ -98,12 +113,38 @@ final class TaskGetHeaders implements Runnable {
 
         // decide the start block number
         long from = 0;
-        int size = 24;
+        int size = REQUEST_SIZE;
 
-        // depends on the number of blocks going BACKWARD
-        state.setMaxRepeats(BACKWARD_SYNC_STEP / size + 1);
+        state.setLastBestBlock(node.getBestBlockNumber());
 
         switch (state.getMode()) {
+            case LIGHTNING:
+                {
+                    // request far forward blocks
+                    if (state.getBase() > selfNumber + LARGE_REQUEST_SIZE
+                            // there have not been STEP_COUNT sequential requests
+                            && state.isUnderRepeatThreshold()) {
+                        size = LARGE_REQUEST_SIZE;
+                        from = state.getBase();
+                        break;
+                    } else {
+                        // transition to ramp down strategy
+                        state.setMode(THUNDER);
+                    }
+                }
+            case THUNDER:
+                {
+                    // there have not been STEP_COUNT sequential requests
+                    if (state.isUnderRepeatThreshold()) {
+                        state.setBase(selfNumber);
+                        size = LARGE_REQUEST_SIZE;
+                        from = Math.max(1, selfNumber - FAR_OVERLAPPING_BLOCKS);
+                        break;
+                    } else {
+                        // behave as normal
+                        state.setMode(NORMAL);
+                    }
+                }
             case NORMAL:
                 {
                     // update base block
@@ -112,20 +153,28 @@ final class TaskGetHeaders implements Runnable {
                     // normal mode
                     long nodeNumber = node.getBestBlockNumber();
                     if (nodeNumber >= selfNumber + BACKWARD_SYNC_STEP) {
-                        from = Math.max(1, selfNumber + 1 - 4);
+                        from = Math.max(1, selfNumber - FAR_OVERLAPPING_BLOCKS);
                     } else if (nodeNumber >= selfNumber - BACKWARD_SYNC_STEP) {
-                        from = Math.max(1, selfNumber + 1 - 16);
+                        from = Math.max(1, selfNumber - CLOSE_OVERLAPPING_BLOCKS);
                     } else {
                         // no need to request from this node. His TD is probably corrupted.
                         return;
                     }
-
                     break;
                 }
             case BACKWARD:
                 {
-                    // step back by 128 blocks
-                    from = Math.max(1, state.getBase() - BACKWARD_SYNC_STEP);
+                    int backwardStep;
+                    // the randomness improves performance when
+                    // multiple peers are on the side-chain
+                    if (random.nextBoolean()) {
+                        // step back by REQUEST_SIZE to BACKWARD_SYNC_STEP blocks
+                        backwardStep = size * (random.nextInt(BACKWARD_SYNC_STEP / size) + 1);
+                    } else {
+                        // step back by BACKWARD_SYNC_STEP blocks
+                        backwardStep = BACKWARD_SYNC_STEP;
+                    }
+                    from = Math.max(1, state.getBase() - backwardStep);
                     break;
                 }
             case FORWARD:
