@@ -693,7 +693,8 @@ final class TaskImportBlocks implements Runnable {
             }
 
             // remove imported data from storage
-            chain.dropImported(level, importedQueues, levelFromDisk);
+            executors.submit(
+                    new TaskDropImportedBlocks(chain, level, importedQueues, levelFromDisk, log));
 
             // increment level
             level++;
