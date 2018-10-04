@@ -86,8 +86,7 @@ public class AionRepositoryImpl
         private static final AionRepositoryImpl inst =
                 new AionRepositoryImpl(
                         new RepositoryConfig(
-                                new File(config.getBasePath(), config.getDb().getPath())
-                                        .getAbsolutePath(),
+                                config.getDatabasePath(),
                                 ContractDetailsAion.getInstance(),
                                 config.getDb()));
     }
