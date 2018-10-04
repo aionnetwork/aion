@@ -15,19 +15,6 @@ sourceSets {
     }
 }
 
-sourceSets { 
-    main { 
-        resources { 
-            srcDirs = ['resources']
-        }
-    }
-    test { 
-        resources {
-            srcDirs = ['test/resources']
-        }
-    }
-}
-
 dependencies {
     compile project(':modLogger')
     compile project(':modMcf')

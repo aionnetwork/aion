@@ -2,6 +2,8 @@ plugins {
     id "de.undercouch.download" version "3.4.3"
 }
 
+ant.echo('Java version: ' + JavaVersion.current()); 
+
 def dirBuildFile =  "./build/main"
 def dirBuildNative = "./build/main/native"
 def dirNative = "./native"
@@ -313,3 +315,9 @@ idea {
     }
 }
 
+task fixIdea { 
+    dependsOn build
+    configure(subprojects.findAll { it.name != 'aion_api' }) {
+        dependsOn it.test.getDependsOn()
+    }
+}
