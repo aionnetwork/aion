@@ -1,6 +1,4 @@
 module aion.boot {
-    uses org.aion.evtmgr.EventMgrModule;
-    uses org.aion.log.AionLoggerFactory;
 
     requires  aion.crypto;
     requires  aion.apiserver;
@@ -15,6 +13,7 @@ module aion.boot {
 
     uses org.aion.evtmgr.EventMgrModule;
     uses org.aion.log.AionLoggerFactory;
+
     requires aion.base;
     requires libnzmq;
 

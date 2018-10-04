@@ -19,10 +19,6 @@ module aion.zero.impl {
     requires jdk.management;
     requires java.xml;
     requires slf4j.api;
-    requires commons.collections4;
-
-    uses org.aion.evtmgr.EventMgrModule;
-    uses org.aion.txpool.TxPoolModule;
     requires com.google.common;
     requires info.picocli;
     requires commons.lang3;
