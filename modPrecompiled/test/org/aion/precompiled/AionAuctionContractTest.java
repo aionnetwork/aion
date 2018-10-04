@@ -41,10 +41,7 @@ import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +53,7 @@ import static junit.framework.TestCase.assertEquals;
  * Test of the Aion Auction Contract
  */
 
+@Ignore
 public class AionAuctionContractTest {
     // use this addr for test to trigger test time periods
     private static final Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");

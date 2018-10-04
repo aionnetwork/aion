@@ -55,6 +55,7 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.junit.*;
 
+@Ignore
 public class AionNameServiceContractTest {
     private static final String RESOLVER_HASH = "ResolverHash";
     private static final String OWNER_HASH = "OwnerHash";
