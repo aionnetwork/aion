@@ -133,7 +133,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 15);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 15);
     }
 
@@ -157,7 +157,7 @@ public class PendingTxCacheTest {
         newCache = cache.flush(map);
         assertTrue(newCache.size() == 1);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 8);
     }
 
@@ -178,7 +178,7 @@ public class PendingTxCacheTest {
         map.put(Address.wrap(key.get(1).getAddress()), BigInteger.TWO);
         cache.flush(map);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 10);
     }
 
@@ -205,7 +205,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheSize() == (txSize - (singleTxSize<<1)));
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 8);
     }
 
@@ -234,10 +234,10 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheSize() == (txSize - (singleTxSize<<2)));
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 8);
 
-        cacheMap = cache.geCacheTx(Address.wrap(key.get(1).getAddress()));
+        cacheMap = cache.getCacheTx(Address.wrap(key.get(1).getAddress()));
         assertTrue(cacheMap.size() == 8);
     }
 
@@ -264,10 +264,10 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheSize() == 0);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 0);
 
-        cacheMap = cache.geCacheTx(Address.wrap(key.get(1).getAddress()));
+        cacheMap = cache.getCacheTx(Address.wrap(key.get(1).getAddress()));
         assertTrue(cacheMap.size() == 0);
     }
 
@@ -282,7 +282,7 @@ public class PendingTxCacheTest {
             cache.addCacheTx((AionTransaction)tx);
         }
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 659);
     }
 
@@ -302,7 +302,7 @@ public class PendingTxCacheTest {
         cache.addCacheTx(tx);
         assertTrue(cache.cacheTxSize() == 659);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 659);
     }
 
@@ -323,7 +323,7 @@ public class PendingTxCacheTest {
         cache.addCacheTx(tx);
         assertTrue(cache.cacheTxSize() == 658);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 658);
     }
 
@@ -343,7 +343,7 @@ public class PendingTxCacheTest {
         cache.addCacheTx(tx);
         assertTrue(cache.cacheTxSize() == 652);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 652);
     }
 
@@ -360,7 +360,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 659);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cache.cacheTxSize() == 659);
 
         AionTransaction tx = getMockBigTransaction(100, 1, 0, 2000).get(0);
@@ -382,7 +382,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 659);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 659);
 
         AionTransaction tx = getMockBigTransaction(100, 1, 0, 199_500).get(0);
@@ -403,7 +403,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 659);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 659);
 
         AionTransaction tx = getMockBigTransaction(100, 1, 0, 199_500).get(0);
@@ -457,10 +457,10 @@ public class PendingTxCacheTest {
         System.out.println("flush took " + t2 + " ms");
 
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger,AionTransaction> cacheMap = cache.getCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == input-remove);
 
-        cacheMap = cache.geCacheTx(Address.wrap(key.get(1).getAddress()));
+        cacheMap = cache.getCacheTx(Address.wrap(key.get(1).getAddress()));
         assertTrue(cacheMap.size() == input-remove);
     }
 }

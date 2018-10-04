@@ -41,10 +41,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.aion.api.server.nrgprice.NrgOracle;
-import org.aion.api.server.types.ArgTxCall;
-import org.aion.api.server.types.Fltr;
-import org.aion.api.server.types.SyncInfo;
-import org.aion.api.server.types.TxRecpt;
+import org.aion.api.server.types.*;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
@@ -63,6 +60,7 @@ import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
+import org.aion.mcf.blockchain.AddTxResponse;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -80,7 +78,7 @@ public abstract class ApiAion extends Api {
     // 2. underlying datastructure provides concurrency guarntees
 
     // delegate concurrency to underlying object
-    private static NrgOracle NRG_ORACLE;
+    protected static NrgOracle NRG_ORACLE;
     protected IAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
 
     // using java.util.concurrent library objects
@@ -224,7 +222,7 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    protected Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
+    public Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
         if (blkNr > 0) {
             return ((AionBlockStore) this.ac.getBlockchain().getBlockStore())
                     .getChainBlockByNumberWithTotalDifficulty(blkNr);
@@ -489,8 +487,8 @@ public abstract class ApiAion extends Api {
                             !(_params.getNonce().equals(BigInteger.ZERO))
                                     ? _params.getNonce().toByteArray()
                                     : pendingState
-                                            .bestPendingStateNonce(Address.wrap(key.getAddress()))
-                                            .toByteArray();
+                                    .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                    .toByteArray();
 
                     AionTransaction tx =
                             new AionTransaction(
@@ -535,19 +533,22 @@ public abstract class ApiAion extends Api {
         return this.ac.getRepository().getNonce(_address);
     }
 
-    protected byte[] sendTransaction(ArgTxCall _params) {
+    protected ApiTxResponse sendTransaction(ArgTxCall _params) {
+
+        if (_params == null)
+            return(new ApiTxResponse(AddTxResponse.INVALID_TX));
 
         Address from = _params.getFrom();
 
         if (from == null || from.isEmptyAddress()) {
             LOG.error("<send-transaction msg=invalid-from-address>");
-            return null;
+            return(new ApiTxResponse(AddTxResponse.INVALID_FROM));
         }
 
         ECKey key = this.getAccountKey(from.toString());
         if (key == null) {
             LOG.error("<send-transaction msg=account-not-found>");
-            return null;
+            return(new ApiTxResponse(AddTxResponse.INVALID_ACCOUNT));
         }
 
         try {
@@ -557,8 +558,8 @@ public abstract class ApiAion extends Api {
                         (!_params.getNonce().equals(BigInteger.ZERO))
                                 ? _params.getNonce().toByteArray()
                                 : pendingState
-                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
-                                        .toByteArray();
+                                .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                .toByteArray();
 
                 AionTransaction tx =
                         new AionTransaction(
@@ -572,10 +573,11 @@ public abstract class ApiAion extends Api {
 
                 pendingState.addPendingTransaction(tx);
 
-                return tx.getHash();
+                return (new ApiTxResponse(AddTxResponse.SUCCESS, tx.getHash()));
             }
         } catch (Exception ex) {
-            return null;
+            LOG.error("ApiAion.sendTransaction exception: [{}]", ex.getMessage());
+            return(new ApiTxResponse(AddTxResponse.EXCEPTION, ex));
         }
     }
 
@@ -670,10 +672,10 @@ public abstract class ApiAion extends Api {
     private String computeClientVersion() {
         try {
             return Stream.of(
-                            "Aion(J)",
-                            "v" + Version.KERNEL_VERSION,
-                            System.getProperty("os.name"),
-                            "Java-" + System.getProperty("java.version"))
+                    "Aion(J)",
+                    "v" + Version.KERNEL_VERSION,
+                    System.getProperty("os.name"),
+                    "Java-" + System.getProperty("java.version"))
                     .collect(Collectors.joining("/"));
         } catch (Exception e) {
             LOG.debug("client version string generation failed", e);

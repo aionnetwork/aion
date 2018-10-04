@@ -61,22 +61,6 @@ public abstract class TransactionExecThread<PS extends IPendingStateInternal, TX
         this.pendingState = pendingState;
     }
 
-    public Future<List<TX>> submitTransaction(TX tx) {
-        Future<List<TX>> txListFuture = txExec.submit(() -> {
-            LOG.debug("TransactionExecThread.broadcastTransaction: " + tx.toString());
-            return this.pendingState.addPendingTransaction(tx);
-        });
-
-        return txListFuture;
-    }
-
-    public Future<List<TX>> submitTransaction(List<TX> tx) {
-        Future<List<TX>> txListFuture = txExec.submit(() -> {
-            return this.pendingState.addPendingTransactions(tx);
-        });
-        return txListFuture;
-    }
-
     public void shutdown() {
         LOGGEN.info("TransactionExecThread shutting down...");
         txExec.shutdown();

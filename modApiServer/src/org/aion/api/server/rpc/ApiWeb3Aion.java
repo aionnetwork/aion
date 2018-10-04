@@ -43,6 +43,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListenableFutureTask;
 import org.aion.api.server.ApiAion;
+import org.aion.api.server.ApiTxResponse;
 import org.aion.api.server.types.*;
 import org.aion.base.db.IRepository;
 import org.aion.base.type.Address;
@@ -225,24 +226,24 @@ public class ApiWeb3Aion extends ApiAion {
                 .maximumSize(1)
                 .refreshAfterWrite(OPS_RECENT_ENTITY_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
                 .build(
-                    new CacheLoader<>() {
-                        public ChainHeadView load(Integer key) { // no checked exception
-                            return new ChainHeadView(OPS_RECENT_ENTITY_COUNT).update();
-                        }
+                        new CacheLoader<>() {
+                            public ChainHeadView load(Integer key) { // no checked exception
+                                return new ChainHeadView(OPS_RECENT_ENTITY_COUNT).update();
+                            }
 
-                        public ListenableFuture<ChainHeadView> reload(final Integer key,
-                            ChainHeadView prev) {
-                            try {
-                                ListenableFutureTask<ChainHeadView> task = ListenableFutureTask
-                                    .create(() -> new ChainHeadView(prev).update());
-                                cacheUpdateExecutor.execute(task);
-                                return task;
-                            } catch (Throwable e) {
-                                LOG.debug("<cache-updater - could not queue up task: ", e);
-                                throw (e);
-                            } // exception is swallowed by refresh and load. so just log it for our logs
-                        }
-                    });
+                            public ListenableFuture<ChainHeadView> reload(final Integer key,
+                                                                          ChainHeadView prev) {
+                                try {
+                                    ListenableFutureTask<ChainHeadView> task = ListenableFutureTask
+                                            .create(() -> new ChainHeadView(prev).update());
+                                    cacheUpdateExecutor.execute(task);
+                                    return task;
+                                } catch (Throwable e) {
+                                    LOG.debug("<cache-updater - could not queue up task: ", e);
+                                    throw (e);
+                                } // exception is swallowed by refresh and load. so just log it for our logs
+                            }
+                        });
 
         cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(1), new CacheUpdateThreadFactory());
@@ -269,7 +270,7 @@ public class ApiWeb3Aion extends ApiAion {
                             public ListenableFuture<MinerStatsView> reload(final String key, MinerStatsView prev) {
                                 try {
                                     ListenableFutureTask<MinerStatsView> task = ListenableFutureTask.create(
-                                        () -> new MinerStatsView(prev).update());
+                                            () -> new MinerStatsView(prev).update());
                                     MinerStatsExecutor.execute(task);
                                     return task;
                                 } catch (Throwable e) {
@@ -697,18 +698,34 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
-        if (txParams == null)
-            return new RpcMsg(
-                    null, RpcError.INVALID_PARAMS, "Please check your transaction object.");
 
-        // check for unlocked account
-        Address address = txParams.getFrom();
-        ECKey key = getAccountKey(address.toString());
+        ApiTxResponse response = sendTransaction(txParams);
 
-        if (key == null) return new RpcMsg(null, RpcError.NOT_ALLOWED, "Account not unlocked.");
+        switch(response.getType()) {
+            case SUCCESS:
+            case ALREADY_CACHED:
+            case CACHED_POOLMAX:
+            case CACHED_NONCE:
+            case ALREADY_SEALED:
+            case REPAID:
+                return new RpcMsg(TypeConverter.toJsonHex(response.getTxHash()));
+            case INVALID_TX:
+            case INVALID_TX_NRG_PRICE:
+            case INVALID_FROM:
+            case REPAYTX_LOWPRICE:
+                return new RpcMsg(
+                        null, RpcError.INVALID_PARAMS, response.getMessage());
+            case INVALID_ACCOUNT:
+                return new RpcMsg(
+                        null, RpcError.NOT_ALLOWED, response.getMessage());
 
-        byte[] response = sendTransaction(txParams);
-        return new RpcMsg(TypeConverter.toJsonHex(response));
+            case REPAYTX_POOL_EXCEPTION:
+            case DROPPED:
+            case EXCEPTION:
+            default:
+                return new RpcMsg(
+                        null, RpcError.EXECUTION_ERROR, response.getMessage());
+        }
     }
 
     public RpcMsg eth_sendRawTransaction(Object _params) {
@@ -2274,7 +2291,7 @@ public class ApiWeb3Aion extends ApiAion {
         // ok to getUnchecked() since the load() implementation does not throw checked exceptions
         AionBlock b;
         try {
-             b = blockCache.getUnchecked(new ByteArrayWrapper(blockHash));
+            b = blockCache.getUnchecked(new ByteArrayWrapper(blockHash));
         } catch (CacheLoader.InvalidCacheLoadException e) {
             // Catch errors if send an incorrect tx hash
             return new RpcMsg(null, RpcError.INVALID_REQUEST, "Invalid Request");
