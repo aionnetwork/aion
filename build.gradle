@@ -111,12 +111,6 @@ subprojects {
         delete 'native'
     }
 
-/*    test { 
-        reports { 
-            html.enabled = false;
-        }
-    }*/
-
     afterEvaluate { 
         // Override java plug-in behaviour to make JDK9+ module logic work
         // From: https://guides.gradle.org/building-java-9-modules/#step_2_produce_java_9_modules_for_all_subprojects
@@ -130,10 +124,11 @@ subprojects {
             }
         }
 
+/*
         test { 
             outputs.upToDateWhen { false } 
         }
-        
+  */      
         // Need to comment this out for now, modules-info.java doesn't have 'require' declarations
         // used by the test code.  The ant build.xml, similarly, uses module-path for build, but 
         // classpath for building the tests (at least in modRlp).  Need to sort out how to properly set the module-path
@@ -330,12 +325,5 @@ task fixIdea {
     dependsOn build
     configure(subprojects.findAll { it.name != 'aion_api' }) {
         dependsOn test
-        test { 
-            // hacky way to avoid tests from actually running, to save time
-            filter { 
-                failOnNoMatchingTests false
-                includeTestsMatching "_dummy_"
-            }
-        }
     }
 }
