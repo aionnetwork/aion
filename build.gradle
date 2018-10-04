@@ -2,6 +2,19 @@ plugins {
     id "de.undercouch.download" version "3.4.3"
 }
 
+ant.echo('Java version: ' + JavaVersion.current()); 
+
+def dirBuildFile =  "./build/main"
+def dirBuildNative = "./build/main/native"
+def dirNative = "./native"
+def dirWorkspace = "./"
+def dirPack = "./pack"
+def dirLibFile = "lib"
+def dirModFile ="./mod"
+def javaHome = "$System.env.JAVA_HOME"
+def vmVersion = "0.3.1"
+def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
+
 allprojects { 
     apply plugin: 'java'
     apply plugin: 'idea'
@@ -15,27 +28,13 @@ allprojects {
     }
 }
 
+// used only for 3rd_build
 ant.importBuild('build.xml') { antTargetName -> 'ant-' + antTargetName }
-
-// referencing the ant values for now; once everything is working,
-// use the constants instead
-def dirBuildFile = ant.properties['dir.buildfile'] // = "./build/main"
-def dirBuildNative = ant.properties['dir.build.native'] // = "./build/main/native"
-def dirNative = ant.properties['dir.native'] // = "./native"
-def dirWorkspace = ant.properties['dir.workspace'] // = "./"
-def dirPack = ant.properties['dir.pack'] // = "./pack"
-def dirLibFile = ant.properties['dir.libfile'] // = ""
-def dirModFile = ant.properties['dir.modfile']  // ="./mod"
-def javaHome = "$System.env.JAVA_HOME"
-def vmVersion = ant.properties['vm.version'] // = "0.2.1"
-
-def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
 task compileNative(type:Exec) {
     // seems kinda hacky, but need big reorganization to fix
     dependsOn 'modCrypto:compileNative'
     dependsOn 'modAionImpl:compileJava'
-    //dependsOn 'aion_api:compileJava'
 
     doFirst { 
         mkdir "${dirBuildFile}"
@@ -79,38 +78,37 @@ task compileNative(type:Exec) {
 subprojects {
     sourceSets { 
         main {
-            java { srcDirs = ['src'] }
+            java.srcDirs = ['src']
         }
         test {
-            java { srcDirs = ['test'] }
+            java.srcDirs = ['test']
+        }
+        integTest { 
+            java { 
+                srcDirs = ['integration-test']
+                compileClasspath += main.output + test.output
+                runtimeClasspath += main.output + test.output
+            }
         }
     }
 
-    task copyJarToAionMod(type: Copy) { 
-        task -> from "build/libs/${task.project.name}.jar" into file("../mod")
+    task integTest(type: Test) { 
+        testClassesDirs = sourceSets.integTest.output.classesDirs
+        classpath = sourceSets.integTest.runtimeClasspath
     }
 
-    task deleteJarFromAionMod(type: Delete) { 
-        task -> delete "../mod/${task.project.name}.jar"
+    configurations { 
+        integTestCompile.extendsFrom testCompile
+        integTestRuntime.extendsFrom testRuntime
     }
-
+ 
     task copyNativeLibsForModuleTests(type: Copy) { 
         dependsOn rootProject.compileNative
-        from rootProject.file('native') into file('./native')
+        from rootProject.file('native') into file('native')
     }
 
     task deleteNativeLibs(type: Delete) {
-        task -> delete 'native'
-    }
-
-    build.dependsOn copyJarToAionMod
-    clean.dependsOn deleteJarFromAionMod
-
-    test { 
-        reports { 
-            html.enabled = false;
-        }
-        //testResultsDirName = "${rootProject.projectDir}/reports"
+        delete 'native'
     }
 
     afterEvaluate { 
@@ -125,7 +123,12 @@ subprojects {
                 classpath = files()
             }
         }
-        
+
+/*
+        test { 
+            outputs.upToDateWhen { false } 
+        }
+  */      
         // Need to comment this out for now, modules-info.java doesn't have 'require' declarations
         // used by the test code.  The ant build.xml, similarly, uses module-path for build, but 
         // classpath for building the tests (at least in modRlp).  Need to sort out how to properly set the module-path
@@ -160,16 +163,38 @@ subprojects {
     }
 }
 
-task downloadVmDepsGit(type: Download) { 
+project(':modAionImpl') { build.finalizedBy(compileNative) }
+
+task downloadFastVmGit(type:Download) { 
     overwrite false // TODO This seems to work only when this task is directly invoked
-    src([
-        "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/fastvm_v${vmVersion}.tar.gz",
-        "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
-    ])
-    dest 'build'
+    onlyIfModified true
+    src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/fastvm_v${vmVersion}.tar.gz"
+    dest buildDir
 }
 
-task extractVmDepsGit(dependsOn: downloadVmDepsGit, type: Copy) { 
+task downloadSolidityGit(type:Download) { 
+    overwrite false // TODO This seems to work only when this task is directly invoked
+    onlyIfModified true
+    src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
+    dest buildDir
+}
+
+task buildVmDependencies(type: Exec) { 
+    commandLine 'sh', 'aion_fastvm/scripts/release.sh', vmVersion, '1'
+}
+
+task getVmDependencies { 
+    if(project.hasProperty('vmFromSource')) { 
+        getVmDependencies.dependsOn buildVmDependencies
+    } else {
+        // 'overwrite' property of Download task doesn't seem to work when
+        // there's multiple files in the task, so splitting them into two
+        dependsOn downloadFastVmGit
+        dependsOn downloadSolidityGit
+    }
+}
+
+task extractVmDepsGit(dependsOn: getVmDependencies, type: Copy) { 
     from tarTree("build/fastvm_v${vmVersion}.tar.gz") 
     from tarTree("build/solidity_v${vmVersion}.tar.gz") 
     into "${dirNative}/linux"
@@ -189,6 +214,12 @@ task collectDependentJars(type: Copy) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+build { 
+    dependsOn("ant-3rd_build")
+    dependsOn("extractVmDepsGit")
+    dependsOn("collectDependentJars")
+}
+
 task prePack(type:Exec)  { 
     dependsOn ':aion_api:build'
     commandLine 'sh', 'script/prepack.sh' 
@@ -197,6 +228,11 @@ task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
 
 /** Replaces `ant pack_build` */
 task pack(type: Tar) { 
+    dependsOn build
+    dependsOn prePack
+    dependsOn collectDependentJars 
+    finalizedBy(postPack)
+
     archiveName = 'aion.tar.bz2'
     destinationDir = file(dirPack)
     compression = Compression.BZIP2
@@ -239,11 +275,6 @@ task pack(type: Tar) {
     }
 }
 
-pack.dependsOn build
-pack.dependsOn prePack
-pack.dependsOn collectDependentJars 
-pack.finalizedBy(postPack)
-
 task packDocker(type: Exec) { 
     dependsOn pack
     commandLine 'sh', "${dirWorkspace}/script/pack_docker.sh"
@@ -254,22 +285,11 @@ task packDevDocker(type: Exec) {
 }
 
 clean { 
-    delete 'pack'
+    dependsOn "ant-3rd_clean"
+    delete dirPack
+    delete file('report')
 }
 
-/*
-task aggregatedReport(type: TestReport) { 
-    reportOn subprojects*.test
-    destinationDir = file("${buildDir}/reports")
-}
-*/
-
-build.dependsOn("ant-3rd_build")
-build.dependsOn("extractVmDepsGit")
-build.dependsOn("collectDependentJars")
-
-
-project(':modAionImpl') { build.finalizedBy(compileNative) }
 
 /** Replaces `ant ci_build` */
 task ciBuild { 
@@ -280,7 +300,7 @@ task ciBuild {
         'modTxPoolImpl', 
         'modRlp', 
         'modDbImpl', 
-        'aion_fastvm/modFastVM', 
+        'aion_fastvm', 
         'modAionImpl', 
         'modPrecompiled', 
         'modApiServer'] 
@@ -289,5 +309,21 @@ task ciBuild {
         it.test { testResultsDirName = "${rootProject.projectDir}/report/${project.name}" }
         dependsOn it.test
     } 
+}
 
+idea { 
+    project {
+        jdkName = '10.0'
+    }
+}
+
+task fixIdea { 
+    // when importing project in IDEA, some of the library paths are not where they need to be
+    // these are set up via dependencies on build and test, but IDEA doesn't actually use them
+    // this task puts those files where IDEA expects them by running build and test
+
+    dependsOn build
+    configure(subprojects.findAll { it.name != 'aion_api' }) {
+        dependsOn test
+    }
 }

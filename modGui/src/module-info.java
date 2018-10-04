@@ -6,6 +6,8 @@ module aion.gui {
     requires aion.crypto;
     requires aion.api.client;
 
+    uses org.aion.log.AionLoggerFactory;
+
     requires slf4j.api;
 
     requires javafx.fxml;
@@ -15,8 +17,15 @@ module aion.gui {
     requires javafx.swing;
     requires java.desktop;
     requires java.management;
+    requires com.google.common;
 
     requires BIP39;
 
     exports org.aion;
+    exports org.aion.gui.controller;
+
+    opens org.aion.gui.model to com.google.common;
+    opens org.aion.gui.controller to com.google.common, javafx.fxml;
+    opens org.aion.gui.controller.partials to com.google.common, javafx.fxml;
+    opens org.aion.gui.views to javafx.fxml;
 }

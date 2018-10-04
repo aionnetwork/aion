@@ -16,7 +16,7 @@ dependencies {
     compile project(':modVM')
     compile project(':modTxPool')
     compile project(':aion_api')
-    compile project(':aion_fastvm/modFastVM')
+    compile project(':aion_fastvm')
     compile files('../lib/libJson.jar')
     compile 'info.picocli:picocli:3.6.1'
 
