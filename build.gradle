@@ -111,6 +111,12 @@ subprojects {
         delete 'native'
     }
 
+/*    test { 
+        reports { 
+            html.enabled = false;
+        }
+    }*/
+
     afterEvaluate { 
         // Override java plug-in behaviour to make JDK9+ module logic work
         // From: https://guides.gradle.org/building-java-9-modules/#step_2_produce_java_9_modules_for_all_subprojects
@@ -286,6 +292,7 @@ task packDevDocker(type: Exec) {
 clean { 
     dependsOn "ant-3rd_clean"
     delete dirPack
+    delete file('report')
 }
 
 
