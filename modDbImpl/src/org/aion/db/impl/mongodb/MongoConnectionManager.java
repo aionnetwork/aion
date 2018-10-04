@@ -1,6 +1,7 @@
 package org.aion.db.impl.mongodb;
 
 import com.mongodb.ClientSessionOptions;
+import com.mongodb.ConnectionString;
 import com.mongodb.DB;
 import com.mongodb.MongoClientURI;
 import com.mongodb.TransactionOptions;
@@ -11,12 +12,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.slf4j.Logger;
 
 /**
  * This class exists to manage singleton instances to a MongoDB server. It is recommended by the Mongo
  * docs to only have a single instance of the {@link com.mongodb.MongoClient}
  */
 public class MongoConnectionManager {
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+
     private MongoConnectionManager() {
         // Private constructor to force using the Singleton
     }
@@ -40,7 +46,7 @@ public class MongoConnectionManager {
             this.activeClientCountMap.put(mongoClientUri, new AtomicInteger(1));
         } else {
             mongoClient = this.mongoUriToClientMap.get(mongoClientUri);
-            this.activeClientCountMap.get(mongoClientUri).intValue();
+            this.activeClientCountMap.get(mongoClientUri).incrementAndGet();
         }
 
         return mongoClient;
@@ -56,11 +62,13 @@ public class MongoConnectionManager {
 
     public void closeMongoClientInstance(String mongoClientUri) {
         if (!this.mongoUriToClientMap.containsKey(mongoClientUri) || !this.activeClientCountMap.containsKey(mongoClientUri)) {
-            throw new IllegalArgumentException("Unopened client uri");
+            throw new IllegalArgumentException(String.format("Unopened client uri %s", mongoClientUri));
         }
 
         int newCount = this.activeClientCountMap.get(mongoClientUri).decrementAndGet();
         if (newCount == 0) {
+            LOG.info("Closing mongo client connection for {}", mongoClientUri);
+
             this.mongoUriToClientMap.get(mongoClientUri).close();
             this.mongoUriToClientMap.remove(mongoClientUri);
             this.activeClientCountMap.remove(mongoClientUri);

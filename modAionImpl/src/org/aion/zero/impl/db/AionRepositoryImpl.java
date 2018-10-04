@@ -27,6 +27,8 @@ import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.io.File;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -78,14 +80,28 @@ public class AionRepositoryImpl
     private static class AionRepositoryImplHolder {
         // configuration
         private static CfgAion config = CfgAion.inst();
+
+        private static RepositoryConfig getRepoConfig(CfgAion config) {
+            URI dbPathUri = null;
+            try {
+                dbPathUri = new URI(config.getDb().getPath());
+            } catch (URISyntaxException e) {
+                throw new RuntimeException("Invalid dbPathUri");
+            }
+
+            String fullDbPath;
+            if (dbPathUri.getScheme() == null || dbPathUri.getScheme().equalsIgnoreCase("file")) {
+                fullDbPath = new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath();
+            } else {
+                fullDbPath = config.getDb().getPath();
+            }
+
+            return new RepositoryConfig(fullDbPath, ContractDetailsAion.getInstance(), config.getDb());
+        }
+
         // repository singleton instance
         private static final AionRepositoryImpl inst =
-                new AionRepositoryImpl(
-                        new RepositoryConfig(
-                                new File(config.getBasePath(), config.getDb().getPath())
-                                        .getAbsolutePath(),
-                                ContractDetailsAion.getInstance(),
-                                config.getDb()));
+                new AionRepositoryImpl(getRepoConfig(config));
     }
 
     public static AionRepositoryImpl inst() {

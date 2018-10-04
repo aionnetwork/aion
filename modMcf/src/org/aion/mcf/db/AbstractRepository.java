@@ -23,6 +23,7 @@ package org.aion.mcf.db;
 import static org.aion.db.impl.DatabaseFactory.Props;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -142,21 +143,27 @@ public abstract class AbstractRepository<
         //            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist");
         //        } else {
         // verify user-provided path
-        File f = new File(this.cfg.getDbPath());
-        try {
-            // ask the OS if the path is valid
-            f.getCanonicalPath();
 
-            // try to create the directory
-            if (!f.exists()) {
-                f.mkdirs();
-            }
-        } catch (Exception e) {
-            throw new InvalidFilePathException(
+        URI dbPathUri = new URI(this.cfg.getDbPath());
+
+        if (dbPathUri.getScheme() == null || dbPathUri.getScheme().equalsIgnoreCase("file")) {
+            File f = new File(this.cfg.getDbPath());
+            try {
+                // ask the OS if the path is valid
+                f.getCanonicalPath();
+
+                // try to create the directory
+                if (!f.exists()) {
+                    f.mkdirs();
+                }
+            } catch (Exception e) {
+                throw new InvalidFilePathException(
                     "Resolved file path \""
-                            + this.cfg.getDbPath()
-                            + "\" not valid as reported by the OS or a read/write permissions error occurred. Please provide an alternative DB file path in /config/config.xml.");
+                        + this.cfg.getDbPath()
+                        + "\" not valid as reported by the OS or a read/write permissions error occurred. Please provide an alternative DB file path in /config/config.xml.");
+            }
         }
+
         //        }
         //
         //        if (!Arrays.asList(this.cfg.getVendorList()).contains(this.cfg.getActiveVendor()))
