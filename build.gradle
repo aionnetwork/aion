@@ -316,8 +316,19 @@ idea {
 }
 
 task fixIdea { 
+    // when importing project in IDEA, some of the library paths are not where they need to be
+    // these are set up via dependencies on build and test, but IDEA doesn't actually use them
+    // this task puts those files where IDEA expects them by running build and test
+
     dependsOn build
     configure(subprojects.findAll { it.name != 'aion_api' }) {
-        dependsOn it.test.getDependsOn()
+        dependsOn test
+        test { 
+            // hacky way to avoid tests from actually running, to save time
+            filter { 
+                failOnNoMatchingTests false
+                includeTestsMatching "_dummy_"
+            }
+        }
     }
 }
