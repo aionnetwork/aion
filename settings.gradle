@@ -15,3 +15,4 @@ include 'modAionBase', 'modAion', 'modAionImpl',
     'aion_api',
     'modBoot',
     'modGui'
+project(":aion_fastvm/modFastVM").name = "aion_fastvm"

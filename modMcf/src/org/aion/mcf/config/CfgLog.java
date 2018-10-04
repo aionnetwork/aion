@@ -158,6 +158,11 @@ public class CfgLog {
         return this.logFile;
     }
 
+    /** Used to turn off logging in case of incorrect configuration. */
+    public void disableLogging() {
+        this.logFile = false;
+    }
+
     /** Method returns user input folder path of logger */
     public String getLogPath() {
         return logPath;

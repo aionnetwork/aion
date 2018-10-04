@@ -1,0 +1,19 @@
+{
+  "alloc": {
+    "0xa0b88269779d225510ca880ed742e445db0c70efb1ee3159b6d56479ae3501f9": {
+      "balance": "314000000000000000000000000"
+    }
+  },
+  "networkBalanceAllocs": {
+    "0": {
+      "balance": "465934586660000000000000000"
+    }
+  },
+  "energyLimit": "15000000",
+  "nonce": "0x00",
+  "difficulty": "0x0008",
+  "coinbase": "0xa08fc457b39b03c30dc71bdb89a4d0409dd4fa42f6539a5c3ee4054af9b71f23",
+  "timestamp": "1525924800",
+  "parentHash": "0x10E71BF64DCB8C60766CCB491AB6E3ACEC1AB07D0D5A088FCF533CBFBC801295",
+  "chainId": "32"
+}
