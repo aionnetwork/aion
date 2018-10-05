@@ -304,6 +304,17 @@ final class TaskImportBlocks implements Runnable {
                                 b.getShortHash(),
                                 b.getNumber(),
                                 displayId);
+                    } else {
+                        // message used instead of import NO_PARENT ones
+                        if (state.isInFastMode()) {
+                            log.info(
+                                    "<import-status: STORED {} blocks from node = {}, starting with hash = {}, number = {}, txs = {}>",
+                                    batch.size(),
+                                    displayId,
+                                    b.getShortHash(),
+                                    b.getNumber(),
+                                    b.getTransactionsList().size());
+                        }
                     }
 
                     switch (mode) {
@@ -560,14 +571,18 @@ final class TaskImportBlocks implements Runnable {
                     importResult,
                     t2 - t1);
         } else {
-            log.info(
-                    "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
-                    displayId,
-                    b.getShortHash(),
-                    b.getNumber(),
-                    b.getTransactionsList().size(),
-                    importResult,
-                    t2 - t1);
+            // not printing this message when the state is in fast mode with no parent result
+            // a different message will be printed to indicate the storage of blocks
+            if (!state.isInFastMode() || importResult != ImportResult.NO_PARENT) {
+                log.info(
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                        displayId,
+                        b.getShortHash(),
+                        b.getNumber(),
+                        b.getTransactionsList().size(),
+                        importResult,
+                        t2 - t1);
+            }
         }
         return importResult;
     }

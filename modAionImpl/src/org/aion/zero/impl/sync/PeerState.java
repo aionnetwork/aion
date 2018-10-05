@@ -105,6 +105,16 @@ public class PeerState {
         this.resetRepeated();
     }
 
+    /**
+     * Method for checking if the state is in one of the fast modes, namely {@link Mode#LIGHTNING}
+     * and {@link Mode#THUNDER}.
+     *
+     * @return {@code true} when the state is in one of the fast modes, {@code false} otherwise.
+     */
+    public boolean isInFastMode() {
+        return mode == Mode.LIGHTNING || mode == Mode.THUNDER;
+    }
+
     public long getBase() {
         return base;
     }
