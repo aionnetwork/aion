@@ -753,24 +753,12 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 }
 
                 switch(result.getType()) {
-
-//                    SUCCESS(),
-//                            INVALID_TX(),
-//                            INVALID_TX_NRG_PRICE(),
-//                            INVALID_FROM(),
-//                            INVALID_ACCOUNT(),
-//                            ALREADY_CACHED(),
-//                            CACHED_NONCE(),
-//                            CACHED_POOLMAX(),
-//                            REPAID(),
-//                            ALREADY_SEALED(),
-//                            REPAYTX_POOL_EXCEPTION(),
-//                            REPAYTX_LOWPRICE(),
-//                            DROPPED(),
-//                            EXCEPTION(),
-
-
                     case SUCCESS:
+                    case REPAID:
+                    case ALREADY_CACHED:
+                    case ALREADY_SEALED:
+                    case CACHED_NONCE:
+                    case CACHED_POOLMAX:
                         getMsgIdMapping()
                                 .put(
                                         ByteArrayWrapper.wrap(result.getTxHash()),
@@ -794,6 +782,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     case INVALID_TX:
                     case INVALID_TX_NRG_PRICE:
+                    case REPAYTX_LOWPRICE:
                         return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_function_arguments_VALUE,
                                 msgHash,result.getMessage().getBytes());
 
@@ -801,13 +790,10 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     case INVALID_ACCOUNT:
                         return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_invalid_addr_VALUE,
                                 msgHash, result.getMessage().getBytes());
-                    //TODO AAYUSH: Figure out the correct return stuff
-                    case ALREADY_CACHED:
-                    case CACHED_NONCE:
-                    case CACHED_POOLMAX:
-                    case REPAYTX_POOL_EXCEPTION:
-                    case REPAYTX_LOWPRICE:
                     case DROPPED:
+                        return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_unknown_VALUE,
+                        msgHash, result.getMessage().getBytes());
+                    case REPAYTX_POOL_EXCEPTION:
                     case EXCEPTION:
                         return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_function_exception_VALUE,
                                 msgHash, result.getMessage().getBytes());
