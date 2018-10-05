@@ -231,24 +231,22 @@ final class TaskImportBlocks implements Runnable {
             AionBlock b = batch.get(batch.size() - 1);
             Mode mode = givenState.getMode();
 
-            // last block exists when in FORWARD mode
-            if ((mode == FORWARD && isAlreadyStored(chain.getBlockStore(), b))
-                    // late returns on main chain requests
-                    // where the blocks are behind the local chain and can be discarded
-                    || (mode != FORWARD && b.getNumber() < getBestBlockNumber())) {
-
+            // last block already exists
+            // implies the full batch was already imported (but not filtered by the queue)
+            if (isAlreadyStored(chain.getBlockStore(), b)) {
                 // keeping track of the last block check
                 importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
 
                 // skipping the batch
-                batch.clear();
                 if (log.isDebugEnabled()) {
                     log.debug(
-                            "Skip batch for node = {} in mode = {} with base = {}.",
+                            "Skip {} blocks from node = {} in mode = {} with base = {}.",
+                            batch.size(),
                             displayId,
                             givenState.getMode(),
                             givenState.getBase());
                 }
+                batch.clear();
 
                 // updating the state
                 if (mode == FORWARD) {
@@ -317,10 +315,22 @@ final class TaskImportBlocks implements Runnable {
 
                     switch (mode) {
                         case FORWARD:
-                        case NORMAL:
                             {
                                 // switch to backward mode
                                 state.setMode(BACKWARD);
+                                state.setBase(b.getNumber());
+                                break;
+                            }
+                        case NORMAL:
+                            {
+                                // requiring a minimum number of normal states
+                                if (countStates(getBestBlockNumber(), NORMAL, peerStates.values())
+                                        > MIN_NORMAL_PEERS) {
+                                    // switch to backward mode
+                                    state.setMode(BACKWARD);
+                                    state.setBase(b.getNumber());
+                                }
+                                break;
                             }
                         case BACKWARD:
                             {
