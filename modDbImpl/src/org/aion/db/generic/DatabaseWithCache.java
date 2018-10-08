@@ -45,10 +45,8 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.iq80.leveldb.DBException;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -287,9 +285,9 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public PersistenceMethod getPersistence() {
+    public PersistenceMethod getPersistenceMethod() {
         // no locks because the persistence flag never changes
-        return database.getPersistence();
+        return database.getPersistenceMethod();
     }
 
     @Override

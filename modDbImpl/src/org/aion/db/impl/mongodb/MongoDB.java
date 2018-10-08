@@ -3,25 +3,21 @@ package org.aion.db.impl.mongodb;
 import static com.mongodb.client.model.Filters.eq;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.ReadPreference;
-import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoClient;
 import com.mongodb.ReadConcern;
+import com.mongodb.ReadPreference;
 import com.mongodb.TransactionOptions;
 import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOneModel;
-import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Projections;
 import com.mongodb.client.model.UpdateOneModel;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.WriteModel;
-import com.mongodb.client.result.DeleteResult;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,13 +31,22 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
-import org.rocksdb.Transaction;
 
 public class MongoDB extends AbstractDB {
 
+    /**
+     * Simple wrapper class to encloses a collection of writes (inserts, edits, or deletes) to the Mongo
+     * database.
+     */
     private static class WriteBatch {
         private List<WriteModel<BsonDocument>> edits = new ArrayList<>();
 
+        /**
+         * Adds a new edit to the batch
+         * @param key the key to write
+         * @param value the value to write. Null indicates we should delete this key
+         * @return this
+         */
         public WriteBatch addEdit(byte[] key, byte[] value) {
             if (value == null) {
                 DeleteOneModel deleteModel = new DeleteOneModel<>(
@@ -61,10 +66,21 @@ public class MongoDB extends AbstractDB {
             return this;
         }
 
+        /**
+         * Adds a new edit to the batch
+         * @param key the key to write
+         * @param value the value to write. Null indicates we should delete this key
+         * @return this
+         */
         public WriteBatch addEdit(ByteArrayWrapper key, byte[] value) {
             return addEdit(key.getData(), value);
         }
 
+        /**
+         * Adds a collection of edits to the batch
+         * @param kvPairs The collection of key value pairs we want to write in
+         * @return this
+         */
         public WriteBatch addEdits(Map<byte[], byte[]> kvPairs) {
             for (byte[] key : kvPairs.keySet()) {
                 addEdit(key, kvPairs.get(key));
@@ -73,6 +89,11 @@ public class MongoDB extends AbstractDB {
             return this;
         }
 
+        /**
+         * Adds a collection of edits to the batch
+         * @param kvPairs The collection of key value pairs we want to write in
+         * @return this
+         */
         public WriteBatch addEditsWrapper(Map<ByteArrayWrapper, byte[]> kvPairs) {
             for (ByteArrayWrapper key : kvPairs.keySet()) {
                 addEdit(key, kvPairs.get(key));
@@ -81,33 +102,65 @@ public class MongoDB extends AbstractDB {
             return this;
         }
 
+        /**
+         * Gets the collection of writes which have been collected here
+         * @return The edits which have been added to this instance.
+         */
         public List<WriteModel<BsonDocument>> getEdits() {
             return this.edits;
         }
 
+        /**
+         * Gets the number of deletes which are in this batch
+         * @return Number of deletes
+         */
         public long getDeleteCount() {
             return this.edits.stream().filter(e -> e instanceof DeleteOneModel).count();
         }
 
+        /**
+         * Gets the number of updates (edits or inserts) in this batch
+         * @return Number of updates
+         */
         public long getUpdateCount() {
             return this.edits.stream().filter(e -> e instanceof UpdateOneModel).count();
         }
     }
 
+    /**
+     * Wrapper class holding the result of writing a batch
+     */
     private static class WriteBatchResult {
+
+        /**
+         * Total number of updates which were committed
+         */
         public final long totalUpdates;
+
+        /**
+         * Total number of deletes which were committed
+         */
         public final long totalDeletes;
-        public final BulkWriteResult writeResult;
+
+        /**
+         * Creates a new instance of the WriteBatchResult from Mongo's raw BulkWriteResult
+         * @param writeResult The BulkWriteResult returned from Mongo
+         */
         public WriteBatchResult(BulkWriteResult writeResult) {
             this.totalUpdates = writeResult.getInsertedCount() + writeResult.getModifiedCount() + writeResult.getUpserts().size();
             this.totalDeletes = writeResult.getDeletedCount();
-            this.writeResult = writeResult;
         }
 
+        /**
+         * Returns whether or not the expeced number of updates and deletes where committed in this batch
+         * @param batch The batch which specified these results
+         * @return Whether or not things were written as expected
+         */
         public boolean matchedExpectation(WriteBatch batch) {
             return batch.getDeleteCount() == this.totalDeletes && batch.getUpdateCount() == this.totalUpdates;
         }
     }
+
 
     private String mongoClientUri;
     private ClientSession clientSession;
@@ -117,6 +170,28 @@ public class MongoDB extends AbstractDB {
     public MongoDB(String dbName, String mongoClientUri) {
         super(dbName);
         this.mongoClientUri = mongoClientUri;
+    }
+
+    /**
+     * Private helper method for writing a collection of edits into the database
+     * @param edits The edits to write
+     * @return A summary of the write results
+     */
+    private WriteBatchResult doBulkWrite(WriteBatch edits) {
+        BulkWriteResult writeResult = this.collection.bulkWrite(this.clientSession, edits.getEdits());
+        WriteBatchResult result = new WriteBatchResult(writeResult);
+
+        if (result.totalDeletes != edits.getDeleteCount()) {
+            LOG.warn("Expected {} deletes but only deleted {}", edits.getDeleteCount(), result.totalDeletes);
+        }
+
+        if (result.totalUpdates != edits.getUpdateCount()) {
+            LOG.warn("Expected {} upserts but only got {}", edits.getUpdateCount(), result.totalUpdates);
+        }
+
+        LOG.info("Successfully wrote {} edits", edits.getEdits().size());
+
+        return result;
     }
 
     @Override
@@ -149,11 +224,10 @@ public class MongoDB extends AbstractDB {
             }
         }
 
-        if (!collectionExists) {
-            mongoDb.createCollection(this.clientSession, this.name);
-        }
-
+        // Gets the collection where we will be saving our values. Mongo creates it if it doesn't yet exist
         this.collection = mongoDb.getCollection(this.name, BsonDocument.class);
+
+        LOG.info("Finished opening the Mongo connection");
         return isOpen();
     }
 
@@ -164,12 +238,15 @@ public class MongoDB extends AbstractDB {
 
     @Override
     public boolean isCreatedOnDisk() {
+        // Always return false here since we don't persist to the local disk.
         return false;
     }
 
     @Override
     public long approximateSize() {
         check();
+
+        // Just return -1 because we don't have a good way of asking the Mongo Server our size in bytes
         return -1L;
     }
 
@@ -177,6 +254,7 @@ public class MongoDB extends AbstractDB {
     public boolean isEmpty() {
         check();
         long count = this.collection.estimatedDocumentCount();
+        LOG.info("Estimated document count: {}", count);
         return count == 0;
     }
 
@@ -184,31 +262,16 @@ public class MongoDB extends AbstractDB {
     public Set<byte[]> keys() {
         check();
 
-        MongoIterable<byte[]> iter = this.collection.find(this.clientSession)
-            .projection(Projections.fields(Projections.include(MongoConstants.ID_FIELD_NAME)))
-            .map(f -> f.getBinary(MongoConstants.ID_FIELD_NAME).getData());
+        LOG.info("Getting the collection of keys");
 
-        Set<byte[]> keys = new HashSet<>();
-        for (byte[] k : iter) {
-            keys.add(k);
-        }
+        Set<byte[]> keys = this.collection.find(this.clientSession)
+            .projection(Projections.fields(Projections.include(MongoConstants.ID_FIELD_NAME)))
+            .map(f -> f.getBinary(MongoConstants.ID_FIELD_NAME).getData())
+            .into(new HashSet<>());
+
+        LOG.info("The database contains {} keys", keys.size());
 
         return keys;
-    }
-
-    private WriteBatchResult doBulkWrite(WriteBatch edits) {
-        BulkWriteResult writeResult = this.collection.bulkWrite(this.clientSession, edits.getEdits());
-        WriteBatchResult result = new WriteBatchResult(writeResult);
-
-        if (result.totalDeletes != edits.getDeleteCount()) {
-            LOG.warn("Expected {} deletes but only deleted {}", edits.getDeleteCount(), result.totalDeletes);
-        }
-
-        if (result.totalUpdates != edits.getUpdateCount()) {
-            LOG.warn("Expected {} upserts but only got {}", edits.getUpdateCount(), result.totalUpdates);
-        }
-
-        return result;
     }
 
     @Override
@@ -237,7 +300,7 @@ public class MongoDB extends AbstractDB {
         check();
         check(key);
 
-
+        // Write this single edit in as a batch
         WriteBatch edits = new WriteBatch().addEdit(key, value);
         doBulkWrite(edits);
     }
@@ -247,7 +310,7 @@ public class MongoDB extends AbstractDB {
         check();
         check(key);
 
-
+        // Write this single edit in as a batch
         WriteBatch edits = new WriteBatch().addEdit(key, null);
         doBulkWrite(edits);
     }
@@ -278,7 +341,10 @@ public class MongoDB extends AbstractDB {
         check();
 
         if (this.batch != null) {
+            LOG.info("Committing batch of writes");
             doBulkWrite(this.batch);
+        } else {
+            LOG.info("Attempting to commit empty batch, skipping");
         }
 
         this.batch = null;
@@ -311,15 +377,21 @@ public class MongoDB extends AbstractDB {
         this.batch = null;
     }
 
-
     @Override
     public void drop() {
         check();
+
+        LOG.info("Dropping collection {}", this.name);
         this.collection.drop(this.clientSession);
     }
 
     @Override
-    public PersistenceMethod getPersistence() {
+    public PersistenceMethod getPersistenceMethod() {
         return PersistenceMethod.REMOTE_SERVER;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + ":" + propertiesInfo();
     }
 }

@@ -1,14 +1,7 @@
 package org.aion.db.impl.mongodb;
 
-import com.mongodb.ClientSessionOptions;
-import com.mongodb.ConnectionString;
-import com.mongodb.DB;
-import com.mongodb.MongoClientURI;
-import com.mongodb.TransactionOptions;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoDatabase;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,7 +11,9 @@ import org.slf4j.Logger;
 
 /**
  * This class exists to manage singleton instances to a MongoDB server. It is recommended by the Mongo
- * docs to only have a single instance of the {@link com.mongodb.MongoClient}
+ * docs to only have a single instance of the {@link com.mongodb.MongoClient} opened at a time, so this
+ * class keeps track of reference counting active instances and will close the connection once all instances
+ * are done being used.
  */
 public class MongoConnectionManager {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -41,23 +36,17 @@ public class MongoConnectionManager {
     public MongoClient getMongoClientInstance(String mongoClientUri) {
         MongoClient mongoClient;
         if (!this.mongoUriToClientMap.containsKey(mongoClientUri)) {
+            LOG.info("Creating new mongo client to connect to {}", mongoClientUri);
             mongoClient = MongoClients.create(mongoClientUri);
             this.mongoUriToClientMap.put(mongoClientUri, mongoClient);
             this.activeClientCountMap.put(mongoClientUri, new AtomicInteger(1));
         } else {
+            LOG.info("Reusing existing mongo client for {}", mongoClientUri);
             mongoClient = this.mongoUriToClientMap.get(mongoClientUri);
             this.activeClientCountMap.get(mongoClientUri).incrementAndGet();
         }
 
         return mongoClient;
-//
-//        mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).defaultTransactionOptions(
-//            TransactionOptions.builder()..build()))
-//
-//        // No need to check for existence of the DB here or anything
-//        MongoDatabase database = mongoClient.getDatabase(MongoConstants.AION_DB_NAME);
-//
-//        return database;
     }
 
     public void closeMongoClientInstance(String mongoClientUri) {

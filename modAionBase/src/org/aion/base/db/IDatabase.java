@@ -166,7 +166,7 @@ public interface IDatabase {
      *
      * @return The method of persistence this database uses.
      */
-    PersistenceMethod getPersistence();
+    PersistenceMethod getPersistenceMethod();
 
     /**
      * Used to validate if the DB file(s) has been created on disk. Can be used

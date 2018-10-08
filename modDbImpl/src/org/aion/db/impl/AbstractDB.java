@@ -169,7 +169,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public PersistenceMethod getPersistence() {
+    public PersistenceMethod getPersistenceMethod() {
         // Default to file-based since most of our dbs are that
         return PersistenceMethod.FILE_BASED;
     }

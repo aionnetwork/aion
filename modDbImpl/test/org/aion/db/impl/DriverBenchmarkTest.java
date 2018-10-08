@@ -143,7 +143,7 @@ public class DriverBenchmarkTest {
         assertTrue(db.isClosed());
 
         // for non-persistant DB's, close() should wipe the DB
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             File dbDir = new File(db.getPath().get());
             if (dbDir.exists()) { assertTrue(FileUtils.deleteRecursively(dbDir)); }
         }

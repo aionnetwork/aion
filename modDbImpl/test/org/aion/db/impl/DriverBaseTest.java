@@ -244,7 +244,7 @@ public class DriverBaseTest {
         assertThat(db.isOpen()).isFalse();
         assertThat(db.isClosed()).isTrue();
 
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             assertThat(db.isCreatedOnDisk()).isFalse();
             assertThat(db.getPath().get()).isEqualTo(new File(dbPath, dbName).getAbsolutePath());
         }
@@ -261,7 +261,7 @@ public class DriverBaseTest {
         assertThat(db.isClosed()).isFalse();
         assertThat(db.isEmpty()).isTrue();
 
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             assertThat(db.isCreatedOnDisk()).isTrue();
             assertThat(db.getPath().get()).isEqualTo(new File(dbPath, dbName).getAbsolutePath());
         }
@@ -276,7 +276,7 @@ public class DriverBaseTest {
         assertThat(db.isOpen()).isTrue();
         assertThat(db.isClosed()).isFalse();
 
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             assertThat(db.isCreatedOnDisk()).isTrue();
             assertThat(db.getPath().get()).isEqualTo(new File(dbPath, dbName).getAbsolutePath());
         }
@@ -284,7 +284,7 @@ public class DriverBaseTest {
         assertThat(db.isLocked()).isFalse();
         assertThat(db.getName().get()).isEqualTo(dbName);
 
-        if (db.getPersistence() == PersistenceMethod.REMOTE_SERVER) {
+        if (db.getPersistenceMethod() == PersistenceMethod.REMOTE_SERVER) {
             db.drop();
             assertThat(db.isEmpty()).isTrue();
         }
@@ -295,7 +295,7 @@ public class DriverBaseTest {
         assertThat(db.isClosed()).isTrue();
 
         // for non-persistent DB's, close() should wipe the DB
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             assertThat(db.isCreatedOnDisk()).isTrue();
             assertThat(FileUtils.deleteRecursively(new File(db.getPath().get()))).isTrue();
             assertThat(db.isCreatedOnDisk()).isFalse();
@@ -314,7 +314,7 @@ public class DriverBaseTest {
     @Test
     public void testOpenSecondInstance()
             throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             // another connection to same DB should fail on open for all persistent KVDBs
             IByteArrayKeyValueDatabase otherDatabase = this.constructor.newInstance(this.args);
             assertThat(otherDatabase.open()).isFalse();
@@ -327,7 +327,7 @@ public class DriverBaseTest {
 
     @Test
     public void testPersistence() throws InterruptedException {
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             // adding data ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
             db.put(k1, v1);
@@ -371,7 +371,7 @@ public class DriverBaseTest {
 
     @Test
     public void testBatchPersistence() throws InterruptedException {
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             // adding data ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
             assertThat(db.get(k2).isPresent()).isFalse();
@@ -602,7 +602,7 @@ public class DriverBaseTest {
 
     @Test
     public void testApproximateDBSize() {
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             int repeat = 1_000_000;
             for (int i = 0; i < repeat; i++) {
                 db.put(String.format("%c%09d", 'a' + i % 26, i).getBytes(), "test".getBytes());
@@ -737,7 +737,7 @@ public class DriverBaseTest {
      */
     @Test
     public void testAutoCommitDisabled() throws InterruptedException {
-        if (db.getPersistence() == PersistenceMethod.FILE_BASED && !db.isAutoCommitEnabled()) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED && !db.isAutoCommitEnabled()) {
             // adding data ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
             db.put(k1, v1);
