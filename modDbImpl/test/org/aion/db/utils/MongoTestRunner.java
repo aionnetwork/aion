@@ -111,6 +111,10 @@ public class MongoTestRunner implements AutoCloseable {
         }
     }
 
+    /**
+     * Returns the connection string to be used to connect to the started Mongo instance
+     * @return The connection string.
+     */
     public String getConnectionString() {
         return String.format("mongodb://localhost:%d", this.port);
     }
