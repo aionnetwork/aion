@@ -403,27 +403,6 @@ public class ApiAionTest {
             msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertEquals(api.sendTransaction(txcall).getType(), AddTxResponse.INVALID_ACCOUNT);
-
-        //        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-
-
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-            addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-            msg, 100000, 100000);
-        tx.sign(new ECKeyEd25519());
-
-        assertNotNull(api.sendTransaction(tx.getEncoded()));
-
-        txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
-            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertEquals(api.sendTransaction(txcall).getType(), ApiTxResponse.TxRspType.INVALID_FROM);
-
-        txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
-            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertEquals(api.sendTransaction(txcall).getType(), ApiTxResponse.TxRspType.INVALID_FROM);
-        tearDown();
     }
 
     @Test
