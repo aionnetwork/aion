@@ -44,6 +44,7 @@ import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.impl.mongodb.MongoDB;
 import org.aion.db.utils.FileUtils;
+import org.aion.db.utils.MongoTestRunner;
 import org.aion.log.AionLoggerFactory;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -83,6 +84,7 @@ public class DriverBaseTest {
     private static final String dbNamePrefix = "TestDB";
     private static final String dbPath = testDir.getAbsolutePath();
     private static final String unboundHeapCache = "0";
+
     //    public static String boundHeapCache = "256";
 
     @Parameters(name = "{0}")
@@ -108,19 +110,19 @@ public class DriverBaseTest {
                 // Mongo
                 { "MongoDB", new boolean[] { false, false, false },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), "mongodb://writer:writer@localhost:27017"} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
                 { "MongoDB+lock", new boolean[] { true, false, false },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), "mongodb://writer:writer@localhost:27017"} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
                 { "MongoDB+heapCache", new boolean[] { false, true, false },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), "mongodb://writer:writer@localhost:27017"} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
                 { "MongoDB+heapCache+lock", new boolean[] { true, true, false },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), "mongodb://writer:writer@localhost:27017"} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
                 { "MongoDB+heapCache+autocommit", new boolean[] { false, true, true },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), "mongodb://writer:writer@localhost:27017"} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
                 // LevelDB wo. db cache wo. compression
                 { "LevelDB", new boolean[] { false, false, false },
                         LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
@@ -187,6 +189,7 @@ public class DriverBaseTest {
     }
 
     private IByteArrayKeyValueDatabase db;
+    private static MongoTestRunner dbCreator = new MongoTestRunner(new File(dbPath));;
 
     private final Constructor<IByteArrayKeyValueDatabase> constructor;
     private final Object[] args;
@@ -218,6 +221,15 @@ public class DriverBaseTest {
         this.args = args;
         this.dbName = (String) args[0];
         this.db = constructor.newInstance(args);
+//
+//        if (db.getPersistenceMethod() == PersistenceMethod.REMOTE_SERVER) {
+//            // TODO - fix this up
+//            dbCreator = new MongoTestRunner(new File(dbPath));
+//            String mongoPath = dbCreator.getConnectionString();
+//            args[1] = mongoPath;
+//            this.db = constructor.newInstance(args);
+//        }
+
         if (props[1]) {
             this.db = new DatabaseWithCache((AbstractDB) this.db, props[2], "0", false);
         }
@@ -234,7 +246,12 @@ public class DriverBaseTest {
     }
 
     @AfterClass
-    public static void teardown() {
+    public static void teardown() throws Exception {
+        if (dbCreator != null) {
+            dbCreator.close();
+            dbCreator = null;
+        }
+
         assertThat(testDir.delete()).isTrue();
     }
 

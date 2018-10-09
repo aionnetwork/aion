@@ -28,6 +28,8 @@
  ******************************************************************************/
 package org.aion.db.impl;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import org.aion.db.impl.leveldb.LevelDBConstants;
 
 import java.io.File;
@@ -206,5 +208,15 @@ public class DatabaseTestUtils {
             }
         }
         assertTrue(message + "failed with " + exceptions.size() + " exception(s):" + exceptions, exceptions.isEmpty());
+    }
+
+    public static int findOpenPort() {
+        try (ServerSocket socket = new ServerSocket(0);) {
+            return socket.getLocalPort();
+        } catch (Exception ex) {
+            assertTrue("Exception thrown finding open port: " + ex  .getMessage(), false);
+        }
+
+        return -1;
     }
 }
