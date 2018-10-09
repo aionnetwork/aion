@@ -58,13 +58,13 @@ public class AionTxExecSummaryTest {
     @Test
     public void testRLPEncoding() {
         AionTransaction mockTx = new AionTransaction(
-                BigInteger.ONE.toByteArray(),
-                defaultAddress,
-                defaultAddress,
-                BigInteger.ONE.toByteArray(),
-                HashUtil.EMPTY_DATA_HASH,
-                1L,
-                1L
+            BigInteger.ONE.toByteArray(),
+            defaultAddress,
+            defaultAddress,
+            BigInteger.ONE.toByteArray(),
+            defaultHash,
+            1L,
+            1L
         );
 
         AionTxReceipt txReceipt = new AionTxReceipt(HashUtil.EMPTY_TRIE_HASH, new Bloom(), Collections.EMPTY_LIST);
@@ -73,7 +73,7 @@ public class AionTxExecSummaryTest {
 
         AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(txReceipt);
         builder.markAsFailed()
-                .result(new byte[0]);
+            .result(new byte[0]);
         AionTxExecSummary summary = builder.build();
         byte[] encodedSummary = summary.getEncoded();
 
