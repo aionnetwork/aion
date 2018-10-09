@@ -164,7 +164,6 @@ public class MongoDB extends AbstractDB {
 
     private String mongoClientUri;
     private ClientSession clientSession;
-    private MongoDatabase mongoDb;
     private MongoCollection<BsonDocument> collection = null;
     private WriteBatch batch = null;
 
@@ -195,18 +194,6 @@ public class MongoDB extends AbstractDB {
         return result;
     }
 
-    private boolean collectionExists() {
-        check();
-
-        for (String collectionName : mongoDb.listCollectionNames(this.clientSession)) {
-            if (collectionName.equals(this.name)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     @Override
     public boolean open() {
         if (isOpen()) {
@@ -228,7 +215,7 @@ public class MongoDB extends AbstractDB {
         this.clientSession = mongoClient.startSession(sessionOptions);
 
         // Get the database and our collection. Mongo takes care of creating these if they don't exist
-        mongoDb = mongoClient.getDatabase(MongoConstants.AION_DB_NAME);
+        MongoDatabase mongoDb = mongoClient.getDatabase(MongoConstants.AION_DB_NAME);
 
         // Gets the collection where we will be saving our values. Mongo creates it if it doesn't yet exist
         this.collection = mongoDb.getCollection(this.name, BsonDocument.class);
@@ -387,17 +374,13 @@ public class MongoDB extends AbstractDB {
     public void drop() {
         check();
 
+        LOG.info("Dropping collection {}", this.name);
         this.collection.drop(this.clientSession);
-//
-//        if (this.collectionExists()) {
-//            LOG.info("Dropping collection {}", this.name);
-//            this.collection.drop(this.clientSession);
-//        }
     }
 
     @Override
     public PersistenceMethod getPersistenceMethod() {
-        return PersistenceMethod.REMOTE_SERVER;
+        return PersistenceMethod.DBMS;
     }
 
     @Override

@@ -89,6 +89,7 @@ public class DriverBaseTest {
 
     @Parameters(name = "{0}")
     public static Iterable<Object[]> data() throws NoSuchMethodException, SecurityException {
+        initManagedDbs();
         return Arrays.asList(new Object[][] {
                 // H2MVMap wo. db cache wo. compression
                 { "H2MVMap", new boolean[] { false, false, false },
@@ -189,7 +190,7 @@ public class DriverBaseTest {
     }
 
     private IByteArrayKeyValueDatabase db;
-    private static MongoTestRunner dbCreator = new MongoTestRunner(new File(dbPath));;
+    private static MongoTestRunner dbCreator;
 
     private final Constructor<IByteArrayKeyValueDatabase> constructor;
     private final Object[] args;
@@ -221,14 +222,6 @@ public class DriverBaseTest {
         this.args = args;
         this.dbName = (String) args[0];
         this.db = constructor.newInstance(args);
-//
-//        if (db.getPersistenceMethod() == PersistenceMethod.REMOTE_SERVER) {
-//            // TODO - fix this up
-//            dbCreator = new MongoTestRunner(new File(dbPath));
-//            String mongoPath = dbCreator.getConnectionString();
-//            args[1] = mongoPath;
-//            this.db = constructor.newInstance(args);
-//        }
 
         if (props[1]) {
             this.db = new DatabaseWithCache((AbstractDB) this.db, props[2], "0", false);
@@ -243,6 +236,8 @@ public class DriverBaseTest {
         // clean out the tmp directory
         Truth.assertThat(FileUtils.deleteRecursively(testDir)).isTrue();
         assertThat(testDir.mkdirs()).isTrue();
+
+        initManagedDbs();
     }
 
     @AfterClass
@@ -253,6 +248,12 @@ public class DriverBaseTest {
         }
 
         assertThat(testDir.delete()).isTrue();
+    }
+
+    private static void initManagedDbs() {
+        if (dbCreator == null) {
+            dbCreator = new MongoTestRunner();
+        }
     }
 
     @Before
@@ -301,7 +302,7 @@ public class DriverBaseTest {
         assertThat(db.isLocked()).isFalse();
         assertThat(db.getName().get()).isEqualTo(dbName);
 
-        if (db.getPersistenceMethod() == PersistenceMethod.REMOTE_SERVER) {
+        if (db.getPersistenceMethod() == PersistenceMethod.DBMS) {
             db.drop();
             assertThat(db.isEmpty()).isTrue();
         }
