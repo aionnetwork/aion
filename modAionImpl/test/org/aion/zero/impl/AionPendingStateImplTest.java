@@ -30,7 +30,7 @@ public class AionPendingStateImplTest {
         assertNotNull(ps);
 
         AionTransaction mockTx = new AionTransaction(
-            BigInteger.ONE.toByteArray(),
+            BigInteger.ZERO.toByteArray(),
             Address.EMPTY_ADDRESS(),
             Address.EMPTY_ADDRESS(),
             BigInteger.ONE.toByteArray(),
