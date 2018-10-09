@@ -89,7 +89,6 @@ public class DriverBaseTest {
 
     @Parameters(name = "{0}")
     public static Iterable<Object[]> data() throws NoSuchMethodException, SecurityException {
-        initManagedDbs();
         return Arrays.asList(new Object[][] {
                 // H2MVMap wo. db cache wo. compression
                 { "H2MVMap", new boolean[] { false, false, false },
@@ -111,19 +110,19 @@ public class DriverBaseTest {
                 // Mongo
                 { "MongoDB", new boolean[] { false, false, false },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
                 { "MongoDB+lock", new boolean[] { true, false, false },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
                 { "MongoDB+heapCache", new boolean[] { false, true, false },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
                 { "MongoDB+heapCache+lock", new boolean[] { true, true, false },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
                 { "MongoDB+heapCache+autocommit", new boolean[] { false, true, true },
                     MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbCreator.getConnectionString()} },
+                    new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
                 // LevelDB wo. db cache wo. compression
                 { "LevelDB", new boolean[] { false, false, false },
                         LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
@@ -190,7 +189,6 @@ public class DriverBaseTest {
     }
 
     private IByteArrayKeyValueDatabase db;
-    private static MongoTestRunner dbCreator;
 
     private final Constructor<IByteArrayKeyValueDatabase> constructor;
     private final Object[] args;
@@ -236,24 +234,11 @@ public class DriverBaseTest {
         // clean out the tmp directory
         Truth.assertThat(FileUtils.deleteRecursively(testDir)).isTrue();
         assertThat(testDir.mkdirs()).isTrue();
-
-        initManagedDbs();
     }
 
     @AfterClass
     public static void teardown() throws Exception {
-        if (dbCreator != null) {
-            dbCreator.close();
-            dbCreator = null;
-        }
-
         assertThat(testDir.delete()).isTrue();
-    }
-
-    private static void initManagedDbs() {
-        if (dbCreator == null) {
-            dbCreator = new MongoTestRunner();
-        }
     }
 
     @Before

@@ -38,6 +38,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.aion.db.utils.MongoTestRunner;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
 import static org.junit.Assert.assertTrue;
@@ -138,7 +139,7 @@ public class DatabaseTestUtils {
                                                            List<Object> parameters) {
         if (vendor == DBVendor.MONGODB) {
             sharedProps = (Properties)sharedProps.clone();
-            sharedProps.setProperty(Props.DB_PATH, "mongodb://localhost:27017");
+            sharedProps.setProperty(Props.DB_PATH, MongoTestRunner.inst().getConnectionString());
         }
 
         if (vendor != DBVendor.MOCKDB) {

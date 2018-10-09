@@ -16,7 +16,17 @@ public class MongoTestRunner implements AutoCloseable {
     private Process runningMongoServer;
     private File databaseFilesDir;
 
-    public MongoTestRunner() {
+
+    private static class Holder {
+        static final MongoTestRunner INSTANCE = new MongoTestRunner();
+    }
+
+    public static MongoTestRunner inst() {
+        return Holder.INSTANCE;
+    }
+
+
+    private MongoTestRunner() {
         this.port = DatabaseTestUtils.findOpenPort();
 
         // Create a temp directory to store our db files in
@@ -36,12 +46,13 @@ public class MongoTestRunner implements AutoCloseable {
             databaseFilesDir.getAbsolutePath(),
             "--replSet",
             String.format("rs%d", System.currentTimeMillis()),
-            "--noauth" ,
+            "--noauth",
             "--nojournal"
         );
 
         try {
             this.runningMongoServer = new ProcessBuilder(commands)
+                .redirectError(Redirect.INHERIT)
                 .start();
 
             List<String> initializationCommands = List.of(
@@ -77,6 +88,7 @@ public class MongoTestRunner implements AutoCloseable {
         Exception exception = null;
         try {
             exitCode = new ProcessBuilder(initializationCommands)
+                .redirectError(Redirect.INHERIT)
                 .start()
                 .waitFor();
         } catch (Exception e) {
@@ -94,7 +106,7 @@ public class MongoTestRunner implements AutoCloseable {
                 fail("Failed to initialize MongoDB, no retries remaining. Exit code was: " + Integer.toString(exitCode));
             } else {
                 Thread.sleep(pauseTimeMillis);
-                tryInitializeDb(initializationCommands, retriesRemaining--, pauseTimeMillis);
+                tryInitializeDb(initializationCommands, retriesRemaining - 1, pauseTimeMillis);
             }
         }
     }
