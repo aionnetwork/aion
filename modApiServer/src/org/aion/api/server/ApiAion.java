@@ -571,9 +571,7 @@ public abstract class ApiAion extends Api {
                         _params.getNrgPrice());
                 tx.sign(key);
 
-                pendingState.addPendingTransaction(tx);
-
-                return (new ApiTxResponse(AddTxResponse.SUCCESS, tx.getHash()));
+                return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getHash()));
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.sendTransaction exception: [{}]", ex.getMessage());
