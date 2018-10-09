@@ -22,7 +22,6 @@ module aion.zero.impl {
     requires com.google.common;
     requires info.picocli;
     requires commons.lang3;
-    requires commons.collections4;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;
