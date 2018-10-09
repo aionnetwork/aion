@@ -39,6 +39,7 @@ import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.blockchain.AddTxResponse;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -237,7 +238,7 @@ public class ApiAionTest {
 
         // check because blk might be the genesis block
         assertEquals(rslt.getValue(),
-                ((AionBlockStore) impl.getBlockchain().getBlockStore()).getTotalDifficultyForHash(blk.getHash()));
+            ((AionBlockStore) impl.getBlockchain().getBlockStore()).getTotalDifficultyForHash(blk.getHash()));
 
         // retrieving genesis block's difficulty
         assertEquals(api.getBlockWithTotalDifficulty(0).getValue(), CfgAion.inst().getGenesis().getDifficultyBI());
@@ -268,12 +269,12 @@ public class ApiAionTest {
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
         byte[] msg = "test message".getBytes();
         AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+            Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+            msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
         AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+            Collections.singletonList(tx), false);
 
         assertNotNull(blk);
         assertNotEquals(blk.getTransactionsList().size(), 0);
@@ -289,7 +290,7 @@ public class ApiAionTest {
         blk = api.getBlockByHash(blk.getHash());
 
         assertEquals(1, api.getTransactionCount(
-                blk.getTransactionsList().get(0).getFrom(), blk.getNumber()));
+            blk.getTransactionsList().get(0).getFrom(), blk.getNumber()));
         assertEquals(0, api.getTransactionCount(Address.EMPTY_ADDRESS(), blk.getNumber()));
 
         assertEquals(tx, api.getTransactionByHash(tx.getHash()));
@@ -304,13 +305,13 @@ public class ApiAionTest {
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+            addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+            msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
 
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNotNull(api.doCall(txcall));
         tearDown();
@@ -325,13 +326,13 @@ public class ApiAionTest {
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+            addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+            msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
 
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertEquals(impl.estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
         tearDown();
@@ -346,18 +347,18 @@ public class ApiAionTest {
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNotNull(api.createContract(txcall).transId);
         assertNotNull(api.createContract(txcall).address);
 
         txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.createContract(txcall));
 
         txcall = new ArgTxCall(Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.createContract(txcall));
         tearDown();
@@ -371,49 +372,71 @@ public class ApiAionTest {
         assertEquals(repo.getNonce(Address.ZERO_ADDRESS()), api.getNonce(Address.ZERO_ADDRESS().toString()));
     }
 
-//    @Test
-//    public void testSendTransaction() {
-//        byte[] msg = "test message".getBytes();
-//
-//        Address addr = new Address(Keystore.create("testPwd"));
-//
-//        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-//
-//        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-//                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-//
-//        assertNotNull(api.sendTransaction(txcall));
-//
-//        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-//                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-//                msg, 100000, 100000);
-//        tx.sign(new ECKeyEd25519());
-//
-//        assertNotNull(api.sendTransaction(tx.getEncoded()));
-//
-//        txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
-//                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-//
-//        assertEquals(api.sendTransaction(txcall).getType(), ApiTxResponse.TxRspType.INVALID_FROM);
-//
-//        txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
-//                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-//
-//        assertEquals(api.sendTransaction(txcall).getType(), ApiTxResponse.TxRspType.INVALID_FROM);
-//        tearDown();
-//    }
+    @Test
+    public void testSendTransaction() {
+
+        byte[] msg = "test message".getBytes();
+
+        //null params returns INVALID_TX
+
+        ArgTxCall txcall = null;
+
+        assertEquals(api.sendTransaction(txcall).getType(), AddTxResponse.INVALID_TX);
+
+        //null from and empty from return INVALID_FROM
+
+        txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
+            msg, BigInteger.ONE, BigInteger.ONE, 100000, 100000);
+
+        assertEquals(api.sendTransaction(txcall).getType(), AddTxResponse.INVALID_FROM);
+
+        txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
+            msg, BigInteger.ONE, BigInteger.ONE, 100000, 100000);
+
+        assertEquals(api.sendTransaction(txcall).getType(), AddTxResponse.INVALID_FROM);
+
+        Address addr = new Address(Keystore.create("testPwd"));
+
+        // locked account should throw INVALID_ACCOUNT
+
+        txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+
+        assertEquals(api.sendTransaction(txcall).getType(), AddTxResponse.INVALID_ACCOUNT);
+
+        //        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+
+        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+            addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+            msg, 100000, 100000);
+        tx.sign(new ECKeyEd25519());
+
+        assertNotNull(api.sendTransaction(tx.getEncoded()));
+
+        txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+
+        assertEquals(api.sendTransaction(txcall).getType(), ApiTxResponse.TxRspType.INVALID_FROM);
+
+        txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+
+        assertEquals(api.sendTransaction(txcall).getType(), ApiTxResponse.TxRspType.INVALID_FROM);
+        tearDown();
+    }
 
     @Test
     public void testSimpleGetters() {
         assertEquals(CfgAion.inst().getApi().getNrg().getNrgPriceDefault(),
-                api.getRecommendedNrgPrice());
+            api.getRecommendedNrgPrice());
         api.initNrgOracle(impl);
         assertEquals(api.getNrgOracle().getNrgPrice(),
-                api.getRecommendedNrgPrice());
+            api.getRecommendedNrgPrice());
 
         assertNotNull(api.getCoinbase());
         assertEquals(repo.getCode(Address.ZERO_ADDRESS()),
-                api.getCode(Address.ZERO_ADDRESS()));
+            api.getCode(Address.ZERO_ADDRESS()));
         assertEquals(impl.getBlockMiner().isMining(), api.isMining());
         assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
         assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());
