@@ -211,6 +211,10 @@ public class DatabaseTestUtils {
         assertTrue(message + "failed with " + exceptions.size() + " exception(s):" + exceptions, exceptions.isEmpty());
     }
 
+    /**
+     * Helper method to find an unused port of the local machine
+     * @return An unused port
+     */
     public static int findOpenPort() {
         try (ServerSocket socket = new ServerSocket(0);) {
             return socket.getLocalPort();

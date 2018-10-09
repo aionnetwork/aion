@@ -53,6 +53,7 @@ public class MongoTestRunner implements AutoCloseable {
         try {
             this.runningMongoServer = new ProcessBuilder(commands)
                 .redirectError(Redirect.INHERIT)
+                // .redirectOutput(Redirect.INHERIT)
                 .start();
 
             List<String> initializationCommands = List.of(
@@ -72,6 +73,16 @@ public class MongoTestRunner implements AutoCloseable {
             e.printStackTrace();
             fail("Exception thrown while starting Mongo");
         }
+
+        // Add a shutdown hook to kill the Mongo server when the process dies
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                fail("Failed to close MongoDB connection");
+            }
+        }));
     }
 
     /**
@@ -121,7 +132,11 @@ public class MongoTestRunner implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        this.runningMongoServer.destroyForcibly();
-        FileUtils.deleteRecursively(this.databaseFilesDir);
+        if (this.runningMongoServer != null) {
+            this.runningMongoServer.destroyForcibly();
+            FileUtils.deleteRecursively(this.databaseFilesDir);
+        }
+
+        this.runningMongoServer = null;
     }
 }

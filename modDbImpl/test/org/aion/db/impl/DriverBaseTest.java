@@ -282,15 +282,14 @@ public class DriverBaseTest {
         if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             assertThat(db.isCreatedOnDisk()).isTrue();
             assertThat(db.getPath().get()).isEqualTo(new File(dbPath, dbName).getAbsolutePath());
+        } else if (db.getPersistenceMethod() == PersistenceMethod.DBMS) {
+            // Drop the DB before closing the connection for DBMS systems
+            db.drop();
+            assertThat(db.isEmpty()).isTrue();
         }
 
         assertThat(db.isLocked()).isFalse();
         assertThat(db.getName().get()).isEqualTo(dbName);
-
-        if (db.getPersistenceMethod() == PersistenceMethod.DBMS) {
-            db.drop();
-            assertThat(db.isEmpty()).isTrue();
-        }
 
         db.close();
 
@@ -330,7 +329,7 @@ public class DriverBaseTest {
 
     @Test
     public void testPersistence() throws InterruptedException {
-        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() != PersistenceMethod.IN_MEMORY) {
             // adding data ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
             db.put(k1, v1);
@@ -374,7 +373,7 @@ public class DriverBaseTest {
 
     @Test
     public void testBatchPersistence() throws InterruptedException {
-        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
+        if (db.getPersistenceMethod() != PersistenceMethod.IN_MEMORY) {
             // adding data ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
             assertThat(db.get(k2).isPresent()).isFalse();
@@ -740,7 +739,7 @@ public class DriverBaseTest {
      */
     @Test
     public void testAutoCommitDisabled() throws InterruptedException {
-        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED && !db.isAutoCommitEnabled()) {
+        if (db.getPersistenceMethod() != PersistenceMethod.IN_MEMORY && !db.isAutoCommitEnabled()) {
             // adding data ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
             db.put(k1, v1);

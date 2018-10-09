@@ -82,6 +82,8 @@ public class AionRepositoryImpl
         private static CfgAion config = CfgAion.inst();
 
         private static RepositoryConfig getRepoConfig(CfgAion config) {
+
+            // Try to parse out the dbPath as a URI to figure out if it might be a remote DB
             URI dbPathUri = null;
             try {
                 dbPathUri = new URI(config.getDb().getPath());
@@ -91,8 +93,10 @@ public class AionRepositoryImpl
 
             String fullDbPath;
             if (dbPathUri.getScheme() == null || dbPathUri.getScheme().equalsIgnoreCase("file")) {
+                // The dbPath is file based, get the full file path
                 fullDbPath = new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath();
             } else {
+                // The dbPath has a non-file protocol, just return it as-is and let the DB engine deal with it
                 fullDbPath = config.getDb().getPath();
             }
 

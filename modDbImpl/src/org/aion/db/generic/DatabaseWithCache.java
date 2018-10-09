@@ -286,7 +286,6 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
 
     @Override
     public PersistenceMethod getPersistenceMethod() {
-        // no locks because the persistence flag never changes
         return database.getPersistenceMethod();
     }
 
