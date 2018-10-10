@@ -20,7 +20,9 @@ dependencies {
     compile files('../lib/libJson.jar')
     compile 'info.picocli:picocli:3.6.1'
 
+    testCompile project(path: ':modTxPoolImpl')
     testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
+
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
