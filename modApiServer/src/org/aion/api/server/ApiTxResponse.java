@@ -25,32 +25,32 @@
 
 package org.aion.api.server;
 
-import org.aion.mcf.blockchain.AddTxResponse;
+import org.aion.mcf.blockchain.TxResponse;
 
 public class ApiTxResponse {
 
-    private final AddTxResponse rsp;
+    private final TxResponse rsp;
 
     private byte[] txHash;
 
     // Could just store the exception message string
     private Exception ex;
 
-    ApiTxResponse(AddTxResponse rsp) {
+    ApiTxResponse(TxResponse rsp) {
         this.rsp = rsp;
     }
 
-    ApiTxResponse(AddTxResponse rsp, byte[] txHash) {
+    ApiTxResponse(TxResponse rsp, byte[] txHash) {
         this.rsp = rsp;
         this.txHash = txHash;
     }
 
-    ApiTxResponse(AddTxResponse rsp, Exception ex) {
+    ApiTxResponse(TxResponse rsp, Exception ex) {
         this.rsp = rsp;
         this.ex = ex;
     }
 
-    public AddTxResponse getType() {
+    public TxResponse getType() {
         return rsp;
     }
 

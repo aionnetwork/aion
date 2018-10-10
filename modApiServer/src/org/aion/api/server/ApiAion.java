@@ -60,7 +60,7 @@ import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.IAionChain;
-import org.aion.mcf.blockchain.AddTxResponse;
+import org.aion.mcf.blockchain.TxResponse;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -536,19 +536,19 @@ public abstract class ApiAion extends Api {
     protected ApiTxResponse sendTransaction(ArgTxCall _params) {
 
         if (_params == null)
-            return(new ApiTxResponse(AddTxResponse.INVALID_TX));
+            return(new ApiTxResponse(TxResponse.INVALID_TX));
 
         Address from = _params.getFrom();
 
         if (from == null || from.isEmptyAddress()) {
             LOG.error("<send-transaction msg=invalid-from-address>");
-            return(new ApiTxResponse(AddTxResponse.INVALID_FROM));
+            return(new ApiTxResponse(TxResponse.INVALID_FROM));
         }
 
         ECKey key = this.getAccountKey(from.toString());
         if (key == null) {
             LOG.error("<send-transaction msg=account-not-found>");
-            return(new ApiTxResponse(AddTxResponse.INVALID_ACCOUNT));
+            return(new ApiTxResponse(TxResponse.INVALID_ACCOUNT));
         }
 
         try {
@@ -575,7 +575,7 @@ public abstract class ApiAion extends Api {
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.sendTransaction exception: [{}]", ex.getMessage());
-            return(new ApiTxResponse(AddTxResponse.EXCEPTION, ex));
+            return(new ApiTxResponse(TxResponse.EXCEPTION, ex));
         }
     }
 

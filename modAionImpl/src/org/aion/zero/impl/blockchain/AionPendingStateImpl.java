@@ -60,7 +60,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
-import org.aion.mcf.blockchain.AddTxResponse;
+import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
 import org.aion.p2p.INode;
@@ -435,7 +435,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      * libAion uses to work with timers
      */
     @Override
-    public synchronized AddTxResponse addPendingTransaction(AionTransaction tx) {
+    public synchronized TxResponse addPendingTransaction(AionTransaction tx) {
 
         return addPendingTransactions(Collections.singletonList(tx)).get(0);
     }
@@ -443,7 +443,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     // Returns a list of SendTxResponses, which should be indexed using the same indices
     // as the input list of AionTransactions
     @Override
-    public synchronized List<AddTxResponse> addPendingTransactions(
+    public synchronized List<TxResponse> addPendingTransactions(
         List<AionTransaction> transactions) {
 
         if ((isSeed || !closeToNetworkBest) && !loadPendingTx) {
@@ -452,7 +452,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         List<AionTransaction> newPending = new ArrayList<>();
         List<AionTransaction> newLargeNonceTx = new ArrayList<>();
-        List<AddTxResponse> txResponses = new ArrayList<>();
+        List<TxResponse> txResponses = new ArrayList<>();
 
         for (AionTransaction tx : transactions) {
             BigInteger txNonce = tx.getNonceBI();
@@ -462,7 +462,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             int cmp = txNonce.compareTo(bestPSNonce);
 
             if (isInTxCache(txFrom, txNonce))
-                txResponses.add(AddTxResponse.ALREADY_CACHED);
+                txResponses.add(TxResponse.ALREADY_CACHED);
             else if (cmp > 0) {
                 newLargeNonceTx.add(tx);
                 addToTxCache(tx);
@@ -476,7 +476,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                         "addPendingTransactions addToCache due to largeNonce: from = {}, nonce = {}",
                         txFrom, txNonce);
                 }
-                txResponses.add(AddTxResponse.CACHED_NONCE);
+                txResponses.add(TxResponse.CACHED_NONCE);
             } else if (cmp == 0 && txPool.size() > MAX_VALIDATED_PENDING_TXS) {
                 newLargeNonceTx.add(tx);
                 addToTxCache(tx);
@@ -490,7 +490,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                         "addPendingTransactions addToCache due to poolMax: from = {}, nonce = {}",
                         txFrom, txNonce);
                 }
-                txResponses.add(AddTxResponse.CACHED_POOLMAX);
+                txResponses.add(TxResponse.CACHED_POOLMAX);
             } else if (cmp == 0) {
                 // TODO: need to implement better cache return Strategy
                 Map<BigInteger, AionTransaction> cache = pendingTxCache.getCacheTx(txFrom);
@@ -513,12 +513,12 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 boolean added = false;
 
                 do {
-                    AddTxResponse implResponse = addPendingTransactionImpl(tx, txNonce);
+                    TxResponse implResponse = addPendingTransactionImpl(tx, txNonce);
                     if(!added) {
                         txResponses.add(implResponse);
                         added = true;
                     }
-                    if (implResponse.equals(AddTxResponse.SUCCESS)) {
+                    if (implResponse.equals(TxResponse.SUCCESS)) {
                         newPending.add(tx);
 
                         if (poolBackUp) {
@@ -541,10 +541,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                         < MAX_VALIDATED_PENDING_TXS);
             } else if (bestRepoNonce(txFrom).compareTo(txNonce) < 1) {
                 // repay Tx
-                AddTxResponse implResponse = addPendingTransactionImpl(tx, txNonce);
-                if (implResponse.equals(AddTxResponse.SUCCESS)) {
+                TxResponse implResponse = addPendingTransactionImpl(tx, txNonce);
+                if (implResponse.equals(TxResponse.SUCCESS)) {
                     newPending.add(tx);
-                    txResponses.add(AddTxResponse.REPAID);
+                    txResponses.add(TxResponse.REPAID);
 
                     if (poolBackUp) {
                         backupPendingPoolAdd.put(tx.getHash(), tx.getEncoded());
@@ -553,7 +553,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 else
                     txResponses.add(implResponse);
             } else {
-                txResponses.add(AddTxResponse.ALREADY_SEALED);
+                txResponses.add(TxResponse.ALREADY_SEALED);
             }
         }
 
@@ -587,17 +587,17 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         return txResponses;
     }
 
-    private List<AddTxResponse> seedProcess(List<AionTransaction> transactions) {
+    private List<TxResponse> seedProcess(List<AionTransaction> transactions) {
         List<AionTransaction> newTx = new ArrayList<>();
-        List<AddTxResponse> txResponses = new ArrayList<>();
+        List<TxResponse> txResponses = new ArrayList<>();
         for (AionTransaction tx : transactions) {
             if (TXValidator.isValid(tx)) {
                 newTx.add(tx);
-                txResponses.add(AddTxResponse.SUCCESS);
+                txResponses.add(TxResponse.SUCCESS);
             } else {
                 LOGGER_TX
                     .error("tx sig does not match with the tx raw data, tx[{}]", tx.toString());
-                txResponses.add(AddTxResponse.INVALID_TX);
+                txResponses.add(TxResponse.INVALID_TX);
             }
         }
 
@@ -640,18 +640,18 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      * @param txNonce nonce of the transaction.
      * @return True if transaction gets NEW_PENDING state, False if DROPPED
      */
-    private AddTxResponse addPendingTransactionImpl(final AionTransaction tx, BigInteger txNonce) {
+    private TxResponse addPendingTransactionImpl(final AionTransaction tx, BigInteger txNonce) {
 
         if (!TXValidator.isValid(tx)) {
             LOGGER_TX.error("invalid Tx [{}]", tx.toString());
             fireDroppedTx(tx, "INVALID_TX");
-            return AddTxResponse.INVALID_TX;
+            return TxResponse.INVALID_TX;
         }
 
         if (inValidTxNrgPrice(tx)) {
             LOGGER_TX.error("invalid Tx Nrg price [{}]", tx.toString());
             fireDroppedTx(tx, "INVALID_TX_NRG_PRICE");
-            return AddTxResponse.INVALID_TX_NRG_PRICE;
+            return TxResponse.INVALID_TX_NRG_PRICE;
         }
 
         AionTxExecSummary txSum;
@@ -663,14 +663,14 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 LOGGER_TX.error("addPendingTransactionImpl no same tx nonce in the pool {}",
                     tx.toString());
                 fireDroppedTx(tx, "REPAYTX_POOL_EXCEPTION");
-                return AddTxResponse.REPAYTX_POOL_EXCEPTION;
+                return TxResponse.REPAYTX_POOL_EXCEPTION;
             } else {
                 long price = (poolTx.getNrgPrice() << 1);
                 if (price > 0 && price <= tx.getNrgPrice()) {
                     txSum = executeTx(tx, true);
                 } else {
                     fireDroppedTx(tx, "REPAYTX_LOWPRICE");
-                    return AddTxResponse.REPAYTX_LOWPRICE;
+                    return TxResponse.REPAYTX_LOWPRICE;
                 }
             }
         } else {
@@ -683,7 +683,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                     txSum.getReceipt().getError());
             }
             fireTxUpdate(txSum.getReceipt(), PendingTransactionState.DROPPED, best.get());
-            return AddTxResponse.DROPPED;
+            return TxResponse.DROPPED;
         } else {
             tx.setNrgConsume(txSum.getReceipt().getEnergyUsed());
 
@@ -708,7 +708,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 fireTxUpdate(txSum.getReceipt(), PendingTransactionState.NEW_PENDING, best.get());
             }
 
-            return AddTxResponse.SUCCESS;
+            return TxResponse.SUCCESS;
         }
     }
 

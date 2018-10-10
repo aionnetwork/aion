@@ -32,9 +32,9 @@ import java.util.List;
 
 public interface IPendingState<TX extends ITransaction> {
 
-    List<AddTxResponse> addPendingTransactions(List<TX> transactions);
+    List<TxResponse> addPendingTransactions(List<TX> transactions);
 
-    AddTxResponse addPendingTransaction(TX tx);
+    TxResponse addPendingTransaction(TX tx);
 
     IRepositoryCache<?, ?, ?> getRepository();
 

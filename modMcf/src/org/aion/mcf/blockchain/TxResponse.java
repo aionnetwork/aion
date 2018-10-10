@@ -1,6 +1,6 @@
 package org.aion.mcf.blockchain;
 
-public enum AddTxResponse {
+public enum TxResponse {
     SUCCESS(),
     INVALID_TX(),
     INVALID_TX_NRG_PRICE(),

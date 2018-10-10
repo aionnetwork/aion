@@ -39,7 +39,7 @@ import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
-import org.aion.mcf.blockchain.AddTxResponse;
+import org.aion.mcf.blockchain.TxResponse;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -381,19 +381,19 @@ public class ApiAionTest {
 
         ArgTxCall txcall = null;
 
-        assertEquals(api.sendTransaction(txcall).getType(), AddTxResponse.INVALID_TX);
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_TX);
 
         //null from and empty from return INVALID_FROM
 
         txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
             msg, BigInteger.ONE, BigInteger.ONE, 100000, 100000);
 
-        assertEquals(api.sendTransaction(txcall).getType(), AddTxResponse.INVALID_FROM);
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_FROM);
 
         txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
             msg, BigInteger.ONE, BigInteger.ONE, 100000, 100000);
 
-        assertEquals(api.sendTransaction(txcall).getType(), AddTxResponse.INVALID_FROM);
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_FROM);
 
         Address addr = new Address(Keystore.create("testPwd"));
 
@@ -402,7 +402,7 @@ public class ApiAionTest {
         txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
             msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
-        assertEquals(api.sendTransaction(txcall).getType(), AddTxResponse.INVALID_ACCOUNT);
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_ACCOUNT);
     }
 
     @Test
