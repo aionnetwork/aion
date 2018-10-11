@@ -183,12 +183,4 @@ public class ApiTest {
         CompiledContr compiledContr = compileResult.get("SimpleStorage");
         assertNull(compiledContr.error);
     }
-
-    @Test
-    public void testContractCreateResult() {
-        ApiImpl.ContractCreateResult ccr = api.new ContractCreateResult();
-        assertNull(ccr.address);
-        assertNull(ccr.transId);
-    }
-
 }

@@ -342,26 +342,32 @@ public class ApiAionTest {
     public void testCreateContract() {
         byte[] msg = "test message".getBytes();
 
-        Address addr = new Address(Keystore.create("testPwd"));
+        //null params returns INVALID_TX
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        ArgTxCall txcall = null;
 
-        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_TX);
 
-        assertNotNull(api.createContract(txcall).transId);
-        assertNotNull(api.createContract(txcall).address);
+        //null from and empty from return INVALID_FROM
 
         txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
+            msg, BigInteger.ONE, BigInteger.ONE, 100000, 100000);
+
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_FROM);
+
+        txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
+            msg, BigInteger.ONE, BigInteger.ONE, 100000, 100000);
+
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_FROM);
+
+        // locked account should throw INVALID_ACCOUNT
+
+        Address addr = new Address(Keystore.create("testPwd"));
+
+        txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
             msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
-        assertNull(api.createContract(txcall));
-
-        txcall = new ArgTxCall(Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(),
-            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertNull(api.createContract(txcall));
-        tearDown();
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_ACCOUNT);
     }
 
     @Test
@@ -395,9 +401,9 @@ public class ApiAionTest {
 
         assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_FROM);
 
-        Address addr = new Address(Keystore.create("testPwd"));
-
         // locked account should throw INVALID_ACCOUNT
+
+        Address addr = new Address(Keystore.create("testPwd"));
 
         txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
             msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
