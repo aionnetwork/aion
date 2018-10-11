@@ -166,10 +166,13 @@ public class MongoDB extends AbstractDB {
     private ClientSession clientSession;
     private MongoCollection<BsonDocument> collection = null;
     private WriteBatch batch = null;
+    private boolean isReader = false;
 
     public MongoDB(String dbName, String mongoClientUri) {
         super(dbName);
         this.mongoClientUri = mongoClientUri;
+
+        this.isReader = mongoClientUri.contains("reader");
     }
 
     /**
@@ -272,6 +275,10 @@ public class MongoDB extends AbstractDB {
         check();
         check(cache.keySet().stream().map(k -> k.getData()).collect(Collectors.toList()));
 
+        if (this.isReader) {
+            return true;
+        }
+
         WriteBatch edits = new WriteBatch().addEditsWrapper(cache);
         WriteBatchResult result = doBulkWrite(edits);
 
@@ -293,6 +300,10 @@ public class MongoDB extends AbstractDB {
         check();
         check(key);
 
+        if (this.isReader) {
+            return;
+        }
+
         // Write this single edit in as a batch
         WriteBatch edits = new WriteBatch().addEdit(key, value);
         doBulkWrite(edits);
@@ -302,6 +313,10 @@ public class MongoDB extends AbstractDB {
     public void delete(byte[] key) {
         check();
         check(key);
+
+        if (this.isReader) {
+            return;
+        }
 
         // Write this single edit in as a batch
         WriteBatch edits = new WriteBatch().addEdit(key, null);
@@ -313,6 +328,10 @@ public class MongoDB extends AbstractDB {
         check();
         check(inputMap.keySet());
 
+        if (this.isReader) {
+            return;
+        }
+
         WriteBatch edits = new WriteBatch().addEdits(inputMap);
         doBulkWrite(edits);
     }
@@ -321,6 +340,10 @@ public class MongoDB extends AbstractDB {
     public void putToBatch(byte[] key, byte[] value) {
         check();
         check(key);
+
+        if (this.isReader) {
+            return;
+        }
 
         if (this.batch == null) {
             this.batch = new WriteBatch();
@@ -332,6 +355,10 @@ public class MongoDB extends AbstractDB {
     @Override
     public void commitBatch() {
         check();
+
+        if (this.isReader) {
+            return;
+        }
 
         if (this.batch != null) {
             LOG.info("Committing batch of writes");
@@ -347,6 +374,11 @@ public class MongoDB extends AbstractDB {
     public void deleteBatch(Collection<byte[]> keys) {
         check();
         check(keys);
+
+
+        if (this.isReader) {
+            return;
+        }
 
         if (!keys.isEmpty()) {
             Map<byte[], byte[]> batch = new HashMap();
@@ -373,6 +405,10 @@ public class MongoDB extends AbstractDB {
     @Override
     public void drop() {
         check();
+
+        if (this.isReader) {
+            return;
+        }
 
         LOG.info("Dropping collection {}", this.name);
         this.collection.drop(this.clientSession);
