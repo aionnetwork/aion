@@ -34,11 +34,10 @@
  */
 package org.aion.base.db;
 
-import org.aion.base.type.Address;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.aion.base.type.Address;
 
 public interface IContractDetails<DW> {
 
@@ -55,9 +54,10 @@ public interface IContractDetails<DW> {
     /**
      * Returns the value associated with key.
      *
-     * @implNote Some implementations may handle a non-existent key-value pair differently.
      * @param key The key to query.
-     * @return The associated value or some non-value indicator in the case of no such key-value pair.
+     * @return The associated value or some non-value indicator in the case of no such key-value
+     * pair.
+     * @implNote Some implementations may handle a non-existent key-value pair differently.
      */
     DW get(DW key);
 
@@ -70,19 +70,19 @@ public interface IContractDetails<DW> {
     byte[] getCode();
 
     /**
+     * Sets the code of the associated address to code.
+     *
+     * @param code The code to set.
+     */
+    void setCode(byte[] code);
+
+    /**
      * Returns the code whose hash is codeHash.
      *
      * @param codeHash The hashed code.
      * @return the code.
      */
     byte[] getCode(byte[] codeHash);
-
-    /**
-     * Sets the code of the associated address to code.
-     *
-     * @param code The code to set.
-     */
-    void setCode(byte[] code);
 
     /**
      * Returns the storage hash.
@@ -94,24 +94,10 @@ public interface IContractDetails<DW> {
     /**
      * Decodes an IContractDetails object from the RLP encoding rlpCode.
      *
-     * @implNote Implementing classes may not necessarily support this method.
      * @param rlpCode The encoding to decode.
+     * @implNote Implementing classes may not necessarily support this method.
      */
     void decode(byte[] rlpCode);
-
-    /**
-     * Sets the dirty value to dirty.
-     *
-     * @param dirty The dirty value.
-     */
-    void setDirty(boolean dirty);
-
-    /**
-     * Sets the deleted value to deleted.
-     *
-     * @param deleted the deleted value.
-     */
-    void setDeleted(boolean deleted);
 
     /**
      * Returns true iff the IContractDetails is dirty.
@@ -121,6 +107,13 @@ public interface IContractDetails<DW> {
     boolean isDirty();
 
     /**
+     * Sets the dirty value to dirty.
+     *
+     * @param dirty The dirty value.
+     */
+    void setDirty(boolean dirty);
+
+    /**
      * Returns true iff the IContractDetails is deleted.
      *
      * @return only if this is deleted.
@@ -128,10 +121,17 @@ public interface IContractDetails<DW> {
     boolean isDeleted();
 
     /**
+     * Sets the deleted value to deleted.
+     *
+     * @param deleted the deleted value.
+     */
+    void setDeleted(boolean deleted);
+
+    /**
      * Returns an rlp encoding of this IContractDetails object.
      *
-     * @implNote Implementing classes may not necessarily support this method.
      * @return an rlp encoding of this.
+     * @implNote Implementing classes may not necessarily support this method.
      */
     byte[] getEncoded();
 
@@ -145,7 +145,8 @@ public interface IContractDetails<DW> {
 
     /**
      * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in storageValues.
+     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
+     * storageValues.
      *
      * @param storageKeys The keys.
      * @param storageValues The values.
@@ -189,17 +190,17 @@ public interface IContractDetails<DW> {
      * Returns an IContractDetails object pertaining to a specific point in time given by the root
      * hash hash.
      *
-     * @implNote Implementing classes may not necessarily support this method.
      * @param hash The root hash to search for.
      * @return the specified IContractDetails.
+     * @implNote Implementing classes may not necessarily support this method.
      */
     IContractDetails<DW> getSnapshotTo(byte[] hash);
 
     /**
      * Sets the data source to dataSource.
      *
-     * @implNote Implementing classes may not necessarily support this method.
      * @param dataSource The new dataSource.
+     * @implNote Implementing classes may not necessarily support this method.
      */
     void setDataSource(IByteArrayKeyValueStore dataSource);
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,13 +31,12 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.base.type;
 
 import java.math.BigInteger;
 
 /**
- *
  * @author jin
  */
 public interface ITransaction extends Cloneable {
@@ -45,6 +44,8 @@ public interface ITransaction extends Cloneable {
     byte[] getHash();
 
     byte[] getEncoded();
+
+    void setEncoded(byte[] _encodedData);
 
     Address getFrom();
 
@@ -59,10 +60,7 @@ public interface ITransaction extends Cloneable {
     BigInteger getTimeStampBI();
 
     /**
-     * Added these two interfaces with refactoring (should be here in the first
-     * place!)
-     * 
-     * @return
+     * Added these two interfaces with refactoring (should be here in the first place!)
      */
     byte[] getValue();
 
@@ -77,8 +75,6 @@ public interface ITransaction extends Cloneable {
     long getNrgPrice();
 
     long getNrgConsume();
-
-    void setEncoded(byte[] _encodedData);
 
     void setNrgConsume(long _nrg);
 

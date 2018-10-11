@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,15 +31,15 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.base.util;
 
 import java.time.Instant;
 
 public final class TimeInstant {
-    private static Instant instant;
 
     public static final TimeInstant EPOCH = new TimeInstant();
+    private static Instant instant;
 
     public static TimeInstant now() {
         TimeInstant.instant = Instant.now();
@@ -49,7 +49,6 @@ public final class TimeInstant {
     public long toEpochSec() {
         return instant.getEpochSecond();
     }
-
 
 //    public long toEpochNano() {
 //        long seconds = instant.getEpochSecond();

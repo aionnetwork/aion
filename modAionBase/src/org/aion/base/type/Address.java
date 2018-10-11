@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,23 +31,20 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.base.type;
 
+import java.util.Arrays;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Bytesable;
 import org.aion.base.util.FastByteComparisons;
 
-import java.util.Arrays;
-
 /**
- * The address class is a byte array wrapper represent fixed-32bytes array for
- * the kernel account (public key) has more security compare with 20bytes
- * address blockchain system.
- * 
- * @author jay
+ * The address class is a byte array wrapper represent fixed-32bytes array for the kernel account
+ * (public key) has more security compare with 20bytes address blockchain system.
  *
+ * @author jay
  */
 public final class Address implements Comparable<Address>, Bytesable<Address>, Cloneable {
 
@@ -100,11 +97,6 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
         setupData(hexByte);
     }
 
-    private void setupData(final byte[] in) {
-        this.address = in;
-        this.hashCode = Arrays.hashCode(in);
-    }
-
     public static Address wrap(final byte[] addr) {
         return new Address(addr);
     }
@@ -115,6 +107,19 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
 
     public static Address wrap(final ByteArrayWrapper addr) {
         return new Address(addr);
+    }
+
+    public static Address ZERO_ADDRESS() {
+        return zeroAddr;
+    }
+
+    public static Address EMPTY_ADDRESS() {
+        return emptyAddr;
+    }
+
+    private void setupData(final byte[] in) {
+        this.address = in;
+        this.hashCode = Arrays.hashCode(in);
     }
 
     public final String toString() {
@@ -144,7 +149,8 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
             return false;
         } else {
             byte[] otherAddress = ((Address) other).toBytes();
-            return FastByteComparisons.compareTo(this.address, 0, this.address.length, otherAddress, 0,
+            return
+                FastByteComparisons.compareTo(this.address, 0, this.address.length, otherAddress, 0,
                     otherAddress.length) == 0;
         }
     }
@@ -155,7 +161,8 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
 
     @Override
     public int compareTo(Address o) {
-        return FastByteComparisons.compareTo(this.address, 0, ADDRESS_LEN, o.toBytes(), 0, o.toBytes().length);
+        return FastByteComparisons
+            .compareTo(this.address, 0, ADDRESS_LEN, o.toBytes(), 0, o.toBytes().length);
     }
 
     public int compareTo(byte[] o) {
@@ -167,15 +174,11 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
         return new Address(bs);
     }
 
-    public static Address ZERO_ADDRESS() {
-        return zeroAddr;
+    public boolean isEmptyAddress() {
+        return Arrays.equals(address, emptyAddr.toBytes());
     }
 
-    public static Address EMPTY_ADDRESS() {
-        return emptyAddr;
+    public boolean isZeroAddress() {
+        return Arrays.equals(address, zeroAddr.toBytes());
     }
-
-    public boolean isEmptyAddress() { return  Arrays.equals(address, emptyAddr.toBytes()); }
-
-    public boolean isZeroAddress() { return Arrays.equals(address, zeroAddr.toBytes()); }
 }

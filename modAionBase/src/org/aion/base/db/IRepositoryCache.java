@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,18 +31,16 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.base.db;
 
-import org.aion.base.type.Address;
-
 import java.math.BigInteger;
+import org.aion.base.type.Address;
 
 /**
  * Repository interface for individual account additions and updates.
  *
- * @implNote Tracking a repository should be done through implementing this
- *           interface.
+ * @implNote Tracking a repository should be done through implementing this interface.
  */
 public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> {
 
@@ -52,8 +50,7 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
     /**
      * Creates a new account state in the database or cache.
      *
-     * @param address
-     *            the address of the account to be created
+     * @param address the address of the account to be created
      * @return a {@link AS} object storing the newly created account state
      */
     AS createAccount(Address address);
@@ -61,40 +58,33 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
     /**
      * Deletes the account from the cache and database.
      *
-     * @param address
-     *            the address of the account to be deleted
-     * @implNote This method only marks the account for deletion. Removing the
-     *           account from the database is done at the next flush operation.
+     * @param address the address of the account to be deleted
+     * @implNote This method only marks the account for deletion. Removing the account from the
+     * database is done at the next flush operation.
      */
     void deleteAccount(Address address);
 
     /**
      * Increases by one the account associated with the given address.
      *
-     * @param address
-     *            the address of the account of interest
+     * @param address the address of the account of interest
      * @return the updated value of the nonce
      */
     BigInteger incrementNonce(Address address);
 
     /**
-     * Sets to a specific value the nonce of the account associated with the
-     * given address.
+     * Sets to a specific value the nonce of the account associated with the given address.
      *
-     * @param address
-     *            the address of the account of interest
+     * @param address the address of the account of interest
      * @return the updated nonce value for the account
      */
     BigInteger setNonce(Address address, BigInteger nonce);
 
     /**
-     * Adds the given value to the balance of the account associated with the
-     * given address.
+     * Adds the given value to the balance of the account associated with the given address.
      *
-     * @param address
-     *            the address of the account of interest
-     * @param value
-     *            to be added to the balance
+     * @param address the address of the account of interest
+     * @param value to be added to the balance
      * @return the updated balance for the account
      */
     BigInteger addBalance(Address address, BigInteger value);
@@ -105,12 +95,10 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
     /**
      * Stores code associated with an account.
      *
-     * @param address
-     *            the address of the account of interest
-     * @param code
-     *            the code that will be associated with this account
-     * @implNote Calling this method on already initialized code should leave
-     *           the account and contract state unaltered.
+     * @param address the address of the account of interest
+     * @param code the code that will be associated with this account
+     * @implNote Calling this method on already initialized code should leave the account and
+     * contract state unaltered.
      */
     void saveCode(Address address, byte[] code);
 
@@ -118,15 +106,11 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
     // -------------------------------------------------------------------------------------
 
     /**
-     * Store the given data at the given key in the account associated with the
-     * given address.
+     * Store the given data at the given key in the account associated with the given address.
      *
-     * @param address
-     *            the address of the account of interest
-     * @param key
-     *            the key at which the date will be stored
-     * @param value
-     *            the data to be stored
+     * @param address the address of the account of interest
+     * @param key the key at which the date will be stored
+     * @param value the data to be stored
      */
     void addStorageRow(Address address, DW key, DW value);
 

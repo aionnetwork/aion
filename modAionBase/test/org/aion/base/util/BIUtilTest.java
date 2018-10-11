@@ -20,25 +20,36 @@
  * Contributors:
  *     Aion foundation.
  */
-
 package org.aion.base.util;
 
-import org.junit.Test;
+import static org.aion.base.util.BIUtil.isCovers;
+import static org.aion.base.util.BIUtil.isEqual;
+import static org.aion.base.util.BIUtil.isLessThan;
+import static org.aion.base.util.BIUtil.isMoreThan;
+import static org.aion.base.util.BIUtil.isNotCovers;
+import static org.aion.base.util.BIUtil.isNotEqual;
+import static org.aion.base.util.BIUtil.isPositive;
+import static org.aion.base.util.BIUtil.isZero;
+import static org.aion.base.util.BIUtil.max;
+import static org.aion.base.util.BIUtil.min;
+import static org.aion.base.util.BIUtil.sum;
+import static org.aion.base.util.BIUtil.toBI;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
-
-import static org.aion.base.util.BIUtil.*;
-import static org.junit.Assert.*;
+import org.junit.Test;
 
 public class BIUtilTest {
 
-    private final BigInteger[][] bigInt ={
-            { new BigInteger("-00000000000000000000"), new BigInteger("00000000000000000000")},
-            { new BigInteger("-00000000000000000001"), new BigInteger("00000000000000000001")},
-            { new BigInteger("-10000000000000000000"), new BigInteger("10000000000000000000")},
-            { new BigInteger("-20000000000000000000"), new BigInteger("20000000000000000000")},
-            { new BigInteger("-30000000000000000000"), new BigInteger("30000000000000000000")},
-            { new BigInteger("-99999999999999999999"), new BigInteger("99999999999999999999")},
+    private final BigInteger[][] bigInt = {
+        {new BigInteger("-00000000000000000000"), new BigInteger("00000000000000000000")},
+        {new BigInteger("-00000000000000000001"), new BigInteger("00000000000000000001")},
+        {new BigInteger("-10000000000000000000"), new BigInteger("10000000000000000000")},
+        {new BigInteger("-20000000000000000000"), new BigInteger("20000000000000000000")},
+        {new BigInteger("-30000000000000000000"), new BigInteger("30000000000000000000")},
+        {new BigInteger("-99999999999999999999"), new BigInteger("99999999999999999999")},
     };
 
     @Test
@@ -94,21 +105,21 @@ public class BIUtilTest {
 
         // toBI(byte), toBI(long)
         final long[] testLong = {
-                0L,
-                1L,
-                1000000000000000000L,
-                9223372036854775807L,
+            0L,
+            1L,
+            1000000000000000000L,
+            9223372036854775807L,
         };
 
         final byte[][] testByte = {
-                ByteUtil.longToBytes(testLong[0]),
-                ByteUtil.longToBytes(testLong[1]),
-                ByteUtil.longToBytes(testLong[2]),
-                ByteUtil.longToBytes(testLong[3]),
+            ByteUtil.longToBytes(testLong[0]),
+            ByteUtil.longToBytes(testLong[1]),
+            ByteUtil.longToBytes(testLong[2]),
+            ByteUtil.longToBytes(testLong[3]),
         };
 
-        for(int i = 0; i < 4; i++) {
-            assertEquals( toBI(testLong[i]), toBI(testByte[i]));
+        for (int i = 0; i < 4; i++) {
+            assertEquals(toBI(testLong[i]), toBI(testByte[i]));
         }
 
         // exitLong
@@ -129,40 +140,40 @@ public class BIUtilTest {
         }
 
         assertEquals(new BigInteger("-160000000000000000000"),
-                sum(bigInt[0][0],
+            sum(bigInt[0][0],
                 sum(bigInt[1][0],
-                sum(bigInt[2][0],
-                sum(bigInt[3][0],
-                sum(bigInt[4][0], bigInt[5][0]))))));
+                    sum(bigInt[2][0],
+                        sum(bigInt[3][0],
+                            sum(bigInt[4][0], bigInt[5][0]))))));
 
         assertEquals(new BigInteger("160000000000000000000"),
-                sum(bigInt[0][1],
+            sum(bigInt[0][1],
                 sum(bigInt[1][1],
-                sum(bigInt[2][1],
-                sum(bigInt[3][1],
-                sum(bigInt[4][1], bigInt[5][1]))))));
+                    sum(bigInt[2][1],
+                        sum(bigInt[3][1],
+                            sum(bigInt[4][1], bigInt[5][1]))))));
     }
 
     @Test
     public void testMinMax() {
         // min && max
-        for(int c = 0; c < bigInt.length; c++) {
+        for (int c = 0; c < bigInt.length; c++) {
             assertEquals(bigInt[c][0], min(bigInt[c][0], bigInt[c][1]));
             assertEquals(bigInt[c][1], max(bigInt[c][0], bigInt[c][1]));
         }
 
-        assertEquals(bigInt[bigInt.length-1][0],
-                min(bigInt[0][0],
+        assertEquals(bigInt[bigInt.length - 1][0],
+            min(bigInt[0][0],
                 min(bigInt[1][0],
-                min(bigInt[2][0],
-                min(bigInt[3][0],
-                min(bigInt[4][0], bigInt[5][0]))))));
+                    min(bigInt[2][0],
+                        min(bigInt[3][0],
+                            min(bigInt[4][0], bigInt[5][0]))))));
 
-        assertEquals(bigInt[bigInt.length-1][1],
-                max(bigInt[0][1],
+        assertEquals(bigInt[bigInt.length - 1][1],
+            max(bigInt[0][1],
                 max(bigInt[1][1],
-                max(bigInt[2][1],
-                max(bigInt[3][1],
-                max(bigInt[4][1], bigInt[5][1]))))));
+                    max(bigInt[2][1],
+                        max(bigInt[3][1],
+                            max(bigInt[4][1], bigInt[5][1]))))));
     }
 }
