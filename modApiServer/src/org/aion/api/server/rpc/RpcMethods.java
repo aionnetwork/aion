@@ -206,6 +206,7 @@ public class RpcMethods {
             Map.entry("eth_submitHashrate", (params) -> api.eth_submitHashrate(params)),
             Map.entry("eth_gasPrice", (params) -> api.eth_gasPrice()),
             Map.entry("eth_sign", (params) -> api.eth_sign(params)),
+            Map.entry("eth_signTransaction", (params) -> api.eth_signTransaction(params)),
             Map.entry("eth_getStorageAt", (params) -> api.eth_getStorageAt(params)),
 
             Map.entry("eth_newFilter", (params) -> api.eth_newFilter(params)),
