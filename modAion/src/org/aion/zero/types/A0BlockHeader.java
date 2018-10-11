@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,12 +17,9 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.zero.types;
 
 import static org.aion.base.util.ByteUtil.longToBytes;
@@ -31,18 +28,15 @@ import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.Objects;
-
 import org.aion.base.type.Address;
 import org.aion.base.type.IPowBlockHeader;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Utils;
 import org.aion.crypto.HashUtil;
+import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
-import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONObject;
 
@@ -54,32 +48,12 @@ import org.json.JSONObject;
 public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeader {
 
     static final int RPL_BH_VERSION = 0, RPL_BH_NUMBER = 1, RPL_BH_PARENTHASH = 2,
-            RPL_BH_COINBASE = 3, RPL_BH_STATEROOT = 4, RPL_BH_TXTRIE = 5,
-            RPL_BH_RECEIPTTRIE = 6, RPL_BH_LOGSBLOOM = 7, RPL_BH_DIFFICULTY = 8,
-            RPL_BH_EXTRADATA = 9, RPL_BH_NRG_CONSUMED = 10, RPL_BH_NRG_LIMIT = 11,
-            RPL_BH_TIMESTAMP = 12, RPL_BH_NONCE = 13, RPL_BH_SOLUTION = 14;
+        RPL_BH_COINBASE = 3, RPL_BH_STATEROOT = 4, RPL_BH_TXTRIE = 5,
+        RPL_BH_RECEIPTTRIE = 6, RPL_BH_LOGSBLOOM = 7, RPL_BH_DIFFICULTY = 8,
+        RPL_BH_EXTRADATA = 9, RPL_BH_NRG_CONSUMED = 10, RPL_BH_NRG_LIMIT = 11,
+        RPL_BH_TIMESTAMP = 12, RPL_BH_NONCE = 13, RPL_BH_SOLUTION = 14;
 
     private byte[] mineHashBytes;
-
-    //TODO: Update this
-    public JSONObject toJSON() {
-        JSONObject obj = new JSONObject();
-        obj.putOpt("version", toHexString(this.parentHash));
-        obj.putOpt("number", toHexString(longToBytes(this.number)));
-        obj.putOpt("parentHash", toHexString(this.parentHash));
-        obj.putOpt("coinBase", toHexString(this.coinbase.toBytes()));
-        obj.putOpt("stateRoot", toHexString(this.stateRoot));
-        obj.putOpt("txTrieRoot", toHexString(this.txTrieRoot));
-        obj.putOpt("receiptTrieRoot", toHexString(this.receiptTrieRoot));
-        obj.putOpt("logsBloom", toHexString(this.logsBloom));
-        obj.putOpt("difficulty", toHexString(this.difficulty));
-        obj.putOpt("extraData", toHexString(this.extraData));
-        obj.putOpt("energyConsumed", toHexString(longToBytes(this.energyConsumed)));
-        obj.putOpt("energyLimit", toHexString(longToBytes(this.energyLimit)));
-        obj.putOpt("timestamp", toHexString(longToBytes(this.timestamp)));
-
-        return obj;
-    }
 
     public A0BlockHeader(byte[] encoded) {
         this((RLPList) RLP.decode2(encoded).get(0));
@@ -101,7 +75,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         // CoinBase
         byte[] data = rlpHeader.get(RPL_BH_COINBASE).getRLPData();
         this.coinbase = (data == null) ? Address.EMPTY_ADDRESS()
-                : Address.wrap(rlpHeader.get(RPL_BH_COINBASE).getRLPData());
+            : Address.wrap(rlpHeader.get(RPL_BH_COINBASE).getRLPData());
 
         // StateRoot
         this.stateRoot = rlpHeader.get(RPL_BH_STATEROOT).getRLPData();
@@ -129,11 +103,13 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         // Energy Consumed
         byte[] energyConsumedBytes = rlpHeader.get(RPL_BH_NRG_CONSUMED).getRLPData();
-        this.energyConsumed = energyConsumedBytes == null ? 0 : (new BigInteger(1, energyConsumedBytes).longValue());
+        this.energyConsumed =
+            energyConsumedBytes == null ? 0 : (new BigInteger(1, energyConsumedBytes).longValue());
 
         // Energy Limit
         byte[] energyLimitBytes = rlpHeader.get(RPL_BH_NRG_LIMIT).getRLPData();
-        this.energyLimit = energyLimitBytes == null ? 0 : (new BigInteger(1, energyLimitBytes).longValue());
+        this.energyLimit =
+            energyLimitBytes == null ? 0 : (new BigInteger(1, energyLimitBytes).longValue());
 
         // Timestamp
         byte[] tsBytes = rlpHeader.get(RPL_BH_TIMESTAMP).getRLPData();
@@ -152,8 +128,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
     /**
      * Copy constructor
      *
-     * @param toCopy
-     *            Block header to copy
+     * @param toCopy Block header to copy
      */
     public A0BlockHeader(A0BlockHeader toCopy) {
 
@@ -180,7 +155,8 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         // Copy receiptTreeRoot
         this.receiptTrieRoot = new byte[toCopy.getReceiptsRoot().length];
-        System.arraycopy(toCopy.getReceiptsRoot(), 0, this.receiptTrieRoot, 0, this.receiptTrieRoot.length);
+        System.arraycopy(toCopy.getReceiptsRoot(), 0, this.receiptTrieRoot, 0,
+            this.receiptTrieRoot.length);
 
         // Copy logs bloom
         this.logsBloom = new byte[toCopy.getLogsBloom().length];
@@ -213,8 +189,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
     }
 
-    public A0BlockHeader(byte version, long number, byte[] parentHash, Address coinbase, byte[] logsBloom, byte[] difficulty,
-                             byte[] extraData, long energyConsumed, long energyLimit, long timestamp, byte[] nonce, byte[] solution) {
+    public A0BlockHeader(byte version, long number, byte[] parentHash, Address coinbase,
+        byte[] logsBloom, byte[] difficulty,
+        byte[] extraData, long energyConsumed, long energyLimit, long timestamp, byte[] nonce,
+        byte[] solution) {
         this.version = version;
         this.coinbase = coinbase;
         this.parentHash = parentHash;
@@ -233,164 +211,12 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         this.energyLimit = energyLimit;
     }
 
-    public byte[] getHash() {
-        return HashUtil.h256(getEncoded());
-    }
-
-    public byte[] getEncoded() {
-        return this.getEncoded(true); // with nonce
-    }
-
-    public byte[] getEncodedWithoutNonce() {
-        return this.getEncoded(false);
-    }
-
-    public byte[] getEncoded(boolean withNonce) {
-
-        byte[] versionBytes = {this.version};
-
-        byte[] RLPversion = RLP.encodeElement(versionBytes);
-        byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
-        byte[] parentHash = RLP.encodeElement(this.parentHash);
-        byte[] coinbase = RLP.encodeElement(this.coinbase.toBytes());
-        byte[] stateRoot = RLP.encodeElement(this.stateRoot);
-
-        if (txTrieRoot == null) {
-            this.txTrieRoot = EMPTY_TRIE_HASH;
-        }
-        byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot);
-
-        if (receiptTrieRoot == null) {
-            this.receiptTrieRoot = EMPTY_TRIE_HASH;
-        }
-        byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
-        byte[] logsBloom = RLP.encodeElement(this.logsBloom);
-        byte[] difficulty = RLP.encodeElement(this.difficulty);
-        byte[] extraData = RLP.encodeElement(this.extraData);
-        byte[] energyConsumed = RLP.encodeBigInteger(BigInteger.valueOf(this.energyConsumed));
-        byte[] energyLimit = RLP.encodeBigInteger(BigInteger.valueOf(this.energyLimit));
-
-        byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
-
-        byte[] solution = RLP.encodeElement(this.solution);
-
-        if (withNonce) {
-            byte[] nonce = RLP.encodeElement(this.nonce);
-            return RLP.encodeList(RLPversion, number, parentHash, coinbase, stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty,
-                                  extraData, energyConsumed, energyLimit, timestamp, nonce, solution);
-        } else {
-            return RLP.encodeList(RLPversion, parentHash, coinbase, stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty,
-                    number, timestamp, extraData, solution, energyConsumed, energyLimit);
-        }
-    }
-
-    public String toString() {
-        return toStringWithSuffix("\n");
-    }
-
-    private String toStringWithSuffix(final String suffix) {
-        StringBuilder toStringBuff = new StringBuilder();
-        toStringBuff.append("  hash=").append(toHexString(getHash())).append("  Length: ").append(getHash().length)
-                .append(suffix);
-        toStringBuff.append("  version=").append(Integer.toHexString(version)).append("  Length: ").append(suffix);
-        toStringBuff.append("  number=").append(number).append(suffix);
-        toStringBuff.append("  parentHash=").append(toHexString(parentHash)).append("  parentHash: ")
-                .append(parentHash.length).append(suffix);
-        toStringBuff.append("  coinbase=").append(coinbase.toString()).append("  coinBase: ")
-                .append(coinbase.toBytes().length).append(suffix);
-        toStringBuff.append("  stateRoot=").append(toHexString(stateRoot)).append("  stateRoot: ")
-                .append(stateRoot.length).append(suffix);
-        toStringBuff.append("  txTrieHash=").append(toHexString(txTrieRoot)).append("  txTrieRoot: ")
-                .append(txTrieRoot.length).append(suffix);
-        toStringBuff.append("  receiptsTrieHash=").append(toHexString(receiptTrieRoot)).append("  receiptTrieRoot: ")
-                .append(receiptTrieRoot.length).append(suffix);
-        toStringBuff.append("  difficulty=").append(toHexString(difficulty)).append("  difficulty: ")
-                .append(difficulty.length).append(suffix);
-        toStringBuff.append("  energyConsumed=").append(energyConsumed).append(suffix);
-        toStringBuff.append("  energyLimit=").append(energyLimit).append(suffix);
-        toStringBuff.append("  extraData=").append(toHexString(extraData)).append(suffix);
-        toStringBuff.append("  timestamp=").append(timestamp).append(" (").append(Utils.longToDateTime(timestamp))
-                .append(")").append(suffix);
-        toStringBuff.append("  nonce=").append(toHexString(nonce)).append(suffix);
-        toStringBuff.append("  solution=").append(toHexString(solution)).append(suffix);
-        return toStringBuff.toString();
-    }
-
-    public String toFlatString() {
-        return toStringWithSuffix("");
-    }
-
-    public byte[] getSolution() {
-        return this.solution;
-    }
-
-    public void setSolution(byte[] _sl) {
-        this.solution = _sl;
-    }
-
-    public long getEnergyConsumed() {
-        return this.energyConsumed;
-    }
-
-    public long getEnergyLimit() {
-        return this.energyLimit;
-    }
-
-    /**
-     * Set the energyConsumed field in header, this is used during block
-     * creation
-     *
-     * @param energyConsumed
-     *            total energyConsumed during execution of transactions
-     */
-    public void setEnergyConsumed(long energyConsumed) {
-        this.energyConsumed = energyConsumed;
-    }
-
-    /**
-     * Return unencoded bytes of the header
-     *
-     * @param toMine Return header bytes excluding nonce and solution if true; else the entire block header
-     * @return byte array containing raw header bytes
-     */
-    public byte[] getHeaderBytes(boolean toMine) {
-        byte[] hdrBytes;
-        if(toMine) {
-            hdrBytes = merge(new byte[]{this.version}, longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
-                    this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
-                    this.difficulty, this.extraData, longToBytes(this.energyConsumed),
-                    longToBytes(this.energyLimit), longToBytes(this.timestamp));
-        }else {
-            hdrBytes = merge(new byte[]{this.version}, longToBytes(this.number), this.parentHash, this.coinbase.toBytes(),
-                    this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
-                    this.difficulty, this.extraData, longToBytes(this.energyConsumed),
-                    longToBytes(this.energyLimit), longToBytes(this.timestamp), this.nonce, this.solution);
-        }
-        return hdrBytes;
-    }
-
-    /**
-     * Get hash of the header bytes to mine a block
-     *
-     * @return Blake2b digest (32 bytes) of the raw header bytes.
-     */
-    public byte[] getMineHash() {
-        if(this.mineHashBytes == null) {
-            this.mineHashBytes = HashUtil.h256(getHeaderBytes(true));
-        }
-        return mineHashBytes;
-    }
-
     public static A0BlockHeader fromRLP(byte[] rawData, boolean isUnsafe) throws Exception {
         return fromRLP((RLPList) RLP.decode2(rawData).get(0), isUnsafe);
     }
 
     /**
      * Construct a block header from RLP
-     *
-     * @param rlpHeader
-     * @param isUnsafe
-     * @return
      */
     public static A0BlockHeader fromRLP(RLPList rlpHeader, boolean isUnsafe) throws Exception {
         Builder builder = new Builder();
@@ -400,8 +226,9 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         // Version
         byte[] version = rlpHeader.get(RPL_BH_VERSION).getRLPData();
-        if(version != null && version.length == 1)
+        if (version != null && version.length == 1) {
             builder.withVersion(version[0]);
+        }
 
         // Number
         byte[] nrBytes = rlpHeader.get(RPL_BH_NUMBER).getRLPData();
@@ -466,18 +293,198 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         return builder.build();
     }
 
+    //TODO: Update this
+    public JSONObject toJSON() {
+        JSONObject obj = new JSONObject();
+        obj.putOpt("version", toHexString(this.parentHash));
+        obj.putOpt("number", toHexString(longToBytes(this.number)));
+        obj.putOpt("parentHash", toHexString(this.parentHash));
+        obj.putOpt("coinBase", toHexString(this.coinbase.toBytes()));
+        obj.putOpt("stateRoot", toHexString(this.stateRoot));
+        obj.putOpt("txTrieRoot", toHexString(this.txTrieRoot));
+        obj.putOpt("receiptTrieRoot", toHexString(this.receiptTrieRoot));
+        obj.putOpt("logsBloom", toHexString(this.logsBloom));
+        obj.putOpt("difficulty", toHexString(this.difficulty));
+        obj.putOpt("extraData", toHexString(this.extraData));
+        obj.putOpt("energyConsumed", toHexString(longToBytes(this.energyConsumed)));
+        obj.putOpt("energyLimit", toHexString(longToBytes(this.energyLimit)));
+        obj.putOpt("timestamp", toHexString(longToBytes(this.timestamp)));
+
+        return obj;
+    }
+
+    public byte[] getHash() {
+        return HashUtil.h256(getEncoded());
+    }
+
+    public byte[] getEncoded() {
+        return this.getEncoded(true); // with nonce
+    }
+
+    public byte[] getEncodedWithoutNonce() {
+        return this.getEncoded(false);
+    }
+
+    public byte[] getEncoded(boolean withNonce) {
+
+        byte[] versionBytes = {this.version};
+
+        byte[] RLPversion = RLP.encodeElement(versionBytes);
+        byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
+        byte[] parentHash = RLP.encodeElement(this.parentHash);
+        byte[] coinbase = RLP.encodeElement(this.coinbase.toBytes());
+        byte[] stateRoot = RLP.encodeElement(this.stateRoot);
+
+        if (txTrieRoot == null) {
+            this.txTrieRoot = EMPTY_TRIE_HASH;
+        }
+        byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot);
+
+        if (receiptTrieRoot == null) {
+            this.receiptTrieRoot = EMPTY_TRIE_HASH;
+        }
+        byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
+        byte[] logsBloom = RLP.encodeElement(this.logsBloom);
+        byte[] difficulty = RLP.encodeElement(this.difficulty);
+        byte[] extraData = RLP.encodeElement(this.extraData);
+        byte[] energyConsumed = RLP.encodeBigInteger(BigInteger.valueOf(this.energyConsumed));
+        byte[] energyLimit = RLP.encodeBigInteger(BigInteger.valueOf(this.energyLimit));
+
+        byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
+
+        byte[] solution = RLP.encodeElement(this.solution);
+
+        if (withNonce) {
+            byte[] nonce = RLP.encodeElement(this.nonce);
+            return RLP.encodeList(RLPversion, number, parentHash, coinbase, stateRoot, txTrieRoot,
+                receiptTrieRoot, logsBloom, difficulty,
+                extraData, energyConsumed, energyLimit, timestamp, nonce, solution);
+        } else {
+            return RLP.encodeList(RLPversion, parentHash, coinbase, stateRoot, txTrieRoot,
+                receiptTrieRoot, logsBloom, difficulty,
+                number, timestamp, extraData, solution, energyConsumed, energyLimit);
+        }
+    }
+
+    public String toString() {
+        return toStringWithSuffix("\n");
+    }
+
+    private String toStringWithSuffix(final String suffix) {
+        StringBuilder toStringBuff = new StringBuilder();
+        toStringBuff.append("  hash=").append(toHexString(getHash())).append("  Length: ")
+            .append(getHash().length)
+            .append(suffix);
+        toStringBuff.append("  version=").append(Integer.toHexString(version)).append("  Length: ")
+            .append(suffix);
+        toStringBuff.append("  number=").append(number).append(suffix);
+        toStringBuff.append("  parentHash=").append(toHexString(parentHash))
+            .append("  parentHash: ")
+            .append(parentHash.length).append(suffix);
+        toStringBuff.append("  coinbase=").append(coinbase.toString()).append("  coinBase: ")
+            .append(coinbase.toBytes().length).append(suffix);
+        toStringBuff.append("  stateRoot=").append(toHexString(stateRoot)).append("  stateRoot: ")
+            .append(stateRoot.length).append(suffix);
+        toStringBuff.append("  txTrieHash=").append(toHexString(txTrieRoot))
+            .append("  txTrieRoot: ")
+            .append(txTrieRoot.length).append(suffix);
+        toStringBuff.append("  receiptsTrieHash=").append(toHexString(receiptTrieRoot))
+            .append("  receiptTrieRoot: ")
+            .append(receiptTrieRoot.length).append(suffix);
+        toStringBuff.append("  difficulty=").append(toHexString(difficulty))
+            .append("  difficulty: ")
+            .append(difficulty.length).append(suffix);
+        toStringBuff.append("  energyConsumed=").append(energyConsumed).append(suffix);
+        toStringBuff.append("  energyLimit=").append(energyLimit).append(suffix);
+        toStringBuff.append("  extraData=").append(toHexString(extraData)).append(suffix);
+        toStringBuff.append("  timestamp=").append(timestamp).append(" (")
+            .append(Utils.longToDateTime(timestamp))
+            .append(")").append(suffix);
+        toStringBuff.append("  nonce=").append(toHexString(nonce)).append(suffix);
+        toStringBuff.append("  solution=").append(toHexString(solution)).append(suffix);
+        return toStringBuff.toString();
+    }
+
+    public String toFlatString() {
+        return toStringWithSuffix("");
+    }
+
+    public byte[] getSolution() {
+        return this.solution;
+    }
+
+    public void setSolution(byte[] _sl) {
+        this.solution = _sl;
+    }
+
+    public long getEnergyConsumed() {
+        return this.energyConsumed;
+    }
+
+    /**
+     * Set the energyConsumed field in header, this is used during block creation
+     *
+     * @param energyConsumed total energyConsumed during execution of transactions
+     */
+    public void setEnergyConsumed(long energyConsumed) {
+        this.energyConsumed = energyConsumed;
+    }
+
+    public long getEnergyLimit() {
+        return this.energyLimit;
+    }
+
+    /**
+     * Return unencoded bytes of the header
+     *
+     * @param toMine Return header bytes excluding nonce and solution if true; else the entire block
+     * header
+     * @return byte array containing raw header bytes
+     */
+    public byte[] getHeaderBytes(boolean toMine) {
+        byte[] hdrBytes;
+        if (toMine) {
+            hdrBytes = merge(new byte[]{this.version}, longToBytes(this.number), this.parentHash,
+                this.coinbase.toBytes(),
+                this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
+                this.difficulty, this.extraData, longToBytes(this.energyConsumed),
+                longToBytes(this.energyLimit), longToBytes(this.timestamp));
+        } else {
+            hdrBytes = merge(new byte[]{this.version}, longToBytes(this.number), this.parentHash,
+                this.coinbase.toBytes(),
+                this.stateRoot, this.txTrieRoot, this.receiptTrieRoot, this.logsBloom,
+                this.difficulty, this.extraData, longToBytes(this.energyConsumed),
+                longToBytes(this.energyLimit), longToBytes(this.timestamp), this.nonce,
+                this.solution);
+        }
+        return hdrBytes;
+    }
+
+    /**
+     * Get hash of the header bytes to mine a block
+     *
+     * @return Blake2b digest (32 bytes) of the raw header bytes.
+     */
+    public byte[] getMineHash() {
+        if (this.mineHashBytes == null) {
+            this.mineHashBytes = HashUtil.h256(getHeaderBytes(true));
+        }
+        return mineHashBytes;
+    }
+
     /**
      * <p>Builder used to introduce blocks into system that come from unsafe
      * sources</p>
      */
     public static class Builder {
 
+        private static byte[] EMPTY_SOLUTION = new byte[1408];
+        private static byte[] EMPTY_BLOOM = new byte[256];
         /*
          * Some constants for fallbacks, these are not rigorously defined this;
          * TODO: define these with explanations in the future
          */
         protected Address EMPTY_ADDRESS = Address.EMPTY_ADDRESS();
-
         protected byte version;
         protected byte[] parentHash;
         protected Address coinbase;
@@ -493,13 +500,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         protected long energyLimit;
         protected byte[] solution;
         protected byte[] nonce;
-
         /*
          * Builder parameters, not related to header data structure
          */
         protected boolean isFromUnsafeSource = false;
-        private static byte[] EMPTY_SOLUTION = new byte[1408];
-        private static byte[] EMPTY_BLOOM = new byte[256];
 
         /**
          * Indicates that the data is from an unsafe source
@@ -512,9 +516,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         }
 
         public Builder withVersion(byte version) throws HeaderStructureException {
-            if(isFromUnsafeSource) {
+            if (isFromUnsafeSource) {
                 if (version < 1) {
-                    throw new HeaderStructureException("version", RPL_BH_VERSION, "must be greater than 0");
+                    throw new HeaderStructureException("version", RPL_BH_VERSION,
+                        "must be greater than 0");
                 }
             }
 
@@ -524,11 +529,15 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         public Builder withParentHash(byte[] parentHash) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                if (parentHash == null)
-                    throw new HeaderStructureException("parentHash", RPL_BH_PARENTHASH, "cannot be null");
+                if (parentHash == null) {
+                    throw new HeaderStructureException("parentHash", RPL_BH_PARENTHASH,
+                        "cannot be null");
+                }
 
-                if (parentHash.length != 32)
-                    throw new HeaderStructureException("parentHash", RPL_BH_PARENTHASH, "must be of length 32");
+                if (parentHash.length != 32) {
+                    throw new HeaderStructureException("parentHash", RPL_BH_PARENTHASH,
+                        "must be of length 32");
+                }
             }
 
             this.parentHash = parentHash;
@@ -537,8 +546,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         public Builder withCoinbase(Address coinbase) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                if (coinbase == null)
-                    throw new HeaderStructureException("coinbase", RPL_BH_COINBASE, "cannot be null");
+                if (coinbase == null) {
+                    throw new HeaderStructureException("coinbase", RPL_BH_COINBASE,
+                        "cannot be null");
+                }
             }
 
             this.coinbase = coinbase;
@@ -547,11 +558,15 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         public Builder withStateRoot(byte[] stateRoot) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                if (stateRoot == null)
-                    throw new HeaderStructureException("stateRoot", RPL_BH_STATEROOT, "cannot be null");
+                if (stateRoot == null) {
+                    throw new HeaderStructureException("stateRoot", RPL_BH_STATEROOT,
+                        "cannot be null");
+                }
 
-                if (stateRoot.length != 32)
-                    throw new HeaderStructureException("stateRoot", RPL_BH_STATEROOT, "must be of length 32");
+                if (stateRoot.length != 32) {
+                    throw new HeaderStructureException("stateRoot", RPL_BH_STATEROOT,
+                        "must be of length 32");
+                }
             }
 
             this.stateRoot = stateRoot;
@@ -561,11 +576,15 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withTxTrieRoot(byte[] txTrieRoot) throws HeaderStructureException {
             if (isFromUnsafeSource) {
 
-                if (txTrieRoot == null)
-                    throw new HeaderStructureException("txTrieRoot", RPL_BH_TXTRIE, "cannot be null");
+                if (txTrieRoot == null) {
+                    throw new HeaderStructureException("txTrieRoot", RPL_BH_TXTRIE,
+                        "cannot be null");
+                }
 
-                if (txTrieRoot.length != 32)
-                    throw new HeaderStructureException("txTrieRoot", RPL_BH_TXTRIE, "must be of length 32");
+                if (txTrieRoot.length != 32) {
+                    throw new HeaderStructureException("txTrieRoot", RPL_BH_TXTRIE,
+                        "must be of length 32");
+                }
             }
 
             this.txTrieRoot = txTrieRoot;
@@ -575,11 +594,15 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withReceiptTrieRoot(byte[] receiptTrieRoot) throws HeaderStructureException {
             if (isFromUnsafeSource) {
 
-                if (receiptTrieRoot == null)
-                    throw new HeaderStructureException("receiptTrieRoot", RPL_BH_RECEIPTTRIE, "cannot be null");
+                if (receiptTrieRoot == null) {
+                    throw new HeaderStructureException("receiptTrieRoot", RPL_BH_RECEIPTTRIE,
+                        "cannot be null");
+                }
 
-                if (receiptTrieRoot.length != 32)
-                    throw new HeaderStructureException("receiptTrieRoot", RPL_BH_RECEIPTTRIE, "must be of length 32");
+                if (receiptTrieRoot.length != 32) {
+                    throw new HeaderStructureException("receiptTrieRoot", RPL_BH_RECEIPTTRIE,
+                        "must be of length 32");
+                }
             }
 
             this.receiptTrieRoot = receiptTrieRoot;
@@ -589,11 +612,15 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withLogsBloom(byte[] logsBloom) throws HeaderStructureException {
             if (isFromUnsafeSource) {
 
-                if (logsBloom == null)
-                    throw new HeaderStructureException("logsBloom", RPL_BH_LOGSBLOOM, "cannot be null");
+                if (logsBloom == null) {
+                    throw new HeaderStructureException("logsBloom", RPL_BH_LOGSBLOOM,
+                        "cannot be null");
+                }
 
-                if (logsBloom.length != 256)
-                    throw new HeaderStructureException("logsBloom", RPL_BH_LOGSBLOOM, "logsBloom must be of length 256");
+                if (logsBloom.length != 256) {
+                    throw new HeaderStructureException("logsBloom", RPL_BH_LOGSBLOOM,
+                        "logsBloom must be of length 256");
+                }
             }
 
             this.logsBloom = logsBloom;
@@ -603,8 +630,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withDifficulty(byte[] difficulty) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 Objects.requireNonNull(difficulty);
-                if (difficulty.length > 16)
-                    throw new HeaderStructureException("difficulty", RPL_BH_DIFFICULTY, "cannot be greater than 16 bytes");
+                if (difficulty.length > 16) {
+                    throw new HeaderStructureException("difficulty", RPL_BH_DIFFICULTY,
+                        "cannot be greater than 16 bytes");
+                }
             }
             this.difficulty = difficulty;
             return this;
@@ -616,8 +645,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         public Builder withTimestamp(long timestamp) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                if (timestamp < 0)
-                    throw new HeaderStructureException("timestamp", RPL_BH_TIMESTAMP, "must be positive value");
+                if (timestamp < 0) {
+                    throw new HeaderStructureException("timestamp", RPL_BH_TIMESTAMP,
+                        "must be positive value");
+                }
             }
 
             this.timestamp = timestamp;
@@ -627,8 +658,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withTimestamp(byte[] timestamp) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 Objects.requireNonNull(timestamp);
-                if (timestamp.length > 8)
-                    throw new HeaderStructureException("timestamp", RPL_BH_TIMESTAMP, "cannot be greater than 8 bytes");
+                if (timestamp.length > 8) {
+                    throw new HeaderStructureException("timestamp", RPL_BH_TIMESTAMP,
+                        "cannot be greater than 8 bytes");
+                }
             }
             return withTimestamp(ByteUtil.byteArrayToLong(timestamp));
         }
@@ -646,8 +679,9 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         public Builder withNumber(byte[] number) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                if (number == null)
+                if (number == null) {
                     throw new HeaderStructureException("number", RPL_BH_NUMBER, "cannot be null");
+                }
             }
             return withNumber(ByteUtil.byteArrayToLong(number));
         }
@@ -655,11 +689,14 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withExtraData(byte[] extraData) throws HeaderStructureException {
             if (isFromUnsafeSource) {
 
-                if (extraData == null)
-                    throw new HeaderStructureException("extraData", RPL_BH_EXTRADATA, "cannot be null");
+                if (extraData == null) {
+                    throw new HeaderStructureException("extraData", RPL_BH_EXTRADATA,
+                        "cannot be null");
+                }
 
                 if (extraData.length > 32) {
-                    throw new HeaderStructureException("extraData", RPL_BH_EXTRADATA, "cannot be greater than 32 bytes");
+                    throw new HeaderStructureException("extraData", RPL_BH_EXTRADATA,
+                        "cannot be greater than 32 bytes");
                 }
             }
 
@@ -670,7 +707,8 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withEnergyConsumed(long energyConsumed) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 if (energyConsumed < 0) {
-                    throw new HeaderStructureException("energyConsumed", RPL_BH_NRG_CONSUMED, "must be positive value");
+                    throw new HeaderStructureException("energyConsumed", RPL_BH_NRG_CONSUMED,
+                        "must be positive value");
                 }
             }
 
@@ -680,11 +718,15 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
         public Builder withEnergyConsumed(byte[] energyConsumed) throws HeaderStructureException {
             if (isFromUnsafeSource) {
-                if (energyConsumed == null)
-                    throw new HeaderStructureException("energyConsumed", RPL_BH_NRG_CONSUMED, "cannot be null");
+                if (energyConsumed == null) {
+                    throw new HeaderStructureException("energyConsumed", RPL_BH_NRG_CONSUMED,
+                        "cannot be null");
+                }
 
-                if (energyConsumed.length > 8)
-                    throw new HeaderStructureException("energyConsumed", RPL_BH_NRG_CONSUMED, "cannot be greater than 8 bytes");
+                if (energyConsumed.length > 8) {
+                    throw new HeaderStructureException("energyConsumed", RPL_BH_NRG_CONSUMED,
+                        "cannot be greater than 8 bytes");
+                }
             }
 
             return withEnergyConsumed(ByteUtil.byteArrayToLong(energyConsumed));
@@ -693,7 +735,8 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withEnergyLimit(long energyLimit) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 if (energyLimit < 0) {
-                    throw new HeaderStructureException("energyLimitException", RPL_BH_NRG_LIMIT, "energyLimit must be positive value");
+                    throw new HeaderStructureException("energyLimitException", RPL_BH_NRG_LIMIT,
+                        "energyLimit must be positive value");
                 }
             }
 
@@ -704,11 +747,15 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withEnergyLimit(byte[] energyLimit) throws HeaderStructureException {
             if (isFromUnsafeSource) {
 
-                if (energyLimit == null)
-                    throw new HeaderStructureException("energyLimit", RPL_BH_NRG_LIMIT, "cannot be null");
+                if (energyLimit == null) {
+                    throw new HeaderStructureException("energyLimit", RPL_BH_NRG_LIMIT,
+                        "cannot be null");
+                }
 
-                if (energyLimit.length > 8)
-                    throw new HeaderStructureException("energyLimit", RPL_BH_NRG_LIMIT, "energyLimit cannot be greater than 8 bytes");
+                if (energyLimit.length > 8) {
+                    throw new HeaderStructureException("energyLimit", RPL_BH_NRG_LIMIT,
+                        "energyLimit cannot be greater than 8 bytes");
+                }
             }
             return withEnergyLimit(ByteUtil.byteArrayToLong(energyLimit));
         }
@@ -719,11 +766,14 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withSolution(byte[] solution) throws HeaderStructureException {
             if (isFromUnsafeSource) {
 
-                if (solution == null)
-                    throw new HeaderStructureException("solution", RPL_BH_SOLUTION, "cannot be null");
+                if (solution == null) {
+                    throw new HeaderStructureException("solution", RPL_BH_SOLUTION,
+                        "cannot be null");
+                }
 
                 if (solution.length != 1408) {
-                    throw new HeaderStructureException("solution", RPL_BH_SOLUTION, "invalid solution length");
+                    throw new HeaderStructureException("solution", RPL_BH_SOLUTION,
+                        "invalid solution length");
                 }
             }
             this.solution = solution;
@@ -733,11 +783,13 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         public Builder withNonce(byte[] nonce) throws HeaderStructureException {
             if (isFromUnsafeSource) {
 
-                if (nonce == null)
+                if (nonce == null) {
                     throw new HeaderStructureException("nonce", RPL_BH_NONCE, "cannot be null");
+                }
 
                 if (nonce.length > 32) {
-                    throw new HeaderStructureException("nonce", RPL_BH_NONCE, "cannot be greater than 32 bytes");
+                    throw new HeaderStructureException("nonce", RPL_BH_NONCE,
+                        "cannot be greater than 32 bytes");
                 }
             }
 
@@ -752,16 +804,18 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             this.coinbase = this.coinbase == null ? Address.ZERO_ADDRESS() : this.coinbase;
             this.stateRoot = this.stateRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.stateRoot;
             this.txTrieRoot = this.txTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.txTrieRoot;
-            this.receiptTrieRoot = this.receiptTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.receiptTrieRoot;
+            this.receiptTrieRoot =
+                this.receiptTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.receiptTrieRoot;
             this.logsBloom = this.logsBloom == null ? EMPTY_BLOOM : this.logsBloom;
             this.difficulty = this.difficulty == null ? ByteUtil.EMPTY_HALFWORD : this.difficulty;
             this.extraData = this.extraData == null ? ByteUtil.EMPTY_WORD : this.extraData;
             this.nonce = this.nonce == null ? ByteUtil.EMPTY_WORD : this.nonce;
             this.solution = this.solution == null ? EMPTY_SOLUTION : this.solution;
 
-            A0BlockHeader header = new A0BlockHeader(this.version, this.number, this.parentHash, this.coinbase, this.logsBloom,
-                    this.difficulty, this.extraData, this.energyConsumed,
-                    this.energyLimit, this.timestamp, this.nonce, this.solution);
+            A0BlockHeader header = new A0BlockHeader(this.version, this.number, this.parentHash,
+                this.coinbase, this.logsBloom,
+                this.difficulty, this.extraData, this.energyConsumed,
+                this.energyLimit, this.timestamp, this.nonce, this.solution);
             header.setReceiptsRoot(this.receiptTrieRoot);
             header.setStateRoot(this.stateRoot);
             header.txTrieRoot = this.txTrieRoot;
