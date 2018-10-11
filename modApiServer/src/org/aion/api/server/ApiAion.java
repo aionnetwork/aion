@@ -467,52 +467,52 @@ public abstract class ApiAion extends Api {
         return receipt.getEnergyUsed();
     }
 
-    protected ContractCreateResult createContract(ArgTxCall _params) {
+    protected ApiTxResponse createContract(ArgTxCall _params) {
+
+        if (_params == null)
+            return(new ApiTxResponse(TxResponse.INVALID_TX));
 
         Address from = _params.getFrom();
 
         if (from == null || from.isEmptyAddress()) {
-            return null;
+            LOG.error("<create-contract msg=invalid-from-address>");
+            return(new ApiTxResponse(TxResponse.INVALID_FROM));
         }
 
         ECKey key = this.getAccountKey(from.toString());
 
         if (key == null) {
             LOG.debug("ApiAion.createContract - null key");
-            return null;
-        } else {
-            try {
-                synchronized (pendingState) {
-                    byte[] nonce =
-                        !(_params.getNonce().equals(BigInteger.ZERO))
-                            ? _params.getNonce().toByteArray()
-                            : pendingState
-                                .bestPendingStateNonce(Address.wrap(key.getAddress()))
-                                .toByteArray();
+            return(new ApiTxResponse(TxResponse.INVALID_ACCOUNT));
+        }
 
-                    AionTransaction tx =
-                        new AionTransaction(
-                            nonce,
-                            from,
-                            null,
-                            _params.getValue().toByteArray(),
-                            _params.getData(),
-                            _params.getNrg(),
-                            _params.getNrgPrice());
-                    tx.sign(key);
+        try {
+            synchronized (pendingState) {
+                byte[] nonce =
+                    !(_params.getNonce().equals(BigInteger.ZERO))
+                        ? _params.getNonce().toByteArray()
+                        : pendingState
+                            .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                            .toByteArray();
 
-                    pendingState.addPendingTransaction(tx);
+                AionTransaction tx =
+                    new AionTransaction(
+                        nonce,
+                        from,
+                        null,
+                        _params.getValue().toByteArray(),
+                        _params.getData(),
+                        _params.getNrg(),
+                        _params.getNrgPrice());
+                tx.sign(key);
 
-                    ContractCreateResult c = new ContractCreateResult();
-                    c.address = tx.getContractAddress();
-                    c.transId = tx.getHash();
-                    return c;
-                }
-            } catch (Exception ex) {
-                LOG.error("ApiAion.createContract - exception: [{}]", ex.getMessage());
+                TxResponse rsp = pendingState.addPendingTransaction(tx);
 
-                return null;
+                return new ApiTxResponse(rsp, tx.getHash(), tx.getContractAddress());
             }
+        } catch (Exception ex) {
+            LOG.error("ApiAion.createContract - exception: [{}]", ex.getMessage());
+            return new ApiTxResponse(TxResponse.EXCEPTION, ex);
         }
     }
 
