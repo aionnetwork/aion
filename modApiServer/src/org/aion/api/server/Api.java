@@ -33,6 +33,7 @@ import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.TxResponse;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
@@ -108,12 +109,6 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     public abstract B getBlockByHash(final byte[] hash);
 
     public abstract BigInteger getBalance(final String _address) throws Exception;
-
-    public class ContractCreateResult {
-
-        public Address address;
-        public byte[] transId;
-    }
 
     public Map<String, CompiledContr> contract_compileSolidity(final String _contract) {
         try {
