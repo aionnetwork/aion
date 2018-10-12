@@ -51,16 +51,15 @@ import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.GenesisBlockLoader;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public final class CfgAion extends Cfg {
 
-    protected AionGenesis genesis;
-
     protected static final int N = 210;
-
     private static final int K = 9;
-
     private static final String NODE_ID_PLACEHOLDER = "[NODE-ID-PLACEHOLDER]";
+    protected AionGenesis genesis;
 
     public CfgAion() {
         this.mode = "aion";
@@ -77,16 +76,20 @@ public final class CfgAion extends Cfg {
         initializeConfiguration();
     }
 
-    private static class CfgAionHolder {
-        private static CfgAion inst = new CfgAion();
-    }
-
     public static CfgAion inst() {
         return CfgAionHolder.inst;
     }
 
     public static void setInst(CfgAion cfgAion) {
         CfgAionHolder.inst = cfgAion;
+    }
+
+    public static int getN() {
+        return N;
+    }
+
+    public static int getK() {
+        return K;
     }
 
     @Override
@@ -106,25 +109,19 @@ public final class CfgAion extends Cfg {
         }
     }
 
-    public void setGenesis(AionGenesis genesis) {
-        this.genesis = genesis;
-    }
-
     public CfgConsensusPow getConsensus() {
         return (CfgConsensusPow) this.consensus;
     }
 
     public synchronized AionGenesis getGenesis() {
-        if (this.genesis == null) setGenesis();
+        if (this.genesis == null) {
+            setGenesis();
+        }
         return this.genesis;
     }
 
-    public static int getN() {
-        return N;
-    }
-
-    public static int getK() {
-        return K;
+    public void setGenesis(AionGenesis genesis) {
+        this.genesis = genesis;
     }
 
     private void closeFileInputStream(final FileInputStream fis) {
@@ -161,8 +158,11 @@ public final class CfgAion extends Cfg {
                         }
                         break;
                     case XMLStreamReader.END_ELEMENT:
-                        if (sr.getLocalName().toLowerCase().equals("aion")) break loop;
-                        else break;
+                        if (sr.getLocalName().toLowerCase().equals("aion")) {
+                            break loop;
+                        } else {
+                            break;
+                        }
                 }
             }
         } catch (Exception e) {
@@ -227,8 +227,11 @@ public final class CfgAion extends Cfg {
                     }
                     break;
                 case XMLStreamReader.END_ELEMENT:
-                    if (sr.getLocalName().toLowerCase().equals("aion")) break loop;
-                    else break;
+                    if (sr.getLocalName().toLowerCase().equals("aion")) {
+                        break loop;
+                    } else {
+                        break;
+                    }
             }
         }
         return shouldWriteBackToFile;
@@ -299,7 +302,9 @@ public final class CfgAion extends Cfg {
                     if (subArgsArr.length > 0) {
                         List<String> _nodes = new ArrayList<>();
                         for (String subArg : subArgsArr) {
-                            if (!subArg.equals("")) _nodes.add(subArg);
+                            if (!subArg.equals("")) {
+                                _nodes.add(subArg);
+                            }
                         }
                         this.getNet().setNodes(_nodes.toArray(new String[0]));
                     }
@@ -325,7 +330,9 @@ public final class CfgAion extends Cfg {
                     }
                 }
             }
-            if (override) System.out.println("Config Override");
+            if (override) {
+                System.out.println("Config Override");
+            }
         }
 
         XMLOutputFactory output = XMLOutputFactory.newInstance();
@@ -381,8 +388,12 @@ public final class CfgAion extends Cfg {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         CfgAion cfgAion = (CfgAion) o;
         return Objects.equal(genesis, cfgAion.genesis);
     }
@@ -390,5 +401,10 @@ public final class CfgAion extends Cfg {
     @Override
     public int hashCode() {
         return Objects.hashCode(genesis);
+    }
+
+    private static class CfgAionHolder {
+
+        private static CfgAion inst = new CfgAion();
     }
 }

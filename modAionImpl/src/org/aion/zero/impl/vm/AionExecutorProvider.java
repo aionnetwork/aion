@@ -10,8 +10,17 @@ import org.aion.vm.VirtualMachine;
 
 public class AionExecutorProvider implements ExecutorProvider {
 
+    private AionExecutorProvider() {
+    }
+
+    // holder
+    public static AionExecutorProvider getInstance() {
+        return Holder.INST;
+    }
+
     @Override
-    public IPrecompiledContract getPrecompiledContract(ExecutionContext context, IRepositoryCache track) {
+    public IPrecompiledContract getPrecompiledContract(ExecutionContext context,
+        IRepositoryCache track) {
         return new ContractFactory().getPrecompiledContract(context, track);
     }
 
@@ -20,14 +29,8 @@ public class AionExecutorProvider implements ExecutorProvider {
         return new FastVM();
     }
 
-    private AionExecutorProvider() {}
-
     private static class Holder {
-        static final AionExecutorProvider INST = new AionExecutorProvider();
-    }
 
-    // holder
-    public static AionExecutorProvider getInstance() {
-        return Holder.INST;
+        static final AionExecutorProvider INST = new AionExecutorProvider();
     }
 }

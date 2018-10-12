@@ -34,8 +34,17 @@ import static org.aion.zero.impl.BlockchainTestUtils.generateTransactions;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Hash256;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
@@ -48,20 +57,20 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/** @author Alexandra Roatis */
+/**
+ * @author Alexandra Roatis
+ */
 public class BlockchainConcurrentImportTest {
 
     private static final int CONCURRENT_THREADS_PER_TYPE = 30;
     private static final int MAIN_CHAIN_FREQUENCY = 5;
     private static final int TIME_OUT = 100; // in seconds
     private static final boolean DISPLAY_MESSAGES = false;
-
+    private static final List<ECKey> accounts = generateAccounts(10);
+    private static final int MAX_TX_PER_BLOCK = 60;
     private static StandaloneBlockchain testChain;
     private static StandaloneBlockchain sourceChain;
     private static List<AionBlock> knownBlocks = new ArrayList<>();
-
-    private static final List<ECKey> accounts = generateAccounts(10);
-    private static final int MAX_TX_PER_BLOCK = 60;
 
     @BeforeClass
     public static void setup() {
@@ -73,16 +82,16 @@ public class BlockchainConcurrentImportTest {
         // build a blockchain with CONCURRENT_THREADS_PER_TYPE blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         testChain = bundle.bc;
 
         builder = new StandaloneBlockchain.Builder();
         sourceChain =
-                builder.withValidatorConfiguration("simple")
-                        .withDefaultAccounts(accounts)
-                        .build()
-                        .bc;
+            builder.withValidatorConfiguration("simple")
+                .withDefaultAccounts(accounts)
+                .build()
+                .bc;
 
         generateBlocks();
     }
@@ -127,12 +136,12 @@ public class BlockchainConcurrentImportTest {
 
             if (DISPLAY_MESSAGES) {
                 System.out.format(
-                        "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
-                        block.getShortHash(),
-                        block.getNumber(),
-                        new String(block.getExtraData()),
-                        block.getTransactionsList().size(),
-                        result.toString());
+                    "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
+                    block.getShortHash(),
+                    block.getNumber(),
+                    new String(block.getExtraData()),
+                    block.getTransactionsList().size(),
+                    result.toString());
             }
         }
 
@@ -147,16 +156,133 @@ public class BlockchainConcurrentImportTest {
     }
 
     /**
+     * From <a href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit
+     * Wiki on multithreaded code and concurrency</a>
+     */
+    public static void assertConcurrent(
+        final String message,
+        final List<? extends Runnable> runnables,
+        final int maxTimeoutSeconds)
+        throws InterruptedException {
+        final int numThreads = runnables.size();
+        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
+        try {
+            final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
+            final CountDownLatch afterInitBlocker = new CountDownLatch(1);
+            final CountDownLatch allDone = new CountDownLatch(numThreads);
+            for (final Runnable submittedTestRunnable : runnables) {
+                threadPool.submit(
+                    () -> {
+                        allExecutorThreadsReady.countDown();
+                        try {
+                            afterInitBlocker.await();
+                            submittedTestRunnable.run();
+                        } catch (final Throwable e) {
+                            exceptions.add(e);
+                        } finally {
+                            allDone.countDown();
+                        }
+                    });
+            }
+            // wait until all threads are ready
+            assertTrue(
+                "Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent",
+                allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
+            // start all test runners
+            afterInitBlocker.countDown();
+            assertTrue(
+                message + " timeout! More than" + maxTimeoutSeconds + "seconds",
+                allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
+        } finally {
+            threadPool.shutdownNow();
+        }
+        if (!exceptions.isEmpty()) {
+            for (Throwable e : exceptions) {
+                e.printStackTrace();
+            }
+        }
+        assertTrue(
+            message + "failed with " + exceptions.size() + " exception(s):" + exceptions,
+            exceptions.isEmpty());
+    }
+
+    /**
      * Adds a new thread for importing an already known block.
      *
-     * @param _threads list of threads to be executed; the current thread will be added to this list
+     * @param _threads list of threads to be executed; the current thread will be added to this
+     * list
      * @param _chain the blockchain where the blocks will be imported
      * @param _block the block to import
      */
     private void addThread_tryToConnect(
-            List<Runnable> _threads, StandaloneBlockchain _chain, AionBlock _block) {
+        List<Runnable> _threads, StandaloneBlockchain _chain, AionBlock _block) {
         _threads.add(
-                () -> {
+            () -> {
+                testChain.assertEqualTotalDifficulty();
+                // importing the given block
+                ImportResult result = _chain.tryToConnect(_block);
+                testChain.assertEqualTotalDifficulty();
+
+                if (DISPLAY_MESSAGES) {
+                    System.out.format(
+                        "Import block with hash: %s, number: %6d, extra data: %6s, txs: %3d, status: %20s in thread: %20s %n",
+                        _block.getShortHash(),
+                        _block.getNumber(),
+                        new String(_block.getExtraData()),
+                        _block.getTransactionsList().size(),
+                        result.toString(),
+                        Thread.currentThread().getName());
+                }
+
+                // checking total difficulty
+                if (result == ImportResult.IMPORTED_BEST
+                    || result == ImportResult.IMPORTED_NOT_BEST) {
+                    AionBlockStore store = _chain.getBlockStore();
+
+                    BigInteger tdFromStore = store.getTotalDifficultyForHash(_block.getHash());
+                    BigInteger tdCalculated =
+                        store.getTotalDifficultyForHash(_block.getParentHash())
+                            .add(_block.getDifficultyBI());
+
+                    assertThat(tdFromStore).isEqualTo(tdCalculated);
+                    assertThat(tdCalculated)
+                        .isEqualTo(
+                            _chain.getTotalDifficultyByHash(
+                                new Hash256(_block.getHash())));
+
+                    if (result == ImportResult.IMPORTED_BEST) {
+                        // can't check for equality since other blocks may have already been
+                        // imported
+                        assertThat(store.getTotalDifficulty()).isAtLeast(tdFromStore);
+                    }
+                }
+            });
+    }
+
+    /**
+     * Adds a new thread for importing a block from the given queue.
+     *
+     * @param _threads list of threads to be executed; the current thread will be added to this
+     * list
+     * @param _chain the blockchain where the blocks will be imported
+     * @param _queue a queue containing new blocks
+     * @param _imported a list of blocks that have been imported; blocks successfully imported are
+     * added to this list
+     */
+    private void addThread_tryToConnect(
+        List<Runnable> _threads,
+        StandaloneBlockchain _chain,
+        ConcurrentLinkedQueue<AionBlock> _queue,
+        ConcurrentLinkedQueue<AionBlock> _imported) {
+        _threads.add(
+            () -> {
+
+                // get next block from queue
+                AionBlock _block = _queue.poll();
+
+                if (_block != null) {
+
                     testChain.assertEqualTotalDifficulty();
                     // importing the given block
                     ImportResult result = _chain.tryToConnect(_block);
@@ -164,235 +290,174 @@ public class BlockchainConcurrentImportTest {
 
                     if (DISPLAY_MESSAGES) {
                         System.out.format(
-                                "Import block with hash: %s, number: %6d, extra data: %6s, txs: %3d, status: %20s in thread: %20s %n",
-                                _block.getShortHash(),
-                                _block.getNumber(),
-                                new String(_block.getExtraData()),
-                                _block.getTransactionsList().size(),
-                                result.toString(),
-                                Thread.currentThread().getName());
+                            "Import block with hash: %s, number: %6d, extra data: %6s, txs: %3d, status: %20s in thread: %20s (from queue)%n",
+                            _block.getShortHash(),
+                            _block.getNumber(),
+                            new String(_block.getExtraData()),
+                            _block.getTransactionsList().size(),
+                            result.toString(),
+                            Thread.currentThread().getName());
                     }
 
                     // checking total difficulty
                     if (result == ImportResult.IMPORTED_BEST
-                            || result == ImportResult.IMPORTED_NOT_BEST) {
+                        || result == ImportResult.IMPORTED_NOT_BEST) {
                         AionBlockStore store = _chain.getBlockStore();
 
-                        BigInteger tdFromStore = store.getTotalDifficultyForHash(_block.getHash());
+                        BigInteger tdFromStore =
+                            store.getTotalDifficultyForHash(_block.getHash());
                         BigInteger tdCalculated =
-                                store.getTotalDifficultyForHash(_block.getParentHash())
-                                        .add(_block.getDifficultyBI());
+                            store.getTotalDifficultyForHash(_block.getParentHash())
+                                .add(_block.getDifficultyBI());
 
                         assertThat(tdFromStore).isEqualTo(tdCalculated);
                         assertThat(tdCalculated)
-                                .isEqualTo(
-                                        _chain.getTotalDifficultyByHash(
-                                                new Hash256(_block.getHash())));
+                            .isEqualTo(
+                                _chain.getTotalDifficultyByHash(
+                                    new Hash256(_block.getHash())));
 
                         if (result == ImportResult.IMPORTED_BEST) {
                             // can't check for equality since other blocks may have already been
                             // imported
                             assertThat(store.getTotalDifficulty()).isAtLeast(tdFromStore);
                         }
+
+                        // save the block for later comparison
+                        _imported.add(_block);
                     }
-                });
-    }
-
-    /**
-     * Adds a new thread for importing a block from the given queue.
-     *
-     * @param _threads list of threads to be executed; the current thread will be added to this list
-     * @param _chain the blockchain where the blocks will be imported
-     * @param _queue a queue containing new blocks
-     * @param _imported a list of blocks that have been imported; blocks successfully imported are
-     *     added to this list
-     */
-    private void addThread_tryToConnect(
-            List<Runnable> _threads,
-            StandaloneBlockchain _chain,
-            ConcurrentLinkedQueue<AionBlock> _queue,
-            ConcurrentLinkedQueue<AionBlock> _imported) {
-        _threads.add(
-                () -> {
-
-                    // get next block from queue
-                    AionBlock _block = _queue.poll();
-
-                    if (_block != null) {
-
-                        testChain.assertEqualTotalDifficulty();
-                        // importing the given block
-                        ImportResult result = _chain.tryToConnect(_block);
-                        testChain.assertEqualTotalDifficulty();
-
-                        if (DISPLAY_MESSAGES) {
-                            System.out.format(
-                                    "Import block with hash: %s, number: %6d, extra data: %6s, txs: %3d, status: %20s in thread: %20s (from queue)%n",
-                                    _block.getShortHash(),
-                                    _block.getNumber(),
-                                    new String(_block.getExtraData()),
-                                    _block.getTransactionsList().size(),
-                                    result.toString(),
-                                    Thread.currentThread().getName());
-                        }
-
-                        // checking total difficulty
-                        if (result == ImportResult.IMPORTED_BEST
-                                || result == ImportResult.IMPORTED_NOT_BEST) {
-                            AionBlockStore store = _chain.getBlockStore();
-
-                            BigInteger tdFromStore =
-                                    store.getTotalDifficultyForHash(_block.getHash());
-                            BigInteger tdCalculated =
-                                    store.getTotalDifficultyForHash(_block.getParentHash())
-                                            .add(_block.getDifficultyBI());
-
-                            assertThat(tdFromStore).isEqualTo(tdCalculated);
-                            assertThat(tdCalculated)
-                                    .isEqualTo(
-                                            _chain.getTotalDifficultyByHash(
-                                                    new Hash256(_block.getHash())));
-
-                            if (result == ImportResult.IMPORTED_BEST) {
-                                // can't check for equality since other blocks may have already been
-                                // imported
-                                assertThat(store.getTotalDifficulty()).isAtLeast(tdFromStore);
-                            }
-
-                            // save the block for later comparison
-                            _imported.add(_block);
-                        }
-                    } else {
-                        if (DISPLAY_MESSAGES) {
-                            System.out.format(
-                                    "%62sNo block in queue. Skipping import in thread: %20s %n",
-                                    " ", Thread.currentThread().getName());
-                        }
+                } else {
+                    if (DISPLAY_MESSAGES) {
+                        System.out.format(
+                            "%62sNo block in queue. Skipping import in thread: %20s %n",
+                            " ", Thread.currentThread().getName());
                     }
-                });
+                }
+            });
     }
 
     /**
      * Adds a new thread for creating a new block with a parent among the already known blocks.
      *
-     * @param _threads list of threads to be executed; the current thread will be added to this list
+     * @param _threads list of threads to be executed; the current thread will be added to this
+     * list
      * @param _chain the blockchain where the blocks will be imported
      * @param _parent the block that will be the parent of the newly created block
      * @param _id number used for identifying the block; added as extra data
      * @param _queue a queue for storing the new blocks; to be imported by a separate thread
      */
     private void addThread_createNewBlock(
-            List<Runnable> _threads,
-            StandaloneBlockchain _chain,
-            AionBlock _parent,
-            int _id,
-            ConcurrentLinkedQueue<AionBlock> _queue) {
+        List<Runnable> _threads,
+        StandaloneBlockchain _chain,
+        AionBlock _parent,
+        int _id,
+        ConcurrentLinkedQueue<AionBlock> _queue) {
         _threads.add(
-                () -> {
+            () -> {
 
-                    // creating block only if parent already imported
-                    if (_chain.isBlockExist(_parent.getHash())) {
+                // creating block only if parent already imported
+                if (_chain.isBlockExist(_parent.getHash())) {
 
-                        testChain.assertEqualTotalDifficulty();
+                    testChain.assertEqualTotalDifficulty();
 
-                        // only some of these txs may be valid
-                        // cannot syncToRoot due to concurrency issues
-                        AionRepositoryImpl repo = _chain.getRepository();
-                        List<AionTransaction> txs =
-                                generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
+                    // only some of these txs may be valid
+                    // cannot syncToRoot due to concurrency issues
+                    AionRepositoryImpl repo = _chain.getRepository();
+                    List<AionTransaction> txs =
+                        generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        AionBlock block = _chain.createNewBlock(_parent, txs, true);
-                        block.setExtraData(String.valueOf(_id).getBytes());
-                        testChain.assertEqualTotalDifficulty();
+                    AionBlock block = _chain.createNewBlock(_parent, txs, true);
+                    block.setExtraData(String.valueOf(_id).getBytes());
+                    testChain.assertEqualTotalDifficulty();
 
-                        // checking if the new block was already imported
-                        if (!_chain.isBlockExist(block.getHash())) {
-                            // still adding this block
-                            _queue.add(block);
+                    // checking if the new block was already imported
+                    if (!_chain.isBlockExist(block.getHash())) {
+                        // still adding this block
+                        _queue.add(block);
 
-                            if (DISPLAY_MESSAGES) {
-                                System.out.format(
-                                        "Create block with hash: %s, number: %6d, extra data: %6s, txs: %3d, parent: %20s in thread: %20s %n",
-                                        block.getShortHash(),
-                                        block.getNumber(),
-                                        new String(block.getExtraData()),
-                                        block.getTransactionsList().size(),
-                                        _parent.getShortHash(),
-                                        Thread.currentThread().getName());
-                            }
-                        } else {
-                            if (DISPLAY_MESSAGES) {
-                                System.out.format(
-                                        "%57sBlock already imported. Skipping create in thread: %20s %n",
-                                        " ", Thread.currentThread().getName());
-                            }
+                        if (DISPLAY_MESSAGES) {
+                            System.out.format(
+                                "Create block with hash: %s, number: %6d, extra data: %6s, txs: %3d, parent: %20s in thread: %20s %n",
+                                block.getShortHash(),
+                                block.getNumber(),
+                                new String(block.getExtraData()),
+                                block.getTransactionsList().size(),
+                                _parent.getShortHash(),
+                                Thread.currentThread().getName());
                         }
                     } else {
                         if (DISPLAY_MESSAGES) {
                             System.out.format(
-                                    "%60sParent not imported. Skipping create in thread: %20s %n",
-                                    " ", Thread.currentThread().getName());
+                                "%57sBlock already imported. Skipping create in thread: %20s %n",
+                                " ", Thread.currentThread().getName());
                         }
                     }
-                });
+                } else {
+                    if (DISPLAY_MESSAGES) {
+                        System.out.format(
+                            "%60sParent not imported. Skipping create in thread: %20s %n",
+                            " ", Thread.currentThread().getName());
+                    }
+                }
+            });
     }
 
     /**
      * Adds a new thread for creating a new block with a parent among the already known blocks.
      *
-     * @param _threads list of threads to be executed; the current thread will be added to this list
+     * @param _threads list of threads to be executed; the current thread will be added to this
+     * list
      * @param _chain the blockchain where the blocks will be imported
      * @param _id number used for identifying the block; added as extra data
      * @param _queue a queue for storing the new blocks; to be imported by a separate thread
      * @param _startHeight blocks are created only if a minimum height is reached
      */
     private void addThread_createNewBlock(
-            List<Runnable> _threads,
-            StandaloneBlockchain _chain,
-            int _id,
-            ConcurrentLinkedQueue<AionBlock> _queue,
-            int _startHeight) {
+        List<Runnable> _threads,
+        StandaloneBlockchain _chain,
+        int _id,
+        ConcurrentLinkedQueue<AionBlock> _queue,
+        int _startHeight) {
         _threads.add(
-                () -> {
+            () -> {
 
-                    // parent will be main chain block
-                    AionBlock _parent = _chain.getBestBlock();
+                // parent will be main chain block
+                AionBlock _parent = _chain.getBestBlock();
 
-                    if (_parent.getNumber() >= _startHeight) {
+                if (_parent.getNumber() >= _startHeight) {
 
-                        testChain.assertEqualTotalDifficulty();
+                    testChain.assertEqualTotalDifficulty();
 
-                        // only some of these txs may be valid
-                        // cannot syncToRoot due to concurrency issues
-                        AionRepositoryImpl repo = _chain.getRepository();
-                        List<AionTransaction> txs =
-                                generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
+                    // only some of these txs may be valid
+                    // cannot syncToRoot due to concurrency issues
+                    AionRepositoryImpl repo = _chain.getRepository();
+                    List<AionTransaction> txs =
+                        generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
 
-                        AionBlock block = _chain.createNewBlock(_parent, txs, true);
-                        block.setExtraData(String.valueOf(_id).getBytes());
-                        testChain.assertEqualTotalDifficulty();
+                    AionBlock block = _chain.createNewBlock(_parent, txs, true);
+                    block.setExtraData(String.valueOf(_id).getBytes());
+                    testChain.assertEqualTotalDifficulty();
 
-                        // still adding this block
-                        _queue.add(block);
+                    // still adding this block
+                    _queue.add(block);
 
-                        if (DISPLAY_MESSAGES) {
-                            System.out.format(
-                                    "Create block with hash: %s, number: %6d, extra data: %6s, txs: %3d, parent: %20s in thread: %20s (using getBestBlock) %n",
-                                    block.getShortHash(),
-                                    block.getNumber(),
-                                    new String(block.getExtraData()),
-                                    block.getTransactionsList().size(),
-                                    _parent.getShortHash(),
-                                    Thread.currentThread().getName());
-                        }
-                    } else {
-                        if (DISPLAY_MESSAGES) {
-                            System.out.format(
-                                    "%51sParent not at minimum height. Skipping create in thread: %20s %n",
-                                    " ", Thread.currentThread().getName());
-                        }
+                    if (DISPLAY_MESSAGES) {
+                        System.out.format(
+                            "Create block with hash: %s, number: %6d, extra data: %6s, txs: %3d, parent: %20s in thread: %20s (using getBestBlock) %n",
+                            block.getShortHash(),
+                            block.getNumber(),
+                            new String(block.getExtraData()),
+                            block.getTransactionsList().size(),
+                            _parent.getShortHash(),
+                            Thread.currentThread().getName());
                     }
-                });
+                } else {
+                    if (DISPLAY_MESSAGES) {
+                        System.out.format(
+                            "%51sParent not at minimum height. Skipping create in thread: %20s %n",
+                            " ", Thread.currentThread().getName());
+                    }
+                }
+            });
     }
 
     @Test
@@ -445,12 +510,12 @@ public class BlockchainConcurrentImportTest {
 
             if (DISPLAY_MESSAGES) {
                 System.out.format(
-                        "Importing block with hash: %s, number: %6d, extra data: %6s, txs: %3d, status: %20s%n",
-                        block.getShortHash(),
-                        block.getNumber(),
-                        new String(block.getExtraData()),
-                        block.getTransactionsList().size(),
-                        result.toString());
+                    "Importing block with hash: %s, number: %6d, extra data: %6s, txs: %3d, status: %20s%n",
+                    block.getShortHash(),
+                    block.getNumber(),
+                    new String(block.getExtraData()),
+                    block.getTransactionsList().size(),
+                    result.toString());
             }
             block = imported.poll();
         }
@@ -458,7 +523,7 @@ public class BlockchainConcurrentImportTest {
         // comparing total diff for the two chains
         assertThat(testChain.getTotalDifficulty()).isEqualTo(sourceChain.getTotalDifficulty());
         assertThat(testChain.getCachedTotalDifficulty())
-                .isEqualTo(sourceChain.getCachedTotalDifficulty());
+            .isEqualTo(sourceChain.getCachedTotalDifficulty());
         testChain.assertEqualTotalDifficulty();
 
         AionBlockStore sourceStore = sourceChain.getBlockStore();
@@ -466,63 +531,10 @@ public class BlockchainConcurrentImportTest {
         // comparing total diff for each block of the two chains
         for (AionBlock blk : knownBlocks) {
             assertThat(testChain.getBlockStore().getTotalDifficultyForHash(blk.getHash()))
-                    .isEqualTo(sourceStore.getTotalDifficultyForHash(blk.getHash()));
+                .isEqualTo(sourceStore.getTotalDifficultyForHash(blk.getHash()));
             Hash256 hash = new Hash256(blk.getHash());
             assertThat(testChain.getTotalDifficultyByHash(hash))
-                    .isEqualTo(sourceChain.getTotalDifficultyByHash(hash));
+                .isEqualTo(sourceChain.getTotalDifficultyByHash(hash));
         }
-    }
-
-    /**
-     * From <a
-     * href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit
-     * Wiki on multithreaded code and concurrency</a>
-     */
-    public static void assertConcurrent(
-            final String message,
-            final List<? extends Runnable> runnables,
-            final int maxTimeoutSeconds)
-            throws InterruptedException {
-        final int numThreads = runnables.size();
-        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
-        final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
-        try {
-            final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
-            final CountDownLatch afterInitBlocker = new CountDownLatch(1);
-            final CountDownLatch allDone = new CountDownLatch(numThreads);
-            for (final Runnable submittedTestRunnable : runnables) {
-                threadPool.submit(
-                        () -> {
-                            allExecutorThreadsReady.countDown();
-                            try {
-                                afterInitBlocker.await();
-                                submittedTestRunnable.run();
-                            } catch (final Throwable e) {
-                                exceptions.add(e);
-                            } finally {
-                                allDone.countDown();
-                            }
-                        });
-            }
-            // wait until all threads are ready
-            assertTrue(
-                    "Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent",
-                    allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
-            // start all test runners
-            afterInitBlocker.countDown();
-            assertTrue(
-                    message + " timeout! More than" + maxTimeoutSeconds + "seconds",
-                    allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
-        } finally {
-            threadPool.shutdownNow();
-        }
-        if (!exceptions.isEmpty()) {
-            for (Throwable e : exceptions) {
-                e.printStackTrace();
-            }
-        }
-        assertTrue(
-                message + "failed with " + exceptions.size() + " exception(s):" + exceptions,
-                exceptions.isEmpty());
     }
 }

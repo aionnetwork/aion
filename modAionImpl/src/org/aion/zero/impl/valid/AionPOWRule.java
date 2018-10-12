@@ -19,25 +19,28 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.valid;
 
 import java.math.BigInteger;
 import java.util.List;
-
-import org.aion.base.util.ByteUtil;
+import org.aion.crypto.HashUtil;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.crypto.HashUtil;
-
-import static org.aion.base.util.Hex.toHexString;
 
 /**
  * Checks proof value against its boundary for the block header
  */
 public class AionPOWRule extends BlockHeaderRule<A0BlockHeader> {
+
+    private static String formatError(BigInteger actual, BigInteger boundary) {
+        return "computed output ("
+            + actual
+            + ") violates boundary condition ("
+            + boundary + ")";
+    }
 
     @Override
     public boolean validate(A0BlockHeader header, List<RuleError> errors) {
@@ -48,8 +51,8 @@ public class AionPOWRule extends BlockHeaderRule<A0BlockHeader> {
 
         int pos = 0;
         System.arraycopy(hdrBytes, 0, input, pos, hdrBytes.length);
-        System.arraycopy(header.getNonce(), 0, input, pos+=32, 32);
-        System.arraycopy(header.getSolution(), 0, input, pos+=32, 1408);
+        System.arraycopy(header.getNonce(), 0, input, pos += 32, 32);
+        System.arraycopy(header.getSolution(), 0, input, pos += 32, 1408);
 
         BigInteger hash = new BigInteger(1, HashUtil.h256(input));
 
@@ -58,12 +61,5 @@ public class AionPOWRule extends BlockHeaderRule<A0BlockHeader> {
             return false;
         }
         return true;
-    }
-
-    private static String formatError(BigInteger actual, BigInteger boundary) {
-        return "computed output ("
-                + actual
-                + ") violates boundary condition ("
-                + boundary + ")";
     }
 }

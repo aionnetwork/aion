@@ -19,12 +19,12 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.query;
 
-import java.util.Optional;
+public interface QueryInterface extends BlockQueryInterface, SyncQueryInterface,
+    StateQueryInterface {
 
-public interface QueryInterface extends BlockQueryInterface, SyncQueryInterface, StateQueryInterface {
 }

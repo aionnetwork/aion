@@ -1,6 +1,6 @@
 /**
- * *****************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
  * This file is part of the aion network project.
  *
@@ -33,13 +33,13 @@ import org.aion.zero.types.AionTxReceipt;
 
 /** aion blockchain interface. */
 public interface IAionBlockchain
-        extends IBlockchain<AionBlock, A0BlockHeader, AionTransaction, AionTxReceipt, AionTxInfo> {
+    extends IBlockchain<AionBlock, A0BlockHeader, AionTransaction, AionTxReceipt, AionTxInfo> {
 
     AionBlock createNewBlock(
-            AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+        AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
 
     BlockContext createNewBlockContext(
-            AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
+        AionBlock parent, List<AionTransaction> transactions, boolean waitUntilBlockTime);
 
     AionBlock getBestBlock();
 

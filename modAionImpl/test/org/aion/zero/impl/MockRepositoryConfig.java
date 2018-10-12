@@ -14,6 +14,14 @@ public class MockRepositoryConfig implements IRepositoryConfig {
     private DBVendor vendor = DBVendor.MOCKDB;
     private IPruneConfig pruneConfig = new CfgPrune(false);
 
+    public MockRepositoryConfig(DBVendor vendor) {
+        this.vendor = vendor;
+    }
+
+    public MockRepositoryConfig(IPruneConfig _pruneConfig) {
+        this.pruneConfig = _pruneConfig;
+    }
+
     @Override
     public String getDbPath() {
         return "";
@@ -35,13 +43,5 @@ public class MockRepositoryConfig implements IRepositoryConfig {
         props.setProperty(DatabaseFactory.Props.DB_TYPE, vendor.toValue());
         props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
         return props;
-    }
-
-    public MockRepositoryConfig(DBVendor vendor) {
-        this.vendor = vendor;
-    }
-
-    public MockRepositoryConfig(IPruneConfig _pruneConfig) {
-        this.pruneConfig = _pruneConfig;
     }
 }

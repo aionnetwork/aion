@@ -44,10 +44,8 @@ import org.slf4j.Logger;
  * @author Ross Kitsis (ross@nuco.io)
  */
 public class Equihash {
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
-    private int cBitLen; // Collision Bit Length used by equihash
-    AtomicLong totalSolGenerated;
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 
     /*
      * Load native libraries
@@ -57,7 +55,8 @@ public class Equihash {
         NativeLoader.loadLibrary("equihash");
     }
 
-    public native int[][] solve(byte[] nonce, byte[] headerBytes);
+    AtomicLong totalSolGenerated;
+    private int cBitLen; // Collision Bit Length used by equihash
 
     /**
      * Create a new Equihash instance with the parameters (n,k)
@@ -69,6 +68,8 @@ public class Equihash {
         this.cBitLen = n / (k + 1);
         this.totalSolGenerated = new AtomicLong(0);
     }
+
+    public native int[][] solve(byte[] nonce, byte[] headerBytes);
 
     /**
      * Retrieves a set of possible solutions given the passed header and nonce value Any number of

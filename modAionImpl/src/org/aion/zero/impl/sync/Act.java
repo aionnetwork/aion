@@ -57,5 +57,4 @@ public final class Act {
     public static final byte BROADCAST_BLOCK = 7;
 
 
-
 }

@@ -33,20 +33,22 @@ import org.aion.mcf.types.AbstractTransaction;
 @SuppressWarnings("rawtypes")
 public class TxBroadcaster<TX extends AbstractTransaction, TXTASK extends AbstractTxTask> {
 
-    private TxBroadcaster() {}
+    private ExecutorService executor = Executors.newFixedThreadPool(1);
 
-    private static class Holder {
-        static final TxBroadcaster INSTANCE = new TxBroadcaster();
+    private TxBroadcaster() {
     }
 
     public static TxBroadcaster getInstance() {
         return Holder.INSTANCE;
     }
 
-    private ExecutorService executor = Executors.newFixedThreadPool(1);
-
     @SuppressWarnings("unchecked")
     public Future<List<TX>> submitTransaction(TXTASK task) {
         return executor.submit(task);
+    }
+
+    private static class Holder {
+
+        static final TxBroadcaster INSTANCE = new TxBroadcaster();
     }
 }

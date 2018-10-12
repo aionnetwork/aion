@@ -37,6 +37,14 @@ public class RepositoryConfig implements IRepositoryConfig {
     private final DetailsProvider detailsProvider;
     private final Map<String, Properties> cfg;
 
+    public RepositoryConfig(
+        final String dbPath, final DetailsProvider detailsProvider, final CfgDb cfgDb) {
+        this.dbPath = dbPath;
+        this.detailsProvider = detailsProvider;
+        this.cfg = cfgDb.asProperties();
+        this.cfgPrune = cfgDb.getPrune();
+    }
+
     @Override
     public String getDbPath() {
         return dbPath;
@@ -59,13 +67,5 @@ public class RepositoryConfig implements IRepositoryConfig {
             prop = cfg.get(CfgDb.Names.DEFAULT);
         }
         return new Properties(prop);
-    }
-
-    public RepositoryConfig(
-            final String dbPath, final DetailsProvider detailsProvider, final CfgDb cfgDb) {
-        this.dbPath = dbPath;
-        this.detailsProvider = detailsProvider;
-        this.cfg = cfgDb.asProperties();
-        this.cfgPrune = cfgDb.getPrune();
     }
 }

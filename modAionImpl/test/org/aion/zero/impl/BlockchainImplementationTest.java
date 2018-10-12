@@ -26,6 +26,52 @@ public class BlockchainImplementationTest {
     private static final List<ECKey> accounts = BlockchainTestUtils.generateAccounts(10);
     private static final int MAX_TX_PER_BLOCK = 30;
 
+    public static void assertEndWith_expectedOne(StandaloneBlockchain chain, byte[] hash, int qty) {
+        List<byte[]> hashes = chain.getListOfHashesEndWith(hash, qty);
+        assertThat(hashes.size()).isEqualTo(1);
+        assertThat(hashes.get(0)).isEqualTo(hash);
+    }
+
+    public static void assertEndWith(
+        StandaloneBlockchain chain, byte[] hash, int qty, List<ByteArrayWrapper> expected) {
+        List<ByteArrayWrapper> hashes = new ArrayList<>();
+        chain.getListOfHashesEndWith(hash, qty).forEach(h -> hashes.add(ByteArrayWrapper.wrap(h)));
+        assertThat(hashes.size()).isEqualTo(expected.size());
+        assertThat(hashes).isEqualTo(expected);
+    }
+
+    public static void assertStartFromBlock_expectedOne(
+        StandaloneBlockchain chain, byte[] hash, long number, int qty) {
+        List<byte[]> hashes = chain.getListOfHashesStartFromBlock(number, qty);
+        assertThat(hashes.size()).isEqualTo(1);
+        assertThat(hashes.get(0)).isEqualTo(hash);
+    }
+
+    public static void assertStartFromBlock(
+        StandaloneBlockchain chain, long number, int qty, List<ByteArrayWrapper> expected) {
+        List<ByteArrayWrapper> hashes = new ArrayList<>();
+        chain.getListOfHashesStartFromBlock(number, qty)
+            .forEach(h -> hashes.add(ByteArrayWrapper.wrap(h)));
+        assertThat(hashes.size()).isEqualTo(expected.size());
+        assertThat(hashes).isEqualTo(expected);
+    }
+
+    public static void assertStartFrom_expectedOne(
+        StandaloneBlockchain chain, byte[] hash, long number, int qty) {
+        List<A0BlockHeader> hashes = chain.getListOfHeadersStartFrom(number, qty);
+        assertThat(hashes.size()).isEqualTo(1);
+        assertThat(hashes.get(0).getHash()).isEqualTo(hash);
+    }
+
+    public static void assertStartFrom(
+        StandaloneBlockchain chain, long number, int qty, List<ByteArrayWrapper> expected) {
+        List<ByteArrayWrapper> hashes = new ArrayList<>();
+        chain.getListOfHeadersStartFrom(number, qty)
+            .forEach(h -> hashes.add(ByteArrayWrapper.wrap(h.getHash())));
+        assertThat(hashes.size()).isEqualTo(expected.size());
+        assertThat(hashes).isEqualTo(expected);
+    }
+
     /**
      * In TOP mode only the top K blocks have a stored state. Blocks older than the top K are have
      * restrictions due to pruning.
@@ -38,11 +84,11 @@ public class BlockchainImplementationTest {
         int height = 200;
 
         StandaloneBlockchain.Bundle bundle =
-                new StandaloneBlockchain.Builder()
-                        .withValidatorConfiguration("simple")
-                        .withRepoConfig(new MockRepositoryConfig(new CfgPrune(stored)))
-                        .withDefaultAccounts(accounts)
-                        .build();
+            new StandaloneBlockchain.Builder()
+                .withValidatorConfiguration("simple")
+                .withRepoConfig(new MockRepositoryConfig(new CfgPrune(stored)))
+                .withDefaultAccounts(accounts)
+                .build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -55,7 +101,7 @@ public class BlockchainImplementationTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+                .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // testing restriction for unrestricted blocks: height to (height - stored + 1)
@@ -87,11 +133,11 @@ public class BlockchainImplementationTest {
         int height = 200;
 
         StandaloneBlockchain.Bundle bundle =
-                new StandaloneBlockchain.Builder()
-                        .withValidatorConfiguration("simple")
-                        .withRepoConfig(new MockRepositoryConfig(new CfgPrune(false)))
-                        .withDefaultAccounts(accounts)
-                        .build();
+            new StandaloneBlockchain.Builder()
+                .withValidatorConfiguration("simple")
+                .withRepoConfig(new MockRepositoryConfig(new CfgPrune(false)))
+                .withDefaultAccounts(accounts)
+                .build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -104,7 +150,7 @@ public class BlockchainImplementationTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+                .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // testing restriction for unrestricted blocks
@@ -129,11 +175,11 @@ public class BlockchainImplementationTest {
         int index = 1000;
 
         StandaloneBlockchain.Bundle bundle =
-                new StandaloneBlockchain.Builder()
-                        .withValidatorConfiguration("simple")
-                        .withRepoConfig(new MockRepositoryConfig(new CfgPrune(stored, index)))
-                        .withDefaultAccounts(accounts)
-                        .build();
+            new StandaloneBlockchain.Builder()
+                .withValidatorConfiguration("simple")
+                .withRepoConfig(new MockRepositoryConfig(new CfgPrune(stored, index)))
+                .withDefaultAccounts(accounts)
+                .build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -146,7 +192,7 @@ public class BlockchainImplementationTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 100000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+                .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // testing restriction for unrestricted blocks
@@ -165,7 +211,7 @@ public class BlockchainImplementationTest {
     @Test(expected = NullPointerException.class)
     public void testGetTotalDifficultyByHash_wNull() {
         StandaloneBlockchain.Bundle bundle =
-                new StandaloneBlockchain.Builder().withValidatorConfiguration("simple").build();
+            new StandaloneBlockchain.Builder().withValidatorConfiguration("simple").build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -178,10 +224,10 @@ public class BlockchainImplementationTest {
         int height = 200;
 
         StandaloneBlockchain.Bundle bundle =
-                new StandaloneBlockchain.Builder()
-                        .withValidatorConfiguration("simple")
-                        .withDefaultAccounts(accounts)
-                        .build();
+            new StandaloneBlockchain.Builder()
+                .withValidatorConfiguration("simple")
+                .withDefaultAccounts(accounts)
+                .build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -193,10 +239,10 @@ public class BlockchainImplementationTest {
         for (int i = 0; i < height; i++) {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             block =
-                    chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L)
-                            .block;
+                chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L)
+                    .block;
             assertThat(chain.tryToConnectInternal(block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+                .isEqualTo(ImportResult.IMPORTED_BEST);
 
             for (int j = 0; j < block.getNumber() + 100; j++) {
                 if (j < block.getNumber() - 32 || j > block.getNumber() + 32) {
@@ -214,7 +260,7 @@ public class BlockchainImplementationTest {
     public void testGetListOfHashesEndWith_wNullHash() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -228,7 +274,7 @@ public class BlockchainImplementationTest {
     public void testGetListOfHeadersEndWith_wGenesisBlock() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -260,7 +306,7 @@ public class BlockchainImplementationTest {
     public void testGetListOfHeadersEndWith_wBestBlock() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -314,25 +360,11 @@ public class BlockchainImplementationTest {
         assertEndWith_expectedOne(chain, bestHash, qty);
     }
 
-    public static void assertEndWith_expectedOne(StandaloneBlockchain chain, byte[] hash, int qty) {
-        List<byte[]> hashes = chain.getListOfHashesEndWith(hash, qty);
-        assertThat(hashes.size()).isEqualTo(1);
-        assertThat(hashes.get(0)).isEqualTo(hash);
-    }
-
-    public static void assertEndWith(
-            StandaloneBlockchain chain, byte[] hash, int qty, List<ByteArrayWrapper> expected) {
-        List<ByteArrayWrapper> hashes = new ArrayList<>();
-        chain.getListOfHashesEndWith(hash, qty).forEach(h -> hashes.add(ByteArrayWrapper.wrap(h)));
-        assertThat(hashes.size()).isEqualTo(expected.size());
-        assertThat(hashes).isEqualTo(expected);
-    }
-
     @Test
     public void testGetListOfHeadersStartFromBlock_wGenesisBlock() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -392,7 +424,7 @@ public class BlockchainImplementationTest {
     public void testGetListOfHeadersStartFromBlock_wBestBlock() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -421,27 +453,11 @@ public class BlockchainImplementationTest {
         assertStartFromBlock_expectedOne(chain, bestHash, bestNumber, qty);
     }
 
-    public static void assertStartFromBlock_expectedOne(
-            StandaloneBlockchain chain, byte[] hash, long number, int qty) {
-        List<byte[]> hashes = chain.getListOfHashesStartFromBlock(number, qty);
-        assertThat(hashes.size()).isEqualTo(1);
-        assertThat(hashes.get(0)).isEqualTo(hash);
-    }
-
-    public static void assertStartFromBlock(
-            StandaloneBlockchain chain, long number, int qty, List<ByteArrayWrapper> expected) {
-        List<ByteArrayWrapper> hashes = new ArrayList<>();
-        chain.getListOfHashesStartFromBlock(number, qty)
-                .forEach(h -> hashes.add(ByteArrayWrapper.wrap(h)));
-        assertThat(hashes.size()).isEqualTo(expected.size());
-        assertThat(hashes).isEqualTo(expected);
-    }
-
     @Test
     public void testGetListOfHeadersStartFrom_wNullBlock() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -449,16 +465,16 @@ public class BlockchainImplementationTest {
         generateRandomChain(chain, 6, 2, accounts, MAX_TX_PER_BLOCK);
 
         assertThat(chain.getListOfHeadersStartFrom(chain.getBestBlock().getNumber() + 1, 1))
-                .isEmpty();
+            .isEmpty();
         assertThat(chain.getListOfHeadersStartFrom(chain.getBestBlock().getNumber() + 10, 1))
-                .isEmpty();
+            .isEmpty();
     }
 
     @Test
     public void testGetListOfHeadersStartFrom_wGenesisBlock() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -518,7 +534,7 @@ public class BlockchainImplementationTest {
     public void testGetListOfHeadersStartFrom_wBestBlock() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -545,21 +561,5 @@ public class BlockchainImplementationTest {
         // get list of 0 from genesis
         qty = 0; // zero blocks requested
         assertThat(chain.getListOfHeadersStartFrom(bestNumber, qty)).isEmpty();
-    }
-
-    public static void assertStartFrom_expectedOne(
-            StandaloneBlockchain chain, byte[] hash, long number, int qty) {
-        List<A0BlockHeader> hashes = chain.getListOfHeadersStartFrom(number, qty);
-        assertThat(hashes.size()).isEqualTo(1);
-        assertThat(hashes.get(0).getHash()).isEqualTo(hash);
-    }
-
-    public static void assertStartFrom(
-            StandaloneBlockchain chain, long number, int qty, List<ByteArrayWrapper> expected) {
-        List<ByteArrayWrapper> hashes = new ArrayList<>();
-        chain.getListOfHeadersStartFrom(number, qty)
-                .forEach(h -> hashes.add(ByteArrayWrapper.wrap(h.getHash())));
-        assertThat(hashes.size()).isEqualTo(expected.size());
-        assertThat(hashes).isEqualTo(expected);
     }
 }

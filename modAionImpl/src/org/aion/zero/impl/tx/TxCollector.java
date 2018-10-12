@@ -53,10 +53,11 @@ public class TxCollector {
         int broadcastLoop = 1;
         int initDelay = 10;
         broadcastTxExec.scheduleAtFixedRate(
-                this::broadcastTransactionsTask, initDelay, broadcastLoop, TimeUnit.SECONDS);
+            this::broadcastTransactionsTask, initDelay, broadcastLoop, TimeUnit.SECONDS);
     }
 
-    public TxCollector(IP2pMgr p2pMgr) {}
+    public TxCollector(IP2pMgr p2pMgr) {
+    }
 
     /*
      * Submit a batch list of tx
@@ -66,8 +67,9 @@ public class TxCollector {
         for (AionTransaction tx : txs) {
             try {
                 transactionQueue.offer(tx, offerTimeout, TimeUnit.MILLISECONDS);
-                if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize)
+                if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize) {
                     broadcastTx();
+                }
 
             } catch (InterruptedException e) {
                 // Interrupted, no problem
@@ -81,8 +83,9 @@ public class TxCollector {
     public void submitTx(AionTransaction tx) {
         try {
             transactionQueue.offer(tx, offerTimeout, TimeUnit.MILLISECONDS);
-            if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize)
+            if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize) {
                 broadcastTx();
+            }
 
         } catch (InterruptedException e) {
             // Interrupted, no problem
@@ -96,7 +99,9 @@ public class TxCollector {
         try {
 
             // Check tx queue has not already been emptied
-            if (transactionQueue.isEmpty()) return;
+            if (transactionQueue.isEmpty()) {
+                return;
+            }
 
             // Grab everything in the queue
             transactions = new ArrayList<>(transactionQueue.size());
@@ -119,8 +124,8 @@ public class TxCollector {
             }
 
             TxBroadcaster.getInstance()
-                    .submitTransaction(
-                            new A0TxTask(transactions, this.p2p, new BroadcastTx(transactions)));
+                .submitTransaction(
+                    new A0TxTask(transactions, this.p2p, new BroadcastTx(transactions)));
         }
     }
 
@@ -129,7 +134,9 @@ public class TxCollector {
      */
     private void broadcastTransactionsTask() {
         int maxDelay = 1000;
-        if (System.currentTimeMillis() - this.lastBroadcast.get() < maxDelay) return;
+        if (System.currentTimeMillis() - this.lastBroadcast.get() < maxDelay) {
+            return;
+        }
 
         broadcastTx();
     }

@@ -25,7 +25,13 @@ package org.aion.equihash;
 
 import static org.aion.base.util.Hex.toHexString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -44,21 +50,18 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.IAionBlock;
 
-/** @author Ross Kitsis (ross@nuco.io) */
+/**
+ * @author Ross Kitsis (ross@nuco.io)
+ */
 public class EquihashMiner extends AbstractMineRunner<AionBlock> {
 
     public static final String VERSION = "0.1.0";
-
-    private final CfgAion cfg;
-
-    private final IEventMgr evtMgr;
-
-    // Equihash solver implementation
-    private final Equihash miner;
-
     // 15 second show status delay
     private static final int STATUS_INTERVAL = 15;
-
+    private final CfgAion cfg;
+    private final IEventMgr evtMgr;
+    // Equihash solver implementation
+    private final Equihash miner;
     // Status scheduler
     private final ScheduledThreadPoolExecutor scheduledWorkers;
 
@@ -67,41 +70,14 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
 
     private final EventExecuteService ees;
 
-    /** Miner threads */
+    /**
+     * Miner threads
+     */
     private final List<Thread> threads = new ArrayList<>();
 
-    private final class EpMiner implements Runnable {
-        boolean go = true;
-
-        @Override
-        public void run() {
-            while (go) {
-                IEvent e = ees.take();
-                if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue()
-                        && e.getCallbackType()
-                                == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
-                    EquihashMiner.this.onBlockTemplate((AionBlock) e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
-                    go = false;
-                }
-            }
-        }
-    }
-
-    private static class Holder {
-        static final EquihashMiner INSTANCE = new EquihashMiner();
-    }
-
     /**
-     * Singleton instance
-     *
-     * @return Equihash miner instance
+     * Private constructor; called by singleton instance once
      */
-    public static EquihashMiner inst() {
-        return Holder.INSTANCE;
-    }
-
-    /** Private constructor; called by singleton instance once */
     private EquihashMiner() {
         this.cfg = CfgAion.inst();
 
@@ -128,6 +104,15 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         ees.start(new EpMiner());
     }
 
+    /**
+     * Singleton instance
+     *
+     * @return Equihash miner instance
+     */
+    public static EquihashMiner inst() {
+        return Holder.INSTANCE;
+    }
+
     private Set<Integer> setEvtFilter() {
         Set<Integer> eventSN = new HashSet<>();
 
@@ -145,10 +130,10 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             LOG.info("sealer starting 🔒 {" + cpuThreads + "}");
 
             scheduledWorkers.scheduleWithFixedDelay(
-                    new ShowMiningStatusTask(),
-                    STATUS_INTERVAL * 2,
-                    STATUS_INTERVAL,
-                    TimeUnit.SECONDS);
+                new ShowMiningStatusTask(),
+                STATUS_INTERVAL * 2,
+                STATUS_INTERVAL,
+                TimeUnit.SECONDS);
 
             for (int i = 0; i < cpuThreads; i++) {
                 Thread t = new Thread(this::mine, "miner-" + (i + 1));
@@ -189,7 +174,9 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         }
     }
 
-    /** Keeps mining until the thread is interrupted */
+    /**
+     * Keeps mining until the thread is interrupted
+     */
     private void mine() {
         IAionBlock block;
         byte[] nonce;
@@ -218,7 +205,9 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         }
     }
 
-    /** Restart the mining process when a new block template is received. */
+    /**
+     * Restart the mining process when a new block template is received.
+     */
     private void onBlockTemplate(AionBlock block) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("onBlockTemplate(): {}", toHexString(block.getHash()));
@@ -241,21 +230,23 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             LOG.info("<delayed-start-sealing>");
             Timer t = new Timer();
             t.schedule(
-                    new TimerTask() {
-                        @Override
-                        public void run() {
-                            if (cfg.getConsensus().getMining()) {
-                                startMining();
-                            }
+                new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (cfg.getConsensus().getMining()) {
+                            startMining();
                         }
-                    },
-                    sec * 1000);
+                    }
+                },
+                sec * 1000);
         } else {
             LOG.info("<sealing-disabled>");
         }
     }
 
-    /** This miner will listen to the ON_BLOCK_TEMPLATE event from the consensus handler. */
+    /**
+     * This miner will listen to the ON_BLOCK_TEMPLATE event from the consensus handler.
+     */
     private void registerCallback() {
         // Only register events if actual mining
         if (cfg.getConsensus().getMining()) {
@@ -270,7 +261,9 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         }
     }
 
-    /** Register miner events. */
+    /**
+     * Register miner events.
+     */
     private void registerMinerEvents() {
         List<IEvent> evts = new ArrayList<>();
         evts.add(new EventMiner(EventMiner.CALLBACK.MININGSTARTED));
@@ -297,7 +290,36 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
         return hashrateMAF.getAverage();
     }
 
+    public void shutdown() {
+        ees.shutdown();
+    }
+
+    private static class Holder {
+
+        static final EquihashMiner INSTANCE = new EquihashMiner();
+    }
+
+    private final class EpMiner implements Runnable {
+
+        boolean go = true;
+
+        @Override
+        public void run() {
+            while (go) {
+                IEvent e = ees.take();
+                if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue()
+                    && e.getCallbackType()
+                    == EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE.getValue()) {
+                    EquihashMiner.this.onBlockTemplate((AionBlock) e.getFuncArgs().get(0));
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
+                    go = false;
+                }
+            }
+        }
+    }
+
     private class ShowMiningStatusTask implements Runnable {
+
         @Override
         public void run() {
             Thread.currentThread().setName("miner_status");
@@ -305,9 +327,5 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
             hashrateMAF.add(hashrate);
             LOG.info("Aion internal miner generating {} solutions per second", hashrate);
         }
-    }
-
-    public void shutdown() {
-        ees.shutdown();
     }
 }

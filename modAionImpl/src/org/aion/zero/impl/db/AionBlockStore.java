@@ -62,26 +62,91 @@ import org.slf4j.Logger;
 
 public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHeader> {
 
+    /**
+     * Called by {@link AionBlockStore#BLOCK_INFO_SERIALIZER} for now, on main-net launch we should
+     * default to this class.
+     */
+    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_RLP_SERIALIZER = new Serializer<>() {
+        @Override
+        public byte[] serialize(List<BlockInfo> object) {
+            byte[][] infoList = new byte[object.size()][];
+            int i = 0;
+            for (BlockInfo b : object) {
+                infoList[i] = b.getEncoded();
+                i++;
+            }
+            return RLP.encodeList(infoList);
+        }
+
+        @Override
+        public List<BlockInfo> deserialize(byte[] stream) {
+            RLPList list = (RLPList) RLP.decode2(stream).get(0);
+            List<BlockInfo> res = new ArrayList<>(list.size());
+
+            for (RLPElement aList : list) {
+                res.add(new BlockInfo(aList.getRLPData()));
+            }
+            return res;
+        }
+    };
+    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_SERIALIZER = new Serializer<>() {
+
+        @Override
+        public byte[] serialize(List<BlockInfo> value) {
+            return BLOCK_INFO_RLP_SERIALIZER.serialize(value);
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public List<BlockInfo> deserialize(byte[] bytes) {
+            try {
+                return BLOCK_INFO_RLP_SERIALIZER.deserialize(bytes);
+            } catch (Exception e) {
+                // fallback logic for old block infos
+                try {
+                    ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, bytes.length);
+                    ObjectInputStream ois = new MigrationRedirectingInputStream(bis);
+                    return (List<BlockInfo>) ois.readObject();
+                } catch (IOException | ClassNotFoundException e2) {
+                    throw new RuntimeException(e2);
+                }
+            }
+        }
+    };
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     private static final Logger LOG_CONS = AionLoggerFactory.getLogger(LogEnum.CONS.name());
-
     protected ReadWriteLock lock = new ReentrantReadWriteLock();
-
     private DataSourceArray<List<BlockInfo>> index;
     private ObjectDataSource<AionBlock> blocks;
-
     private boolean checkIntegrity = true;
-
-    private Deque<IAionBlock> branchingBlk = new ArrayDeque<>(), preBranchingBlk= new ArrayDeque<>();
+    private Deque<IAionBlock> branchingBlk = new ArrayDeque<>(), preBranchingBlk = new ArrayDeque<>();
     private long branchingLevel;
 
     public AionBlockStore(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
         init(index, blocks);
     }
 
-    public AionBlockStore(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks, boolean checkIntegrity) {
+    public AionBlockStore(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks,
+        boolean checkIntegrity) {
         this(index, blocks);
         this.checkIntegrity = checkIntegrity;
+    }
+
+    /**
+     * @return the hash information if it is present in the list or {@code null} when the given
+     * block list is {@code null} or the hash is not present in the list
+     * @implNote The method calling this method must handle the locking.
+     */
+    private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash) {
+        if (blocks == null) {
+            return null;
+        }
+        for (BlockInfo blockInfo : blocks) {
+            if (Arrays.equals(hash, blockInfo.getHash())) {
+                return blockInfo;
+            }
+        }
+        return null;
     }
 
     private void init(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
@@ -174,19 +239,22 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
      */
     private void addInternalBlock(AionBlock block, BigInteger cummDifficulty, boolean mainChain) {
         long blockNumber = block.getNumber();
-        List<BlockInfo> blockInfos = blockNumber >= index.size() ? new ArrayList<>() : index.get(blockNumber);
+        List<BlockInfo> blockInfos =
+            blockNumber >= index.size() ? new ArrayList<>() : index.get(blockNumber);
 
         // if the blocks are added out of order, the size will be updated without changing the index value
         // useful for concurrency testing and potential parallel sync
         if (blockInfos == null) {
-            LOG.error("Null block information found at " + blockNumber + " when data should exist.");
+            LOG.error(
+                "Null block information found at " + blockNumber + " when data should exist.");
             blockInfos = new ArrayList<>();
         }
 
         BlockInfo blockInfo = new BlockInfo();
         blockInfo.setCummDifficulty(cummDifficulty);
         blockInfo.setHash(block.getHash());
-        blockInfo.setMainChain(mainChain); // FIXME: maybe here I should force reset main chain for all uncles on that level
+        blockInfo.setMainChain(
+            mainChain); // FIXME: maybe here I should force reset main chain for all uncles on that level
 
         blockInfos.add(blockInfo);
 
@@ -194,7 +262,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         index.set(block.getNumber(), blockInfos);
     }
 
-    public List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(long number) {
+    public List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> getBlocksByNumber(
+        long number) {
         lock.readLock().lock();
 
         try {
@@ -211,7 +280,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 byte[] hash = blockInfo.getHash();
                 AionBlock block = blocks.get(hash);
 
-                result.add(Map.entry(block, Map.entry(blockInfo.getCummDifficulty(), blockInfo.mainChain)));
+                result.add(Map.entry(block,
+                    Map.entry(blockInfo.getCummDifficulty(), blockInfo.mainChain)));
             }
 
             return result;
@@ -301,7 +371,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             Long level = block.getNumber();
             List<BlockInfo> blockInfos = index.get(level.longValue());
-            if (blockInfos == null){
+            if (blockInfos == null) {
                 return ZERO;
             }
             for (BlockInfo blockInfo : blockInfos) {
@@ -450,7 +520,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                         //For collecting branching blocks
                         branchingBlk.push(getBlockByHash(blockInfo.getHash()));
                     } else {
-                        LOG.error("Null block information found at " + currentLevel + " when data should exist.");
+                        LOG.error("Null block information found at " + currentLevel
+                            + " when data should exist.");
                     }
                     forkLine = getBlockByHash(forkLine.getParentHash());
                     --currentLevel;
@@ -471,7 +542,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                         //For collecting prebranching blocks
                         preBranchingBlk.push(getBlockByHash(blockInfo.getHash()));
                     } else {
-                        LOG.error("Null block information found at " + currentLevel + " when data should exist.");
+                        LOG.error("Null block information found at " + currentLevel
+                            + " when data should exist.");
                     }
                     bestLine = getBlockByHash(bestLine.getParentHash());
                     --currentLevel;
@@ -534,7 +606,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 //For collecting preBranching blocks
                 preBranchingBlk.push(getBlockByHash(bestInfo.getHash()));
             } else {
-                LOG.error("Null block information found at " + currentLevel + " when information should exist.");
+                LOG.error("Null block information found at " + currentLevel
+                    + " when information should exist.");
             }
 
             BlockInfo forkInfo = getBlockInfoForHash(levelBlocks, forkLine.getHash());
@@ -545,7 +618,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 //For collecting branching blocks
                 branchingBlk.push(getBlockByHash(forkInfo.getHash()));
             } else {
-                LOG.error("Null block information found at " + currentLevel + " when information should exist.");
+                LOG.error("Null block information found at " + currentLevel
+                    + " when information should exist.");
             }
 
             bestLine = getBlockByHash(bestLine.getParentHash());
@@ -557,7 +631,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         branchingLevel -= currentLevel;
 
         if (LOG_CONS.isInfoEnabled()) {
-            LOG_CONS.info("branching: common block = {}/{}", forkLine.getNumber(), Hex.toHexString(forkLine.getHash()));
+            LOG_CONS.info("branching: common block = {}/{}", forkLine.getNumber(),
+                Hex.toHexString(forkLine.getHash()));
         }
     }
 
@@ -583,7 +658,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 List<BlockInfo> currentLevelBlocks = getBlockInfoForLevel(currentLevel);
                 if (currentLevelBlocks == null || currentLevelBlocks.size() == 0) {
                     blocks.delete(bestLine.getHash());
-                    LOG.error("Null block information found at " + currentLevel + " when information should exist.");
+                    LOG.error("Null block information found at " + currentLevel
+                        + " when information should exist.");
                 } else {
                     for (BlockInfo bk_info : currentLevelBlocks) {
                         blocks.delete(bk_info.getHash());
@@ -602,7 +678,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             }
 
             if (bestLine == null) {
-                LOG.error("Block at level #" + previousLevel + " is null. Reverting further back may be required.");
+                LOG.error("Block at level #" + previousLevel
+                    + " is null. Reverting further back may be required.");
             } else {
                 // update the main chain based on difficulty, if needed
                 List<BlockInfo> blocks = getBlockInfoForLevel(previousLevel);
@@ -616,12 +693,14 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                     }
                 } else {
                     if (blockInfo == null) {
-                        LOG.error("Null block information found at " + previousLevel + " when data should exist. "
-                                + "Rebuilding information.");
+                        LOG.error("Null block information found at " + previousLevel
+                            + " when data should exist. "
+                            + "Rebuilding information.");
 
                         // recreate missing block info
                         blockInfo = new BlockInfo();
-                        blockInfo.setCummDifficulty(getTotalDifficultyForHash(bestLine.getParentHash())
+                        blockInfo
+                            .setCummDifficulty(getTotalDifficultyForHash(bestLine.getParentHash())
                                 .add(bestLine.getHeader().getDifficultyBI()));
                         blockInfo.setHash(bestLine.getHash());
                         blocks.add(blockInfo);
@@ -660,7 +739,7 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 block = getBlockByHash(block.getParentHash());
                 if (block == null) {
                     LOG.error("Block #" + (level - 1) + " missing from the database. "
-                            + "Cannot proceed with block pruning and total difficulty updates.");
+                        + "Cannot proceed with block pruning and total difficulty updates.");
                     return;
                 }
                 level = block.getNumber();
@@ -675,7 +754,9 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             level = 1;
             while (level <= initialLevel) {
                 parentTotalDifficulty = correctTotalDifficulty(level, parentTotalDifficulty);
-                LOG.info("Updated total difficulty on level " + level + " to " + parentTotalDifficulty + ".");
+                LOG.info(
+                    "Updated total difficulty on level " + level + " to " + parentTotalDifficulty
+                        + ".");
                 level++;
             }
         } finally {
@@ -728,7 +809,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
         if (levelBlocks.size() != 1) {
             // something went awry
-            LOG.error("Cannot proceed with total difficulty updates. Previous updates have been overwritten.");
+            LOG.error(
+                "Cannot proceed with total difficulty updates. Previous updates have been overwritten.");
             return null;
         } else {
             // correct block info
@@ -772,9 +854,10 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             // ensuring that there exists only one main chain at present
             if (mainChain.size() > 1) {
-                LOG.error("The database is corrupted. There are two different main chain blocks at level {}."
-                                  + " Please stop the kernel and repair the block information by executing:\t./aion.sh -r",
-                          blockNumber);
+                LOG.error(
+                    "The database is corrupted. There are two different main chain blocks at level {}."
+                        + " Please stop the kernel and repair the block information by executing:\t./aion.sh -r",
+                    blockNumber);
             }
 
             levelBlocks.add(blockInfo);
@@ -807,9 +890,11 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 writer.newLine();
 
                 for (BlockInfo bi : levelBlocks) {
-                    writer.append("\nBlock hash from index database: " + Hex.toHexString(bi.getHash())
-                                          + "\nTotal Difficulty: " + bi.getCummDifficulty() + "\nBlock on main chain: "
-                                          + String.valueOf(bi.isMainChain()).toUpperCase());
+                    writer
+                        .append("\nBlock hash from index database: " + Hex.toHexString(bi.getHash())
+                            + "\nTotal Difficulty: " + bi.getCummDifficulty()
+                            + "\nBlock on main chain: "
+                            + String.valueOf(bi.isMainChain()).toUpperCase());
                     writer.newLine();
                     AionBlock blk = getBlockByHash(bi.getHash());
                     if (blk != null) {
@@ -874,8 +959,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     }
 
     /**
-     * First checks if the size key is missing or smaller than it should be.
-     * If it is incorrect, the method attempts to correct it by setting it to the given level.
+     * First checks if the size key is missing or smaller than it should be. If it is incorrect, the
+     * method attempts to correct it by setting it to the given level.
      */
     public void correctSize(long maxNumber, Logger log) {
         // correcting the size if smaller than should be
@@ -884,7 +969,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             // can't change size directly, so we do a put + delete the next level to reset it
             index.set(maxNumber + 1, new ArrayList<>());
             index.remove(maxNumber + 1);
-            log.info("Corrupted index size corrected from {} to {}.", storedSize, index.getStoredSize());
+            log.info("Corrupted index size corrected from {} to {}.", storedSize,
+                index.getStoredSize());
         }
     }
 
@@ -903,8 +989,8 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 // loop stops when the block is null or is already main chain
                 while (thisBlockInfo != null && !thisBlockInfo.isMainChain()) {
                     log.info("Setting block hash: {}, number: {} to main chain.",
-                             currentBlock.getShortHash(),
-                             currentBlock.getNumber());
+                        currentBlock.getShortHash(),
+                        currentBlock.getNumber());
 
                     // fix the info for the current block
                     infos.remove(thisBlockInfo);
@@ -926,130 +1012,6 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             lock.writeLock().unlock();
         }
     }
-
-    public static class BlockInfo implements Serializable {
-
-        public BlockInfo() {}
-
-        public BlockInfo(byte[] ser) {
-            RLPList outerList = RLP.decode2(ser);
-
-            // should we throw?
-            if (outerList.isEmpty()) { return; }
-
-            RLPList list = (RLPList) outerList.get(0);
-            this.hash = list.get(0).getRLPData();
-            this.cummDifficulty = ByteUtil.bytesToBigInteger(list.get(1).getRLPData());
-
-            byte[] boolData = list.get(2).getRLPData();
-            this.mainChain = !(boolData == null || boolData.length == 0) && boolData[0] == (byte) 0x1;
-        }
-
-        private static final long serialVersionUID = 7279277944605144671L;
-
-        private byte[] hash;
-
-        private BigInteger cummDifficulty;
-
-        private boolean mainChain;
-
-        public byte[] getHash() {
-            return hash;
-        }
-
-        public void setHash(byte[] hash) {
-            this.hash = hash;
-        }
-
-        public BigInteger getCummDifficulty() {
-            return cummDifficulty;
-        }
-
-        public void setCummDifficulty(BigInteger cummDifficulty) {
-            this.cummDifficulty = cummDifficulty;
-        }
-
-        public boolean isMainChain() {
-            return mainChain;
-        }
-
-        public void setMainChain(boolean mainChain) {
-            this.mainChain = mainChain;
-        }
-
-        public byte[] getEncoded() {
-            byte[] hashElement = RLP.encodeElement(hash);
-            byte[] cumulativeDiffElement = RLP.encodeElement(cummDifficulty.toByteArray());
-            byte[] mainChainElement = RLP.encodeByte(mainChain ? (byte) 0x1 : (byte) 0x0);
-            return RLP.encodeList(hashElement, cumulativeDiffElement, mainChainElement);
-        }
-    }
-
-    private static class MigrationRedirectingInputStream extends ObjectInputStream {
-
-        public MigrationRedirectingInputStream(InputStream in) throws IOException {
-            super(in);
-        }
-
-        @Override
-        protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
-            if (desc.getName().equals("org.aion.db.a0.AionBlockStore$BlockInfo")) { return BlockInfo.class; }
-            return super.resolveClass(desc);
-        }
-    }
-
-    /**
-     * Called by {@link AionBlockStore#BLOCK_INFO_SERIALIZER} for now, on main-net launch
-     * we should default to this class.
-     */
-    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_RLP_SERIALIZER = new Serializer<>() {
-        @Override
-        public byte[] serialize(List<BlockInfo> object) {
-            byte[][] infoList = new byte[object.size()][];
-            int i = 0;
-            for (BlockInfo b : object) {
-                infoList[i] = b.getEncoded();
-                i++;
-            }
-            return RLP.encodeList(infoList);
-        }
-
-        @Override
-        public List<BlockInfo> deserialize(byte[] stream) {
-            RLPList list = (RLPList) RLP.decode2(stream).get(0);
-            List<BlockInfo> res = new ArrayList<>(list.size());
-
-            for (RLPElement aList : list) {
-                res.add(new BlockInfo(aList.getRLPData()));
-            }
-            return res;
-        }
-    };
-
-    public static final Serializer<List<BlockInfo>, byte[]> BLOCK_INFO_SERIALIZER = new Serializer<>() {
-
-        @Override
-        public byte[] serialize(List<BlockInfo> value) {
-            return BLOCK_INFO_RLP_SERIALIZER.serialize(value);
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        public List<BlockInfo> deserialize(byte[] bytes) {
-            try {
-                return BLOCK_INFO_RLP_SERIALIZER.deserialize(bytes);
-            } catch (Exception e) {
-                // fallback logic for old block infos
-                try {
-                    ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, bytes.length);
-                    ObjectInputStream ois = new MigrationRedirectingInputStream(bis);
-                    return (List<BlockInfo>) ois.readObject();
-                } catch (IOException | ClassNotFoundException e2) {
-                    throw new RuntimeException(e2);
-                }
-            }
-        }
-    };
 
     public void printChain() {
         lock.readLock().lock();
@@ -1093,36 +1055,11 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
         index.set(level, infos);
     }
 
-    /**
-     * @return the hash information if it is present in the list
-     *         or {@code null} when the given block list is {@code null}
-     *         or the hash is not present in the list
-     * @implNote The method calling this method must handle the locking.
-     */
-    private static BlockInfo getBlockInfoForHash(List<BlockInfo> blocks, byte[] hash) {
-        if (blocks == null) {
-            return null;
-        }
-        for (BlockInfo blockInfo : blocks) {
-            if (Arrays.equals(hash, blockInfo.getHash())) {
-                return blockInfo;
-            }
-        }
-        return null;
-    }
-
     @Override
     public void load() {
         if (checkIntegrity) {
             indexIntegrityCheck();
         }
-    }
-
-    public enum IntegrityCheckResult {
-        MISSING_GENESIS,
-        MISSING_LEVEL,
-        FIXED,
-        CORRECT
     }
 
     public IntegrityCheckResult indexIntegrityCheck() {
@@ -1139,13 +1076,14 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             while (correct && block.getNumber() > 0) {
                 // it is correct if there is no inconsistency wrt to the parent
                 correct = getTotalDifficultyForHash(block.getHash())
-                        .equals(getTotalDifficultyForHash(block.getParentHash()).add(block.getDifficultyBI()));
+                    .equals(getTotalDifficultyForHash(block.getParentHash())
+                        .add(block.getDifficultyBI()));
 
                 if (!correct) {
                     LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
-                                  block.getShortHash(),
-                                  block.getNumber(),
-                                  "NOT OK");
+                        block.getShortHash(),
+                        block.getNumber(),
+                        "NOT OK");
                 } else {
                     time = System.currentTimeMillis();
                     if (time - round > 4999) {
@@ -1156,11 +1094,11 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                         approx = approx >= 1 ? approx : 1;
 
                         LOG_CONS.info(
-                                "{} blocks checked in {} sec. {} more blocks to verify. Approximate completion time is {} sec.",
-                                checked,
-                                (long) duration,
-                                remaining,
-                                (long) approx);
+                            "{} blocks checked in {} sec. {} more blocks to verify. Approximate completion time is {} sec.",
+                            checked,
+                            (long) duration,
+                            remaining,
+                            (long) approx);
                         round = time;
                     }
                 }
@@ -1171,12 +1109,13 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             // check correct TD for genesis block
             if (block.getNumber() == 0) {
-                correct = getTotalDifficultyForHash(block.getHash()).equals(block.getDifficultyBI());
+                correct = getTotalDifficultyForHash(block.getHash())
+                    .equals(block.getDifficultyBI());
                 if (!correct) {
                     LOG_CONS.info("Total difficulty for block hash: {} number: {} is {}.",
-                                  block.getShortHash(),
-                                  block.getNumber(),
-                                  "NOT OK");
+                        block.getShortHash(),
+                        block.getNumber(),
+                        "NOT OK");
                 } else {
                     time = ((System.currentTimeMillis() - start) / 1000) + 1;
                     LOG_CONS.info("{} blocks checked in under {} sec.", bestBlockNumber + 1, time);
@@ -1185,21 +1124,24 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
 
             // if any inconsistency, correct the TD
             if (!correct) {
-                LOG_CONS.info("Integrity check of total difficulty found INVALID information. Correcting ...");
+                LOG_CONS.info(
+                    "Integrity check of total difficulty found INVALID information. Correcting ...");
 
                 List<BlockInfo> infos = getBlockInfoForLevel(0);
                 if (infos == null) {
-                    LOG_CONS.error("Missing genesis block information. Cannot recover without deleting database.");
+                    LOG_CONS.error(
+                        "Missing genesis block information. Cannot recover without deleting database.");
                     return IntegrityCheckResult.MISSING_GENESIS;
                 }
 
                 for (BlockInfo bi : infos) {
                     block = getBlockByHash(bi.getHash());
                     bi.setCummDifficulty(block.getDifficultyBI());
-                    LOG_CONS.info("Correcting total difficulty for block hash: {} number: {} to {}.",
-                                  block.getShortHash(),
-                                  block.getNumber(),
-                                  bi.getCummDifficulty());
+                    LOG_CONS
+                        .info("Correcting total difficulty for block hash: {} number: {} to {}.",
+                            block.getShortHash(),
+                            block.getNumber(),
+                            bi.getCummDifficulty());
                 }
                 setBlockInfoForLevel(0, infos);
 
@@ -1209,20 +1151,21 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                     infos = getBlockInfoForLevel(level);
                     if (infos == null) {
                         LOG_CONS.error("Missing block information at level {}."
-                                               + " Cannot recover without reverting to block number {}.",
-                                       level,
-                                       (level - 1));
+                                + " Cannot recover without reverting to block number {}.",
+                            level,
+                            (level - 1));
                         return IntegrityCheckResult.MISSING_LEVEL;
                     }
 
                     for (BlockInfo bi : infos) {
                         block = getBlockByHash(bi.getHash());
                         bi.setCummDifficulty(block.getDifficultyBI()
-                                                     .add(getTotalDifficultyForHash(block.getParentHash())));
-                        LOG_CONS.info("Correcting total difficulty for block hash: {} number: {} to {}.",
-                                      block.getShortHash(),
-                                      block.getNumber(),
-                                      bi.getCummDifficulty());
+                            .add(getTotalDifficultyForHash(block.getParentHash())));
+                        LOG_CONS.info(
+                            "Correcting total difficulty for block hash: {} number: {} to {}.",
+                            block.getShortHash(),
+                            block.getNumber(),
+                            bi.getCummDifficulty());
                     }
                     setBlockInfoForLevel(level, infos);
 
@@ -1255,6 +1198,88 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             } finally {
                 lock.writeLock().unlock();
             }
+        }
+    }
+
+    public enum IntegrityCheckResult {
+        MISSING_GENESIS,
+        MISSING_LEVEL,
+        FIXED,
+        CORRECT
+    }
+
+    public static class BlockInfo implements Serializable {
+
+        private static final long serialVersionUID = 7279277944605144671L;
+        private byte[] hash;
+        private BigInteger cummDifficulty;
+        private boolean mainChain;
+
+        public BlockInfo() {
+        }
+
+        public BlockInfo(byte[] ser) {
+            RLPList outerList = RLP.decode2(ser);
+
+            // should we throw?
+            if (outerList.isEmpty()) {
+                return;
+            }
+
+            RLPList list = (RLPList) outerList.get(0);
+            this.hash = list.get(0).getRLPData();
+            this.cummDifficulty = ByteUtil.bytesToBigInteger(list.get(1).getRLPData());
+
+            byte[] boolData = list.get(2).getRLPData();
+            this.mainChain =
+                !(boolData == null || boolData.length == 0) && boolData[0] == (byte) 0x1;
+        }
+
+        public byte[] getHash() {
+            return hash;
+        }
+
+        public void setHash(byte[] hash) {
+            this.hash = hash;
+        }
+
+        public BigInteger getCummDifficulty() {
+            return cummDifficulty;
+        }
+
+        public void setCummDifficulty(BigInteger cummDifficulty) {
+            this.cummDifficulty = cummDifficulty;
+        }
+
+        public boolean isMainChain() {
+            return mainChain;
+        }
+
+        public void setMainChain(boolean mainChain) {
+            this.mainChain = mainChain;
+        }
+
+        public byte[] getEncoded() {
+            byte[] hashElement = RLP.encodeElement(hash);
+            byte[] cumulativeDiffElement = RLP.encodeElement(cummDifficulty.toByteArray());
+            byte[] mainChainElement = RLP.encodeByte(mainChain ? (byte) 0x1 : (byte) 0x0);
+            return RLP.encodeList(hashElement, cumulativeDiffElement, mainChainElement);
+        }
+    }
+
+    private static class MigrationRedirectingInputStream extends ObjectInputStream {
+
+        public MigrationRedirectingInputStream(InputStream in) throws IOException {
+            super(in);
+        }
+
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass desc)
+            throws IOException, ClassNotFoundException {
+            if (desc.getName().equals("org.aion.db.a0.AionBlockStore$BlockInfo")) {
+                return BlockInfo.class;
+            }
+            return super.resolveClass(desc);
         }
     }
 }

@@ -60,12 +60,12 @@ final class TaskGetBodies implements Runnable {
      * @param _headersWithBodiesRequested ConcurrentHashMap
      */
     TaskGetBodies(
-            final IP2pMgr _p2p,
-            final AtomicBoolean _run,
-            final BlockingQueue<HeadersWrapper> _downloadedHeaders,
-            final ConcurrentHashMap<Integer, HeadersWrapper> _headersWithBodiesRequested,
-            final Map<Integer, PeerState> peerStates,
-            final Logger log) {
+        final IP2pMgr _p2p,
+        final AtomicBoolean _run,
+        final BlockingQueue<HeadersWrapper> _downloadedHeaders,
+        final ConcurrentHashMap<Integer, HeadersWrapper> _headersWithBodiesRequested,
+        final Map<Integer, PeerState> peerStates,
+        final Logger log) {
         this.p2p = _p2p;
         this.run = _run;
         this.downloadedHeaders = _downloadedHeaders;
@@ -93,17 +93,17 @@ final class TaskGetBodies implements Runnable {
 
             if (log.isDebugEnabled()) {
                 log.debug(
-                        "<get-bodies from-num={} to-num={} node={}>",
-                        headers.get(0).getNumber(),
-                        headers.get(headers.size() - 1).getNumber(),
-                        hw.getDisplayId());
+                    "<get-bodies from-num={} to-num={} node={}>",
+                    headers.get(0).getNumber(),
+                    headers.get(headers.size() - 1).getNumber(),
+                    hw.getDisplayId());
             }
 
             p2p.send(
-                    idHash,
-                    displayId,
-                    new ReqBlocksBodies(
-                            headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+                idHash,
+                displayId,
+                new ReqBlocksBodies(
+                    headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
             headersWithBodiesRequested.put(idHash, hw);
 
             PeerState peerState = peerStates.get(hw.getNodeIdHash());

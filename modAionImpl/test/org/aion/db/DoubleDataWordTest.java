@@ -1,6 +1,7 @@
 package org.aion.db;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNull;
 
 import java.util.Properties;
 import java.util.Random;
@@ -30,6 +31,7 @@ import org.junit.Test;
  * Tests the DoubleDataWord class, mainly that it integrates well with the db.
  */
 public class DoubleDataWordTest {
+
     private IRepositoryConfig repoConfig;
     private IRepository repo;
     private IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
@@ -65,7 +67,7 @@ public class DoubleDataWordTest {
 
         this.repo = AionRepositoryImpl.createForTesting(repoConfig);
         this.track = new AionRepositoryCache(repo);
-        this.rand =  new Random();
+        this.rand = new Random();
         this.addr = Address.wrap(ECKeyFac.inst().create().getAddress());
     }
 
@@ -102,13 +104,17 @@ public class DoubleDataWordTest {
         doubleValLast[0] = (byte) 0x3;
 
         track.addStorageRow(addr, new DataWord(singleKey), new DataWord(singleVal));
-        track.addStorageRow(addr, new DoubleDataWord(doubleKeyFirst), new DoubleDataWord(doubleValFirst));
-        track.addStorageRow(addr, new DoubleDataWord(doubleKeyLast), new DoubleDataWord(doubleValLast));
+        track.addStorageRow(addr, new DoubleDataWord(doubleKeyFirst),
+            new DoubleDataWord(doubleValFirst));
+        track.addStorageRow(addr, new DoubleDataWord(doubleKeyLast),
+            new DoubleDataWord(doubleValLast));
         track.flush();
 
         byte[] singleRes = track.getStorageValue(addr, new DataWord(singleKey)).getData();
-        byte[] doubleResFirst = track.getStorageValue(addr, new DoubleDataWord(doubleKeyFirst)).getData();
-        byte[] doubleResLast = track.getStorageValue(addr, new DoubleDataWord(doubleKeyLast)).getData();
+        byte[] doubleResFirst = track.getStorageValue(addr, new DoubleDataWord(doubleKeyFirst))
+            .getData();
+        byte[] doubleResLast = track.getStorageValue(addr, new DoubleDataWord(doubleKeyLast))
+            .getData();
 
         assertArrayEquals(singleVal, singleRes);
         assertArrayEquals(doubleValFirst, doubleResFirst);

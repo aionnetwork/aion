@@ -66,11 +66,11 @@ import org.slf4j.Logger;
  * <p>The blocks are stored using three data sources:
  *
  * <ul>
- *   <li><b>levels</b>: maps a blockchain height to the queue identifiers that start with blocks at
- *       that height;
- *   <li><b>queues</b>: maps queues identifiers to the list of blocks (in ascending order) that
- *       belong to the queue;
- *   <li><b>indexes</b>: maps block hashes to the identifier of the queue where the block is stored.
+ * <li><b>levels</b>: maps a blockchain height to the queue identifiers that start with blocks at
+ * that height;
+ * <li><b>queues</b>: maps queues identifiers to the list of blocks (in ascending order) that
+ * belong to the queue;
+ * <li><b>indexes</b>: maps block hashes to the identifier of the queue where the block is stored.
  * </ul>
  *
  * Additionally, the class is used to optimize requests for blocks ahead of time by tracking
@@ -82,34 +82,80 @@ public class PendingBlockStore implements Flushable, Closeable {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     private static final Logger LOG_SYNC = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
-
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
-
     // database names
     private static final String LEVEL_DB_NAME = "level";
     private static final String QUEUE_DB_NAME = "queue";
     private static final String INDEX_DB_NAME = "index";
+    private static final int FORWARD_SKIP = STEP_COUNT * LARGE_REQUEST_SIZE;
 
     // data sources
+    private static final Serializer<List<byte[]>, byte[]> HASH_LIST_RLP_SERIALIZER =
+        new Serializer<>() {
+            @Override
+            public byte[] serialize(List<byte[]> object) {
+                byte[][] infoList = new byte[object.size()][];
+                int i = 0;
+                for (byte[] b : object) {
+                    infoList[i] = RLP.encodeElement(b);
+                    i++;
+                }
+                return RLP.encodeList(infoList);
+            }
+
+            @Override
+            public List<byte[]> deserialize(byte[] stream) {
+                RLPList list = (RLPList) RLP.decode2(stream).get(0);
+                List<byte[]> res = new ArrayList<>(list.size());
+
+                for (RLPElement aList : list) {
+                    res.add(aList.getRLPData());
+                }
+                return res;
+            }
+        };
+    private static final Serializer<List<AionBlock>, byte[]> BLOCK_LIST_RLP_SERIALIZER =
+        new Serializer<>() {
+            @Override
+            public byte[] serialize(List<AionBlock> object) {
+                byte[][] infoList = new byte[object.size()][];
+                int i = 0;
+                for (AionBlock b : object) {
+                    infoList[i] = b.getEncoded();
+                    i++;
+                }
+                return RLP.encodeList(infoList);
+            }
+
+            @Override
+            public List<AionBlock> deserialize(byte[] stream) {
+                RLPList list = (RLPList) RLP.decode2(stream).get(0);
+                List<AionBlock> res = new ArrayList<>(list.size());
+
+                for (RLPElement aList : list) {
+                    res.add(new AionBlock(aList.getRLPData()));
+                }
+                return res;
+            }
+        };
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     /**
      * Used to map a level (blockchain height) to the queue identifiers that start with blocks at
      * that height.
      */
     private ObjectDataSource<List<byte[]>> levelSource;
-
     private IByteArrayKeyValueDatabase levelDatabase;
-    /** Used to map a queue identifier to a list of consecutive blocks. */
+    /**
+     * Used to map a queue identifier to a list of consecutive blocks.
+     */
     private ObjectDataSource<List<AionBlock>> queueSource;
-
     private IByteArrayKeyValueDatabase queueDatabase;
-    /** Used to maps a block hash to its current queue identifier. */
+    /**
+     * Used to maps a block hash to its current queue identifier.
+     */
     private IByteArrayKeyValueDatabase indexSource;
-
     // tracking the status
     private Map<ByteArrayWrapper, QueueInfo> status;
     private long maxRequest = 0L, minStatus = Long.MAX_VALUE, maxStatus = 0L;
-
-    private static final int FORWARD_SKIP = STEP_COUNT * LARGE_REQUEST_SIZE;
 
     /**
      * Constructor. Initializes the databases used for storage. If the database configuration used
@@ -118,7 +164,7 @@ public class PendingBlockStore implements Flushable, Closeable {
      *
      * @param _props properties of the databases to be used for storage
      * @throws InvalidFilePathException when given a persistent database vendor for which the data
-     *     store cannot be created or opened.
+     * store cannot be created or opened.
      */
     public PendingBlockStore(final Properties _props) throws InvalidFilePathException {
         Properties local = new Properties(_props);
@@ -127,7 +173,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         DBVendor vendor = DBVendor.fromString(local.getProperty(Props.DB_TYPE));
         if (vendor.getPersistence()) {
             File pbFolder =
-                    new File(local.getProperty(Props.DB_PATH), local.getProperty(Props.DB_NAME));
+                new File(local.getProperty(Props.DB_PATH), local.getProperty(Props.DB_NAME));
 
             verifyAndBuildPath(pbFolder);
             local.setProperty(Props.DB_PATH, pbFolder.getAbsolutePath());
@@ -141,7 +187,7 @@ public class PendingBlockStore implements Flushable, Closeable {
      *
      * @param props the database properties to be used in initializing the underlying databases
      * @throws InvalidFilePathException when any of the required databases cannot be instantiated or
-     *     opened.
+     * opened.
      */
     private void init(Properties props) throws InvalidFilePathException {
         // initialize status
@@ -173,10 +219,10 @@ public class PendingBlockStore implements Flushable, Closeable {
 
     private InvalidFilePathException newException(String dbName, Properties props) {
         return new InvalidFilePathException(
-                "The «"
-                        + dbName
-                        + "» database from the pending block store could not be initialized with the given parameters: "
-                        + props);
+            "The «"
+                + dbName
+                + "» database from the pending block store could not be initialized with the given parameters: "
+                + props);
     }
 
     /**
@@ -189,63 +235,13 @@ public class PendingBlockStore implements Flushable, Closeable {
 
         try {
             return status != null
-                    && levelSource.isOpen()
-                    && queueSource.isOpen()
-                    && indexSource.isOpen();
+                && levelSource.isOpen()
+                && queueSource.isOpen()
+                && indexSource.isOpen();
         } finally {
             lock.readLock().unlock();
         }
     }
-
-    private static final Serializer<List<byte[]>, byte[]> HASH_LIST_RLP_SERIALIZER =
-            new Serializer<>() {
-                @Override
-                public byte[] serialize(List<byte[]> object) {
-                    byte[][] infoList = new byte[object.size()][];
-                    int i = 0;
-                    for (byte[] b : object) {
-                        infoList[i] = RLP.encodeElement(b);
-                        i++;
-                    }
-                    return RLP.encodeList(infoList);
-                }
-
-                @Override
-                public List<byte[]> deserialize(byte[] stream) {
-                    RLPList list = (RLPList) RLP.decode2(stream).get(0);
-                    List<byte[]> res = new ArrayList<>(list.size());
-
-                    for (RLPElement aList : list) {
-                        res.add(aList.getRLPData());
-                    }
-                    return res;
-                }
-            };
-
-    private static final Serializer<List<AionBlock>, byte[]> BLOCK_LIST_RLP_SERIALIZER =
-            new Serializer<>() {
-                @Override
-                public byte[] serialize(List<AionBlock> object) {
-                    byte[][] infoList = new byte[object.size()][];
-                    int i = 0;
-                    for (AionBlock b : object) {
-                        infoList[i] = b.getEncoded();
-                        i++;
-                    }
-                    return RLP.encodeList(infoList);
-                }
-
-                @Override
-                public List<AionBlock> deserialize(byte[] stream) {
-                    RLPList list = (RLPList) RLP.decode2(stream).get(0);
-                    List<AionBlock> res = new ArrayList<>(list.size());
-
-                    for (RLPElement aList : list) {
-                        res.add(new AionBlock(aList.getRLPData()));
-                    }
-                    return res;
-                }
-            };
 
     /**
      * Stores a single block in the pending block store for importing later when the chain reaches
@@ -254,9 +250,9 @@ public class PendingBlockStore implements Flushable, Closeable {
      *
      * @param block a future block that cannot be imported due to height
      * @return {@code true} when the block was imported, {@code false} if the block is {@code null}
-     *     or is already stored and saving it was not necessary.
+     * or is already stored and saving it was not necessary.
      * @implNote The status blocks received impact the functionality of the base value generation
-     *     {@link #nextBase(long, long)} for requesting blocks ahead of import time.
+     * {@link #nextBase(long, long)} for requesting blocks ahead of import time.
      */
     public boolean addStatusBlock(AionBlock block) {
 
@@ -346,7 +342,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
     /**
      * @return the number of elements stored in the status map. * @implNote This method is package
-     *     private because it is meant to be used for testing.
+     * private because it is meant to be used for testing.
      */
     @VisibleForTesting
     int getStatusSize() {
@@ -361,7 +357,7 @@ public class PendingBlockStore implements Flushable, Closeable {
     /**
      * @param hash the identifier of a queue of blocks stored in the status map
      * @return the information for that queue if it exists, {@code null} otherwise. * @implNote This
-     *     method is package private because it is meant to be used for testing.
+     * method is package private because it is meant to be used for testing.
      */
     @VisibleForTesting
     QueueInfo getStatusItem(byte[] hash) {
@@ -381,11 +377,12 @@ public class PendingBlockStore implements Flushable, Closeable {
      * Attempts to store a range of blocks in the pending block store for importing later when the
      * chain reaches the needed height and the parent blocks gets imported.
      *
-     * @param blocks a range of blocks that cannot be imported due to height or lack of parent block
+     * @param blocks a range of blocks that cannot be imported due to height or lack of parent
+     * block
      * @return an integer value (ranging from zero to the number of given blocks) representing the
-     *     number of blocks that were stored from the given input.
+     * number of blocks that were stored from the given input.
      * @implNote The functionality is optimized for calls providing consecutive blocks, but ensures
-     *     correct behavior even when the blocks are not consecutive.
+     * correct behavior even when the blocks are not consecutive.
      */
     public int addBlockRange(List<AionBlock> blocks) {
         List<AionBlock> blockRange = new ArrayList<>(blocks);
@@ -419,11 +416,11 @@ public class PendingBlockStore implements Flushable, Closeable {
      * Stores a block ranges with the first element determining the queue placement.
      *
      * @param first the parent block to the lowest block in the given range which will be used to
-     *     determine the queue identifier
+     * determine the queue identifier
      * @param blockRange a range of blocks that cannot be imported due to height or lack of parent
-     *     block
+     * block
      * @return an integer value (ranging from zero to the number of given blocks) representing the
-     *     number of blocks that were stored from the given input.
+     * number of blocks that were stored from the given input.
      * @implNote Any method calling this functionality must first acquire the needed write lock.
      */
     private int addBlockRange(AionBlock first, List<AionBlock> blockRange) {
@@ -470,7 +467,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
             // check for issues with batch continuity and storage
             if (!Arrays.equals(current.getParentHash(), parent.getHash()) // continuity issue
-                    || indexSource.get(current.getHash()).isPresent()) { // already stored
+                || indexSource.get(current.getHash()).isPresent()) { // already stored
 
                 // store separately
                 stored += addBlockRange(current, blockRange);
@@ -544,7 +541,7 @@ public class PendingBlockStore implements Flushable, Closeable {
      *
      * @param level the height / number of the first block in the queues to be retrieved
      * @return a map of queue identifiers and lists of blocks containing all the separate chain
-     *     queues stored at that level.
+     * queues stored at that level.
      */
     public Map<ByteArrayWrapper, List<AionBlock>> loadBlockRange(long level) {
         lock.readLock().lock();
@@ -579,12 +576,12 @@ public class PendingBlockStore implements Flushable, Closeable {
      * @param level the block height of the queue starting point
      * @param queues the identifiers for the queues to be deleted
      * @param blocks the queue to blocks mappings to me deleted (used to ensure that if the queues
-     *     have been expanded, only the relevant blocks get deleted)
+     * have been expanded, only the relevant blocks get deleted)
      */
     public void dropPendingQueues(
-            long level,
-            Collection<ByteArrayWrapper> queues,
-            Map<ByteArrayWrapper, List<AionBlock>> blocks) {
+        long level,
+        Collection<ByteArrayWrapper> queues,
+        Map<ByteArrayWrapper, List<AionBlock>> blocks) {
 
         lock.writeLock().lock();
 
@@ -639,7 +636,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
             if (levelData == null) {
                 LOG.error(
-                        "Corrupt data in PendingBlockStorage. Level (expected to exist) was not found.");
+                    "Corrupt data in PendingBlockStorage. Level (expected to exist) was not found.");
                 // level already missing so nothing to do here
             } else {
                 List<byte[]> updatedLevelData = new ArrayList<>();
@@ -679,14 +676,14 @@ public class PendingBlockStore implements Flushable, Closeable {
      * assumptions:
      *
      * <ol>
-     *   <li>the majority of peers are on the same (main) chain;
-     *   <li>bases that cannot be used are recycled in the functionality calling this method;
-     *   <li>chain continuity is ensured by employing NORMAL requests in addition to LIGHTNING ones.
+     * <li>the majority of peers are on the same (main) chain;
+     * <li>bases that cannot be used are recycled in the functionality calling this method;
+     * <li>chain continuity is ensured by employing NORMAL requests in addition to LIGHTNING ones.
      * </ol>
      *
      * @param current the starting point value for the next base
      * @param knownBest value retrieved from the last best block status update for the peer
-     *     requesting a base value for a subsequent LIGHTNING request.
+     * requesting a base value for a subsequent LIGHTNING request.
      * @return the next generated base value for the request.
      */
     public long nextBase(long current, long knownBest) {
@@ -709,12 +706,12 @@ public class PendingBlockStore implements Flushable, Closeable {
 
                     if (LOG_SYNC.isDebugEnabled()) {
                         LOG_SYNC.debug(
-                                "Searching for last > " + current + " in " + statusToString());
+                            "Searching for last > " + current + " in " + statusToString());
                     }
 
                     // find first gap
                     Optional<QueueInfo> info =
-                            status.values().stream().filter(s -> s.getLast() > current).findFirst();
+                        status.values().stream().filter(s -> s.getLast() > current).findFirst();
 
                     if (info.isPresent()) {
                         // update base to gap
@@ -745,13 +742,13 @@ public class PendingBlockStore implements Flushable, Closeable {
 
             if (LOG_SYNC.isDebugEnabled()) {
                 LOG_SYNC.debug(
-                        "min status = {}, max status = {}, max requested = {}, known best = {}, current = {}, returned base = {}",
-                        minStatus,
-                        maxStatus,
-                        knownBest,
-                        maxRequest,
-                        current,
-                        base);
+                    "min status = {}, max status = {}, max requested = {}, known best = {}, current = {}, returned base = {}",
+                    minStatus,
+                    maxStatus,
+                    knownBest,
+                    maxRequest,
+                    current,
+                    base);
             }
 
             // keep track of base
@@ -807,7 +804,9 @@ public class PendingBlockStore implements Flushable, Closeable {
         }
     }
 
-    /** @implNote Any method calling this functionality must first acquire the needed read lock. */
+    /**
+     * @implNote Any method calling this functionality must first acquire the needed read lock.
+     */
     private String statusToString() {
         StringBuilder sb = new StringBuilder("Current status queues:\n");
         for (QueueInfo i : status.values()) {
@@ -821,6 +820,27 @@ public class PendingBlockStore implements Flushable, Closeable {
     static class QueueInfo {
 
         private static final long UNKNOWN = -1;
+        // the hash identifying the queue
+        private final byte[] hash;
+        // the number of the first block in the queue
+        private long first;
+        // the number of the last block in the queue
+        private long last;
+
+        //        /** For future functionality to store to disk. */
+        //        public QueueInfo(byte[] data) {
+        //            RLPList outerList = RLP.decode2(data);
+        //
+        //            if (outerList.isEmpty()) {
+        //                throw new IllegalArgumentException(
+        //                        "The given data does not correspond to a QueueInfo object.");
+        //            }
+        //
+        //            RLPList list = (RLPList) outerList.get(0);
+        //            this.hash = list.get(0).getRLPData();
+        //            this.first = ByteUtil.byteArrayToLong(list.get(1).getRLPData());
+        //            this.last = ByteUtil.byteArrayToLong(list.get(2).getRLPData());
+        //        }
 
         private QueueInfo(byte[] _hash, long _last) {
             this.hash = _hash;
@@ -838,28 +858,6 @@ public class PendingBlockStore implements Flushable, Closeable {
             info.first = UNKNOWN;
             return info;
         }
-
-        //        /** For future functionality to store to disk. */
-        //        public QueueInfo(byte[] data) {
-        //            RLPList outerList = RLP.decode2(data);
-        //
-        //            if (outerList.isEmpty()) {
-        //                throw new IllegalArgumentException(
-        //                        "The given data does not correspond to a QueueInfo object.");
-        //            }
-        //
-        //            RLPList list = (RLPList) outerList.get(0);
-        //            this.hash = list.get(0).getRLPData();
-        //            this.first = ByteUtil.byteArrayToLong(list.get(1).getRLPData());
-        //            this.last = ByteUtil.byteArrayToLong(list.get(2).getRLPData());
-        //        }
-
-        // the hash identifying the queue
-        private final byte[] hash;
-        // the number of the first block in the queue
-        private long first;
-        // the number of the last block in the queue
-        private long last;
 
         long getLast() {
             return last;
@@ -880,12 +878,12 @@ public class PendingBlockStore implements Flushable, Closeable {
         @Override
         public String toString() {
             return "[ short hash: "
-                    + Hex.toHexString(hash).substring(0, 6)
-                    + " first: "
-                    + first
-                    + " last: "
-                    + last
-                    + " ]";
+                + Hex.toHexString(hash).substring(0, 6)
+                + " first: "
+                + first
+                + " last: "
+                + last
+                + " ]";
         }
     }
 }

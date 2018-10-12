@@ -37,7 +37,8 @@ public class TaskDumpHeap implements Runnable {
 
     private final String reportFolder;
 
-    public TaskDumpHeap(final AtomicBoolean _start, final int _interval, final String _reportFolder) {
+    public TaskDumpHeap(final AtomicBoolean _start, final int _interval,
+        final String _reportFolder) {
         this.start = _start;
         this.interval = _interval;
         this.reportFolder = _reportFolder;

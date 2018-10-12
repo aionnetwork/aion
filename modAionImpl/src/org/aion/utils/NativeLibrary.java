@@ -1,9 +1,8 @@
 package org.aion.utils;
 
-import org.aion.base.util.NativeLoader;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.aion.base.util.NativeLoader;
 
 public enum NativeLibrary {
     COMMON("common"),
@@ -15,12 +14,9 @@ public enum NativeLibrary {
     SOLIDITY("solidity");
 
     private final String name;
+
     NativeLibrary(String name) {
         this.name = name;
-    }
-
-    public String getName() {
-        return this.name;
     }
 
     public static void checkNativeLibrariesLoaded() {
@@ -46,5 +42,9 @@ public enum NativeLibrary {
             builder.append("\n");
         }
         return builder.toString();
+    }
+
+    public String getName() {
+        return this.name;
     }
 }

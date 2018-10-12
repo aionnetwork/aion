@@ -46,7 +46,7 @@ final class HeaderQuery {
 
     int take;
 
-    HeaderQuery(String _fromNode, long _from, int _take){
+    HeaderQuery(String _fromNode, long _from, int _take) {
         this.fromNode = _fromNode;
         this.from = _from;
         this.take = _take;

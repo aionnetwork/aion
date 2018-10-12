@@ -19,23 +19,22 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.core;
 
 import java.math.BigInteger;
-
-import org.aion.zero.api.BlockConstants;
 import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.zero.api.BlockConstants;
 
 /**
  * Multiple implementations for calculating the rewards
- * 
- * @author yao
  *
+ * @author yao
  */
 public class RewardsCalculator {
+
     private BlockConstants constants;
     private BigInteger m;
 
@@ -47,8 +46,8 @@ public class RewardsCalculator {
         assert (delta > 0);
 
         this.m = this.constants.getRampUpEndValue()
-                .subtract(this.constants.getRampUpStartValue())
-                .divide(BigInteger.valueOf(delta));
+            .subtract(this.constants.getRampUpStartValue())
+            .divide(BigInteger.valueOf(delta));
     }
 
     /**

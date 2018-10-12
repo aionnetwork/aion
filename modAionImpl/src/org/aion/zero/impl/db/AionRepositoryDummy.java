@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.db;
@@ -73,7 +73,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
     }
 
     public void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
-            HashMap<ByteArrayWrapper, IContractDetails<IDataWord>> detailsCache) {
+        HashMap<ByteArrayWrapper, IContractDetails<IDataWord>> detailsCache) {
 
         for (ByteArrayWrapper hash : stateCache.keySet()) {
 
@@ -95,10 +95,10 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
                     worldState.put(hash, accountState);
                     if (logger.isDebugEnabled()) {
                         logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
-                                     Hex.toHexString(hash.getData()),
-                                     accountState.getNonce(),
-                                     accountState.getBalance(),
-                                     Hex.toHexString(contractDetails.getStorageHash()));
+                            Hex.toHexString(hash.getData()),
+                            accountState.getNonce(),
+                            accountState.getBalance(),
+                            Hex.toHexString(contractDetails.getStorageHash()));
                     }
 
                 }
@@ -279,7 +279,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
     }
 
     public void loadAccount(Address addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
-            HashMap<ByteArrayWrapper, IContractDetails<IDataWord>> cacheDetails) {
+        HashMap<ByteArrayWrapper, IContractDetails<IDataWord>> cacheDetails) {
 
         AccountState account = getAccountState(addr);
         IContractDetails<IDataWord> details = getContractDetails(addr);

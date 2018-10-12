@@ -26,7 +26,6 @@ import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.zero.impl.AionHub.INIT_ERROR_EXIT_CODE;
 
-import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,9 +56,11 @@ import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
-/** Has direct database connection. */
+/**
+ * Has direct database connection.
+ */
 public class AionRepositoryImpl
-        extends AbstractRepository<AionBlock, A0BlockHeader, AionBlockStore> {
+    extends AbstractRepository<AionBlock, A0BlockHeader, AionBlockStore> {
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
 
@@ -69,26 +70,16 @@ public class AionRepositoryImpl
     /**
      * used by getSnapShotTo
      *
-     * <p>@ATTENTION: when do snap shot, another instance will be created. Make sure it is used only
+     * <p>@ATTENTION: when do snap shot, another instance will be created. Make sure it is used
+     * only
      * by getSnapShotTo
      */
-    protected AionRepositoryImpl() {}
+    protected AionRepositoryImpl() {
+    }
 
     protected AionRepositoryImpl(IRepositoryConfig repoConfig) {
         this.cfg = repoConfig;
         init();
-    }
-
-    private static class AionRepositoryImplHolder {
-        // configuration
-        private static CfgAion config = CfgAion.inst();
-        // repository singleton instance
-        private static final AionRepositoryImpl inst =
-                new AionRepositoryImpl(
-                        new RepositoryConfig(
-                                config.getDatabasePath(),
-                                ContractDetailsAion.getInstance(),
-                                config.getDb()));
     }
 
     public static AionRepositoryImpl inst() {
@@ -105,8 +96,8 @@ public class AionRepositoryImpl
 
             // Setup the cache for transaction data source.
             this.transactionStore =
-                    new TransactionStore<>(
-                            transactionDatabase, AionTransactionStoreSerializer.serializer);
+                new TransactionStore<>(
+                    transactionDatabase, AionTransactionStoreSerializer.serializer);
 
             // Setup block store.
             this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity);
@@ -127,7 +118,9 @@ public class AionRepositoryImpl
         return this.pendingStore;
     }
 
-    /** @implNote The transaction store is not locked within the repository implementation. */
+    /**
+     * @implNote The transaction store is not locked within the repository implementation.
+     */
     public TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> getTransactionStore() {
         return this.transactionStore;
     }
@@ -138,8 +131,8 @@ public class AionRepositoryImpl
 
     @Override
     public void updateBatch(
-            Map<Address, AccountState> stateCache,
-            Map<Address, IContractDetails<IDataWord>> detailsCache) {
+        Map<Address, AccountState> stateCache,
+        Map<Address, IContractDetails<IDataWord>> detailsCache) {
         rwLock.writeLock().lock();
 
         try {
@@ -168,18 +161,18 @@ public class AionRepositoryImpl
 
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace(
-                                        "update: [{}],nonce: [{}] balance: [{}] [{}]",
-                                        Hex.toHexString(address.toBytes()),
-                                        accountState.getNonce(),
-                                        accountState.getBalance(),
-                                        Hex.toHexString(contractDetails.getStorageHash()));
+                                    "update: [{}],nonce: [{}] balance: [{}] [{}]",
+                                    Hex.toHexString(address.toBytes()),
+                                    accountState.getNonce(),
+                                    accountState.getBalance(),
+                                    Hex.toHexString(contractDetails.getStorageHash()));
                             }
                         }
                         continue;
                     }
 
                     ContractDetailsCacheImpl contractDetailsCache =
-                            (ContractDetailsCacheImpl) contractDetails;
+                        (ContractDetailsCacheImpl) contractDetails;
                     if (contractDetailsCache.origContract == null) {
                         contractDetailsCache.origContract = this.cfg.contractDetailsImpl();
 
@@ -188,7 +181,7 @@ public class AionRepositoryImpl
                         } catch (Exception e) {
                             e.printStackTrace();
                             LOG.error(
-                                    "contractDetailsCache setAddress exception [{}]", e.toString());
+                                "contractDetailsCache setAddress exception [{}]", e.toString());
                         }
 
                         contractDetailsCache.commit();
@@ -206,11 +199,11 @@ public class AionRepositoryImpl
 
                     if (LOG.isTraceEnabled()) {
                         LOG.trace(
-                                "update: [{}],nonce: [{}] balance: [{}] [{}]",
-                                Hex.toHexString(address.toBytes()),
-                                accountState.getNonce(),
-                                accountState.getBalance(),
-                                Hex.toHexString(contractDetails.getStorageHash()));
+                            "update: [{}],nonce: [{}] balance: [{}] [{}]",
+                            Hex.toHexString(address.toBytes()),
+                            accountState.getNonce(),
+                            accountState.getBalance(),
+                            Hex.toHexString(contractDetails.getStorageHash()));
                     }
                 }
             }
@@ -223,9 +216,11 @@ public class AionRepositoryImpl
         }
     }
 
-    /** @implNote The method calling this method must handle the locking. */
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private void updateContractDetails(
-            final Address address, final IContractDetails<IDataWord> contractDetails) {
+        final Address address, final IContractDetails<IDataWord> contractDetails) {
         // locked by calling method
         detailsDS.update(address, contractDetails);
     }
@@ -390,7 +385,9 @@ public class AionRepositoryImpl
         return (account == null) ? BigInteger.ZERO : account.getNonce();
     }
 
-    /** @implNote The method calling this method must handle the locking. */
+    /**
+     * @implNote The method calling this method must handle the locking.
+     */
     private void updateAccountState(Address address, AccountState accountState) {
         // locked by calling method
         worldState.update(address.toBytes(), accountState.getEncoded());
@@ -399,9 +396,9 @@ public class AionRepositoryImpl
     /**
      * @inheritDoc
      * @implNote Any other method calling this can rely on the fact that the contract details
-     *     returned is a newly created object by {@link IContractDetails#getSnapshotTo(byte[])}.
-     *     Since this querying method it locked, the methods calling it <b>may not need to be locked
-     *     or synchronized</b>, depending on the specific use case.
+     * returned is a newly created object by {@link IContractDetails#getSnapshotTo(byte[])}. Since
+     * this querying method it locked, the methods calling it <b>may not need to be locked or
+     * synchronized</b>, depending on the specific use case.
      */
     @Override
     public IContractDetails<IDataWord> getContractDetails(Address address) {
@@ -443,8 +440,8 @@ public class AionRepositoryImpl
     /**
      * @inheritDoc
      * @implNote Any other method calling this can rely on the fact that the account state returned
-     *     is a newly created object. Since this querying method it locked, the methods calling it
-     *     <b>may not need to be locked or synchronized</b>, depending on the specific use case.
+     * is a newly created object. Since this querying method it locked, the methods calling it
+     * <b>may not need to be locked or synchronized</b>, depending on the specific use case.
      */
     @Override
     public AccountState getAccountState(Address address) {
@@ -458,7 +455,7 @@ public class AionRepositoryImpl
             if (accountData.length != 0) {
                 result = new AccountState(accountData);
                 LOG.debug(
-                        "New AccountSate [{}], State [{}]", address.toString(), result.toString());
+                    "New AccountSate [{}], State [{}]", address.toString(), result.toString());
             }
             return result;
         } finally {
@@ -473,13 +470,13 @@ public class AionRepositoryImpl
 
     /**
      * @implNote The loaded objects are fresh copies of the original account state and contract
-     *     details.
+     * details.
      */
     @Override
     public void loadAccountState(
-            Address address,
-            Map<Address, AccountState> cacheAccounts,
-            Map<Address, IContractDetails<IDataWord>> cacheDetails) {
+        Address address,
+        Map<Address, AccountState> cacheAccounts,
+        Map<Address, IContractDetails<IDataWord>> cacheDetails) {
 
         AccountState account = getAccountState(address);
         IContractDetails<IDataWord> details = getContractDetails(address);
@@ -526,12 +523,12 @@ public class AionRepositoryImpl
                 if (stateDSPrune.isArchiveEnabled() && blockHeader.getNumber() % archiveRate == 0) {
                     // archive block
                     worldState.saveDiffStateToDatabase(
-                            blockHeader.getStateRoot(), stateDSPrune.getArchiveSource());
+                        blockHeader.getStateRoot(), stateDSPrune.getArchiveSource());
                 }
                 stateDSPrune.storeBlockChanges(blockHeader.getHash(), blockHeader.getNumber());
                 detailsDS
-                        .getStorageDSPrune()
-                        .storeBlockChanges(blockHeader.getHash(), blockHeader.getNumber());
+                    .getStorageDSPrune()
+                    .storeBlockChanges(blockHeader.getHash(), blockHeader.getNumber());
                 pruneBlocks(blockHeader);
             }
         } finally {
@@ -557,7 +554,7 @@ public class AionRepositoryImpl
 
     /**
      * @return {@code true} when pruning is enabled and archiving is disabled, {@code false}
-     *     otherwise
+     * otherwise
      */
     public boolean usesTopPruning() {
         return pruneEnabled && !stateDSPrune.isArchiveEnabled();
@@ -634,7 +631,9 @@ public class AionRepositoryImpl
         }
     }
 
-    /** This function cannot for any reason fail, otherwise we may have dangling file IO locks */
+    /**
+     * This function cannot for any reason fail, otherwise we may have dangling file IO locks
+     */
     @Override
     public void close() {
         rwLock.writeLock().lock();
@@ -717,7 +716,7 @@ public class AionRepositoryImpl
                 }
             } catch (Exception e) {
                 LOGGEN.error(
-                        "Exception occurred while closing the pendingTxCacheDatabase store.", e);
+                    "Exception occurred while closing the pendingTxCacheDatabase store.", e);
             }
         } finally {
             rwLock.writeLock().unlock();
@@ -730,8 +729,6 @@ public class AionRepositoryImpl
      *
      * <p>Note that referencing the state database directly is unsafe, and should only be used for
      * debugging and testing purposes.
-     *
-     * @return
      */
     public IByteArrayKeyValueDatabase getStateDatabase() {
         return this.stateDatabase;
@@ -747,19 +744,21 @@ public class AionRepositoryImpl
      *
      * <p>Note that referencing the state database directly is unsafe, and should only be used for
      * debugging and testing purposes.
-     *
-     * @return
      */
     public IByteArrayKeyValueDatabase getDetailsDatabase() {
         return this.detailsDatabase;
     }
 
-    /** For testing. */
+    /**
+     * For testing.
+     */
     public IByteArrayKeyValueDatabase getBlockDatabase() {
         return this.blockDatabase;
     }
 
-    /** For testing. */
+    /**
+     * For testing.
+     */
     public IByteArrayKeyValueDatabase getIndexDatabase() {
         return this.indexDatabase;
     }
@@ -767,12 +766,12 @@ public class AionRepositoryImpl
     @Override
     public String toString() {
         return "AionRepositoryImpl{ identityHashCode="
-                + System.identityHashCode(this)
-                + ", "
-                + //
-                "databaseGroupSize="
-                + (databaseGroup == null ? 0 : databaseGroup.size())
-                + '}';
+            + System.identityHashCode(this)
+            + ", "
+            + //
+            "databaseGroupSize="
+            + (databaseGroup == null ? 0 : databaseGroup.size())
+            + '}';
     }
 
     @Override
@@ -789,5 +788,18 @@ public class AionRepositoryImpl
         } finally {
             rwLock.writeLock().unlock();
         }
+    }
+
+    private static class AionRepositoryImplHolder {
+
+        // configuration
+        private static CfgAion config = CfgAion.inst();
+        // repository singleton instance
+        private static final AionRepositoryImpl inst =
+            new AionRepositoryImpl(
+                new RepositoryConfig(
+                    config.getDatabasePath(),
+                    ContractDetailsAion.getInstance(),
+                    config.getDb()));
     }
 }

@@ -29,15 +29,14 @@
 
 package org.aion.zero.impl.sync;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqStatus;
 import org.slf4j.Logger;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * @author chris
- * long run
+ * @author chris long run
  */
 final class TaskGetStatus implements Runnable {
 

@@ -44,6 +44,17 @@ import org.junit.Test;
 
 public class AionHubTest {
 
+    @BeforeClass
+    public static void setup() {
+        // logging to see errors
+        Map<String, String> cfg = new HashMap<>();
+        cfg.put("GEN", "INFO");
+        cfg.put("CONS", "INFO");
+        cfg.put("DB", "ERROR");
+
+        AionLoggerFactory.init(cfg);
+    }
+
     private void checkHubNullity(AionHub hub) {
         assertThat(hub).isNotNull();
         assertThat(hub.getBlockchain()).isNotNull();
@@ -54,17 +65,6 @@ public class AionHubTest {
         assertThat(hub.getSyncMgr()).isNotNull();
         assertThat(hub.getBlockStore()).isNotNull();
         assertThat(hub.getPropHandler()).isNotNull();
-    }
-
-    @BeforeClass
-    public static void setup() {
-        // logging to see errors
-        Map<String, String> cfg = new HashMap<>();
-        cfg.put("GEN", "INFO");
-        cfg.put("CONS", "INFO");
-        cfg.put("DB", "ERROR");
-
-        AionLoggerFactory.init(cfg);
     }
 
     @After
@@ -138,7 +138,7 @@ public class AionHubTest {
     public void MockHubInst_wStartRecovery() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts().build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts().build();
 
         int NUMBER_OF_BLOCKS = 10, MAX_TX_PER_BLOCK = 60;
 
@@ -151,11 +151,11 @@ public class AionHubTest {
         long time = System.currentTimeMillis();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs =
-                    BlockchainTestUtils.generateTransactions(
-                            MAX_TX_PER_BLOCK, bundle.privateKeys, repo);
+                BlockchainTestUtils.generateTransactions(
+                    MAX_TX_PER_BLOCK, bundle.privateKeys, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+                .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // second half of blocks will miss the state root
@@ -163,11 +163,11 @@ public class AionHubTest {
         List<AionBlock> blocksToImport = new ArrayList<>();
         for (int i = 0; i < NUMBER_OF_BLOCKS / 2; i++) {
             txs =
-                    BlockchainTestUtils.generateTransactions(
-                            MAX_TX_PER_BLOCK, bundle.privateKeys, repo);
+                BlockchainTestUtils.generateTransactions(
+                    MAX_TX_PER_BLOCK, bundle.privateKeys, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                    .isEqualTo(ImportResult.IMPORTED_BEST);
+                .isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(context.block.getStateRoot());
             blocksToImport.add(context.block);
         }

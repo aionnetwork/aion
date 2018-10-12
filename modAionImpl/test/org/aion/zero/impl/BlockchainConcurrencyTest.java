@@ -1,16 +1,15 @@
 package org.aion.zero.impl;
 
-import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.types.AionTransaction;
-import org.junit.Test;
+import static com.google.common.truth.Truth.assertThat;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static com.google.common.truth.Truth.assertThat;
+import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.AionTransaction;
+import org.junit.Test;
 
 public class BlockchainConcurrencyTest {
 
@@ -20,9 +19,9 @@ public class BlockchainConcurrencyTest {
         ExecutorService getBlockService = Executors.newSingleThreadExecutor();
 
         StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
-                .withDefaultAccounts()
-                .withValidatorConfiguration("simple")
-                .build();
+            .withDefaultAccounts()
+            .withValidatorConfiguration("simple")
+            .build();
         StandaloneBlockchain bc = bundle.bc;
 
         final int MAX_COUNT = 100000;
@@ -46,7 +45,7 @@ public class BlockchainConcurrencyTest {
             getBlockService.submit(() -> {
                 int count = 0;
                 long prevNumber = bc.getBestBlock().getNumber();
-                while(!Thread.currentThread().isInterrupted() && count < MAX_COUNT) {
+                while (!Thread.currentThread().isInterrupted() && count < MAX_COUNT) {
                     // all three of these methods use {@link AionBlockchainImpl#pubBestBlock}
                     assertThat(bc.getBestBlockHash()).isNotNull();
                     bc.getSize();

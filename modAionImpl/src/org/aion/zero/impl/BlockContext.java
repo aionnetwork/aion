@@ -8,6 +8,7 @@ import org.aion.zero.impl.types.AionBlock;
  * with PoW/PoS)
  */
 public class BlockContext {
+
     public final AionBlock block;
     public final BigInteger baseBlockReward;
     public final BigInteger transactionFee;

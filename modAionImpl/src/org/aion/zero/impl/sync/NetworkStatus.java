@@ -33,8 +33,7 @@ package org.aion.zero.impl.sync;
 import java.math.BigInteger;
 
 /**
- * @author chris
- * used by sync mgr display logging
+ * @author chris used by sync mgr display logging
  */
 final class NetworkStatus {
 
@@ -46,7 +45,7 @@ final class NetworkStatus {
 
     private String targetBestBlockHash;
 
-    NetworkStatus(){
+    NetworkStatus() {
         this.targetDisplayId = "";
         this.targetTotalDiff = BigInteger.ZERO;
         this.targetBestBlockNumber = 0;
@@ -58,26 +57,26 @@ final class NetworkStatus {
         BigInteger _targetTotalDiff,
         long _targetBestBlockNumber,
         String _targetBestBlockHash
-    ){
+    ) {
         this.targetDisplayId = _targetDisplayId;
         this.targetTotalDiff = _targetTotalDiff;
         this.targetBestBlockNumber = _targetBestBlockNumber;
         this.targetBestBlockHash = _targetBestBlockHash;
     }
 
-    String getTargetDisplayId(){
+    String getTargetDisplayId() {
         return this.targetDisplayId;
     }
 
-    BigInteger getTargetTotalDiff(){
+    BigInteger getTargetTotalDiff() {
         return this.targetTotalDiff;
     }
 
-    long getTargetBestBlockNumber(){
+    long getTargetBestBlockNumber() {
         return this.targetBestBlockNumber;
     }
 
-    String getTargetBestBlockHash(){
+    String getTargetBestBlockHash() {
         return this.targetBestBlockHash;
     }
 

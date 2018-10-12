@@ -64,16 +64,16 @@ final class TaskShowStatus implements Runnable {
     private final Map<Integer, PeerState> peerStates;
 
     TaskShowStatus(
-            final AtomicBoolean _start,
-            int _interval,
-            final AionBlockchainImpl _chain,
-            final NetworkStatus _networkStatus,
-            final SyncStats _stats,
-            final boolean _printReport,
-            final String _reportFolder,
-            final IP2pMgr _p2p,
-            final Map<Integer, PeerState> _peerStates,
-            final Logger _log) {
+        final AtomicBoolean _start,
+        int _interval,
+        final AionBlockchainImpl _chain,
+        final NetworkStatus _networkStatus,
+        final SyncStats _stats,
+        final boolean _printReport,
+        final String _reportFolder,
+        final IP2pMgr _p2p,
+        final Map<Integer, PeerState> _peerStates,
+        final Logger _log) {
         this.start = _start;
         this.interval = _interval;
         this.chain = _chain;
@@ -94,23 +94,23 @@ final class TaskShowStatus implements Runnable {
             String selfTd = selfBest.getCumulativeDifficulty().toString(10);
 
             String status =
-                    "sync-status avg-import="
-                            + String.format("%.2f", this.stats.getAvgBlocksPerSec())
-                            //
-                            + " b/s" //
-                            + " td="
-                            + selfTd
-                            + "/"
-                            + networkStatus.getTargetTotalDiff().toString(10) //
-                            + " b-num="
-                            + selfBest.getNumber()
-                            + "/"
-                            + this.networkStatus.getTargetBestBlockNumber() //
-                            + " b-hash="
-                            + Hex.toHexString(this.chain.getBestBlockHash()) //
-                            + "/"
-                            + this.networkStatus.getTargetBestBlockHash()
-                            + "";
+                "sync-status avg-import="
+                    + String.format("%.2f", this.stats.getAvgBlocksPerSec())
+                    //
+                    + " b/s" //
+                    + " td="
+                    + selfTd
+                    + "/"
+                    + networkStatus.getTargetTotalDiff().toString(10) //
+                    + " b-num="
+                    + selfBest.getNumber()
+                    + "/"
+                    + this.networkStatus.getTargetBestBlockNumber() //
+                    + " b-hash="
+                    + Hex.toHexString(this.chain.getBestBlockHash()) //
+                    + "/"
+                    + this.networkStatus.getTargetBestBlockHash()
+                    + "";
 
             p2pLOG.info(status);
 
@@ -125,9 +125,9 @@ final class TaskShowStatus implements Runnable {
             if (printReport) {
                 try {
                     Files.write(
-                            Paths.get(
-                                    reportFolder, System.currentTimeMillis() + "-sync-report.out"),
-                            status.getBytes());
+                        Paths.get(
+                            reportFolder, System.currentTimeMillis() + "-sync-report.out"),
+                        status.getBytes());
                 } catch (IOException e) {
                     if (p2pLOG.isDebugEnabled()) {
                         p2pLOG.debug("sync-ss report exception {}", e.toString());
@@ -164,35 +164,35 @@ final class TaskShowStatus implements Runnable {
             StringBuilder sb = new StringBuilder();
             sb.append("\n");
             sb.append(
-                    String.format(
-                            "======================================================================== sync-status =========================================================================\n"));
+                String.format(
+                    "======================================================================== sync-status =========================================================================\n"));
             sb.append(
-                    String.format(
-                            "%9s %16s %17s %8s %16s %2s %16s\n",
-                            "id",
-                            "# best block",
-                            "state",
-                            "mode",
-                            "base",
-                            "rp",
-                            "last request"));
+                String.format(
+                    "%9s %16s %17s %8s %16s %2s %16s\n",
+                    "id",
+                    "# best block",
+                    "state",
+                    "mode",
+                    "base",
+                    "rp",
+                    "last request"));
             sb.append(
-                    "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+                "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
             for (NodeState ns : sorted) {
                 INode n = ns.getN();
                 PeerState s = ns.getS();
 
                 sb.append(
-                        String.format(
-                                "id:%6s %16d %17s %8s %16d %2d %16d\n",
-                                n.getIdShort(),
-                                n.getBestBlockNumber(),
-                                s.getState(),
-                                s.getMode(),
-                                s.getBase(),
-                                s.getRepeated(),
-                                s.getLastHeaderRequest()));
+                    String.format(
+                        "id:%6s %16d %17s %8s %16d %2d %16d\n",
+                        n.getIdShort(),
+                        n.getBestBlockNumber(),
+                        s.getState(),
+                        s.getMode(),
+                        s.getBase(),
+                        s.getRepeated(),
+                        s.getLastHeaderRequest()));
             }
             return sb.toString();
         }

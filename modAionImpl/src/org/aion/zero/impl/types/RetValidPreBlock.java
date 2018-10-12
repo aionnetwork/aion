@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.zero.impl.types;
@@ -27,7 +27,6 @@ package org.aion.zero.impl.types;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-
 import org.aion.base.type.Address;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -40,8 +39,9 @@ public class RetValidPreBlock {
     public final List<AionTxReceipt> receipts;
     public final List<AionTxExecSummary> summaries;
 
-    public RetValidPreBlock(List<AionTransaction> txs, Map<Address, BigInteger> rewards, List<AionTxReceipt> receipts,
-            List<AionTxExecSummary> summaries) {
+    public RetValidPreBlock(List<AionTransaction> txs, Map<Address, BigInteger> rewards,
+        List<AionTxReceipt> receipts,
+        List<AionTxExecSummary> summaries) {
         this.txs = txs;
         this.rewards = rewards;
         this.receipts = receipts;

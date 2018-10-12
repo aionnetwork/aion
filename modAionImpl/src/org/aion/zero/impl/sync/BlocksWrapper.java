@@ -29,12 +29,11 @@
 
 package org.aion.zero.impl.sync;
 
-import org.aion.zero.impl.types.AionBlock;
 import java.util.List;
+import org.aion.zero.impl.types.AionBlock;
 
 /**
- * @author chris
- * used by imported headers on sync mgr
+ * @author chris used by imported headers on sync mgr
  */
 final class BlocksWrapper {
 
@@ -45,12 +44,11 @@ final class BlocksWrapper {
     private List<AionBlock> blocks;
 
     /**
-     *
      * @param _nodeIdHash int
      * @param _displayId String
      * @param _blocks List
      */
-    BlocksWrapper(int _nodeIdHash, String _displayId, final List<AionBlock> _blocks){
+    BlocksWrapper(int _nodeIdHash, String _displayId, final List<AionBlock> _blocks) {
         this.nodeIdHash = _nodeIdHash;
         this.displayId = _displayId;
         this.blocks = _blocks;
@@ -59,19 +57,21 @@ final class BlocksWrapper {
     /**
      * @return int - node id hash
      */
-    int getNodeIdHash(){
+    int getNodeIdHash() {
         return this.nodeIdHash;
     }
 
     /**
      * @return String - node display id
      */
-    String getDisplayId() { return this.displayId; }
+    String getDisplayId() {
+        return this.displayId;
+    }
 
     /**
      * @return List
      */
-    List<AionBlock> getBlocks(){
+    List<AionBlock> getBlocks() {
         return this.blocks;
     }
 
