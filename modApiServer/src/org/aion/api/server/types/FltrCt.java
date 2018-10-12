@@ -19,16 +19,14 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.api.server.types;
 
-import org.aion.base.type.Address;
-
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import org.aion.base.type.Address;
 
 /**
  * @author chris
@@ -48,7 +46,8 @@ public class FltrCt extends Fltr {
 
     private long expireTime;
 
-    public FltrCt(byte[] contractAddress, String toBlock, String fromBlock, List<String> topics, List<byte[]> addrs, long time) {
+    public FltrCt(byte[] contractAddress, String toBlock, String fromBlock, List<String> topics,
+        List<byte[]> addrs, long time) {
         super(Type.EVENT);
         this.contractAddress = contractAddress;
         this.toBlock = toBlock;

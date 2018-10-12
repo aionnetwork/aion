@@ -19,15 +19,15 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.api.server.types;
 
+import static org.aion.api.server.types.Fltr.Type;
+
 import org.aion.base.type.IBlock;
 import org.aion.base.util.TypeConverter;
-
-import static org.aion.api.server.types.Fltr.Type;
 
 @SuppressWarnings("rawtypes")
 public class EvtBlk extends Evt {
@@ -42,9 +42,9 @@ public class EvtBlk extends Evt {
     public Type getType() {
         return Type.BLOCK;
     }
-    
+
     @Override
-    public String toJSON()  {
+    public String toJSON() {
         return TypeConverter.toJsonHex(b.getHash());
     }
 

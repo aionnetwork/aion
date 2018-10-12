@@ -1,13 +1,27 @@
 package org.aion.api.server.rpc;
 
-import org.aion.zero.impl.blockchain.AionImpl;
-import org.junit.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.aion.zero.impl.blockchain.AionImpl;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class RpcMethodsTest {
+
+    private static final String WEB3 = "web3";
+    private static final String BLOCK_NUMBER = "eth_blockNumber";
+    private static final String PING = "ping";
+    private static final String CLIENT_VERSION = "web3_clientVersion";
+    private static final String SHA3 = "web3_sha3";
+    private static final String NEW_ACCOUNT = "personal_newAccount";
+    private static final String INVALID_GROUP = "foo";
+    private static final String INVALID_METHOD_NAME = "foo_invalid_method_name";
+    private static final List<String> EMPTY = new ArrayList<>();
+    private RpcMethods methods;
+
     @BeforeClass
     public static void setup() {
         // Initialize this instance at the start to make the tests run a little faster
@@ -20,18 +34,6 @@ public class RpcMethodsTest {
             methods.shutdown();
         }
     }
-
-    private RpcMethods methods;
-
-    private static final String WEB3 = "web3";
-    private static final String BLOCK_NUMBER = "eth_blockNumber";
-    private static final String PING = "ping";
-    private static final String CLIENT_VERSION = "web3_clientVersion";
-    private static final String SHA3 = "web3_sha3";
-    private static final String NEW_ACCOUNT = "personal_newAccount";
-    private static final String INVALID_GROUP = "foo";
-    private static final String INVALID_METHOD_NAME = "foo_invalid_method_name";
-    private static final List<String> EMPTY = new ArrayList<>();
 
     @Test
     public void testEmpty() {

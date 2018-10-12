@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author chris lin
  */
 public class AionHttpdThreadFactory implements ThreadFactory {
+
     private final AtomicInteger tnum = new AtomicInteger(1);
 
     @Override

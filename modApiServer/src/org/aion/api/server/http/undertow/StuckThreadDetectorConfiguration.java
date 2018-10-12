@@ -1,6 +1,7 @@
 package org.aion.api.server.http.undertow;
 
 public class StuckThreadDetectorConfiguration {
+
     private final boolean enabled;
     private final int timeoutSeconds;
 
@@ -9,6 +10,11 @@ public class StuckThreadDetectorConfiguration {
         this.timeoutSeconds = timeoutSeconds;
     }
 
-    public boolean isEnabled() { return enabled; }
-    public int getTimeoutSeconds() { return timeoutSeconds; }
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public int getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
 }

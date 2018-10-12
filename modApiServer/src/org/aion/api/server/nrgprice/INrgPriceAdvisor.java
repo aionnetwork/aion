@@ -4,6 +4,7 @@ import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 
 public interface INrgPriceAdvisor<BLK extends IBlock, TXN extends ITransaction> {
+
     /* Is the recommendation engine hungry for more data?
      * Recommendations prescribed by engine while hungry are left up to the engine itself
      */

@@ -19,19 +19,18 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.api.server.types;
 
 import com.google.protobuf.ByteString;
+import java.util.Optional;
 import org.aion.api.server.pb.Message;
 import org.aion.api.server.types.Fltr.Type;
 
-import java.util.Optional;
-
 public class EvtContract extends Evt {
-    
+
     private final byte[] addr;
     private final byte[] data;
     private final byte[] blockHash;
@@ -41,8 +40,9 @@ public class EvtContract extends Evt {
     private final boolean removed;
     private final int txIndex;
     private final byte[] txHash;
-    
-    public EvtContract(byte[] addr, byte[] data, byte[] blockHash, long blockNumber, int logIndex, String eventName, boolean removed, int txIndex, byte[] txHash) {
+
+    public EvtContract(byte[] addr, byte[] data, byte[] blockHash, long blockNumber, int logIndex,
+        String eventName, boolean removed, int txIndex, byte[] txHash) {
         this.addr = addr;
         this.data = data;
         this.blockHash = blockHash;
@@ -51,21 +51,22 @@ public class EvtContract extends Evt {
         this.eventName = eventName;
         this.removed = removed;
         this.txIndex = txIndex;
-        this.txHash = txHash; 
+        this.txHash = txHash;
     }
-    
+
     public Message.t_EventCt getMsgEventCt() {
         return Message.t_EventCt.newBuilder()
-                .setAddress(ByteString.copyFrom(Optional.ofNullable(this.addr).orElse(new byte[0])))
-                .setBlockHash(ByteString.copyFrom(Optional.ofNullable(this.blockHash).orElse(new byte[0])))
-                .setData(ByteString.copyFrom(Optional.ofNullable(this.data).orElse(new byte[0])))
-                .setBlockNumber(this.blockNumber)
-                .setLogIndex(this.logIndex)
-                .setEventName(this.eventName)
-                .setRemoved(this.removed)
-                .setTxIndex(this.txIndex)
-                .setTxHash(ByteString.copyFrom(Optional.ofNullable(this.txHash).orElse(new byte[0])))
-                .build();                
+            .setAddress(ByteString.copyFrom(Optional.ofNullable(this.addr).orElse(new byte[0])))
+            .setBlockHash(
+                ByteString.copyFrom(Optional.ofNullable(this.blockHash).orElse(new byte[0])))
+            .setData(ByteString.copyFrom(Optional.ofNullable(this.data).orElse(new byte[0])))
+            .setBlockNumber(this.blockNumber)
+            .setLogIndex(this.logIndex)
+            .setEventName(this.eventName)
+            .setRemoved(this.removed)
+            .setTxIndex(this.txIndex)
+            .setTxHash(ByteString.copyFrom(Optional.ofNullable(this.txHash).orElse(new byte[0])))
+            .build();
     }
 
     @Override

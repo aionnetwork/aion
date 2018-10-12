@@ -5,11 +5,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This builder is opinionated;
- * 1. It assumes that false is a reasonable default for sslEnabled and corsEnabled.
- * 2. It assumes empty array for enabledEndpoints is a reasonable default
- * 3. It assumes "*" is a reasonable default for corsOrigin
- * 4. Any "unset" objects get initialized to null
+ * This builder is opinionated; 1. It assumes that false is a reasonable default for sslEnabled and
+ * corsEnabled. 2. It assumes empty array for enabledEndpoints is a reasonable default 3. It assumes
+ * "*" is a reasonable default for corsOrigin 4. Any "unset" objects get initialized to null
  */
 public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
 
@@ -38,9 +36,15 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
     public T setUrl(String hostName, int port) {
         this.hostName = Objects.requireNonNull(hostName);
 
-        if (port < 1) throw new RuntimeException("Port number must be greater than 0.");
-        if (port < 1024) System.out.println("Ports < 1024 are privileged and require sudo.");
-        if (port > 65535) System.out.println("Ports > 65535 are not supported by OS.");
+        if (port < 1) {
+            throw new RuntimeException("Port number must be greater than 0.");
+        }
+        if (port < 1024) {
+            System.out.println("Ports < 1024 are privileged and require sudo.");
+        }
+        if (port > 65535) {
+            System.out.println("Ports > 65535 are not supported by OS.");
+        }
         this.port = port; // autoboxing
 
         return self();

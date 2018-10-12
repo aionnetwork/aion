@@ -1,12 +1,11 @@
 package org.aion.api.server.http;
 
-import org.aion.api.server.rpc.RpcProcessor;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.aion.api.server.rpc.RpcProcessor;
 
 public abstract class RpcServer {
 
@@ -25,8 +24,8 @@ public abstract class RpcServer {
     protected boolean stuckThreadDetectorEnabled;
 
     /**
-     * to explicitly force any subclasses to check for null values, access to the following variables is
-     * restricted through protected accessor methods
+     * to explicitly force any subclasses to check for null values, access to the following
+     * variables is restricted through protected accessor methods
      */
     private Integer workerPoolSize;
     private Integer ioPoolSize;
@@ -43,9 +42,12 @@ public abstract class RpcServer {
         corsEnabled = builder.corsEnabled;
         corsOrigin = builder.corsOrigin;
 
-        List<String> enabledEndpoints = Collections.unmodifiableList(Objects.requireNonNull(builder.enabledEndpoints));
-        List<String> enabledMethods = Collections.unmodifiableList(Objects.requireNonNull(builder.enabledMethods));
-        List<String> disabledMethods = Collections.unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
+        List<String> enabledEndpoints = Collections
+            .unmodifiableList(Objects.requireNonNull(builder.enabledEndpoints));
+        List<String> enabledMethods = Collections
+            .unmodifiableList(Objects.requireNonNull(builder.enabledMethods));
+        List<String> disabledMethods = Collections
+            .unmodifiableList(Objects.requireNonNull(builder.disabledMethods));
         rpcProcessor = new RpcProcessor(enabledEndpoints, enabledMethods, disabledMethods);
 
         sslEnabled = builder.sslEnabled;
@@ -55,7 +57,7 @@ public abstract class RpcServer {
                 sslCertCanonicalPath = new File(certPath).getCanonicalPath();
             } catch (Exception e) {
                 // rethrow checked exceptions from File
-                throw new RuntimeException("Could not locate SSL file at path: "+certPath);
+                throw new RuntimeException("Could not locate SSL file at path: " + certPath);
             }
             Objects.requireNonNull(sslCertCanonicalPath); // paranoid check
 
@@ -71,10 +73,19 @@ public abstract class RpcServer {
     }
 
     // want to explicitly force user of this class to check for null values here.
-    protected Optional<Integer> getWorkerPoolSize() { return Optional.ofNullable(workerPoolSize); }
-    protected Optional<Integer> getIoPoolSize() { return Optional.ofNullable(ioPoolSize); }
-    protected Optional<Integer> getRequestQueueSize() { return Optional.ofNullable(requestQueueSize); }
+    protected Optional<Integer> getWorkerPoolSize() {
+        return Optional.ofNullable(workerPoolSize);
+    }
+
+    protected Optional<Integer> getIoPoolSize() {
+        return Optional.ofNullable(ioPoolSize);
+    }
+
+    protected Optional<Integer> getRequestQueueSize() {
+        return Optional.ofNullable(requestQueueSize);
+    }
 
     public abstract void start();
+
     public abstract void stop();
 }

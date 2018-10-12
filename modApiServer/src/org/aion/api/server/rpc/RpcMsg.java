@@ -8,6 +8,7 @@ import org.json.JSONObject;
  * Simple data structure to pass rpc messages
  */
 public class RpcMsg {
+
     private Object result;
     private RpcError error;
     private Object errorData;
@@ -51,10 +52,11 @@ public class RpcMsg {
         // result: This member is REQUIRED on success. This member MUST NOT exist if there was an error invoking the method.
         if (this.result == null) { // call equals on the leaf type
             RpcError e = this.error;
-            if (e == null)
+            if (e == null) {
                 e = RpcError.INTERNAL_ERROR;
+            }
 
-            JSONObject error  = new JSONObject();
+            JSONObject error = new JSONObject();
             error.put("code", e.getCode());
             error.put("message", e.getMessage());
             error.put("data", this.errorData);

@@ -23,14 +23,13 @@
 
 package org.aion.api.server;
 
-import org.apache.commons.lang3.RandomUtils;
-import org.junit.Test;
-
-import java.util.Arrays;
-
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+
+import java.util.Arrays;
+import org.apache.commons.lang3.RandomUtils;
+import org.junit.Test;
 
 public class ApiUtilTest {
 
@@ -119,8 +118,10 @@ public class ApiUtilTest {
         assertEquals(1, header[2]);
         assertArrayEquals(hash, Arrays.copyOfRange(header, 3, ApiUtil.HASH_LEN + 3));
         assertEquals(error.length, header[ApiUtil.HASH_LEN + 3]);
-        assertArrayEquals(error, Arrays.copyOfRange(header, ApiUtil.HASH_LEN + 4, ApiUtil.HASH_LEN + errorLength + 4));
-        assertArrayEquals(result, Arrays.copyOfRange(header, ApiUtil.HASH_LEN + errorLength + 4, header.length));
+        assertArrayEquals(error,
+            Arrays.copyOfRange(header, ApiUtil.HASH_LEN + 4, ApiUtil.HASH_LEN + errorLength + 4));
+        assertArrayEquals(result,
+            Arrays.copyOfRange(header, ApiUtil.HASH_LEN + errorLength + 4, header.length));
 
         error = new byte[0];
         header = ApiUtil.toReturnHeader(vers, retCode, hash, error, result);

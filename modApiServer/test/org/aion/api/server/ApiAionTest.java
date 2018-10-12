@@ -23,7 +23,20 @@
 
 package org.aion.api.server;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import io.undertow.util.FileUtils;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.aion.api.server.rpc.ApiWeb3Aion;
 import org.aion.api.server.rpc.RpcError;
 import org.aion.api.server.rpc.RpcMsg;
@@ -54,86 +67,10 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.*;
-
 public class ApiAionTest {
-
-    private class ApiAionImpl extends ApiAion {
-
-        private boolean onBlockFlag;
-        private boolean pendingRcvdFlag;
-        private boolean pendingUpdateFlag;
-
-        @Override
-        protected void onBlock(AionBlockSummary cbs) {
-            onBlockFlag = true;
-        }
-
-        @Override
-        protected void pendingTxReceived(ITransaction _tx) {
-            pendingRcvdFlag = true;
-        }
-
-        @Override
-        protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
-            pendingUpdateFlag = true;
-        }
-
-        private boolean allFlagsSet() {
-            return (onBlockFlag && pendingRcvdFlag && pendingUpdateFlag);
-        }
-
-
-        private ApiAionImpl(AionImpl impl) {
-            super(impl);
-            onBlockFlag = false;
-            pendingRcvdFlag = false;
-            pendingUpdateFlag = false;
-        }
-
-        private void addEvents() {
-            EventTx pendingRcvd = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
-            AionTransaction tx = new AionTransaction(null);
-            List l1 = new ArrayList<ITransaction>();
-            l1.add(tx);
-            l1.add(tx);
-            l1.add(tx);
-            pendingRcvd.setFuncArgs(Collections.singletonList(l1));
-
-            ees.add(pendingRcvd);
-
-            EventTx pendingUpdate = new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0);
-            List l2 = new ArrayList<>();
-            l2.add(new AionTxReceipt());
-            l2.add(-1);
-            pendingUpdate.setFuncArgs(l2);
-
-            ees.add(pendingUpdate);
-
-            EventBlock evBlock = new EventBlock(EventBlock.CALLBACK.ONBLOCK0);
-            AionBlockSummary abs = new AionBlockSummary(null, null, null, null);
-            evBlock.setFuncArgs(Collections.singletonList(abs));
-
-            ees.add(evBlock);
-
-            //provokes exception in EpApi.run()
-            ees.add(new EventBlock(EventBlock.CALLBACK.ONBLOCK0));
-            ees.add(new EventDummy());
-        }
-
-    }
 
     private static final String KEYSTORE_PATH;
     private static final String DATABASE_PATH = "ApiServerTestPath";
-    private long testStartTime;
 
     static {
         String storageDir = System.getProperty("local.storage.dir");
@@ -143,6 +80,7 @@ public class ApiAionTest {
         KEYSTORE_PATH = storageDir + "/keystore";
     }
 
+    private long testStartTime;
     private ApiAionImpl api;
     private ApiWeb3Aion web3Api;
     private AionImpl impl;
@@ -163,23 +101,27 @@ public class ApiAionTest {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
 
-        if (folder == null)
+        if (folder == null) {
             return;
+        }
 
         File[] AllFilesInDirectory = folder.listFiles();
 
         // check for invalid or wrong path - should not happen
-        if (AllFilesInDirectory == null)
+        if (AllFilesInDirectory == null) {
             return;
+        }
 
         for (File file : AllFilesInDirectory) {
-            if (file.lastModified() >= testStartTime)
+            if (file.lastModified() >= testStartTime) {
                 file.delete();
+            }
         }
         folder = new File(DATABASE_PATH);
 
-        if (folder == null)
+        if (folder == null) {
             return;
+        }
 
         try {
             FileUtils.deleteRecursive(folder.toPath());
@@ -237,43 +179,50 @@ public class ApiAionTest {
 
         // check because blk might be the genesis block
         assertEquals(rslt.getValue(),
-                ((AionBlockStore) impl.getBlockchain().getBlockStore()).getTotalDifficultyForHash(blk.getHash()));
+            ((AionBlockStore) impl.getBlockchain().getBlockStore())
+                .getTotalDifficultyForHash(blk.getHash()));
 
         // retrieving genesis block's difficulty
-        assertEquals(api.getBlockWithTotalDifficulty(0).getValue(), CfgAion.inst().getGenesis().getDifficultyBI());
+        assertEquals(api.getBlockWithTotalDifficulty(0).getValue(),
+            CfgAion.inst().getGenesis().getDifficultyBI());
     }
-
 
     @Test
     public void testGetSync() {
         SyncInfo sync = api.getSync();
         assertNotNull(sync);
         assertEquals(sync.done, impl.isSyncComplete());
-        if (impl.getInitialStartingBlockNumber().isPresent())
-            assertEquals((long) impl.getInitialStartingBlockNumber().get(), sync.chainStartingBlkNumber);
-        else
+        if (impl.getInitialStartingBlockNumber().isPresent()) {
+            assertEquals((long) impl.getInitialStartingBlockNumber().get(),
+                sync.chainStartingBlkNumber);
+        } else {
             assertEquals(0L, sync.chainStartingBlkNumber);
-        if (impl.getNetworkBestBlockNumber().isPresent())
+        }
+        if (impl.getNetworkBestBlockNumber().isPresent()) {
             assertEquals((long) impl.getNetworkBestBlockNumber().get(), sync.networkBestBlkNumber);
-        else
+        } else {
             assertEquals(0L, sync.networkBestBlkNumber);
-        if (impl.getLocalBestBlockNumber().isPresent())
+        }
+        if (impl.getLocalBestBlockNumber().isPresent()) {
             assertEquals((long) impl.getLocalBestBlockNumber().get(), sync.chainBestBlkNumber);
-        else
+        } else {
             assertEquals(0L, sync.chainBestBlkNumber);
+        }
     }
 
-    @Test @Ignore
+    @Test
+    @Ignore
     public void testGetTransactions() {
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
         byte[] msg = "test message".getBytes();
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx = new AionTransaction(
+            repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+            Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+            msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
         AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+            Collections.singletonList(tx), false);
 
         assertNotNull(blk);
         assertNotEquals(blk.getTransactionsList().size(), 0);
@@ -289,7 +238,7 @@ public class ApiAionTest {
         blk = api.getBlockByHash(blk.getHash());
 
         assertEquals(1, api.getTransactionCount(
-                blk.getTransactionsList().get(0).getFrom(), blk.getNumber()));
+            blk.getTransactionsList().get(0).getFrom(), blk.getNumber()));
         assertEquals(0, api.getTransactionCount(Address.EMPTY_ADDRESS(), blk.getNumber()));
 
         assertEquals(tx, api.getTransactionByHash(tx.getHash()));
@@ -303,14 +252,14 @@ public class ApiAionTest {
         Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx = new AionTransaction(
+            repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+            addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+            msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
-
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNotNull(api.doCall(txcall));
         tearDown();
@@ -324,14 +273,14 @@ public class ApiAionTest {
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx = new AionTransaction(
+            repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+            addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+            msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
-
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertEquals(impl.estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
         tearDown();
@@ -346,18 +295,18 @@ public class ApiAionTest {
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNotNull(api.createContract(txcall).transId);
         assertNotNull(api.createContract(txcall).address);
 
         txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.createContract(txcall));
 
         txcall = new ArgTxCall(Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.createContract(txcall));
         tearDown();
@@ -365,10 +314,13 @@ public class ApiAionTest {
 
     @Test
     public void testAccountGetters() {
-        assertEquals(repo.getBalance(Address.ZERO_ADDRESS()), api.getBalance(Address.ZERO_ADDRESS()));
+        assertEquals(repo.getBalance(Address.ZERO_ADDRESS()),
+            api.getBalance(Address.ZERO_ADDRESS()));
         assertEquals(repo.getNonce(Address.ZERO_ADDRESS()), api.getNonce(Address.ZERO_ADDRESS()));
-        assertEquals(repo.getBalance(Address.ZERO_ADDRESS()), api.getBalance(Address.ZERO_ADDRESS().toString()));
-        assertEquals(repo.getNonce(Address.ZERO_ADDRESS()), api.getNonce(Address.ZERO_ADDRESS().toString()));
+        assertEquals(repo.getBalance(Address.ZERO_ADDRESS()),
+            api.getBalance(Address.ZERO_ADDRESS().toString()));
+        assertEquals(repo.getNonce(Address.ZERO_ADDRESS()),
+            api.getNonce(Address.ZERO_ADDRESS().toString()));
     }
 
     @Test
@@ -380,24 +332,25 @@ public class ApiAionTest {
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNotNull(api.sendTransaction(txcall));
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx = new AionTransaction(
+            repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+            addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
+            msg, 100000, 100000);
         tx.sign(new ECKeyEd25519());
 
         assertNotNull(api.sendTransaction(tx.getEncoded()));
 
         txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.sendTransaction(txcall));
 
         txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+            msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
 
         assertNull(api.sendTransaction(txcall));
         tearDown();
@@ -406,14 +359,14 @@ public class ApiAionTest {
     @Test
     public void testSimpleGetters() {
         assertEquals(CfgAion.inst().getApi().getNrg().getNrgPriceDefault(),
-                api.getRecommendedNrgPrice());
+            api.getRecommendedNrgPrice());
         api.initNrgOracle(impl);
         assertEquals(api.getNrgOracle().getNrgPrice(),
-                api.getRecommendedNrgPrice());
+            api.getRecommendedNrgPrice());
 
         assertNotNull(api.getCoinbase());
         assertEquals(repo.getCode(Address.ZERO_ADDRESS()),
-                api.getCode(Address.ZERO_ADDRESS()));
+            api.getCode(Address.ZERO_ADDRESS()));
         assertEquals(impl.getBlockMiner().isMining(), api.isMining());
         assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
         assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());
@@ -427,7 +380,8 @@ public class ApiAionTest {
         double hashRate = 1000;
 
         assertTrue(api.setReportedHashrate(Double.toString(hashRate), ""));
-        assertEquals(impl.getBlockMiner().getHashrate() + hashRate, Double.parseDouble(api.getHashrate()), 0.001);
+        assertEquals(impl.getBlockMiner().getHashrate() + hashRate,
+            Double.parseDouble(api.getHashrate()), 0.001);
     }
 
     @Test
@@ -531,5 +485,69 @@ public class ApiAionTest {
         JSONObject result = (JSONObject) rpcMsg.getResult();
         assertNull(result);
         assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
+    }
+
+    private class ApiAionImpl extends ApiAion {
+
+        private boolean onBlockFlag;
+        private boolean pendingRcvdFlag;
+        private boolean pendingUpdateFlag;
+
+        private ApiAionImpl(AionImpl impl) {
+            super(impl);
+            onBlockFlag = false;
+            pendingRcvdFlag = false;
+            pendingUpdateFlag = false;
+        }
+
+        @Override
+        protected void onBlock(AionBlockSummary cbs) {
+            onBlockFlag = true;
+        }
+
+        @Override
+        protected void pendingTxReceived(ITransaction _tx) {
+            pendingRcvdFlag = true;
+        }
+
+        @Override
+        protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
+            pendingUpdateFlag = true;
+        }
+
+        private boolean allFlagsSet() {
+            return (onBlockFlag && pendingRcvdFlag && pendingUpdateFlag);
+        }
+
+        private void addEvents() {
+            EventTx pendingRcvd = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
+            AionTransaction tx = new AionTransaction(null);
+            List l1 = new ArrayList<ITransaction>();
+            l1.add(tx);
+            l1.add(tx);
+            l1.add(tx);
+            pendingRcvd.setFuncArgs(Collections.singletonList(l1));
+
+            ees.add(pendingRcvd);
+
+            EventTx pendingUpdate = new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0);
+            List l2 = new ArrayList<>();
+            l2.add(new AionTxReceipt());
+            l2.add(-1);
+            pendingUpdate.setFuncArgs(l2);
+
+            ees.add(pendingUpdate);
+
+            EventBlock evBlock = new EventBlock(EventBlock.CALLBACK.ONBLOCK0);
+            AionBlockSummary abs = new AionBlockSummary(null, null, null, null);
+            evBlock.setFuncArgs(Collections.singletonList(abs));
+
+            ees.add(evBlock);
+
+            //provokes exception in EpApi.run()
+            ees.add(new EventBlock(EventBlock.CALLBACK.ONBLOCK0));
+            ees.add(new EventDummy());
+        }
+
     }
 }
