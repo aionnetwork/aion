@@ -32,6 +32,7 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
+import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
@@ -438,10 +439,10 @@ public class ApiAionTest {
         Address toAddr = new Address(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
-        tx.put("from", addr.toString());
+        tx.put("from", "0x" + addr.toString());
+        tx.put("to", "0x" + toAddr.toString());
         tx.put("gasPrice", "20000000000");
         tx.put("gas", "21000");
-        tx.put("to", toAddr.toString());
         tx.put("value", "500000");
         tx.put("data", "");
 
@@ -452,10 +453,31 @@ public class ApiAionTest {
         RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
         assertNotNull(rpcMsg);
 
-        JSONObject result = (JSONObject)rpcMsg.getResult();
+        JSONObject result = (JSONObject) rpcMsg.getResult();
+        JSONObject outTx = (JSONObject) result.get("tx");
+        String raw = (String) result.get("raw");
+
         assertNotNull(result);
-        assertNotNull(result.get("raw"));
-        assertNotNull(result.get("tx"));
+        assertNotNull(raw);
+        assertNotNull(tx);
+
+        assertEquals(tx.get("from"), outTx.get("from"));
+        assertEquals(tx.get("to"), outTx.get("to"));
+        assertEquals(tx.get("value").toString(),
+            TypeConverter.StringHexToBigInteger(outTx.get("value").toString()).toString());
+        assertEquals(tx.get("gasPrice").toString(),
+            TypeConverter.StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
+        assertEquals(tx.get("gasPrice").toString(),
+            TypeConverter.StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
+        assertEquals(tx.get("gas").toString(),
+            TypeConverter.StringHexToBigInteger(outTx.get("gas").toString()).toString());
+        assertEquals(tx.get("gas").toString(),
+            TypeConverter.StringHexToBigInteger(outTx.get("nrg").toString()).toString());
+        assertEquals("0x", outTx.get("input").toString());
+
+        JSONArray rawTxArray = new JSONArray();
+        rawTxArray.put(raw);
+        assertNotNull(web3Api.eth_sendRawTransaction(rawTxArray));
     }
 
     @Test
@@ -481,9 +503,9 @@ public class ApiAionTest {
         RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
         assertNotNull(rpcMsg);
 
-        JSONObject result = (JSONObject)rpcMsg.getResult();
+        JSONObject result = (JSONObject) rpcMsg.getResult();
         assertNull(result);
-        assertEquals(RpcError.INVALID_PARAMS, rpcMsg.getError());
+        assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
     }
 
     @Test
@@ -507,6 +529,8 @@ public class ApiAionTest {
         RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
         assertNotNull(rpcMsg);
 
-        assertEquals(RpcError.NOT_ALLOWED, rpcMsg.getError());
+        JSONObject result = (JSONObject) rpcMsg.getResult();
+        assertNull(result);
+        assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
     }
 }

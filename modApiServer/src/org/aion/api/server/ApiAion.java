@@ -594,9 +594,18 @@ public abstract class ApiAion extends Api {
         return tx.getHash();
     }
 
-    protected AionTransaction signTransaction(ArgTxCall _params, ECKey key) {
+    protected AionTransaction signTransaction(ArgTxCall _params, String _address) {
+        Address address = null;
+        if (_address == null || _address.isEmpty()) {
+            LOG.error("<sign-transaction msg=invalid-signing-address>");
+            return null;
+        } else {
+            address = Address.wrap(_address);
+        }
+
+        ECKey key = getAccountKey(address.toString());
         if (key == null) {
-            LOG.error("<sign-transaction msg=account-not-found>");
+            LOG.error("<sign-transaction msg=account-not-unlocked>");
             return null;
         }
 
