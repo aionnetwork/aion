@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.blockchain;
 
 import java.util.ArrayList;
@@ -248,6 +247,7 @@ public abstract class AbstractSyncQueue<BLK extends IBlock<?, ?>, BHW extends Ab
         private final long start;
         private final int count;
         private final boolean reverse;
+
         public HeadersRequestImpl(long start, int count, boolean reverse) {
             this.start = start;
             this.count = count;

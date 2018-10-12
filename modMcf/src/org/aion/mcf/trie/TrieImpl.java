@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,15 +17,10 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
- *******************************************************************************/
+ */
+
 package org.aion.mcf.trie;
 
 import static java.util.Arrays.copyOfRange;
@@ -149,15 +144,15 @@ public class TrieImpl implements Trie {
         return root;
     }
 
-    @Override
-    public void setRoot(byte[] root) {
-        this.root = root;
-    }
-
     /**
      * for testing TrieTest.testRollbackToRootScenarios
      */
     public void setRoot(Object root) {
+        this.root = root;
+    }
+
+    @Override
+    public void setRoot(byte[] root) {
         this.root = root;
     }
 

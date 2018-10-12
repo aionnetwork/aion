@@ -56,6 +56,7 @@ public final class CfgApiRpc {
     private Integer ioThreads;
     private Integer requestQueueSize;
     private boolean stuckThreadDetectorEnabled;
+
     CfgApiRpc() {
         this.active = true;
         this.ip = "127.0.0.1";

@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.valid;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -49,7 +72,8 @@ public class BlockNumberRuleTest {
     }
 
     /**
-     * Checks if the {@link BlockNumberRule#validate} returns {@code false} when the block number is
+     * Checks if the {@link BlockNumberRule#validate} returns {@code false} when the block number
+     * is
      * <b>larger</b> than the parent block number.
      */
     @Test
@@ -67,7 +91,8 @@ public class BlockNumberRuleTest {
     }
 
     /**
-     * Checks if the {@link BlockNumberRule#validate} returns {@code false} when the block number is
+     * Checks if the {@link BlockNumberRule#validate} returns {@code false} when the block number
+     * is
      * <b>smaller by more than 1</b> than the parent block number.
      */
     @Test

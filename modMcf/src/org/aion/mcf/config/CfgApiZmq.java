@@ -5,7 +5,7 @@
  *
  *     The aion network project is free software: you can redistribute it
  *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either versio 3 of
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
  *     The aion network project is distributed in the hope that it will

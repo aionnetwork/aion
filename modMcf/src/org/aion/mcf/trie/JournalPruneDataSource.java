@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.mcf.trie;
 
 import java.util.ArrayList;
@@ -72,6 +72,7 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     private LinkedHashMap<ByteArrayWrapper, Updates> blockUpdates = new LinkedHashMap<>();
     private Updates currentUpdates = new Updates();
     private AtomicBoolean enabled = new AtomicBoolean(false);
+
     public JournalPruneDataSource(IByteArrayKeyValueStore src) {
         this.src = src;
         this.hasArchive = src instanceof ArchivedDataSource;
