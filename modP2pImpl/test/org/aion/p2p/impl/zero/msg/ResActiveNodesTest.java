@@ -38,22 +38,24 @@ import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
 import org.junit.Test;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public class ResActiveNodesTest {
 
     private Node randomNode() {
         return new Node(
-                ThreadLocalRandom.current().nextBoolean(),
-                UUID.randomUUID().toString().getBytes(),
-                Node.ipStrToBytes(
-                        ThreadLocalRandom.current().nextInt(0, 256)
-                                + "."
-                                + ThreadLocalRandom.current().nextInt(0, 256)
-                                + "."
-                                + ThreadLocalRandom.current().nextInt(0, 256)
-                                + "."
-                                + ThreadLocalRandom.current().nextInt(0, 256)),
-                ThreadLocalRandom.current().nextInt());
+            ThreadLocalRandom.current().nextBoolean(),
+            UUID.randomUUID().toString().getBytes(),
+            Node.ipStrToBytes(
+                ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256)),
+            ThreadLocalRandom.current().nextInt());
     }
 
     @Test
@@ -70,14 +72,14 @@ public class ResActiveNodesTest {
 
         int m = ThreadLocalRandom.current().nextInt(0, 20);
         List<INode> srcNodes = new ArrayList<>();
-        for(int i = 0; i < m; i++){
+        for (int i = 0; i < m; i++) {
             srcNodes.add(randomNode());
         }
 
         ResActiveNodes res = ResActiveNodes.decode(new ResActiveNodes(srcNodes).encode());
         assertEquals(res.getNodes().size(), m);
         List<INode> tarNodes = res.getNodes();
-        for(int i = 0; i < m; i++){
+        for (int i = 0; i < m; i++) {
 
             INode srcNode = srcNodes.get(i);
             INode tarNode = tarNodes.get(i);

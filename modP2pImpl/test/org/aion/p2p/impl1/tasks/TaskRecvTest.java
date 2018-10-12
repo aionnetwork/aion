@@ -22,7 +22,6 @@
 
 package org.aion.p2p.impl1.tasks;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -78,7 +77,7 @@ public class TaskRecvTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -107,12 +106,12 @@ public class TaskRecvTest {
         when(handler.get(route)).thenReturn(hdlr);
 
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
 
-    @Test (expected = Exception.class, timeout = 10_000)
+    @Test(expected = Exception.class, timeout = 10_000)
     public void testRunMsgIn2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskReceive ts = new TaskReceive(atb, recvMsgQue, handler);
@@ -137,7 +136,7 @@ public class TaskRecvTest {
         doThrow(new Exception("test exception!")).when(h).receive(anyInt(), anyString(), any());
 
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }

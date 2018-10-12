@@ -77,44 +77,33 @@ import org.slf4j.Logger;
  * @author Chris p2p://{uuid}@{ip}:{port}
  */
 public final class P2pMgr implements IP2pMgr {
+
+    public static final Logger p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
     private static final int PERIOD_SHOW_STATUS = 10000;
     private static final int PERIOD_REQUEST_ACTIVE_NODES = 1000;
     private static final int PERIOD_UPNP_PORT_MAPPING = 3600000;
     private static final int TIMEOUT_MSG_READ = 10000;
-
     // TODO: need refactor by passing the parameter in the later version to P2pMgr.
     public static int txBroadCastRoute =
         (Ctrl.SYNC << 8) + 6; // ((Ver.V0 << 16) + (Ctrl.SYNC << 8) + 6);
-
-    public static final Logger p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
-
+    private static ReqHandshake1 cachedReqHandshake1;
+    private static ResHandshake1 cachedResHandshake1;
+    private final Map<Integer, List<Handler>> handlers = new ConcurrentHashMap<>();
+    private final Set<Short> versions = new HashSet<>();
+    private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
+    private final AtomicBoolean start = new AtomicBoolean(true);
     private int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
     private boolean syncSeedsOnly, upnpEnable;
     private String selfRevision, selfShortId;
     private byte[] selfNodeId, selfIp;
     private INodeMgr nodeMgr;
-    private final Map<Integer, List<Handler>> handlers = new ConcurrentHashMap<>();
-    private final Set<Short> versions = new HashSet<>();
-    private final Map<Integer, Integer> errCnt = Collections.synchronizedMap(new LRUMap<>(128));
-    private final AtomicBoolean start = new AtomicBoolean(true);
-
     private ServerSocketChannel tcpServer;
     private Selector selector;
     private ScheduledExecutorService scheduledWorkers;
     private int errTolerance;
     private BlockingQueue<MsgOut> sendMsgQue = new LinkedBlockingQueue<>();
     private BlockingQueue<MsgIn> receiveMsgQue = new LinkedBlockingQueue<>();
-
-    private static ReqHandshake1 cachedReqHandshake1;
-    private static ResHandshake1 cachedResHandshake1;
-
     private String outGoingIP;
-
-    public enum Dest {
-        INBOUND,
-        OUTBOUND,
-        ACTIVE
-    }
 
     /**
      * @param _nodeId byte[36]
@@ -162,7 +151,6 @@ public final class P2pMgr implements IP2pMgr {
                 nodeMgr.seedIpAdd(node.getIpStr());
             }
         }
-
 
         // rem out for bug:
         // nodeMgr.loadPersistedNodes();
@@ -378,12 +366,12 @@ public final class P2pMgr implements IP2pMgr {
         nodeMgr.dropActive(nodeIdHashcode, "ban");
     }
 
-    // <------------------------ getter methods below --------------------------->
-
     @Override
     public INode getRandom() {
         return this.nodeMgr.getRandom();
     }
+
+    // <------------------------ getter methods below --------------------------->
 
     @Override
     public Map<Integer, INode> getActiveNodes() {
@@ -428,7 +416,6 @@ public final class P2pMgr implements IP2pMgr {
     public boolean isSyncSeedsOnly() {
         return this.syncSeedsOnly;
     }
-
 
     private TaskInbound getInboundInstance() {
         return new TaskInbound(
@@ -504,7 +491,7 @@ public final class P2pMgr implements IP2pMgr {
                 new BufferedReader(new InputStreamReader(pr.getInputStream()));
 
             String line;
-            while ((line = reader.readLine())!= null) {
+            while ((line = reader.readLine()) != null) {
                 output.append(line);
             }
         } catch (IOException | InterruptedException e) {
@@ -512,5 +499,11 @@ public final class P2pMgr implements IP2pMgr {
         }
 
         return output.toString();
+    }
+
+    public enum Dest {
+        INBOUND,
+        OUTBOUND,
+        ACTIVE
     }
 }

@@ -43,15 +43,13 @@ public class TaskSend implements Runnable {
     private static final int TOTAL_LANE = Math
         .min(Runtime.getRuntime().availableProcessors() << 1, 32);
     private static final int THREAD_Q_LIMIT = 20000;
-
+    private static ThreadPoolExecutor tpe;
     private final IP2pMgr mgr;
     private final AtomicBoolean start;
     private final BlockingQueue<MsgOut> sendMsgQue;
     private final INodeMgr nodeMgr;
     private final Selector selector;
     private final int lane;
-
-    private static ThreadPoolExecutor tpe;
 
     public TaskSend(
         final IP2pMgr _mgr,
@@ -76,6 +74,16 @@ public class TaskSend implements Runnable {
                 , new LinkedBlockingQueue<>(THREAD_Q_LIMIT)
                 , Executors.defaultThreadFactory());
         }
+    }
+
+    // hash mapping channel id to write thread.
+    static int hash2Lane(int in) {
+        in ^= in >> (32 - 5);
+        in ^= in >> (32 - 10);
+        in ^= in >> (32 - 15);
+        in ^= in >> (32 - 20);
+        in ^= in >> (32 - 25);
+        return (in & 0b11111) * TOTAL_LANE / 32;
     }
 
     @Override
@@ -127,7 +135,8 @@ public class TaskSend implements Runnable {
                     }
                 } else {
                     if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("msg-{} ->{} node-not-exist", mo.getDest().name(), mo.getDisplayId());
+                        p2pLOG.debug("msg-{} ->{} node-not-exist", mo.getDest().name(),
+                            mo.getDisplayId());
                     }
                 }
             } catch (InterruptedException e) {
@@ -141,15 +150,5 @@ public class TaskSend implements Runnable {
                 }
             }
         }
-    }
-
-    // hash mapping channel id to write thread.
-    static int hash2Lane(int in) {
-        in ^= in >> (32 - 5);
-        in ^= in >> (32 - 10);
-        in ^= in >> (32 - 15);
-        in ^= in >> (32 - 20);
-        in ^= in >> (32 - 25);
-        return (in & 0b11111) * TOTAL_LANE / 32;
     }
 }

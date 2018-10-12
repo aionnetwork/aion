@@ -22,7 +22,6 @@
 
 package org.aion.p2p.impl1.tasks;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -39,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class TaskClearTest {
+
     @Mock
     private INodeMgr nodeMgr;
 
