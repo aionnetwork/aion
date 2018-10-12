@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,8 +31,8 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- *     H2 Group.
- ******************************************************************************/
+ *     H2 Group
+ */
 package org.aion.db.impl;
 
 import static com.google.common.base.Charsets.UTF_8;

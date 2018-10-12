@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -32,7 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  *     H2 Group.
- ******************************************************************************/
+ */
 package org.aion.db.utils.slices;
 
 import com.google.common.base.Preconditions;
