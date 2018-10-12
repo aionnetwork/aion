@@ -1,18 +1,18 @@
 package org.aion.os;
 
-import org.aion.mcf.config.CfgGuiLauncher;
-import org.junit.Test;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import org.aion.mcf.config.CfgGuiLauncher;
+import org.junit.Test;
 
-import static org.hamcrest.Matchers.is;
-
-import static org.junit.Assert.assertThat;
-
-/** Test {@link KernelLaunchConfigurator} */
+/**
+ * Test {@link KernelLaunchConfigurator}
+ */
 public class KernelLaunchConfiguratorTest {
 
     @Test
@@ -26,8 +26,8 @@ public class KernelLaunchConfiguratorTest {
         String expectedJavaHome = System.getProperty("java.home");
         String expectedWorkingDir = System.getProperty("user.dir");
         List<String> expectedAionSh = Arrays.asList(
-                String.format("%s/script/nohup_wrapper.sh", expectedWorkingDir),
-                String.format("%s/aion.sh", expectedWorkingDir)
+            String.format("%s/script/nohup_wrapper.sh", expectedWorkingDir),
+            String.format("%s/aion.sh", expectedWorkingDir)
         );
 
         CfgGuiLauncher cfg = new CfgGuiLauncher();
@@ -54,8 +54,8 @@ public class KernelLaunchConfiguratorTest {
         assertThat(processBuilder.directory(), is(new File(config.getWorkingDir())));
         assertThat(processBuilder.environment().get("JAVA_HOME"), is(config.getJavaHome()));
         assertThat(processBuilder.command(), is(Arrays.asList(
-                String.format("%s/script/nohup_wrapper.sh", config.getWorkingDir()),
-                String.format("%s/%s", config.getWorkingDir(), config.getAionSh())
+            String.format("%s/script/nohup_wrapper.sh", config.getWorkingDir()),
+            String.format("%s/%s", config.getWorkingDir(), config.getAionSh())
         )));
     }
 }

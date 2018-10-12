@@ -1,9 +1,22 @@
 package org.aion.os;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.google.common.base.Charsets;
-import com.google.common.io.CharStreams;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.aion.gui.events.EventBusRegistry;
-import org.aion.gui.events.EventPublisher;
 import org.aion.mcf.config.CfgGuiLauncher;
 import org.junit.After;
 import org.junit.Before;
@@ -11,32 +24,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.only;
-import static org.mockito.Mockito.when;
-
 public class KernelLauncherIntegTest {
-    private List<Long> cleanupPids;
 
     private static final long POLL_TERMINATION_INTERVAL_MILLIS = 3000;
     private static final long POLL_TERMINATION_MAX_MILLIS = 300_000;
-
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
+    private List<Long> cleanupPids;
 
     @Before
     public void before() {
@@ -46,17 +40,17 @@ public class KernelLauncherIntegTest {
     @After
     public void after() throws Exception {
         cleanupPids.stream().forEach(
-                pid -> {
-                    try {
-                        new ProcessBuilder()
-                                .command("kill", "-9", String.valueOf(pid))
-                                .start()
-                                .waitFor(150, TimeUnit.SECONDS);
-                    } catch (IOException | InterruptedException ex) {
-                        // can't do much if this fails
-                        ex.printStackTrace();
-                    }
-                });
+            pid -> {
+                try {
+                    new ProcessBuilder()
+                        .command("kill", "-9", String.valueOf(pid))
+                        .start()
+                        .waitFor(150, TimeUnit.SECONDS);
+                } catch (IOException | InterruptedException ex) {
+                    // can't do much if this fails
+                    ex.printStackTrace();
+                }
+            });
     }
 
     @Test
@@ -68,14 +62,15 @@ public class KernelLauncherIntegTest {
         cfg.setWorkingDir(System.getProperty("user.dir") + "/../");
 
         List<Long> aionPidsInitial = pgrep("Aion$");
-        System.out.println("Before kernel launch, PIDs for Aion kernel process: " + aionPidsInitial);
+        System.out
+            .println("Before kernel launch, PIDs for Aion kernel process: " + aionPidsInitial);
 
         File tempLocalStorageDir = tempFolder.newFolder("localStorageDir");
         System.out.println("Using temp folder: " + tempLocalStorageDir.getAbsolutePath());
 
         // launch a kernel instance
         KernelLauncher kl = new KernelLauncher(cfg, EventBusRegistry.INSTANCE,
-                new UnixProcessTerminator(), new UnixKernelProcessHealthChecker(), tempLocalStorageDir);
+            new UnixProcessTerminator(), new UnixKernelProcessHealthChecker(), tempLocalStorageDir);
         Process kernelProc = kl.launch();
         Long nohupWrapperPid = kernelProc.pid();
 
@@ -83,7 +78,8 @@ public class KernelLauncherIntegTest {
         // test will not work properly if there's two instances of it running simultaneously from the same user
         Thread.sleep(3000); // pause because new process doesn't immediately show up in pgrep
         List<Long> aionPidsAfterLaunch = pgrep("Aion$");
-        System.out.println("After kernel launch, PIDs for Aion kernel process: " + aionPidsAfterLaunch);
+        System.out
+            .println("After kernel launch, PIDs for Aion kernel process: " + aionPidsAfterLaunch);
         List<Long> difference = new LinkedList<>(aionPidsAfterLaunch);
         difference.removeAll(aionPidsInitial);
         assertThat("Expected exactly one new Aion process", difference.size(), is(1));
@@ -94,7 +90,7 @@ public class KernelLauncherIntegTest {
         // terminate the kernel instance using a different launcher (simulates exit GUI / reopen GUI case)
         // and make sure that PID went away
         KernelLauncher kl2 = new KernelLauncher(cfg, EventBusRegistry.INSTANCE,
-                new UnixProcessTerminator(), new UnixKernelProcessHealthChecker(), tempLocalStorageDir);
+            new UnixProcessTerminator(), new UnixKernelProcessHealthChecker(), tempLocalStorageDir);
         kl2.tryResume();
         kl2.terminate();
 
@@ -104,17 +100,19 @@ public class KernelLauncherIntegTest {
         boolean terminated = false;
         do {
             System.out.println(String.format(
-                    "Waiting for kernel to terminate.  Waited for %d msec so for (timeout: %d msec)",
-                    waited, POLL_TERMINATION_MAX_MILLIS));
+                "Waiting for kernel to terminate.  Waited for %d msec so for (timeout: %d msec)",
+                waited, POLL_TERMINATION_MAX_MILLIS));
             Thread.sleep(POLL_TERMINATION_INTERVAL_MILLIS);
             List<Long> aionPidsAfterTerm = pgrep("Aion$");
-            System.out.println("After kernel launch, PIDs for Aion kernel process: " + aionPidsAfterTerm);
+            System.out
+                .println("After kernel launch, PIDs for Aion kernel process: " + aionPidsAfterTerm);
             terminated = !aionPidsAfterTerm.contains(aionKernelPid);
             waited += POLL_TERMINATION_INTERVAL_MILLIS;
-        } while(!terminated && waited < POLL_TERMINATION_MAX_MILLIS);
+        } while (!terminated && waited < POLL_TERMINATION_MAX_MILLIS);
 
-        assertThat("Expected PID that was launched to no longer be running after KernelLauncher#terminate",
-                terminated, is(true));
+        assertThat(
+            "Expected PID that was launched to no longer be running after KernelLauncher#terminate",
+            terminated, is(true));
     }
 
     @Test
@@ -132,7 +130,7 @@ public class KernelLauncherIntegTest {
         File tempLocalStorageDir = tempFolder.newFolder("localStorageDir");
         System.out.println("Using temp folder: " + tempLocalStorageDir.getAbsolutePath());
         KernelLauncher kl = new KernelLauncher(cfg, EventBusRegistry.INSTANCE,
-                new UnixProcessTerminator(), healthChecker, tempLocalStorageDir);
+            new UnixProcessTerminator(), healthChecker, tempLocalStorageDir);
         kl.setAndPersistPid(1);
         kl.setCurrentInstance(null);
 
@@ -154,15 +152,16 @@ public class KernelLauncherIntegTest {
         proc.waitFor(30, TimeUnit.SECONDS);
 
         try (
-                final InputStream is = proc.getInputStream();
-                final InputStreamReader isr = new InputStreamReader(is, Charsets.UTF_8);
-                final BufferedReader br = new BufferedReader(isr);
+            final InputStream is = proc.getInputStream();
+            final InputStreamReader isr = new InputStreamReader(is, Charsets.UTF_8);
+            final BufferedReader br = new BufferedReader(isr);
         ) {
             return br.lines().flatMap(pid -> {
                 try {
                     return Stream.of(Long.valueOf(pid));
                 } catch (NumberFormatException nfe) {
-                    System.out.println(String.format("Ignored unparseable line from pgrep: '%s'", pid));
+                    System.out
+                        .println(String.format("Ignored unparseable line from pgrep: '%s'", pid));
                     return Stream.empty();
                 }
             }).collect(Collectors.toList());

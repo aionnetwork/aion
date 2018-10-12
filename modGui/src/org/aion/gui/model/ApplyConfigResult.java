@@ -1,6 +1,7 @@
 package org.aion.gui.model;
 
 public class ApplyConfigResult {
+
     private final boolean succeeded;
     private final String displayableError;
     private final Throwable cause;

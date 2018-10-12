@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.aion.api.type.ApiMsg;
 
 public class ApiDataRetrievalException extends RuntimeException {
+
     private final int apiMsgCode;
     private final String apiMsgString;
 

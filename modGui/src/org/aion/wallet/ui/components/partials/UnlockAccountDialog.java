@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -23,6 +23,9 @@
 package org.aion.wallet.ui.components.partials;
 
 import com.google.common.eventbus.Subscribe;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -45,15 +48,10 @@ import org.aion.wallet.events.AccountEvent;
 import org.aion.wallet.exception.ValidationException;
 import org.slf4j.Logger;
 
-import java.io.Console;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 public class UnlockAccountDialog implements Initializable {
 
     private static final Logger LOGGER = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
+        .getLogger(org.aion.log.LogEnum.GUI.name());
 
     private final Popup popup = new Popup();
     private final AccountManager accountManager;
@@ -66,7 +64,7 @@ public class UnlockAccountDialog implements Initializable {
     private AccountDTO account;
 
     public UnlockAccountDialog(AccountManager accountManager,
-                               ConsoleManager consoleManager) {
+        ConsoleManager consoleManager) {
         this.accountManager = accountManager;
         this.consoleManager = consoleManager;
     }
@@ -84,8 +82,10 @@ public class UnlockAccountDialog implements Initializable {
         Pane unlockAccountDialog;
         try {
 //            unlockAccountDialog = FXMLLoader.load(getClass().getResource("UnlockAccountDialog.fxml"));
-            FXMLLoader loader = new FXMLLoader((getClass().getResource("UnlockAccountDialog.fxml")));
-            loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager) /* TODO a specialization only has what we need */);
+            FXMLLoader loader = new FXMLLoader(
+                (getClass().getResource("UnlockAccountDialog.fxml")));
+            loader.setControllerFactory(new ControllerFactory().withAccountManager(
+                accountManager) /* TODO a specialization only has what we need */);
             unlockAccountDialog = loader.load();
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
@@ -95,8 +95,10 @@ public class UnlockAccountDialog implements Initializable {
         Node eventSource = (Node) mouseEvent.getSource();
         final double windowX = eventSource.getScene().getWindow().getX();
         final double windowY = eventSource.getScene().getWindow().getY();
-        popup.setX(windowX + eventSource.getScene().getWidth() / 2 - unlockAccountDialog.getPrefWidth() / 2);
-        popup.setY(windowY + eventSource.getScene().getHeight() / 2 - unlockAccountDialog.getPrefHeight() / 2);
+        popup.setX(windowX + eventSource.getScene().getWidth() / 2
+            - unlockAccountDialog.getPrefWidth() / 2);
+        popup.setY(windowY + eventSource.getScene().getHeight() / 2
+            - unlockAccountDialog.getPrefHeight() / 2);
         popup.getContent().addAll(unlockAccountDialog);
         popup.show(eventSource.getScene().getWindow());
     }
@@ -110,10 +112,13 @@ public class UnlockAccountDialog implements Initializable {
         if (password != null && !password.isEmpty()) {
             try {
                 accountManager.unlockAccount(account, password);
-                consoleManager.addLog("Account" + account.getPublicAddress() + " unlocked", ConsoleManager.LogType.ACCOUNT);
+                consoleManager.addLog("Account" + account.getPublicAddress() + " unlocked",
+                    ConsoleManager.LogType.ACCOUNT);
                 close(event);
             } catch (ValidationException e) {
-                consoleManager.addLog("Account" + account.getPublicAddress() + " could not be unlocked", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager
+                    .addLog("Account" + account.getPublicAddress() + " could not be unlocked",
+                        ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
                 validationError.setText(e.getMessage());
                 validationError.setVisible(true);
             }

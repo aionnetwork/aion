@@ -20,7 +20,8 @@ public class BalanceUtils {
             return String.valueOf(0);
         }
         BigDecimal bigDecimalBalance = new BigDecimal(balance);
-        return bigDecimalBalance.divide(WEI_MULTIPLIER, PRECISION, RoundingMode.HALF_EVEN).stripTrailingZeros().toPlainString();
+        return bigDecimalBalance.divide(WEI_MULTIPLIER, PRECISION, RoundingMode.HALF_EVEN)
+            .stripTrailingZeros().toPlainString();
     }
 
     public static BigInteger extractBalance(final String formattedBalance) {

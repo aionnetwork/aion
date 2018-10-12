@@ -1,5 +1,13 @@
 package org.aion.gui.model;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.LinkedList;
+import java.util.List;
 import org.aion.api.IAionAPI;
 import org.aion.api.IMine;
 import org.aion.api.INet;
@@ -7,16 +15,8 @@ import org.aion.api.type.ApiMsg;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class GeneralKernelInfoRetrieverTest {
+
     private ApiMsg apiMsgWithError;
 
     @Before
@@ -92,7 +92,7 @@ public class GeneralKernelInfoRetrieverTest {
         when(net.getActiveNodes()).thenReturn(msg);
         when(msg.isError()).thenReturn(false);
         List<Object> peerList = new LinkedList<>() {{
-            for(int ix = 0; ix < peerCount; ++ix) {
+            for (int ix = 0; ix < peerCount; ++ix) {
                 add(new Object());
             }
         }};
@@ -117,7 +117,7 @@ public class GeneralKernelInfoRetrieverTest {
         when(net.getActiveNodes()).thenReturn(msg);
         when(msg.isError()).thenReturn(false);
         List<Object> peerList = new LinkedList<>() {{
-            for(int ix = 0; ix < peerCount; ++ix) {
+            for (int ix = 0; ix < peerCount; ++ix) {
                 add(new Object());
             }
         }};

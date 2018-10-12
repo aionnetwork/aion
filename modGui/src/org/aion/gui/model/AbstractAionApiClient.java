@@ -12,31 +12,26 @@ import org.slf4j.Logger;
  * Example implementation: {@link GeneralKernelInfoRetriever}.
  */
 public abstract class AbstractAionApiClient {
-    private final IAionAPI api;
-    private final IApiMsgErrorHandler errorHandler;
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
+    private final IAionAPI api;
+    private final IApiMsgErrorHandler errorHandler;
 
     /**
      * Constructor
      *
      * @param kernelConnection connection containing the API instance to interact with
      * @param errorHander error handler that executes whenever API call is made.  use null if no
-     *                    error handling needed.
+     * error handling needed.
      */
     protected AbstractAionApiClient(KernelConnection kernelConnection,
-                                    IApiMsgErrorHandler errorHander) {
+        IApiMsgErrorHandler errorHander) {
         this.api = kernelConnection.getApi();
         this.errorHandler = errorHander;
     }
 
     protected AbstractAionApiClient(KernelConnection kernelConnection) {
         this(kernelConnection, null);
-    }
-
-    @FunctionalInterface
-    protected interface ApiFunction {
-        ApiMsg call(IAionAPI api);
     }
 
     /**
@@ -54,7 +49,7 @@ public abstract class AbstractAionApiClient {
         synchronized (api) {
             msg = func.call(api);
         }
-        if(errorHandler != null) {
+        if (errorHandler != null) {
             errorHandler.handleError(msg);
         }
         return msg;
@@ -65,5 +60,11 @@ public abstract class AbstractAionApiClient {
      */
     protected boolean apiIsConnected() {
         return api.isConnected();
+    }
+
+    @FunctionalInterface
+    protected interface ApiFunction {
+
+        ApiMsg call(IAionAPI api);
     }
 }

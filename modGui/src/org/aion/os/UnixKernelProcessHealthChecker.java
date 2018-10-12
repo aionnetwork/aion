@@ -1,7 +1,6 @@
 package org.aion.os;
 
 import com.google.common.base.Charsets;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class UnixKernelProcessHealthChecker {
+
     private String AION_KERNEL_SCRIPT = "aion.sh";
 
     public boolean checkIfKernelRunning(long pid) throws KernelControlException {
@@ -22,15 +22,15 @@ public class UnixKernelProcessHealthChecker {
     }
 
     private List<String> callPs(long pid)
-            throws IOException, InterruptedException, KernelControlException {
-        final String[] command = new String[] {"ps", "-o", "comm=", "--pid", String.valueOf(pid)};
+        throws IOException, InterruptedException, KernelControlException {
+        final String[] command = new String[]{"ps", "-o", "comm=", "--pid", String.valueOf(pid)};
         Process proc = new ProcessBuilder().command(command).start();
         proc.waitFor();
 
         try (
-                final InputStream is = proc.getInputStream();
-                final InputStreamReader isr = new InputStreamReader(is, Charsets.UTF_8);
-                final BufferedReader br = new BufferedReader(isr);
+            final InputStream is = proc.getInputStream();
+            final InputStreamReader isr = new InputStreamReader(is, Charsets.UTF_8);
+            final BufferedReader br = new BufferedReader(isr);
         ) {
             return br.lines().collect(Collectors.toList());
         } catch (IOException ioe) {

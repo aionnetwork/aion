@@ -34,6 +34,7 @@ public class UIUtils {
     }
 
     public static void setWidth(final TextField field) {
-        field.setPrefWidth(UIUtils.computeTextWidth(field.getFont(), field.getText()) + SIZE_BUFFER);
+        field
+            .setPrefWidth(UIUtils.computeTextWidth(field.getFont(), field.getText()) + SIZE_BUFFER);
     }
 }

@@ -1,7 +1,6 @@
 package org.aion.gui.events;
 
 import com.google.common.eventbus.EventBus;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,11 +13,12 @@ public class EventBusRegistry {
 
     private final Map<String, EventBus> busMap = new HashMap<>();
 
+    public EventBusRegistry() {
+    }
+
     public EventBus getBus(final String identifier) {
         return getBusById(identifier);
     }
-
-    public EventBusRegistry() {}
 
     private EventBus getBusById(final String identifier) {
         return busMap.computeIfAbsent(identifier, EventBus::new);

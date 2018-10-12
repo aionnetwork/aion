@@ -11,6 +11,7 @@ import org.fxmisc.richtext.LineNumberFactory;
  * FXML properly.
  */
 public class XmlArea extends StackPane {
+
     private CodeArea codeArea;
 
     public XmlArea() {
@@ -21,13 +22,13 @@ public class XmlArea extends StackPane {
         getChildren().add(vsp);
     }
 
+    public String getText() {
+        return codeArea.getText();
+    }
+
     public void setText(String text) {
         codeArea.replaceText(text);
         codeArea.scrollToPixel(0, 0);
-    }
-
-    public String getText() {
-        return codeArea.getText();
     }
 
 }

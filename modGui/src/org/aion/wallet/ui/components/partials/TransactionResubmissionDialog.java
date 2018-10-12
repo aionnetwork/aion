@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,6 +22,10 @@
  */
 package org.aion.wallet.ui.components.partials;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -45,14 +49,10 @@ import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.dto.AccountDTO;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Optional;
-import java.util.ResourceBundle;
-
 public class TransactionResubmissionDialog implements Initializable {
 
-    private static final Logger LOGGER = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+    private static final Logger LOGGER = AionLoggerFactory
+        .getLogger(org.aion.log.LogEnum.GUI.name());
     private final Popup popup = new Popup();
     private ConsoleManager consoleManager;
     private AccountManager accountManager;
@@ -61,7 +61,7 @@ public class TransactionResubmissionDialog implements Initializable {
     private VBox transactions;
 
     public TransactionResubmissionDialog(AccountManager accountManager,
-                                         ConsoleManager consoleManager) {
+        ConsoleManager consoleManager) {
         this.consoleManager = consoleManager;
         this.accountManager = accountManager;
     }
@@ -72,7 +72,8 @@ public class TransactionResubmissionDialog implements Initializable {
 
         Pane resubmitTransactionDialog;
         try {
-            resubmitTransactionDialog = FXMLLoader.load(getClass().getResource("TransactionResubmissionDialog.fxml"));
+            resubmitTransactionDialog = FXMLLoader
+                .load(getClass().getResource("TransactionResubmissionDialog.fxml"));
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
             return;
@@ -81,8 +82,10 @@ public class TransactionResubmissionDialog implements Initializable {
         Node eventSource = (Node) mouseEvent.getSource();
         final double windowX = eventSource.getScene().getWindow().getX();
         final double windowY = eventSource.getScene().getWindow().getY();
-        popup.setX(windowX + eventSource.getScene().getWidth() / 2 - resubmitTransactionDialog.getPrefWidth() / 2);
-        popup.setY(windowY + eventSource.getScene().getHeight() / 2 - resubmitTransactionDialog.getPrefHeight() / 2);
+        popup.setX(windowX + eventSource.getScene().getWidth() / 2
+            - resubmitTransactionDialog.getPrefWidth() / 2);
+        popup.setY(windowY + eventSource.getScene().getHeight() / 2
+            - resubmitTransactionDialog.getPrefHeight() / 2);
         popup.getContent().addAll(resubmitTransactionDialog);
         popup.show(eventSource.getScene().getWindow());
     }
@@ -98,11 +101,13 @@ public class TransactionResubmissionDialog implements Initializable {
 
     private void displayTransactions() {
         addHeaderForTable();
-        final Optional<AccountDTO> first = accountManager.getAccounts().stream().filter(AccountDTO::isActive).findFirst();
+        final Optional<AccountDTO> first = accountManager.getAccounts().stream()
+            .filter(AccountDTO::isActive).findFirst();
         final String publicAddress;
         if (first.isPresent()) {
             publicAddress = first.get().getPublicAddress();
-            for (SendTransactionDTO unsentTransaction : accountManager.getTimedOutTransactions(publicAddress)) {
+            for (SendTransactionDTO unsentTransaction : accountManager
+                .getTimedOutTransactions(publicAddress)) {
                 HBox row = new HBox();
                 row.setSpacing(10);
                 row.setAlignment(Pos.CENTER);
@@ -132,7 +137,8 @@ public class TransactionResubmissionDialog implements Initializable {
                 resubmitTransaction.setOnMouseClicked(event -> {
                     close(event);
                     accountManager.removeTimedOutTransaction(unsentTransaction);
-                    consoleManager.addLog("Transaction timeout treated", ConsoleManager.LogType.TRANSACTION);
+                    consoleManager
+                        .addLog("Transaction timeout treated", ConsoleManager.LogType.TRANSACTION);
                     EventPublisher.fireTransactionResubmited(unsentTransaction);
                 });
                 row.getChildren().add(resubmitTransaction);

@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -28,6 +28,7 @@ import io.github.novacrypto.bip39.Validation.InvalidWordCountException;
 import io.github.novacrypto.bip39.Validation.UnexpectedWhiteSpaceException;
 import io.github.novacrypto.bip39.Validation.WordNotFoundException;
 import io.github.novacrypto.bip39.wordlists.English;
+import java.io.IOException;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -47,13 +48,13 @@ import org.aion.wallet.console.ConsoleManager;
 import org.aion.wallet.exception.ValidationException;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-
 public class AddAccountDialog {
+
+    private static final Logger LOG = org.aion.log.AionLoggerFactory
+        .getLogger(org.aion.log.LogEnum.GUI.name());
     private final MnemonicDialog mnemonicDialog = new MnemonicDialog();
     private final AccountManager accountManager;
     private final ConsoleManager consoleManager;
-
     @FXML
     public TextField mnemonicTextField;
     @FXML
@@ -67,13 +68,10 @@ public class AddAccountDialog {
     @FXML
     private Label validationError;
 
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
-
     public AddAccountDialog(AccountManager accountManager,
-                            ConsoleManager consoleManager) {
-       this.accountManager = accountManager;
-       this.consoleManager = consoleManager;
+        ConsoleManager consoleManager) {
+        this.accountManager = accountManager;
+        this.consoleManager = consoleManager;
     }
 
     public void createAccount(final InputEvent mouseEvent) {
@@ -92,16 +90,19 @@ public class AddAccountDialog {
 
         try {
 //            String mnemonic = blockchainConnector.createMasterAccount(newPassword.getText(), newAccountName.getText());
-            String mnemonic = accountManager.createMasterAccount(newPassword.getText(), newAccountName.getText());
-            consoleManager.addLog("Master account created -> name: " + newAccountName.getText(), ConsoleManager.LogType.ACCOUNT);
-
+            String mnemonic = accountManager
+                .createMasterAccount(newPassword.getText(), newAccountName.getText());
+            consoleManager.addLog("Master account created -> name: " + newAccountName.getText(),
+                ConsoleManager.LogType.ACCOUNT);
 
             if (mnemonic != null) {
                 mnemonicDialog.open(mouseEvent);
                 EventPublisher.fireMnemonicCreated(mnemonic);
             }
         } catch (ValidationException e) {
-            consoleManager.addLog("Master account could not be created", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+            consoleManager
+                .addLog("Master account could not be created", ConsoleManager.LogType.ACCOUNT,
+                    ConsoleManager.LogLevel.WARNING);
             showInvalidFieldsError(e.getMessage());
         }
     }
@@ -109,16 +110,19 @@ public class AddAccountDialog {
     public void importMnemonic(final InputEvent mouseEvent) {
         final String mnemonic = mnemonicTextField.getText();
         final String mnemonicPassword = mnemonicPasswordField.getText();
-        if (mnemonic != null && !mnemonic.isEmpty() && mnemonicPassword != null && !mnemonicPassword.isEmpty()) {
+        if (mnemonic != null && !mnemonic.isEmpty() && mnemonicPassword != null && !mnemonicPassword
+            .isEmpty()) {
             try {
                 MnemonicValidator
-                        .ofWordList(English.INSTANCE)
-                        .validate(mnemonic);
+                    .ofWordList(English.INSTANCE)
+                    .validate(mnemonic);
                 accountManager.importMasterAccount(mnemonic, mnemonicPassword);
                 consoleManager.addLog("Master account imported", ConsoleManager.LogType.ACCOUNT);
                 this.close(mouseEvent);
             } catch (UnexpectedWhiteSpaceException | InvalidWordCountException | InvalidChecksumException | WordNotFoundException | ValidationException e) {
-                consoleManager.addLog("Could not import master account", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager
+                    .addLog("Could not import master account", ConsoleManager.LogType.ACCOUNT,
+                        ConsoleManager.LogLevel.WARNING);
                 showInvalidFieldsError(getMnemonicValidationErrorMessage(e));
                 LOG.error(e.getMessage(), e);
             }
@@ -136,17 +140,20 @@ public class AddAccountDialog {
             return "Invalid mnemonic!";
         } else if (e instanceof WordNotFoundException) {
             return "Word in mnemonic was not found!";
-        } else return e.getMessage();
+        } else {
+            return e.getMessage();
+        }
     }
 
     private boolean validateFields() {
-        if (newPassword == null || newPassword.getText() == null || retypedPassword == null || retypedPassword.getText() == null) {
+        if (newPassword == null || newPassword.getText() == null || retypedPassword == null
+            || retypedPassword.getText() == null) {
             return false;
         }
 
         return newPassword.getText() != null && !newPassword.getText().isEmpty()
-                && retypedPassword.getText() != null && !retypedPassword.getText().isEmpty()
-                && newPassword.getText().equals(retypedPassword.getText());
+            && retypedPassword.getText() != null && !retypedPassword.getText().isEmpty()
+            && newPassword.getText().equals(retypedPassword.getText());
     }
 
     public void resetValidation() {
@@ -169,8 +176,9 @@ public class AddAccountDialog {
 //            addAccountDialog = FXMLLoader.load(getClass().getResource("AddAccountDialog.fxml"));
             FXMLLoader loader = new FXMLLoader((getClass().getResource("AddAccountDialog.fxml")));
             loader.setControllerFactory(new ControllerFactory()
-                    .withAccountManager(accountManager) /* TODO a specialization only has what we need... also constantly making new controller factories is so error prone */
-                    .withConsoleManager(consoleManager)
+                .withAccountManager(
+                    accountManager) /* TODO a specialization only has what we need... also constantly making new controller factories is so error prone */
+                .withConsoleManager(consoleManager)
             );
             addAccountDialog = loader.load();
         } catch (IOException e) {
@@ -181,8 +189,10 @@ public class AddAccountDialog {
         Node eventSource = (Node) mouseEvent.getSource();
         final double windowX = eventSource.getScene().getWindow().getX();
         final double windowY = eventSource.getScene().getWindow().getY();
-        popup.setX(windowX + eventSource.getScene().getWidth() / 2 - addAccountDialog.getPrefWidth() / 2);
-        popup.setY(windowY + eventSource.getScene().getHeight() / 2 - addAccountDialog.getPrefHeight() / 2);
+        popup.setX(
+            windowX + eventSource.getScene().getWidth() / 2 - addAccountDialog.getPrefWidth() / 2);
+        popup.setY(windowY + eventSource.getScene().getHeight() / 2
+            - addAccountDialog.getPrefHeight() / 2);
         popup.getContent().addAll(addAccountDialog);
         popup.show(eventSource.getScene().getWindow());
     }

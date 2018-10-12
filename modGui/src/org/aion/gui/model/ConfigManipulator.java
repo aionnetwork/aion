@@ -4,16 +4,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharSource;
 import com.google.common.io.Files;
-import org.aion.log.AionLoggerFactory;
-import org.aion.mcf.config.Cfg;
-import org.aion.zero.impl.config.dynamic.ConfigProposalResult;
-import org.aion.zero.impl.config.dynamic.InFlightConfigReceiver;
-import org.aion.zero.impl.config.dynamic.InFlightConfigReceiverMBean;
-import org.aion.zero.impl.config.dynamic.RollbackException;
-import org.aion.os.KernelLauncher;
-import org.aion.zero.impl.config.CfgAion;
-import org.slf4j.Logger;
-
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
 import javax.management.MBeanServerConnection;
 import javax.management.MBeanServerInvocationHandler;
 import javax.management.MalformedObjectNameException;
@@ -23,14 +16,20 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
+import org.aion.log.AionLoggerFactory;
+import org.aion.mcf.config.Cfg;
+import org.aion.os.KernelLauncher;
+import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.config.dynamic.ConfigProposalResult;
+import org.aion.zero.impl.config.dynamic.InFlightConfigReceiver;
+import org.aion.zero.impl.config.dynamic.InFlightConfigReceiverMBean;
+import org.aion.zero.impl.config.dynamic.RollbackException;
+import org.slf4j.Logger;
 
 /**
- * Provides an interface (intended to be used by Controllers) to manipulate the kernel config.
- * This includes both the config.xml file as well as sending remote commands to a running kernel
- * to reconfigure it dynamically.
+ * Provides an interface (intended to be used by Controllers) to manipulate the kernel config. This
+ * includes both the config.xml file as well as sending remote commands to a running kernel to
+ * reconfigure it dynamically.
  */
 public class ConfigManipulator {
     // Current method of determining file path of config.xml is a little wonky.  cfg is the
@@ -41,31 +40,28 @@ public class ConfigManipulator {
     //             from the impl that the part of the Cfg we care about -- base dir -- doesn't change.
     //             Does not seem very reliable.
 
+    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
     private final Cfg cfg;
     private final KernelLauncher kernelLauncher;
     private final FileLoaderSaver fileLoaderSaver;
     private final JmxCaller jmxCaller;
-
     private String lastLoadContent;
-
-    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
     /**
      * Constructor
      *
-     * @param cfg            The Cfg that is currently in use by
-     * @param kernelLauncher
+     * @param cfg The Cfg that is currently in use by
      */
     public ConfigManipulator(Cfg cfg,
-                             KernelLauncher kernelLauncher) {
+        KernelLauncher kernelLauncher) {
         this(cfg, kernelLauncher, new FileLoaderSaver(), new JmxCaller());
     }
 
     @VisibleForTesting
     ConfigManipulator(Cfg cfg,
-                      KernelLauncher kernelLauncher,
-                      FileLoaderSaver fileLoaderSaver,
-                      JmxCaller jmxCaller) {
+        KernelLauncher kernelLauncher,
+        FileLoaderSaver fileLoaderSaver,
+        JmxCaller jmxCaller) {
         this.cfg = cfg;
         this.kernelLauncher = kernelLauncher;
         this.fileLoaderSaver = fileLoaderSaver;
@@ -91,12 +87,14 @@ public class ConfigManipulator {
      * Apply a new config
      *
      * @param cfgXml XML text of new config
-     * @return {@link ApplyConfigResult} whether it was successful or failure, plus reason for failure
+     * @return {@link ApplyConfigResult} whether it was successful or failure, plus reason for
+     * failure
      */
     public ApplyConfigResult applyNewConfig(String cfgXml) {
         Optional<String> maybeError = checkForErrors(cfgXml);
         if (maybeError.isPresent()) {
-            String msg = "Could not apply config because it has errors.  File will not be saved.  Error was:\n\n"
+            String msg =
+                "Could not apply config because it has errors.  File will not be saved.  Error was:\n\n"
                     + maybeError.get();
             return new ApplyConfigResult(false, msg, null);
         }
@@ -106,8 +104,8 @@ public class ConfigManipulator {
             backupConfigFilename = backupConfig();
         } catch (IOException ioe) {
             String msg =
-                    "Failed to backup existing config, so aborting operation.  Error during backup:\n\n"
-                            + ioe.getMessage();
+                "Failed to backup existing config, so aborting operation.  Error during backup:\n\n"
+                    + ioe.getMessage();
             ioe.printStackTrace();
             return new ApplyConfigResult(false, msg, null);
         }
@@ -118,9 +116,10 @@ public class ConfigManipulator {
 //        if (!result.isSucceeded()) {
 //            return result;
 //        }
-        if(kernelLauncher.hasLaunchedInstance()) {
+        if (kernelLauncher.hasLaunchedInstance()) {
             return new ApplyConfigResult(false,
-                    "Cannot update config file while kernel is running.  Please terminate kernel before applying config changes.", null);
+                "Cannot update config file while kernel is running.  Please terminate kernel before applying config changes.",
+                null);
         }
 
         try {
@@ -128,21 +127,21 @@ public class ConfigManipulator {
             LOG.info("Saving new config.xml");
         } catch (IOException ioe) {
             String msg =
-                    "Config was successfully applied, but failed to save to config.xml:\n\n"
-                            + ioe.getMessage();
+                "Config was successfully applied, but failed to save to config.xml:\n\n"
+                    + ioe.getMessage();
             LOG.error(msg, ioe);
             return new ApplyConfigResult(true, msg, null);
         }
 
         return new ApplyConfigResult(true,
-                "Config saved.  Previous copy is backed up at " + backupConfigFilename,
-                null);
+            "Config saved.  Previous copy is backed up at " + backupConfigFilename,
+            null);
     }
 
     private Optional<String> checkForErrors(String cfgXml) {
         try {
             XMLStreamReader xmlStream = XMLInputFactory.newInstance()
-                    .createXMLStreamReader(CharSource.wrap(cfgXml).openStream());
+                .createXMLStreamReader(CharSource.wrap(cfgXml).openStream());
             new CfgAion().fromXML(xmlStream);
             return Optional.empty();
         } catch (Exception e) {
@@ -157,20 +156,21 @@ public class ConfigManipulator {
         try {
             ConfigProposalResult result = jmxCaller.sendConfigProposal(cfgText);
             LOG.debug("JMX propose call returned: " + result.toString());
-            String msg = result.getErrorCause() != null ? result.getErrorCause().getMessage() : null;
+            String msg =
+                result.getErrorCause() != null ? result.getErrorCause().getMessage() : null;
 
             return new ApplyConfigResult(result.isSuccess(), msg, result.getErrorCause());
         } catch (IOException | MalformedObjectNameException ex) {
-                LOG.error("JMX call exception", ex);
-                return new ApplyConfigResult(false,
-                        "Failed to make JMX call", ex);
+            LOG.error("JMX call exception", ex);
+            return new ApplyConfigResult(false,
+                "Failed to make JMX call", ex);
         } catch (RollbackException re) {
             LOG.error("Kernel encountered config error and failed to roll back", re);
             return new ApplyConfigResult(false,
-                    "Encountered error while applying config changes, " +
-                            "but could not undo the partially applied changes.  " +
-                            "It is recommended that you restart your kernel.",
-                    re);
+                "Encountered error while applying config changes, " +
+                    "but could not undo the partially applied changes.  " +
+                    "It is recommended that you restart your kernel.",
+                re);
         }
     }
 
@@ -192,15 +192,17 @@ public class ConfigManipulator {
 
     @VisibleForTesting
     static class JmxCaller {
+
         public ConfigProposalResult sendConfigProposal(int port, String xmlConfig)
-        throws IOException, MalformedObjectNameException, RollbackException {
+            throws IOException, MalformedObjectNameException, RollbackException {
             JMXServiceURL url = new JMXServiceURL(
-                    InFlightConfigReceiver.createJmxUrl(port));
+                InFlightConfigReceiver.createJmxUrl(port));
             try (JMXConnector conn = JMXConnectorFactory.connect(url, null)) {
                 MBeanServerConnection mbeanServerConnection = conn.getMBeanServerConnection();
-                ObjectName objectName = new ObjectName(InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
+                ObjectName objectName = new ObjectName(
+                    InFlightConfigReceiver.DEFAULT_JMX_OBJECT_NAME);
                 InFlightConfigReceiverMBean proxy = MBeanServerInvocationHandler.newProxyInstance(
-                        mbeanServerConnection, objectName, InFlightConfigReceiverMBean.class, true);
+                    mbeanServerConnection, objectName, InFlightConfigReceiverMBean.class, true);
                 return proxy.propose(xmlConfig);
             }
         }
@@ -213,6 +215,7 @@ public class ConfigManipulator {
 
     @VisibleForTesting
     static class FileLoaderSaver {
+
         public void save(String cfgXml, File file) throws IOException {
             Files.write(cfgXml, file, Charsets.UTF_8);
         }

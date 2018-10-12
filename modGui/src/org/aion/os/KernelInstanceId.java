@@ -2,10 +2,13 @@ package org.aion.os;
 
 import java.io.Serializable;
 
-/** Identifier for the OS process that is running the Aion kernel */
+/**
+ * Identifier for the OS process that is running the Aion kernel
+ */
 public class KernelInstanceId implements Serializable {
-    private final long pid;
+
     private static final long serialVersionUID = 4L;
+    private final long pid;
 
     /**
      * Constructor
@@ -16,7 +19,9 @@ public class KernelInstanceId implements Serializable {
         this.pid = pid;
     }
 
-    /** @return process id */
+    /**
+     * @return process id
+     */
     public long getPid() {
         return pid;
     }

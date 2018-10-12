@@ -1,12 +1,12 @@
 package org.aion.gui.model;
 
-import org.hamcrest.Matchers;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
-
 public class ApplyConfigResultTest {
+
     @Test
     public void testCtorAndGetters() {
         boolean success = true;

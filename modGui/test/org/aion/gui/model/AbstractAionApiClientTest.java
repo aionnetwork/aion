@@ -1,18 +1,16 @@
 package org.aion.gui.model;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 public class AbstractAionApiClientTest {
+
     private IAionAPI api;
     private IApiMsgErrorHandler errorHandler;
     private KernelConnection kernelConnection;
@@ -24,7 +22,8 @@ public class AbstractAionApiClientTest {
         errorHandler = mock(IApiMsgErrorHandler.class);
         kernelConnection = mock(KernelConnection.class);
         when(kernelConnection.getApi()).thenReturn(api);
-        unit = new AbstractAionApiClient(kernelConnection, errorHandler) {};
+        unit = new AbstractAionApiClient(kernelConnection, errorHandler) {
+        };
     }
 
     @Test

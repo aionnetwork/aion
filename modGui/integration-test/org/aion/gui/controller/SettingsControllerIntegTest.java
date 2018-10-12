@@ -1,5 +1,22 @@
 package org.aion.gui.controller;
 
+import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.testfx.api.FxAssert.verifyThat;
+
+import java.io.File;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -26,25 +43,9 @@ import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.matcher.control.LabeledMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
-import java.io.File;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.testfx.api.FxAssert.verifyThat;
-
 public class SettingsControllerIntegTest extends ApplicationTest {
+
+    private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
     private ControllerFactory cf;
     private ConfigManipulator configManipulator;
     private SettingsController controller;
@@ -53,13 +54,12 @@ public class SettingsControllerIntegTest extends ApplicationTest {
     private String configFileName = "/tmp/absolute/path/to/the/Config/File/Name";
     private Stage stage;
     private EventBusRegistry ebr;
-    private final Map<HeaderPaneButtonEvent.Type, Node> panes = new HashMap<>();
     private AccountManager accountManager;
     private ConsoleManager consoleManager;
 
     /**
-     * Not using Mockito's @Before because JavaFX's start() runs first and that needs member
-     * vars already set up.  Will just call this init method from start.
+     * Not using Mockito's @Before because JavaFX's start() runs first and that needs member vars
+     * already set up.  Will just call this init method from start.
      */
     @Override
     public void init() {
@@ -76,19 +76,19 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         this.stage = stage;
 
         cf = new ControllerFactory()
-                .withConfigManipulator(configManipulator)
-                .withKernelConnection(kc)
-                .withEventBusRegistry(ebr);
+            .withConfigManipulator(configManipulator)
+            .withKernelConnection(kc)
+            .withEventBusRegistry(ebr);
         FXMLLoader loader = new FXMLLoader(
-                SettingsController.class.getResource("components/partials/SettingsPane.fxml"),
-                null,
-                null,
-                cf,
-                Charset.forName(DEFAULT_CHARSET_NAME),
-                new LinkedList<>());
+            SettingsController.class.getResource("components/partials/SettingsPane.fxml"),
+            null,
+            null,
+            cf,
+            Charset.forName(DEFAULT_CHARSET_NAME),
+            new LinkedList<>());
         loader.setBuilderFactory(new UiSubcomponentsFactory()
-                .withAccountManager(accountManager)
-                .withConsoleManager(consoleManager)
+            .withAccountManager(accountManager)
+            .withConsoleManager(consoleManager)
         );
         Parent root = loader.load();
         controller = loader.getController();
@@ -108,31 +108,24 @@ public class SettingsControllerIntegTest extends ApplicationTest {
     }
 
     /**
-     * Use case:
-     *  - open settings pane
-     *  - config file's contents should be in the text box
-     * @throws Exception
+     * Use case: - open settings pane - config file's contents should be in the text box
      */
     @Test
     public void testInitialState() throws Exception {
         XmlArea xml = lookup("#xmlArea").query();
         assertThat(xml.getText(), is(configFileContents));
         verifyThat(lookup("#editingFileLabel"),
-                LabeledMatchers.hasText("Editing " + new File(configFileName).getAbsolutePath()));
+            LabeledMatchers.hasText("Editing " + new File(configFileName).getAbsolutePath()));
     }
 
     /**
-     * Use case:
-     *  - open settings pane
-     *  - make a modification in the text box
-     *  - click the reset button
-     *  - text box should contain original config file contents
-     * @throws Exception
+     * Use case: - open settings pane - make a modification in the text box - click the reset button
+     * - text box should contain original config file contents
      */
     @Test
     public void testReset() throws Exception {
         XmlArea xml = lookup("#xmlArea").query();
-        Platform.runLater( () -> xml.setText("something new") );
+        Platform.runLater(() -> xml.setText("something new"));
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(xml.getText(), is("something new"));
@@ -142,21 +135,17 @@ public class SettingsControllerIntegTest extends ApplicationTest {
     }
 
     /**
-     * Use case:
-     *  - open settings pane
-     *  - input config xml that contains errors
-     *  - click apply and save
-     *  - should get an error
-     * @throws Exception
+     * Use case: - open settings pane - input config xml that contains errors - click apply and save
+     * - should get an error
      */
     @Test
     public void testSaveApplyWhenError() throws Exception {
         String errorMsg = "you're configging it wrong";
         when(configManipulator.applyNewConfig(anyString()))
-                .thenReturn(new ApplyConfigResult(false, errorMsg, null));
+            .thenReturn(new ApplyConfigResult(false, errorMsg, null));
 
         XmlArea xml = lookup("#xmlArea").query();
-        Platform.runLater( () -> xml.setText("anyText") );
+        Platform.runLater(() -> xml.setText("anyText"));
 
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -169,17 +158,17 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         assertThat(alertDialog.getHeaderText(), is("Error"));
         assertThat(alertDialog.getContentText(), is(errorMsg));
 
-        Platform.runLater(() -> ((Button)alertDialog.lookupButton(ButtonType.OK)).fire());
+        Platform.runLater(() -> ((Button) alertDialog.lookupButton(ButtonType.OK)).fire());
     }
 
     @Test
     public void testSaveApplyWhenSuccessful() throws Exception {
         String msg = "it worked!";
         when(configManipulator.applyNewConfig(anyString()))
-                .thenReturn(new ApplyConfigResult(true, msg, null));
+            .thenReturn(new ApplyConfigResult(true, msg, null));
 
         XmlArea xml = lookup("#xmlArea").query();
-        Platform.runLater( () -> xml.setText("anyText") );
+        Platform.runLater(() -> xml.setText("anyText"));
         WaitForAsyncUtils.waitForFxEvents();
         clickOn("#applyAndSaveButton");
         WaitForAsyncUtils.waitForFxEvents();
@@ -189,7 +178,7 @@ public class SettingsControllerIntegTest extends ApplicationTest {
         DialogPane alertDialog = dialogPaneOfAlertBox(alertBox);
         assertThat(alertDialog.getHeaderText(), is("Confirmation"));
         assertThat(alertDialog.getContentText(), is(msg));
-        Platform.runLater(() -> ((Button)alertDialog.lookupButton(ButtonType.OK)).fire());
+        Platform.runLater(() -> ((Button) alertDialog.lookupButton(ButtonType.OK)).fire());
     }
 
     private DialogPane dialogPaneOfAlertBox(Stage alertBox) {
@@ -199,14 +188,15 @@ public class SettingsControllerIntegTest extends ApplicationTest {
     private Stage getAlertBox() {
         // based on
         // https://stackoverflow.com/questions/48565782/testfx-how-to-test-validation-dialogs-with-no-ids
-        final List<Window> allWindows = new ArrayList<>(robotContext().getWindowFinder().listWindows());
+        final List<Window> allWindows = new ArrayList<>(
+            robotContext().getWindowFinder().listWindows());
         Collections.reverse(allWindows);
 
         return (Stage) allWindows
-                .stream()
-                .filter(window -> window instanceof Stage
-                        && ((Stage) window).getModality() == Modality.APPLICATION_MODAL)
-                .findFirst()
-                .orElse(null);
+            .stream()
+            .filter(window -> window instanceof Stage
+                && ((Stage) window).getModality() == Modality.APPLICATION_MODAL)
+            .findFirst()
+            .orElse(null);
     }
 }
