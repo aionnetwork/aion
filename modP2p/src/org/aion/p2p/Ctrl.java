@@ -46,10 +46,9 @@ public class Ctrl {
 
     /**
      * @param _ctrl byte
-     * @return byte
-     * method provided to filter any decoded ctrl (byte)
+     * @return byte method provided to filter any decoded ctrl (byte)
      */
-    public static byte filter(byte _ctrl){
+    public static byte filter(byte _ctrl) {
         return active.contains(_ctrl) ? _ctrl : UNKNOWN;
     }
 
