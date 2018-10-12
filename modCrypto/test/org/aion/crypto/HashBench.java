@@ -34,9 +34,9 @@
  ******************************************************************************/
 package org.aion.crypto;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertArrayEquals;
+
+import org.junit.Test;
 
 /**
  * @author jin

@@ -34,12 +34,18 @@
  ******************************************************************************/
 package org.aion.crypto;
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.AfterClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
-
 public class SignatureTest {
+
+    @AfterClass
+    public static void teardown() {
+        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
+    }
+
     @Test
     public void testSecp256k1Signature() {
         ECKeyFac.setType(ECKeyFac.ECKeyType.SECP256K1);
@@ -68,10 +74,5 @@ public class SignatureTest {
         ISignature sig = key.sign(msgHash);
         assertTrue(SignatureFac.verify(msgHash, sig));
         assertTrue(SignatureFac.verify(msgHash, SignatureFac.fromBytes(sig.toBytes())));
-    }
-
-    @AfterClass
-    public static void teardown() {
-        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
     }
 }

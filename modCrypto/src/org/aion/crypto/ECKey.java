@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 package org.aion.crypto;
 
@@ -42,15 +42,15 @@ public interface ECKey {
     byte[] getPrivKeyBytes();
 
     /**
-     * An exception when the ECKey couldn't be used to sign messages because the
-     * private key is missing.
+     * An exception when the ECKey couldn't be used to sign messages because the private key is
+     * missing.
      */
     class MissingPrivateKeyException extends RuntimeException {
 
-		private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1L;
 
 
-		public MissingPrivateKeyException() {
+        public MissingPrivateKeyException() {
         }
 
         public MissingPrivateKeyException(String msg) {

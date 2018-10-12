@@ -20,7 +20,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 package org.aion.crypto.hash;
 
@@ -31,7 +31,8 @@ public class Blake2bNative {
     /*
     Generate hashes to validate an Equihash solution
      */
-    public static native byte[][] genSolutionHash(byte[] personalization, byte[] nonce, int[] indices, byte[] header);
+    public static native byte[][] genSolutionHash(byte[] personalization, byte[] nonce,
+        int[] indices, byte[] header);
 
     public static byte[] blake256(byte[] in1, byte[] in2) {
         byte[] arr = new byte[in1.length + in2.length];
@@ -41,7 +42,8 @@ public class Blake2bNative {
         return blake256(arr);
     }
 
-    public static byte[][] getSolutionHash(byte[] personalization, byte[] nonce, int[] indices, byte[] header) {
+    public static byte[][] getSolutionHash(byte[] personalization, byte[] nonce, int[] indices,
+        byte[] header) {
         return genSolutionHash(personalization, nonce, indices, header);
     }
 }

@@ -24,7 +24,6 @@
 package org.aion.crypto;
 
 /**
- *
  * @author jin
  */
 public interface Hash256 {

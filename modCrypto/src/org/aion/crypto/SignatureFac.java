@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 package org.aion.crypto;
 
@@ -55,7 +55,6 @@ public class SignatureFac {
      *
      * @param msg message for signing
      * @param sig the signature
-     * @return
      */
     public static boolean verify(byte[] msg, ISignature sig) {
         switch (ECKeyFac.type) {

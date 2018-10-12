@@ -1,9 +1,10 @@
 package org.aion.crypto;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Optional;
 import org.aion.base.util.ByteUtil;
 import org.junit.Test;
-import java.util.Optional;
-import static org.junit.Assert.assertEquals;
 
 public class ChecksumTest {
 

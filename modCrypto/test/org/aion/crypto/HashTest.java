@@ -34,11 +34,10 @@
  ******************************************************************************/
 package org.aion.crypto;
 
-import org.aion.base.util.Hex;
-import org.junit.AfterClass;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
+
+import org.aion.base.util.Hex;
+import org.junit.Test;
 
 public class HashTest {
 

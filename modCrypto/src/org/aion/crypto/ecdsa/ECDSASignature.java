@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ISignature;
@@ -55,16 +54,25 @@ import org.spongycastle.util.encoders.Base64;
 
 /**
  *
- * 
+ *
  */
 public class ECDSASignature implements ISignature {
 
+    private static int LEN = 65;
     /**
      * The two components of the signature.
      */
     public final BigInteger r, s;
     public byte v;
-    private static int LEN = 65;
+
+    /**
+     * Constructs a signature with the given components. Does NOT automatically canonicalise the
+     * signature.
+     */
+    public ECDSASignature(BigInteger r, BigInteger s) {
+        this.r = r;
+        this.s = s;
+    }
 
     public static ECDSASignature fromBytes(byte[] sigs) {
         if (sigs != null && sigs.length == LEN) {
@@ -75,43 +83,8 @@ public class ECDSASignature implements ISignature {
         }
     }
 
-    @Override
-    public byte[] toBytes() {
-        ByteBuffer bb = ByteBuffer.allocate(LEN);
-        bb.put(v);
-        bb.put(bigIntegerToBytes(r, 32));
-        bb.put(bigIntegerToBytes(s, 32));
-        return bb.array();
-    }
-
-    @Override
-    public byte[] getSignature() {
-        return toBytes();
-    }
-
-    @Override
-    public byte[] getPubkey(byte[] msg) {
-         return new ECKeySecp256k1().recoverFromSignature(this.v - 27, this, msg).getPubKey();
-    }
-
-    /**
-     * Constructs a signature with the given components. Does NOT automatically
-     * canonicalise the signature.
-     *
-     * @param r
-     * @param s
-     */
-    public ECDSASignature(BigInteger r, BigInteger s) {
-        this.r = r;
-        this.s = s;
-    }
-
     /**
      * t
-     *
-     * @param r
-     * @param s
-     * @return
      */
     private static ECDSASignature fromComponents(byte[] r, byte[] s) {
         return new ECDSASignature(new BigInteger(1, r), new BigInteger(1, s));
@@ -119,9 +92,6 @@ public class ECDSASignature implements ISignature {
 
     /**
      * mix was in structure { v, r, s }
-     *
-     * @param mix
-     * @return
      */
     public static ECDSASignature fromComponents(byte[] mix) {
         BigInteger r = new BigInteger(1, mix, 1, 32);
@@ -142,10 +112,6 @@ public class ECDSASignature implements ISignature {
         ECDSASignature signature = fromComponents(r, s);
         signature.v = v;
         return signature;
-    }
-
-    public boolean validateComponents() {
-        return validateComponents(r, s, v);
     }
 
     public static boolean validateComponents(BigInteger r, BigInteger s, byte v) {
@@ -199,14 +165,36 @@ public class ECDSASignature implements ISignature {
         }
     }
 
+    @Override
+    public byte[] toBytes() {
+        ByteBuffer bb = ByteBuffer.allocate(LEN);
+        bb.put(v);
+        bb.put(bigIntegerToBytes(r, 32));
+        bb.put(bigIntegerToBytes(s, 32));
+        return bb.array();
+    }
+
+    @Override
+    public byte[] getSignature() {
+        return toBytes();
+    }
+
+    @Override
+    public byte[] getPubkey(byte[] msg) {
+        return new ECKeySecp256k1().recoverFromSignature(this.v - 27, this, msg).getPubKey();
+    }
+
+    public boolean validateComponents() {
+        return validateComponents(r, s, v);
+    }
+
     /**
-     * Will automatically adjust the S component to be less than or equal to
-     * half the curve order, if necessary. This is required because for every
-     * signature (r,s) the signature (r, -s (mod N)) is a valid signature of the
-     * same message. However, we dislike the ability to modify the bits of a
-     * Ethereum transaction after it's been signed, as that violates various
-     * assumed invariants. Thus in future only one of those forms will be
-     * considered legal and the other will be banned.
+     * Will automatically adjust the S component to be less than or equal to half the curve order,
+     * if necessary. This is required because for every signature (r,s) the signature (r, -s (mod
+     * N)) is a valid signature of the same message. However, we dislike the ability to modify the
+     * bits of a Ethereum transaction after it's been signed, as that violates various assumed
+     * invariants. Thus in future only one of those forms will be considered legal and the other
+     * will be banned.
      *
      * @return -
      */
@@ -228,12 +216,11 @@ public class ECDSASignature implements ISignature {
     }
 
     /**
-     *
      * @return -
      */
     public String toBase64() {
         byte[] sigData = new byte[65]; // 1 header + 32 bytes for R + 32 bytes
-                                       // for S
+        // for S
         sigData[0] = v;
         System.arraycopy(bigIntegerToBytes(this.r, 32), 0, sigData, 1, 32);
         System.arraycopy(bigIntegerToBytes(this.s, 32), 0, sigData, 33, 32);
@@ -243,8 +230,9 @@ public class ECDSASignature implements ISignature {
     public byte[] toByteArray() {
         final byte fixedV = this.v >= 27 ? (byte) (this.v - 27) : this.v;
 
-        return ByteUtil.merge(ByteUtil.bigIntegerToBytes(this.r), ByteUtil.bigIntegerToBytes(this.s),
-                new byte[] { fixedV });
+        return ByteUtil
+            .merge(ByteUtil.bigIntegerToBytes(this.r), ByteUtil.bigIntegerToBytes(this.s),
+                new byte[]{fixedV});
     }
 
     public String toHex() {
@@ -276,9 +264,8 @@ public class ECDSASignature implements ISignature {
     }
 
     /**
-     * Throws unsupported operation for now since we don't yet
-     * have a definition/support/procedure for what ECDSA keys
-     * should look like.
+     * Throws unsupported operation for now since we don't yet have a definition/support/procedure
+     * for what ECDSA keys should look like.
      */
     @Override
     public byte[] getAddress() {

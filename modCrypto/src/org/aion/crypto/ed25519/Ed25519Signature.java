@@ -19,19 +19,18 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 package org.aion.crypto.ed25519;
 
+import java.util.Arrays;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ISignature;
 
-import java.util.Arrays;
-
 /**
- * ED25519 signature implementation. Each {@link Ed25519Signature} contains two
- * components, public key and raw signature.
+ * ED25519 signature implementation. Each {@link Ed25519Signature} contains two components, public
+ * key and raw signature.
  *
  * @author yulong
  */
@@ -84,14 +83,15 @@ public class Ed25519Signature implements ISignature {
         byte[] address = this.getAddress();
 
         return "[pk: " + (this.pk == null ? "null" : ByteUtil.toHexString(this.pk)) +
-                " address: " + (address == null ? "null" : ByteUtil.toHexString(address)) +
-                 " signature: " +  (this.sig == null ? "null" : ByteUtil.toHexString(this.sig)) + "]";
+            " address: " + (address == null ? "null" : ByteUtil.toHexString(address)) +
+            " signature: " + (this.sig == null ? "null" : ByteUtil.toHexString(this.sig)) + "]";
     }
 
     @Override
     public byte[] getAddress() {
-        if (this.pk == null)
+        if (this.pk == null) {
             return null;
+        }
         return AddressSpecs.computeA0Address(this.pk);
     }
 }

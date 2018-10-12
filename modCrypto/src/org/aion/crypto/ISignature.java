@@ -32,8 +32,6 @@ public interface ISignature {
 
     /**
      * Converts into a byte array.
-     *
-     * @return
      */
     byte[] toBytes();
 
@@ -45,9 +43,7 @@ public interface ISignature {
     /**
      * Returns the public key, encoded or recovered.
      *
-     * @param msg
-     *            Only required by Secp256k1; pass null if you're using ED25519
-     * @return
+     * @param msg Only required by Secp256k1; pass null if you're using ED25519
      */
     byte[] getPubkey(byte[] msg);
 

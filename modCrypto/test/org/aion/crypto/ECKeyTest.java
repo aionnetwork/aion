@@ -34,17 +34,19 @@
  ******************************************************************************/
 package org.aion.crypto;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertArrayEquals;
+
 import org.aion.base.util.ByteUtil;
 import org.junit.AfterClass;
 import org.junit.Test;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertArrayEquals;
-
 public class ECKeyTest {
+
+    @AfterClass
+    public static void teardown() {
+        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
+    }
 
     @Test
     public void testSecp256k1() {
@@ -81,7 +83,6 @@ public class ECKeyTest {
         ECKey key = ECKeyFac.inst().create();
         assertThat(key.getPubKey()).isNotEqualTo(key.getAddress());
 
-
         byte[] address = key.getAddress();
         // check header for address
         String addressStr = ByteUtil.toHexString(address);
@@ -95,10 +96,5 @@ public class ECKeyTest {
         // check that the remainder matches a hashed pubKey
         String hashedPkString = ByteUtil.toHexString(HashUtil.h256(key.getPubKey()));
         assertThat(hashedPkString.substring(2)).isEqualTo(addressStr.substring(2));
-    }
-
-    @AfterClass
-    public static void teardown() {
-        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
     }
 }
