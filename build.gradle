@@ -231,6 +231,7 @@ task pack(type: Tar) {
     dependsOn build
     dependsOn prePack
     dependsOn collectDependentJars 
+    dependsOn compileNative 
     finalizedBy(postPack)
 
     archiveName = 'aion.tar.bz2'
