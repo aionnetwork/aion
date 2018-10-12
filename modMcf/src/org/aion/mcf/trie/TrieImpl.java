@@ -144,15 +144,15 @@ public class TrieImpl implements Trie {
         return root;
     }
 
-    @Override
-    public void setRoot(byte[] root) {
-        this.root = root;
-    }
-
     /**
      * for testing TrieTest.testRollbackToRootScenarios
      */
     public void setRoot(Object root) {
+        this.root = root;
+    }
+
+    @Override
+    public void setRoot(byte[] root) {
         this.root = root;
     }
 

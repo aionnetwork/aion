@@ -1585,6 +1585,7 @@ public final class Message {
     getDescriptor() {
         return descriptor;
     }
+
     /**
      * Protobuf enum {@code org.aion.api.server.pb.Servs}
      */
@@ -1764,6 +1765,7 @@ public final class Message {
 
         // @@protoc_insertion_point(enum_scope:org.aion.api.server.pb.Servs)
     }
+
     /**
      * Protobuf enum {@code org.aion.api.server.pb.Funcs}
      */
@@ -2423,6 +2425,7 @@ public final class Message {
 
         // @@protoc_insertion_point(enum_scope:org.aion.api.server.pb.Funcs)
     }
+
     /**
      * Protobuf enum {@code org.aion.api.server.pb.Retcode}
      */
@@ -2822,6 +2825,7 @@ public final class Message {
 
         // @@protoc_insertion_point(enum_scope:org.aion.api.server.pb.Retcode)
     }
+
     public interface t_ContractOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_Contract)
         com.google.protobuf.MessageOrBuilder {
@@ -2896,6 +2900,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getDevDoc();
     }
+
     public interface t_AionTxOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_AionTx)
         com.google.protobuf.MessageOrBuilder {
@@ -2940,6 +2945,7 @@ public final class Message {
          */
         long getNrgPrice();
     }
+
     public interface t_NodeOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_Node)
         com.google.protobuf.MessageOrBuilder {
@@ -2981,6 +2987,7 @@ public final class Message {
          */
         int getLatency();
     }
+
     public interface t_LgEleOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_LgEle)
         com.google.protobuf.MessageOrBuilder {
@@ -3017,6 +3024,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getTopicsBytes(int index);
     }
+
     public interface t_FilterCtOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_FilterCt)
         com.google.protobuf.MessageOrBuilder {
@@ -3090,6 +3098,7 @@ public final class Message {
          */
         long getExpireTime();
     }
+
     public interface t_EventCtOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_EventCt)
         com.google.protobuf.MessageOrBuilder {
@@ -3145,6 +3154,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getTxHash();
     }
+
     public interface t_BlockDetailOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_BlockDetail)
         com.google.protobuf.MessageOrBuilder {
@@ -3267,6 +3277,7 @@ public final class Message {
          */
         long getBlockTime();
     }
+
     public interface t_TxDetailOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_TxDetail)
         com.google.protobuf.MessageOrBuilder {
@@ -3365,6 +3376,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getErrorBytes();
     }
+
     public interface t_AccountDetailOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_AccountDetail)
         com.google.protobuf.MessageOrBuilder {
@@ -3379,6 +3391,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getBalance();
     }
+
     public interface t_BlockOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_Block)
         com.google.protobuf.MessageOrBuilder {
@@ -3483,6 +3496,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getTxHash(int index);
     }
+
     public interface t_BlockSqlOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_BlockSql)
         com.google.protobuf.MessageOrBuilder {
@@ -3547,6 +3561,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getTxBytes(int index);
     }
+
     public interface rsp_errormsgOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_errormsg)
         com.google.protobuf.MessageOrBuilder {
@@ -3562,6 +3577,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getErrormsgBytes();
     }
+
     public interface rsp_protocolVersionOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_protocolVersion)
         com.google.protobuf.MessageOrBuilder {
@@ -3643,6 +3659,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getTxpoolBytes();
     }
+
     public interface rsp_minerAddressOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_minerAddress)
         com.google.protobuf.MessageOrBuilder {
@@ -3652,6 +3669,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getMinerAddr();
     }
+
     public interface req_getBlockByNumberOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockByNumber)
         com.google.protobuf.MessageOrBuilder {
@@ -3661,6 +3679,7 @@ public final class Message {
          */
         long getBlockNumber();
     }
+
     public interface rsp_getBlockOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlock)
         com.google.protobuf.MessageOrBuilder {
@@ -3765,6 +3784,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getTxHash(int index);
     }
+
     public interface req_getBlockHeaderByNumberOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockHeaderByNumber)
         com.google.protobuf.MessageOrBuilder {
@@ -3774,6 +3794,7 @@ public final class Message {
          */
         long getBlockNumber();
     }
+
     public interface rsp_getBlockHeaderOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlockHeader)
         com.google.protobuf.MessageOrBuilder {
@@ -3858,6 +3879,7 @@ public final class Message {
          */
         int getSize();
     }
+
     public interface req_sendTransactionOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_sendTransaction)
         com.google.protobuf.MessageOrBuilder {
@@ -3897,6 +3919,7 @@ public final class Message {
          */
         long getNrgPrice();
     }
+
     public interface rsp_sendTransactionOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_sendTransaction)
         com.google.protobuf.MessageOrBuilder {
@@ -3906,6 +3929,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getTxHash();
     }
+
     public interface req_getTransactionByHashOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getTransactionByHash)
         com.google.protobuf.MessageOrBuilder {
@@ -3915,6 +3939,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getTxHash();
     }
+
     public interface rsp_getTransactionOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getTransaction)
         com.google.protobuf.MessageOrBuilder {
@@ -3979,6 +4004,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getValue();
     }
+
     public interface req_unlockAccountOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_unlockAccount)
         com.google.protobuf.MessageOrBuilder {
@@ -4004,6 +4030,7 @@ public final class Message {
          */
         int getDuration();
     }
+
     public interface rsp_accountsOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_accounts)
         com.google.protobuf.MessageOrBuilder {
@@ -4023,6 +4050,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getAccout(int index);
     }
+
     public interface req_compileOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_compile)
         com.google.protobuf.MessageOrBuilder {
@@ -4038,6 +4066,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getCodeBytes();
     }
+
     public interface rsp_compileOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_compile)
         com.google.protobuf.MessageOrBuilder {
@@ -4081,6 +4110,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_Contract getConstractsOrThrow(
             java.lang.String key);
     }
+
     public interface req_getCodeOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getCode)
         com.google.protobuf.MessageOrBuilder {
@@ -4095,6 +4125,7 @@ public final class Message {
          */
         long getBlocknumber();
     }
+
     public interface rsp_getCodeOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getCode)
         com.google.protobuf.MessageOrBuilder {
@@ -4104,6 +4135,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getCode();
     }
+
     public interface req_contractDeployOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_contractDeploy)
         com.google.protobuf.MessageOrBuilder {
@@ -4133,6 +4165,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getValue();
     }
+
     public interface rsp_contractDeployOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_contractDeploy)
         com.google.protobuf.MessageOrBuilder {
@@ -4147,6 +4180,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getContractAddress();
     }
+
     public interface req_callOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_call)
         com.google.protobuf.MessageOrBuilder {
@@ -4181,6 +4215,7 @@ public final class Message {
          */
         long getNrgPrice();
     }
+
     public interface rsp_callOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_call)
         com.google.protobuf.MessageOrBuilder {
@@ -4190,6 +4225,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getResult();
     }
+
     public interface req_getBlockByHashOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockByHash)
         com.google.protobuf.MessageOrBuilder {
@@ -4199,6 +4235,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getBlockHash();
     }
+
     public interface req_getBlockHeaderByHashOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockHeaderByHash)
         com.google.protobuf.MessageOrBuilder {
@@ -4208,6 +4245,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getBlockHash();
     }
+
     public interface req_getTransactionCountOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getTransactionCount)
         com.google.protobuf.MessageOrBuilder {
@@ -4222,6 +4260,7 @@ public final class Message {
          */
         long getBlocknumber();
     }
+
     public interface rsp_getTransactionCountOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getTransactionCount)
         com.google.protobuf.MessageOrBuilder {
@@ -4231,6 +4270,7 @@ public final class Message {
          */
         long getTxCount();
     }
+
     public interface req_getTransactionCountByHashOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getTransactionCountByHash)
         com.google.protobuf.MessageOrBuilder {
@@ -4240,6 +4280,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getTxHash();
     }
+
     public interface rsp_blockNumberOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_blockNumber)
         com.google.protobuf.MessageOrBuilder {
@@ -4249,6 +4290,7 @@ public final class Message {
          */
         long getBlocknumber();
     }
+
     public interface req_getBalanceOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBalance)
         com.google.protobuf.MessageOrBuilder {
@@ -4263,6 +4305,7 @@ public final class Message {
          */
         long getBlockNumber();
     }
+
     public interface rsp_getBalanceOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBalance)
         com.google.protobuf.MessageOrBuilder {
@@ -4272,6 +4315,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getBalance();
     }
+
     public interface req_getStorageAtOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getStorageAt)
         com.google.protobuf.MessageOrBuilder {
@@ -4297,6 +4341,7 @@ public final class Message {
          */
         long getBlocknumber();
     }
+
     public interface rsp_getStorageAtOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getStorageAt)
         com.google.protobuf.MessageOrBuilder {
@@ -4312,6 +4357,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getStorageBytes();
     }
+
     public interface req_getBlockTransactionCountByHashOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockTransactionCountByHash)
         com.google.protobuf.MessageOrBuilder {
@@ -4321,6 +4367,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getBlockHash();
     }
+
     public interface rsp_getBlockTransactionCountOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlockTransactionCount)
         com.google.protobuf.MessageOrBuilder {
@@ -4330,6 +4377,7 @@ public final class Message {
          */
         int getTxCount();
     }
+
     public interface req_getBlockTransactionCountByNumberOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockTransactionCountByNumber)
         com.google.protobuf.MessageOrBuilder {
@@ -4339,6 +4387,7 @@ public final class Message {
          */
         long getBlockNumber();
     }
+
     public interface req_getTransactionByBlockHashAndIndexOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getTransactionByBlockHashAndIndex)
         com.google.protobuf.MessageOrBuilder {
@@ -4353,6 +4402,7 @@ public final class Message {
          */
         int getTxIndex();
     }
+
     public interface req_getTransactionByBlockNumberAndIndexOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getTransactionByBlockNumberAndIndex)
         com.google.protobuf.MessageOrBuilder {
@@ -4367,6 +4417,7 @@ public final class Message {
          */
         int getTxIndex();
     }
+
     public interface req_getTransactionReceiptOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getTransactionReceipt)
         com.google.protobuf.MessageOrBuilder {
@@ -4376,6 +4427,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getTxHash();
     }
+
     public interface rsp_getTransactionReceiptOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getTransactionReceipt)
         com.google.protobuf.MessageOrBuilder {
@@ -4453,6 +4505,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_LgEleOrBuilder getLogsOrBuilder(
             int index);
     }
+
     public interface req_getUncleByBlockHashAndIndexOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getUncleByBlockHashAndIndex)
         com.google.protobuf.MessageOrBuilder {
@@ -4467,6 +4520,7 @@ public final class Message {
          */
         int getIndex();
     }
+
     public interface rsp_getCompilersOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getCompilers)
         com.google.protobuf.MessageOrBuilder {
@@ -4493,6 +4547,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getCompilerBytes(int index);
     }
+
     public interface req_compileSolidityOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_compileSolidity)
         com.google.protobuf.MessageOrBuilder {
@@ -4508,6 +4563,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getSourceBytes();
     }
+
     public interface rsp_compileSolidityOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_compileSolidity)
         com.google.protobuf.MessageOrBuilder {
@@ -4538,6 +4594,7 @@ public final class Message {
          */
         org.aion.api.server.pb.Message.t_ContractOrBuilder getInfoOrBuilder();
     }
+
     public interface rsp_getWorkOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getWork)
         com.google.protobuf.MessageOrBuilder {
@@ -4564,6 +4621,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getWorkBytes(int index);
     }
+
     public interface req_submitWorkOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_submitWork)
         com.google.protobuf.MessageOrBuilder {
@@ -4583,6 +4641,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getDigest();
     }
+
     public interface rsp_submitWorkOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_submitWork)
         com.google.protobuf.MessageOrBuilder {
@@ -4592,6 +4651,7 @@ public final class Message {
          */
         boolean getWorkAccepted();
     }
+
     public interface rsp_fetchQueuedTransactionsOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_fetchQueuedTransactions)
         com.google.protobuf.MessageOrBuilder {
@@ -4624,6 +4684,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_AionTxOrBuilder getTxOrBuilder(
             int index);
     }
+
     public interface req_rawTransactionOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_rawTransaction)
         com.google.protobuf.MessageOrBuilder {
@@ -4633,6 +4694,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getEncodedTx();
     }
+
     public interface req_estimateNrgOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_estimateNrg)
         com.google.protobuf.MessageOrBuilder {
@@ -4667,6 +4729,7 @@ public final class Message {
          */
         long getNrgPrice();
     }
+
     public interface rsp_estimateNrgOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_estimateNrg)
         com.google.protobuf.MessageOrBuilder {
@@ -4676,6 +4739,7 @@ public final class Message {
          */
         long getNrg();
     }
+
     public interface rsp_miningOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_mining)
         com.google.protobuf.MessageOrBuilder {
@@ -4685,6 +4749,7 @@ public final class Message {
          */
         boolean getMining();
     }
+
     public interface rsp_syncingOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_syncing)
         com.google.protobuf.MessageOrBuilder {
@@ -4704,6 +4769,7 @@ public final class Message {
          */
         long getHighestBlock();
     }
+
     public interface rsp_hashrateOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_hashrate)
         com.google.protobuf.MessageOrBuilder {
@@ -4713,6 +4779,7 @@ public final class Message {
          */
         long getHashrate();
     }
+
     public interface rsp_getActiveNodesOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getActiveNodes)
         com.google.protobuf.MessageOrBuilder {
@@ -4745,6 +4812,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_NodeOrBuilder getNodeOrBuilder(
             int index);
     }
+
     public interface rsp_getStaticNodesOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getStaticNodes)
         com.google.protobuf.MessageOrBuilder {
@@ -4777,6 +4845,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_NodeOrBuilder getNodeOrBuilder(
             int index);
     }
+
     public interface rsp_getSolcVersionOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getSolcVersion)
         com.google.protobuf.MessageOrBuilder {
@@ -4792,6 +4861,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getVerBytes();
     }
+
     public interface rsp_isSyncingOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_isSyncing)
         com.google.protobuf.MessageOrBuilder {
@@ -4801,6 +4871,7 @@ public final class Message {
          */
         boolean getSyncing();
     }
+
     public interface rsp_syncInfoOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_syncInfo)
         com.google.protobuf.MessageOrBuilder {
@@ -4825,6 +4896,7 @@ public final class Message {
          */
         int getMaxImportBlocks();
     }
+
     public interface rsp_systemInfoOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_systemInfo)
         com.google.protobuf.MessageOrBuilder {
@@ -4844,6 +4916,7 @@ public final class Message {
          */
         long getDBSize();
     }
+
     public interface req_eventRegisterOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_eventRegister)
         com.google.protobuf.MessageOrBuilder {
@@ -4885,6 +4958,7 @@ public final class Message {
          */
         org.aion.api.server.pb.Message.t_FilterCtOrBuilder getFilterOrBuilder();
     }
+
     public interface rsp_eventRegisterOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_eventRegister)
         com.google.protobuf.MessageOrBuilder {
@@ -4894,6 +4968,7 @@ public final class Message {
          */
         boolean getResult();
     }
+
     public interface req_eventDeregisterOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_eventDeregister)
         com.google.protobuf.MessageOrBuilder {
@@ -4925,6 +5000,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getContractAddr();
     }
+
     public interface rsp_eventDeregisterOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_eventDeregister)
         com.google.protobuf.MessageOrBuilder {
@@ -4934,6 +5010,7 @@ public final class Message {
          */
         boolean getResult();
     }
+
     public interface rsp_EventCtCallbackOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_EventCtCallback)
         com.google.protobuf.MessageOrBuilder {
@@ -4966,6 +5043,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_EventCtOrBuilder getEcOrBuilder(
             int index);
     }
+
     public interface req_accountCreateOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_accountCreate)
         com.google.protobuf.MessageOrBuilder {
@@ -4997,6 +5075,7 @@ public final class Message {
          */
         boolean getPrivateKey();
     }
+
     public interface rsp_accountCreateOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_accountCreate)
         com.google.protobuf.MessageOrBuilder {
@@ -5031,6 +5110,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getPrivateKey(int index);
     }
+
     public interface req_accountlockOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_accountlock)
         com.google.protobuf.MessageOrBuilder {
@@ -5051,6 +5131,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getPasswordBytes();
     }
+
     public interface rsp_accountlockOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_accountlock)
         com.google.protobuf.MessageOrBuilder {
@@ -5060,6 +5141,7 @@ public final class Message {
          */
         boolean getLocked();
     }
+
     public interface req_userPrivilegeOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_userPrivilege)
         com.google.protobuf.MessageOrBuilder {
@@ -5086,6 +5168,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getPasswordBytes();
     }
+
     public interface rsp_userPrivilegeOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_userPrivilege)
         com.google.protobuf.MessageOrBuilder {
@@ -5112,6 +5195,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getPrivilegeBytes(int index);
     }
+
     public interface req_queryCtEventsOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_queryCtEvents)
         com.google.protobuf.MessageOrBuilder {
@@ -5131,6 +5215,7 @@ public final class Message {
          */
         org.aion.api.server.pb.Message.t_FilterCtOrBuilder getFilterOrBuilder();
     }
+
     public interface rsp_queryCtEventsOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_queryCtEvents)
         com.google.protobuf.MessageOrBuilder {
@@ -5163,6 +5248,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_EventCtOrBuilder getEcOrBuilder(
             int index);
     }
+
     public interface t_PrivateKeyOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_PrivateKey)
         com.google.protobuf.MessageOrBuilder {
@@ -5189,6 +5275,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getPasswordBytes();
     }
+
     public interface req_importAccountsOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_importAccounts)
         com.google.protobuf.MessageOrBuilder {
@@ -5221,6 +5308,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_PrivateKeyOrBuilder getPrivateKeyOrBuilder(
             int index);
     }
+
     public interface rsp_importAccountsOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_importAccounts)
         com.google.protobuf.MessageOrBuilder {
@@ -5247,6 +5335,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getInvalidKeyBytes(int index);
     }
+
     public interface t_KeyOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.t_Key)
         com.google.protobuf.MessageOrBuilder {
@@ -5267,6 +5356,7 @@ public final class Message {
         com.google.protobuf.ByteString
         getPasswordBytes();
     }
+
     public interface req_exportAccountsOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_exportAccounts)
         com.google.protobuf.MessageOrBuilder {
@@ -5299,6 +5389,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_KeyOrBuilder getKeyFileOrBuilder(
             int index);
     }
+
     public interface rsp_exportAccountsOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_exportAccounts)
         com.google.protobuf.MessageOrBuilder {
@@ -5333,6 +5424,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getFailedKey(int index);
     }
+
     public interface rsp_getCurrentTotalDifficultyOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getCurrentTotalDifficulty)
         com.google.protobuf.MessageOrBuilder {
@@ -5342,6 +5434,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getTotalDiff();
     }
+
     public interface req_getBlockDetailsByNumberOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockDetailsByNumber)
         com.google.protobuf.MessageOrBuilder {
@@ -5361,6 +5454,7 @@ public final class Message {
          */
         long getBlkNumbers(int index);
     }
+
     public interface rsp_getBlockDetailsByNumberOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlockDetailsByNumber)
         com.google.protobuf.MessageOrBuilder {
@@ -5393,6 +5487,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_BlockDetailOrBuilder getBlkDetailsOrBuilder(
             int index);
     }
+
     public interface req_getBlockDetailsByLatestOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockDetailsByLatest)
         com.google.protobuf.MessageOrBuilder {
@@ -5402,6 +5497,7 @@ public final class Message {
          */
         long getCount();
     }
+
     public interface rsp_getBlockDetailsByLatestOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlockDetailsByLatest)
         com.google.protobuf.MessageOrBuilder {
@@ -5434,6 +5530,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_BlockDetailOrBuilder getBlkDetailsOrBuilder(
             int index);
     }
+
     public interface req_getBlocksByLatestOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlocksByLatest)
         com.google.protobuf.MessageOrBuilder {
@@ -5443,6 +5540,7 @@ public final class Message {
          */
         long getCount();
     }
+
     public interface rsp_getBlocksByLatestOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlocksByLatest)
         com.google.protobuf.MessageOrBuilder {
@@ -5475,6 +5573,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_BlockOrBuilder getBlksOrBuilder(
             int index);
     }
+
     public interface req_getAccountDetailsByAddressListOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getAccountDetailsByAddressList)
         com.google.protobuf.MessageOrBuilder {
@@ -5494,6 +5593,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getAddresses(int index);
     }
+
     public interface rsp_getAccountDetailsByAddressListOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getAccountDetailsByAddressList)
         com.google.protobuf.MessageOrBuilder {
@@ -5526,6 +5626,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_AccountDetailOrBuilder getAccountsOrBuilder(
             int index);
     }
+
     public interface req_getBlockSqlByRangeOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockSqlByRange)
         com.google.protobuf.MessageOrBuilder {
@@ -5540,6 +5641,7 @@ public final class Message {
          */
         long getBlkNumberEnd();
     }
+
     public interface rsp_getBlockSqlByRangeOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlockSqlByRange)
         com.google.protobuf.MessageOrBuilder {
@@ -5572,6 +5674,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_BlockSqlOrBuilder getBlkSqlOrBuilder(
             int index);
     }
+
     public interface req_getBlockDetailsByRangeOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getBlockDetailsByRange)
         com.google.protobuf.MessageOrBuilder {
@@ -5586,6 +5689,7 @@ public final class Message {
          */
         long getBlkNumberEnd();
     }
+
     public interface rsp_getBlockDetailsByRangeOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getBlockDetailsByRange)
         com.google.protobuf.MessageOrBuilder {
@@ -5618,6 +5722,7 @@ public final class Message {
         org.aion.api.server.pb.Message.t_BlockDetailOrBuilder getBlkDetailsOrBuilder(
             int index);
     }
+
     public interface req_getNonceOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.req_getNonce)
         com.google.protobuf.MessageOrBuilder {
@@ -5627,6 +5732,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getAddress();
     }
+
     public interface rsp_getNonceOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getNonce)
         com.google.protobuf.MessageOrBuilder {
@@ -5636,6 +5742,7 @@ public final class Message {
          */
         com.google.protobuf.ByteString getNonce();
     }
+
     public interface rsp_getNrgPriceOrBuilder extends
         // @@protoc_insertion_point(interface_extends:org.aion.api.server.pb.rsp_getNrgPrice)
         com.google.protobuf.MessageOrBuilder {
@@ -6984,6 +7091,7 @@ public final class Message {
             nrgConsumed_ = 0L;
             nrgPrice_ = 0L;
         }
+
         private t_AionTx(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7890,6 +7998,7 @@ public final class Message {
         private int remoteP2PPort_;
         private int latency_;
         private byte memoizedIsInitialized = -1;
+
         // Use t_Node.newBuilder() to construct.
         private t_Node(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -8760,6 +8869,7 @@ public final class Message {
         private com.google.protobuf.ByteString data_;
         private com.google.protobuf.LazyStringList topics_;
         private byte memoizedIsInitialized = -1;
+
         // Use t_LgEle.newBuilder() to construct.
         private t_LgEle(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -9521,6 +9631,7 @@ public final class Message {
             topics_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             expireTime_ = 0L;
         }
+
         private t_FilterCt(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10667,6 +10778,7 @@ public final class Message {
         private int txIndex_;
         private com.google.protobuf.ByteString txHash_;
         private byte memoizedIsInitialized = -1;
+
         // Use t_EventCt.newBuilder() to construct.
         private t_EventCt(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -11747,6 +11859,7 @@ public final class Message {
         private t_BlockDetail(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private t_BlockDetail() {
             blockNumber_ = 0L;
             timestamp_ = 0L;
@@ -13657,6 +13770,7 @@ public final class Message {
         private t_TxDetail(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private t_TxDetail() {
             txHash_ = com.google.protobuf.ByteString.EMPTY;
             from_ = com.google.protobuf.ByteString.EMPTY;
@@ -15254,6 +15368,7 @@ public final class Message {
             address_ = com.google.protobuf.ByteString.EMPTY;
             balance_ = com.google.protobuf.ByteString.EMPTY;
         }
+
         private t_AccountDetail(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15832,6 +15947,7 @@ public final class Message {
         private int size_;
         private java.util.List<com.google.protobuf.ByteString> txHash_;
         private byte memoizedIsInitialized = -1;
+
         // Use t_Block.newBuilder() to construct.
         private t_Block(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -17450,6 +17566,7 @@ public final class Message {
         private volatile java.lang.Object block_;
         private com.google.protobuf.LazyStringList tx_;
         private byte memoizedIsInitialized = -1;
+
         // Use t_BlockSql.newBuilder() to construct.
         private t_BlockSql(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -18518,6 +18635,7 @@ public final class Message {
         private rsp_errormsg(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_errormsg() {
             errormsg_ = "";
         }
@@ -19091,6 +19209,7 @@ public final class Message {
         private rsp_protocolVersion(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_protocolVersion() {
             kernel_ = "";
             net_ = "";
@@ -20434,6 +20553,7 @@ public final class Message {
         private rsp_minerAddress(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_minerAddress() {
             minerAddr_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -20927,6 +21047,7 @@ public final class Message {
         private req_getBlockByNumber(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getBlockByNumber() {
             blockNumber_ = 0L;
         }
@@ -21449,6 +21570,7 @@ public final class Message {
         private int size_;
         private java.util.List<com.google.protobuf.ByteString> txHash_;
         private byte memoizedIsInitialized = -1;
+
         // Use rsp_getBlock.newBuilder() to construct.
         private rsp_getBlock(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -23065,6 +23187,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getBlockHeaderByNumber() {
             blockNumber_ = 0L;
         }
@@ -23591,6 +23714,7 @@ public final class Message {
         private rsp_getBlockHeader(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getBlockHeader() {
             blockNumber_ = 0L;
             timestamp_ = 0L;
@@ -25001,6 +25125,7 @@ public final class Message {
         private req_sendTransaction(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_sendTransaction() {
             from_ = com.google.protobuf.ByteString.EMPTY;
             to_ = com.google.protobuf.ByteString.EMPTY;
@@ -25857,6 +25982,7 @@ public final class Message {
         private rsp_sendTransaction(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_sendTransaction() {
             txHash_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -26352,6 +26478,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getTransactionByHash() {
             txHash_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -26865,6 +26992,7 @@ public final class Message {
         private com.google.protobuf.ByteString to_;
         private com.google.protobuf.ByteString value_;
         private byte memoizedIsInitialized = -1;
+
         // Use rsp_getTransaction.newBuilder() to construct.
         private rsp_getTransaction(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -28023,6 +28151,7 @@ public final class Message {
         private volatile java.lang.Object password_;
         private int duration_;
         private byte memoizedIsInitialized = -1;
+
         // Use req_unlockAccount.newBuilder() to construct.
         private req_unlockAccount(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -28710,6 +28839,7 @@ public final class Message {
         private rsp_accounts(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_accounts() {
             accout_ = java.util.Collections.emptyList();
         }
@@ -29292,6 +29422,7 @@ public final class Message {
         private req_compile(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_compile() {
             code_ = "";
         }
@@ -30604,6 +30735,7 @@ public final class Message {
             address_ = com.google.protobuf.ByteString.EMPTY;
             blocknumber_ = 0L;
         }
+
         private req_getCode(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -31150,6 +31282,7 @@ public final class Message {
         private rsp_getCode(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getCode() {
             code_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -31658,6 +31791,7 @@ public final class Message {
             data_ = com.google.protobuf.ByteString.EMPTY;
             value_ = com.google.protobuf.ByteString.EMPTY;
         }
+
         private req_contractDeploy(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -32391,6 +32525,7 @@ public final class Message {
             txHash_ = com.google.protobuf.ByteString.EMPTY;
             contractAddress_ = com.google.protobuf.ByteString.EMPTY;
         }
+
         private rsp_contractDeploy(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -32946,6 +33081,7 @@ public final class Message {
         private long nrg_;
         private long nrgPrice_;
         private byte memoizedIsInitialized = -1;
+
         // Use req_call.newBuilder() to construct.
         private req_call(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -33743,6 +33879,7 @@ public final class Message {
         private rsp_call(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_call() {
             result_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -34234,6 +34371,7 @@ public final class Message {
         private req_getBlockByHash(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getBlockByHash() {
             blockHash_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -34729,6 +34867,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getBlockHeaderByHash() {
             blockHash_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -35232,6 +35371,7 @@ public final class Message {
             address_ = com.google.protobuf.ByteString.EMPTY;
             blocknumber_ = 0L;
         }
+
         private req_getTransactionCount(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -35781,6 +35921,7 @@ public final class Message {
         private rsp_getTransactionCount(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getTransactionCount() {
             txCount_ = 0L;
         }
@@ -36275,6 +36416,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getTransactionCountByHash() {
             txHash_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -36773,6 +36915,7 @@ public final class Message {
         private rsp_blockNumber(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_blockNumber() {
             blocknumber_ = 0L;
         }
@@ -37270,6 +37413,7 @@ public final class Message {
             address_ = com.google.protobuf.ByteString.EMPTY;
             blockNumber_ = 0L;
         }
+
         private req_getBalance(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -37816,6 +37960,7 @@ public final class Message {
         private rsp_getBalance(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getBalance() {
             balance_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -38307,6 +38452,7 @@ public final class Message {
         private volatile java.lang.Object key_;
         private long blocknumber_;
         private byte memoizedIsInitialized = -1;
+
         // Use req_getStorageAt.newBuilder() to construct.
         private req_getStorageAt(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -38994,6 +39140,7 @@ public final class Message {
         private rsp_getStorageAt(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getStorageAt() {
             storage_ = "";
         }
@@ -39557,6 +39704,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getBlockTransactionCountByHash() {
             blockHash_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -40056,6 +40204,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getBlockTransactionCount() {
             txCount_ = 0;
         }
@@ -40552,6 +40701,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getBlockTransactionCountByNumber() {
             blockNumber_ = 0L;
         }
@@ -41056,6 +41206,7 @@ public final class Message {
             blockHash_ = com.google.protobuf.ByteString.EMPTY;
             txIndex_ = 0;
         }
+
         private req_getTransactionByBlockHashAndIndex(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -41615,6 +41766,7 @@ public final class Message {
             blockNumber_ = 0L;
             txIndex_ = 0;
         }
+
         private req_getTransactionByBlockNumberAndIndex(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -42165,6 +42317,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getTransactionReceipt() {
             txHash_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -42683,6 +42836,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getTransactionReceipt() {
             txIndex_ = 0;
             blockNumber_ = 0L;
@@ -44036,6 +44190,7 @@ public final class Message {
             blockHash_ = com.google.protobuf.ByteString.EMPTY;
             index_ = 0;
         }
+
         private req_getUncleByBlockHashAndIndex(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -44587,6 +44742,7 @@ public final class Message {
         private rsp_getCompilers(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getCompilers() {
             compiler_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
@@ -45201,6 +45357,7 @@ public final class Message {
         private req_compileSolidity(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_compileSolidity() {
             source_ = "";
         }
@@ -46524,6 +46681,7 @@ public final class Message {
         private rsp_getWork(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getWork() {
             work_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
@@ -47136,6 +47294,7 @@ public final class Message {
         private com.google.protobuf.ByteString solution_;
         private com.google.protobuf.ByteString digest_;
         private byte memoizedIsInitialized = -1;
+
         // Use req_submitWork.newBuilder() to construct.
         private req_submitWork(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -47755,6 +47914,7 @@ public final class Message {
         private rsp_submitWork(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_submitWork() {
             workAccepted_ = false;
         }
@@ -48246,6 +48406,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_fetchQueuedTransactions() {
             tx_ = java.util.Collections.emptyList();
         }
@@ -49049,6 +49210,7 @@ public final class Message {
         private req_rawTransaction(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_rawTransaction() {
             encodedTx_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -49548,6 +49710,7 @@ public final class Message {
         private long nrg_;
         private long nrgPrice_;
         private byte memoizedIsInitialized = -1;
+
         // Use req_estimateNrg.newBuilder() to construct.
         private req_estimateNrg(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -50346,6 +50509,7 @@ public final class Message {
         private rsp_estimateNrg(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_estimateNrg() {
             nrg_ = 0L;
         }
@@ -50836,6 +51000,7 @@ public final class Message {
         private rsp_mining(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_mining() {
             mining_ = false;
         }
@@ -51324,6 +51489,7 @@ public final class Message {
         private long currentBlock_;
         private long highestBlock_;
         private byte memoizedIsInitialized = -1;
+
         // Use rsp_syncing.newBuilder() to construct.
         private rsp_syncing(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -51937,6 +52103,7 @@ public final class Message {
         private rsp_hashrate(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_hashrate() {
             hashrate_ = 0L;
         }
@@ -52427,6 +52594,7 @@ public final class Message {
         private rsp_getActiveNodes(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getActiveNodes() {
             node_ = java.util.Collections.emptyList();
         }
@@ -53226,6 +53394,7 @@ public final class Message {
         private rsp_getStaticNodes(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getStaticNodes() {
             node_ = java.util.Collections.emptyList();
         }
@@ -54025,6 +54194,7 @@ public final class Message {
         private rsp_getSolcVersion(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getSolcVersion() {
             ver_ = "";
         }
@@ -54588,6 +54758,7 @@ public final class Message {
         private rsp_isSyncing(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_isSyncing() {
             syncing_ = false;
         }
@@ -55084,6 +55255,7 @@ public final class Message {
         private rsp_syncInfo(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_syncInfo() {
             syncing_ = false;
             networkBestBlock_ = 0L;
@@ -55749,6 +55921,7 @@ public final class Message {
         private long memoryUsage_;
         private long dBSize_;
         private byte memoizedIsInitialized = -1;
+
         // Use rsp_systemInfo.newBuilder() to construct.
         private rsp_systemInfo(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
@@ -57179,6 +57352,7 @@ public final class Message {
         private rsp_eventRegister(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_eventRegister() {
             result_ = false;
         }
@@ -58353,6 +58527,7 @@ public final class Message {
         private rsp_eventDeregister(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_eventDeregister() {
             result_ = false;
         }
@@ -58845,6 +59020,7 @@ public final class Message {
         private rsp_EventCtCallback(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_EventCtCallback() {
             ec_ = java.util.Collections.emptyList();
         }
@@ -61068,6 +61244,7 @@ public final class Message {
             account_ = com.google.protobuf.ByteString.EMPTY;
             password_ = "";
         }
+
         private req_accountlock(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -61685,6 +61862,7 @@ public final class Message {
         private rsp_accountlock(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_accountlock() {
             locked_ = false;
         }
@@ -62871,6 +63049,7 @@ public final class Message {
         private rsp_userPrivilege(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_userPrivilege() {
             privilege_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
@@ -63486,6 +63665,7 @@ public final class Message {
         private req_queryCtEvents(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_queryCtEvents() {
         }
 
@@ -64113,6 +64293,7 @@ public final class Message {
         private rsp_queryCtEvents(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_queryCtEvents() {
             ec_ = java.util.Collections.emptyList();
         }
@@ -65606,6 +65787,7 @@ public final class Message {
         private req_importAccounts(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_importAccounts() {
             privateKey_ = java.util.Collections.emptyList();
         }
@@ -66407,6 +66589,7 @@ public final class Message {
         private rsp_importAccounts(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_importAccounts() {
             invalidKey_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
@@ -67030,6 +67213,7 @@ public final class Message {
             address_ = com.google.protobuf.ByteString.EMPTY;
             password_ = "";
         }
+
         private t_Key(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -67645,6 +67829,7 @@ public final class Message {
         private req_exportAccounts(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_exportAccounts() {
             keyFile_ = java.util.Collections.emptyList();
         }
@@ -69183,6 +69368,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getCurrentTotalDifficulty() {
             totalDiff_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -69677,6 +69863,7 @@ public final class Message {
         private java.util.List<java.lang.Long> blkNumbers_;
         private int blkNumbersMemoizedSerializedSize = -1;
         private byte memoizedIsInitialized = -1;
+
         // Use req_getBlockDetailsByNumber.newBuilder() to construct.
         private req_getBlockDetailsByNumber(
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
@@ -70289,6 +70476,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getBlockDetailsByNumber() {
             blkDetails_ = java.util.Collections.emptyList();
         }
@@ -71095,6 +71283,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getBlockDetailsByLatest() {
             count_ = 0L;
         }
@@ -71592,6 +71781,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getBlockDetailsByLatest() {
             blkDetails_ = java.util.Collections.emptyList();
         }
@@ -72397,6 +72587,7 @@ public final class Message {
         private req_getBlocksByLatest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getBlocksByLatest() {
             count_ = 0L;
         }
@@ -72889,6 +73080,7 @@ public final class Message {
         private rsp_getBlocksByLatest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getBlocksByLatest() {
             blks_ = java.util.Collections.emptyList();
         }
@@ -73689,6 +73881,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getAccountDetailsByAddressList() {
             addresses_ = java.util.Collections.emptyList();
         }
@@ -74279,6 +74472,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getAccountDetailsByAddressList() {
             accounts_ = java.util.Collections.emptyList();
         }
@@ -75091,6 +75285,7 @@ public final class Message {
             blkNumberStart_ = 0L;
             blkNumberEnd_ = 0L;
         }
+
         private req_getBlockSqlByRange(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -75637,6 +75832,7 @@ public final class Message {
         private rsp_getBlockSqlByRange(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getBlockSqlByRange() {
             blkSql_ = java.util.Collections.emptyList();
         }
@@ -76446,6 +76642,7 @@ public final class Message {
             blkNumberStart_ = 0L;
             blkNumberEnd_ = 0L;
         }
+
         private req_getBlockDetailsByRange(
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -76997,6 +77194,7 @@ public final class Message {
             com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getBlockDetailsByRange() {
             blkDetails_ = java.util.Collections.emptyList();
         }
@@ -77802,6 +78000,7 @@ public final class Message {
         private req_getNonce(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private req_getNonce() {
             address_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -78294,6 +78493,7 @@ public final class Message {
         private rsp_getNonce(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getNonce() {
             nonce_ = com.google.protobuf.ByteString.EMPTY;
         }
@@ -78786,6 +78986,7 @@ public final class Message {
         private rsp_getNrgPrice(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
             super(builder);
         }
+
         private rsp_getNrgPrice() {
             nrgPrice_ = 0L;
         }
