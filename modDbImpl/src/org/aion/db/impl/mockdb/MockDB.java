@@ -1,9 +1,12 @@
 package org.aion.db.impl.mockdb;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
-
-import java.util.*;
 
 public class MockDB extends AbstractDB {
 
@@ -130,7 +133,8 @@ public class MockDB extends AbstractDB {
                 }
             });
         } catch (Exception e) {
-            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".",
+                e);
         }
     }
 

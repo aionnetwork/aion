@@ -45,10 +45,11 @@ import org.slf4j.Logger;
  */
 public class TimedDatabase implements IByteArrayKeyValueDatabase {
 
-    /** Unlocked database. */
-    protected final IByteArrayKeyValueDatabase database;
-
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+    /**
+     * Unlocked database.
+     */
+    protected final IByteArrayKeyValueDatabase database;
 
     public TimedDatabase(IByteArrayKeyValueDatabase _database) {
         this.database = _database;
@@ -195,12 +196,12 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         long t2 = System.nanoTime();
 
         LOG.debug(
-                database.toString()
-                        + " get(key) in "
-                        + (t2 - t1)
-                        + " ns."
-                        + "\n\t\t\t\t\tkey = "
-                        + (key != null ? Hex.toHexString(key) : "null"));
+            database.toString()
+                + " get(key) in "
+                + (t2 - t1)
+                + " ns."
+                + "\n\t\t\t\t\tkey = "
+                + (key != null ? Hex.toHexString(key) : "null"));
         return value;
     }
 
@@ -211,14 +212,14 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         long t2 = System.nanoTime();
 
         LOG.debug(
-                database.toString()
-                        + " put(key,value) in "
-                        + (t2 - t1)
-                        + " ns."
-                        + "\n\t\t\t\t\tkey = "
-                        + (key != null ? Hex.toHexString(key) : "null")
-                        + "\n\t\t\t\t\tvalue = "
-                        + (value != null ? Hex.toHexString(value) : "null"));
+            database.toString()
+                + " put(key,value) in "
+                + (t2 - t1)
+                + " ns."
+                + "\n\t\t\t\t\tkey = "
+                + (key != null ? Hex.toHexString(key) : "null")
+                + "\n\t\t\t\t\tvalue = "
+                + (value != null ? Hex.toHexString(value) : "null"));
     }
 
     @Override
@@ -228,12 +229,12 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         long t2 = System.nanoTime();
 
         LOG.debug(
-                database.toString()
-                        + " delete(key) in "
-                        + (t2 - t1)
-                        + " ns."
-                        + "\n\t\t\t\t\tkey = "
-                        + (key != null ? Hex.toHexString(key) : "null"));
+            database.toString()
+                + " delete(key) in "
+                + (t2 - t1)
+                + " ns."
+                + "\n\t\t\t\t\tkey = "
+                + (key != null ? Hex.toHexString(key) : "null"));
     }
 
     @Override
@@ -243,12 +244,12 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         long t2 = System.nanoTime();
 
         LOG.debug(
-                database.toString()
-                        + " putBatch("
-                        + (keyValuePairs != null ? keyValuePairs.size() : "null")
-                        + ") in "
-                        + (t2 - t1)
-                        + " ns.");
+            database.toString()
+                + " putBatch("
+                + (keyValuePairs != null ? keyValuePairs.size() : "null")
+                + ") in "
+                + (t2 - t1)
+                + " ns.");
     }
 
     @Override
@@ -258,14 +259,14 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         long t2 = System.nanoTime();
 
         LOG.debug(
-                database.toString()
-                        + " putToBatch(key,value) in "
-                        + (t2 - t1)
-                        + " ns."
-                        + "\n\t\t\t\t\tkey = "
-                        + Hex.toHexString(key)
-                        + "\n\t\t\t\t\tvalue = "
-                        + (value != null ? Hex.toHexString(value) : "null"));
+            database.toString()
+                + " putToBatch(key,value) in "
+                + (t2 - t1)
+                + " ns."
+                + "\n\t\t\t\t\tkey = "
+                + Hex.toHexString(key)
+                + "\n\t\t\t\t\tvalue = "
+                + (value != null ? Hex.toHexString(value) : "null"));
     }
 
     @Override
@@ -284,12 +285,12 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
         long t2 = System.nanoTime();
 
         LOG.debug(
-                database.toString()
-                        + " deleteBatch("
-                        + (keys != null ? keys.size() : "null")
-                        + ") in "
-                        + (t2 - t1)
-                        + " ns.");
+            database.toString()
+                + " deleteBatch("
+                + (keys != null ? keys.size() : "null")
+                + ") in "
+                + (t2 - t1)
+                + " ns.");
     }
 
     @Override

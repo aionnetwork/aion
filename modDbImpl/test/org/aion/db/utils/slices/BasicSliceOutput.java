@@ -43,89 +43,76 @@ import java.nio.channels.ScatteringByteChannel;
 import java.nio.charset.Charset;
 
 public class BasicSliceOutput
-        extends SliceOutput
-{
+    extends SliceOutput {
+
     private final Slice slice;
     private int size;
 
-    protected BasicSliceOutput(Slice slice)
-    {
+    protected BasicSliceOutput(Slice slice) {
         this.slice = slice;
     }
 
     @Override
-    public void reset()
-    {
+    public void reset() {
         size = 0;
     }
 
     @Override
-    public int size()
-    {
+    public int size() {
         return size;
     }
 
     @Override
-    public boolean isWritable()
-    {
+    public boolean isWritable() {
         return writableBytes() > 0;
     }
 
     @Override
-    public int writableBytes()
-    {
+    public int writableBytes() {
         return slice.length() - size;
     }
 
     @Override
-    public void writeByte(int value)
-    {
+    public void writeByte(int value) {
         slice.setByte(size++, value);
     }
 
     @Override
-    public void writeShort(int value)
-    {
+    public void writeShort(int value) {
         slice.setShort(size, value);
         size += 2;
     }
 
     @Override
-    public void writeInt(int value)
-    {
+    public void writeInt(int value) {
         slice.setInt(size, value);
         size += 4;
     }
 
     @Override
-    public void writeLong(long value)
-    {
+    public void writeLong(long value) {
         slice.setLong(size, value);
         size += 8;
     }
 
     @Override
-    public void writeBytes(byte[] source, int sourceIndex, int length)
-    {
+    public void writeBytes(byte[] source, int sourceIndex, int length) {
         slice.setBytes(size, source, sourceIndex, length);
         size += length;
     }
 
     @Override
-    public void writeBytes(byte[] source)
-    {
+    public void writeBytes(byte[] source) {
         writeBytes(source, 0, source.length);
     }
 
     @Override
-    public void writeBytes(Slice source)
-    {
+    public void writeBytes(Slice source) {
         writeBytes(source, 0, source.length());
     }
 
     @Override
-    public void writeBytes(SliceInput source, int length)
-    {
+    public void writeBytes(SliceInput source, int length) {
         if (length > source.available()) {
             throw new IndexOutOfBoundsException();
         }
@@ -133,15 +120,13 @@ public class BasicSliceOutput
     }
 
     @Override
-    public void writeBytes(Slice source, int sourceIndex, int length)
-    {
+    public void writeBytes(Slice source, int sourceIndex, int length) {
         slice.setBytes(size, source, sourceIndex, length);
         size += length;
     }
 
     @Override
-    public void writeBytes(ByteBuffer source)
-    {
+    public void writeBytes(ByteBuffer source) {
         int length = source.remaining();
         slice.setBytes(size, source);
         size += length;
@@ -149,8 +134,7 @@ public class BasicSliceOutput
 
     @Override
     public int writeBytes(InputStream in, int length)
-            throws IOException
-    {
+        throws IOException {
         int writtenBytes = slice.setBytes(size, in, length);
         if (writtenBytes > 0) {
             size += writtenBytes;
@@ -160,8 +144,7 @@ public class BasicSliceOutput
 
     @Override
     public int writeBytes(ScatteringByteChannel in, int length)
-            throws IOException
-    {
+        throws IOException {
         int writtenBytes = slice.setBytes(size, in, length);
         if (writtenBytes > 0) {
             size += writtenBytes;
@@ -171,8 +154,7 @@ public class BasicSliceOutput
 
     @Override
     public int writeBytes(FileChannel in, int position, int length)
-            throws IOException
-    {
+        throws IOException {
         int writtenBytes = slice.setBytes(size, in, position, length);
         if (writtenBytes > 0) {
             size += writtenBytes;
@@ -181,14 +163,13 @@ public class BasicSliceOutput
     }
 
     @Override
-    public void writeZero(int length)
-    {
+    public void writeZero(int length) {
         if (length == 0) {
             return;
         }
         if (length < 0) {
             throw new IllegalArgumentException(
-                    "length must be 0 or greater than 0.");
+                "length must be 0 or greater than 0.");
         }
         int nLong = length >>> 3;
         int nBytes = length & 7;
@@ -197,13 +178,11 @@ public class BasicSliceOutput
         }
         if (nBytes == 4) {
             writeInt(0);
-        }
-        else if (nBytes < 4) {
+        } else if (nBytes < 4) {
             for (int i = nBytes; i > 0; i--) {
                 writeByte((byte) 0);
             }
-        }
-        else {
+        } else {
             writeInt(0);
             for (int i = nBytes - 4; i > 0; i--) {
                 writeByte((byte) 0);
@@ -212,28 +191,24 @@ public class BasicSliceOutput
     }
 
     @Override
-    public Slice slice()
-    {
+    public Slice slice() {
         return slice.slice(0, size);
     }
 
     @Override
-    public ByteBuffer toByteBuffer()
-    {
+    public ByteBuffer toByteBuffer() {
         return slice.toByteBuffer(0, size);
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return getClass().getSimpleName() + '(' +
-                "size=" + size + ", " +
-                "capacity=" + slice.length() +
-                ')';
+            "size=" + size + ", " +
+            "capacity=" + slice.length() +
+            ')';
     }
 
-    public String toString(Charset charset)
-    {
+    public String toString(Charset charset) {
         return slice.toString(0, size, charset);
     }
 }

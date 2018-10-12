@@ -34,17 +34,16 @@
  ******************************************************************************/
 package org.aion.db.impl.h2;
 
+import static org.aion.db.impl.DatabaseFactory.Props;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+import java.io.File;
+import java.util.Properties;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.junit.Test;
-
-import java.io.File;
-import java.util.Properties;
-
-import static org.aion.db.impl.DatabaseFactory.Props;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public class H2MVMapDriverTest {
 

@@ -49,6 +49,15 @@ public class PersistentMockDB extends MockDB {
         this.path = new File(path, name).getAbsolutePath();
     }
 
+    private static final byte[] convertToByteArray(String byteArrayString) {
+        String[] numbers = byteArrayString.substring(1, byteArrayString.length() - 1).split(", ");
+        byte[] rawData = new byte[numbers.length];
+        for (int i = 0; i < rawData.length; i++) {
+            rawData[i] = Byte.parseByte(numbers[i]);
+        }
+        return rawData;
+    }
+
     @Override
     public boolean open() {
         if (isOpen()) {
@@ -97,25 +106,18 @@ public class PersistentMockDB extends MockDB {
         }
     }
 
-    private static final byte[] convertToByteArray(String byteArrayString) {
-        String[] numbers = byteArrayString.substring(1, byteArrayString.length() - 1).split(", ");
-        byte[] rawData = new byte[numbers.length];
-        for (int i = 0; i < rawData.length; i++) {
-            rawData[i] = Byte.parseByte(numbers[i]);
-        }
-        return rawData;
-    }
-
     /**
      * @implNote Persistence is loosely defined here. In this case the data is read from disk at
-     *     open and saved to disk at close.
+     * open and saved to disk at close.
      */
     @Override
     public boolean isPersistent() {
         return true;
     }
 
-    /** @implNote Returns false because data is saved to disk only at close. */
+    /**
+     * @implNote Returns false because data is saved to disk only at close.
+     */
     @Override
     public boolean isCreatedOnDisk() {
         return new File(path).exists();
@@ -138,10 +140,10 @@ public class PersistentMockDB extends MockDB {
             try (FileWriter writer = new FileWriter(dbFile, false)) {
                 for (Map.Entry<ByteArrayWrapper, byte[]> entry : kv.entrySet()) {
                     writer.write(
-                            Arrays.toString(entry.getKey().getData())
-                                    + ":"
-                                    + Arrays.toString(entry.getValue())
-                                    + "\n");
+                        Arrays.toString(entry.getKey().getData())
+                            + ":"
+                            + Arrays.toString(entry.getValue())
+                            + "\n");
                 }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();

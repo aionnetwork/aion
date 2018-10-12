@@ -28,13 +28,13 @@
  ******************************************************************************/
 package org.aion.db.generic;
 
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-
 import java.util.Collection;
 import java.util.Map;
+import org.aion.base.db.IByteArrayKeyValueDatabase;
 
 /**
- * Implements locking functionality for a database that is mostly thread-safe except for open and close (like LevelDB).
+ * Implements locking functionality for a database that is mostly thread-safe except for open and
+ * close (like LevelDB).
  *
  * @author Alexandra Roatis
  */

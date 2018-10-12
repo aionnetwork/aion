@@ -34,38 +34,49 @@
  ******************************************************************************/
 package org.aion.db.impl;
 
-import org.aion.db.impl.rocksdb.RocksDBWrapper;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.aion.db.impl.rocksdb.RocksDBWrapper;
 
 // @ThreadSafe
 public enum DBVendor {
 
-    /** Used in correlation with implementations of {@link IDriver}. */
+    /**
+     * Used in correlation with implementations of {@link IDriver}.
+     */
     UNKNOWN("unknown", false), //
-    /** Using an instance of {@link org.aion.db.impl.leveldb.LevelDB}. */
+    /**
+     * Using an instance of {@link org.aion.db.impl.leveldb.LevelDB}.
+     */
     LEVELDB("leveldb", true), //
-    /** Using an instance of {@link RocksDBWrapper}. */
+    /**
+     * Using an instance of {@link RocksDBWrapper}.
+     */
     ROCKSDB("rocksdb", true),
-    /** Using an instance of {@link org.aion.db.impl.h2.H2MVMap}. */
+    /**
+     * Using an instance of {@link org.aion.db.impl.h2.H2MVMap}.
+     */
     H2("h2", true), //
-    /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
+    /**
+     * Using an instance of {@link org.aion.db.impl.mockdb.MockDB}.
+     */
     MOCKDB("mockdb", false),
-    /** Using an instance of {@link org.aion.db.impl.mockdb.PersistentMockDB}. */
+    /**
+     * Using an instance of {@link org.aion.db.impl.mockdb.PersistentMockDB}.
+     */
     PERSISTENTMOCKDB("persistentmockdb", false);
 
     private static final Map<String, DBVendor> stringToTypeMap = new ConcurrentHashMap<>();
+    /* map implemented using concurrent hash map */
+    private static final List<DBVendor> driverImplementations = List
+        .of(LEVELDB, ROCKSDB, H2, MOCKDB);
 
     static {
         for (DBVendor type : DBVendor.values()) {
             stringToTypeMap.put(type.value, type);
         }
     }
-
-    /* map implemented using concurrent hash map */
-    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, ROCKSDB, H2, MOCKDB);
 
     private final String value;
     private final boolean persistence;
@@ -77,12 +88,23 @@ public enum DBVendor {
 
     // public interface
     public static DBVendor fromString(String s) {
-        if (s == null) { return DBVendor.UNKNOWN; }
+        if (s == null) {
+            return DBVendor.UNKNOWN;
+        }
 
         DBVendor type = stringToTypeMap.get(s);
-        if (type == null) { return DBVendor.UNKNOWN; }
+        if (type == null) {
+            return DBVendor.UNKNOWN;
+        }
 
         return type;
+    }
+
+    /**
+     * @return {@code false} for a DBVendor with an undefined driver implementation
+     */
+    public static boolean hasDriverImplementation(DBVendor v) {
+        return driverImplementations.contains(v);
     }
 
     public String toValue() {
@@ -96,12 +118,5 @@ public enum DBVendor {
      */
     public boolean getPersistence() {
         return this.persistence;
-    }
-
-    /**
-     * @return {@code false} for a DBVendor with an undefined driver implementation
-     */
-    public static boolean hasDriverImplementation(DBVendor v) {
-        return driverImplementations.contains(v);
     }
 }

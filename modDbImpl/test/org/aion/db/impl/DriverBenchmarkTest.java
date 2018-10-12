@@ -35,11 +35,25 @@
  ******************************************************************************/
 package org.aion.db.impl;
 
+import static com.google.common.base.Charsets.UTF_8;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
@@ -51,47 +65,45 @@ import org.aion.db.utils.repeat.RepeatRule;
 import org.aion.db.utils.slices.Slice;
 import org.aion.db.utils.slices.SliceOutput;
 import org.aion.db.utils.slices.Slices;
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
-import static com.google.common.base.Charsets.UTF_8;
-import static org.junit.Assert.*;
-
 @Ignore
 @RunWith(Parameterized.class)
 public class DriverBenchmarkTest {
 
-    @Rule
-    public TestName name = new TestName();
-
-    @Rule
-    public RepeatRule repeatRule = new RepeatRule();
-
+    // Arrange to generate values that shrink to this fraction
+    // of their original size after compression
+    private static final double compressionRatio = 0.5d;
+    private static final int keyCount = (int) 1e6;
+    private static final int valueSizeBytes = 100;
+    private static final int keySizeBytes = 16;
     public static File testDir = new File(System.getProperty("user.dir"), "tmp");
-
-    @Parameters(name = "{0}")
-    public static Iterable<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                { "H2MVMap", new H2MVMap("H2MVMapTest", testDir.getAbsolutePath(), false, false) },
-                { "LevelDB", new LevelDB("LevelDBTest", testDir.getAbsolutePath(), false, false) },
-                { "RocksDb", new RocksDBWrapper("RocksDb", testDir.getAbsolutePath(), false,false , RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE, RocksDBConstants.CACHE_SIZE )}
-        });
-    }
-
-    public IByteArrayKeyValueDatabase db;
-    public String testName;
-
     private final RandomGenerator generator;
     private final Random random;
+    @Rule
+    public TestName name = new TestName();
+    @Rule
+    public RepeatRule repeatRule = new RepeatRule();
+    public IByteArrayKeyValueDatabase db;
+    public String testName;
+    private long startTime;
+    private long byteCount;
+
+    // ---------------------------------------------------------------
+    // ========================= Unit Tests ==========================
+    // ---------------------------------------------------------------
+    private int opCount;
+    private int nextReport;
 
     // Every test invocation instantiates a new IByteArrayKeyValueDB
     public DriverBenchmarkTest(String testName, IByteArrayKeyValueDatabase db) {
@@ -103,10 +115,24 @@ public class DriverBenchmarkTest {
 
     }
 
+    @Parameters(name = "{0}")
+    public static Iterable<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+            {"H2MVMap", new H2MVMap("H2MVMapTest", testDir.getAbsolutePath(), false, false)},
+            {"LevelDB", new LevelDB("LevelDBTest", testDir.getAbsolutePath(), false, false)},
+            {"RocksDb", new RocksDBWrapper("RocksDb", testDir.getAbsolutePath(), false, false,
+                RocksDBConstants.MAX_OPEN_FILES, RocksDBConstants.BLOCK_SIZE,
+                RocksDBConstants.WRITE_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE,
+                RocksDBConstants.CACHE_SIZE)}
+        });
+    }
+
     @BeforeClass
     public static void setup() {
         // clean out the tmp directory
-        if (testDir.exists()) { assertTrue(FileUtils.deleteRecursively(testDir)); }
+        if (testDir.exists()) {
+            assertTrue(FileUtils.deleteRecursively(testDir));
+        }
         assertTrue(testDir.mkdirs());
 
         printHeader();
@@ -115,6 +141,82 @@ public class DriverBenchmarkTest {
     @AfterClass
     public static void teardown() {
         assertTrue(testDir.delete());
+    }
+
+    public static byte[] formatNumber(long k) {
+        Preconditions.checkArgument(k >= 0, "number must be positive");
+
+        byte[] slice = new byte[16];
+
+        int i = 15;
+        while (k > 0) {
+            slice[i--] = (byte) ((long) '0' + (k % 10));
+            k /= 10;
+        }
+        while (i >= 0) {
+            slice[i--] = '0';
+        }
+        return slice;
+    }
+
+    private static void printHeader() {
+        printEnvironment();
+
+        System.out.printf("Keys:       %d bytes each\n", keySizeBytes);
+        System.out
+            .printf("Values:     %d bytes each (%d bytes after compression)\n", valueSizeBytes,
+                (int) (valueSizeBytes * compressionRatio + 0.5));
+        System.out.printf("Entries:    %d\n", keyCount);
+        System.out.printf("Compression Ration:    %.1f\n", compressionRatio);
+        System.out.printf("RawSize:    %.1f MB (estimated)\n",
+            ((float) (keySizeBytes + valueSizeBytes) * (float) keyCount) / (1024F * 1024F));
+        System.out.printf("CompressedSize:   %.1f MB (estimated)\n",
+            (((keySizeBytes + valueSizeBytes * (float) compressionRatio) * (float) keyCount) / (
+                1024F * 1024F)));
+
+        System.out.printf("------------------------------------------------\n\n");
+
+        System.out
+            .printf(
+                "db, benchmark, keyCount, valueSizeBytes, batchSizeBytes, elapsed_s, opCount, disk_mb, raw_mb\n");
+    }
+
+    private static void printEnvironment() {
+        System.out.printf("Date:       %tc\n", new Date());
+
+        File cpuInfo = new File("/proc/cpuinfo");
+        if (cpuInfo.canRead()) {
+            int numberOfCpus = 0;
+            String cpuType = null;
+            String cacheSize = null;
+            try {
+                for (String line : CharStreams.readLines(Files.newReader(cpuInfo, UTF_8))) {
+                    ImmutableList<String> parts = ImmutableList
+                        .copyOf(
+                            Splitter.on(':').omitEmptyStrings().trimResults().limit(2).split(line));
+                    if (parts.size() != 2) {
+                        continue;
+                    }
+                    String key = parts.get(0);
+                    String value = parts.get(1);
+
+                    if (key.equals("model name")) {
+                        numberOfCpus++;
+                        cpuType = value;
+                    } else if (key.equals("cache size")) {
+                        cacheSize = value;
+                    }
+                }
+            } catch (FileNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            System.out.printf("CPU:        %d * %s\n", numberOfCpus, cpuType);
+            System.out.printf("CPUCache:   %s\n", cacheSize);
+        }
     }
 
     @Before
@@ -144,21 +246,11 @@ public class DriverBenchmarkTest {
         // for non-persistant DB's, close() should wipe the DB
         if (db.isPersistent()) {
             File dbDir = new File(db.getPath().get());
-            if (dbDir.exists()) { assertTrue(FileUtils.deleteRecursively(dbDir)); }
+            if (dbDir.exists()) {
+                assertTrue(FileUtils.deleteRecursively(dbDir));
+            }
         }
     }
-
-    // ---------------------------------------------------------------
-    // ========================= Unit Tests ==========================
-    // ---------------------------------------------------------------
-
-    // Arrange to generate values that shrink to this fraction
-    // of their original size after compression
-    private static final double compressionRatio = 0.5d;
-
-    private static final int keyCount = (int) 1e6;
-    private static final int valueSizeBytes = 100;
-    private static final int keySizeBytes = 16;
 
     @Ignore
     @Repeat(10)
@@ -172,6 +264,9 @@ public class DriverBenchmarkTest {
         write(Order.SEQUENTIAL, keyCount, valueSizeBytes, batchSizeBytes);
         stop(name.getMethodName(), keyCount, valueSizeBytes, batchSizeBytes);
     }
+    // ---------------------------------------------------------------
+    // ========================= Test Cases ==========================
+    // ---------------------------------------------------------------
 
     @Ignore
     @Repeat(10)
@@ -225,12 +320,17 @@ public class DriverBenchmarkTest {
         stop(name.getMethodName(), keyCount, valueSizeBytes, batchSizeBytes);
     }
 
+    // ---------------------------------------------------------------
+    // ====================== Timer Utilities ========================
+    // ---------------------------------------------------------------
+
     @Ignore
     @Repeat(10)
     @Test
     public void overwriteRandom() {
         // fill DB values, unmeasured
-        write(Order.SEQUENTIAL, DriverBenchmarkTest.keyCount, DriverBenchmarkTest.valueSizeBytes, 1);
+        write(Order.SEQUENTIAL, DriverBenchmarkTest.keyCount, DriverBenchmarkTest.valueSizeBytes,
+            1);
 
         db.close();
         assertTrue(db.isClosed());
@@ -253,7 +353,8 @@ public class DriverBenchmarkTest {
 
         // make sure the delta in file-size after overwrite operation
         // is within 10% of original file size
-        float fileSizeDelta = (float) Math.abs(fileSizeFinal - fileSizeInitial) / (float) fileSizeInitial;
+        float fileSizeDelta =
+            (float) Math.abs(fileSizeFinal - fileSizeInitial) / (float) fileSizeInitial;
         // System.out.printf("fileSizeDelta: %.5f", fileSizeDelta);
         assertTrue(fileSizeDelta < 0.1f);
     }
@@ -296,13 +397,6 @@ public class DriverBenchmarkTest {
             finishedSingleOp();
         }
         stop(name.getMethodName(), keyCount, valueSizeBytes, batchSizeBytes);
-    }
-    // ---------------------------------------------------------------
-    // ========================= Test Cases ==========================
-    // ---------------------------------------------------------------
-
-    enum Order {
-        SEQUENTIAL, RANDOM
     }
 
     // same as write, except with assertion that every write has to override an
@@ -372,26 +466,6 @@ public class DriverBenchmarkTest {
         }
     }
 
-    public static byte[] formatNumber(long k) {
-        Preconditions.checkArgument(k >= 0, "number must be positive");
-
-        byte[] slice = new byte[16];
-
-        int i = 15;
-        while (k > 0) {
-            slice[i--] = (byte) ((long) '0' + (k % 10));
-            k /= 10;
-        }
-        while (i >= 0) {
-            slice[i--] = '0';
-        }
-        return slice;
-    }
-
-    // ---------------------------------------------------------------
-    // ====================== Timer Utilities ========================
-    // ---------------------------------------------------------------
-
     private void finishedSingleOp() {
         opCount++;
         if (opCount >= nextReport) {
@@ -413,11 +487,6 @@ public class DriverBenchmarkTest {
             // System.out.printf("... finished %d ops%30s\r", opCount, "");
         }
     }
-
-    private long startTime;
-    private long byteCount;
-    private int opCount;
-    private int nextReport;
 
     private void start() {
         startTime = System.nanoTime();
@@ -446,64 +515,15 @@ public class DriverBenchmarkTest {
         long fileSize = FileUtils.getDirectorySizeBytes(db.getPath().get());
         assertTrue(db.open());
 
-        System.out.printf("%s, %s, %d, %d, %d, %.5f, %d, %.5f, %.5f \n", testName, benchmark, keyCount, valueSizeBytes,
-                batchSizeBytes, elapsedSeconds, opCount, fileSize / (1024F * 1024F), byteCount / (1024F * 1024F));
-    }
-
-    private static void printHeader() {
-        printEnvironment();
-
-        System.out.printf("Keys:       %d bytes each\n", keySizeBytes);
-        System.out.printf("Values:     %d bytes each (%d bytes after compression)\n", valueSizeBytes,
-                (int) (valueSizeBytes * compressionRatio + 0.5));
-        System.out.printf("Entries:    %d\n", keyCount);
-        System.out.printf("Compression Ration:    %.1f\n", compressionRatio);
-        System.out.printf("RawSize:    %.1f MB (estimated)\n",
-                ((float) (keySizeBytes + valueSizeBytes) * (float) keyCount) / (1024F * 1024F));
-        System.out.printf("CompressedSize:   %.1f MB (estimated)\n",
-                (((keySizeBytes + valueSizeBytes * (float) compressionRatio) * (float) keyCount) / (1024F * 1024F)));
-
-        System.out.printf("------------------------------------------------\n\n");
-
         System.out
-                .printf("db, benchmark, keyCount, valueSizeBytes, batchSizeBytes, elapsed_s, opCount, disk_mb, raw_mb\n");
+            .printf("%s, %s, %d, %d, %d, %.5f, %d, %.5f, %.5f \n", testName, benchmark, keyCount,
+                valueSizeBytes,
+                batchSizeBytes, elapsedSeconds, opCount, fileSize / (1024F * 1024F),
+                byteCount / (1024F * 1024F));
     }
 
-    private static void printEnvironment() {
-        System.out.printf("Date:       %tc\n", new Date());
-
-        File cpuInfo = new File("/proc/cpuinfo");
-        if (cpuInfo.canRead()) {
-            int numberOfCpus = 0;
-            String cpuType = null;
-            String cacheSize = null;
-            try {
-                for (String line : CharStreams.readLines(Files.newReader(cpuInfo, UTF_8))) {
-                    ImmutableList<String> parts = ImmutableList
-                            .copyOf(Splitter.on(':').omitEmptyStrings().trimResults().limit(2).split(line));
-                    if (parts.size() != 2) {
-                        continue;
-                    }
-                    String key = parts.get(0);
-                    String value = parts.get(1);
-
-                    if (key.equals("model name")) {
-                        numberOfCpus++;
-                        cpuType = value;
-                    } else if (key.equals("cache size")) {
-                        cacheSize = value;
-                    }
-                }
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            System.out.printf("CPU:        %d * %s\n", numberOfCpus, cpuType);
-            System.out.printf("CPUCache:   %s\n", cacheSize);
-        }
+    enum Order {
+        SEQUENTIAL, RANDOM
     }
 
     // ---------------------------------------------------------------
@@ -511,6 +531,7 @@ public class DriverBenchmarkTest {
     // ---------------------------------------------------------------
 
     private static class RandomGenerator {
+
         private final Slice data;
         private int position;
 
@@ -528,18 +549,6 @@ public class DriverBenchmarkTest {
             }
         }
 
-        private byte[] generate(int length) {
-            if (position + length > data.length()) {
-                position = 0;
-                assert (length < data.length());
-            }
-            Slice slice = data.slice(position, length);
-            position += length;
-            return slice.getBytes();
-        }
-
-        // Utility methods
-
         private static Slice compressibleString(Random rnd, double compressionRatio, int len) {
             int raw = (int) (len * compressionRatio);
             if (raw < 1) {
@@ -551,10 +560,13 @@ public class DriverBenchmarkTest {
             Slice dst = Slices.allocate(len);
             SliceOutput sliceOutput = dst.output();
             while (sliceOutput.size() < len) {
-                sliceOutput.writeBytes(rawData, 0, Math.min(rawData.length(), sliceOutput.writableBytes()));
+                sliceOutput.writeBytes(rawData, 0,
+                    Math.min(rawData.length(), sliceOutput.writableBytes()));
             }
             return dst;
         }
+
+        // Utility methods
 
         private static Slice generateRandomSlice(Random random, int length) {
             Slice rawData = Slices.allocate(length);
@@ -563,6 +575,16 @@ public class DriverBenchmarkTest {
                 sliceOutput.writeByte((byte) ((int) ' ' + random.nextInt(95)));
             }
             return rawData;
+        }
+
+        private byte[] generate(int length) {
+            if (position + length > data.length()) {
+                position = 0;
+                assert (length < data.length());
+            }
+            Slice slice = data.slice(position, length);
+            position += length;
+            return slice.getBytes();
         }
     }
 }
