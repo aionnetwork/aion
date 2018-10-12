@@ -24,11 +24,12 @@
 
 package org.aion.evtmgr.impl.evt;
 
-import org.aion.evtmgr.IEvent;
-import org.junit.Test;
-import java.util.LinkedList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
+
+import java.util.LinkedList;
+import org.aion.evtmgr.IEvent;
+import org.junit.Test;
 
 public class EventDummyTest {
 
@@ -42,7 +43,7 @@ public class EventDummyTest {
     }
 
     @Test
-    public void testDummyFunctions(){
+    public void testDummyFunctions() {
         EventDummy eventDummy = new EventDummy();
 
         eventDummy.setFuncArgs(new LinkedList<>());

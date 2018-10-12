@@ -24,21 +24,22 @@
 
 package org.aion.evtmgr.impl.abs;
 
+import static junit.framework.TestCase.assertEquals;
+
+import java.util.List;
+import java.util.Properties;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.handler.TxHandler;
 import org.aion.evtmgr.impl.mgr.EventMgrA0;
 import org.junit.Test;
-import java.util.List;
-import java.util.Properties;
-
-import static junit.framework.TestCase.assertEquals;
 
 public class AbstractEventMgrTest {
+
     private Properties properties = new Properties();
     private EventMgrA0 evtManager = new EventMgrA0(properties);
 
     @Test
-    public void testStart(){
+    public void testStart() {
         evtManager.start();
     }
 
@@ -49,7 +50,7 @@ public class AbstractEventMgrTest {
     }
 
     @Test
-    public void testGetHandler(){
+    public void testGetHandler() {
         IHandler res = evtManager.getHandler(1);
         IHandler expectedHandler = new TxHandler();
         assertEquals(expectedHandler.getType(), res.getType());
@@ -64,7 +65,7 @@ public class AbstractEventMgrTest {
     }
 
     @Test
-    public void testGetHandlerList(){
+    public void testGetHandlerList() {
         List<IHandler> res = evtManager.getHandlerList();
         assertEquals(4, res.size());
     }

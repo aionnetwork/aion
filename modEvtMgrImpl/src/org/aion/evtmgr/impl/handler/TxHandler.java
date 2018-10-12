@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.evtmgr.impl.handler;
@@ -30,7 +30,6 @@ import org.aion.evtmgr.impl.abs.AbstractHandler;
 
 /**
  * @author jay
- *
  */
 public class TxHandler extends AbstractHandler implements IHandler {
 

@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.evtmgr.impl.abs;
@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 
 /**
  * @author jay
- *
  */
 public abstract class AbstractHandler {
 
@@ -65,7 +64,8 @@ public abstract class AbstractHandler {
                     try {
                         dispatch(e);
                     } catch (Throwable ex) {
-                        LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}, {}", e.getEventType(), e.getCallbackType(), ex.toString());
+                        LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}, {}",
+                            e.getEventType(), e.getCallbackType(), ex.toString());
                     }
                 }
             }
@@ -140,7 +140,8 @@ public abstract class AbstractHandler {
         if (this.typeEqual(event.getEventType())) {
 
             if (LOG.isTraceEnabled()) {
-                LOG.trace("CB size:[{}] cbType:[{}]", this.eventCallback.size(), event.getCallbackType());
+                LOG.trace("CB size:[{}] cbType:[{}]", this.eventCallback.size(),
+                    event.getCallbackType());
             }
 
             for (IEventCallback cb : this.eventCallback) {

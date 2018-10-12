@@ -19,45 +19,43 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
+ *
  ******************************************************************************/
 
 package org.aion.evtmgr.impl.evt;
 
 import java.util.List;
-
 import org.aion.evtmgr.IEvent;
 
 /**
  * @author jay
- *
  */
 public class EventDummy implements IEvent {
 
     private final static int type = TYPE.DUMMY.getValue();
+
+    public static int getTypeStatic() {
+        return EventDummy.type;
+    }
 
     @Override
     public int getEventType() {
         return EventDummy.type;
     }
 
-    public static int getTypeStatic() {
-        return EventDummy.type;
+    @Override
+    public List<Object> getFuncArgs() {
+        return null;
     }
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.aion.evt.common.IEvent#setFuncArgs(java.util.List)
      */
     @Override
     public void setFuncArgs(List<Object> _objs) {
 
-    }
-
-    @Override
-    public List<Object> getFuncArgs() {
-        return null;
     }
 
     @Override

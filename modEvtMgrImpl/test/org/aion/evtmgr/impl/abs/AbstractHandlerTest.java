@@ -24,6 +24,10 @@
 
 package org.aion.evtmgr.impl.abs;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
+
 import org.aion.evtmgr.IEventCallback;
 import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
@@ -36,13 +40,12 @@ import org.aion.log.LogEnum;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
-
 public class AbstractHandlerTest {
-    private static final Logger LOGGER_EVENT = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
-    private EventExecuteService eventExecuteService = new EventExecuteService(100, "TestEES", Thread.NORM_PRIORITY, LOGGER_EVENT);
+
+    private static final Logger LOGGER_EVENT = AionLoggerFactory
+        .getLogger(LogEnum.EVTMGR.toString());
+    private EventExecuteService eventExecuteService = new EventExecuteService(100, "TestEES",
+        Thread.NORM_PRIORITY, LOGGER_EVENT);
     private IEventCallback callback = new EventCallback(eventExecuteService, LOGGER_EVENT);
     private AbstractHandler handler = new BlockHandler();
 
@@ -65,12 +68,12 @@ public class AbstractHandlerTest {
     }
 
     @Test
-    public void testEventCallback(){
+    public void testEventCallback() {
         handler.eventCallback(callback);
     }
 
     @Test
-    public void testOnEvent(){
+    public void testOnEvent() {
         handler.onEvent(new EventDummy());
     }
 
@@ -80,13 +83,14 @@ public class AbstractHandlerTest {
     }
 
     @Test
-    public void testAddEvent(){
+    public void testAddEvent() {
         AbstractHandler handler = new BlockHandler();
 
         boolean res = handler.addEvent(new EventDummy());
         assertTrue(res);
 
-        boolean res2 = handler.addEvent(new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE));
+        boolean res2 = handler
+            .addEvent(new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE));
         assertTrue(res2);
 
         boolean res3 = handler.addEvent(null);
@@ -94,7 +98,7 @@ public class AbstractHandlerTest {
     }
 
     @Test
-    public void testRemoveEvent(){
+    public void testRemoveEvent() {
         AbstractHandler handler = new BlockHandler();
         handler.addEvent(new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE));
 
@@ -104,12 +108,13 @@ public class AbstractHandlerTest {
         boolean res2 = handler.removeEvent(null);
         assertFalse(res2);
 
-        boolean res3 = handler.removeEvent(new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE));
+        boolean res3 = handler
+            .removeEvent(new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE));
         assertTrue(res3);
     }
 
     @Test
-    public void testType(){
+    public void testType() {
         assertEquals(BlockHandler.TYPE.BLOCK0.getValue(), handler.getType());
     }
 }

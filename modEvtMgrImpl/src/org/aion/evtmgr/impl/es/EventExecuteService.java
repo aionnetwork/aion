@@ -1,25 +1,25 @@
 package org.aion.evtmgr.impl.es;
 
-import org.aion.evtmgr.IEvent;
-import org.aion.evtmgr.impl.evt.EventDummy;
-import org.slf4j.Logger;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.impl.evt.EventDummy;
+import org.slf4j.Logger;
 
 public class EventExecuteService {
 
+    private static Logger LOG;
     private LinkedBlockingQueue<IEvent> callbackEvt;
     private ExecutorService es;
-    private static Logger LOG;
     private String thName;
     private Set<Integer> filter;
 
-    public EventExecuteService(final int qSize, final String threadName, final int threadPriority, final Logger log ) {
-        if (threadName == null || log == null ) {
+    public EventExecuteService(final int qSize, final String threadName, final int threadPriority,
+        final Logger log) {
+        if (threadName == null || log == null) {
             throw new NullPointerException();
         }
 
@@ -65,7 +65,9 @@ public class EventExecuteService {
         return null;
     }
 
-    /** Clear all events from queue */
+    /**
+     * Clear all events from queue
+     */
     public void clear() {
         callbackEvt.clear();
     }
