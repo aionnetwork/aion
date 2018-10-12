@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -23,7 +23,7 @@
  *     for their work. For provenance information and contributors
  *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
- * Contributors:
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
  *     <ether.camp> team through the ethereumJ library.
  *     Ether.Camp Inc. (US) team through Ethereum Harmony.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.crypto.ecdsa;
 
 import static org.aion.base.util.BIUtil.isLessThan;
