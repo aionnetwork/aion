@@ -22,6 +22,13 @@
  ******************************************************************************/
 package org.aion.mcf.db;
 
+import static org.aion.base.util.Utils.dummy;
+
+import java.io.Closeable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.Flushable;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
@@ -33,22 +40,16 @@ import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 
-import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import static org.aion.base.util.Utils.dummy;
-
 public class TransactionStore<TX extends AbstractTransaction, TXR extends AbstractTxReceipt<TX>, INFO extends AbstractTxInfo<TXR, TX>>
-        implements Flushable, Closeable {
+    implements Flushable, Closeable {
+
     private final LRUMap<ByteArrayWrapper, Object> lastSavedTxHash = new LRUMap<>(5000);
     private final ObjectDataSource<List<INFO>> source;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public TransactionStore(IByteArrayKeyValueDatabase src, Serializer<List<INFO>, byte[]> serializer) {
+    public TransactionStore(IByteArrayKeyValueDatabase src,
+        Serializer<List<INFO>, byte[]> serializer) {
         source = new ObjectDataSource(src, serializer);
     }
 
@@ -59,7 +60,8 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
             byte[] txHash = tx.getReceipt().getTransaction().getHash();
 
             List<INFO> existingInfos = null;
-            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), dummy) != null || !lastSavedTxHash.isFull()) {
+            if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), dummy) != null || !lastSavedTxHash
+                .isFull()) {
                 existingInfos = source.get(txHash);
             }
 
@@ -81,7 +83,7 @@ public class TransactionStore<TX extends AbstractTransaction, TXR extends Abstra
         }
     }
 
-    public void flushBatch(){
+    public void flushBatch() {
         source.flushBatch();
     }
 

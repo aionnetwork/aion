@@ -20,14 +20,12 @@
  *
  * Contributors:
  *     Aion foundation.
-
  ******************************************************************************/
 package org.aion.mcf.types;
 
 import static org.aion.base.util.ByteUtil.byteArrayToLong;
 
 import java.math.BigInteger;
-
 import org.aion.base.type.IBlockIdentifier;
 import org.aion.base.util.Hex;
 import org.aion.rlp.RLP;

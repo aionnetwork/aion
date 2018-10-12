@@ -1,5 +1,19 @@
 package org.aion.trie;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.base.util.ByteUtil.intToBytes;
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.crypto.HashUtil;
@@ -10,87 +24,138 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.*;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.base.util.ByteUtil.intToBytes;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.junit.Assert.*;
-
 /**
  * @author Alexandra Roatis
  */
 @RunWith(JUnitParamsRunner.class)
 public class TrieTest {
 
-    private String[] testKeys = new String[] { "", "k", "ky", "key", "ey", "y", "other", "key-0123456789",
-            "key-0123456789abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ" };
-
-    private String[] testValues = new String[] { "v", "value",
-            "value-0123456789abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ" };
-
-    private String[] randomValues = new String[] { "spinneries", "archipenko", "prepotency", "herniotomy", "preexpress",
-            "relaxative", "insolvably", "debonnaire", "apophysate", "virtuality", "cavalryman", "utilizable",
-            "diagenesis", "vitascopic", "governessy", "abranchial", "cyanogenic", "gratulated", "signalment",
-            "predicable", "subquality", "crystalize", "prosaicism", "oenologist", "repressive", "impanelled",
-            "cockneyism", "bordelaise", "compigne", "konstantin", "predicated", "unsublimed", "hydrophane",
-            "phycomyces", "capitalise", "slippingly", "untithable", "unburnable", "deoxidizer", "misteacher",
-            "precorrect", "disclaimer", "solidified", "neuraxitis", "caravaning", "betelgeuse", "underprice",
-            "uninclosed", "acrogynous", "reirrigate", "dazzlingly", "chaffiness", "corybantes", "intumesced",
-            "intentness", "superexert", "abstrusely", "astounding", "pilgrimage", "posttarsal", "prayerless",
-            "nomologist", "semibelted", "frithstool", "unstinging", "ecalcarate", "amputating", "megascopic",
-            "graphalloy", "platteland", "adjacently", "mingrelian", "valentinus", "appendical", "unaccurate",
-            "coriaceous", "waterworks", "sympathize", "doorkeeper", "overguilty", "flaggingly", "admonitory",
-            "aeriferous", "normocytic", "parnellism", "catafalque", "odontiasis", "apprentice", "adulterous",
-            "mechanisma", "wilderness", "undivorced", "reinterred", "effleurage", "pretrochal", "phytogenic",
-            "swirlingly", "herbarized", "unresolved", "classifier", "diosmosing", "microphage", "consecrate",
-            "astarboard", "predefying", "predriving", "lettergram", "ungranular", "overdozing", "conferring",
-            "unfavorite", "peacockish", "coinciding", "erythraeum", "freeholder", "zygophoric", "imbitterer",
-            "centroidal", "appendixes", "grayfishes", "enological", "indiscreet", "broadcloth", "divulgated",
-            "anglophobe", "stoopingly", "bibliophil", "laryngitis", "separatist", "estivating", "bellarmine",
-            "greasiness", "typhlology", "xanthation", "mortifying", "endeavorer", "aviatrices", "unequalise",
-            "metastatic", "leftwinger", "apologizer", "quatrefoil", "nonfouling", "bitartrate", "outchiding",
-            "undeported", "poussetted", "haemolysis", "asantehene", "montgomery", "unjoinable", "cedarhurst",
-            "unfastener", "nonvacuums", "beauregard", "animalized", "polyphides", "cannizzaro", "gelatinoid",
-            "apologised", "unscripted", "tracheidal", "subdiscoid", "gravelling", "variegated", "interabang",
-            "inoperable", "immortelle", "laestrygon", "duplicatus", "proscience", "deoxidised", "manfulness",
-            "channelize", "nondefense", "ectomorphy", "unimpelled", "headwaiter", "hexaemeric", "derivation",
-            "prelexical", "limitarian", "nonionized", "prorefugee", "invariably", "patronizer", "paraplegia",
-            "redivision", "occupative", "unfaceable", "hypomnesia", "psalterium", "doctorfish", "gentlefolk",
-            "overrefine", "heptastich", "desirously", "clarabelle", "uneuphonic", "autotelism", "firewarden",
-            "timberjack", "fumigation", "drainpipes", "spathulate", "novelvelle", "bicorporal", "grisliness",
-            "unhesitant", "supergiant", "unpatented", "womanpower", "toastiness", "multichord", "paramnesia",
-            "undertrick", "contrarily", "neurogenic", "gunmanship", "settlement", "brookville", "gradualism",
-            "unossified", "villanovan", "ecospecies", "organising", "buckhannon", "prefulfill", "johnsonese",
-            "unforegone", "unwrathful", "dunderhead", "erceldoune", "unwadeable", "refunction", "understuff",
-            "swaggering", "freckliest", "telemachus", "groundsill", "outslidden", "bolsheviks", "recognizer",
-            "hemangioma", "tarantella", "muhammedan", "talebearer", "relocation", "preemption", "chachalaca",
-            "septuagint", "ubiquitous", "plexiglass", "humoresque", "biliverdin", "tetraploid", "capitoline",
-            "summerwood", "undilating", "undetested", "meningitic", "petrolatum", "phytotoxic", "adiphenine",
-            "flashlight", "protectory", "inwreathed", "rawishness", "tendrillar", "hastefully", "bananaquit",
-            "anarthrous", "unbedimmed", "herborized", "decenniums", "deprecated", "karyotypic", "squalidity",
-            "pomiferous", "petroglyph", "actinomere", "peninsular", "trigonally", "androgenic", "resistance",
-            "unassuming", "frithstool", "documental", "eunuchised", "interphone", "thymbraeus", "confirmand",
-            "expurgated", "vegetation", "myographic", "plasmagene", "spindrying", "unlackeyed", "foreknower",
-            "mythically", "albescence", "rebudgeted", "implicitly", "unmonastic", "torricelli", "mortarless",
-            "labialized", "phenacaine", "radiometry", "sluggishly", "understood", "wiretapper", "jacobitely",
-            "unbetrayed", "stadholder", "directress", "emissaries", "corelation", "sensualize", "uncurbable",
-            "permillage", "tentacular", "thriftless", "demoralize", "preimagine", "iconoclast", "acrobatism",
-            "firewarden", "transpired", "bluethroat", "wanderjahr", "groundable", "pedestrian", "unulcerous",
-            "preearthly", "freelanced", "sculleries", "avengingly", "visigothic", "preharmony", "bressummer",
-            "acceptable", "unfoolable", "predivider", "overseeing", "arcosolium", "piriformis", "needlecord",
-            "homebodies", "sulphation", "phantasmic", "unsensible", "unpackaged", "isopiestic", "cytophagic",
-            "butterlike", "frizzliest", "winklehawk", "necrophile", "mesothorax", "cuchulainn", "unrentable",
-            "untangible", "unshifting", "unfeasible", "poetastric", "extermined", "gaillardia", "nonpendent",
-            "harborside", "pigsticker", "infanthood", "underrower", "easterling", "jockeyship", "housebreak",
-            "horologium", "undepicted", "dysacousma", "incurrable", "editorship", "unrelented", "peritricha",
-            "interchaff", "frothiness", "underplant", "proafrican", "squareness", "enigmatise", "reconciled",
-            "nonnumeral", "nonevident", "hamantasch", "victualing", "watercolor", "schrdinger", "understand",
-            "butlerlike", "hemiglobin", "yankeeland" };
+    private static String LONG_STRING = "1234567890abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ";
+    private static String ROOT_HASH_EMPTY = Hex.toHexString(EMPTY_TRIE_HASH);
+    private static String cat = "cat";
+    private String[] testKeys = new String[]{"", "k", "ky", "key", "ey", "y", "other",
+        "key-0123456789",
+        "key-0123456789abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ"};
+    private String[] testValues = new String[]{"v", "value",
+        "value-0123456789abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ"};
+    private String[] randomValues = new String[]{"spinneries", "archipenko", "prepotency",
+        "herniotomy", "preexpress",
+        "relaxative", "insolvably", "debonnaire", "apophysate", "virtuality", "cavalryman",
+        "utilizable",
+        "diagenesis", "vitascopic", "governessy", "abranchial", "cyanogenic", "gratulated",
+        "signalment",
+        "predicable", "subquality", "crystalize", "prosaicism", "oenologist", "repressive",
+        "impanelled",
+        "cockneyism", "bordelaise", "compigne", "konstantin", "predicated", "unsublimed",
+        "hydrophane",
+        "phycomyces", "capitalise", "slippingly", "untithable", "unburnable", "deoxidizer",
+        "misteacher",
+        "precorrect", "disclaimer", "solidified", "neuraxitis", "caravaning", "betelgeuse",
+        "underprice",
+        "uninclosed", "acrogynous", "reirrigate", "dazzlingly", "chaffiness", "corybantes",
+        "intumesced",
+        "intentness", "superexert", "abstrusely", "astounding", "pilgrimage", "posttarsal",
+        "prayerless",
+        "nomologist", "semibelted", "frithstool", "unstinging", "ecalcarate", "amputating",
+        "megascopic",
+        "graphalloy", "platteland", "adjacently", "mingrelian", "valentinus", "appendical",
+        "unaccurate",
+        "coriaceous", "waterworks", "sympathize", "doorkeeper", "overguilty", "flaggingly",
+        "admonitory",
+        "aeriferous", "normocytic", "parnellism", "catafalque", "odontiasis", "apprentice",
+        "adulterous",
+        "mechanisma", "wilderness", "undivorced", "reinterred", "effleurage", "pretrochal",
+        "phytogenic",
+        "swirlingly", "herbarized", "unresolved", "classifier", "diosmosing", "microphage",
+        "consecrate",
+        "astarboard", "predefying", "predriving", "lettergram", "ungranular", "overdozing",
+        "conferring",
+        "unfavorite", "peacockish", "coinciding", "erythraeum", "freeholder", "zygophoric",
+        "imbitterer",
+        "centroidal", "appendixes", "grayfishes", "enological", "indiscreet", "broadcloth",
+        "divulgated",
+        "anglophobe", "stoopingly", "bibliophil", "laryngitis", "separatist", "estivating",
+        "bellarmine",
+        "greasiness", "typhlology", "xanthation", "mortifying", "endeavorer", "aviatrices",
+        "unequalise",
+        "metastatic", "leftwinger", "apologizer", "quatrefoil", "nonfouling", "bitartrate",
+        "outchiding",
+        "undeported", "poussetted", "haemolysis", "asantehene", "montgomery", "unjoinable",
+        "cedarhurst",
+        "unfastener", "nonvacuums", "beauregard", "animalized", "polyphides", "cannizzaro",
+        "gelatinoid",
+        "apologised", "unscripted", "tracheidal", "subdiscoid", "gravelling", "variegated",
+        "interabang",
+        "inoperable", "immortelle", "laestrygon", "duplicatus", "proscience", "deoxidised",
+        "manfulness",
+        "channelize", "nondefense", "ectomorphy", "unimpelled", "headwaiter", "hexaemeric",
+        "derivation",
+        "prelexical", "limitarian", "nonionized", "prorefugee", "invariably", "patronizer",
+        "paraplegia",
+        "redivision", "occupative", "unfaceable", "hypomnesia", "psalterium", "doctorfish",
+        "gentlefolk",
+        "overrefine", "heptastich", "desirously", "clarabelle", "uneuphonic", "autotelism",
+        "firewarden",
+        "timberjack", "fumigation", "drainpipes", "spathulate", "novelvelle", "bicorporal",
+        "grisliness",
+        "unhesitant", "supergiant", "unpatented", "womanpower", "toastiness", "multichord",
+        "paramnesia",
+        "undertrick", "contrarily", "neurogenic", "gunmanship", "settlement", "brookville",
+        "gradualism",
+        "unossified", "villanovan", "ecospecies", "organising", "buckhannon", "prefulfill",
+        "johnsonese",
+        "unforegone", "unwrathful", "dunderhead", "erceldoune", "unwadeable", "refunction",
+        "understuff",
+        "swaggering", "freckliest", "telemachus", "groundsill", "outslidden", "bolsheviks",
+        "recognizer",
+        "hemangioma", "tarantella", "muhammedan", "talebearer", "relocation", "preemption",
+        "chachalaca",
+        "septuagint", "ubiquitous", "plexiglass", "humoresque", "biliverdin", "tetraploid",
+        "capitoline",
+        "summerwood", "undilating", "undetested", "meningitic", "petrolatum", "phytotoxic",
+        "adiphenine",
+        "flashlight", "protectory", "inwreathed", "rawishness", "tendrillar", "hastefully",
+        "bananaquit",
+        "anarthrous", "unbedimmed", "herborized", "decenniums", "deprecated", "karyotypic",
+        "squalidity",
+        "pomiferous", "petroglyph", "actinomere", "peninsular", "trigonally", "androgenic",
+        "resistance",
+        "unassuming", "frithstool", "documental", "eunuchised", "interphone", "thymbraeus",
+        "confirmand",
+        "expurgated", "vegetation", "myographic", "plasmagene", "spindrying", "unlackeyed",
+        "foreknower",
+        "mythically", "albescence", "rebudgeted", "implicitly", "unmonastic", "torricelli",
+        "mortarless",
+        "labialized", "phenacaine", "radiometry", "sluggishly", "understood", "wiretapper",
+        "jacobitely",
+        "unbetrayed", "stadholder", "directress", "emissaries", "corelation", "sensualize",
+        "uncurbable",
+        "permillage", "tentacular", "thriftless", "demoralize", "preimagine", "iconoclast",
+        "acrobatism",
+        "firewarden", "transpired", "bluethroat", "wanderjahr", "groundable", "pedestrian",
+        "unulcerous",
+        "preearthly", "freelanced", "sculleries", "avengingly", "visigothic", "preharmony",
+        "bressummer",
+        "acceptable", "unfoolable", "predivider", "overseeing", "arcosolium", "piriformis",
+        "needlecord",
+        "homebodies", "sulphation", "phantasmic", "unsensible", "unpackaged", "isopiestic",
+        "cytophagic",
+        "butterlike", "frizzliest", "winklehawk", "necrophile", "mesothorax", "cuchulainn",
+        "unrentable",
+        "untangible", "unshifting", "unfeasible", "poetastric", "extermined", "gaillardia",
+        "nonpendent",
+        "harborside", "pigsticker", "infanthood", "underrower", "easterling", "jockeyship",
+        "housebreak",
+        "horologium", "undepicted", "dysacousma", "incurrable", "editorship", "unrelented",
+        "peritricha",
+        "interchaff", "frothiness", "underplant", "proafrican", "squareness", "enigmatise",
+        "reconciled",
+        "nonnumeral", "nonevident", "hamantasch", "victualing", "watercolor", "schrdinger",
+        "understand",
+        "butlerlike", "hemiglobin", "yankeeland"};
 
     /**
-     * @return parameters for testing
-     *         {@link #testInsertUpdateDeleteGet(String, String, String)}
+     * @return parameters for testing {@link #testInsertUpdateDeleteGet(String, String, String)}
      */
     @SuppressWarnings("unused")
     private Object keyValue1Value2Parameters() {
@@ -103,7 +168,7 @@ public class TrieTest {
                 for (String value2 : testValues) {
                     // also testing updates with the same value
                     // if (!value1.equals(value2)) {
-                    parameters[index] = new Object[] { key, value1, value2 };
+                    parameters[index] = new Object[]{key, value1, value2};
                     index++;
                     // }
                 }
@@ -114,11 +179,10 @@ public class TrieTest {
     }
 
     /**
-     * Tests correct retrieval using {@link TrieImpl#get(String)} after an
-     * initial insert with {@link TrieImpl#update(String, String)} and after a
-     * sequential update using {@link TrieImpl#update(String, String)}. Uses
-     * diverse combinations of keys and values from
-     * {@link #keyValue1Value2Parameters()}.
+     * Tests correct retrieval using {@link TrieImpl#get(String)} after an initial insert with
+     * {@link TrieImpl#update(String, String)} and after a sequential update using {@link
+     * TrieImpl#update(String, String)}. Uses diverse combinations of keys and values from {@link
+     * #keyValue1Value2Parameters()}.
      */
     @Test
     @Parameters(method = "keyValue1Value2Parameters")
@@ -210,8 +274,7 @@ public class TrieTest {
     }
 
     /**
-     * @return parameters for testing
-     *         {@link #testInsertRandomMultipleItems(HashMap)}
+     * @return parameters for testing {@link #testInsertRandomMultipleItems(HashMap)}
      */
     @SuppressWarnings("unused")
     private Object keyValuePairsParameters() {
@@ -231,14 +294,17 @@ public class TrieTest {
                 testCase.put(key, value);
             }
 
-            parameters[i] = new Object[] { testCase };
+            parameters[i] = new Object[]{testCase};
         }
 
         return parameters;
     }
 
+    // -----------------------------------------------------------------------------------------------------------------
+    // Tests from EthJ
+    // -----------------------------------------------------------------------------------------------------------------
+
     /**
-     * @param pairs
      * @implNote By design the keys are distinct due to the use of HashMap.
      */
     @Test
@@ -246,7 +312,9 @@ public class TrieTest {
     public void testInsertRandomMultipleItems(HashMap<String, String> pairs) {
         boolean print = false;
 
-        if (print) { System.out.println("Number of pairs = " + pairs.size()); }
+        if (print) {
+            System.out.println("Number of pairs = " + pairs.size());
+        }
 
         TrieImpl trie = new TrieImpl(new MockDB("TestInsertRandomMultipleItems"));
         String key, value;
@@ -255,7 +323,9 @@ public class TrieTest {
             key = entry.getKey();
             value = entry.getValue();
 
-            if (print) { System.out.println("(" + key + "," + value + ")"); }
+            if (print) {
+                System.out.println("(" + key + "," + value + ")");
+            }
 
             // insert (key,value)
             trie.update(key, value);
@@ -273,7 +343,6 @@ public class TrieTest {
     }
 
     /**
-     * @param pairs
      * @implNote By design the keys are distinct due to the use of HashMap.
      */
     @Test
@@ -281,7 +350,9 @@ public class TrieTest {
     public void testDeleteAll(HashMap<String, String> pairs) {
         boolean print = false;
 
-        if (print) { System.out.println("Number of pairs = " + pairs.size()); }
+        if (print) {
+            System.out.println("Number of pairs = " + pairs.size());
+        }
 
         TrieImpl trie = new TrieImpl(new MockDB("TestDeleteAll"));
 
@@ -294,7 +365,9 @@ public class TrieTest {
             key = entry.getKey();
             value = entry.getValue();
 
-            if (print) { System.out.println("(" + key + "," + value + ")"); }
+            if (print) {
+                System.out.println("(" + key + "," + value + ")");
+            }
 
             // insert (key,value)
             trie.update(key, value);
@@ -318,7 +391,9 @@ public class TrieTest {
 
         boolean print = false;
 
-        if (print) { System.out.println("Number of pairs = " + pairs.size()); }
+        if (print) {
+            System.out.println("Number of pairs = " + pairs.size());
+        }
 
         // create a new trie object without database
         TrieImpl trie1 = new TrieImpl(null);
@@ -330,7 +405,9 @@ public class TrieTest {
             key = entry.getKey();
             value = entry.getValue();
 
-            if (print) { System.out.println("(" + key + "," + value + ")"); }
+            if (print) {
+                System.out.println("(" + key + "," + value + ")");
+            }
 
             // insert (key,value)
             trie1.update(key, value);
@@ -338,7 +415,8 @@ public class TrieTest {
 
             // ensure equality after each addition
             assertThat(trie1).isEqualTo(trie2);
-            assertThat(Hex.toHexString(trie1.getRootHash())).isEqualTo(Hex.toHexString(trie2.getRootHash()));
+            assertThat(Hex.toHexString(trie1.getRootHash()))
+                .isEqualTo(Hex.toHexString(trie2.getRootHash()));
         }
         String oldHash = Hex.toHexString(trie1.getRootHash());
 
@@ -347,32 +425,26 @@ public class TrieTest {
         trie2.update("key for trie2", "value2");
 
         assertThat(trie1).isNotEqualTo(trie2);
-        assertThat(Hex.toHexString(trie1.getRootHash())).isNotEqualTo(Hex.toHexString(trie2.getRootHash()));
+        assertThat(Hex.toHexString(trie1.getRootHash()))
+            .isNotEqualTo(Hex.toHexString(trie2.getRootHash()));
 
         // ensure equality after deletions
         trie1.delete("key for trie1");
         trie2.delete("key for trie2");
 
         assertThat(trie1).isEqualTo(trie2);
-        assertThat(Hex.toHexString(trie1.getRootHash())).isEqualTo(Hex.toHexString(trie2.getRootHash()));
+        assertThat(Hex.toHexString(trie1.getRootHash()))
+            .isEqualTo(Hex.toHexString(trie2.getRootHash()));
         assertThat(Hex.toHexString(trie1.getRootHash())).isEqualTo(oldHash);
 
         // ensure inequality after one side deletion
         trie1.delete(pairs.keySet().iterator().next());
 
         assertThat(trie1).isNotEqualTo(trie2);
-        assertThat(Hex.toHexString(trie1.getRootHash())).isNotEqualTo(Hex.toHexString(trie2.getRootHash()));
+        assertThat(Hex.toHexString(trie1.getRootHash()))
+            .isNotEqualTo(Hex.toHexString(trie2.getRootHash()));
         assertThat(Hex.toHexString(trie1.getRootHash())).isNotEqualTo(oldHash);
     }
-
-    // -----------------------------------------------------------------------------------------------------------------
-    // Tests from EthJ
-    // -----------------------------------------------------------------------------------------------------------------
-
-    private static String LONG_STRING = "1234567890abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ";
-    private static String ROOT_HASH_EMPTY = Hex.toHexString(EMPTY_TRIE_HASH);
-
-    private static String cat = "cat";
 
     @Test
     public void TestTrieReset() {
@@ -476,7 +548,8 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(null);
         trie.update("doe", "reindeer");
         TrieImpl trie2 = trie.copy();
-        assertNotEquals(trie.hashCode(), trie2.hashCode()); // avoid possibility that its just a reference copy
+        assertNotEquals(trie.hashCode(),
+            trie2.hashCode()); // avoid possibility that its just a reference copy
         assertEquals(Hex.toHexString(trie.getRootHash()), Hex.toHexString(trie2.getRootHash()));
         assertTrue(trie.equals(trie2));
     }

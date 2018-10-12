@@ -22,7 +22,9 @@
  */
 package org.aion.mcf.core;
 
-/** Import Result Enum */
+/**
+ * Import Result Enum
+ */
 public enum ImportResult {
     IMPORTED_BEST,
     IMPORTED_NOT_BEST,

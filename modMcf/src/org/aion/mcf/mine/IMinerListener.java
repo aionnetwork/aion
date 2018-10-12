@@ -20,7 +20,6 @@
  *
  * Contributors:
  *     Aion foundation.
-
  ******************************************************************************/
 package org.aion.mcf.mine;
 
@@ -28,8 +27,6 @@ import org.aion.base.type.IBlock;
 
 /**
  * Miner Listener interface.
- *
- * @param <BLK>
  */
 public interface IMinerListener<BLK extends IBlock<?, ?>> {
 

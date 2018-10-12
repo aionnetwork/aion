@@ -37,7 +37,6 @@ package org.aion.mcf.trie;
 import static org.aion.rlp.CompactEncoder.unpackToNibbles;
 
 import java.util.List;
-
 import org.aion.rlp.Value;
 
 /*

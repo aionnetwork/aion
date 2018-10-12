@@ -20,7 +20,6 @@
  *
  * Contributors:
  *     Aion foundation.
-
  ******************************************************************************/
 
 package org.aion.mcf.evt;

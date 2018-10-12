@@ -1,5 +1,8 @@
 package org.aion.trie;
 
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.junit.Assert.assertEquals;
+
 import junitparams.JUnitParamsRunner;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.mockdb.MockDB;
@@ -12,9 +15,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.spongycastle.util.encoders.Hex;
-
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Alexandra Roatis
@@ -54,7 +54,7 @@ public class TrieTestWithRootHashValues {
         trie.update("dog", "puppy");
 
         assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -70,7 +70,7 @@ public class TrieTestWithRootHashValues {
         trie.update("shaman", "");
 
         assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -81,7 +81,7 @@ public class TrieTestWithRootHashValues {
         trie.update("food", "bass");
 
         assertEquals("17beaa1648bafa633cda809c90c04af50fc8aed3cb40d16efbddee6fdf63c4c3",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -92,7 +92,7 @@ public class TrieTestWithRootHashValues {
         trie.update("dog", "puppy");
         trie.update("bed", "d");
         assertEquals("3f67c7a47520f79faa29255d2d3c084a7a6df0453116ed7232ff10277a8be68b",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -100,15 +100,15 @@ public class TrieTestWithRootHashValues {
         TrieImpl trie = new TrieImpl(null);
         trie.update("doe", "reindeer");
         assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
 
         trie.update("dog", "puppy");
         assertEquals("05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
 
         trie.update("dogglesworth", "cat");
         assertEquals("8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -116,16 +116,16 @@ public class TrieTestWithRootHashValues {
         TrieImpl trie = new TrieImpl(mockDb);
         trie.update("doe", "reindeer");
         assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
         trie.sync();
 
         trie.update("dog", "puppy");
         assertEquals("05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
 
         trie.undo();
         assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -243,10 +243,14 @@ public class TrieTestWithRootHashValues {
     @Test
     public void storageHashCalc_1() {
 
-        byte[] key1 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000010");
-        byte[] key2 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000014");
-        byte[] key3 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000016");
-        byte[] key4 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000017");
+        byte[] key1 = Hex
+            .decode("0000000000000000000000000000000000000000000000000000000000000010");
+        byte[] key2 = Hex
+            .decode("0000000000000000000000000000000000000000000000000000000000000014");
+        byte[] key3 = Hex
+            .decode("0000000000000000000000000000000000000000000000000000000000000016");
+        byte[] key4 = Hex
+            .decode("0000000000000000000000000000000000000000000000000000000000000017");
 
         byte[] val1 = Hex.decode("947e70f9460402290a3e487dae01f610a1a8218fda");
         byte[] val2 = Hex.decode("40");
@@ -262,7 +266,8 @@ public class TrieTestWithRootHashValues {
         String hash = Hex.toHexString(storage.getRootHash());
 
         System.out.println(hash);
-        Assert.assertEquals("517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62", hash);
+        Assert
+            .assertEquals("517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62", hash);
     }
 
     @Test
@@ -271,11 +276,11 @@ public class TrieTestWithRootHashValues {
 
         trie.update("test", "test");
         assertEquals("85d106d4edff3b7a4889e91251d0a87d7c17a1dda648ebdba8c6060825be23b8",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
 
         trie.update("te", "testy");
         assertEquals("8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -338,7 +343,7 @@ public class TrieTestWithRootHashValues {
         trie.update("A", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
         assertEquals("d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab",
-                Hex.toHexString(trie.getRootHash()));
+            Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
@@ -383,7 +388,8 @@ public class TrieTestWithRootHashValues {
 
         System.out.println("root: " + Hex.toHexString(root));
 
-        Assert.assertEquals("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d", Hex.toHexString(root));
+        Assert.assertEquals("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d",
+            Hex.toHexString(root));
     }
 
     @Test

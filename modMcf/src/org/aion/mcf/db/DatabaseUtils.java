@@ -37,7 +37,9 @@ import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.slf4j.Logger;
 
-/** @author Alexandra Roatis */
+/**
+ * @author Alexandra Roatis
+ */
 public class DatabaseUtils {
 
     public static IByteArrayKeyValueDatabase connectAndOpen(Properties info, Logger LOG) {
@@ -50,17 +52,17 @@ public class DatabaseUtils {
         // check object status
         if (db == null) {
             LOG.error(
-                    "Database <{}> connection could not be established for <{}>.",
-                    info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
+                "Database <{}> connection could not be established for <{}>.",
+                info.getProperty(Props.DB_TYPE),
+                info.getProperty(Props.DB_NAME));
         }
 
         // check persistence status
         if (!db.isCreatedOnDisk()) {
             LOG.error(
-                    "Database <{}> cannot be saved to disk for <{}>.",
-                    info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
+                "Database <{}> cannot be saved to disk for <{}>.",
+                info.getProperty(Props.DB_TYPE),
+                info.getProperty(Props.DB_NAME));
         }
 
         return db;
@@ -72,21 +74,21 @@ public class DatabaseUtils {
      *
      * @param dbFile the path to be verified.
      * @throws InvalidFilePathException when:
-     *     <ol>
-     *       <li>the given path is not valid;
-     *       <li>the directory structure cannot be created;
-     *       <li>the path cannot be written to;
-     *       <li>the give file is not a directory
-     *     </ol>
+     * <ol>
+     * <li>the given path is not valid;
+     * <li>the directory structure cannot be created;
+     * <li>the path cannot be written to;
+     * <li>the give file is not a directory
+     * </ol>
      */
     public static void verifyAndBuildPath(File dbFile) throws InvalidFilePathException {
         // to throw in case of issues with the path
         InvalidFilePathException exception =
-                new InvalidFilePathException(
-                        "The path «"
-                                + dbFile.getAbsolutePath()
-                                + "» is not valid as reported by the OS or a read/write permissions error occurred."
-                                + " Please provide an alternative DB dbFile path in /config/config.xml.");
+            new InvalidFilePathException(
+                "The path «"
+                    + dbFile.getAbsolutePath()
+                    + "» is not valid as reported by the OS or a read/write permissions error occurred."
+                    + " Please provide an alternative DB dbFile path in /config/config.xml.");
         Path path;
 
         try {
@@ -114,35 +116,37 @@ public class DatabaseUtils {
         Path path = file.toPath();
         try {
             java.nio.file.Files.walkFileTree(
-                    path,
-                    new SimpleFileVisitor<>() {
-                        @Override
-                        public FileVisitResult visitFile(
-                                final Path file, final BasicFileAttributes attrs)
-                                throws IOException {
-                            java.nio.file.Files.delete(file);
-                            return FileVisitResult.CONTINUE;
-                        }
+                path,
+                new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult visitFile(
+                        final Path file, final BasicFileAttributes attrs)
+                        throws IOException {
+                        java.nio.file.Files.delete(file);
+                        return FileVisitResult.CONTINUE;
+                    }
 
-                        @Override
-                        public FileVisitResult visitFileFailed(
-                                final Path file, final IOException e) {
+                    @Override
+                    public FileVisitResult visitFileFailed(
+                        final Path file, final IOException e) {
+                        return handleException(e);
+                    }
+
+                    private FileVisitResult handleException(final IOException e) {
+                        // e.printStackTrace();
+                        return FileVisitResult.TERMINATE;
+                    }
+
+                    @Override
+                    public FileVisitResult postVisitDirectory(
+                        final Path dir, final IOException e) throws IOException {
+                        if (e != null) {
                             return handleException(e);
                         }
-
-                        private FileVisitResult handleException(final IOException e) {
-                            // e.printStackTrace();
-                            return FileVisitResult.TERMINATE;
-                        }
-
-                        @Override
-                        public FileVisitResult postVisitDirectory(
-                                final Path dir, final IOException e) throws IOException {
-                            if (e != null) return handleException(e);
-                            java.nio.file.Files.delete(dir);
-                            return FileVisitResult.CONTINUE;
-                        }
-                    });
+                        java.nio.file.Files.delete(dir);
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
         } catch (IOException e) {
             e.printStackTrace();
             return false;

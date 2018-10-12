@@ -20,17 +20,15 @@
  *
  * Contributors:
  *     Aion foundation.
-
  ******************************************************************************/
 package org.aion.mcf.tx;
 
 import java.util.List;
-
 import java.util.concurrent.Future;
-
 import org.aion.base.type.ITransaction;
 
 public interface ITransactionExecThread<TX extends ITransaction> {
+
     Future<List<TX>> submitTransaction(TX tx);
 
     Future<List<TX>> submitTransaction(List<TX> tx);

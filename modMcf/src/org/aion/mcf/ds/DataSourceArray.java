@@ -23,22 +23,19 @@
  ******************************************************************************/
 package org.aion.mcf.ds;
 
+import java.io.Closeable;
+import java.util.Optional;
 import org.aion.base.db.Flushable;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 
-import java.io.Closeable;
-import java.util.Optional;
-
 /**
  * DataSource Array.
- *
- * @param <V>
  */
 public class DataSourceArray<V> implements Flushable, Closeable {
 
-    private final ObjectDataSource<V> src;
     private static final byte[] sizeKey = Hex.decode("FFFFFFFFFFFFFFFF");
+    private final ObjectDataSource<V> src;
     private long size = -1L;
 
     public DataSourceArray(ObjectDataSource<V> src) {
@@ -81,7 +78,8 @@ public class DataSourceArray<V> implements Flushable, Closeable {
     public V get(long index) {
         if (index < 0 || index >= size()) {
             throw new IndexOutOfBoundsException(
-                    "Incorrect index value <" + index + ">. Allowed values are >= 0 and < " + size + ".");
+                "Incorrect index value <" + index + ">. Allowed values are >= 0 and < " + size
+                    + ".");
         }
 
         V value;

@@ -20,20 +20,15 @@
  *
  * Contributors:
  *     Aion foundation.
-
  ******************************************************************************/
 package org.aion.mcf.mine;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.aion.base.type.IBlock;
 import org.aion.mcf.types.AbstractBlockHeader;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
 /**
  * Miner interface.
- *
- * @param <Blk>
- * @param <BH>
  */
 public interface IMiner<Blk extends IBlock<?, ?>, BH extends AbstractBlockHeader> {
 

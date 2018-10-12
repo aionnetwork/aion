@@ -25,7 +25,6 @@
 package org.aion.mcf.blockchain;
 
 import org.aion.base.type.IBlock;
-import org.aion.base.type.IBlockIdentifier;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.types.AbstractBlockHeader;

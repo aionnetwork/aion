@@ -1,17 +1,17 @@
 package org.aion.mcf.valid;
 
 
+import java.util.List;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.slf4j.Logger;
-
-import java.util.List;
 
 public abstract class AbstractBlockHeaderValidator {
 
     public void logErrors(final Logger logger,
-                          final List<IValidRule.RuleError> errors) {
-        if (errors.isEmpty())
+        final List<IValidRule.RuleError> errors) {
+        if (errors.isEmpty()) {
             return;
+        }
 
         if (logger.isErrorEnabled()) {
             StringBuilder builder = new StringBuilder();

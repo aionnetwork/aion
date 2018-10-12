@@ -26,25 +26,22 @@
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
 /**
  * @author chris
  */
 public final class CfgSync {
 
-    private int blocksQueueMax;
-
-    private boolean showStatus;
-
     private static int BLOCKS_QUEUE_MAX = 32;
+    private int blocksQueueMax;
+    private boolean showStatus;
 
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
@@ -57,22 +54,22 @@ public final class CfgSync {
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                String elementName = sr.getLocalName().toLowerCase();
-                switch (elementName) {
-                case "blocks-queue-max":
-                    this.blocksQueueMax = Integer.parseInt(Cfg.readValue(sr));
+                case XMLStreamReader.START_ELEMENT:
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "blocks-queue-max":
+                            this.blocksQueueMax = Integer.parseInt(Cfg.readValue(sr));
+                            break;
+                        case "show-status":
+                            this.showStatus = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        default:
+                            Cfg.skipElement(sr);
+                            break;
+                    }
                     break;
-                case "show-status":
-                    this.showStatus = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                default:
-                    Cfg.skipElement(sr);
-                    break;
-                }
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
             }
         }
     }
@@ -126,11 +123,15 @@ public final class CfgSync {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         CfgSync cfgSync = (CfgSync) o;
         return blocksQueueMax == cfgSync.blocksQueueMax &&
-                showStatus == cfgSync.showStatus;
+            showStatus == cfgSync.showStatus;
     }
 
     @Override

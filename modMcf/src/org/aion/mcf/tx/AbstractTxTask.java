@@ -40,7 +40,7 @@ import org.aion.p2p.Msg;
 // AbstractChanMgr, CHAN extends AbstractChannel> implements Callable<List<TX>>
 // {
 public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMgr>
-        implements Callable<List<TX>> {
+    implements Callable<List<TX>> {
 
     protected final List<TX> tx;
     protected final P2P p2pMgr;
@@ -58,7 +58,9 @@ public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMg
         this.msg = _msg;
     }
 
-    /** Class fails silently */
+    /**
+     * Class fails silently
+     */
     @SuppressWarnings("unchecked")
     @Override
     public List<TX> call() throws Exception {

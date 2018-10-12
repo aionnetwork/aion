@@ -1,13 +1,13 @@
 package org.aion.mcf.valid;
 
+import java.util.LinkedList;
+import java.util.List;
 import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.slf4j.Logger;
 
-import java.util.LinkedList;
-import java.util.List;
-
-public class GrandParentBlockHeaderValidator<BH extends IBlockHeader> extends AbstractBlockHeaderValidator {
+public class GrandParentBlockHeaderValidator<BH extends IBlockHeader> extends
+    AbstractBlockHeaderValidator {
 
     private List<GrandParentDependantBlockHeaderRule<BH>> rules;
 
@@ -20,8 +20,9 @@ public class GrandParentBlockHeaderValidator<BH extends IBlockHeader> extends Ab
 
         for (GrandParentDependantBlockHeaderRule<BH> rule : rules) {
             if (!rule.validate(grandParent, parent, current, errors)) {
-                if (logger != null)
+                if (logger != null) {
                     logErrors(logger, errors);
+                }
                 return false;
             }
         }

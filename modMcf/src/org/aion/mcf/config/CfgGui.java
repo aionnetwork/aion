@@ -1,27 +1,26 @@
 package org.aion.mcf.config;
 
-import javax.xml.stream.XMLOutputFactory;
 import com.google.common.base.Objects;
-
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
 /**
  * Configuration for modGui.  Represents the </code><code>gui</code> section of Aion kernel config.
  */
 public class CfgGui {
+
     private CfgGuiLauncher cfgGuiLauncher;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     */
     public CfgGui() {
         this.cfgGuiLauncher = CfgGuiLauncher.DEFAULT_CONFIG;
     }
 
-    /** Populate this object from XML data */
+    /**
+     * Populate this object from XML data
+     */
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
         while (sr.hasNext()) {
@@ -45,7 +44,7 @@ public class CfgGui {
 
     public String toXML() {
         // Hidden for now
-        
+
         return "";
 //        final XMLOutputFactory output = XMLOutputFactory.newInstance();
 //        output.setProperty("escapeCharacters", false);
@@ -89,8 +88,12 @@ public class CfgGui {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         CfgGui cfgGui = (CfgGui) o;
         return Objects.equal(cfgGuiLauncher, cfgGui.cfgGuiLauncher);
     }

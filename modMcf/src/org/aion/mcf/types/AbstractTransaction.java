@@ -20,11 +20,11 @@
  *
  * Contributors:
  *     Aion foundation.
-
  ******************************************************************************/
 
 package org.aion.mcf.types;
 
+import java.math.BigInteger;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.crypto.ISignature;
@@ -32,14 +32,10 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-import java.math.BigInteger;
-
 public abstract class AbstractTransaction implements ITransaction {
 
-    private static final int nrgDigits = 64;
-
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
-
+    private static final int nrgDigits = 64;
     /* SHA3 hash of the RLP encoded transaction */
     protected byte[] hash;
 
@@ -84,15 +80,17 @@ public abstract class AbstractTransaction implements ITransaction {
         this.type = 0x01;
     }
 
-    public AbstractTransaction(byte[] nonce, Address receiveAddress, byte[] value, byte[] data, long nrg,
-            long nrgPrice) {
+    public AbstractTransaction(byte[] nonce, Address receiveAddress, byte[] value, byte[] data,
+        long nrg,
+        long nrgPrice) {
         this(nonce, receiveAddress, value, data);
         this.nrg = nrg;
         this.nrgPrice = nrgPrice;
     }
 
-    public AbstractTransaction(byte[] nonce, Address receiveAddress, byte[] value, byte[] data, long nrg, long nrgPrice,
-            byte type) throws Exception {
+    public AbstractTransaction(byte[] nonce, Address receiveAddress, byte[] value, byte[] data,
+        long nrg, long nrgPrice,
+        byte type) throws Exception {
         this(nonce, receiveAddress, value, data, nrg, nrgPrice);
 
         if (type == 0x00) {

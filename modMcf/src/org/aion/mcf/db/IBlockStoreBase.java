@@ -25,15 +25,11 @@
 package org.aion.mcf.db;
 
 import java.util.List;
-
 import org.aion.base.type.IBlock;
 import org.aion.mcf.types.AbstractBlockHeader;
 
 /**
  * BlockStore interface base.
- *
- * @param <BLK>
- * @param <BH>
  */
 public interface IBlockStoreBase<BLK extends IBlock<?, ?>, BH extends AbstractBlockHeader> {
 

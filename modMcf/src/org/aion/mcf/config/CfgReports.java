@@ -23,14 +23,13 @@
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
 /**
  * Printing reports for debugging purposes.
@@ -180,20 +179,26 @@ public class CfgReports {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         CfgReports that = (CfgReports) o;
         return print == that.print &&
-                enable == that.enable &&
-                dump_interval == that.dump_interval &&
-                block_frequency == that.block_frequency &&
-                enable_heap_dumps == that.enable_heap_dumps &&
-                heap_dump_interval == that.heap_dump_interval &&
-                Objects.equal(path, that.path);
+            enable == that.enable &&
+            dump_interval == that.dump_interval &&
+            block_frequency == that.block_frequency &&
+            enable_heap_dumps == that.enable_heap_dumps &&
+            heap_dump_interval == that.heap_dump_interval &&
+            Objects.equal(path, that.path);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(print, enable, path, dump_interval, block_frequency, enable_heap_dumps, heap_dump_interval);
+        return Objects
+            .hashCode(print, enable, path, dump_interval, block_frequency, enable_heap_dumps,
+                heap_dump_interval);
     }
 }

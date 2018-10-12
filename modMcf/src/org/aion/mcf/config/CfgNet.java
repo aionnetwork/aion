@@ -26,16 +26,15 @@
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
 /**
  * @author chris
@@ -43,7 +42,8 @@ import java.util.List;
 public final class CfgNet {
 
     private static final boolean SINGLE = false;
-
+    protected String[] nodes;
+    protected CfgNetP2p p2p;
     private int id;
 
     public CfgNet() {
@@ -52,47 +52,43 @@ public final class CfgNet {
         this.p2p = new CfgNetP2p();
     }
 
-    protected String[] nodes;
-
-    protected CfgNetP2p p2p;
-
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                String elementName = sr.getLocalName().toLowerCase();
-                switch (elementName) {
-                    case "id":
-                        int _id = Integer.parseInt(Cfg.readValue(sr));
-                        this.id = _id < 0 ? 0 : _id;
-                        break;
-                    case "nodes":
-                        List<String> nodes = new ArrayList<>();
-                        loopNode:
-                        while (sr.hasNext()) {
-                            int eventType1 = sr.next();
-                            switch (eventType1) {
-                            case XMLStreamReader.START_ELEMENT:
-                                nodes.add(Cfg.readValue(sr));
-                                break;
-                            case XMLStreamReader.END_ELEMENT:
-                                this.nodes = nodes.toArray(new String[nodes.size()]);
-                                break loopNode;
+                case XMLStreamReader.START_ELEMENT:
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "id":
+                            int _id = Integer.parseInt(Cfg.readValue(sr));
+                            this.id = _id < 0 ? 0 : _id;
+                            break;
+                        case "nodes":
+                            List<String> nodes = new ArrayList<>();
+                            loopNode:
+                            while (sr.hasNext()) {
+                                int eventType1 = sr.next();
+                                switch (eventType1) {
+                                    case XMLStreamReader.START_ELEMENT:
+                                        nodes.add(Cfg.readValue(sr));
+                                        break;
+                                    case XMLStreamReader.END_ELEMENT:
+                                        this.nodes = nodes.toArray(new String[nodes.size()]);
+                                        break loopNode;
+                                }
                             }
-                        }
-                        break;
-                    case "p2p":
-                        this.p2p.fromXML(sr);
-                        break;
-                    default:
-                        Cfg.skipElement(sr);
-                        break;
-                }
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
+                            break;
+                        case "p2p":
+                            this.p2p.fromXML(sr);
+                            break;
+                        default:
+                            Cfg.skipElement(sr);
+                            break;
+                    }
+                    break;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
             }
         }
     }
@@ -147,22 +143,24 @@ public final class CfgNet {
         }
     }
 
-    public void setNodes(String[] _nodes) {
-        if (SINGLE)
-            this.nodes = new String[0];
-        else
-            this.nodes = _nodes;
-    }
-
-    public int getId(){
+    public int getId() {
         return this.id;
     }
 
     public String[] getNodes() {
-        if (SINGLE)
+        if (SINGLE) {
             return new String[0];
-        else
+        } else {
             return this.nodes;
+        }
+    }
+
+    public void setNodes(String[] _nodes) {
+        if (SINGLE) {
+            this.nodes = new String[0];
+        } else {
+            this.nodes = _nodes;
+        }
     }
 
     public CfgNetP2p getP2p() {
@@ -171,12 +169,16 @@ public final class CfgNet {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         CfgNet cfgNet = (CfgNet) o;
         return id == cfgNet.id &&
-                Objects.equal(nodes, cfgNet.nodes) &&
-                Objects.equal(p2p, cfgNet.p2p);
+            Objects.equal(nodes, cfgNet.nodes) &&
+            Objects.equal(p2p, cfgNet.p2p);
     }
 
     @Override

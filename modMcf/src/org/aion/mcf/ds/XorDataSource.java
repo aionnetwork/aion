@@ -34,12 +34,18 @@
  ******************************************************************************/
 package org.aion.mcf.ds;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 
 public class XorDataSource implements IByteArrayKeyValueStore {
+
     IByteArrayKeyValueStore source;
     byte[] subKey;
 
@@ -89,7 +95,7 @@ public class XorDataSource implements IByteArrayKeyValueStore {
     public void updateBatch(Map<ByteArrayWrapper, byte[]> rows, boolean erasure) {
         // not supported
         throw new UnsupportedOperationException(
-                "ByteArrayWrapper map not supported in XorDataSource.updateBatch yet");
+            "ByteArrayWrapper map not supported in XorDataSource.updateBatch yet");
     }
 
     @Override

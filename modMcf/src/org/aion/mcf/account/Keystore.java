@@ -63,7 +63,9 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-/** key store class. */
+/**
+ * key store class.
+ */
 public class Keystore {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
@@ -113,7 +115,9 @@ public class Keystore {
             String fileName = "UTC--" + iso_date + "--" + address;
             try {
                 Path keyFile = PATH.resolve(fileName);
-                if (!Files.exists(keyFile)) keyFile = Files.createFile(keyFile, attr);
+                if (!Files.exists(keyFile)) {
+                    keyFile = Files.createFile(keyFile, attr);
+                }
                 String path = keyFile.toString();
                 FileOutputStream fos = new FileOutputStream(path);
                 fos.write(content);
@@ -156,18 +160,18 @@ public class Keystore {
         }
 
         List<File> matchedFile =
-                files.parallelStream()
-                        .filter(
-                                file ->
-                                        account.entrySet()
-                                                .parallelStream()
-                                                .anyMatch(
-                                                        ac ->
-                                                                file.getName()
-                                                                        .contains(
-                                                                                ac.getKey()
-                                                                                        .toString())))
-                        .collect(Collectors.toList());
+            files.parallelStream()
+                .filter(
+                    file ->
+                        account.entrySet()
+                            .parallelStream()
+                            .anyMatch(
+                                ac ->
+                                    file.getName()
+                                        .contains(
+                                            ac.getKey()
+                                                .toString())))
+                .collect(Collectors.toList());
 
         Map<Address, ByteArrayWrapper> res = new HashMap<>();
         for (File file : matchedFile) {
@@ -206,18 +210,18 @@ public class Keystore {
     private static List<String> addAddrs(List<File> files) {
         List<String> addresses = new ArrayList<>();
         files.forEach(
-                (file) -> {
-                    String[] frags = file.getName().split("--");
-                    if (frags.length == 3) {
-                        if (frags[2].startsWith(AION_PREFIX)) {
-                            addresses.add(TypeConverter.toJsonHex(frags[2]));
-                        } else {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Wrong address format: {}", frags[2]);
-                            }
+            (file) -> {
+                String[] frags = file.getName().split("--");
+                if (frags.length == 3) {
+                    if (frags[2].startsWith(AION_PREFIX)) {
+                        addresses.add(TypeConverter.toJsonHex(frags[2]));
+                    } else {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Wrong address format: {}", frags[2]);
                         }
                     }
-                });
+                }
+            });
         return addresses;
     }
 
@@ -290,19 +294,19 @@ public class Keystore {
         for (Map.Entry<String, String> keySet : importKey.entrySet()) {
             if (count < IMPORT_LIMIT) {
                 ECKey key =
-                        KeystoreFormat.fromKeystore(Hex.decode(keySet.getKey()), keySet.getValue());
+                    KeystoreFormat.fromKeystore(Hex.decode(keySet.getKey()), keySet.getValue());
                 if (key != null) {
                     String address = Keystore.create(keySet.getValue(), key);
                     if (!address.equals(ADDR_PREFIX)) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug(
-                                    "The private key was imported, the address is {}",
-                                    keySet.getKey());
+                                "The private key was imported, the address is {}",
+                                keySet.getKey());
                         }
                     } else {
                         LOG.error(
-                                "Failed to import the private key {}. Already exists?",
-                                keySet.getKey());
+                            "Failed to import the private key {}. Already exists?",
+                            keySet.getKey());
                         // only return the failed import privateKey.
                         rtn.add(keySet.getKey());
                     }
@@ -310,8 +314,8 @@ public class Keystore {
             } else {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug(
-                            "The account import limit was reached, the address didn't import into keystore {}",
-                            keySet.getKey());
+                        "The account import limit was reached, the address didn't import into keystore {}",
+                        keySet.getKey());
                 }
                 rtn.add(keySet.getKey());
             }
@@ -334,7 +338,7 @@ public class Keystore {
         }
 
         Optional<File> matchedFile =
-                files.parallelStream().filter(file -> file.getName().contains(address)).findFirst();
+            files.parallelStream().filter(file -> file.getName().contains(address)).findFirst();
 
         if (matchedFile.isPresent()) {
             byte[] content = new byte[0];
@@ -352,10 +356,12 @@ public class Keystore {
         return null;
     }
 
+    public static String getKeystorePath() {
+        return KEYSTORE_PATH;
+    }
+
     public static void setKeystorePath(String path) {
         KEYSTORE_PATH = path;
         PATH = Paths.get(KEYSTORE_PATH);
     }
-
-    public static String getKeystorePath() { return KEYSTORE_PATH; }
 }

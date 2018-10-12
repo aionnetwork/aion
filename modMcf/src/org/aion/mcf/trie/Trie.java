@@ -81,12 +81,16 @@ public interface Trie {
      */
     boolean isValidRoot(byte[] root);
 
-    /** Commit all the changes until now */
+    /**
+     * Commit all the changes until now
+     */
     void sync();
 
     void sync(boolean flushCache);
 
-    /** Discard all the changes until now */
+    /**
+     * Discard all the changes until now
+     */
     @Deprecated
     void undo();
 

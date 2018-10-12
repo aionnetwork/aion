@@ -48,22 +48,19 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-/** Account Manger Class */
+/**
+ * Account Manger Class
+ */
 public class AccountManager {
 
-    private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
     public static final int UNLOCK_MAX = 86400, // sec
-            UNLOCK_DEFAULT = 60; // sec
-
+        UNLOCK_DEFAULT = 60; // sec
+    private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
     private Map<Address, Account> accounts;
 
     private AccountManager() {
         LOGGER.debug("<account-manager init>");
         accounts = new HashMap<>();
-    }
-
-    private static class Holder {
-        static final AccountManager INSTANCE = new AccountManager();
     }
 
     public static AccountManager inst() {
@@ -147,5 +144,10 @@ public class AccountManager {
             }
             return false;
         }
+    }
+
+    private static class Holder {
+
+        static final AccountManager INSTANCE = new AccountManager();
     }
 }

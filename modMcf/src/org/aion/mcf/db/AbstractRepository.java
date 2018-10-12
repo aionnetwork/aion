@@ -50,23 +50,22 @@ import org.slf4j.Logger;
 
 // import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
 
-/** Abstract Repository class. */
+/**
+ * Abstract Repository class.
+ */
 public abstract class AbstractRepository<
-                BLK extends AbstractBlock<BH, ? extends ITransaction>,
-                BH extends IBlockHeader,
-                BSB extends IBlockStoreBase<?, ?>>
-        implements IRepository<AccountState, IDataWord, BSB> {
+    BLK extends AbstractBlock<BH, ? extends ITransaction>,
+    BH extends IBlockHeader,
+    BSB extends IBlockStoreBase<?, ?>>
+    implements IRepository<AccountState, IDataWord, BSB> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
     protected static final Logger LOGGEN = AionLoggerFactory.getLogger(LogEnum.GEN.name());
-
-    // Configuration parameter
-    protected IRepositoryConfig cfg;
-
-    /** ********* Database Name Constants ********** */
+    /**
+     * ******** Database Name Constants **********
+     */
     protected static final String TRANSACTION_DB = Names.TRANSACTION;
-
     protected static final String INDEX_DB = Names.INDEX;
     protected static final String BLOCK_DB = Names.BLOCK;
     protected static final String PENDING_BLOCK_DB = Names.PENDING_BLOCK;
@@ -76,17 +75,20 @@ public abstract class AbstractRepository<
     protected static final String STATE_ARCHIVE_DB = Names.STATE_ARCHIVE;
     protected static final String PENDING_TX_POOL_DB = Names.TX_POOL;
     protected static final String PENDING_TX_CACHE_DB = Names.TX_CACHE;
-
-    // State trie.
-    protected Trie worldState;
+    // Current blockstore.
+    public BSB blockStore;
+    // Configuration parameter
+    protected IRepositoryConfig cfg;
 
     // DB Path
     // protected final static String DB_PATH = new
     // File(System.getProperty("user.dir"), "database").getAbsolutePath();
-
-    /** ******** Database and Cache parameters ************* */
+    // State trie.
+    protected Trie worldState;
+    /**
+     * ******* Database and Cache parameters *************
+     */
     protected IByteArrayKeyValueDatabase transactionDatabase;
-
     protected IByteArrayKeyValueDatabase detailsDatabase;
     protected IByteArrayKeyValueDatabase storageDatabase;
     protected IByteArrayKeyValueDatabase indexDatabase;
@@ -95,25 +97,17 @@ public abstract class AbstractRepository<
     protected IByteArrayKeyValueDatabase stateArchiveDatabase;
     protected IByteArrayKeyValueDatabase txPoolDatabase;
     protected IByteArrayKeyValueDatabase pendingTxCacheDatabase;
-
     protected Collection<IByteArrayKeyValueDatabase> databaseGroup;
-
     protected ArchivedDataSource stateWithArchive;
     protected JournalPruneDataSource stateDSPrune;
     protected DetailsDataStore<BLK, BH> detailsDS;
-
     // Read Write Lock
     protected ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
     // Block related parameters.
     protected long bestBlockNumber = 0;
     protected long pruneBlockCount;
     protected long archiveRate;
     protected boolean pruneEnabled = true;
-
-    // Current blockstore.
-    public BSB blockStore;
-
     // pending block store
     protected Properties pendingStoreProperties;
 
@@ -179,7 +173,7 @@ public abstract class AbstractRepository<
             databaseGroup = new ArrayList<>();
 
             checkIntegrity = Boolean.valueOf(
-                    cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.CHECK_INTEGRITY));
+                cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.CHECK_INTEGRITY));
 
             // getting state specific properties
             sharedProps = cfg.getDatabaseConfig(STATE_DB);
@@ -295,9 +289,9 @@ public abstract class AbstractRepository<
                 stateDSPrune = new JournalPruneDataSource(stateWithArchive);
 
                 LOGGEN.info(
-                        "Pruning and archiving ENABLED. Top block count set to {} and archive rate set to {}.",
-                        pruneBlockCount,
-                        archiveRate);
+                    "Pruning and archiving ENABLED. Top block count set to {} and archive rate set to {}.",
+                    pruneBlockCount,
+                    archiveRate);
             } else {
                 stateArchiveDatabase = null;
                 stateWithArchive = null;

@@ -24,14 +24,13 @@
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
 /**
  * Api configuration class.
@@ -51,9 +50,11 @@ public final class CfgApi {
     public CfgApiRpc getRpc() {
         return this.rpc;
     }
+
     public CfgApiZmq getZmq() {
         return this.zmq;
     }
+
     public CfgApiNrg getNrg() {
         return this.nrg;
     }
@@ -63,24 +64,24 @@ public final class CfgApi {
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                switch (sr.getLocalName()) {
-                case "java":
-                    this.zmq.fromXML(sr);
+                case XMLStreamReader.START_ELEMENT:
+                    switch (sr.getLocalName()) {
+                        case "java":
+                            this.zmq.fromXML(sr);
+                            break;
+                        case "rpc":
+                            this.rpc.fromXML(sr);
+                            break;
+                        case "nrg-recommendation":
+                            this.nrg.fromXML(sr);
+                            break;
+                        default:
+                            Cfg.skipElement(sr);
+                            break;
+                    }
                     break;
-                case "rpc":
-                    this.rpc.fromXML(sr);
-                    break;
-                case "nrg-recommendation":
-                    this.nrg.fromXML(sr);
-                    break;
-                default:
-                    Cfg.skipElement(sr);
-                    break;
-                }
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
             }
         }
     }
@@ -116,12 +117,16 @@ public final class CfgApi {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         CfgApi cfgApi = (CfgApi) o;
         return Objects.equal(zmq, cfgApi.zmq) &&
-                Objects.equal(rpc, cfgApi.rpc) &&
-                Objects.equal(nrg, cfgApi.nrg);
+            Objects.equal(rpc, cfgApi.rpc) &&
+            Objects.equal(nrg, cfgApi.nrg);
     }
 
     @Override

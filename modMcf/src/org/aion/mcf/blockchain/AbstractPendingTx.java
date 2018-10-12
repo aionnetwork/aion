@@ -25,15 +25,12 @@
 package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
-
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteUtil;
 
 /**
  * Abstract Pending Transaction Class.
- *
- * @param <TX>
  */
 
 public abstract class AbstractPendingTx<TX extends ITransaction> {
@@ -87,12 +84,14 @@ public abstract class AbstractPendingTx<TX extends ITransaction> {
 
     @Override
     public String toString() {
-        return "PendingTransaction [" + "  transaction=" + transaction + ", blockNumber=" + blockNumber + ']';
+        return "PendingTransaction [" + "  transaction=" + transaction + ", blockNumber="
+            + blockNumber + ']';
     }
 
     @Override
     public int hashCode() {
-        return ByteUtil.byteArrayToInt(getSender().toBytes()) + ByteUtil.byteArrayToInt(transaction.getNonce());
+        return ByteUtil.byteArrayToInt(getSender().toBytes()) + ByteUtil
+            .byteArrayToInt(transaction.getNonce());
     }
 
 }

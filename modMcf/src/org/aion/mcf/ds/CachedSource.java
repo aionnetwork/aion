@@ -34,5 +34,6 @@ public interface CachedSource<Key, Value> extends Source<Key, Value> {
     long estimateCacheSize();
 
     interface BytesKey<Value> extends CachedSource<byte[], Value> {
+
     }
 }

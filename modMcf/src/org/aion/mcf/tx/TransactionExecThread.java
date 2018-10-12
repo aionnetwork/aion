@@ -20,7 +20,6 @@
  *
  * Contributors:
  *     Aion foundation.
-
  ******************************************************************************/
 package org.aion.mcf.tx;
 
@@ -30,26 +29,24 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-
 import org.aion.base.type.ITransaction;
-import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.slf4j.Logger;
 
 /**
- * Thread is responsible for execution of all transactions coming from API
- * (only), Blockchain thread execution is done separately
+ * Thread is responsible for execution of all transactions coming from API (only), Blockchain thread
+ * execution is done separately
  * <p>
  *
  * @author yao
  */
 public abstract class TransactionExecThread<PS extends IPendingStateInternal, TX extends ITransaction> {
 
-    private final PS pendingState;
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOGGEN = AionLoggerFactory.getLogger(LogEnum.GEN.toString());
-
+    private final PS pendingState;
     private final ExecutorService txExec = Executors.newSingleThreadExecutor(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable arg0) {

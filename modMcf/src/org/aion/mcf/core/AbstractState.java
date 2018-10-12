@@ -24,8 +24,8 @@
 package org.aion.mcf.core;
 
 /**
- * Common functionality for externally owned accounts {@link AccountState} and
- * contracts (to be added soon).
+ * Common functionality for externally owned accounts {@link AccountState} and contracts (to be
+ * added soon).
  *
  * @author Alexandra Roatis
  */
@@ -46,29 +46,25 @@ public abstract class AbstractState {
     protected boolean dirty = false;
 
     /**
-     * Checks whether the state of the account has been changed during
-     * execution.
+     * Checks whether the state of the account has been changed during execution.
      * <p>
-     * The dirty status is set internally by the object when its stored values
-     * have been modified.
+     * The dirty status is set internally by the object when its stored values have been modified.
      *
-     * @return {@code true} if the account state has been modified (including if
-     * the account is newly created), {@code false} if the account state
-     * is the same as in the database
+     * @return {@code true} if the account state has been modified (including if the account is
+     * newly created), {@code false} if the account state is the same as in the database
      */
     public boolean isDirty() {
         return this.dirty;
     }
 
     /**
-     * Sets the dirty flag to true signaling that the object state has been
-     * changed.
+     * Sets the dirty flag to true signaling that the object state has been changed.
      *
-     * @apiNote Once the account has been modified (by setting the flag to
-     * {@code true}) it is <b>considered dirty</b> even if its state
-     * reverts to the initial values by applying subsequent changes.
-     * @implNote Method called internally by the account object when its state
-     * has been modified. Resets the stored RLP encoding.
+     * @apiNote Once the account has been modified (by setting the flag to {@code true}) it is
+     * <b>considered dirty</b> even if its state reverts to the initial values by applying
+     * subsequent changes.
+     * @implNote Method called internally by the account object when its state has been modified.
+     * Resets the stored RLP encoding.
      */
     protected void makeDirty() {
         this.rlpEncoded = null;
@@ -78,8 +74,8 @@ public abstract class AbstractState {
     /**
      * Deletes the current account.
      *
-     * @apiNote Once the account has been deleted (by setting the flag to
-     * {@code true}) <b>it cannot be recovered</b>.
+     * @apiNote Once the account has been deleted (by setting the flag to {@code true}) <b>it cannot
+     * be recovered</b>.
      */
     public void delete() {
         this.deleted = true;
@@ -98,22 +94,19 @@ public abstract class AbstractState {
     /**
      * Retrieves the RLP encoding of this object.
      *
-     * @return a {@code byte} array representing the RLP encoding of the account
-     * state.
-     * @implNote For performance reasons, this encoding is stored when available
-     * and recomputed only if the object has been modified during
-     * execution.
+     * @return a {@code byte} array representing the RLP encoding of the account state.
+     * @implNote For performance reasons, this encoding is stored when available and recomputed only
+     * if the object has been modified during execution.
      */
     public abstract byte[] getEncoded();
 
     /**
      * Checks if the account state stores any meaningful information.
      *
-     * @return {@code true} if the account state is empty, {@code false}
-     * otherwise
+     * @return {@code true} if the account state is empty, {@code false} otherwise
      * @apiNote Empty accounts should not be stored in the database.
-     * @implNote Empty accounts do not have associated code (or by extension
-     * storage), i.e. cannot be contract accounts.
+     * @implNote Empty accounts do not have associated code (or by extension storage), i.e. cannot
+     * be contract accounts.
      */
     public abstract boolean isEmpty();
 }

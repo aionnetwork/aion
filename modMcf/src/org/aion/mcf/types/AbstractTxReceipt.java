@@ -52,8 +52,18 @@ public abstract class AbstractTxReceipt<TX extends ITransaction> implements Byte
         return postTxState;
     }
 
+    public void setPostTxState(byte[] postTxState) {
+        this.postTxState = postTxState;
+        rlpEncoded = null;
+    }
+
     public byte[] getExecutionResult() {
         return executionResult;
+    }
+
+    public void setExecutionResult(byte[] executionResult) {
+        this.executionResult = executionResult;
+        rlpEncoded = null;
     }
 
     public Bloom getBloomFilter() {
@@ -72,16 +82,6 @@ public abstract class AbstractTxReceipt<TX extends ITransaction> implements Byte
 
     public String getError() {
         return error;
-    }
-
-    public void setPostTxState(byte[] postTxState) {
-        this.postTxState = postTxState;
-        rlpEncoded = null;
-    }
-
-    public void setExecutionResult(byte[] executionResult) {
-        this.executionResult = executionResult;
-        rlpEncoded = null;
     }
 
     /**
@@ -107,16 +107,16 @@ public abstract class AbstractTxReceipt<TX extends ITransaction> implements Byte
         rlpEncoded = null;
     }
 
-    public void setTransaction(TX transaction) {
-        this.transaction = transaction;
-    }
-
     public TX getTransaction() {
         if (transaction == null) {
             throw new NullPointerException(
                 "Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
         }
         return transaction;
+    }
+
+    public void setTransaction(TX transaction) {
+        this.transaction = transaction;
     }
 
 }

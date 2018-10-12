@@ -27,9 +27,6 @@ import org.aion.mcf.types.AbstractTxReceipt;
 
 /**
  * Abstract transaction info.
- *
- * @param <TXR>
- * @param <TX>
  */
 
 public abstract class AbstractTxInfo<TXR extends AbstractTxReceipt<?>, TX extends AbstractTransaction> {

@@ -11,15 +11,15 @@ import org.slf4j.Logger;
 
 public class AionLoggerFactoryTest {
 
-	@Test
-	@Ignore
-	public void test() {
+    @Test
+    @Ignore
+    public void test() {
 //		AionLogger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 //		assertNotNull(LOG);
 //		assertNotNull(AionLogger.CONFIG_PARAMS);
-	}
+    }
 
-   public void test1() {
+    public void test1() {
         Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
         assertNotNull(LOG);
         //assertNotNull(AionLogger.CONFIG_PARAMS);
