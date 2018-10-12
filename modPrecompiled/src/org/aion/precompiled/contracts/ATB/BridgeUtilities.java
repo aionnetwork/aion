@@ -1,15 +1,17 @@
 package org.aion.precompiled.contracts.ATB;
 
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.PrecompiledUtilities;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-
 public class BridgeUtilities {
+
+    private static final byte[] TRUE = ByteUtil
+        .hexStringToBytes("00000000000000000000000000000001");
 
     static byte[] toSignature(@Nonnull final String funcSignature) {
         byte[] sigChopped = new byte[4];
@@ -23,8 +25,9 @@ public class BridgeUtilities {
     }
 
     static byte[] getSignature(@Nonnull final byte[] input) {
-        if (input.length < 4)
+        if (input.length < 4) {
             return null;
+        }
 
         byte[] sig = new byte[4];
         System.arraycopy(input, 0, sig, 0, 4);
@@ -39,7 +42,6 @@ public class BridgeUtilities {
         return input == null ? ByteUtil.EMPTY_WORD : input;
     }
 
-    private static final byte[] TRUE = ByteUtil.hexStringToBytes("00000000000000000000000000000001");
     static byte[] booleanToResultBytes(final boolean input) {
         return input ? TRUE : ByteUtil.EMPTY_HALFWORD;
     }

@@ -1,16 +1,15 @@
 package org.aion.precompiled.contracts.ATB;
 
-import java.util.Arrays;
-import org.aion.precompiled.PrecompiledUtilities;
-
-import javax.annotation.Nonnull;
 import java.math.BigInteger;
+import java.util.Arrays;
+import javax.annotation.Nonnull;
+import org.aion.precompiled.PrecompiledUtilities;
 
 public class BridgeTransfer {
 
     /**
-     * Consists of the sourceTransactionHash (32 bytes), the recipient address (32 bytes)
-     * and the value (padded to 16 bytes).
+     * Consists of the sourceTransactionHash (32 bytes), the recipient address (32 bytes) and the
+     * value (padded to 16 bytes).
      */
     static final int TRANSFER_SIZE = 32 + 32 + 16;
 
@@ -19,8 +18,8 @@ public class BridgeTransfer {
     private final byte[] sourceTransactionHash;
 
     private BridgeTransfer(@Nonnull final BigInteger transferValue,
-                   @Nonnull final byte[] recipient,
-                   @Nonnull final byte[] sourceTransactionHash) {
+        @Nonnull final byte[] recipient,
+        @Nonnull final byte[] sourceTransactionHash) {
         this.transferValue = transferValue;
         this.recipient = recipient.length == 32 ? recipient : Arrays.copyOf(recipient, 32);
         this.sourceTransactionHash =
@@ -28,12 +27,13 @@ public class BridgeTransfer {
                 ? sourceTransactionHash
                 : Arrays.copyOf(sourceTransactionHash, 32);
     }
-    
+
     static BridgeTransfer getInstance(@Nonnull final BigInteger transferValue,
-                                      @Nonnull final byte[] recipient,
-                                      @Nonnull final byte[] sourceTransactionHash) {
-        if (transferValue.toByteArray().length > 16)
+        @Nonnull final byte[] recipient,
+        @Nonnull final byte[] sourceTransactionHash) {
+        if (transferValue.toByteArray().length > 16) {
             return null;
+        }
         return new BridgeTransfer(transferValue, recipient, sourceTransactionHash);
     }
 

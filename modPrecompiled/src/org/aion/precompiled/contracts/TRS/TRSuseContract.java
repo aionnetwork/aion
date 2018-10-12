@@ -49,20 +49,19 @@ import org.aion.vm.ExecutionResult;
  * contract itself. Some of the supported operations are privileged and can only be called by the
  * contract owner.
  *
- * The following operations are supported:
- *      deposit -- deposits funds into a public-facing TRS contract.
- *      withdraw -- withdraws funds from a public-facing TRS contract.
- *      bulkDepositFor -- bulk fund depositing on the behalf of depositors. Owner-only.
- *      bulkWithdraw -- bulk fund withdrawal to all depositors. Owner-only.
- *      refund -- refunds funds to a depositor. Can only be called prior to locking. Owner-only.
- *      depositFor -- deposits funds into a public-facing TRS contract on an accout's behalf. Owner-only.
- *      addExtraFunds -- adds extra funds to contract, in case of subsequent sales. Owner-only.
+ * The following operations are supported: deposit -- deposits funds into a public-facing TRS
+ * contract. withdraw -- withdraws funds from a public-facing TRS contract. bulkDepositFor -- bulk
+ * fund depositing on the behalf of depositors. Owner-only. bulkWithdraw -- bulk fund withdrawal to
+ * all depositors. Owner-only. refund -- refunds funds to a depositor. Can only be called prior to
+ * locking. Owner-only. depositFor -- deposits funds into a public-facing TRS contract on an
+ * accout's behalf. Owner-only. addExtraFunds -- adds extra funds to contract, in case of subsequent
+ * sales. Owner-only.
  */
 public final class TRSuseContract extends AbstractTRS {
 
     /**
-     * Constructs a new TRSuseContract that will use repo as the database cache to update its
-     * state with and is called by caller.
+     * Constructs a new TRSuseContract that will use repo as the database cache to update its state
+     * with and is called by caller.
      *
      * @param repo The database cache.
      * @param caller The calling address.
@@ -82,151 +81,129 @@ public final class TRSuseContract extends AbstractTRS {
      * where arguments is defined differently for different operations. The supported operations
      * along with their expected arguments are outlined as follows:
      *
-     *   <b>operation 0x0</b> - deposits funds into a public-facing TRS contract.
-     *     [<32b - contractAddress> | <128b - amount>]
-     *     total = 161 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract to deposit funds into.
-     *       amount is the amount of funds to deposit. The contract interprets these 128 bytes as an
-     *       unsigned and positive amount.
+     * <b>operation 0x0</b> - deposits funds into a public-facing TRS contract.
+     * [<32b - contractAddress> | <128b - amount>] total = 161 bytes where: contractAddress is the
+     * address of the public-facing TRS contract to deposit funds into. amount is the amount of
+     * funds to deposit. The contract interprets these 128 bytes as an unsigned and positive
+     * amount.
      *
-     *     conditions: the calling account must have enough balance to deposit amount otherwise this
-     *       method effectively does nothing. The deposit operation is enabled only when the contract
-     *       is unlocked; once locked depositing is disabled. If a contract has its funds open then
-     *       this operation is disabled.
+     * conditions: the calling account must have enough balance to deposit amount otherwise this
+     * method effectively does nothing. The deposit operation is enabled only when the contract is
+     * unlocked; once locked depositing is disabled. If a contract has its funds open then this
+     * operation is disabled.
      *
-     *     returns: void.
+     * returns: void.
      *
-     *                                          ~~~***~~~
+     * ~~~***~~~
      *
-     *   <b>operation 0x1</b> - withdraws funds from the calling account's TRS deposit balance and
-     *     puts them into the calling account. Each account is eligible to make 1 withdrawal per
-     *     period as well as a special one-off withdrawal that will be claimed automatically on the
-     *     account's first ever withdrawal. If an account has missed previous periods then the next
-     *     call to this operation will withdraw for the current period as well as any previously
-     *     missed periods.
+     * <b>operation 0x1</b> - withdraws funds from the calling account's TRS deposit balance and
+     * puts them into the calling account. Each account is eligible to make 1 withdrawal per period
+     * as well as a special one-off withdrawal that will be claimed automatically on the account's
+     * first ever withdrawal. If an account has missed previous periods then the next call to this
+     * operation will withdraw for the current period as well as any previously missed periods.
      *
-     *     In the special case that a contract has its funds open, the first call to this operation
-     *     after the funds are opened will withdraw all funds that the contract owes the caller
-     *     including bonus. Any subsequent calls will fail.
+     * In the special case that a contract has its funds open, the first call to this operation
+     * after the funds are opened will withdraw all funds that the contract owes the caller
+     * including bonus. Any subsequent calls will fail.
      *
-     *     [<32b - contractAddress>]
-     *     total = 33 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract that the account is
-     *       attempting to withdraw funds from.
+     * [<32b - contractAddress>] total = 33 bytes where: contractAddress is the address of the
+     * public-facing TRS contract that the account is attempting to withdraw funds from.
      *
-     *     conditions: the TRS contract must be live in order to withdraw funds from it.
+     * conditions: the TRS contract must be live in order to withdraw funds from it.
      *
-     *     returns: void.
+     * returns: void.
      *
-     *                                          ~~~***~~~
+     * ~~~***~~~
      *
-     *   <b>operation 0x2</b> - deposits the specified funds into the contract on the behalf of
-     *     other accounts. This is a convenience operation for the owner to use the depositFor logic
-     *     in bulk. This operation supports depositing into the contract on behalf of up to 100
-     *     accounts.
+     * <b>operation 0x2</b> - deposits the specified funds into the contract on the behalf of
+     * other accounts. This is a convenience operation for the owner to use the depositFor logic in
+     * bulk. This operation supports depositing into the contract on behalf of up to 100 accounts.
      *
-     *     Define "entry" as the following 160b array: [<32b - accountAddress> | <128b - amount>]
-     *     Then the arguments to this operation are:
-     *       32-byte contractAddress followed by a contiguous list of X 160-byte entry arrays,
-     *       where X is in [1, 100]
-     *     total = 193-16,033 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract that the account is
-     *       attempting to deposit funds into.
-     *     and for each entry we have the following pair:
-     *       accountAddress is the address of an account the caller is attempting to deposit funds
-     *       into the contract for.
-     *       amount is the corresponding amount of funds to deposit on behalf of accountAddress.
+     * Define "entry" as the following 160b array: [<32b - accountAddress> | <128b - amount>] Then
+     * the arguments to this operation are: 32-byte contractAddress followed by a contiguous list of
+     * X 160-byte entry arrays, where X is in [1, 100] total = 193-16,033 bytes where:
+     * contractAddress is the address of the public-facing TRS contract that the account is
+     * attempting to deposit funds into. and for each entry we have the following pair:
+     * accountAddress is the address of an account the caller is attempting to deposit funds into
+     * the contract for. amount is the corresponding amount of funds to deposit on behalf of
+     * accountAddress.
      *
-     *     conditions: the TRS contract must not yet be locked (nor obviously live) to bulkDeposit
-     *       into it. The caller must be the owner of the contract. Each accountAddress must be an
-     *       Aion account address. If a contract has its funds open then this operation is disabled.
+     * conditions: the TRS contract must not yet be locked (nor obviously live) to bulkDeposit into
+     * it. The caller must be the owner of the contract. Each accountAddress must be an Aion account
+     * address. If a contract has its funds open then this operation is disabled.
      *
-     *     returns: void.
+     * returns: void.
      *
-     *                                          ~~~***~~~
+     * ~~~***~~~
      *
-     *   <b>operation 0x3</b> - withdraws funds from the contract on behalf of each depositor in the
-     *     contract. This operation is functionally equivalent to having each depositor in the
-     *     contract perform a withdraw operation.
+     * <b>operation 0x3</b> - withdraws funds from the contract on behalf of each depositor in the
+     * contract. This operation is functionally equivalent to having each depositor in the contract
+     * perform a withdraw operation.
      *
-     *     In the special case where a contract has its funds open, the first call to this operation
-     *     after the funds are opened will withdraw the total amounts the contract owes each
-     *     depositor. Any subsequent calls to this operation involving the same addresses as the
-     *     first time will have no effect.
+     * In the special case where a contract has its funds open, the first call to this operation
+     * after the funds are opened will withdraw the total amounts the contract owes each depositor.
+     * Any subsequent calls to this operation involving the same addresses as the first time will
+     * have no effect.
      *
-     *     [<32b - contractAddress>]
-     *     total = 33 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract that the account is
-     *       attempting to perform a bulk withdrawal of funds from.
+     * [<32b - contractAddress>] total = 33 bytes where: contractAddress is the address of the
+     * public-facing TRS contract that the account is attempting to perform a bulk withdrawal of
+     * funds from.
      *
-     *     conditions: the TRS contract must be live in order to bulk withdraw funds from it. The
-     *       caller must be the owner of the contract.
+     * conditions: the TRS contract must be live in order to bulk withdraw funds from it. The caller
+     * must be the owner of the contract.
      *
-     *     returns: void.
+     * returns: void.
      *
-     *                                          ~~~***~~~
+     * ~~~***~~~
      *
-     *   <b>operation 0x4</b> - refunds a specified amount of depositor's balance for the public-
-     *     facing TRS contract.
-     *     [<32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
-     *     total = 193 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract that the account given
-     *       by the address accountAddress is being refunded from. The proposed refund amount is
-     *       given by amount. The contract interprets the 128 bytes of amount as unsigned and
-     *       strictly positive.
+     * <b>operation 0x4</b> - refunds a specified amount of depositor's balance for the public-
+     * facing TRS contract. [<32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
+     * total = 193 bytes where: contractAddress is the address of the public-facing TRS contract
+     * that the account given by the address accountAddress is being refunded from. The proposed
+     * refund amount is given by amount. The contract interprets the 128 bytes of amount as unsigned
+     * and strictly positive.
      *
-     *     conditions: the calling account must be the owner of the public-facing TRS contract. The
-     *       account accountAddress must have a deposit balannce into this TRS contract of at least
-     *       amount. The refund operation is enabled only when the contract is unlocked; once locked
-     *       refunding is disabled. If any of these conditions are not satisfied this method
-     *       effectively does nothing. If a contract's funds are open then this method is disabled.
+     * conditions: the calling account must be the owner of the public-facing TRS contract. The
+     * account accountAddress must have a deposit balannce into this TRS contract of at least
+     * amount. The refund operation is enabled only when the contract is unlocked; once locked
+     * refunding is disabled. If any of these conditions are not satisfied this method effectively
+     * does nothing. If a contract's funds are open then this method is disabled.
      *
-     *     returns: void.
+     * returns: void.
      *
-     *                                          ~~~***~~~
+     * ~~~***~~~
      *
-     *   <b>operation 0x5</b> - deposits the specified amount of funds into the contract on the
-     *     behalf of the specified account. This operation is here so that, if direct deposits into
-     *     the contract are disabled, the contract owner has a means of depositing funds into the
-     *     contract for the users.
+     * <b>operation 0x5</b> - deposits the specified amount of funds into the contract on the
+     * behalf of the specified account. This operation is here so that, if direct deposits into the
+     * contract are disabled, the contract owner has a means of depositing funds into the contract
+     * for the users.
      *
-     *     [<32b - contractAddress> | <32b - forAccount> | <128b - amount>]
-     *     total = 193 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract.
-     *     forAccount is the account that will be listed as having amount deposited into it if the
-     *       operation succeeds.
-     *     amount is the amount of funds to deposit into the contract on forAccount's behalf.
+     * [<32b - contractAddress> | <32b - forAccount> | <128b - amount>] total = 193 bytes where:
+     * contractAddress is the address of the public-facing TRS contract. forAccount is the account
+     * that will be listed as having amount deposited into it if the operation succeeds. amount is
+     * the amount of funds to deposit into the contract on forAccount's behalf.
      *
-     *     conditions: the TRS contract must not yet be locked (or obviously live) and the caller
-     *       must be the contract owner. If a contract's funds are open then this operation is
-     *       disabled.
+     * conditions: the TRS contract must not yet be locked (or obviously live) and the caller must
+     * be the contract owner. If a contract's funds are open then this operation is disabled.
      *
-     *     returns: void.
+     * returns: void.
      *
-     *                                          ~~~***~~~
+     * ~~~***~~~
      *
-     *   <b>operation 0x6</b> - adds extra funds to the TRS contract that are split proportionally
-     *     among the contract's depositors according to the proportions each of them has contributed
-     *     compared to the total amount of user deposits (that is, excluding added extra funds and
-     *     bonus amounts). These extra funds are withdrawn by the depositors equally over the number
-     *     of remaining periods.
+     * <b>operation 0x6</b> - adds extra funds to the TRS contract that are split proportionally
+     * among the contract's depositors according to the proportions each of them has contributed
+     * compared to the total amount of user deposits (that is, excluding added extra funds and bonus
+     * amounts). These extra funds are withdrawn by the depositors equally over the number of
+     * remaining periods.
      *
-     *     [<32b - contractAddress> | <128b - amount>]
-     *     total = 161 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract.
-     *     amount is the amount of extra funds to add to the contract.
+     * [<32b - contractAddress> | <128b - amount>] total = 161 bytes where: contractAddress is the
+     * address of the public-facing TRS contract. amount is the amount of extra funds to add to the
+     * contract.
      *
-     *     conditions: the caller must be the contract owner. If a contract's funds are open then
-     *       this operation is disabled.
+     * conditions: the caller must be the contract owner. If a contract's funds are open then this
+     * operation is disabled.
      *
-     *     returns: void.
+     * returns: void.
      *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
@@ -249,35 +226,40 @@ public final class TRSuseContract extends AbstractTRS {
 
         int operation = input[0];
         switch (operation) {
-            case 0: return deposit(input, nrgLimit);
-            case 1: return withdraw(input, nrgLimit);
-            case 2: return bulkDepositFor(input, nrgLimit);
-            case 3: return bulkWithdraw(input, nrgLimit);
-            case 4: return refund(input, nrgLimit);
-            case 5: return depositFor(input, nrgLimit);
-            case 6: return addExtraFunds(input, nrgLimit);
-            default: return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            case 0:
+                return deposit(input, nrgLimit);
+            case 1:
+                return withdraw(input, nrgLimit);
+            case 2:
+                return bulkDepositFor(input, nrgLimit);
+            case 3:
+                return bulkWithdraw(input, nrgLimit);
+            case 4:
+                return refund(input, nrgLimit);
+            case 5:
+                return depositFor(input, nrgLimit);
+            case 6:
+                return addExtraFunds(input, nrgLimit);
+            default:
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
 
     /**
      * Logic to deposit funds to an existing public-facing TRS contract.
      *
-     * The input byte array format is defined as follows:
-     *   [<1b - 0x0> | <32b - contractAddress> | <128b - amount>]
-     *   total = 161 bytes
-     * where:
-     *   contractAddress is the address of the public-facing TRS contract to deposit funds into.
-     *   amount is the amount of funds to deposit. The contract interprets these 128 bytes as an
-     *     unsigned and positive amount.
+     * The input byte array format is defined as follows: [<1b - 0x0> | <32b - contractAddress> |
+     * <128b - amount>] total = 161 bytes where: contractAddress is the address of the public-facing
+     * TRS contract to deposit funds into. amount is the amount of funds to deposit. The contract
+     * interprets these 128 bytes as an unsigned and positive amount.
      *
-     *   conditions: the calling account must have enough balance to deposit amount otherwise this
-     *     method effectively does nothing. The deposit operation is enabled only when the contract
-     *     is unlocked; once locked depositing is disabled. Note that if zero is deposited, the call
-     *     will succeed but the depositor will not be saved into the database. If a contract has its
-     *     funds open then depositing is disabled.
+     * conditions: the calling account must have enough balance to deposit amount otherwise this
+     * method effectively does nothing. The deposit operation is enabled only when the contract is
+     * unlocked; once locked depositing is disabled. Note that if zero is deposited, the call will
+     * succeed but the depositor will not be saved into the database. If a contract has its funds
+     * open then depositing is disabled.
      *
-     *   returns: void.
+     * returns: void.
      *
      * @param input The input to deposit to a public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -323,23 +305,22 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         ExecutionResult result = makeDeposit(contract, caller, amount, nrgLimit);
-        if (result.getResultCode().equals(ResultCode.SUCCESS)) { track.flush(); }
+        if (result.getResultCode().equals(ResultCode.SUCCESS)) {
+            track.flush();
+        }
         return result;
     }
 
     /**
      * Logic to withdraw funds from an existing public-facing TRS contract.
      *
-     * The input byte array format is defined as follows:
-     *     [<32b - contractAddress>]
-     *     total = 33 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract that the account is
-     *       attempting to withdraw funds from.
+     * The input byte array format is defined as follows: [<32b - contractAddress>] total = 33 bytes
+     * where: contractAddress is the address of the public-facing TRS contract that the account is
+     * attempting to withdraw funds from.
      *
-     *     conditions: the TRS contract must be live in order to withdraw funds from it.
+     * conditions: the TRS contract must be live in order to withdraw funds from it.
      *
-     *     returns: void.
+     * returns: void.
      *
      * @param input The input to withdraw from a public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -377,24 +358,20 @@ public final class TRSuseContract extends AbstractTRS {
     /**
      * Logic to bulk-deposit-for funds into an existing public-facing TRS contract.
      *
-     *   Define "entry" as the following 160b array: [<32b - accountAddress> | <128b - amount>]
-     *   Then the arguments to this operation are:
-     *      [ <1b - 0x2> | <32b - contractAddress> | E]
-     *   where E is a contiguous list of X 160-byte entry arrays, such that X is in [1, 100]
-     *     total = 193-16,033 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract that the account is
-     *       attempting to deposit funds into.
-     *     and for each entry we have the following pair:
-     *       accountAddress is the address of an account the caller is attempting to deposit funds
-     *       into the contract for.
-     *       amount is the corresponding amount of funds to deposit on behalf of accountAddress.
+     * Define "entry" as the following 160b array: [<32b - accountAddress> | <128b - amount>] Then
+     * the arguments to this operation are: [ <1b - 0x2> | <32b - contractAddress> | E] where E is a
+     * contiguous list of X 160-byte entry arrays, such that X is in [1, 100] total = 193-16,033
+     * bytes where: contractAddress is the address of the public-facing TRS contract that the
+     * account is attempting to deposit funds into. and for each entry we have the following pair:
+     * accountAddress is the address of an account the caller is attempting to deposit funds into
+     * the contract for. amount is the corresponding amount of funds to deposit on behalf of
+     * accountAddress.
      *
-     *     conditions: the TRS contract must not yet be locked (nor obviously live) to bulkDeposit
-     *       into it. The caller must be the owner of the contract. Each accountAddress must be an
-     *       Aion account address. If a contract has its funds open then this operation is disabled.
+     * conditions: the TRS contract must not yet be locked (nor obviously live) to bulkDeposit into
+     * it. The caller must be the owner of the contract. Each accountAddress must be an Aion account
+     * address. If a contract has its funds open then this operation is disabled.
      *
-     *     returns: void.
+     * returns: void.
      *
      * @param input The input to bulk-deposit-for into a public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -476,17 +453,14 @@ public final class TRSuseContract extends AbstractTRS {
     /**
      * Logic to bulk-withdraw funds from an existing public-facing TRS contract.
      *
-     * The input byte array format is defined as follows:
-     *     [<32b - contractAddress>]
-     *     total = 33 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract that the account is
-     *       attempting to perform a bulk withdrawal of funds from.
+     * The input byte array format is defined as follows: [<32b - contractAddress>] total = 33 bytes
+     * where: contractAddress is the address of the public-facing TRS contract that the account is
+     * attempting to perform a bulk withdrawal of funds from.
      *
-     *     conditions: the TRS contract must be live in order to bulk withdraw funds from it. The
-     *       caller must be the owner of the contract.
+     * conditions: the TRS contract must be live in order to bulk withdraw funds from it. The caller
+     * must be the owner of the contract.
      *
-     *     returns: void.
+     * returns: void.
      *
      * @param input The input to bulk-withdraw from a public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -520,7 +494,9 @@ public final class TRSuseContract extends AbstractTRS {
 
         // Iterate over all depositors and withdraw on their behalf. Once here this is a success.
         byte[] curr = getListHead(contract);
-        if (curr == null) { return new ExecutionResult(ResultCode.SUCCESS, 0); }
+        if (curr == null) {
+            return new ExecutionResult(ResultCode.SUCCESS, 0);
+        }
 
         while (curr != null) {
             curr[0] = AION_PREFIX;
@@ -536,23 +512,19 @@ public final class TRSuseContract extends AbstractTRS {
     /**
      * Logic to refund funds for an account in an existing public-facing TRS contract.
      *
-     * The input byte array format is defined as follows:
-     *     [<1b - 0x4> | <32b - contractAddress> | <32b - accountAddress> | <128b - amount>]
-     *     total = 193 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract that the account given
-     *       by the address accountAddress is being refunded from. The proposed refund amount is
-     *       given by amount. The contract interprets the 128 bytes of amount as unsigned and
-     *       strictly positive.
+     * The input byte array format is defined as follows: [<1b - 0x4> | <32b - contractAddress> |
+     * <32b - accountAddress> | <128b - amount>] total = 193 bytes where: contractAddress is the
+     * address of the public-facing TRS contract that the account given by the address
+     * accountAddress is being refunded from. The proposed refund amount is given by amount. The
+     * contract interprets the 128 bytes of amount as unsigned and strictly positive.
      *
-     *     conditions: the calling account must be the owner of the public-facing TRS contract. The
-     *       account accountAddress must have a deposit balannce into this TRS contract of at least
-     *       amount. The refund operation is enabled only when the contract is unlocked; once locked
-     *       refunding is disabled. If any of these conditions are not satisfied this method
-     *       effectively does nothing. If a contract has its funds open then this operation is
-     *       disabled.
+     * conditions: the calling account must be the owner of the public-facing TRS contract. The
+     * account accountAddress must have a deposit balannce into this TRS contract of at least
+     * amount. The refund operation is enabled only when the contract is unlocked; once locked
+     * refunding is disabled. If any of these conditions are not satisfied this method effectively
+     * does nothing. If a contract has its funds open then this operation is disabled.
      *
-     *     returns: void.
+     * returns: void.
      *
      * @param input The input to refund an account for a public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -625,26 +597,23 @@ public final class TRSuseContract extends AbstractTRS {
     }
 
     /**
-     * Logic to deposit funds on the behalf of an account in an existing public-facing TRS contract.
+     * Logic to deposit funds on the behalf of an account in an existing public-facing TRS
+     * contract.
      *
-     * The input byte array format is defined as follows:
-     *     [<1b - 0x5> | <32b - contractAddress> | <32b - forAccount> | <128b - amount>]
-     *     total = 193 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract.
-     *     forAccount is the account that will be listed as having amount deposited into it if the
-     *       operation succeeds.
-     *     amount is the amount of funds to deposit into the contract on forAccount's behalf. This
-     *       value is interpreted as unsigned and strictly positive.
+     * The input byte array format is defined as follows: [<1b - 0x5> | <32b - contractAddress> |
+     * <32b - forAccount> | <128b - amount>] total = 193 bytes where: contractAddress is the address
+     * of the public-facing TRS contract. forAccount is the account that will be listed as having
+     * amount deposited into it if the operation succeeds. amount is the amount of funds to deposit
+     * into the contract on forAccount's behalf. This value is interpreted as unsigned and strictly
+     * positive.
      *
-     *     conditions: the TRS contract must not yet be locked (or obviously live) and the caller
-     *       must be the contract owner. If a contract has its funds open then this operation is
-     *       disabled.
+     * conditions: the TRS contract must not yet be locked (or obviously live) and the caller must
+     * be the contract owner. If a contract has its funds open then this operation is disabled.
      *
-     *     returns: void.
+     * returns: void.
      *
-     * @param input The input to deposit on the behalf of an account for a public-facing TRS contract
-     * logic.
+     * @param input The input to deposit on the behalf of an account for a public-facing TRS
+     * contract logic.
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
@@ -694,24 +663,23 @@ public final class TRSuseContract extends AbstractTRS {
 
         Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
         ExecutionResult result = makeDeposit(contract, account, amount, nrgLimit);
-        if (result.getResultCode().equals(ResultCode.SUCCESS)) { track.flush(); }
+        if (result.getResultCode().equals(ResultCode.SUCCESS)) {
+            track.flush();
+        }
         return result;
     }
 
     /**
      * Logic to add extra funds to an existing public-facing TRS contract.
      *
-     * The input byte array format is defined as follows:
-     *     [<1b - 0x6> | <32b - contractAddress> | <128b - amount>]
-     *     total = 161 bytes
-     *   where:
-     *     contractAddress is the address of the public-facing TRS contract.
-     *     amount is the amount of extra funds to add to the contract.
+     * The input byte array format is defined as follows: [<1b - 0x6> | <32b - contractAddress> |
+     * <128b - amount>] total = 161 bytes where: contractAddress is the address of the public-facing
+     * TRS contract. amount is the amount of extra funds to add to the contract.
      *
-     *   conditions: the caller must be the contract owner. If a contract's funds are open then
-     *     this operation is disabled.
+     * conditions: the caller must be the contract owner. If a contract's funds are open then this
+     * operation is disabled.
      *
-     *   returns: void.
+     * returns: void.
      *
      * @param input The input to add extra funds into a public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -799,8 +767,8 @@ public final class TRSuseContract extends AbstractTRS {
     }
 
     /**
-     * Updates the linked list for the TRS contract given by contract, if necessary, in the following
-     * way:
+     * Updates the linked list for the TRS contract given by contract, if necessary, in the
+     * following way:
      *
      * If the caller does not have a valid account in the TRS contract contract then that account is
      * added to the head of the linked list for that contract.
@@ -815,8 +783,8 @@ public final class TRSuseContract extends AbstractTRS {
     }
 
     /**
-     * Updates the linked list for the TRS contract given by contract, if necessary, in the following
-     * way:
+     * Updates the linked list for the TRS contract given by contract, if necessary, in the
+     * following way:
      *
      * If account does not have a valid account in the TRS contract contract then that account is
      * added to the head of the linked list for that contract.
@@ -828,7 +796,9 @@ public final class TRSuseContract extends AbstractTRS {
      */
     private void listAddToHead(Address contract, Address account) {
         byte[] next = getListNextBytes(contract, account);
-        if (accountIsValid(next)) { return; }  // no update needed.
+        if (accountIsValid(next)) {
+            return;
+        }  // no update needed.
 
         // Set account's next entry to point to head.
         byte[] head = getListHead(contract);
@@ -837,7 +807,8 @@ public final class TRSuseContract extends AbstractTRS {
         // If head was non-null set the head's previous entry to point to account.
         if (head != null) {
             head[0] = AION_PREFIX;
-            setListPrevious(contract, Address.wrap(head), Arrays.copyOf(account.toBytes(), Address.ADDRESS_LEN));
+            setListPrevious(contract, Address.wrap(head),
+                Arrays.copyOf(account.toBytes(), Address.ADDRESS_LEN));
         }
 
         // Set the head of the list to point to account and set account's previous entry to null.
@@ -846,8 +817,8 @@ public final class TRSuseContract extends AbstractTRS {
     }
 
     /**
-     * Updates the linked list for the TRS contract given by contract, if necessary, in the following
-     * way:
+     * Updates the linked list for the TRS contract given by contract, if necessary, in the
+     * following way:
      *
      * If the account is valid and exists in contract then that account is removed from the linked
      * list for contract and the account is marked as invalid since we cannot have valid accounts

@@ -6,6 +6,17 @@ import org.junit.Test;
 public class BridgeDeserializerTest {
 
     /**
+     * Returns byte array length numBytes of integer, truncating if need be.
+     */
+    private static byte[] toBytes(int integer, int numBytes) {
+        byte[] alignedBytes = new byte[numBytes];
+        byte[] unalignedBytes = BigInteger.valueOf(integer).toByteArray();
+        int len = unalignedBytes.length;
+        System.arraycopy(unalignedBytes, 0, alignedBytes, numBytes - len, len);
+        return alignedBytes;
+    }
+
+    /**
      * Tries to trigger an out of bounds exception on the first occurrence of parseMeta using some
      * integer overflow.
      *
@@ -34,9 +45,9 @@ public class BridgeDeserializerTest {
     }
 
     /**
-     * Since the logic gives us the invariant: end <= call.length
-     * and we access i + elementLength inside a loop that loops until end-1, this test gets some
-     * numbers aligned so that end == call.length, the best place we can trigger an out of bounds.
+     * Since the logic gives us the invariant: end <= call.length and we access i + elementLength
+     * inside a loop that loops until end-1, this test gets some numbers aligned so that end ==
+     * call.length, the best place we can trigger an out of bounds.
      *
      * No assertions -- we are testing whether or not an exception gets thrown.
      */
@@ -48,17 +59,6 @@ public class BridgeDeserializerTest {
         byte[] listLength = toBytes(512, 16);
         System.arraycopy(listLength, 0, array, 25, 16);
         BridgeDeserializer.parseAddressList(array);
-    }
-
-    /**
-     * Returns byte array length numBytes of integer, truncating if need be.
-     */
-    private static byte[] toBytes(int integer, int numBytes) {
-        byte[] alignedBytes = new byte[numBytes];
-        byte[] unalignedBytes = BigInteger.valueOf(integer).toByteArray();
-        int len = unalignedBytes.length;
-        System.arraycopy(unalignedBytes, 0, alignedBytes, numBytes - len, len);
-        return alignedBytes;
     }
 
 }

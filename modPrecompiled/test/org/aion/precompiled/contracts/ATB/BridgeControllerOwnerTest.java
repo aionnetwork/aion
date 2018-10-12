@@ -17,12 +17,12 @@ import org.junit.Test;
 
 public class BridgeControllerOwnerTest {
 
+    private static final Address CONTRACT_ADDR = new Address(
+        HashUtil.h256("contractAddress".getBytes()));
+    private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
     private BridgeStorageConnector connector;
     private BridgeController controller;
     private ExecutionHelper result;
-
-    private static final Address CONTRACT_ADDR = new Address(HashUtil.h256("contractAddress".getBytes()));
-    private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
 
     @Before
     public void beforeEach() {
@@ -32,7 +32,7 @@ public class BridgeControllerOwnerTest {
         ExecutionContext context = dummyContext();
         this.result = context.helper();
         this.controller = new BridgeController(connector,
-                this.result, CONTRACT_ADDR, OWNER_ADDR);
+            this.result, CONTRACT_ADDR, OWNER_ADDR);
     }
 
     @Test

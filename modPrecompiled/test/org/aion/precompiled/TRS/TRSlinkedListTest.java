@@ -197,7 +197,8 @@ public class TRSlinkedListTest extends TRShelpers {
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
-        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+        assertEquals(ResultCode.SUCCESS,
+            newTRSuseContract(acct2).execute(input, COST).getResultCode());
 
         checkRemoveHeadOfListWithHeadAndNextOnly(trs, contract, acct, acct2);
 
@@ -245,7 +246,8 @@ public class TRSlinkedListTest extends TRShelpers {
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
-        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+        assertEquals(ResultCode.SUCCESS,
+            newTRSuseContract(acct2).execute(input, COST).getResultCode());
 
         checkRemoveTailOfSizeTwoList(trs, contract, acct, acct2);
 
@@ -294,8 +296,10 @@ public class TRSlinkedListTest extends TRShelpers {
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
-        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
-        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
+        assertEquals(ResultCode.SUCCESS,
+            newTRSuseContract(acct2).execute(input, COST).getResultCode());
+        assertEquals(ResultCode.SUCCESS,
+            newTRSuseContract(acct3).execute(input, COST).getResultCode());
 
         checkRemoveInteriorOfSizeThreeList(trs, contract, acct, acct2, acct3);
 
@@ -355,7 +359,8 @@ public class TRSlinkedListTest extends TRShelpers {
 
     // <---------------------------------------HELPERS BELOW--------------------------------------->
 
-    private void checkLinkedListOneDepositor(AbstractTRS trs, Address contract, Address acct, byte[] input) {
+    private void checkLinkedListOneDepositor(AbstractTRS trs, Address contract, Address acct,
+        byte[] input) {
         assertEquals(acct, getLinkedListHead(trs, contract));
         assertNull(getLinkedListNext(trs, contract, acct));
         assertNull(getLinkedListPrev(trs, contract, acct));
