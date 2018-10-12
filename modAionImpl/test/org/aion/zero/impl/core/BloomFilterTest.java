@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,26 +31,25 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.zero.impl.core;
-
-import org.aion.base.type.Address;
-import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.Bloom;
-import org.aion.zero.impl.core.BloomFilter;
-import org.junit.Test;
-
-import java.math.BigInteger;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.math.BigInteger;
+import org.aion.base.type.Address;
+import org.aion.crypto.HashUtil;
+import org.aion.mcf.vm.types.Bloom;
+import org.junit.Test;
+
 /**
- * Very basic bloom filter tests, for integration tests, eventually look for
- * them in {@link org.aion.zero.impl.BlockchainIntegrationTest}
+ * Very basic bloom filter tests, for integration tests, eventually look for them in {@link
+ * org.aion.zero.impl.BlockchainIntegrationTest}
  *
  * TODO: implement integration tests
  */
 public class BloomFilterTest {
+
     @Test
     public void testSimpleAddSearchBloom() {
         String input = "hello world";
@@ -60,7 +59,8 @@ public class BloomFilterTest {
 
     @Test
     public void testContainsAddress() {
-        Address addr = new Address("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        Address addr = new Address(
+            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
         Bloom bloom = BloomFilter.create(addr.toBytes());
         assertThat(BloomFilter.containsAddress(bloom, addr)).isTrue();
     }
@@ -82,7 +82,8 @@ public class BloomFilterTest {
 
     @Test
     public void testCompositeBloomFiltering() {
-        Address addr = new Address("BEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEFFFF");
+        Address addr = new Address(
+            "BEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEFFFF");
         byte[] someEvent = HashUtil.h256(BigInteger.ONE.toByteArray());
         byte[] anotherEvent = HashUtil.h256(BigInteger.TWO.toByteArray());
 

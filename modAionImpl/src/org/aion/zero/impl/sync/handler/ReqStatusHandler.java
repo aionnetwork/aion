@@ -52,24 +52,19 @@ import org.slf4j.Logger;
 public final class ReqStatusHandler extends Handler {
 
     private final Logger log;
-
-    private IAionBlockchain chain;
-
-    private IP2pMgr mgr;
-
-    private byte[] genesisHash;
-
     private final int UPDATE_INTERVAL = 500;
-
+    private IAionBlockchain chain;
+    private IP2pMgr mgr;
+    private byte[] genesisHash;
     private volatile ResStatus cache;
 
     private volatile long cacheTs = 0;
 
     public ReqStatusHandler(
-            final Logger _log,
-            final IAionBlockchain _chain,
-            final IP2pMgr _mgr,
-            final byte[] _genesisHash) {
+        final Logger _log,
+        final IAionBlockchain _chain,
+        final IP2pMgr _mgr,
+        final byte[] _genesisHash) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
         this.log = _log;
         this.chain = _chain;
@@ -86,11 +81,11 @@ public final class ReqStatusHandler extends Handler {
                 try {
                     AionBlock bestBlock = chain.getBestBlock();
                     cache =
-                            new ResStatus(
-                                    bestBlock.getNumber(),
-                                    bestBlock.getCumulativeDifficulty().toByteArray(),
-                                    bestBlock.getHash(),
-                                    this.genesisHash);
+                        new ResStatus(
+                            bestBlock.getNumber(),
+                            bestBlock.getCumulativeDifficulty().toByteArray(),
+                            bestBlock.getHash(),
+                            this.genesisHash);
                 } catch (Exception e) {
                     if (log.isDebugEnabled()) {
                         log.debug("ReqStatus exception {}", e.toString());

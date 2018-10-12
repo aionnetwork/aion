@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.zero.impl.valid;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -73,7 +73,8 @@ public class AionPOWRuleTest {
 
         // recall that this will essentially not do anything to the valid space
         // so basically all bytes are valid
-        when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
+        when(mockHeader.getPowBoundaryBI())
+            .thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
         List<IValidRule.RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();
@@ -86,9 +87,11 @@ public class AionPOWRuleTest {
     @Test
     public void testBelowPOWHalfBoundary() {
         // yes this will produce a value smaller than the boundary
-        final byte[] predefinedHash = ByteUtil.hexStringToBytes("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        final byte[] predefinedHash = ByteUtil
+            .hexStringToBytes("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
         final long predefinedTimestamp = 1;
-        final byte[] predefinedNonce = ByteUtil.hexStringToBytes("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        final byte[] predefinedNonce = ByteUtil
+            .hexStringToBytes("0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         final byte[] predefinedSolution = new byte[1408];
         final BigInteger difficulty = BigInteger.TWO;
 
@@ -99,7 +102,8 @@ public class AionPOWRuleTest {
 
         // recall that this will essentially not do anything to the valid space
         // so basically all bytes are valid
-        when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
+        when(mockHeader.getPowBoundaryBI())
+            .thenReturn(BigInteger.ONE.shiftLeft(256).divide(difficulty));
         List<IValidRule.RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();
@@ -125,7 +129,8 @@ public class AionPOWRuleTest {
 
         // recall that this will essentially not do anything to the valid space
         // so basically all bytes are valid
-        when(mockHeader.getPowBoundaryBI()).thenReturn(BigInteger.ONE.shiftLeft(128).divide(difficulty));
+        when(mockHeader.getPowBoundaryBI())
+            .thenReturn(BigInteger.ONE.shiftLeft(128).divide(difficulty));
         List<IValidRule.RuleError> errors = new ArrayList<>();
 
         AionPOWRule rule = new AionPOWRule();

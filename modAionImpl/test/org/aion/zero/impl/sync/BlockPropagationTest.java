@@ -51,234 +51,6 @@ import org.junit.Test;
  */
 public class BlockPropagationTest {
 
-    private static class NodeMock implements INode {
-
-        private final byte[] nodeId;
-        private final long latestBlockNumber;
-
-        public NodeMock(byte[] nodeId, long latestBlockNumber) {
-            this.nodeId = nodeId;
-            this.latestBlockNumber = latestBlockNumber;
-        }
-
-        @Override
-        public byte[] getId() {
-            return this.nodeId;
-        }
-
-        @Override
-        public int getIdHash() {
-            return Arrays.hashCode(nodeId);
-        }
-
-        @Override
-        public long getBestBlockNumber() {
-            return this.latestBlockNumber;
-        }
-
-        @Override
-        public BigInteger getTotalDifficulty() {
-            return BigInteger.ZERO;
-        }
-
-        @Override
-        public int getPeerId() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void updateStatus(
-            long _bestBlockNumber, byte[] _bestBlockHash, BigInteger _totalDifficulty) {
-        }
-
-        @Override
-        public byte[] getIp() {
-            return new byte[0];
-        }
-
-        @Override
-        public String getIdShort() {
-            return null;
-        }
-
-        @Override
-        public String getIpStr() {
-            return null;
-        }
-
-        @Override
-        public int getPort() {
-            return 0;
-        }
-
-        @Override
-        public long getTimestamp() {
-            return 0;
-        }
-
-        @Override
-        public String getBinaryVersion() {
-            return "";
-        }
-
-        @Override
-        public void setPort(int _port) {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public void setConnection(String _connection) {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public IPeerMetric getPeerMetric() {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public void refreshTimestamp() {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public void setChannel(SocketChannel _channel) {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public void setId(byte[] _id) {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public void setBinaryVersion(String _revision) {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public boolean getIfFromBootList() {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public byte[] getBestBlockHash() {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public String getConnection() {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public SocketChannel getChannel() {
-            throw new IllegalStateException("not implemented");
-        }
-
-        @Override
-        public void setFromBootList(boolean _ifBoot) {
-            throw new IllegalStateException("not implemented");
-        }
-    }
-
-    private static class P2pMock implements IP2pMgr {
-
-        private Map<Integer, INode> map;
-
-        public P2pMock(final Map<Integer, INode> map) {
-            this.map = map;
-        }
-
-        @Override
-        public Map<Integer, INode> getActiveNodes() {
-            return map;
-        }
-
-        @Override
-        public void shutdown() {
-        }
-
-        @Override
-        public void run() {
-        }
-
-        @Override
-        public List<Short> versions() {
-            return new ArrayList<>();
-        }
-
-        @Override
-        public int chainId() {
-            return 0;
-        }
-
-        @Override
-        public void errCheck(int nodeIdHashcode, String _displayId) {
-        }
-
-        @Override
-        public void register(List<Handler> _hs) {
-        }
-
-        @Override
-        public INode getRandom() {
-            return null;
-        }
-
-        @Override
-        public void send(int _id, String _displayId, Msg _msg) {
-        }
-
-        @Override
-        public void closeSocket(SocketChannel _sc, String _reason) {
-        }
-
-        @Override
-        public int getSelfIdHash() {
-            return 0;
-        }
-
-        @Override
-        public void dropActive(int _nodeIdHash, String _reason) {
-            throw new IllegalStateException("not implemented.");
-        }
-
-        @Override
-        public void configChannel(SocketChannel _channel) {
-            throw new IllegalStateException("not implemented.");
-        }
-
-        @Override
-        public int getMaxActiveNodes() {
-            throw new IllegalStateException("not implemented.");
-        }
-
-        @Override
-        public boolean isSyncSeedsOnly() {
-            return false;
-        }
-
-        @Override
-        public int getMaxTempNodes() { throw new IllegalStateException("not implemented."); }
-
-        @Override
-        public boolean validateNode(INode _node) {
-            throw new IllegalStateException("not implemented.");
-        }
-
-        @Override
-        public int getSelfNetId() {
-            throw new IllegalStateException("not implemented.");
-        }
-
-        @Override
-        public String getOutGoingIP() {
-            throw new IllegalStateException("not implemented.");
-        }
-
-    }
-
     private static List<ECKey> generateDefaultAccounts() {
         List<ECKey> accs = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -515,5 +287,235 @@ public class BlockPropagationTest {
 
         // we expect the counter to be incremented once (on propagation)
         assertThat(sendCount.get()).isEqualTo(1);
+    }
+
+    private static class NodeMock implements INode {
+
+        private final byte[] nodeId;
+        private final long latestBlockNumber;
+
+        public NodeMock(byte[] nodeId, long latestBlockNumber) {
+            this.nodeId = nodeId;
+            this.latestBlockNumber = latestBlockNumber;
+        }
+
+        @Override
+        public byte[] getId() {
+            return this.nodeId;
+        }
+
+        @Override
+        public void setId(byte[] _id) {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public int getIdHash() {
+            return Arrays.hashCode(nodeId);
+        }
+
+        @Override
+        public long getBestBlockNumber() {
+            return this.latestBlockNumber;
+        }
+
+        @Override
+        public BigInteger getTotalDifficulty() {
+            return BigInteger.ZERO;
+        }
+
+        @Override
+        public int getPeerId() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void updateStatus(
+            long _bestBlockNumber, byte[] _bestBlockHash, BigInteger _totalDifficulty) {
+        }
+
+        @Override
+        public byte[] getIp() {
+            return new byte[0];
+        }
+
+        @Override
+        public String getIdShort() {
+            return null;
+        }
+
+        @Override
+        public String getIpStr() {
+            return null;
+        }
+
+        @Override
+        public int getPort() {
+            return 0;
+        }
+
+        @Override
+        public void setPort(int _port) {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public long getTimestamp() {
+            return 0;
+        }
+
+        @Override
+        public String getBinaryVersion() {
+            return "";
+        }
+
+        @Override
+        public void setBinaryVersion(String _revision) {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public IPeerMetric getPeerMetric() {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public void refreshTimestamp() {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public boolean getIfFromBootList() {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public byte[] getBestBlockHash() {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public String getConnection() {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public void setConnection(String _connection) {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public SocketChannel getChannel() {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public void setChannel(SocketChannel _channel) {
+            throw new IllegalStateException("not implemented");
+        }
+
+        @Override
+        public void setFromBootList(boolean _ifBoot) {
+            throw new IllegalStateException("not implemented");
+        }
+    }
+
+    private static class P2pMock implements IP2pMgr {
+
+        private Map<Integer, INode> map;
+
+        public P2pMock(final Map<Integer, INode> map) {
+            this.map = map;
+        }
+
+        @Override
+        public Map<Integer, INode> getActiveNodes() {
+            return map;
+        }
+
+        @Override
+        public void shutdown() {
+        }
+
+        @Override
+        public void run() {
+        }
+
+        @Override
+        public List<Short> versions() {
+            return new ArrayList<>();
+        }
+
+        @Override
+        public int chainId() {
+            return 0;
+        }
+
+        @Override
+        public void errCheck(int nodeIdHashcode, String _displayId) {
+        }
+
+        @Override
+        public void register(List<Handler> _hs) {
+        }
+
+        @Override
+        public INode getRandom() {
+            return null;
+        }
+
+        @Override
+        public void send(int _id, String _displayId, Msg _msg) {
+        }
+
+        @Override
+        public void closeSocket(SocketChannel _sc, String _reason) {
+        }
+
+        @Override
+        public int getSelfIdHash() {
+            return 0;
+        }
+
+        @Override
+        public void dropActive(int _nodeIdHash, String _reason) {
+            throw new IllegalStateException("not implemented.");
+        }
+
+        @Override
+        public void configChannel(SocketChannel _channel) {
+            throw new IllegalStateException("not implemented.");
+        }
+
+        @Override
+        public int getMaxActiveNodes() {
+            throw new IllegalStateException("not implemented.");
+        }
+
+        @Override
+        public boolean isSyncSeedsOnly() {
+            return false;
+        }
+
+        @Override
+        public int getMaxTempNodes() {
+            throw new IllegalStateException("not implemented.");
+        }
+
+        @Override
+        public boolean validateNode(INode _node) {
+            throw new IllegalStateException("not implemented.");
+        }
+
+        @Override
+        public int getSelfNetId() {
+            throw new IllegalStateException("not implemented.");
+        }
+
+        @Override
+        public String getOutGoingIP() {
+            throw new IllegalStateException("not implemented.");
+        }
+
     }
 }

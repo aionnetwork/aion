@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,8 +31,10 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.zero.impl.types;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
@@ -40,8 +42,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Test;
-
-import static com.google.common.truth.Truth.assertThat;
 
 public class A0BlockHeaderTest {
 
@@ -71,16 +71,16 @@ public class A0BlockHeaderTest {
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
         // partial build
         builder.withCoinbase(Address.wrap(COINBASE))
-                .withStateRoot(STATE_ROOT)
-                .withTxTrieRoot(TRIE_ROOT)
-                .withExtraData(EXTRA_DATA)
-                .withReceiptTrieRoot(RECEIPT_ROOT)
-                .withTimestamp(time)
-                .withNumber(NUMBER_BYTES)
-                .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
-                .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+            .withStateRoot(STATE_ROOT)
+            .withTxTrieRoot(TRIE_ROOT)
+            .withExtraData(EXTRA_DATA)
+            .withReceiptTrieRoot(RECEIPT_ROOT)
+            .withTimestamp(time)
+            .withNumber(NUMBER_BYTES)
+            .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
+            .withEnergyLimit(ENERGY_LIMIT_BYTES)
+            .withParentHash(PARENT_HASH)
+            .withNonce(NONCE_BYTES);
 
         A0BlockHeader header = builder.build();
 
@@ -104,16 +104,16 @@ public class A0BlockHeaderTest {
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
         // partial build
         builder.fromUnsafeSource()
-                .withStateRoot(STATE_ROOT)
-                .withCoinbase(Address.wrap(COINBASE))
-                .withTxTrieRoot(TRIE_ROOT)
-                .withExtraData(EXTRA_DATA)
-                .withReceiptTrieRoot(RECEIPT_ROOT)
-                .withTimestamp(time)
-                .withNumber(NUMBER_BYTES)
-                .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
-                .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH);
+            .withStateRoot(STATE_ROOT)
+            .withCoinbase(Address.wrap(COINBASE))
+            .withTxTrieRoot(TRIE_ROOT)
+            .withExtraData(EXTRA_DATA)
+            .withReceiptTrieRoot(RECEIPT_ROOT)
+            .withTimestamp(time)
+            .withNumber(NUMBER_BYTES)
+            .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
+            .withEnergyLimit(ENERGY_LIMIT_BYTES)
+            .withParentHash(PARENT_HASH);
 
         A0BlockHeader header = builder.build();
 
@@ -139,16 +139,16 @@ public class A0BlockHeaderTest {
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
 
         builder.fromUnsafeSource()
-                .withCoinbase(Address.wrap(COINBASE))
-                .withTxTrieRoot(TRIE_ROOT)
-                .withExtraData(EXTRA_DATA)
-                .withReceiptTrieRoot(RECEIPT_ROOT)
-                .withTimestamp(time)
-                .withNumber(NUMBER_BYTES)
-                .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
-                .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+            .withCoinbase(Address.wrap(COINBASE))
+            .withTxTrieRoot(TRIE_ROOT)
+            .withExtraData(EXTRA_DATA)
+            .withReceiptTrieRoot(RECEIPT_ROOT)
+            .withTimestamp(time)
+            .withNumber(NUMBER_BYTES)
+            .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
+            .withEnergyLimit(ENERGY_LIMIT_BYTES)
+            .withParentHash(PARENT_HASH)
+            .withNonce(NONCE_BYTES);
 
         A0BlockHeader header = builder.build();
         byte[] encoded = header.getEncoded();

@@ -49,15 +49,6 @@ public enum Network {
         this.chainId = _chainId;
     }
 
-    @Override
-    public String toString() {
-        return this.name;
-    }
-
-    public int getChainId() {
-        return chainId;
-    }
-
     /**
      * Utility method that determines the correct network based on the given name.
      *
@@ -125,5 +116,14 @@ public enum Network {
         Network net = Network.CUSTOM;
         net.chainId = chainId;
         return net;
+    }
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
+
+    public int getChainId() {
+        return chainId;
     }
 }

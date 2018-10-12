@@ -20,7 +20,6 @@
  * Contributors:
  *     Aion foundation.
  */
-
 package org.aion.equihash;
 
 import static org.aion.base.util.Hex.toHexString;

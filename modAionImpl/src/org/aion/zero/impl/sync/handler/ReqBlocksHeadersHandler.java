@@ -64,10 +64,10 @@ public final class ReqBlocksHeadersHandler extends Handler {
     private final boolean isSyncOnlyNode;
 
     public ReqBlocksHeadersHandler(
-            final Logger _log,
-            final IAionBlockchain _blockchain,
-            final IP2pMgr _p2pMgr,
-            final boolean isSyncOnlyNode) {
+        final Logger _log,
+        final IAionBlockchain _blockchain,
+        final IP2pMgr _p2pMgr,
+        final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_HEADERS);
         this.log = _log;
         this.blockchain = _blockchain;
@@ -87,21 +87,21 @@ public final class ReqBlocksHeadersHandler extends Handler {
             int take = reqHeaders.getTake();
             if (log.isDebugEnabled()) {
                 this.log.debug(
-                        "<req-headers from-number={} size={} node={}>",
-                        fromBlock,
-                        take,
-                        _displayId);
+                    "<req-headers from-number={} size={} node={}>",
+                    fromBlock,
+                    take,
+                    _displayId);
             }
             List<A0BlockHeader> headers =
-                    this.blockchain.getListOfHeadersStartFrom(
-                            fromBlock, Math.min(take, MAX_NUM_OF_BLOCKS));
+                this.blockchain.getListOfHeadersStartFrom(
+                    fromBlock, Math.min(take, MAX_NUM_OF_BLOCKS));
             ResBlocksHeaders rbhs = new ResBlocksHeaders(headers);
             this.p2pMgr.send(_nodeIdHashcode, _displayId, rbhs);
         } else {
             this.log.error(
-                    "<req-headers decode-error msg-bytes={} node={}>",
-                    _msgBytes == null ? 0 : _msgBytes.length,
-                    _nodeIdHashcode);
+                "<req-headers decode-error msg-bytes={} node={}>",
+                _msgBytes == null ? 0 : _msgBytes.length,
+                _nodeIdHashcode);
         }
     }
 }
