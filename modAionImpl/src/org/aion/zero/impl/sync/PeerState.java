@@ -38,6 +38,7 @@ public class PeerState {
     private State state;
     private long lastBestBlock = 0;
     private long lastHeaderRequest;
+
     /**
      * Creates a new peer state.
      */
@@ -47,6 +48,7 @@ public class PeerState {
 
         this.state = State.INITIAL;
     }
+
     /**
      * Copy constructor.
      */

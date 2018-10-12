@@ -109,6 +109,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private Set<byte[]> backupPendingPoolRemove;
     private ScheduledExecutorService ex;
     private boolean closeToNetworkBest = true;
+
     private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
         this.repository = _repository;
 

@@ -32,7 +32,9 @@ import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
-/** aion blockchain interface. */
+/**
+ * aion blockchain interface.
+ */
 public interface IAionBlockchain
     extends IBlockchain<AionBlock, A0BlockHeader, AionTransaction, AionTxReceipt, AionTxInfo> {
 

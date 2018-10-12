@@ -41,6 +41,7 @@ package org.aion.zero.impl;
  * Contributors:
  *     Aion foundation.
  */
+
 import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ZERO;
@@ -129,9 +130,8 @@ import org.slf4j.LoggerFactory;
  * of view.
  *
  * <p>The module is also responsible for generate new blocks, mostly called by {@link
- * EquihashMiner}
- * to generate new blocks to mine. As for receiving blocks, this class interacts with {@link
- * SyncMgr} to manage the importing of blocks from network.
+ * EquihashMiner} to generate new blocks to mine. As for receiving blocks, this class interacts with
+ * {@link SyncMgr} to manage the importing of blocks from network.
  */
 public class AionBlockchainImpl implements IAionBlockchain {
 
@@ -162,8 +162,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * actors.
      *
      * <p>However we would still like to publish a bestBlock without locking, therefore we
-     * introduce
-     * a volatile block that is only published when all forking/appending behaviour is completed.
+     * introduce a volatile block that is only published when all forking/appending behaviour is
+     * completed.
      */
     private volatile AionBlock pubBestBlock;
     private volatile BigInteger totalDifficulty = ZERO;
@@ -341,8 +341,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * Referenced only by external
      *
      * <p>Note: If you are making changes to this method and want to use it to track internal
-     * state,
-     * use {@link #bestBlock} instead
+     * state, use {@link #bestBlock} instead
      *
      * @return {@code bestAionBlock}
      * @see #pubBestBlock
@@ -356,8 +355,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * Referenced only by external
      *
      * <p>Note: If you are making changes to this method and want to use it to track internal
-     * state,
-     * opt for {@link #getSizeInternal()} instead.
+     * state, opt for {@link #getSizeInternal()} instead.
      *
      * @return {@code positive long} representing the current size
      * @see #pubBestBlock

@@ -71,8 +71,7 @@ public class AionRepositoryImpl
      * used by getSnapShotTo
      *
      * <p>@ATTENTION: when do snap shot, another instance will be created. Make sure it is used
-     * only
-     * by getSnapShotTo
+     * only by getSnapShotTo
      */
     protected AionRepositoryImpl() {
     }
