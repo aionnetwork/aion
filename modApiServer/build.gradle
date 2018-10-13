@@ -5,6 +5,14 @@ build.dependsOn.remove("check")
 
 test.dependsOn copyNativeLibsForModuleTests
 
+sourceSets {
+    test {
+        resources {
+            srcDirs = ['test_resources']
+        }
+    }
+}
+
 dependencies {
     compile project(':modAionBase')
     compile project(':modAion')
