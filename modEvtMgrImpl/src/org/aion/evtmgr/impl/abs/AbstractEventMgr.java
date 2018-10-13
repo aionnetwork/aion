@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.evtmgr.IHandler;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -42,23 +43,32 @@ public abstract class AbstractEventMgr {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
     protected Map<IHandler, IHandler> handlers;
+    private AtomicBoolean run = new AtomicBoolean(false);
 
     protected AbstractEventMgr() {
         handlers = new ConcurrentHashMap<>();
     }
 
     public void start() {
-        for (Map.Entry<IHandler, IHandler> m : this.handlers.entrySet()) {
-            if (m.getKey() != null) {
-                if (LOG.isInfoEnabled()) {
-                    LOG.info("AbstractEventMgr.start ", m.getKey().getClass().getSimpleName());
+        if (!run.get()) {
+            for (Map.Entry<IHandler, IHandler> m : this.handlers.entrySet()) {
+                if (m.getKey() != null) {
+                    if (LOG.isInfoEnabled()) {
+                        LOG.info("AbstractEventMgr.start ", m.getKey().getClass().getSimpleName());
+                    }
+                    m.getKey().start();
                 }
-                m.getKey().start();
             }
+            run.set(true);
         }
     }
 
     public void shutDown() throws InterruptedException {
+
+        if (!run.getAndSet(false)) {
+            return;
+        }
+
         for (Map.Entry<IHandler, IHandler> m : this.handlers.entrySet()) {
             if (m.getKey() != null) {
                 if (LOG.isInfoEnabled()) {

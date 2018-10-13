@@ -9,7 +9,7 @@ dependencies {
     compile project(':modLogger')
     compile 'com.google.guava:guava:25.1-jre'
     compile 'org.slf4j:slf4j-api:1.7.25'
-    compile group: 'org.fusesource.leveldbjni', name: 'leveldbjni-all', version: '1.8'
+    compile group: 'org.ethereum', name: 'leveldbjni-all', version: '1.18.3'
     compile group: 'org.rocksdb', name: 'rocksdbjni', version: '5.11.3'
     compile group: 'com.h2database', name: 'h2-mvstore', version: '1.4.196'
 
