@@ -672,7 +672,6 @@ public class ApiWeb3Aion extends ApiAion {
             txObj.put("nrgPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
             txObj.put("gas", TypeConverter.toJsonHex(tx.getNrg()));
             txObj.put("nrg", TypeConverter.toJsonHex(tx.getNrg()));
-            txObj.put("from", TypeConverter.toJsonHex(tx.getFrom().toString()));
             txObj.put("to", TypeConverter.toJsonHex(tx.getTo().toString()));
             txObj.put("value", TypeConverter.toJsonHex(tx.getValue()));
             txObj.put("input", TypeConverter.toJsonHex(tx.getData()));

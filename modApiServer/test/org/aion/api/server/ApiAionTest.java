@@ -461,7 +461,6 @@ public class ApiAionTest {
         assertNotNull(raw);
         assertNotNull(tx);
 
-        assertEquals(tx.get("from"), outTx.get("from"));
         assertEquals(tx.get("to"), outTx.get("to"));
         assertEquals(tx.get("value").toString(),
             TypeConverter.StringHexToBigInteger(outTx.get("value").toString()).toString());
