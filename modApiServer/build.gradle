@@ -33,7 +33,7 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     //testCompile group: 'commons-codec', name: 'commons-codec', version: '1.10' 
     compile 'com.google.guava:guava:25.1-jre'
-    compile group: 'org.nanohttpd', name: 'nanohttpd', version: '2.3.0'
+    compile group: 'org.nanohttpd', name: 'nanohttpd', version: '2.3.1'
     compile group: 'org.jboss.logging', name: 'jboss-logging', version: '3.3.0.Final'
     compile group: 'org.jboss.xnio', name: 'xnio-nio', version: '3.3.8.Final'
     compile group: 'org.jboss.xnio', name: 'xnio-api', version: '3.3.8.Final'
