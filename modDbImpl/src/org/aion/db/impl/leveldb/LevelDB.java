@@ -176,6 +176,26 @@ public class LevelDB extends AbstractDB {
         return isOpen();
     }
 
+    public void repair() {
+        LOG.debug("repairing database {}", this.toString());
+
+        if (isOpen()) {
+            this.close();
+        }
+
+        File f = new File(path);
+        Options options = setupLevelDbOptions();
+
+        try {
+            // attempt repair
+            JniDBFactory.factory.repair(f, options);
+        } catch (Exception e2) {
+            LOG.error("Failed to repair the database " + this.toString() + " due to: ", e2);
+        }
+
+        this.open();
+    }
+
     @Override
     public void close() {
         // do nothing if already closed
@@ -275,7 +295,13 @@ public class LevelDB extends AbstractDB {
 
     @Override
     public byte[] getInternal(byte[] k) {
-        return db.get(k);
+        try {
+            return db.get(k);
+        } catch (DBException e) {
+            repair();
+            // will throw the exception if the repair did not work
+            return db.get(k);
+        }
     }
 
     @Override
