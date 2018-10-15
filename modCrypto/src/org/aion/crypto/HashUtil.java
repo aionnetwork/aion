@@ -63,14 +63,14 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class HashUtil {
 
+    static {
+        NativeLoader.loadLibrary("blake2b");
+    }
+
     protected static H256Type type = BLAKE2B_256;
     public static final byte[] EMPTY_DATA_HASH = h256(EMPTY_BYTE_ARRAY);
     public static final byte[] EMPTY_LIST_HASH = h256(RLP.encodeList());
     public static final byte[] EMPTY_TRIE_HASH = h256(RLP.encodeElement(EMPTY_BYTE_ARRAY));
-
-    static {
-        NativeLoader.loadLibrary("blake2b");
-    }
 
     /**
      * Sets the 256-bit hash type.
