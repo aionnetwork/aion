@@ -22,7 +22,7 @@ public abstract class Msg {
     }
 
     /**
-     * Returns byte array encoding of message.
+     * Returns byte array encoding of message body.
      *
      * @return
      */

@@ -13,6 +13,7 @@ import static org.aion.zero.impl.sync.PeerState.Mode.THUNDER;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -62,6 +63,7 @@ final class TaskImportBlocks implements Runnable {
     private final int compactFrequency;
 
     private long lastCompactTime;
+    private ReceiptsRetrievalVerifier rrv;
 
     TaskImportBlocks(
             final AionBlockchainImpl _chain,
@@ -85,6 +87,19 @@ final class TaskImportBlocks implements Runnable {
         this.slowImportTime = _slowImportTime;
         this.compactFrequency = _compactFrequency;
         this.lastCompactTime = System.currentTimeMillis();
+    }
+
+    TaskImportBlocks(
+            final AionBlockchainImpl _chain,
+            final AtomicBoolean _start,
+            final SyncStats _stats,
+            final BlockingQueue<BlocksWrapper> _downloadedBlocks,
+            final Map<ByteArrayWrapper, Object> _importedBlockHashes,
+            final Map<Integer, PeerState> _peerStates,
+            final Logger _log,
+            final ReceiptsRetrievalVerifier receiptsRetrievalVerifier) {
+        this(_chain, _start, _stats, _downloadedBlocks, _importedBlockHashes, _peerStates, _log);
+        this.rrv = receiptsRetrievalVerifier;
     }
 
     ExecutorService executors =
@@ -120,7 +135,7 @@ final class TaskImportBlocks implements Runnable {
                 }
 
                 // process batch and update the peer state
-                peerState.copy(processBatch(peerState, batch, bw.getDisplayId()));
+                peerState.copy(processBatch(peerState, batch, bw.getDisplayId(), bw.getNodeIdHash()));
 
                 // so we can continue immediately
                 peerState.resetLastHeaderRequest();
@@ -183,7 +198,7 @@ final class TaskImportBlocks implements Runnable {
     }
 
     /** @implNote This method is called only when state is not null. */
-    private PeerState processBatch(PeerState givenState, List<AionBlock> batch, String displayId) {
+    private PeerState processBatch(PeerState givenState, List<AionBlock> batch, String displayId, int nodeId) {
         // make a copy of the original state
         state.copy(Objects.requireNonNull(givenState));
 
@@ -225,6 +240,7 @@ final class TaskImportBlocks implements Runnable {
                 // keeping track of the last block check
                 importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
 
+
                 // skipping the batch
                 if (log.isDebugEnabled()) {
                     log.debug(
@@ -251,6 +267,8 @@ final class TaskImportBlocks implements Runnable {
         long first = -1L, last = -1L;
         ImportResult importResult;
 
+        List<AionBlock> storedImportedBlocks = new LinkedList<>();
+
         for (AionBlock b : batch) {
             try {
                 importResult = importBlock(b, displayId, givenState);
@@ -258,6 +276,7 @@ final class TaskImportBlocks implements Runnable {
                 if (importResult.isStored()) {
                     importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
                     this.syncStats.updatePeerImportedBlocks(displayId, 1);
+                    storedImportedBlocks.add(b);
 
                     if (last <= b.getNumber()) {
                         last = b.getNumber() + 1;
@@ -369,6 +388,8 @@ final class TaskImportBlocks implements Runnable {
                 }
             }
         }
+
+        rrv.requestReceiptsFromPeers(storedImportedBlocks, displayId, nodeId);
 
         // check for stored blocks
         if (first < last) {

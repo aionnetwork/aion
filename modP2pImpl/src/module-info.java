@@ -6,6 +6,7 @@ module aion.p2p.impl {
     requires slf4j.api;
     requires jsr305;
     requires commons.collections4;
+    requires com.google.common;
 
     exports org.aion.p2p.impl1;
     exports org.aion.p2p.impl.zero.msg;

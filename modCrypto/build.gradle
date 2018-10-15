@@ -14,6 +14,7 @@ dependencies {
 }
 
 task compileNative(type: Exec) { 
+    environment JAVA_HOME: "/home/sergiu/opt/jdk-10.0.1" // Do not push.
     workingDir 'src_native'
     commandLine 'make'
 }
