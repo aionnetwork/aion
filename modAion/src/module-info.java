@@ -6,6 +6,7 @@ module aion.zero {
     requires aion.mcf;
     requires slf4j.api;
     requires libJson;
+    requires commons.lang3;
 
     exports org.aion.zero.api;
     exports org.aion.zero.db;
