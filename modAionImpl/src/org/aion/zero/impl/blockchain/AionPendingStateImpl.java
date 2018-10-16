@@ -440,8 +440,13 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         return addPendingTransactions(Collections.singletonList(tx)).get(0);
     }
 
-    // Returns a list of SendTxResponses, which should be indexed using the same indices
-    // as the input list of AionTransactions
+    /**
+     * Tries to add the given transactions to the PendingState
+     *
+     * @param transactions, the list of AionTransactions to be added
+     * @return a list of TxResponses of the same size as the input param transactions
+     * The entries in the returned list of responses correspond one-to-one with the input txs
+     */
     @Override
     public synchronized List<TxResponse> addPendingTransactions(
         List<AionTransaction> transactions) {
@@ -638,7 +643,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      *
      * @param tx transaction come from API or P2P
      * @param txNonce nonce of the transaction.
-     * @return True if transaction gets NEW_PENDING state, False if DROPPED
+     * @return SUCCESS if transaction gets NEW_PENDING state, else appropriate message
+     * such as DROPPED, INVALID_TX, etc.
      */
     private TxResponse addPendingTransactionImpl(final AionTransaction tx, BigInteger txNonce) {
 
