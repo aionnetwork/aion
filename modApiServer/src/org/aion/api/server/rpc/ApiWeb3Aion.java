@@ -105,7 +105,7 @@ import static org.aion.base.util.ByteUtil.toHexString;
 
 /**
  * @author chris lin, ali sharif TODO: make implementation pass all spec tests:
- *     https://github.com/ethereum/rpc-tests
+ * https://github.com/ethereum/rpc-tests
  */
 @SuppressWarnings({"Duplicates", "WeakerAccess"})
 public class ApiWeb3Aion extends ApiAion {
@@ -134,20 +134,20 @@ public class ApiWeb3Aion extends ApiAion {
     protected void onBlock(AionBlockSummary cbs) {
         if (isFilterEnabled) {
             installedFilters
-                    .keySet()
-                    .forEach(
-                            (k) -> {
-                                Fltr f = installedFilters.get(k);
-                                if (f.isExpired()) {
-                                    LOG.debug("<Filter: expired, key={}>", k);
-                                    installedFilters.remove(k);
-                                } else if (f.onBlock(cbs)) {
-                                    LOG.debug(
-                                            "<Filter: append, onBlock type={} blk#={}>",
-                                            f.getType().name(),
-                                            cbs.getBlock().getNumber());
-                                }
-                            });
+                .keySet()
+                .forEach(
+                    (k) -> {
+                        Fltr f = installedFilters.get(k);
+                        if (f.isExpired()) {
+                            LOG.debug("<Filter: expired, key={}>", k);
+                            installedFilters.remove(k);
+                        } else if (f.onBlock(cbs)) {
+                            LOG.debug(
+                                "<Filter: append, onBlock type={} blk#={}>",
+                                f.getType().name(),
+                                cbs.getBlock().getNumber());
+                        }
+                    });
         }
     }
 
@@ -157,21 +157,21 @@ public class ApiWeb3Aion extends ApiAion {
             // it already
             // in the onBlock event. eviction done here "just in case ..."
             installedFilters
-                    .keySet()
-                    .forEach(
-                            (k) -> {
-                                Fltr f = installedFilters.get(k);
-                                if (f.isExpired()) {
-                                    LOG.debug("<filter expired, key={}>", k);
-                                    installedFilters.remove(k);
-                                } else if (f.onTransaction(_tx)) {
-                                    LOG.info(
-                                            "<filter append, onPendingTransaction fltrSize={} type={} txHash={}>",
-                                            f.getSize(),
-                                            f.getType().name(),
-                                            TypeConverter.toJsonHex(_tx.getHash()));
-                                }
-                            });
+                .keySet()
+                .forEach(
+                    (k) -> {
+                        Fltr f = installedFilters.get(k);
+                        if (f.isExpired()) {
+                            LOG.debug("<filter expired, key={}>", k);
+                            installedFilters.remove(k);
+                        } else if (f.onTransaction(_tx)) {
+                            LOG.info(
+                                "<filter append, onPendingTransaction fltrSize={} type={} txHash={}>",
+                                f.getSize(),
+                                f.getType().name(),
+                                TypeConverter.toJsonHex(_tx.getHash()));
+                        }
+                    });
         }
     }
 
@@ -223,65 +223,67 @@ public class ApiWeb3Aion extends ApiAion {
         // ops-related endpoints
         // https://github.com/google/guava/wiki/CachesExplained#refresh
         CachedRecentEntities = CacheBuilder.newBuilder()
-                .maximumSize(1)
-                .refreshAfterWrite(OPS_RECENT_ENTITY_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
-                .build(
-                        new CacheLoader<>() {
-                            public ChainHeadView load(Integer key) { // no checked exception
-                                return new ChainHeadView(OPS_RECENT_ENTITY_COUNT).update();
-                            }
-
-                            public ListenableFuture<ChainHeadView> reload(final Integer key,
-                                                                          ChainHeadView prev) {
-                                try {
-                                    ListenableFutureTask<ChainHeadView> task = ListenableFutureTask
-                                            .create(() -> new ChainHeadView(prev).update());
-                                    cacheUpdateExecutor.execute(task);
-                                    return task;
-                                } catch (Throwable e) {
-                                    LOG.debug("<cache-updater - could not queue up task: ", e);
-                                    throw (e);
-                                } // exception is swallowed by refresh and load. so just log it for our logs
-                            }
-                        });
-
-        cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(1), new CacheUpdateThreadFactory());
-
-        //noinspection NullableProblems
-        blockCache = CacheBuilder.newBuilder().maximumSize(BLOCK_CACHE_SIZE).build(
+            .maximumSize(1)
+            .refreshAfterWrite(OPS_RECENT_ENTITY_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
+            .build(
                 new CacheLoader<>() {
-                    public AionBlock load(ByteArrayWrapper blockHash) {
-                        LOG.debug("<rpc-server blockCache miss for "+blockHash.toString()+" >");
-                        return getBlockByHash(blockHash.getData());
+                    public ChainHeadView load(Integer key) { // no checked exception
+                        return new ChainHeadView(OPS_RECENT_ENTITY_COUNT).update();
+                    }
+
+                    public ListenableFuture<ChainHeadView> reload(final Integer key,
+                        ChainHeadView prev) {
+                        try {
+                            ListenableFutureTask<ChainHeadView> task = ListenableFutureTask
+                                .create(() -> new ChainHeadView(prev).update());
+                            cacheUpdateExecutor.execute(task);
+                            return task;
+                        } catch (Throwable e) {
+                            LOG.debug("<cache-updater - could not queue up task: ", e);
+                            throw (e);
+                        } // exception is swallowed by refresh and load. so just log it for our logs
                     }
                 });
 
-        MinerStats = CacheBuilder.newBuilder()
-                .maximumSize(1)
-                .refreshAfterWrite(STRATUM_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
-                .build(
-                        new CacheLoader<>() {
-                            public MinerStatsView load(String key) { // no checked exception
-                                Address miner = new Address(key);
-                                return new MinerStatsView(STRATUM_RECENT_BLK_COUNT, miner.toBytes()).update();
-                            }
+        cacheUpdateExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(1), new CacheUpdateThreadFactory());
 
-                            public ListenableFuture<MinerStatsView> reload(final String key, MinerStatsView prev) {
-                                try {
-                                    ListenableFutureTask<MinerStatsView> task = ListenableFutureTask.create(
-                                            () -> new MinerStatsView(prev).update());
-                                    MinerStatsExecutor.execute(task);
-                                    return task;
-                                } catch (Throwable e) {
-                                    LOG.debug("<miner-stats - could not queue up task: ", e);
-                                    throw(e);
-                                } // exception is swallowed by refresh and load. so just log it for our logs
-                            }
-                        });
+        //noinspection NullableProblems
+        blockCache = CacheBuilder.newBuilder().maximumSize(BLOCK_CACHE_SIZE).build(
+            new CacheLoader<>() {
+                public AionBlock load(ByteArrayWrapper blockHash) {
+                    LOG.debug("<rpc-server blockCache miss for " + blockHash.toString() + " >");
+                    return getBlockByHash(blockHash.getData());
+                }
+            });
+
+        MinerStats = CacheBuilder.newBuilder()
+            .maximumSize(1)
+            .refreshAfterWrite(STRATUM_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
+            .build(
+                new CacheLoader<>() {
+                    public MinerStatsView load(String key) { // no checked exception
+                        Address miner = new Address(key);
+                        return new MinerStatsView(STRATUM_RECENT_BLK_COUNT, miner.toBytes())
+                            .update();
+                    }
+
+                    public ListenableFuture<MinerStatsView> reload(final String key,
+                        MinerStatsView prev) {
+                        try {
+                            ListenableFutureTask<MinerStatsView> task = ListenableFutureTask.create(
+                                () -> new MinerStatsView(prev).update());
+                            MinerStatsExecutor.execute(task);
+                            return task;
+                        } catch (Throwable e) {
+                            LOG.debug("<miner-stats - could not queue up task: ", e);
+                            throw (e);
+                        } // exception is swallowed by refresh and load. so just log it for our logs
+                    }
+                });
 
         MinerStatsExecutor = new ThreadPoolExecutor(1, 1, 10, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(1), new MinerStatsThreadFactory());
+            new ArrayBlockingQueue<>(1), new MinerStatsThreadFactory());
     }
 
     // --------------------------------------------------------------------
@@ -296,7 +298,9 @@ public class ApiWeb3Aion extends ApiAion {
         AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
 
         if (nb == null) {
-            if (LOG.isDebugEnabled()) LOG.debug("<get-block-raw bn={} err=not-found>", bn);
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("<get-block-raw bn={} err=not-found>", bn);
+            }
             return null;
         } else {
             return nb;
@@ -322,7 +326,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         return new RpcMsg(
-                TypeConverter.toJsonHex(HashUtil.keccak256(ByteUtil.hexStringToBytes(_data))));
+            TypeConverter.toJsonHex(HashUtil.keccak256(ByteUtil.hexStringToBytes(_data))));
     }
 
     public RpcMsg net_version() {
@@ -348,12 +352,12 @@ public class ApiWeb3Aion extends ApiAion {
             JSONObject obj = new JSONObject();
             // create obj for when syncing is completed
             obj.put(
-                    "startingBlock",
-                    new NumericalValue(syncInfo.chainStartingBlkNumber).toHexString());
+                "startingBlock",
+                new NumericalValue(syncInfo.chainStartingBlkNumber).toHexString());
             obj.put("currentBlock", new NumericalValue(syncInfo.chainBestBlkNumber).toHexString());
             obj.put(
-                    "highestBlock",
-                    new NumericalValue(syncInfo.networkBestBlkNumber).toHexString());
+                "highestBlock",
+                new NumericalValue(syncInfo.networkBestBlkNumber).toHexString());
             return new RpcMsg(obj);
         } else {
             // create obj for when syncing is ongoing
@@ -418,8 +422,9 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (!JSONObject.NULL.equals(_bnOrId))
+        if (!JSONObject.NULL.equals(_bnOrId)) {
             bnOrId = _bnOrId + "";
+        }
         /*
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
@@ -430,8 +435,11 @@ public class ApiWeb3Aion extends ApiAion {
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found for id / block number: "+bnOrId+". " +
+        {
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR,
+                "Block not found for id / block number: " + bnOrId + ". " +
                     "State may have been pruned; please check your db pruning settings in the configuration file.");
+        }
 
         //IRepository repo = this.ac.getRepository();
 
@@ -458,8 +466,9 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (!JSONObject.NULL.equals(_bnOrId))
+        if (!JSONObject.NULL.equals(_bnOrId)) {
             bnOrId = _bnOrId + "";
+        }
 
         DataWord key;
 
@@ -469,7 +478,7 @@ public class ApiWeb3Aion extends ApiAion {
             // invalid key
             LOG.debug("eth_getStorageAt: invalid storageIndex. Must be <= 16 bytes.");
             return new RpcMsg(
-                    null, RpcError.INVALID_PARAMS, "Invalid storageIndex. Must be <= 16 bytes.");
+                null, RpcError.INVALID_PARAMS, "Invalid storageIndex. Must be <= 16 bytes.");
         }
         /*
         if (!bnOrId.equalsIgnoreCase("latest")) {
@@ -481,16 +490,21 @@ public class ApiWeb3Aion extends ApiAion {
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found for id / block number: "+bnOrId+". " +
+        {
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR,
+                "Block not found for id / block number: " + bnOrId + ". " +
                     "State may have been pruned; please check your db pruning settings in the configuration file.");
+        }
 
         //IRepository repo = this.ac.getRepository();
 
         @SuppressWarnings("unchecked")
         IDataWord storageValue = repo.getStorageValue(address, key);
-        if (storageValue != null)
+        if (storageValue != null) {
             return new RpcMsg(TypeConverter.toJsonHex(storageValue.getData()));
-        else return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
+        } else {
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Storage value not found");
+        }
     }
 
     public RpcMsg eth_getTransactionCount(Object _params) {
@@ -509,8 +523,9 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (!JSONObject.NULL.equals(_bnOrId))
+        if (!JSONObject.NULL.equals(_bnOrId)) {
             bnOrId = _bnOrId + "";
+        }
         /*
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
@@ -521,8 +536,11 @@ public class ApiWeb3Aion extends ApiAion {
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found for id / block number: "+bnOrId+". " +
+        {
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR,
+                "Block not found for id / block number: " + bnOrId + ". " +
                     "State may have been pruned; please check your db pruning settings in the configuration file.");
+        }
 
         //IRepository repo = this.ac.getRepository();
 
@@ -541,7 +559,9 @@ public class ApiWeb3Aion extends ApiAion {
 
         byte[] hash = ByteUtil.hexStringToBytes(_hash);
         AionBlock b = this.ac.getBlockchain().getBlockByHash(hash);
-        if (b == null) return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+        if (b == null) {
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+        }
 
         long n = b.getTransactionsList().size();
         return new RpcMsg(TypeConverter.toJsonHex(n));
@@ -558,7 +578,9 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         Long bn = parseBnOrId(_bnOrId);
-        if (bn == null) return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
+        if (bn == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
+        }
 
         // pending transactions
         if (bn < 0) {
@@ -567,7 +589,9 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
-        if (b == null) return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+        if (b == null) {
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found.");
+        }
 
         List<AionTransaction> list = b.getTransactionsList();
 
@@ -591,8 +615,9 @@ public class ApiWeb3Aion extends ApiAion {
         Address address = new Address(_address);
 
         String bnOrId = "latest";
-        if (!JSONObject.NULL.equals(_bnOrId))
+        if (!JSONObject.NULL.equals(_bnOrId)) {
             bnOrId = _bnOrId + "";
+        }
         /*
         if (!bnOrId.equalsIgnoreCase("latest")) {
             return new RpcMsg(
@@ -603,8 +628,11 @@ public class ApiWeb3Aion extends ApiAion {
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
-            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Block not found for id / block number: "+bnOrId+". " +
+        {
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR,
+                "Block not found for id / block number: " + bnOrId + ". " +
                     "State may have been pruned; please check your db pruning settings in the configuration file.");
+        }
 
         //IRepository repo = this.ac.getRepository();
 
@@ -627,7 +655,9 @@ public class ApiWeb3Aion extends ApiAion {
 
         Address address = Address.wrap(_address);
         ECKey key = getAccountKey(address.toString());
-        if (key == null) return new RpcMsg(null, RpcError.NOT_ALLOWED, "Account not unlocked.");
+        if (key == null) {
+            return new RpcMsg(null, RpcError.NOT_ALLOWED, "Account not unlocked.");
+        }
 
         // Message starts with Unicode Character 'END OF MEDIUM' (U+0019)
         String message = "\u0019Aion Signed Message:\n" + _message.length() + _message;
@@ -688,7 +718,7 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     private RpcMsg processTxResponse(ApiTxResponse rsp) {
-        switch(rsp.getType()) {
+        switch (rsp.getType()) {
             case SUCCESS:
             case ALREADY_CACHED:
             case CACHED_POOLMAX:
@@ -743,8 +773,9 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        if (_rawTx.equals("null"))
+        if (_rawTx.equals("null")) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Null raw transaction provided.");
+        }
 
         byte[] rawTransaction = ByteUtil.hexStringToBytes(_rawTx);
 
@@ -768,25 +799,29 @@ public class ApiWeb3Aion extends ApiAion {
 
         ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
 
-        if (txParams == null)
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid transaction parameter provided");
+        if (txParams == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS,
+                "Invalid transaction parameter provided");
+        }
 
         String bnOrId = "latest";
-        if (!JSONObject.NULL.equals(_bnOrId))
+        if (!JSONObject.NULL.equals(_bnOrId)) {
             bnOrId = _bnOrId + "";
+        }
 
         Long bn = parseBnOrId(bnOrId);
-        if (bn == null || bn < 0)
+        if (bn == null || bn < 0) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block id provided.");
+        }
 
         AionTransaction tx =
-                new AionTransaction(
-                        txParams.getNonce().toByteArray(),
-                        txParams.getTo(),
-                        txParams.getValue().toByteArray(),
-                        txParams.getData(),
-                        txParams.getNrg(),
-                        txParams.getNrgPrice());
+            new AionTransaction(
+                txParams.getNonce().toByteArray(),
+                txParams.getTo(),
+                txParams.getValue().toByteArray(),
+                txParams.getData(),
+                txParams.getNrg(),
+                txParams.getNrgPrice());
 
         AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
         AionTxReceipt receipt = this.ac.callConstant(tx, b);
@@ -836,7 +871,8 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         }
 
-        byte[] mainchainHash = this.ac.getAionHub().getBlockStore().getBlockHashByNumber(block.getNumber());
+        byte[] mainchainHash = this.ac.getAionHub().getBlockStore()
+            .getBlockHashByNumber(block.getNumber());
         if (mainchainHash == null) {
             LOG.debug("<get-block hash={} err=not-found>", _hash);
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
@@ -871,8 +907,9 @@ public class ApiWeb3Aion extends ApiAion {
 
         Long bn = this.parseBnOrId(_bnOrId);
 
-        if (bn == null || bn < 0)
+        if (bn == null || bn < 0) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block id provided.");
+        }
 
         AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
 
@@ -883,7 +920,8 @@ public class ApiWeb3Aion extends ApiAion {
 
         // add main chain block to cache (currently only used by ops_getTransactionReceipt_* functions)
         blockCache.put(new ByteArrayWrapper(nb.getHash()), nb);
-        BigInteger totalDiff = this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(nb.getHash());
+        BigInteger totalDiff = this.ac.getAionHub().getBlockStore()
+            .getTotalDifficultyForHash(nb.getHash());
         return new RpcMsg(Blk.AionBlockToJson(nb, totalDiff, _fullTx));
     }
 
@@ -903,14 +941,20 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         byte[] txHash = ByteUtil.hexStringToBytes(_hash);
-        if (_hash.equals("null") || txHash == null) return null;
+        if (_hash.equals("null") || txHash == null) {
+            return null;
+        }
 
         AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
-        if (txInfo == null)
-            return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+        if (txInfo == null) {
+            return new RpcMsg(
+                JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+        }
 
         AionBlock b = this.ac.getBlockchain().getBlockByHash(txInfo.getBlockHash());
-        if (b == null) return null; // this is actually an internal error
+        if (b == null) {
+            return null; // this is actually an internal error
+        }
 
         return new RpcMsg(Tx.InfoToJSON(txInfo, b));
     }
@@ -929,19 +973,23 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         byte[] hash = ByteUtil.hexStringToBytes(_hash);
-        if (_hash.equals("null") || hash == null) return null;
+        if (_hash.equals("null") || hash == null) {
+            return null;
+        }
 
         AionBlock b = this.ac.getBlockchain().getBlockByHash(hash);
-        if (b == null)
+        if (b == null) {
             return new RpcMsg(
-                    JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+                JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+        }
 
         List<AionTransaction> txs = b.getTransactionsList();
 
         int idx = Integer.decode(_index);
-        if (idx >= txs.size())
+        if (idx >= txs.size()) {
             return new RpcMsg(
-                    JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+                JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+        }
 
         return new RpcMsg(Tx.AionTransactionToJSON(txs.get(idx), b, idx));
     }
@@ -960,19 +1008,23 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         Long bn = parseBnOrId(_bnOrId);
-        if (bn == null || bn < 0) return null;
+        if (bn == null || bn < 0) {
+            return null;
+        }
 
         AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
-        if (b == null)
+        if (b == null) {
             return new RpcMsg(
-                    JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+                JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+        }
 
         List<AionTransaction> txs = b.getTransactionsList();
 
         int idx = Integer.decode(_index);
-        if (idx >= txs.size())
+        if (idx >= txs.size()) {
             return new RpcMsg(
-                    JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+                JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
+        }
 
         return new RpcMsg(Tx.AionTransactionToJSON(txs.get(idx), b, idx));
     }
@@ -1001,7 +1053,10 @@ public class ApiWeb3Aion extends ApiAion {
         }
         */
 
-        if (r == null) return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no receipt was found'
+        if (r == null) {
+            return new RpcMsg(
+                JSONObject.NULL); // json rpc spec: 'or null when no receipt was found'
+        }
 
         return new RpcMsg(r.toJson());
     }
@@ -1080,10 +1135,12 @@ public class ApiWeb3Aion extends ApiAion {
 
             toBlock = toBlock == null ? getBestBlock() : toBlock;
             for (long i = fromBlock.getNumber(); i <= toBlock.getNumber(); i++) {
-                if (filter.isFull()) break;
+                if (filter.isFull()) {
+                    break;
+                }
                 filter.onBlock(
-                        this.ac.getBlockchain().getBlockByNumber(i),
-                        this.ac.getAionHub().getBlockchain());
+                    this.ac.getBlockchain().getBlockByNumber(i),
+                    this.ac.getAionHub().getBlockchain());
             }
         }
 
@@ -1105,12 +1162,14 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         ArgFltr rf = ArgFltr.fromJSON(_filterObj);
-        if (rf == null)
+        if (rf == null) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid filter object provided.");
+        }
 
         FltrLg filter = createFilter(rf);
-        if (filter == null)
+        if (filter == null) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid filter object provided.");
+        }
 
         // "install" the filter after populating historical data;
         // rationale: until the user gets the id back, the user should not expect the filter to be
@@ -1156,8 +1215,8 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         return new RpcMsg(
-                installedFilters.remove(TypeConverter.StringHexToBigInteger(_id).longValue())
-                        != null);
+            installedFilters.remove(TypeConverter.StringHexToBigInteger(_id).longValue())
+                != null);
     }
 
     private JSONArray buildFilterResponse(Fltr filter) {
@@ -1189,7 +1248,9 @@ public class ApiWeb3Aion extends ApiAion {
         long id = TypeConverter.StringHexToBigInteger(_id).longValue();
         Fltr filter = installedFilters.get(id);
 
-        if (filter == null) return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Filter not found.");
+        if (filter == null) {
+            return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Filter not found.");
+        }
 
         return new RpcMsg(buildFilterResponse(filter));
     }
@@ -1205,12 +1266,14 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         ArgFltr rf = ArgFltr.fromJSON(_filterObj);
-        if (rf == null)
+        if (rf == null) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid filter object provided.");
+        }
 
         FltrLg filter = createFilter(rf);
-        if (filter == null)
+        if (filter == null) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block ids provided.");
+        }
 
         return new RpcMsg(buildFilterResponse(filter));
     }
@@ -1236,8 +1299,9 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         int duration = 300;
-        if (!JSONObject.NULL.equals(_duration))
+        if (!JSONObject.NULL.equals(_duration)) {
             duration = new BigInteger(_duration + "").intValueExact();
+        }
 
         return new RpcMsg(unlockAccount(_account, _password, duration));
     }
@@ -1292,11 +1356,13 @@ public class ApiWeb3Aion extends ApiAion {
 
         Long bn = parseBnOrId(_bnOrId);
 
-        if (bn == null || bn < 0) return null;
+        if (bn == null || bn < 0) {
+            return null;
+        }
 
         List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> blocks =
-                ((AionBlockStore) this.ac.getAionHub().getBlockchain().getBlockStore())
-                        .getBlocksByNumber(bn);
+            ((AionBlockStore) this.ac.getAionHub().getBlockchain().getBlockStore())
+                .getBlocksByNumber(bn);
         if (blocks == null) {
             return new RpcMsg(null, RpcError.EXECUTION_ERROR, "Blocks requested not found.");
         }
@@ -1304,8 +1370,8 @@ public class ApiWeb3Aion extends ApiAion {
         JSONArray response = new JSONArray();
         for (Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>> block : blocks) {
             JSONObject b =
-                    (JSONObject)
-                            Blk.AionBlockToJson(block.getKey(), block.getValue().getKey(), _fullTx);
+                (JSONObject)
+                    Blk.AionBlockToJson(block.getKey(), block.getValue().getKey(), _fullTx);
             b.put("mainchain", block.getValue().getValue());
             response.put(b);
         }
@@ -1338,7 +1404,7 @@ public class ApiWeb3Aion extends ApiAion {
 
             // generate a date corresponding to UTC date time (not local)
             String utcTimestampDate =
-                    Instant.ofEpochMilli(node.getTimestamp()).atOffset(ZoneOffset.UTC).toString();
+                Instant.ofEpochMilli(node.getTimestamp()).atOffset(ZoneOffset.UTC).toString();
             n.put("latestTimestampUTC", utcTimestampDate);
             n.put("version", node.getBinaryVersion());
 
@@ -1357,7 +1423,7 @@ public class ApiWeb3Aion extends ApiAion {
 
     // default block for pending transactions
     private static final AionBlock defaultBlock =
-            new AionBlock(new A0BlockHeader.Builder().build(), Collections.emptyList());
+        new AionBlock(new A0BlockHeader.Builder().build(), Collections.emptyList());
 
     public RpcMsg priv_getPendingTransactions(Object _params) {
         boolean fullTx = ((JSONArray) _params).optBoolean(0, false);
@@ -1389,18 +1455,21 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         byte[] hash = ByteUtil.hexStringToBytes(transactionHash);
-        if (hash == null)
+        if (hash == null) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid transaction hash");
+        }
 
         // begin output processing
         AionTxInfo transaction = this.ac.getAionHub().getBlockchain().getTransactionInfo(hash);
 
-        if (transaction == null) return new RpcMsg(JSONObject.NULL);
+        if (transaction == null) {
+            return new RpcMsg(JSONObject.NULL);
+        }
 
         JSONObject tx =
-                Tx.InfoToJSON(
-                        transaction,
-                        this.ac.getBlockchain().getBlockByHash(transaction.getBlockHash()));
+            Tx.InfoToJSON(
+                transaction,
+                this.ac.getBlockchain().getBlockByHash(transaction.getBlockHash()));
         String raw = ByteUtil.toHexString(transaction.getReceipt().getTransaction().getEncoded());
 
         JSONObject obj = new JSONObject();
@@ -1420,11 +1489,15 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         byte[] hash = ByteUtil.hexStringToBytes(hashString);
-        if (hash == null) return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block hash");
+        if (hash == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block hash");
+        }
 
         AionBlock block = this.ac.getBlockchain().getBlockByHash(hash);
 
-        if (block == null) return new RpcMsg(JSONObject.NULL);
+        if (block == null) {
+            return new RpcMsg(JSONObject.NULL);
+        }
 
         BigInteger totalDiff = this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(hash));
         return new RpcMsg(dumpBlock(block, totalDiff, false));
@@ -1449,10 +1522,12 @@ public class ApiWeb3Aion extends ApiAion {
         }
         AionBlock block = this.ac.getBlockchain().getBlockByNumber(number);
 
-        if (block == null) return new RpcMsg(JSONObject.NULL);
+        if (block == null) {
+            return new RpcMsg(JSONObject.NULL);
+        }
 
         BigInteger totalDiff =
-                this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(block.getHash()));
+            this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(block.getHash()));
         return new RpcMsg(dumpBlock(block, totalDiff, false));
     }
 
@@ -1480,7 +1555,9 @@ public class ApiWeb3Aion extends ApiAion {
                 continue;
             }
 
-            if (p.getTotalDifficulty().compareTo(maxPeer.getTotalDifficulty()) > 0) maxPeer = p;
+            if (p.getTotalDifficulty().compareTo(maxPeer.getTotalDifficulty()) > 0) {
+                maxPeer = p;
+            }
         }
 
         // basic local configuration
@@ -1501,8 +1578,8 @@ public class ApiWeb3Aion extends ApiAion {
         blockchain.put("bestBlockhash", ByteUtil.toHexString(block.getHash()));
         blockchain.put("bestNumber", block.getNumber());
         blockchain.put(
-                "totalDifficulty",
-                this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(block.getHash())));
+            "totalDifficulty",
+            this.ac.getBlockchain().getTotalDifficultyByHash(new Hash256(block.getHash())));
         // end
         obj.put("local", blockchain);
 
@@ -1518,10 +1595,10 @@ public class ApiWeb3Aion extends ApiAion {
             remote.put("version", maxPeer.getBinaryVersion());
             remote.put("timestamp", maxPeer.getTimestamp());
             remote.put(
-                    "timestampUTC",
-                    Instant.ofEpochMilli(maxPeer.getTimestamp())
-                            .atOffset(ZoneOffset.UTC)
-                            .toString());
+                "timestampUTC",
+                Instant.ofEpochMilli(maxPeer.getTimestamp())
+                    .atOffset(ZoneOffset.UTC)
+                    .toString());
             // end
             network.put("best", remote);
         }
@@ -1558,10 +1635,10 @@ public class ApiWeb3Aion extends ApiAion {
                 nodeObj.put("version", node.getBinaryVersion());
                 nodeObj.put("timestamp", node.getTimestamp());
                 nodeObj.put(
-                        "timestampUTC",
-                        Instant.ofEpochMilli(node.getTimestamp())
-                                .atOffset(ZoneOffset.UTC)
-                                .toString());
+                    "timestampUTC",
+                    Instant.ofEpochMilli(node.getTimestamp())
+                        .atOffset(ZoneOffset.UTC)
+                        .toString());
 
                 // end
                 peerObj.put("node", nodeObj);
@@ -1571,10 +1648,10 @@ public class ApiWeb3Aion extends ApiAion {
             peerObj.put("idHash", peerState.getKey());
             peerObj.put("lastRequestTimestamp", ps.getLastHeaderRequest());
             peerObj.put(
-                    "lastRequestTimestampUTC",
-                    Instant.ofEpochMilli(ps.getLastHeaderRequest())
-                            .atOffset(ZoneOffset.UTC)
-                            .toString());
+                "lastRequestTimestampUTC",
+                Instant.ofEpochMilli(ps.getLastHeaderRequest())
+                    .atOffset(ZoneOffset.UTC)
+                    .toString());
             peerObj.put("mode", ps.getMode().toString());
             peerObj.put("base", ps.getBase());
 
@@ -1753,7 +1830,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         long latestBlkNum = this.getBestBlock().getNumber();
         AccountState accountState =
-                ((AionRepositoryImpl) this.ac.getRepository()).getAccountState(address);
+            ((AionRepositoryImpl) this.ac.getRepository()).getAccountState(address);
 
         BigInteger nonce = BigInteger.ZERO;
         BigInteger balance = BigInteger.ZERO;
@@ -1774,6 +1851,7 @@ public class ApiWeb3Aion extends ApiAion {
 
     // always gets the latest 20 blocks and transactions
     private class ChainHeadView {
+
         LinkedList<byte[]> hashQueue; // more precisely a dequeue
         Map<byte[], JSONObject> blkList;
         Map<byte[], AionBlock> blkObjList;
@@ -1802,7 +1880,8 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         private JSONObject getJson(AionBlock _b) {
-            BigInteger totalDiff = ac.getAionHub().getBlockStore().getTotalDifficultyForHash(_b.getHash());
+            BigInteger totalDiff = ac.getAionHub().getBlockStore()
+                .getTotalDifficultyForHash(_b.getHash());
             return Blk.AionBlockOnlyToJson(_b, totalDiff);
         }
 
@@ -1864,22 +1943,22 @@ public class ApiWeb3Aion extends ApiAion {
                 lastBlkTimestamp = b.getTimestamp();
 
                 difficultyAccumulator =
-                        difficultyAccumulator.add(new BigInteger(b.getDifficulty()));
+                    difficultyAccumulator.add(new BigInteger(b.getDifficulty()));
                 lastDifficulty = new BigInteger(b.getDifficulty());
 
                 nrgConsumedAccumulator =
-                        nrgConsumedAccumulator.add(
-                                new BigInteger(Long.toString(b.getNrgConsumed())));
+                    nrgConsumedAccumulator.add(
+                        new BigInteger(Long.toString(b.getNrgConsumed())));
                 nrgLimitAccumulator =
-                        nrgLimitAccumulator.add(new BigInteger(Long.toString(b.getNrgLimit())));
+                    nrgLimitAccumulator.add(new BigInteger(Long.toString(b.getNrgLimit())));
                 txnCount += b.getTransactionsList().size();
             }
 
             BigInteger lastBlkReward =
-                    ((AionBlockchainImpl) ac.getBlockchain())
-                            .getChainConfiguration()
-                            .getRewardsCalculator()
-                            .calculateReward(b.getHeader());
+                ((AionBlockchainImpl) ac.getBlockchain())
+                    .getChainConfiguration()
+                    .getRewardsCalculator()
+                    .calculateReward(b.getHeader());
 
             double blkTime = 0;
             double hashRate = 0;
@@ -1945,7 +2024,7 @@ public class ApiWeb3Aion extends ApiAion {
 
             // evict data as necessary
             LinkedList<Map.Entry<byte[], Map.Entry<AionBlock, JSONObject>>> tempStack =
-                    new LinkedList<>();
+                new LinkedList<>();
             tempStack.push(Map.entry(blk.getHash(), Map.entry(blk, getJson(blk))));
             int itr = 1; // deliberately 1, since we've already added the 0th element to the stack
 
@@ -1961,9 +2040,9 @@ public class ApiWeb3Aion extends ApiAion {
                     " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
             */
 
-            while(!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
-                    && itr < qSize
-                    && blk.getNumber() > 2) {
+            while (!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
+                && itr < qSize
+                && blk.getNumber() > 2) {
 
                 blk = getBlockByHash(blk.getParentHash());
                 tempStack.push(Map.entry(blk.getHash(), Map.entry(blk, getJson(blk))));
@@ -2022,6 +2101,7 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     public class CacheUpdateThreadFactory implements ThreadFactory {
+
         private final AtomicInteger tnum = new AtomicInteger(1);
 
         @Override
@@ -2070,20 +2150,28 @@ public class ApiWeb3Aion extends ApiAion {
 
         byte[] txHash = TypeConverter.StringHexToByteArray(_hash);
 
-        if (txHash == null) return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        if (txHash == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
 
         AionTxInfo txInfo = this.ac.getAionHub().getBlockchain().getTransactionInfo(txHash);
 
-        if (txInfo == null) return new RpcMsg(JSONObject.NULL);
+        if (txInfo == null) {
+            return new RpcMsg(JSONObject.NULL);
+        }
 
         AionBlock block =
-                this.ac.getAionHub().getBlockchain().getBlockByHash(txInfo.getBlockHash());
+            this.ac.getAionHub().getBlockchain().getBlockByHash(txInfo.getBlockHash());
 
-        if (block == null) return new RpcMsg(JSONObject.NULL);
+        if (block == null) {
+            return new RpcMsg(JSONObject.NULL);
+        }
 
         AionTransaction tx = txInfo.getReceipt().getTransaction();
 
-        if (tx == null) return new RpcMsg(JSONObject.NULL);
+        if (tx == null) {
+            return new RpcMsg(JSONObject.NULL);
+        }
 
         JSONObject result = new JSONObject();
         result.put("timestampVal", block.getTimestamp());
@@ -2137,7 +2225,9 @@ public class ApiWeb3Aion extends ApiAion {
         if (bn != null) {
             if (bn >= 0) {
                 block = this.ac.getBlockchain().getBlockByNumber(bn);
-                if (block == null) return new RpcMsg(JSONObject.NULL);
+                if (block == null) {
+                    return new RpcMsg(JSONObject.NULL);
+                }
             } else {
                 return new RpcMsg(JSONObject.NULL);
             }
@@ -2146,11 +2236,15 @@ public class ApiWeb3Aion extends ApiAion {
         // see if the user passed in a hash
         if (block == null) {
             block = this.ac.getBlockchain().getBlockByHash(ByteUtil.hexStringToBytes(_bnOrHash));
-            if (block == null) return new RpcMsg(JSONObject.NULL);
+            if (block == null) {
+                return new RpcMsg(JSONObject.NULL);
+            }
         }
 
         AionBlock mainBlock = this.ac.getBlockchain().getBlockByNumber(block.getNumber());
-        if (mainBlock == null) return new RpcMsg(JSONObject.NULL);
+        if (mainBlock == null) {
+            return new RpcMsg(JSONObject.NULL);
+        }
 
         if (!FastByteComparisons.equal(block.getHash(), mainBlock.getHash())) {
             return new RpcMsg(JSONObject.NULL);
@@ -2159,12 +2253,12 @@ public class ApiWeb3Aion extends ApiAion {
         // ok so now we have a mainchain block
 
         BigInteger blkReward =
-                ((AionBlockchainImpl) ac.getBlockchain())
-                        .getChainConfiguration()
-                        .getRewardsCalculator()
-                        .calculateReward(block.getHeader());
+            ((AionBlockchainImpl) ac.getBlockchain())
+                .getChainConfiguration()
+                .getRewardsCalculator()
+                .calculateReward(block.getHeader());
         BigInteger totalDiff =
-                this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(block.getHash());
+            this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(block.getHash());
 
         JSONObject blk = new JSONObject();
         blk.put("timestampVal", block.getTimestamp());
@@ -2216,8 +2310,8 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     /**
-     * This function runs in ~ 30ms
-     * Is an order of magnitude slower than ops_getTransactionReceiptByTransactionAndBlockHash
+     * This function runs in ~ 30ms Is an order of magnitude slower than
+     * ops_getTransactionReceiptByTransactionAndBlockHash
      */
     public RpcMsg ops_getTransactionReceiptByTransactionHash(Object _params) {
         String _transactionHash;
@@ -2232,7 +2326,9 @@ public class ApiWeb3Aion extends ApiAion {
         byte[] transactionHash = TypeConverter.StringHexToByteArray(_transactionHash);
 
         AionTxInfo info = this.ac.getAionHub().getBlockchain().getTransactionInfo(transactionHash);
-        if (info == null) return new RpcMsg(JSONObject.NULL);
+        if (info == null) {
+            return new RpcMsg(JSONObject.NULL);
+        }
 
         // ok to getUnchecked() since the load() implementation does not throw checked exceptions
         AionBlock block = blockCache.getUnchecked(new ByteArrayWrapper(info.getBlockHash()));
@@ -2241,8 +2337,8 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     /**
-     * This function runs as fast as is possible with the on-disk data model
-     * Use this to retrieve the Transaction Receipt if you know the block hash already
+     * This function runs as fast as is possible with the on-disk data model Use this to retrieve
+     * the Transaction Receipt if you know the block hash already
      */
     public RpcMsg ops_getTransactionReceiptByTransactionAndBlockHash(Object _params) {
         String _transactionHash;
@@ -2264,7 +2360,9 @@ public class ApiWeb3Aion extends ApiAion {
         AionBlockchainImpl chain = (AionBlockchainImpl) this.ac.getAionHub().getBlockchain();
 
         AionTxInfo info = chain.getTransactionInfoLite(transactionHash, blockHash);
-        if (info == null) return new RpcMsg(JSONObject.NULL);
+        if (info == null) {
+            return new RpcMsg(JSONObject.NULL);
+        }
 
         // ok to getUnchecked() since the load() implementation does not throw checked exceptions
         AionBlock block = blockCache.getUnchecked(new ByteArrayWrapper(blockHash));
@@ -2291,8 +2389,9 @@ public class ApiWeb3Aion extends ApiAion {
 
         byte[] blockHash = TypeConverter.StringHexToByteArray(_blockHash);
 
-        if (blockHash.length != 32)
+        if (blockHash.length != 32) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
 
         // ok to getUnchecked() since the load() implementation does not throw checked exceptions
         AionBlock b;
@@ -2309,16 +2408,18 @@ public class ApiWeb3Aion extends ApiAion {
         Function<AionTransaction, JSONObject> extractTxReceipt = t -> {
             AionTxInfo info = chain.getTransactionInfoLite(t.getHash(), b.getHash());
             info.setTransaction(t);
-            return((new TxRecpt(b, info, 0L, true)).toJson());
+            return ((new TxRecpt(b, info, 0L, true)).toJson());
         };
 
         List<JSONObject> receipts;
         // use the fork-join pool to parallelize receipt retrieval if necessary
         int PARALLELIZE_RECEIPT_COUNT = 20;
-        if (b.getTransactionsList().size() > PARALLELIZE_RECEIPT_COUNT)
-            receipts = b.getTransactionsList().parallelStream().map(extractTxReceipt).collect(toList());
-        else
+        if (b.getTransactionsList().size() > PARALLELIZE_RECEIPT_COUNT) {
+            receipts = b.getTransactionsList().parallelStream().map(extractTxReceipt)
+                .collect(toList());
+        } else {
             receipts = b.getTransactionsList().stream().map(extractTxReceipt).collect(toList());
+        }
 
         return new RpcMsg(new JSONArray(receipts));
     }
@@ -2373,7 +2474,7 @@ public class ApiWeb3Aion extends ApiAion {
 
                 if (!templateMap.keySet().isEmpty()) {
                     if (templateMap.get(templateMap.keySet().iterator().next()).getNumber()
-                            < bestBlock.block.getNumber()) {
+                        < bestBlock.block.getNumber()) {
                         // Found a higher block, clear any remaining cached entries and start on new
                         // height
                         templateMap.clear();
@@ -2458,7 +2559,8 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject obj = new JSONObject();
 
-        if (!JSONObject.NULL.equals(nce) && !JSONObject.NULL.equals(soln) && !JSONObject.NULL.equals(hdrHash)) {
+        if (!JSONObject.NULL.equals(nce) && !JSONObject.NULL.equals(soln) && !JSONObject.NULL
+            .equals(hdrHash)) {
             try {
                 templateMapLock.writeLock().lock();
 
@@ -2476,18 +2578,18 @@ public class ApiWeb3Aion extends ApiAion {
                     if (importResult.isSuccessful()) {
                         templateMap.remove(key);
                         LOG.info(
-                                "block submitted via api <num={}, hash={}, diff={}, tx={}>",
-                                bestBlock.getNumber(),
-                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                                bestBlock.getHeader().getDifficultyBI().toString(),
-                                bestBlock.getTransactionsList().size());
+                            "block submitted via api <num={}, hash={}, diff={}, tx={}>",
+                            bestBlock.getNumber(),
+                            bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                            bestBlock.getHeader().getDifficultyBI().toString(),
+                            bestBlock.getTransactionsList().size());
                     } else {
                         LOG.info(
-                                "Unable to submit block via api <num={}, hash={}, diff={}, tx={}>",
-                                bestBlock.getNumber(),
-                                bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                                bestBlock.getHeader().getDifficultyBI().toString(),
-                                bestBlock.getTransactionsList().size());
+                            "Unable to submit block via api <num={}, hash={}, diff={}, tx={}>",
+                            bestBlock.getNumber(),
+                            bestBlock.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
+                            bestBlock.getHeader().getDifficultyBI().toString(),
+                            bestBlock.getTransactionsList().size());
                     }
                 }
             } finally {
@@ -2545,6 +2647,7 @@ public class ApiWeb3Aion extends ApiAion {
 
     // always gets the latest 20 blocks and transactions
     private class MinerStatsView {
+
         LinkedList<byte[]> hashQueue; // more precisely a dequeue
         Map<byte[], AionBlock> blocks;
         private JSONObject response;
@@ -2590,7 +2693,9 @@ public class ApiWeb3Aion extends ApiAion {
                     byte[] hash = (byte[]) li.next();
                     b = blocks.get(hash);
 
-                    if (i == 0) lastDifficulty = b.getDifficultyBI();
+                    if (i == 0) {
+                        lastDifficulty = b.getDifficultyBI();
+                    }
 
                     // only accumulate block times over the last 32 blocks
                     if (i <= STRATUM_BLKTIME_INCLUDED_COUNT) {
@@ -2617,8 +2722,8 @@ public class ApiWeb3Aion extends ApiAion {
 
                 if (blkTime > 0) {
                     networkHashrate =
-                            (new BigDecimal(lastDifficulty))
-                                    .divide(BigDecimal.valueOf(blkTime), 4, RoundingMode.HALF_UP);
+                        (new BigDecimal(lastDifficulty))
+                            .divide(BigDecimal.valueOf(blkTime), 4, RoundingMode.HALF_UP);
                 }
 
                 if (i > 0) {
@@ -2642,7 +2747,9 @@ public class ApiWeb3Aion extends ApiAion {
             // get the latest head
             AionBlock blk = getBestBlock();
 
-            if (blk == null) return this;
+            if (blk == null) {
+                return this;
+            }
 
             if (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getHash())) {
                 return this; // nothing to do
@@ -2665,9 +2772,9 @@ public class ApiWeb3Aion extends ApiAion {
                     " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
             */
 
-            while(!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
-                    && itr < qSize
-                    && blk.getNumber() > 2) {
+            while (!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
+                && itr < qSize
+                && blk.getNumber() > 2) {
 
                 blk = getBlockByHash(blk.getParentHash());
                 tempStack.push(Map.entry(blk.getHash(), blk));
@@ -2716,6 +2823,7 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     public class MinerStatsThreadFactory implements ThreadFactory {
+
         private final AtomicInteger tnum = new AtomicInteger(1);
 
         @Override
@@ -2754,16 +2862,22 @@ public class ApiWeb3Aion extends ApiAion {
     private IRepository getRepoByJsonBlockId(String _bnOrId) {
         Long bn = parseBnOrId(_bnOrId);
         // if you passed in an invalid bnOrId, pending or it's an error
-        if (bn == null || bn < 0) return null;
+        if (bn == null || bn < 0) {
+            return null;
+        }
 
         AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
-        if (b == null) return null;
+        if (b == null) {
+            return null;
+        }
 
         return ac.getRepository().getSnapshotTo(b.getStateRoot());
     }
 
     private Long parseBnOrId(String _bnOrId) {
-        if (_bnOrId == null) return null;
+        if (_bnOrId == null) {
+            return null;
+        }
 
         try {
             if ("earliest".equalsIgnoreCase(_bnOrId)) {
@@ -2786,6 +2900,8 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     public void shutdown() {
-        if (isFilterEnabled) shutDownES();
+        if (isFilterEnabled) {
+            shutDownES();
+        }
     }
 }

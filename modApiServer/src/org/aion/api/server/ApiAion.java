@@ -90,7 +90,7 @@ public abstract class ApiAion extends Api {
     private volatile double reportedHashrate = 0; // volatile, used only for 'publishing'
 
     // thread safe because value never changing, can be safely read by multiple threads
-    protected final String[] compilers = new String[] {"solidity"};
+    protected final String[] compilers = new String[]{"solidity"};
     protected final short FLTRS_MAX = 1024;
     protected final String clientVersion = computeClientVersion();
 
@@ -115,6 +115,7 @@ public abstract class ApiAion extends Api {
     }
 
     public final class EpApi implements Runnable {
+
         boolean go = true;
 
 
@@ -459,31 +460,36 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        Address fromAddr = (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
-        AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), fromAddr, params.getTo(),
-            params.getValue().toByteArray(), params.getData(), params.getNrg(), params.getNrgPrice());
+        Address fromAddr =
+            (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
+        AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), fromAddr,
+            params.getTo(),
+            params.getValue().toByteArray(), params.getData(), params.getNrg(),
+            params.getNrgPrice());
 
-        AionTxReceipt receipt = this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
+        AionTxReceipt receipt = this.ac
+            .callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
         return receipt.getEnergyUsed();
     }
 
     protected ApiTxResponse createContract(ArgTxCall _params) {
 
-        if (_params == null)
-            return(new ApiTxResponse(TxResponse.INVALID_TX));
+        if (_params == null) {
+            return (new ApiTxResponse(TxResponse.INVALID_TX));
+        }
 
         Address from = _params.getFrom();
 
         if (from == null || from.isEmptyAddress()) {
             LOG.error("<create-contract msg=invalid-from-address>");
-            return(new ApiTxResponse(TxResponse.INVALID_FROM));
+            return (new ApiTxResponse(TxResponse.INVALID_FROM));
         }
 
         ECKey key = this.getAccountKey(from.toString());
 
         if (key == null) {
             LOG.debug("ApiAion.createContract - null key");
-            return(new ApiTxResponse(TxResponse.INVALID_ACCOUNT));
+            return (new ApiTxResponse(TxResponse.INVALID_ACCOUNT));
         }
 
         try {
@@ -535,20 +541,21 @@ public abstract class ApiAion extends Api {
 
     protected ApiTxResponse sendTransaction(ArgTxCall _params) {
 
-        if (_params == null)
-            return(new ApiTxResponse(TxResponse.INVALID_TX));
+        if (_params == null) {
+            return (new ApiTxResponse(TxResponse.INVALID_TX));
+        }
 
         Address from = _params.getFrom();
 
         if (from == null || from.isEmptyAddress()) {
             LOG.error("<send-transaction msg=invalid-from-address>");
-            return(new ApiTxResponse(TxResponse.INVALID_FROM));
+            return (new ApiTxResponse(TxResponse.INVALID_FROM));
         }
 
         ECKey key = this.getAccountKey(from.toString());
         if (key == null) {
             LOG.error("<send-transaction msg=account-not-found>");
-            return(new ApiTxResponse(TxResponse.INVALID_ACCOUNT));
+            return (new ApiTxResponse(TxResponse.INVALID_ACCOUNT));
         }
 
         try {
@@ -575,20 +582,21 @@ public abstract class ApiAion extends Api {
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.sendTransaction exception: [{}]", ex.getMessage());
-            return(new ApiTxResponse(TxResponse.EXCEPTION, ex));
+            return (new ApiTxResponse(TxResponse.EXCEPTION, ex));
         }
     }
 
     protected ApiTxResponse sendTransaction(byte[] signedTx) {
-        if (signedTx == null)
-            return(new ApiTxResponse(TxResponse.INVALID_TX));
+        if (signedTx == null) {
+            return (new ApiTxResponse(TxResponse.INVALID_TX));
+        }
 
         AionTransaction tx = new AionTransaction(signedTx);
         try {
             return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getHash()));
         } catch (Exception ex) {
             LOG.error("<send-transaction exception>", ex);
-            return(new ApiTxResponse(TxResponse.EXCEPTION, ex));
+            return (new ApiTxResponse(TxResponse.EXCEPTION, ex));
         }
     }
 
@@ -690,7 +698,9 @@ public abstract class ApiAion extends Api {
             for (Short v : p2pVersions) {
                 b.append(ByteUtil.byteArrayToInt(ByteUtil.shortToBytes(v)));
                 i++;
-                if (i < p2pVersions.size()) b.append(",");
+                if (i < p2pVersions.size()) {
+                    b.append(",");
+                }
             }
             return b.toString();
         } catch (Exception e) {
@@ -736,22 +746,24 @@ public abstract class ApiAion extends Api {
             return;
         }
 
-        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
+        IAionBlockchain bc = (IAionBlockchain) _ac.getBlockchain();
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
 
         NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
-        if (CfgAion.inst().getApi().getNrg().isOracleEnabled())
+        if (CfgAion.inst().getApi().getNrg().isOracleEnabled()) {
             oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
+        }
 
         NRG_ORACLE = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
     }
 
     protected long getRecommendedNrgPrice() {
-        if (NRG_ORACLE != null)
+        if (NRG_ORACLE != null) {
             return NRG_ORACLE.getNrgPrice();
-        else
+        } else {
             return CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        }
     }
 
     // leak the oracle instance. NrgOracle is threadsafe, so safe to do this, but bad design

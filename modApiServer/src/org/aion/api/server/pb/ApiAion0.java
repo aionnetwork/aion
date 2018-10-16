@@ -459,7 +459,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     result = this.createContract(params);
 
-                    if(!result.isFail()) {
+                    if (!result.isFail()) {
                         getMsgIdMapping()
                             .put(
                                 ByteArrayWrapper.wrap(result.getTxHash()),
@@ -485,9 +485,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_tx_Recved_VALUE, msgHash);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
-                    }
-                    else
+                    } else {
                         return processTxFail(result, msgHash);
+                    }
 
                 } catch (Exception e) {
                     LOG.error(
@@ -2919,8 +2919,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private byte[] processSendTxRsp(ApiTxResponse result, byte[] msgHash, byte[] socketId) {
-        if (result.isFail())
+        if (result.isFail()) {
             return processTxFail(result, msgHash);
+        }
 
         getMsgIdMapping()
             .put(
@@ -2946,14 +2947,16 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private byte[] processTxFail(ApiTxResponse result, byte[] msgHash) {
-        if(!result.isFail())
+        if (!result.isFail()) {
             return null;
-        switch(result.getType()) {
+        }
+        switch (result.getType()) {
             case INVALID_TX:
             case INVALID_TX_NRG_PRICE:
             case REPAYTX_LOWPRICE:
-                return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_function_arguments_VALUE,
-                    msgHash,result.getMessage().getBytes());
+                return ApiUtil
+                    .toReturnHeader(getApiVersion(), Retcode.r_fail_function_arguments_VALUE,
+                        msgHash, result.getMessage().getBytes());
 
             case INVALID_FROM:
             case INVALID_ACCOUNT:
@@ -2965,8 +2968,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     msgHash, result.getMessage().getBytes());
             case REPAYTX_POOL_EXCEPTION:
             case EXCEPTION:
-                return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_function_exception_VALUE,
-                    msgHash, result.getMessage().getBytes());
+                return ApiUtil
+                    .toReturnHeader(getApiVersion(), Retcode.r_fail_function_exception_VALUE,
+                        msgHash, result.getMessage().getBytes());
             default:
                 return null;
         }

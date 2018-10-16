@@ -436,7 +436,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      */
     @Override
     public synchronized TxResponse addPendingTransaction(AionTransaction tx) {
-
         return addPendingTransactions(Collections.singletonList(tx)).get(0);
     }
 
@@ -444,8 +443,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      * Tries to add the given transactions to the PendingState
      *
      * @param transactions, the list of AionTransactions to be added
-     * @return a list of TxResponses of the same size as the input param transactions
-     * The entries in the returned list of responses correspond one-to-one with the input txs
+     * @return a list of TxResponses of the same size as the input param transactions The entries in
+     * the returned list of responses correspond one-to-one with the input txs
      */
     @Override
     public synchronized List<TxResponse> addPendingTransactions(
@@ -466,9 +465,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
             int cmp = txNonce.compareTo(bestPSNonce);
 
-            if (isInTxCache(txFrom, txNonce))
+            if (isInTxCache(txFrom, txNonce)) {
                 txResponses.add(TxResponse.ALREADY_CACHED);
-            else if (cmp > 0) {
+            } else if (cmp > 0) {
                 newLargeNonceTx.add(tx);
                 addToTxCache(tx);
 
@@ -519,7 +518,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
                 do {
                     TxResponse implResponse = addPendingTransactionImpl(tx, txNonce);
-                    if(!added) {
+                    if (!added) {
                         txResponses.add(implResponse);
                         added = true;
                     }
@@ -554,9 +553,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                     if (poolBackUp) {
                         backupPendingPoolAdd.put(tx.getHash(), tx.getEncoded());
                     }
-                }
-                else
+                } else {
                     txResponses.add(implResponse);
+                }
             } else {
                 txResponses.add(TxResponse.ALREADY_SEALED);
             }
@@ -643,8 +642,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      *
      * @param tx transaction come from API or P2P
      * @param txNonce nonce of the transaction.
-     * @return SUCCESS if transaction gets NEW_PENDING state, else appropriate message
-     * such as DROPPED, INVALID_TX, etc.
+     * @return SUCCESS if transaction gets NEW_PENDING state, else appropriate message such as
+     * DROPPED, INVALID_TX, etc.
      */
     private TxResponse addPendingTransactionImpl(final AionTransaction tx, BigInteger txNonce) {
 
