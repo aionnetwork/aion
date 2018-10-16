@@ -464,6 +464,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             Address txFrom = tx.getFrom();
 
             int cmp = txNonce.compareTo(bestPSNonce);
+
+            // This case happens when we have already received a tx with a larger nonce
+            // from the address txFrom
             if (cmp > 0) {
                 if (isInTxCache(txFrom, txNonce)) {
                     txResponses.add(TxResponse.ALREADY_CACHED);
@@ -482,7 +485,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                     }
                     txResponses.add(TxResponse.CACHED_NONCE);
                 }
-            } else if (cmp == 0) {
+            }
+            // This case happens when this transaction has been received before, but was
+            // cached for some reason
+            else if (cmp == 0) {
                 if (txPool.size() > MAX_VALIDATED_PENDING_TXS) {
                     if (isInTxCache(txFrom, txNonce)) {
                         txResponses.add(TxResponse.ALREADY_CACHED);
@@ -550,7 +556,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                         (txBuffer == null ? txPool.size() : txPool.size() + txBuffer.size())
                             < MAX_VALIDATED_PENDING_TXS);
                 }
-            }else if (bestRepoNonce(txFrom).compareTo(txNonce) < 1) {
+            }
+            // This case happens when this tx was received before, but never sealed,
+            // typically because of low energy
+            else if (bestRepoNonce(txFrom).compareTo(txNonce) < 1) {
                 // repay Tx
                 TxResponse implResponse = addPendingTransactionImpl(tx, txNonce);
                 if (implResponse.equals(TxResponse.SUCCESS)) {
@@ -563,7 +572,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 } else {
                     txResponses.add(implResponse);
                 }
-            } else {
+            }
+            // This should mean that the transaction has already been sealed in the repo
+            else {
                 txResponses.add(TxResponse.ALREADY_SEALED);
             }
         }
