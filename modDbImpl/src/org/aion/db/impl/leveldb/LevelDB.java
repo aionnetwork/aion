@@ -168,10 +168,20 @@ public class LevelDB extends AbstractDB {
                 JniDBFactory.factory.repair(f, options);
             } catch (Exception e2) {
                 LOG.error("Failed to repair the database " + this.toString() + " due to: ", e2);
+                // the repair failed
+                // close the connection and cleanup if needed
+                close();
             }
 
-            // close the connection and cleanup if needed
-            close();
+            // the repair didn't throw an exception
+            // try to open again
+            try {
+                db = JniDBFactory.factory.open(f, options);
+            } catch (Exception e2) {
+                LOG.error("Failed second attempt to open the database " + this.toString() + " due to: ", e2);
+                // close the connection and cleanup if needed
+                close();
+            }
         }
 
         return isOpen();
