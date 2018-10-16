@@ -77,7 +77,7 @@
 		<VM>ERROR</VM>
 		<SYNC>INFO</SYNC>
 		<CONS>INFO</CONS>
-		<DB>ERROR</DB>
+		<DB>WARN</DB>
 		<API>INFO</API>
 		<P2P>INFO</P2P>
 	</log>
