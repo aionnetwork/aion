@@ -66,35 +66,35 @@ public class ApiTxResponse {
     public String getMessage() {
         switch (rsp) {
             case SUCCESS:
-                return ("Transaction sent successfully");
+                return "Transaction sent successfully";
             case INVALID_TX:
-                return ("Invalid transaction object");
+                return "Invalid transaction object";
             case INVALID_TX_NRG_PRICE:
-                return ("Invalid transaction energy price");
+                return "Invalid transaction energy price";
             case INVALID_FROM:
-                return ("Invalid from address provided");
+                return "Invalid from address provided";
             case INVALID_ACCOUNT:
-                return ("Account not found, or not unlocked");
+                return "Account not found, or not unlocked";
             case ALREADY_CACHED:
-                return ("Transaction is already in the cache");
+                return "Transaction is already in the cache";
             case CACHED_NONCE:
-                return ("Transaction cached due to large nonce");
+                return "Transaction cached due to large nonce";
             case CACHED_POOLMAX:
-                return ("Transaction cached because the pool is full");
+                return "Transaction cached because the pool is full";
             case REPAID:
-                return ("Transaction successfully repaid");
+                return "Transaction successfully repaid";
             case ALREADY_SEALED:
-                return ("Transaction has already been sealed in the repo");
+                return "Transaction has already been sealed in the repo";
             case REPAYTX_POOL_EXCEPTION:
-                return ("Repaid transaction wasn't found in the pool");
+                return "Repaid transaction wasn't found in the pool";
             case REPAYTX_LOWPRICE:
-                return ("Repaid transaction needs to have a higher energy price");
+                return "Repaid transaction needs to have a higher energy price";
             case DROPPED:
-                return ("Transaction dropped");
+                return "Transaction dropped";
             case EXCEPTION:
-                return (ex.getMessage());
+                return ex.getMessage();
             default:
-                return ("Transaction status unknown");
+                return "Transaction status unknown";
         }
     }
 
