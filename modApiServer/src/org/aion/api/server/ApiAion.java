@@ -579,19 +579,17 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    protected byte[] sendTransaction(byte[] signedTx) {
-        if (signedTx == null) {
-            throw new NullPointerException();
-        }
+    protected ApiTxResponse sendTransaction(byte[] signedTx) {
+        if (signedTx == null)
+            return(new ApiTxResponse(TxResponse.INVALID_TX));
 
         AionTransaction tx = new AionTransaction(signedTx);
         try {
-            pendingState.addPendingTransaction(tx);
-        } catch (Exception e) {
-            LOG.error("<send-transaction exception>", e);
-            return null;
+            return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getHash()));
+        } catch (Exception ex) {
+            LOG.error("<send-transaction exception>", ex);
+            return(new ApiTxResponse(TxResponse.EXCEPTION, ex));
         }
-        return tx.getHash();
     }
 
     protected AionTransaction signTransaction(ArgTxCall _params, String _address) {

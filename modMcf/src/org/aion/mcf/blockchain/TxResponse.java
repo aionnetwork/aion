@@ -1,28 +1,34 @@
 package org.aion.mcf.blockchain;
 
 public enum TxResponse {
-    SUCCESS(0),
-    INVALID_TX(1),
-    INVALID_TX_NRG_PRICE(2),
-    INVALID_FROM(3),
-    INVALID_ACCOUNT(4),
-    ALREADY_CACHED(5),
-    CACHED_NONCE(6),
-    CACHED_POOLMAX(7),
-    REPAID(8),
-    ALREADY_SEALED(9),
-    REPAYTX_POOL_EXCEPTION(10),
-    REPAYTX_LOWPRICE(11),
-    DROPPED(12),
-    EXCEPTION(13);
+    SUCCESS(0, false),
+    INVALID_TX(1, true),
+    INVALID_TX_NRG_PRICE(2, true),
+    INVALID_FROM(3, true),
+    INVALID_ACCOUNT(4, true),
+    ALREADY_CACHED(5, false),
+    CACHED_NONCE(6, false),
+    CACHED_POOLMAX(7, false),
+    REPAID(8, false),
+    ALREADY_SEALED(9, false),
+    REPAYTX_POOL_EXCEPTION(10, true),
+    REPAYTX_LOWPRICE(11, true),
+    DROPPED(12, true),
+    EXCEPTION(13, true);
 
     private int val;
+    private boolean fail;
 
-    TxResponse(int val) {
+    TxResponse(int val, boolean fail) {
         this.val = val;
+        this.fail = fail;
     }
 
     public int getVal() {
         return val;
+    }
+
+    public boolean isFail() {
+        return fail;
     }
 }

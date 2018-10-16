@@ -1664,7 +1664,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                 byte[] data = parseMsgReq(request, msgHash);
                 Message.req_rawTransaction req;
-                byte[] result;
+                ApiTxResponse result;
                 try {
                     req = Message.req_rawTransaction.parseFrom(data);
                     byte[] encodedTx = req.getEncodedTx().toByteArray();

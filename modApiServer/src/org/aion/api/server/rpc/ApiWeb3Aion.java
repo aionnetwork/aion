@@ -687,6 +687,35 @@ public class ApiWeb3Aion extends ApiAion {
         }
     }
 
+    private RpcMsg processTxResponse(ApiTxResponse rsp) {
+        switch(rsp.getType()) {
+            case SUCCESS:
+            case ALREADY_CACHED:
+            case CACHED_POOLMAX:
+            case CACHED_NONCE:
+            case ALREADY_SEALED:
+            case REPAID:
+                return new RpcMsg(TypeConverter.toJsonHex(rsp.getTxHash()));
+            case INVALID_TX:
+            case INVALID_TX_NRG_PRICE:
+            case INVALID_FROM:
+            case REPAYTX_LOWPRICE:
+                return new RpcMsg(
+                    null, RpcError.INVALID_PARAMS, rsp.getMessage());
+            case INVALID_ACCOUNT:
+                return new RpcMsg(
+                    null, RpcError.NOT_ALLOWED, rsp.getMessage());
+
+            case REPAYTX_POOL_EXCEPTION:
+            case DROPPED:
+            case EXCEPTION:
+            default:
+                return new RpcMsg(
+                    null, RpcError.EXECUTION_ERROR, rsp.getMessage());
+        }
+    }
+
+
     public RpcMsg eth_sendTransaction(Object _params) {
         JSONObject _tx;
         if (_params instanceof JSONArray) {
@@ -701,31 +730,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         ApiTxResponse response = sendTransaction(txParams);
 
-        switch(response.getType()) {
-            case SUCCESS:
-            case ALREADY_CACHED:
-            case CACHED_POOLMAX:
-            case CACHED_NONCE:
-            case ALREADY_SEALED:
-            case REPAID:
-                return new RpcMsg(TypeConverter.toJsonHex(response.getTxHash()));
-            case INVALID_TX:
-            case INVALID_TX_NRG_PRICE:
-            case INVALID_FROM:
-            case REPAYTX_LOWPRICE:
-                return new RpcMsg(
-                        null, RpcError.INVALID_PARAMS, response.getMessage());
-            case INVALID_ACCOUNT:
-                return new RpcMsg(
-                        null, RpcError.NOT_ALLOWED, response.getMessage());
-
-            case REPAYTX_POOL_EXCEPTION:
-            case DROPPED:
-            case EXCEPTION:
-            default:
-                return new RpcMsg(
-                        null, RpcError.EXECUTION_ERROR, response.getMessage());
-        }
+        return processTxResponse(response);
     }
 
     public RpcMsg eth_sendRawTransaction(Object _params) {
@@ -743,8 +748,9 @@ public class ApiWeb3Aion extends ApiAion {
 
         byte[] rawTransaction = ByteUtil.hexStringToBytes(_rawTx);
 
-        byte[] transactionHash = sendTransaction(rawTransaction);
-        return new RpcMsg(TypeConverter.toJsonHex(transactionHash));
+        ApiTxResponse response = sendTransaction(rawTransaction);
+
+        return processTxResponse(response);
     }
 
     public RpcMsg eth_call(Object _params) {
