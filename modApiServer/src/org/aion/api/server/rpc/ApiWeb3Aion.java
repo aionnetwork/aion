@@ -635,6 +635,57 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(TypeConverter.toJsonHex(key.sign(messageHash).getSignature()));
     }
 
+    /**
+     * Sign a transaction. This account needs to be unlocked.
+     * @param _params
+     * @return
+     */
+    public RpcMsg eth_signTransaction(Object _params) {
+        JSONObject _tx;
+        //Address to sign with
+        String _address = null;
+        if (_params instanceof JSONArray) {
+            _tx = ((JSONArray) _params).getJSONObject(0);
+
+            if(((JSONArray) _params).length() > 1)
+                _address = ((JSONArray) _params).get(1) + "";
+        } else if (_params instanceof JSONObject) {
+            _tx = ((JSONObject) _params).getJSONObject("transaction");
+            _address = ((JSONObject) _params).get("address") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        if (txParams == null)
+            return new RpcMsg(
+                null, RpcError.INVALID_PARAMS, "Please check your transaction object.");
+
+        AionTransaction tx = signTransaction(txParams, _address);
+        if(tx != null) {
+            JSONObject obj = new JSONObject();
+            obj.put("raw", TypeConverter.toJsonHex(tx.getEncoded()));
+
+            JSONObject txObj = new JSONObject();
+            txObj.put("nonce", TypeConverter.toJsonHex(tx.getNonce()));
+            txObj.put("gasPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
+            txObj.put("nrgPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
+            txObj.put("gas", TypeConverter.toJsonHex(tx.getNrg()));
+            txObj.put("nrg", TypeConverter.toJsonHex(tx.getNrg()));
+            txObj.put("to", TypeConverter.toJsonHex(tx.getTo().toString()));
+            txObj.put("value", TypeConverter.toJsonHex(tx.getValue()));
+            txObj.put("input", TypeConverter.toJsonHex(tx.getData()));
+            txObj.put("hash", TypeConverter.toJsonHex(tx.getHash()));
+
+            obj.put("tx", txObj);
+            return new RpcMsg(obj);
+        } else {
+            if(LOG.isDebugEnabled())
+                LOG.debug("Transaction signing failed");
+            return new RpcMsg(null, RpcError.INTERNAL_ERROR, "Error in singing the transaction.");
+        }
+    }
+
     public RpcMsg eth_sendTransaction(Object _params) {
         JSONObject _tx;
         if (_params instanceof JSONArray) {
