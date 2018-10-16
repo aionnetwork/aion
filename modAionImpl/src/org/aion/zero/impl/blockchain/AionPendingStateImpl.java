@@ -464,86 +464,93 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             Address txFrom = tx.getFrom();
 
             int cmp = txNonce.compareTo(bestPSNonce);
+            if (cmp > 0) {
+                if (isInTxCache(txFrom, txNonce)) {
+                    txResponses.add(TxResponse.ALREADY_CACHED);
+                } else {
+                    newLargeNonceTx.add(tx);
+                    addToTxCache(tx);
 
-            if (isInTxCache(txFrom, txNonce)) {
-                txResponses.add(TxResponse.ALREADY_CACHED);
-            } else if (cmp > 0) {
-                newLargeNonceTx.add(tx);
-                addToTxCache(tx);
-
-                if (poolBackUp) {
-                    backupPendingCacheAdd.put(tx.getHash(), tx.getEncoded());
-                }
-
-                if (LOGGER_TX.isTraceEnabled()) {
-                    LOGGER_TX.trace(
-                        "addPendingTransactions addToCache due to largeNonce: from = {}, nonce = {}",
-                        txFrom, txNonce);
-                }
-                txResponses.add(TxResponse.CACHED_NONCE);
-            } else if (cmp == 0 && txPool.size() > MAX_VALIDATED_PENDING_TXS) {
-                newLargeNonceTx.add(tx);
-                addToTxCache(tx);
-
-                if (poolBackUp) {
-                    backupPendingCacheAdd.put(tx.getHash(), tx.getEncoded());
-                }
-
-                if (LOGGER_TX.isTraceEnabled()) {
-                    LOGGER_TX.trace(
-                        "addPendingTransactions addToCache due to poolMax: from = {}, nonce = {}",
-                        txFrom, txNonce);
-                }
-                txResponses.add(TxResponse.CACHED_POOLMAX);
-            } else if (cmp == 0) {
-                // TODO: need to implement better cache return Strategy
-                Map<BigInteger, AionTransaction> cache = pendingTxCache.getCacheTx(txFrom);
-
-                int limit = 0;
-                Set<Address> addr = pendingTxCache.getCacheTxAccount();
-                if (!addr.isEmpty()) {
-                    limit = MAX_TXCACHE_FLUSH_SIZE / addr.size();
-
-                    if (limit == 0) {
-                        limit = 1;
-                    }
-                }
-
-                if (LOGGER_TX.isTraceEnabled()) {
-                    LOGGER_TX.trace("addPendingTransactions from cache: from {}, size {}",
-                        txFrom, cache.size());
-                }
-
-                boolean added = false;
-
-                do {
-                    TxResponse implResponse = addPendingTransactionImpl(tx, txNonce);
-                    if (!added) {
-                        txResponses.add(implResponse);
-                        added = true;
-                    }
-                    if (implResponse.equals(TxResponse.SUCCESS)) {
-                        newPending.add(tx);
-
-                        if (poolBackUp) {
-                            backupPendingPoolAdd.put(tx.getHash(), tx.getEncoded());
-                        }
-                    } else {
-                        break;
+                    if (poolBackUp) {
+                        backupPendingCacheAdd.put(tx.getHash(), tx.getEncoded());
                     }
 
                     if (LOGGER_TX.isTraceEnabled()) {
-                        LOGGER_TX.trace("cache: from {}, nonce {}", txFrom,
-                            txNonce.toString());
+                        LOGGER_TX.trace(
+                            "addPendingTransactions addToCache due to largeNonce: from = {}, nonce = {}",
+                            txFrom, txNonce);
+                    }
+                    txResponses.add(TxResponse.CACHED_NONCE);
+                }
+            } else if (cmp == 0) {
+                if (txPool.size() > MAX_VALIDATED_PENDING_TXS) {
+                    if (isInTxCache(txFrom, txNonce)) {
+                        txResponses.add(TxResponse.ALREADY_CACHED);
+                    } else {
+                        newLargeNonceTx.add(tx);
+                        addToTxCache(tx);
+
+                        if (poolBackUp) {
+                            backupPendingCacheAdd.put(tx.getHash(), tx.getEncoded());
+                        }
+
+                        if (LOGGER_TX.isTraceEnabled()) {
+                            LOGGER_TX.trace(
+                                "addPendingTransactions addToCache due to poolMax: from = {}, nonce = {}",
+                                txFrom, txNonce);
+                        }
+                        txResponses.add(TxResponse.CACHED_POOLMAX);
+                    }
+                } else {
+                    // TODO: need to implement better cache return Strategy
+                    Map<BigInteger, AionTransaction> cache = pendingTxCache.getCacheTx(txFrom);
+
+                    int limit = 0;
+                    Set<Address> addr = pendingTxCache.getCacheTxAccount();
+                    if (!addr.isEmpty()) {
+                        limit = MAX_TXCACHE_FLUSH_SIZE / addr.size();
+
+                        if (limit == 0) {
+                            limit = 1;
+                        }
                     }
 
-                    txNonce = txNonce.add(BigInteger.ONE);
-                } while (cache != null &&
-                    (tx = cache.get(txNonce)) != null &&
-                    (limit-- > 0) &&
-                    (txBuffer == null ? txPool.size() : txPool.size() + txBuffer.size())
-                        < MAX_VALIDATED_PENDING_TXS);
-            } else if (bestRepoNonce(txFrom).compareTo(txNonce) < 1) {
+                    if (LOGGER_TX.isTraceEnabled()) {
+                        LOGGER_TX.trace("addPendingTransactions from cache: from {}, size {}",
+                            txFrom, cache.size());
+                    }
+
+                    boolean added = false;
+
+                    do {
+                        TxResponse implResponse = addPendingTransactionImpl(tx, txNonce);
+                        if (!added) {
+                            txResponses.add(implResponse);
+                            added = true;
+                        }
+                        if (implResponse.equals(TxResponse.SUCCESS)) {
+                            newPending.add(tx);
+
+                            if (poolBackUp) {
+                                backupPendingPoolAdd.put(tx.getHash(), tx.getEncoded());
+                            }
+                        } else {
+                            break;
+                        }
+
+                        if (LOGGER_TX.isTraceEnabled()) {
+                            LOGGER_TX.trace("cache: from {}, nonce {}", txFrom,
+                                txNonce.toString());
+                        }
+
+                        txNonce = txNonce.add(BigInteger.ONE);
+                    } while (cache != null &&
+                        (tx = cache.get(txNonce)) != null &&
+                        (limit-- > 0) &&
+                        (txBuffer == null ? txPool.size() : txPool.size() + txBuffer.size())
+                            < MAX_VALIDATED_PENDING_TXS);
+                }
+            }else if (bestRepoNonce(txFrom).compareTo(txNonce) < 1) {
                 // repay Tx
                 TxResponse implResponse = addPendingTransactionImpl(tx, txNonce);
                 if (implResponse.equals(TxResponse.SUCCESS)) {
