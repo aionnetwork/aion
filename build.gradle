@@ -314,7 +314,7 @@ task ciBuild {
 
 idea { 
     project {
-        jdkName = '10.0'
+        jdkName = '11.0'
     }
 }
 

@@ -26,6 +26,17 @@ dependencies {
     compile files('../lib/libnsc.jar')
     compile 'com.google.guava:guava:25.1-jre'
     compile 'org.slf4j:slf4j-api:1.7.25'
+
+    compile "org.openjfx:javafx-base:11"
+    compile "org.openjfx:javafx-graphics:11"
+    compile "org.openjfx:javafx-controls:11"
+
+//    compile group: 'org.openjfx', name: 'javafx-base', version: '11'
+//    compile group: 'org.openjfx', name: 'javafx-controls', version: '11'
+//    compile group: 'org.openjfx', name: 'javafx-graphics', version: '11'
+//    compile group: 'org.openjfx', name: 'javafx-fxml', version: '11'
+//    compile group: 'org.openjfx', name: 'javafx-swing', version: '11'
+
     compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.9.1'
     compile group: 'io.github.novacrypto', name: 'BIP39', version: '0.1.9'
     compile group: 'io.github.novacrypto', name: 'SHA256', version: '0.0.1'
@@ -52,4 +63,13 @@ integTest {
     systemProperty "testfx.headless", "true"
     systemProperty "prism.order", "sw"
     systemProperty "prism.text", "t2k"
+}
+
+compileJava {
+    doFirst {
+        options.compilerArgs = [
+                 '--module-path', 'classpath.asPath,../lib/,../mod,$HOME/ide/javafx-jmods-11',
+                '--add-modules', 'java.desktop,javafx.swing,javafx.controls,jdk.unsupported.desktop'
+        ]
+    }
 }
