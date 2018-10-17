@@ -78,7 +78,7 @@ public abstract class ApiAion extends Api {
     // 2. underlying datastructure provides concurrency guarntees
 
     // delegate concurrency to underlying object
-    protected static NrgOracle NRG_ORACLE;
+    private static NrgOracle NRG_ORACLE;
     protected IAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
 
     // using java.util.concurrent library objects
@@ -463,8 +463,7 @@ public abstract class ApiAion extends Api {
         Address fromAddr =
             (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
         AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), fromAddr,
-            params.getTo(),
-            params.getValue().toByteArray(), params.getData(), params.getNrg(),
+            params.getTo(), params.getValue().toByteArray(), params.getData(), params.getNrg(),
             params.getNrgPrice());
 
         AionTxReceipt receipt = this.ac
@@ -637,8 +636,9 @@ public abstract class ApiAion extends Api {
                 return tx;
             }
         } catch (Exception ex) {
-            if(LOG.isDebugEnabled())
+            if (LOG.isDebugEnabled()) {
                 LOG.debug("Failed to sign the transaction");
+            }
             return null;
         }
     }

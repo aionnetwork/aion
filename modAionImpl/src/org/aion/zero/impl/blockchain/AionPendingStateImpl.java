@@ -483,6 +483,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                             "addPendingTransactions addToCache due to largeNonce: from = {}, nonce = {}",
                             txFrom, txNonce);
                     }
+
+                    // Transaction cached due to large nonce
                     txResponses.add(TxResponse.CACHED_NONCE);
                 }
             }
@@ -505,6 +507,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                                 "addPendingTransactions addToCache due to poolMax: from = {}, nonce = {}",
                                 txFrom, txNonce);
                         }
+
+                        //Transaction cached because the pool is full
                         txResponses.add(TxResponse.CACHED_POOLMAX);
                     }
                 } else {
