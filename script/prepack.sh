@@ -17,7 +17,7 @@ fi
 # download jre11 if can't find the jdk env
 if [ ! -d "$JDK_PATH" ]; then
   wget -c --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/11.0.1+13/90cf5d8f270a4347a95050320eef3fb7/jdk-11.0.1_linux-x64_bin.tar.gz
-  tar -xf "${PACK_PATH}/${JDK_VER}_linux-x64_bin.tar.gz" -C $PACK_PATH
+  tar -xf "${JDK_VER}_linux-x64_bin.tar.gz" -C $PACK_PATH
   mv "${PACK_PATH}/${JDK_VER}" $JDK_PATH
 fi
 
@@ -30,7 +30,8 @@ fi
 
 # generate aion runtime
 if [ ! -d "$JDK_RT" ]; then
-  $JDK_PATH/bin/jlink --module-path $JAVAFX_PATH:$JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management,jdk.unsupported,javafx.graphics,javafx.controls,javafx.base,jdk.sctp,javafx.fxml,javafx.swing --output $JDK_RT
+  $JDK_PATH/bin/jlink --module-path $JAVAFX_PATH:$JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management,jdk.unsupported,javafx.graphics,javafx.controls,javafx.base,jdk.sctp,javafx.fxml,javafx.swing \
+  --output $JDK_RT --compress 2 --no-man-pages
   cp $JDK_PATH/bin/jstack $JDK_RT/bin
 fi
 
