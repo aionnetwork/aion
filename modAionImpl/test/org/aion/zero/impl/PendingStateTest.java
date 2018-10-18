@@ -35,7 +35,7 @@ import org.junit.Test;
 public class PendingStateTest {
 
     @Test
-    public void TestAddPendingTransaction() {
+    public void TestAddPendingTransactionSuccess() {
 
         StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
             .withValidatorConfiguration("simple")
@@ -64,10 +64,27 @@ public class PendingStateTest {
         tx.sign(signer);
 
         assertEquals(hub.getPendingState().addPendingTransaction(tx),TxResponse.SUCCESS);
+    }
+
+    @Test
+    public void TestAddPendingTransactionInvalidNrgPrice() {
+
+        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
+            .withValidatorConfiguration("simple")
+            .withDefaultAccounts()
+            .build();
+        StandaloneBlockchain bc = bundle.bc;
+
+        CfgAion.inst().setGenesis(bc.getGenesis());
+
+        AionHub hub = AionHub.createForTesting(CfgAion.inst(), bc, bc.getRepository());
+
+        Address to = new Address(bundle.privateKeys.get(0).getAddress());
+        ECKey signer = bundle.privateKeys.get(1);
 
         // Invalid Nrg Price transaction
 
-        tx = new AionTransaction(
+        AionTransaction tx = new AionTransaction(
             BigInteger.ZERO.toByteArray(),
             to,
             new byte[0],
