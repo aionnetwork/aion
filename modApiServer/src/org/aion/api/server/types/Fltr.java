@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,16 +19,14 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.api.server.types;
 
-import org.aion.base.type.IBlockSummary;
-import org.aion.base.type.ITransaction;
-
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
+import org.aion.base.type.IBlockSummary;
+import org.aion.base.type.ITransaction;
 
 public abstract class Fltr {
 
@@ -36,18 +34,12 @@ public abstract class Fltr {
     public final static long TIMEOUT_MILLIS = 300000l;
 
     public AtomicLong lastPollTime;
-
-    public enum Type {
-        EVENT, BLOCK, TRANSACTION, LOG
-    }
-
+    protected ArrayBlockingQueue<Evt> events = new ArrayBlockingQueue<>(EVTS_MAX);
     /**
-     * because to use this member variable which cause illegalAccessError make
-     * sure use synchronized method
+     * because to use this member variable which cause illegalAccessError make sure use synchronized
+     * method
      */
     private Type type;
-
-    protected ArrayBlockingQueue<Evt> events = new ArrayBlockingQueue<>(EVTS_MAX);
 
     public Fltr(final Type _type) {
         this.lastPollTime = new AtomicLong(System.currentTimeMillis());
@@ -58,7 +50,9 @@ public abstract class Fltr {
         return this.events.size();
     }
 
-    public synchronized boolean isFull() { return this.events.remainingCapacity() == 0; }
+    public synchronized boolean isFull() {
+        return this.events.remainingCapacity() == 0;
+    }
 
     public synchronized Type getType() {
         return this.type;
@@ -86,15 +80,21 @@ public abstract class Fltr {
         B) Keep filling up the queue, ring-buffer style
      */
     public synchronized void add(Evt evt) {
-        if (events.size() < EVTS_MAX)
+        if (events.size() < EVTS_MAX) {
             events.add(evt);
+        }
     }
 
     public boolean onBlock(IBlockSummary b) {
         return false;
     }
+
     public boolean onTransaction(ITransaction tx) {
         return false;
+    }
+
+    public enum Type {
+        EVENT, BLOCK, TRANSACTION, LOG
     }
 }
 

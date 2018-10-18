@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -23,6 +23,10 @@
 package org.aion.wallet.ui.components.partials;
 
 import com.google.common.eventbus.Subscribe;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -54,17 +58,13 @@ import org.aion.wallet.events.AccountEvent;
 import org.aion.wallet.exception.ValidationException;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 public class SaveKeystoreDialog implements Initializable {
 
     private static final Logger LOGGER = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
+        .getLogger(org.aion.log.LogEnum.GUI.name());
 
-    private static final Tooltip LOCKED_PASSWORD = new Tooltip("Can't change stored account password");
+    private static final Tooltip LOCKED_PASSWORD = new Tooltip(
+        "Can't change stored account password");
     private static final Tooltip NEW_PASSWORD = new Tooltip("New keystore file password");
     private static final String PASSWORD_PLACEHOLDER = "             ";
     private static final String CHOOSER_TITLE = "Keystore Destination";
@@ -101,14 +101,17 @@ public class SaveKeystoreDialog implements Initializable {
         final Pane saveKeystoreDialog;
         try {
             FXMLLoader loader = new FXMLLoader((getClass().getResource("SaveKeystoreDialog.fxml")));
-            loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager).withConsoleManager(consoleManager) /* TODO a specialization only has what we need */);
+            loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager)
+                .withConsoleManager(
+                    consoleManager) /* TODO a specialization only has what we need */);
             saveKeystoreDialog = loader.load();
         } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
             return;
         }
         pane.getChildren().add(saveKeystoreDialog);
-        final Scene secondScene = new Scene(pane, saveKeystoreDialog.getPrefWidth(), saveKeystoreDialog.getPrefHeight());
+        final Scene secondScene = new Scene(pane, saveKeystoreDialog.getPrefWidth(),
+            saveKeystoreDialog.getPrefHeight());
         secondScene.setFill(Color.TRANSPARENT);
 
         final Stage popup = new Stage();
@@ -116,8 +119,11 @@ public class SaveKeystoreDialog implements Initializable {
         popup.setScene(secondScene);
 
         final Node eventSource = (Node) mouseEvent.getSource();
-        popup.setX(eventSource.getScene().getWindow().getX() + eventSource.getScene().getWidth() / 2 - saveKeystoreDialog.getPrefWidth() / 2);
-        popup.setY(eventSource.getScene().getWindow().getY() + eventSource.getScene().getHeight() / 2 - saveKeystoreDialog.getPrefHeight() / 2);
+        popup.setX(eventSource.getScene().getWindow().getX() + eventSource.getScene().getWidth() / 2
+            - saveKeystoreDialog.getPrefWidth() / 2);
+        popup.setY(
+            eventSource.getScene().getWindow().getY() + eventSource.getScene().getHeight() / 2
+                - saveKeystoreDialog.getPrefHeight() / 2);
         popup.initModality(Modality.APPLICATION_MODAL);
         popup.initStyle(StageStyle.TRANSPARENT);
 
@@ -148,12 +154,15 @@ public class SaveKeystoreDialog implements Initializable {
         if (isRemembered() || (password != null && !password.isEmpty())) {
             try {
                 accountManager.exportAccount(account, password, destinationDirectory);
-                final String infoMsg = "Account: " + account.getPublicAddress() + " exported to " + destinationDirectory;
+                final String infoMsg = "Account: " + account.getPublicAddress() + " exported to "
+                    + destinationDirectory;
                 consoleManager.addLog(infoMsg, ConsoleManager.LogType.ACCOUNT);
                 LOGGER.info(infoMsg);
                 close(event);
             } catch (ValidationException e) {
-                consoleManager.addLog("Account: " + account.getPublicAddress() + " could not be exported", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager
+                    .addLog("Account: " + account.getPublicAddress() + " could not be exported",
+                        ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
                 validationError.setText(e.getMessage());
                 validationError.setVisible(true);
                 LOGGER.error(e.getMessage(), e);

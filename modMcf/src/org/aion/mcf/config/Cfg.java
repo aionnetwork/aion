@@ -28,57 +28,86 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.aion.mcf.types.AbstractBlock;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public abstract class Cfg {
 
+    // names
+    private final String configDirName = "config";
+    private final String configFileName = "config.xml";
+    private final String genesisFileName = "genesis.json";
+    private final String keystoreDirName = "keystore";
+    // base path
+    private final File INITIAL_PATH = new File(System.getProperty("user.dir"));
+    // directories containing the configuration files
+    private final File CONFIG_DIR = new File(INITIAL_PATH, configDirName);
     protected String mode;
-
     protected String id;
-
     protected CfgApi api;
-
     protected CfgNet net;
-
     protected CfgConsensus consensus;
-
     protected CfgSync sync;
-
     protected CfgDb db;
-
     protected CfgLog log;
-
     protected CfgTx tx;
-
     protected CfgReports reports;
-
     protected CfgGui gui;
+    private File networkConfigDir = null;
+    // base configuration: old kernel OR using network config
+    private File baseConfigFile = null;
+    private File baseGenesisFile = null;
+    // can be absolute in config file OR depend on execution path
+    private File logDir = null;
+    private File databaseDir = null;
+    private boolean absoluteLogDir = false;
+    private boolean absoluteDatabaseDir = false;
+    // impact execution path
+    private String network = null;
+    private File dataDir = null;
+    /**
+     * Data directory with network.
+     */
+    private File execDir = null;
+    private File execConfigDir = null;
+    private File execConfigFile = null;
+    private File execGenesisFile = null;
 
-    public void setId(final String _id) {
-        this.id = _id;
+    /* ------------ execution path management ------------ */
+
+    public static String readValue(final XMLStreamReader sr) throws XMLStreamException {
+        StringBuilder str = new StringBuilder();
+        readLoop:
+        while (sr.hasNext()) {
+            int eventType = sr.next();
+            switch (eventType) {
+                case XMLStreamReader.CHARACTERS:
+                    str.append(sr.getText());
+                    break;
+                case XMLStreamReader.END_ELEMENT:
+                    break readLoop;
+            }
+        }
+        return str.toString();
     }
 
-    public void setNet(final CfgNet _net) {
-        this.net = _net;
-    }
-
-    public void setApi(final CfgApi _api) {
-        this.api = _api;
-    }
-
-    public void setDb(final CfgDb _db) {
-        this.db = _db;
-    }
-
-    public void setLog(final CfgLog _log) {
-        this.log = _log;
-    }
-
-    public void setTx(final CfgTx _tx) {
-        this.tx = _tx;
+    public static void skipElement(final XMLStreamReader sr) throws XMLStreamException {
+        skipLoop:
+        while (sr.hasNext()) {
+            int eventType = sr.next();
+            switch (eventType) {
+                case XMLStreamReader.END_ELEMENT:
+                    break skipLoop;
+            }
+        }
     }
 
     public String getId() {
         return this.id;
+    }
+
+    public void setId(final String _id) {
+        this.id = _id;
     }
 
     protected String getMode() {
@@ -89,6 +118,10 @@ public abstract class Cfg {
         return this.net;
     }
 
+    public void setNet(final CfgNet _net) {
+        this.net = _net;
+    }
+
     public CfgSync getSync() {
         return this.sync;
     }
@@ -97,16 +130,32 @@ public abstract class Cfg {
         return this.api;
     }
 
+    public void setApi(final CfgApi _api) {
+        this.api = _api;
+    }
+
     public CfgDb getDb() {
         return this.db;
+    }
+
+    public void setDb(final CfgDb _db) {
+        this.db = _db;
     }
 
     public CfgLog getLog() {
         return this.log;
     }
 
+    public void setLog(final CfgLog _log) {
+        this.log = _log;
+    }
+
     public CfgTx getTx() {
         return this.tx;
+    }
+
+    public void setTx(final CfgTx _tx) {
+        this.tx = _tx;
     }
 
     public CfgReports getReports() {
@@ -129,43 +178,9 @@ public abstract class Cfg {
         this.consensus = _consensus;
     }
 
-    /* ------------ execution path management ------------ */
-
-    // names
-    private final String configDirName = "config";
-    private final String configFileName = "config.xml";
-    private final String genesisFileName = "genesis.json";
-    private final String keystoreDirName = "keystore";
-
-    // base path
-    private final File INITIAL_PATH = new File(System.getProperty("user.dir"));
-
-    // directories containing the configuration files
-    private final File CONFIG_DIR = new File(INITIAL_PATH, configDirName);
-    private File networkConfigDir = null;
-
-    // base configuration: old kernel OR using network config
-    private File baseConfigFile = null;
-    private File baseGenesisFile = null;
-
-    // can be absolute in config file OR depend on execution path
-    private File logDir = null;
-    private File databaseDir = null;
-    private boolean absoluteLogDir = false;
-    private boolean absoluteDatabaseDir = false;
-
-    // impact execution path
-    private String network = null;
-    private File dataDir = null;
-
-    /** Data directory with network. */
-    private File execDir = null;
-
-    private File execConfigDir = null;
-    private File execConfigFile = null;
-    private File execGenesisFile = null;
-
-    /** Resets internal data containing network and path. */
+    /**
+     * Resets internal data containing network and path.
+     */
     @VisibleForTesting
     public void resetInternal() {
         networkConfigDir = null;
@@ -226,7 +241,9 @@ public abstract class Cfg {
         updateStoragePaths();
     }
 
-    /** Updates the path to the log, database directories. */
+    /**
+     * Updates the path to the log, database directories.
+     */
     private void updateStoragePaths() {
         if (!absoluteLogDir) {
             logDir = new File(execDir, getLog().getLogPath());
@@ -253,22 +270,15 @@ public abstract class Cfg {
     }
 
     /**
-     * Sets the network to be used by the kernel.
-     *
-     * @param _network the network chosen for execution
-     * @implNote Using this method overwrites the use of old kernel setup.
+     * @return the base dir where all configuration + persistence is managed
      */
-    public void setNetwork(String _network) {
-        this.network = _network;
-        updateNetworkExecPaths();
-    }
-
-    /** @return the base dir where all configuration + persistence is managed */
     public String getBasePath() {
         return getExecDir().getAbsolutePath();
     }
 
-    /** Returns the directory location where the kernel configuration and persistence is managed. */
+    /**
+     * Returns the directory location where the kernel configuration and persistence is managed.
+     */
     public File getExecDir() {
         if (execDir == null) {
             initializeConfiguration();
@@ -278,6 +288,17 @@ public abstract class Cfg {
 
     public String getNetwork() {
         return network;
+    }
+
+    /**
+     * Sets the network to be used by the kernel.
+     *
+     * @param _network the network chosen for execution
+     * @implNote Using this method overwrites the use of old kernel setup.
+     */
+    public void setNetwork(String _network) {
+        this.network = _network;
+        updateNetworkExecPaths();
     }
 
     public String getLogPath() {
@@ -328,7 +349,9 @@ public abstract class Cfg {
         return new File(getExecDir(), keystoreDirName);
     }
 
-    /** Returns the configuration directory location for the kernel execution. */
+    /**
+     * Returns the configuration directory location for the kernel execution.
+     */
     public File getExecConfigDirectory() {
         if (execConfigDir == null) {
             initializeConfiguration();
@@ -336,7 +359,9 @@ public abstract class Cfg {
         return execConfigDir;
     }
 
-    /** Returns the location where the config file is saved for kernel execution. */
+    /**
+     * Returns the location where the config file is saved for kernel execution.
+     */
     public File getExecConfigFile() {
         if (execConfigFile == null) {
             initializeConfiguration();
@@ -344,7 +369,9 @@ public abstract class Cfg {
         return execConfigFile;
     }
 
-    /** Returns the location where the genesis file is saved for kernel execution. */
+    /**
+     * Returns the location where the genesis file is saved for kernel execution.
+     */
     public File getExecGenesisFile() {
         if (execGenesisFile == null) {
             initializeConfiguration();
@@ -352,7 +379,9 @@ public abstract class Cfg {
         return execGenesisFile;
     }
 
-    /** @implNote Maintains the old setup if the config file is present in the old location. */
+    /**
+     * @implNote Maintains the old setup if the config file is present in the old location.
+     */
     public File getInitialConfigFile() {
         if (baseConfigFile == null) {
             initializeConfiguration();
@@ -369,7 +398,9 @@ public abstract class Cfg {
         this.baseGenesisFile = genesisFile;
     }
 
-    /** @implNote Maintains the old setup if the genesis file is present in the old location. */
+    /**
+     * @implNote Maintains the old setup if the genesis file is present in the old location.
+     */
     public File getInitialGenesisFile() {
         if (baseGenesisFile == null) {
             initializeConfiguration();
@@ -377,39 +408,12 @@ public abstract class Cfg {
         return baseGenesisFile;
     }
 
-    public static String readValue(final XMLStreamReader sr) throws XMLStreamException {
-        StringBuilder str = new StringBuilder();
-        readLoop:
-        while (sr.hasNext()) {
-            int eventType = sr.next();
-            switch (eventType) {
-                case XMLStreamReader.CHARACTERS:
-                    str.append(sr.getText());
-                    break;
-                case XMLStreamReader.END_ELEMENT:
-                    break readLoop;
-            }
-        }
-        return str.toString();
-    }
-
-    public static void skipElement(final XMLStreamReader sr) throws XMLStreamException {
-        skipLoop:
-        while (sr.hasNext()) {
-            int eventType = sr.next();
-            switch (eventType) {
-                case XMLStreamReader.END_ELEMENT:
-                    break skipLoop;
-            }
-        }
-    }
-
     /**
      * Loads the configuration from the default config file. Returns a boolean value used to
      * determine if the configuration needs to be saved back to disk with a valid peer identifier.
      *
      * @return {@code true} when the peer id read from the file is [NODE-ID-PLACEHOLDER] which needs
-     *     to be replaced by a valid user ID on disk, {@code false} otherwise.
+     * to be replaced by a valid user ID on disk, {@code false} otherwise.
      */
     public abstract boolean fromXML();
 
@@ -420,7 +424,7 @@ public abstract class Cfg {
      * disk with a valid peer identifier.
      *
      * @return {@code true} when the peer id read from the file is [NODE-ID-PLACEHOLDER] which needs
-     *     to be replaced by a valid user ID on disk, {@code false} otherwise.
+     * to be replaced by a valid user ID on disk, {@code false} otherwise.
      */
     public abstract boolean fromXML(File configFile);
 

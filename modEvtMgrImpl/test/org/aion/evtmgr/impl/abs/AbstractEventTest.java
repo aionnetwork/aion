@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,24 +19,23 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.evtmgr.impl.abs;
-
-import org.aion.evtmgr.impl.evt.EventBlock;
-import org.aion.evtmgr.impl.evt.EventConsensus;
-import java.util.ArrayList;
-import java.util.List;
-import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.evtmgr.impl.evt.EventConsensus;
+import org.junit.Test;
+
 public class AbstractEventTest {
 
     @Test
-    public void testSetFuncArgs(){
+    public void testSetFuncArgs() {
         List<Object> funcArgsList = new ArrayList<>();
         funcArgsList.add(1);
 
@@ -47,7 +46,7 @@ public class AbstractEventTest {
     }
 
     @Test
-    public void testEventEquality(){
+    public void testEventEquality() {
         EventBlock eventBlock1 = new EventBlock(EventBlock.CALLBACK.ONBEST0);
         EventBlock eventBlock2 = new EventBlock(EventBlock.CALLBACK.ONBEST0);
         EventBlock eventBlock3 = new EventBlock(EventBlock.CALLBACK.ONTRACE0);
@@ -58,12 +57,13 @@ public class AbstractEventTest {
     }
 
     @Test
-    public void testHashCode(){
+    public void testHashCode() {
         EventBlock eventBlock1 = new EventBlock(EventBlock.CALLBACK.ONBLOCK0);
         EventBlock eventBlock2 = new EventBlock(EventBlock.CALLBACK.ONBEST0);
 
         EventConsensus eventConsensus1 = new EventConsensus(EventConsensus.CALLBACK.ON_SYNC_DONE);
-        EventConsensus eventConsensus2 = new EventConsensus(EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
+        EventConsensus eventConsensus2 = new EventConsensus(
+            EventConsensus.CALLBACK.ON_BLOCK_TEMPLATE);
 
         // check the hash codes
         System.out.println(eventBlock1.hashCode());

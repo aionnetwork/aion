@@ -1,5 +1,4 @@
 /*
- ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -18,22 +17,10 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- *****************************************************************************
  */
+
 package org.aion.mcf.account;
 
 import java.time.Instant;
@@ -48,22 +35,19 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-/** Account Manger Class */
+/**
+ * Account Manger Class
+ */
 public class AccountManager {
 
-    private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
     public static final int UNLOCK_MAX = 86400, // sec
-            UNLOCK_DEFAULT = 60; // sec
-
+        UNLOCK_DEFAULT = 60; // sec
+    private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
     private Map<Address, Account> accounts;
 
     private AccountManager() {
         LOGGER.debug("<account-manager init>");
         accounts = new HashMap<>();
-    }
-
-    private static class Holder {
-        static final AccountManager INSTANCE = new AccountManager();
     }
 
     public static AccountManager inst() {
@@ -147,5 +131,10 @@ public class AccountManager {
             }
             return false;
         }
+    }
+
+    private static class Holder {
+
+        static final AccountManager INSTANCE = new AccountManager();
     }
 }

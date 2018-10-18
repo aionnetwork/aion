@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.zero.impl.db;
 
 import java.util.Map;
@@ -36,6 +36,14 @@ public class RepositoryConfig implements IRepositoryConfig {
     private final IPruneConfig cfgPrune;
     private final DetailsProvider detailsProvider;
     private final Map<String, Properties> cfg;
+
+    public RepositoryConfig(
+        final String dbPath, final DetailsProvider detailsProvider, final CfgDb cfgDb) {
+        this.dbPath = dbPath;
+        this.detailsProvider = detailsProvider;
+        this.cfg = cfgDb.asProperties();
+        this.cfgPrune = cfgDb.getPrune();
+    }
 
     @Override
     public String getDbPath() {
@@ -59,13 +67,5 @@ public class RepositoryConfig implements IRepositoryConfig {
             prop = cfg.get(CfgDb.Names.DEFAULT);
         }
         return new Properties(prop);
-    }
-
-    public RepositoryConfig(
-            final String dbPath, final DetailsProvider detailsProvider, final CfgDb cfgDb) {
-        this.dbPath = dbPath;
-        this.detailsProvider = detailsProvider;
-        this.cfg = cfgDb.asProperties();
-        this.cfgPrune = cfgDb.getPrune();
     }
 }

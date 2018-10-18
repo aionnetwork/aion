@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,23 +19,22 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 package org.aion.evtmgr;
 
 import java.util.Properties;
 
 public final class EventMgrModule {
-    private static EventMgrModule singleton = null;
-    public static final String MODULENAME = "module_name";
 
+    public static final String MODULENAME = "module_name";
+    private static EventMgrModule singleton = null;
     private static IEventMgr EVTMGR;
 
     private EventMgrModule(Properties config) throws Throwable {
         String moduleName = (String) config.get(MODULENAME);
         if (moduleName != null) {
             EVTMGR = (IEventMgr) getClass().getClassLoader().loadClass(moduleName)
-                    .getDeclaredConstructor(Properties.class).newInstance(config);
+                .getDeclaredConstructor(Properties.class).newInstance(config);
             if (EVTMGR == null) {
                 throw new Exception("Can not load the event manager module!");
             }

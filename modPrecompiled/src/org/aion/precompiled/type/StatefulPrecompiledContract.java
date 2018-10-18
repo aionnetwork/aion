@@ -35,19 +35,20 @@ import org.aion.vm.IPrecompiledContract;
  * particular state, this is what distinguishes them from ordinary pre-compiled contracts.
  */
 public abstract class StatefulPrecompiledContract implements IPrecompiledContract {
+
     public static final long TX_NRG_MIN = 20_999;
     public static final long TX_NRG_MAX = 2_000_001;
     protected final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
 
     /**
      * Constructs a new StatefulPrecompiledContract.
-     *
-     * @param track
      */
     public StatefulPrecompiledContract(
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
-        if (track == null) { throw new IllegalArgumentException("Null track."); }
+        if (track == null) {
+            throw new IllegalArgumentException("Null track.");
+        }
         this.track = track;
     }
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,15 +31,16 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.mcf.blockchain.valid;
 
 /**
  * Valication rules interface.
- *
  */
 public interface IValidRule {
+
     public static class RuleError {
+
         public final Class<?> errorClass;
         public final String error;
 

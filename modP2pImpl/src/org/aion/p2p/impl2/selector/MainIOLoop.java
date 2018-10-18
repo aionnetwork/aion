@@ -23,31 +23,28 @@
 
 package org.aion.p2p.impl2.selector;
 
-import org.aion.p2p.impl.comm.ChannelBuffer;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.p2p.impl.comm.ChannelBuffer;
 
 public class MainIOLoop implements Runnable {
 
-    private Selector currSelector;
-
     private final SelectorProvider selectorProvider;
-
-    private volatile boolean isRunning = false;
-
-    private volatile Thread eventLoopThread;
-
     private final IOEventBus eventBus = new IOEventBus();
-
     private final AtomicBoolean wakenUp = new AtomicBoolean();
-
+    private Selector currSelector;
+    private volatile boolean isRunning = false;
+    private volatile Thread eventLoopThread;
     private long timeoutMillis = 5000L; // 1s
 
     private volatile boolean needsToSelectAgain = false;
@@ -66,6 +63,42 @@ public class MainIOLoop implements Runnable {
         }
     }
 
+    private static void processSelectedKey(SelectionKey key, ChannelBuffer buffer) {
+        Task t = buffer.task;
+        int state = 0;
+        try {
+            t.channelReady(key.channel(), key);
+            state = 1;
+        } catch (Throwable th) {
+
+            // if this was an excepted exception
+            if (th instanceof Exception) {
+                // on any exception, drop
+                key.cancel();
+                t.channelUnregistered(key.channel(), th);
+                state = 2;
+            }
+
+            // otherwise if this was a runtime exception, it could be that
+            // our decoding logic is currently flawed, log out and ignore
+            System.out.println("Selector caught unhandled exception");
+            th.printStackTrace();
+        } finally {
+            // this should not happen, but handle anyways
+            if (state == 0) {
+                key.cancel();
+                t.channelUnregistered(key.channel(), null);
+            } else if (state == 1) {
+                // if the task cancelled the key
+                if (!key.isValid()) {
+                    t.channelUnregistered(key.channel(), null);
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------- internal
+
     // implements the bare minimum required to achieve a stable
     // NIO loop
     @Override
@@ -80,19 +113,22 @@ public class MainIOLoop implements Runnable {
         }
 
         try {
-            while(!Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 select(this.wakenUp.getAndSet(false));
 
                 // see: <a href="https://github.com/netty/netty/blob/4.1/transport/src/main/java/io/netty/channel/nio/NioEventLoop.java#L411"></a>
-                if (this.wakenUp.get())
+                if (this.wakenUp.get()) {
                     this.currSelector.wakeup();
+                }
 
                 try {
                     long startTime = System.currentTimeMillis();
                     processSelectedKeys();
                     long endTime = System.currentTimeMillis();
                     if ((endTime - startTime) > 1000) {
-                        System.out.println("warning, selector thread key proc took: " + (endTime - startTime) + "ms");
+                        System.out.println(
+                            "warning, selector thread key proc took: " + (endTime - startTime)
+                                + "ms");
                     }
                 } finally {
                     long startTime = System.currentTimeMillis();
@@ -100,7 +136,8 @@ public class MainIOLoop implements Runnable {
                     long endTime = System.currentTimeMillis();
 
                     if ((endTime - startTime) > 1000) {
-                        System.out.println("warning, selector thread task took: " + (endTime - startTime) + "ms");
+                        System.out.println(
+                            "warning, selector thread task took: " + (endTime - startTime) + "ms");
                     }
                 }
             }
@@ -109,13 +146,9 @@ public class MainIOLoop implements Runnable {
         }
     }
 
-
-    // -------------------------------------------------------------- internal
-
     private void registerEventLoopThread(Thread t) {
         this.eventLoopThread = t;
     }
-
 
     private void select(boolean oldWakenUp) throws IOException {
         Selector selector = this.currSelector;
@@ -154,8 +187,9 @@ public class MainIOLoop implements Runnable {
 
     private void processSelectedKeys() {
         Set<SelectionKey> selectedKeys = this.currSelector.selectedKeys();
-        if (selectedKeys.isEmpty())
+        if (selectedKeys.isEmpty()) {
             return;
+        }
 
         Iterator<SelectionKey> it = selectedKeys.iterator();
         while (true) {
@@ -165,49 +199,18 @@ public class MainIOLoop implements Runnable {
             // remove the current key
             it.remove();
 
-            if (!it.hasNext())
-                    break;
+            if (!it.hasNext()) {
+                break;
+            }
 
             if (this.needsToSelectAgain) {
                 selectAgain();
                 Set<SelectionKey> keys = this.currSelector.selectedKeys();
-                if (keys.isEmpty())
+                if (keys.isEmpty()) {
                     break;
-                else
+                } else {
                     it = selectedKeys.iterator();
-            }
-        }
-    }
-
-    private static void processSelectedKey(SelectionKey key, ChannelBuffer buffer) {
-        Task t = buffer.task;
-        int state = 0;
-        try {
-            t.channelReady(key.channel(), key);
-            state = 1;
-        } catch (Throwable th) {
-
-            // if this was an excepted exception
-            if (th instanceof Exception) {
-                // on any exception, drop
-                key.cancel();
-                t.channelUnregistered(key.channel(), th);
-                state = 2;
-            }
-
-            // otherwise if this was a runtime exception, it could be that
-            // our decoding logic is currently flawed, log out and ignore
-            System.out.println("Selector caught unhandled exception");
-            th.printStackTrace();
-        } finally {
-            // this should not happen, but handle anyways
-            if (state == 0) {
-                key.cancel();
-                t.channelUnregistered(key.channel(), null);
-            } else if (state == 1) {
-                // if the task cancelled the key
-                if (!key.isValid())
-                    t.channelUnregistered(key.channel(), null);
+                }
             }
         }
     }
@@ -216,8 +219,9 @@ public class MainIOLoop implements Runnable {
         assert isEventLoopThread();
         List<Runnable> tasks = this.eventBus.retrieveAllEvents();
 
-        if (tasks.isEmpty())
+        if (tasks.isEmpty()) {
             return false;
+        }
 
         for (Runnable task : tasks) {
             safeExecute(task);
@@ -244,8 +248,9 @@ public class MainIOLoop implements Runnable {
     }
 
     private void wakeup(boolean inEventLoop) {
-        if (!inEventLoop && this.wakenUp.compareAndSet(false, true))
+        if (!inEventLoop && this.wakenUp.compareAndSet(false, true)) {
             this.currSelector.wakeup();
+        }
     }
 
     // -------------------------------------------------------------- public
@@ -265,26 +270,32 @@ public class MainIOLoop implements Runnable {
      * @param channel a selectable channel that is active
      * @param buffer associated buffer attached with channel
      */
-    public void attachChannel(SelectableChannel channel, int interestOps, ChannelBuffer buffer, Task task) {
-        if (channel == null)
+    public void attachChannel(SelectableChannel channel, int interestOps, ChannelBuffer buffer,
+        Task task) {
+        if (channel == null) {
             throw new NullPointerException();
+        }
 
-        if (interestOps == 0)
+        if (interestOps == 0) {
             throw new IllegalArgumentException();
+        }
 
         if ((interestOps & ~channel.validOps()) != 0) {
             throw new IllegalArgumentException();
         }
 
-        if (buffer == null)
+        if (buffer == null) {
             throw new NullPointerException();
+        }
 
-        if (task == null)
+        if (task == null) {
             throw new NullPointerException();
+        }
 
         // just in case the user forgets to set it
-        if (buffer.task == null)
+        if (buffer.task == null) {
             buffer.task = task;
+        }
 
         // schedule an event for the channel to be attached
         this.eventBus.addEvent(() -> {

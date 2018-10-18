@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,11 +17,9 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 package org.aion.crypto.hash;
 
 public class Blake2bNative {
@@ -31,7 +29,8 @@ public class Blake2bNative {
     /*
     Generate hashes to validate an Equihash solution
      */
-    public static native byte[][] genSolutionHash(byte[] personalization, byte[] nonce, int[] indices, byte[] header);
+    public static native byte[][] genSolutionHash(byte[] personalization, byte[] nonce,
+        int[] indices, byte[] header);
 
     public static byte[] blake256(byte[] in1, byte[] in2) {
         byte[] arr = new byte[in1.length + in2.length];
@@ -41,7 +40,8 @@ public class Blake2bNative {
         return blake256(arr);
     }
 
-    public static byte[][] getSolutionHash(byte[] personalization, byte[] nonce, int[] indices, byte[] header) {
+    public static byte[][] getSolutionHash(byte[] personalization, byte[] nonce, int[] indices,
+        byte[] header) {
         return genSolutionHash(personalization, nonce, indices, header);
     }
 }

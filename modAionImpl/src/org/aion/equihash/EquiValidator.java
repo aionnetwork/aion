@@ -22,7 +22,9 @@
  */
 package org.aion.equihash;
 
-import static org.aion.base.util.ByteUtil.*;
+import static org.aion.base.util.ByteUtil.bytesToInts;
+import static org.aion.base.util.ByteUtil.intToBytesLE;
+import static org.aion.base.util.ByteUtil.merge;
 
 import java.util.Arrays;
 import org.aion.crypto.hash.Blake2b;
@@ -37,6 +39,8 @@ import org.slf4j.Logger;
  * @author Ross Kitsis
  */
 public class EquiValidator {
+
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
     private final int n;
     private final int k;
     private final int indicesPerHashOutput;
@@ -47,8 +51,6 @@ public class EquiValidator {
     private final int finalFullWidth;
     private final int solutionWidth;
     private final int indicesHashLength;
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
-
     private final Param initState;
 
     public EquiValidator(int n, int k) {
@@ -74,7 +76,7 @@ public class EquiValidator {
     private Param InitialiseState() {
         Param p = new Param();
         byte[] personalization =
-                merge("AION0PoW".getBytes(), merge(intToBytesLE(n), intToBytesLE(k)));
+            merge("AION0PoW".getBytes(), merge(intToBytesLE(n), intToBytesLE(k)));
         p.setPersonal(personalization);
         p.setDigestLength(hashOutput);
 
@@ -134,16 +136,16 @@ public class EquiValidator {
             tmpHash = blake.digest();
 
             X[j] =
-                    new FullStepRow(
-                            finalFullWidth,
-                            Arrays.copyOfRange(
-                                    tmpHash,
-                                    (i % indicesPerHashOutput) * indicesHashLength,
-                                    ((i % indicesPerHashOutput) * indicesHashLength) + hashLength),
-                            indicesHashLength,
-                            hashLength,
-                            collisionBitLength,
-                            i);
+                new FullStepRow(
+                    finalFullWidth,
+                    Arrays.copyOfRange(
+                        tmpHash,
+                        (i % indicesPerHashOutput) * indicesHashLength,
+                        ((i % indicesPerHashOutput) * indicesHashLength) + hashLength),
+                    indicesHashLength,
+                    hashLength,
+                    collisionBitLength,
+                    i);
             j++;
         }
 
@@ -189,13 +191,13 @@ public class EquiValidator {
                 // Xc.add(new FullStepRow(finalFullWidth, X[i], X[i + 1],
                 // hashLen, lenIndices, collisionByteLength));
                 Y[i] =
-                        new FullStepRow(
-                                finalFullWidth,
-                                X[i * 2],
-                                X[i * 2 + 1],
-                                hashLen,
-                                lenIndices,
-                                collisionByteLength);
+                    new FullStepRow(
+                        finalFullWidth,
+                        X[i * 2],
+                        X[i * 2 + 1],
+                        hashLen,
+                        lenIndices,
+                        collisionByteLength);
             }
 
             hashLen -= collisionByteLength;
@@ -272,9 +274,9 @@ public class EquiValidator {
         for (int i = 0; i < lenIndices; i = i + Integer.BYTES) {
             for (int j = 0; j < lenIndices; j = j + Integer.BYTES) {
                 if (Arrays.compare(
-                                Arrays.copyOfRange(a.getHash(), len + i, len + i + Integer.BYTES),
-                                Arrays.copyOfRange(b.getHash(), len + j, len + j + Integer.BYTES))
-                        == 0) {
+                    Arrays.copyOfRange(a.getHash(), len + i, len + i + Integer.BYTES),
+                    Arrays.copyOfRange(b.getHash(), len + j, len + j + Integer.BYTES))
+                    == 0) {
                     return false;
                 }
             }

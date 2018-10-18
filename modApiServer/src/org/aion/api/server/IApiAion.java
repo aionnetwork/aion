@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,19 +19,17 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.api.server;
 
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import org.aion.api.server.pb.TxWaitingMappingUpdate;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.TxPendingStatus;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.zero.types.AionTxReceipt;
-
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 
 public interface IApiAion {
 

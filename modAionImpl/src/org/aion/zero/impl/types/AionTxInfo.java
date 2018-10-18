@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,13 +19,10 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
-
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
@@ -34,6 +31,7 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
 public class AionTxInfo extends AbstractTxInfo<AionTxReceipt, AionTransaction> {
+
     public AionTxInfo(AionTxReceipt receipt, byte[] blockHash, int index) {
         this.receipt = receipt;
         this.blockHash = blockHash;

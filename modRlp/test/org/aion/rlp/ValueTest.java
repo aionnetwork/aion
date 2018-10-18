@@ -58,8 +58,8 @@ public class ValueTest {
 
         assertTrue("Expected values to be equal", val3.cmp(val4));
 
-        Value inter = new Value(new Object[] {1});
-        Object[] interExp = new Object[] {1};
+        Value inter = new Value(new Object[]{1});
+        Object[] interExp = new Object[]{1};
 
         assertTrue(new Value(inter.asObj()).cmp(new Value(interExp)));
 
@@ -90,8 +90,8 @@ public class ValueTest {
         assertThat(num.length()).isEqualTo(0);
         assertThat(num.isHashCode()).isFalse();
 
-        Value byt = new Value(new byte[] {1, 2, 3, 4});
-        byte[] bytExp = new byte[] {1, 2, 3, 4};
+        Value byt = new Value(new byte[]{1, 2, 3, 4});
+        byte[] bytExp = new byte[]{1, 2, 3, 4};
         assertTrue(Arrays.equals(byt.asBytes(), bytExp));
         assertThat(byt.isHashCode()).isFalse();
 
@@ -107,7 +107,7 @@ public class ValueTest {
     @Test
     public void longListRLPBug_1() {
         String testRlp =
-                "f7808080d387206f72726563748a626574656c676575736580d387207870726573738a70726564696361626c658080808080808080808080";
+            "f7808080d387206f72726563748a626574656c676575736580d387207870726573738a70726564696361626c658080808080808080808080";
 
         Value val = Value.fromRlpEncoded(Hex.decode(testRlp));
 
@@ -146,12 +146,12 @@ public class ValueTest {
 
         val = new Value(new byte[32]);
         assertThat(val.toString())
-                .isEqualTo("0000000000000000000000000000000000000000000000000000000000000000");
+            .isEqualTo("0000000000000000000000000000000000000000000000000000000000000000");
 
-        val = new Value(new byte[] {9});
+        val = new Value(new byte[]{9});
         assertThat(val.toString()).isEqualTo("09");
 
-        val = new Value(new byte[] {1, 2, 3});
+        val = new Value(new byte[]{1, 2, 3});
         assertThat(val.toString()).isEqualTo("010203");
 
         val = Value.fromRlpEncoded(Hex.decode("c6827a77c10401"));

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.db.impl;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -39,11 +39,9 @@ import org.aion.base.db.IByteArrayKeyValueDatabase;
 public interface IDriver {
 
     /**
-     * Connect to a database. You need to call open() afterward before db
-     * operations.
-     * 
-     * @param info
-     *            the parameters for this database, all represented in String.
+     * Connect to a database. You need to call open() afterward before db operations.
+     *
+     * @param info the parameters for this database, all represented in String.
      * @return HashMapDB, or null.
      */
     IByteArrayKeyValueDatabase connect(java.util.Properties info);
@@ -57,7 +55,7 @@ public interface IDriver {
 
     /**
      * Gets the driver's minor version number. Initially this should be 0.
-     * 
+     *
      * @return driver's minor version number
      */
     int getMinorVersion();

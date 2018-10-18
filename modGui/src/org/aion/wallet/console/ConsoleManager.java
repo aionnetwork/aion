@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,25 +22,22 @@
  */
 package org.aion.wallet.console;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javafx.scene.Scene;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.EventPublisher;
-import org.aion.gui.events.WindowControlsEvent;
-import org.aion.wallet.events.UiMessageEvent;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 public class ConsoleManager {
-    private StackPane root;
+
+    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat(
+        "dd-MM-YY - HH.mm.ss");
     private final TextArea logsTextField;
+    private StackPane root;
     private Stage consoleLogWindow;
     private StringBuilder logs = new StringBuilder();
-
-    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd-MM-YY - HH.mm.ss");
 
     public ConsoleManager() {
         logsTextField = new TextArea();
@@ -68,7 +65,7 @@ public class ConsoleManager {
         logsTextField.setScrollTop(Double.MAX_VALUE);
         EventPublisher.fireConsoleLogged(log);
     }
-    
+
     public void addLog(String log, LogType type) {
         addLog(log, type, LogLevel.INFO);
     }

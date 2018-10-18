@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -25,7 +25,13 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *******************************************************************************/
+ *     <ether.camp> team through the ethereumJ library.
+ *     Ether.Camp Inc. (US) team through Ethereum Harmony.
+ *     John Tromp through the Equihash solver.
+ *     Samuel Neves through the BLAKE2 implementation.
+ *     Zcash project team.
+ *     Bitcoinj team.
+ */
 package org.aion.mcf.trie;
 
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -81,12 +87,16 @@ public interface Trie {
      */
     boolean isValidRoot(byte[] root);
 
-    /** Commit all the changes until now */
+    /**
+     * Commit all the changes until now
+     */
     void sync();
 
     void sync(boolean flushCache);
 
-    /** Discard all the changes until now */
+    /**
+     * Discard all the changes until now
+     */
     @Deprecated
     void undo();
 

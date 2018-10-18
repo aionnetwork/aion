@@ -1,7 +1,34 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -17,6 +44,7 @@ import org.aion.zero.types.AionTransaction;
  * @author Alexandra Roatis
  */
 public class BlockchainTestUtils {
+
     private static final Random rand = new Random();
     private static final byte[] ZERO_BYTE = new byte[0];
     private static final long NRG = 21000L;
@@ -31,7 +59,7 @@ public class BlockchainTestUtils {
     }
 
     public static List<AionTransaction> generateTransactions(
-            int maxSize, List<ECKey> accounts, AionRepositoryImpl repo) {
+        int maxSize, List<ECKey> accounts, AionRepositoryImpl repo) {
         int size = rand.nextInt(maxSize);
 
         if (size == 0) {
@@ -53,13 +81,13 @@ public class BlockchainTestUtils {
                 // generate a random address
                 Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
                 AionTransaction newTx =
-                        new AionTransaction(
-                                accountNonce.toByteArray(),
-                                destAddr,
-                                BigInteger.ONE.toByteArray(),
-                                ZERO_BYTE,
-                                NRG,
-                                NRG_PRICE);
+                    new AionTransaction(
+                        accountNonce.toByteArray(),
+                        destAddr,
+                        BigInteger.ONE.toByteArray(),
+                        ZERO_BYTE,
+                        NRG,
+                        NRG_PRICE);
                 newTx.sign(key);
                 transactions.add(newTx);
                 accountNonce = accountNonce.add(BigInteger.ONE);
@@ -78,11 +106,11 @@ public class BlockchainTestUtils {
      * @param txCount maximum number of transactions per block
      */
     public static void generateRandomChain(
-            StandaloneBlockchain chain,
-            int blocks,
-            int frequency,
-            List<ECKey> accounts,
-            int txCount) {
+        StandaloneBlockchain chain,
+        int blocks,
+        int frequency,
+        List<ECKey> accounts,
+        int txCount) {
 
         AionBlock parent, block, mainChain;
         mainChain = chain.getGenesis();
@@ -127,12 +155,12 @@ public class BlockchainTestUtils {
             }
 
             System.out.format(
-                    "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
-                    block.getShortHash(),
-                    block.getNumber(),
-                    new String(block.getExtraData()),
-                    block.getTransactionsList().size(),
-                    result.toString());
+                "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
+                block.getShortHash(),
+                block.getNumber(),
+                new String(block.getExtraData()),
+                block.getTransactionsList().size(),
+                result.toString());
         }
     }
 
@@ -142,7 +170,7 @@ public class BlockchainTestUtils {
      * @param frequency every multiple of frequency block will be on the main chain
      */
     public static void generateRandomChainWithoutTransactions(
-            StandaloneBlockchain chain, int blocks, int frequency) {
+        StandaloneBlockchain chain, int blocks, int frequency) {
 
         AionBlock parent, block, mainChain;
         mainChain = chain.getGenesis();
@@ -180,12 +208,12 @@ public class BlockchainTestUtils {
             }
 
             System.out.format(
-                    "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
-                    block.getShortHash(),
-                    block.getNumber(),
-                    new String(block.getExtraData()),
-                    block.getTransactionsList().size(),
-                    result.toString());
+                "Created block with hash: %s, number: %6d, extra data: %6s, txs: %3d, import status: %20s %n",
+                block.getShortHash(),
+                block.getNumber(),
+                new String(block.getExtraData()),
+                block.getTransactionsList().size(),
+                result.toString());
         }
     }
 
@@ -195,7 +223,7 @@ public class BlockchainTestUtils {
      * @param txCount maximum number of transactions per block
      */
     public static AionBlock generateNextBlock(
-            StandaloneBlockchain chain, List<ECKey> accounts, int txCount) {
+        StandaloneBlockchain chain, List<ECKey> accounts, int txCount) {
 
         AionBlock block, parent = chain.getBestBlock();
         AionRepositoryImpl repo = chain.getRepository();
@@ -215,8 +243,10 @@ public class BlockchainTestUtils {
      * @implNote returns {@code null} if the parent block is not part of the chain
      */
     public static AionBlock generateNewBlock(
-            StandaloneBlockchain chain, AionBlock parent, List<ECKey> accounts, int txCount) {
-        if (!chain.getBlockStore().isBlockExist(parent.getHash())) return null;
+        StandaloneBlockchain chain, AionBlock parent, List<ECKey> accounts, int txCount) {
+        if (!chain.getBlockStore().isBlockExist(parent.getHash())) {
+            return null;
+        }
 
         AionBlock block;
         AionRepositoryImpl repo = chain.getRepository();

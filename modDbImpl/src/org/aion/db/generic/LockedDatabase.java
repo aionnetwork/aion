@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,21 +17,11 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
- ******************************************************************************/
-package org.aion.db.generic;
+ */
 
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.slf4j.Logger;
+package org.aion.db.generic;
 
 import java.util.Collection;
 import java.util.Map;
@@ -39,23 +29,30 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.slf4j.Logger;
 
 /**
  * Implements locking functionality for a generic database implementation.
  * <p>
- * Allows more flexibility in using the database implementations, by separating locking form database usage.
+ * Allows more flexibility in using the database implementations, by separating locking form
+ * database usage.
  *
  * @author Alexandra Roatis
  */
 public class LockedDatabase implements IByteArrayKeyValueDatabase {
 
-    /** Unlocked database. */
-    protected final IByteArrayKeyValueDatabase database;
-
-    /** Read-write lock allowing concurrent reads and single write operations. */
-    protected final ReadWriteLock lock = new ReentrantReadWriteLock();
-
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+    /**
+     * Unlocked database.
+     */
+    protected final IByteArrayKeyValueDatabase database;
+    /**
+     * Read-write lock allowing concurrent reads and single write operations.
+     */
+    protected final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public LockedDatabase(IByteArrayKeyValueDatabase _unlockedDatabase) {
         this.database = _unlockedDatabase;

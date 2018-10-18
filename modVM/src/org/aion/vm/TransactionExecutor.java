@@ -22,6 +22,9 @@
  */
 package org.aion.vm;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -39,10 +42,6 @@ import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
-
 
 /**
  * Transaction executor is the middle man between kernel and VM. It executes transactions and yields
@@ -51,6 +50,7 @@ import java.util.List;
  * @author yulong
  */
 public class TransactionExecutor extends AbstractExecutor {
+
     // provider is essential to execute, but it is only set manually with a setter, not good practice
     private ExecutionContext ctx;
     private AionTransaction tx;
@@ -62,7 +62,7 @@ public class TransactionExecutor extends AbstractExecutor {
      * <br>
      * IMPORTANT: be sure to accumulate nrg used in a block outside the transaction executor
      *
-     * @param tx    transaction to be executed
+     * @param tx transaction to be executed
      * @param block a temporary block used to garner relevant environmental variables
      */
     public TransactionExecutor(AionTransaction tx, IAionBlock block, IRepository repo,
@@ -92,7 +92,8 @@ public class TransactionExecutor extends AbstractExecutor {
         long nrgLimit = tx.nrgLimit() - tx.transactionCost(block.getNumber());
         DataWord callValue = new DataWord(ArrayUtils.nullToEmpty(tx.getValue()));
         byte[] callData =
-                tx.isContractCreation() ? ByteUtil.EMPTY_BYTE_ARRAY : ArrayUtils.nullToEmpty(tx.getData());
+            tx.isContractCreation() ? ByteUtil.EMPTY_BYTE_ARRAY
+                : ArrayUtils.nullToEmpty(tx.getData());
 
         /*
          * execution info
@@ -120,8 +121,9 @@ public class TransactionExecutor extends AbstractExecutor {
          * execution and context and results
          */
         ctx = new ExecutionContext(txHash, address, origin, caller, nrgPrice, nrgLimit, callValue,
-                callData, depth,
-                kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit, blockDifficulty);
+            callData, depth,
+            kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
+            blockDifficulty);
 
         exeResult = new ExecutionResult(ResultCode.SUCCESS, nrgLimit);
 
@@ -140,7 +142,7 @@ public class TransactionExecutor extends AbstractExecutor {
      * Create a transaction executor (non constant call, use block nrg limit).
      */
     public TransactionExecutor(AionTransaction tx, IAionBlock block,
-                               IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo, Logger logger) {
+        IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo, Logger logger) {
         this(tx, block, repo, false, block.getNrgLimit(), logger);
     }
 
@@ -215,11 +217,12 @@ public class TransactionExecutor extends AbstractExecutor {
         ExecutionHelper rootHelper = new ExecutionHelper();
         rootHelper.merge(ctx.helper(), exeResult.getCode() == ResultCode.SUCCESS.toInt());
 
-        AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(getReceipt(rootHelper.getLogs())) //
-                .logs(rootHelper.getLogs()) //
-                .deletedAccounts(rootHelper.getDeleteAccounts()) //
-                .internalTransactions(rootHelper.getInternalTransactions()) //
-                .result(exeResult.getOutput());
+        AionTxExecSummary.Builder builder = AionTxExecSummary
+            .builderFor(getReceipt(rootHelper.getLogs())) //
+            .logs(rootHelper.getLogs()) //
+            .deletedAccounts(rootHelper.getDeleteAccounts()) //
+            .internalTransactions(rootHelper.getInternalTransactions()) //
+            .result(exeResult.getOutput());
 
         switch (((ExecutionResult) exeResult).getResultCode()) {
             case SUCCESS:
@@ -273,6 +276,8 @@ public class TransactionExecutor extends AbstractExecutor {
         return ctx;
     }
 
-    public IExecutionResult getResult() { return exeResult; }
+    public IExecutionResult getResult() {
+        return exeResult;
+    }
 
 }

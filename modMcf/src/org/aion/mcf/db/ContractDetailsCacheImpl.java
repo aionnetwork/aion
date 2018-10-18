@@ -22,22 +22,23 @@
  */
 package org.aion.mcf.db;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
 
-import java.util.*;
-
 /**
  * Contract details cache implementation.
  */
 public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord> {
 
-    private Map<IDataWord, IDataWord> storage = new HashMap<>();
-
     public IContractDetails<IDataWord> origContract;
+    private Map<IDataWord, IDataWord> storage = new HashMap<>();
 
     public ContractDetailsCacheImpl(IContractDetails<IDataWord> origContract) {
         this.origContract = origContract;
@@ -155,7 +156,8 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
     /**
      * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in storageValues.
+     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
+     * storageValues.
      *
      * @param storageKeys The keys.
      * @param storageValues The values.

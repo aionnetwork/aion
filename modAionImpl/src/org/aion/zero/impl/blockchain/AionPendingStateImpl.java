@@ -20,7 +20,6 @@
  * Contributors:
  *     Aion foundation.
  */
-
 package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
@@ -85,77 +84,82 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private static final Logger LOGGER_TX = AionLoggerFactory.getLogger(LogEnum.TX.toString());
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
-
-    private IP2pMgr p2pMgr;
-
-    public static class TransactionSortedSet extends TreeSet<AionTransaction> {
-
-        private static final long serialVersionUID = 4941385879122799663L;
-
-        public TransactionSortedSet() {
-            super((tx1, tx2) -> {
-                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) -
-                    ByteUtil.byteArrayToLong(tx2.getNonce());
-
-                if (nonceDiff != 0) {
-                    return nonceDiff > 0 ? 1 : -1;
-                }
-                return FastByteComparisons.compareTo(tx1.getHash(), 0, 32, tx2.getHash(), 0, 32);
-            });
-        }
-    }
-
     private static final int MAX_VALIDATED_PENDING_TXS = 8192;
-
+    private static long NRGPRICE_MIN = 10_000_000_000L;  // 10 PLAT  (10 * 10 ^ -9 AION)
+    private static long NRGPRICE_MAX = 9_000_000_000_000_000_000L;  //  9 AION
     private final int MAX_TXCACHE_FLUSH_SIZE = MAX_VALIDATED_PENDING_TXS >> 2;
-
+    private IP2pMgr p2pMgr;
     private IAionBlockchain blockchain;
-
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
-
     private IRepository repository;
-
     private ITxPool<AionTransaction> txPool;
-
     private IEventMgr evtMgr = null;
-
     private IRepositoryCache pendingState;
-
     private AtomicReference<AionBlock> best;
-
     private PendingTxCache pendingTxCache;
-
     private EventExecuteService ees;
-
     private List<AionTxExecSummary> txBuffer;
-
     private boolean bufferEnable;
-
     private boolean dumpPool;
-
     private boolean isSeed;
-
     private boolean loadPendingTx;
-
     private boolean poolBackUp;
-
     private Map<byte[], byte[]> backupPendingPoolAdd;
     private Map<byte[], byte[]> backupPendingCacheAdd;
     private Set<byte[]> backupPendingPoolRemove;
-
     private ScheduledExecutorService ex;
-
     private boolean closeToNetworkBest = true;
 
-    private static long NRGPRICE_MIN = 10_000_000_000L;  // 10 PLAT  (10 * 10 ^ -9 AION)
-    private static long NRGPRICE_MAX = 9_000_000_000_000_000_000L;  //  9 AION
+    private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
+        this.repository = _repository;
 
-    class TxBuffTask implements Runnable {
+        this.isSeed = _cfgAion.getConsensus().isSeed();
 
-        @Override
-        public void run() {
-            processTxBuffer();
+        if (!isSeed) {
+
+            try {
+                ServiceLoader.load(TxPoolModule.class);
+            } catch (Exception e) {
+                LOGGER_TX.error("load TxPoolModule service fail!", e);
+                throw e;
+            }
+
+            Properties prop = new Properties();
+
+            prop.put(TxPoolModule.MODULENAME, "org.aion.txpool.zero.TxPoolA0");
+            // The BlockEnergyLimit will be updated when the best block found.
+            prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT,
+                String.valueOf(CfgAion.inst().getConsensus().getEnergyStrategy().getUpperBound()));
+            prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, String.valueOf(Constant.MAX_BLK_SIZE));
+            prop.put(ITxPool.PROP_TX_TIMEOUT, "86400");
+            TxPoolModule txPoolModule;
+            try {
+                txPoolModule = TxPoolModule.getSingleton(prop);
+                //noinspection unchecked
+                this.txPool = (ITxPool<AionTransaction>) txPoolModule.getTxPool();
+            } catch (Throwable e) {
+                LOGGER_TX.error("TxPoolModule getTxPool fail!", e);
+            }
+
+        } else {
+            LOGGER_TX.info("Seed mode is enable");
         }
+    }
+
+    private static AionPendingStateImpl initializeAionPendingState(
+        CfgAion _cfgAion, AionRepositoryImpl _repository, AionBlockchainImpl _blockchain) {
+        AionPendingStateImpl ps = new AionPendingStateImpl(_cfgAion, _repository);
+        ps.init(_blockchain);
+        return ps;
+    }
+
+    public static AionPendingStateImpl inst() {
+        return Holder.INSTANCE;
+    }
+
+    public static AionPendingStateImpl createForTesting(
+        CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
+        return initializeAionPendingState(_cfgAion, _repository, _blockchain);
     }
 
     private synchronized void processTxBuffer() {
@@ -201,51 +205,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
     }
 
-    private final class EpPS implements Runnable {
-
-        boolean go = true;
-
-        /**
-         * When an object implementing interface <code>Runnable</code> is used to create a thread,
-         * starting the thread causes the object's
-         * <code>run</code> method to be called in that separately executing
-         * thread.
-         * <p>
-         * The general contract of the method <code>run</code> is that it may take any action
-         * whatsoever.
-         *
-         * @see Thread#run()
-         */
-        @Override
-        public void run() {
-            while (go) {
-                IEvent e = ees.take();
-
-                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
-                    && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
-                    long t1 = System.currentTimeMillis();
-                    processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
-
-                    if (LOGGER_TX.isDebugEnabled()) {
-                        long t2 = System.currentTimeMillis();
-                        LOGGER_TX.debug("Pending state update took {} ms", t2 - t1);
-                    }
-                } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()
-                    && e.getCallbackType() == EventTx.CALLBACK.TXBACKUP0.getValue()) {
-                    long t1 = System.currentTimeMillis();
-                    backupPendingTx();
-
-                    if (LOGGER_TX.isDebugEnabled()) {
-                        long t2 = System.currentTimeMillis();
-                        LOGGER_TX.debug("Pending state backupPending took {} ms", t2 - t1);
-                    }
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
-                    go = false;
-                }
-            }
-        }
-    }
-
     private synchronized void backupPendingTx() {
 
         if (!backupPendingPoolAdd.isEmpty()) {
@@ -268,65 +227,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         backupPendingPoolRemove.clear();
         pendingTxCache.clearCacheTxHash();
 
-    }
-
-    private static AionPendingStateImpl initializeAionPendingState(
-            CfgAion _cfgAion, AionRepositoryImpl _repository, AionBlockchainImpl _blockchain) {
-        AionPendingStateImpl ps = new AionPendingStateImpl(_cfgAion, _repository);
-        ps.init(_blockchain);
-        return ps;
-    }
-
-    private static class Holder {
-
-        static final AionPendingStateImpl INSTANCE =
-                initializeAionPendingState(
-                        CfgAion.inst(), AionRepositoryImpl.inst(), AionBlockchainImpl.inst());
-    }
-
-    public static AionPendingStateImpl inst() {
-        return Holder.INSTANCE;
-    }
-
-    public static AionPendingStateImpl createForTesting(
-            CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
-        return initializeAionPendingState(_cfgAion, _repository, _blockchain);
-    }
-
-    private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
-        this.repository = _repository;
-
-        this.isSeed = _cfgAion.getConsensus().isSeed();
-
-        if (!isSeed) {
-
-            try {
-                ServiceLoader.load(TxPoolModule.class);
-            } catch (Exception e) {
-                LOGGER_TX.error("load TxPoolModule service fail!", e);
-                throw e;
-            }
-
-            Properties prop = new Properties();
-
-            prop.put(TxPoolModule.MODULENAME, "org.aion.txpool.zero.TxPoolA0");
-            // The BlockEnergyLimit will be updated when the best block found.
-            prop.put(ITxPool.PROP_BLOCK_NRG_LIMIT,
-                String.valueOf(CfgAion.inst().getConsensus().getEnergyStrategy().getUpperBound()));
-            prop.put(ITxPool.PROP_BLOCK_SIZE_LIMIT, String.valueOf(Constant.MAX_BLK_SIZE));
-            prop.put(ITxPool.PROP_TX_TIMEOUT, "86400");
-            TxPoolModule txPoolModule;
-            try {
-                txPoolModule = TxPoolModule.getSingleton(prop);
-                //noinspection unchecked
-                this.txPool = (ITxPool<AionTransaction>) txPoolModule.getTxPool();
-            } catch (Throwable e) {
-                LOGGER_TX.error("TxPoolModule getTxPool fail!", e);
-            }
-
-        } else {
-            LOGGER_TX.info("Seed mode is enable");
-        }
     }
 
     public void init(final AionBlockchainImpl blockchain) {
@@ -1229,5 +1129,82 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     @Override
     public void updateBest() {
         getBestBlock();
+    }
+
+    public static class TransactionSortedSet extends TreeSet<AionTransaction> {
+
+        private static final long serialVersionUID = 4941385879122799663L;
+
+        public TransactionSortedSet() {
+            super((tx1, tx2) -> {
+                long nonceDiff = ByteUtil.byteArrayToLong(tx1.getNonce()) -
+                    ByteUtil.byteArrayToLong(tx2.getNonce());
+
+                if (nonceDiff != 0) {
+                    return nonceDiff > 0 ? 1 : -1;
+                }
+                return FastByteComparisons.compareTo(tx1.getHash(), 0, 32, tx2.getHash(), 0, 32);
+            });
+        }
+    }
+
+    private static class Holder {
+
+        static final AionPendingStateImpl INSTANCE =
+            initializeAionPendingState(
+                CfgAion.inst(), AionRepositoryImpl.inst(), AionBlockchainImpl.inst());
+    }
+
+    class TxBuffTask implements Runnable {
+
+        @Override
+        public void run() {
+            processTxBuffer();
+        }
+    }
+
+    private final class EpPS implements Runnable {
+
+        boolean go = true;
+
+        /**
+         * When an object implementing interface <code>Runnable</code> is used to create a thread,
+         * starting the thread causes the object's
+         * <code>run</code> method to be called in that separately executing
+         * thread.
+         * <p>
+         * The general contract of the method <code>run</code> is that it may take any action
+         * whatsoever.
+         *
+         * @see Thread#run()
+         */
+        @Override
+        public void run() {
+            while (go) {
+                IEvent e = ees.take();
+
+                if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
+                    && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                    long t1 = System.currentTimeMillis();
+                    processBest((AionBlock) e.getFuncArgs().get(0), (List) e.getFuncArgs().get(1));
+
+                    if (LOGGER_TX.isDebugEnabled()) {
+                        long t2 = System.currentTimeMillis();
+                        LOGGER_TX.debug("Pending state update took {} ms", t2 - t1);
+                    }
+                } else if (e.getEventType() == IHandler.TYPE.TX0.getValue()
+                    && e.getCallbackType() == EventTx.CALLBACK.TXBACKUP0.getValue()) {
+                    long t1 = System.currentTimeMillis();
+                    backupPendingTx();
+
+                    if (LOGGER_TX.isDebugEnabled()) {
+                        long t2 = System.currentTimeMillis();
+                        LOGGER_TX.debug("Pending state backupPending took {} ms", t2 - t1);
+                    }
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
+                    go = false;
+                }
+            }
+        }
     }
 }

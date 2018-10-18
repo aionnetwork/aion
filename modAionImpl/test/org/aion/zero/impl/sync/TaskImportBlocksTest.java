@@ -77,14 +77,27 @@ import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/** @author Alexandra Roatis */
+/**
+ * @author Alexandra Roatis
+ */
 @RunWith(JUnitParamsRunner.class)
 public class TaskImportBlocksTest {
 
     private final List<ECKey> accounts = generateAccounts(10);
     private final StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
 
-    /** @return parameters for {@link #testCountStates(long, long, Mode, Collection)} */
+    /**
+     * Utility method that generates states and adds them to the given list.
+     */
+    private static void addStates(List<PeerState> states, long count, Mode mode, long base) {
+        for (long i = 0; i < count; i++) {
+            states.add(new PeerState(mode, base));
+        }
+    }
+
+    /**
+     * @return parameters for {@link #testCountStates(long, long, Mode, Collection)}
+     */
     @SuppressWarnings("unused")
     private Object parametersForTestCountStates() {
         List<Object> parameters = new ArrayList<>();
@@ -105,19 +118,19 @@ public class TaskImportBlocksTest {
         }
 
         for (Mode mode : Mode.values()) {
-            parameters.add(new Object[] {0L, -1L, mode, Collections.emptySet()});
-            parameters.add(new Object[] {1L, 50L, mode, set1});
-            parameters.add(new Object[] {0L, 100L, mode, set1});
-            parameters.add(new Object[] {2L, 99L, mode, set2});
-            parameters.add(new Object[] {1L, 100L, mode, set2});
-            parameters.add(new Object[] {1L, 199L, mode, set2});
-            parameters.add(new Object[] {0L, 200L, mode, set2});
+            parameters.add(new Object[]{0L, -1L, mode, Collections.emptySet()});
+            parameters.add(new Object[]{1L, 50L, mode, set1});
+            parameters.add(new Object[]{0L, 100L, mode, set1});
+            parameters.add(new Object[]{2L, 99L, mode, set2});
+            parameters.add(new Object[]{1L, 100L, mode, set2});
+            parameters.add(new Object[]{1L, 199L, mode, set2});
+            parameters.add(new Object[]{0L, 200L, mode, set2});
             List<PeerState> set3 =
-                    new ArrayList<>(set2)
-                            .stream()
-                            .filter(s -> s.getMode() != mode)
-                            .collect(Collectors.toList());
-            parameters.add(new Object[] {0L, -1L, mode, set3});
+                new ArrayList<>(set2)
+                    .stream()
+                    .filter(s -> s.getMode() != mode)
+                    .collect(Collectors.toList());
+            parameters.add(new Object[]{0L, -1L, mode, set3});
         }
 
         return parameters.toArray();
@@ -130,18 +143,20 @@ public class TaskImportBlocksTest {
         assertThat(actual).isEqualTo(expected);
     }
 
-    /** @return parameters for {@link #testSelectBase(long, long, SortedSet, SortedSet)} */
+    /**
+     * @return parameters for {@link #testSelectBase(long, long, SortedSet, SortedSet)}
+     */
     @SuppressWarnings("unused")
     private Object parametersForTestSelectBase() {
         List<Object> parameters = new ArrayList<>();
 
         SortedSet<Long> emptySet = new TreeSet<>();
-        parameters.add(new Object[] {100L, 100L, new TreeSet<Long>(), new TreeSet<Long>()});
-        parameters.add(new Object[] {200L, 100L, new TreeSet<Long>(), new TreeSet<Long>()});
+        parameters.add(new Object[]{100L, 100L, new TreeSet<Long>(), new TreeSet<Long>()});
+        parameters.add(new Object[]{200L, 100L, new TreeSet<Long>(), new TreeSet<Long>()});
 
         SortedSet<Long> set1 = new TreeSet<>();
         set1.add(200L);
-        parameters.add(new Object[] {200L, 100L, set1, new TreeSet<Long>()});
+        parameters.add(new Object[]{200L, 100L, set1, new TreeSet<Long>()});
 
         SortedSet<Long> set2 = new TreeSet<>();
         set2.add(10L);
@@ -151,23 +166,23 @@ public class TaskImportBlocksTest {
         set2.add(300L);
         SortedSet<Long> expectedSet = new TreeSet<>();
         expectedSet.add(300L);
-        parameters.add(new Object[] {200L, 100L, set2, expectedSet});
+        parameters.add(new Object[]{200L, 100L, set2, expectedSet});
 
         SortedSet<Long> set3 = new TreeSet<>();
         set3.addAll(set2);
-        parameters.add(new Object[] {300L, 300L, set3, new TreeSet<Long>()});
+        parameters.add(new Object[]{300L, 300L, set3, new TreeSet<Long>()});
 
         set3 = new TreeSet<>();
         set3.addAll(set2);
-        parameters.add(new Object[] {400L, 300L, set3, new TreeSet<Long>()});
+        parameters.add(new Object[]{400L, 300L, set3, new TreeSet<Long>()});
 
         SortedSet<Long> set4 = new TreeSet<>();
         set3.addAll(set2);
-        parameters.add(new Object[] {310L, 310L, set4, new TreeSet<Long>()});
+        parameters.add(new Object[]{310L, 310L, set4, new TreeSet<Long>()});
 
         set4 = new TreeSet<>();
         set3.addAll(set2);
-        parameters.add(new Object[] {400L, 350L, set4, new TreeSet<Long>()});
+        parameters.add(new Object[]{400L, 350L, set4, new TreeSet<Long>()});
 
         return parameters.toArray();
     }
@@ -175,7 +190,7 @@ public class TaskImportBlocksTest {
     @Test
     @Parameters(method = "parametersForTestSelectBase")
     public void testSelectBase(
-            long expected, long best, SortedSet<Long> set, SortedSet<Long> expectedSet) {
+        long expected, long best, SortedSet<Long> set, SortedSet<Long> expectedSet) {
         AionBlockchainImpl chain = mock(AionBlockchainImpl.class);
         when(chain.nextBase(best, 0L)).thenReturn(expected);
 
@@ -186,7 +201,7 @@ public class TaskImportBlocksTest {
     @Test
     public void testIsAlreadyStored() {
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -218,7 +233,7 @@ public class TaskImportBlocksTest {
     @Test
     public void testFilterBatch_woPruningRestrictions() {
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -250,59 +265,59 @@ public class TaskImportBlocksTest {
         int current_count = 5, height = 10;
 
         StandaloneBlockchain.Bundle bundle =
-                builder.withValidatorConfiguration("simple")
-                        .withDefaultAccounts(accounts)
-                        .withRepoConfig(
-                                new IRepositoryConfig() {
-                                    @Override
-                                    public String getDbPath() {
-                                        return "";
-                                    }
+            builder.withValidatorConfiguration("simple")
+                .withDefaultAccounts(accounts)
+                .withRepoConfig(
+                    new IRepositoryConfig() {
+                        @Override
+                        public String getDbPath() {
+                            return "";
+                        }
 
-                                    @Override
-                                    public IPruneConfig getPruneConfig() {
-                                        // top pruning without archiving
-                                        return new IPruneConfig() {
-                                            @Override
-                                            public boolean isEnabled() {
-                                                return true;
-                                            }
+                        @Override
+                        public IPruneConfig getPruneConfig() {
+                            // top pruning without archiving
+                            return new IPruneConfig() {
+                                @Override
+                                public boolean isEnabled() {
+                                    return true;
+                                }
 
-                                            @Override
-                                            public boolean isArchived() {
-                                                return false;
-                                            }
+                                @Override
+                                public boolean isArchived() {
+                                    return false;
+                                }
 
-                                            @Override
-                                            public int getCurrentCount() {
-                                                return current_count;
-                                            }
+                                @Override
+                                public int getCurrentCount() {
+                                    return current_count;
+                                }
 
-                                            @Override
-                                            public int getArchiveRate() {
-                                                return 0;
-                                            }
-                                        };
-                                    }
+                                @Override
+                                public int getArchiveRate() {
+                                    return 0;
+                                }
+                            };
+                        }
 
-                                    @Override
-                                    public IContractDetails contractDetailsImpl() {
-                                        return ContractDetailsAion.createForTesting(0, 1000000)
-                                                .getDetails();
-                                    }
+                        @Override
+                        public IContractDetails contractDetailsImpl() {
+                            return ContractDetailsAion.createForTesting(0, 1000000)
+                                .getDetails();
+                        }
 
-                                    @Override
-                                    public Properties getDatabaseConfig(String db_name) {
-                                        Properties props = new Properties();
-                                        props.setProperty(
-                                                DatabaseFactory.Props.DB_TYPE,
-                                                DBVendor.MOCKDB.toValue());
-                                        props.setProperty(
-                                                DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                                        return props;
-                                    }
-                                })
-                        .build();
+                        @Override
+                        public Properties getDatabaseConfig(String db_name) {
+                            Properties props = new Properties();
+                            props.setProperty(
+                                DatabaseFactory.Props.DB_TYPE,
+                                DBVendor.MOCKDB.toValue());
+                            props.setProperty(
+                                DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                            return props;
+                        }
+                    })
+                .build();
 
         StandaloneBlockchain chain = bundle.bc;
 
@@ -402,19 +417,19 @@ public class TaskImportBlocksTest {
      * Used as parameters for:
      *
      * <ul>
-     *   <li>{@link #testAttemptLightningJump_wMinNormalPeers(Mode)}
-     *   <li>{@link #testAttemptLightningJump_wManyFastStates_wMaxNormalStates(Mode)}
-     *   <li>{@link #testAttemptLightningJump_wFewFastStates_wJump(Mode)}
-     *   <li>{@link #testAttemptLightningJump_wFewFastStates_wRampDown_andBaseRecycling(Mode)}
-     *   <li>{@link #testAttemptLightningJump_wFewFastStates_wRampDown(Mode)}
-     *   <li>{@link #testAttemptLightningJump_wManyNormalStates_wJump(Mode)}
-     *   <li>{@link #testAttemptLightningJump_wManyNormalStates_wRampDown_andBaseRecycling(Mode)}
-     *   <li>{@link #testAttemptLightningJump_wManyNormalStates_wRampDown(Mode)}
+     * <li>{@link #testAttemptLightningJump_wMinNormalPeers(Mode)}
+     * <li>{@link #testAttemptLightningJump_wManyFastStates_wMaxNormalStates(Mode)}
+     * <li>{@link #testAttemptLightningJump_wFewFastStates_wJump(Mode)}
+     * <li>{@link #testAttemptLightningJump_wFewFastStates_wRampDown_andBaseRecycling(Mode)}
+     * <li>{@link #testAttemptLightningJump_wFewFastStates_wRampDown(Mode)}
+     * <li>{@link #testAttemptLightningJump_wManyNormalStates_wJump(Mode)}
+     * <li>{@link #testAttemptLightningJump_wManyNormalStates_wRampDown_andBaseRecycling(Mode)}
+     * <li>{@link #testAttemptLightningJump_wManyNormalStates_wRampDown(Mode)}
      * </ul>
      */
     @SuppressWarnings("unused")
     private Object allModesExceptLightning() {
-        return new Object[] {NORMAL, THUNDER, BACKWARD, FORWARD};
+        return new Object[]{NORMAL, THUNDER, BACKWARD, FORWARD};
     }
 
     @Test
@@ -644,23 +659,16 @@ public class TaskImportBlocksTest {
         assertThat(baseSet.size()).isEqualTo(0);
     }
 
-    /** Utility method that generates states and adds them to the given list. */
-    private static void addStates(List<PeerState> states, long count, Mode mode, long base) {
-        for (long i = 0; i < count; i++) {
-            states.add(new PeerState(mode, base));
-        }
-    }
-
     /**
      * Used as parameters for:
      *
      * <ul>
-     *   <li>{@link #testForwardModeUpdate(ImportResult)}
+     * <li>{@link #testForwardModeUpdate(ImportResult)}
      * </ul>
      */
     @SuppressWarnings("unused")
     private Object allImportResultsExceptImportedBest() {
-        return new Object[] {IMPORTED_NOT_BEST, EXIST, NO_PARENT, INVALID_BLOCK, CONSENSUS_BREAK};
+        return new Object[]{IMPORTED_NOT_BEST, EXIST, NO_PARENT, INVALID_BLOCK, CONSENSUS_BREAK};
     }
 
     @Test

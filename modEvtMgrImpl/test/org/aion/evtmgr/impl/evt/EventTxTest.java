@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,19 +19,22 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 
 package org.aion.evtmgr.impl.evt;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.assertTrue;
+
 import org.aion.evtmgr.IEvent;
 import org.junit.Test;
-import static junit.framework.TestCase.*;
 
 public class EventTxTest {
 
     @Test
-    public void testPENDINGTXSTATECHANGE0(){
+    public void testPENDINGTXSTATECHANGE0() {
         EventTx eventTx = new EventTx(EventTx.CALLBACK.PENDINGTXSTATECHANGE0);
 
         assertEquals(IEvent.TYPE.TX0.getValue(), eventTx.getEventType());
@@ -39,7 +42,7 @@ public class EventTxTest {
     }
 
     @Test
-    public void testPENDINGTXUPDATE0(){
+    public void testPENDINGTXUPDATE0() {
         EventTx eventTx = new EventTx(EventTx.CALLBACK.PENDINGTXUPDATE0);
 
         assertEquals(IEvent.TYPE.TX0.getValue(), eventTx.getEventType());
@@ -47,7 +50,7 @@ public class EventTxTest {
     }
 
     @Test
-    public void testPENDINGTXRECEIVED0(){
+    public void testPENDINGTXRECEIVED0() {
         EventTx eventTx = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
 
         assertEquals(IEvent.TYPE.TX0.getValue(), eventTx.getEventType());
@@ -55,7 +58,7 @@ public class EventTxTest {
     }
 
     @Test
-    public void testTXEXECUTED0(){
+    public void testTXEXECUTED0() {
         EventTx eventTx = new EventTx(EventTx.CALLBACK.TXEXECUTED0);
 
         assertEquals(IEvent.TYPE.TX0.getValue(), eventTx.getEventType());
@@ -63,7 +66,7 @@ public class EventTxTest {
     }
 
     @Test
-    public void testTXBACKUP0(){
+    public void testTXBACKUP0() {
         EventTx eventTx = new EventTx(EventTx.CALLBACK.TXBACKUP0);
 
         assertEquals(IEvent.TYPE.TX0.getValue(), eventTx.getEventType());
@@ -71,7 +74,7 @@ public class EventTxTest {
     }
 
     @Test
-    public void testCALLBACK(){
+    public void testCALLBACK() {
         assertEquals(EventTx.CALLBACK.PENDINGTXSTATECHANGE0, EventTx.CALLBACK.GETCALLBACK(0));
         assertEquals(EventTx.CALLBACK.PENDINGTXUPDATE0, EventTx.CALLBACK.GETCALLBACK(1));
         assertEquals(EventTx.CALLBACK.PENDINGTXRECEIVED0, EventTx.CALLBACK.GETCALLBACK(2));
@@ -83,11 +86,12 @@ public class EventTxTest {
     }
 
     @Test
-    public void testState(){
+    public void testState() {
         EventTx eventTx1 = new EventTx(EventTx.STATE.DROPPED0, EventTx.CALLBACK.PENDINGTXRECEIVED0);
         assertEquals(EventTx.STATE.DROPPED0.getValue(), eventTx1.getState());
 
-        EventTx eventTx2 = new EventTx(EventTx.STATE.NEW_PENDING0, EventTx.CALLBACK.PENDINGTXRECEIVED0);
+        EventTx eventTx2 = new EventTx(EventTx.STATE.NEW_PENDING0,
+            EventTx.CALLBACK.PENDINGTXRECEIVED0);
         assertEquals(EventTx.STATE.NEW_PENDING0.getValue(), eventTx2.getState());
 
         EventTx eventTx3 = new EventTx(EventTx.STATE.PENDING0, EventTx.CALLBACK.PENDINGTXRECEIVED0);
@@ -98,7 +102,7 @@ public class EventTxTest {
     }
 
     @Test
-    public void testStateCALLBACK(){
+    public void testStateCALLBACK() {
         assertEquals(EventTx.STATE.DROPPED0, EventTx.STATE.GETSTATE(0));
         assertEquals(EventTx.STATE.NEW_PENDING0, EventTx.STATE.GETSTATE(1));
         assertEquals(EventTx.STATE.PENDING0, EventTx.STATE.GETSTATE(2));
@@ -109,7 +113,7 @@ public class EventTxTest {
     }
 
     @Test
-    public void testIsPendingState(){
+    public void testIsPendingState() {
         assertFalse(EventTx.STATE.DROPPED0.isPending());
         assertTrue(EventTx.STATE.NEW_PENDING0.isPending());
         assertTrue(EventTx.STATE.PENDING0.isPending());

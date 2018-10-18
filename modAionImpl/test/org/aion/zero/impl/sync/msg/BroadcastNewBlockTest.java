@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,19 +31,15 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.zero.impl.sync.msg;
 
 import org.junit.Test;
 
-import java.util.Arrays;
-
-import static org.junit.Assert.assertEquals;
-
 public class BroadcastNewBlockTest {
+
     @Test
     public void test() {
-
 
         //final int nodeIdHash = Arrays.hashCode(_nodeId);
 //        assertEquals(from, rhNew.getFromBlock());

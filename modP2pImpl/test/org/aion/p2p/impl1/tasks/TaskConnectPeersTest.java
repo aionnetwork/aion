@@ -58,84 +58,21 @@ import org.mockito.MockitoAnnotations;
 
 public class TaskConnectPeersTest {
 
+    private final Random r = new Random();
     @Mock
     private INodeMgr nodeMgr;
-
     @Mock
     private IP2pMgr p2pMgr;
-
     @Mock
     private BlockingQueue<MsgOut> sendMsgQue;
-
     @Mock
     private ReqHandshake1 rhs;
-
     @Mock
     private INode node;
-
     private ServerSocketChannel ssc;
-
     private Thread listen;
-
     private Selector selector;
-
-    private final Random r = new Random();
-
     private int port;
-
-    public class ThreadTCPServer extends Thread {
-
-        SocketChannel sc;
-        Selector selector;
-
-        ThreadTCPServer(Selector _selector) {
-            selector = _selector;
-        }
-
-        @Override
-        public void run() {
-            while (!this.isInterrupted()) {
-                try {
-                    if (this.selector.selectNow() == 0) {
-                        Thread.sleep(0, 1);
-                        continue;
-                    }
-                } catch (IOException | ClosedSelectorException e) {
-                    p2pLOG.debug("inbound-select-exception", e);
-                    continue;
-                } catch (InterruptedException e) {
-                    p2pLOG.error("inbound thread sleep exception ", e);
-                    return;
-                }
-
-                Iterator itor = this.selector.selectedKeys().iterator();
-                while (itor.hasNext()) {
-                    SelectionKey key;
-                    try {
-                        key = (SelectionKey)itor.next();
-                        if (key.isAcceptable()) {
-                            ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
-                            sc = ssc.accept();
-                            if (sc != null) {
-                                sc.configureBlocking(false);
-                                sc.socket().setSoTimeout(10_000);
-                                sc.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
-                                sc.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
-
-                                SelectionKey sk = sc.register(this.selector, SelectionKey.OP_READ);
-                                sk.attach(new ChannelBuffer());
-                                System.out.println("socket connected!");
-                            }
-                        }
-
-                    } catch ( IOException e) {
-                        e.printStackTrace();
-                    }
-                    itor.remove();
-                }
-            }
-        }
-    }
 
     @Before
     public void setup() throws IOException {
@@ -168,7 +105,6 @@ public class TaskConnectPeersTest {
         ssc.close();
     }
 
-
     @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
@@ -181,7 +117,7 @@ public class TaskConnectPeersTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().equals("TERMINATED")) {
+        while (!t.getState().toString().equals("TERMINATED")) {
             Thread.sleep(100);
         }
     }
@@ -221,7 +157,7 @@ public class TaskConnectPeersTest {
         Thread.sleep(2000);
 
         atb.set(false);
-        while(!t.getState().toString().equals("TERMINATED")) {
+        while (!t.getState().toString().equals("TERMINATED")) {
             Thread.sleep(100);
         }
     }
@@ -259,7 +195,7 @@ public class TaskConnectPeersTest {
         Thread.sleep(2000);
 
         atb.set(false);
-        while(!t.getState().toString().equals("TERMINATED")) {
+        while (!t.getState().toString().equals("TERMINATED")) {
             Thread.sleep(100);
         }
     }
@@ -288,5 +224,59 @@ public class TaskConnectPeersTest {
         atb.set(false);
         Thread.sleep(3000);
         assertEquals("TERMINATED", t.getState().toString());
+    }
+
+    public class ThreadTCPServer extends Thread {
+
+        SocketChannel sc;
+        Selector selector;
+
+        ThreadTCPServer(Selector _selector) {
+            selector = _selector;
+        }
+
+        @Override
+        public void run() {
+            while (!this.isInterrupted()) {
+                try {
+                    if (this.selector.selectNow() == 0) {
+                        Thread.sleep(0, 1);
+                        continue;
+                    }
+                } catch (IOException | ClosedSelectorException e) {
+                    p2pLOG.debug("inbound-select-exception", e);
+                    continue;
+                } catch (InterruptedException e) {
+                    p2pLOG.error("inbound thread sleep exception ", e);
+                    return;
+                }
+
+                Iterator itor = this.selector.selectedKeys().iterator();
+                while (itor.hasNext()) {
+                    SelectionKey key;
+                    try {
+                        key = (SelectionKey) itor.next();
+                        if (key.isAcceptable()) {
+                            ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
+                            sc = ssc.accept();
+                            if (sc != null) {
+                                sc.configureBlocking(false);
+                                sc.socket().setSoTimeout(10_000);
+                                sc.socket().setReceiveBufferSize(P2pConstant.RECV_BUFFER_SIZE);
+                                sc.socket().setSendBufferSize(P2pConstant.SEND_BUFFER_SIZE);
+
+                                SelectionKey sk = sc.register(this.selector, SelectionKey.OP_READ);
+                                sk.attach(new ChannelBuffer());
+                                System.out.println("socket connected!");
+                            }
+                        }
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    itor.remove();
+                }
+            }
+        }
     }
 }

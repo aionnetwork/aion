@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,10 +31,18 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.mcf.trie;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -55,47 +63,39 @@ import org.slf4j.Logger;
  */
 public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
-
-    private class Updates {
-        ByteArrayWrapper blockHeader;
-        long blockNumber;
-        Set<ByteArrayWrapper> insertedKeys = new HashSet<>();
-        Set<ByteArrayWrapper> deletedKeys = new HashSet<>();
-    }
-
-    private static class Ref {
-
-        boolean dbRef;
-        int journalRefs;
-
-        public Ref(boolean dbRef) {
-            this.dbRef = dbRef;
-        }
-
-        public int getTotRefs() {
-            return journalRefs + (dbRef ? 1 : 0);
-        }
-
-        @Override
-        public String toString() {
-            return "refs: " + String.valueOf(journalRefs) + " db: " + String.valueOf(dbRef);
-        }
-    }
-
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final boolean hasArchive;
     Map<ByteArrayWrapper, Ref> refCount = new HashMap<>();
-
     private IByteArrayKeyValueStore src;
     // block hash => updates
     private LinkedHashMap<ByteArrayWrapper, Updates> blockUpdates = new LinkedHashMap<>();
     private Updates currentUpdates = new Updates();
     private AtomicBoolean enabled = new AtomicBoolean(false);
-    private final boolean hasArchive;
 
     public JournalPruneDataSource(IByteArrayKeyValueStore src) {
         this.src = src;
         this.hasArchive = src instanceof ArchivedDataSource;
+    }
+
+    /**
+     * Checks that the given key is not null. Throws a {@link IllegalArgumentException} if the key
+     * is null.
+     */
+    public static void checkNotNull(byte[] k) {
+        if (k == null) {
+            throw new IllegalArgumentException("The data store does not accept null keys.");
+        }
+    }
+
+    /**
+     * Checks that the given collection of keys does not contain null values. Throws a {@link
+     * IllegalArgumentException} if a null key is present.
+     */
+    public static void checkNotNull(Collection<byte[]> keys) {
+        if (keys.contains(null)) {
+            throw new IllegalArgumentException("The data store does not accept null keys.");
+        }
     }
 
     public void setPruneEnabled(boolean _enabled) {
@@ -438,23 +438,30 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
         src.check();
     }
 
-    /**
-     * Checks that the given key is not null. Throws a {@link IllegalArgumentException} if the key
-     * is null.
-     */
-    public static void checkNotNull(byte[] k) {
-        if (k == null) {
-            throw new IllegalArgumentException("The data store does not accept null keys.");
+    private static class Ref {
+
+        boolean dbRef;
+        int journalRefs;
+
+        public Ref(boolean dbRef) {
+            this.dbRef = dbRef;
+        }
+
+        public int getTotRefs() {
+            return journalRefs + (dbRef ? 1 : 0);
+        }
+
+        @Override
+        public String toString() {
+            return "refs: " + String.valueOf(journalRefs) + " db: " + String.valueOf(dbRef);
         }
     }
 
-    /**
-     * Checks that the given collection of keys does not contain null values. Throws a {@link
-     * IllegalArgumentException} if a null key is present.
-     */
-    public static void checkNotNull(Collection<byte[]> keys) {
-        if (keys.contains(null)) {
-            throw new IllegalArgumentException("The data store does not accept null keys.");
-        }
+    private class Updates {
+
+        ByteArrayWrapper blockHeader;
+        long blockNumber;
+        Set<ByteArrayWrapper> insertedKeys = new HashSet<>();
+        Set<ByteArrayWrapper> deletedKeys = new HashSet<>();
     }
 }

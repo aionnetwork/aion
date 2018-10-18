@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.precompiled.contracts.ATB;
 
 import org.aion.base.type.Address;
@@ -5,9 +28,9 @@ import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.ExecutionContext;
-import org.aion.vm.TransactionResult;
 
 public class BridgeTestUtils {
+
     static ExecutionContext dummyContext() {
         return context(Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), new byte[0]);
     }
@@ -25,27 +48,27 @@ public class BridgeTestUtils {
         final int flag = 0;
         final int kind = 0;
         final Address blockCoinbase = new Address(AddressSpecs.computeA0Address(
-                HashUtil.h256("coinbase".getBytes())));
+            HashUtil.h256("coinbase".getBytes())));
         long blockNumber = 0;
         long blockTimestamp = 0;
         long blockNrgLimit = 0;
         DataWord blockDifficulty = DataWord.ZERO;
 
         return new ExecutionContext(transactionHash,
-                address,
-                origin,
-                caller,
-                nrgPrice,
-                nrgLimit,
-                callValue,
-                callData,
-                callDepth,
-                flag,
-                kind,
-                blockCoinbase,
-                blockNumber,
-                blockTimestamp,
-                blockNrgLimit,
-                blockDifficulty);
+            address,
+            origin,
+            caller,
+            nrgPrice,
+            nrgLimit,
+            callValue,
+            callData,
+            callDepth,
+            flag,
+            kind,
+            blockCoinbase,
+            blockNumber,
+            blockTimestamp,
+            blockNrgLimit,
+            blockDifficulty);
     }
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,18 +17,22 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.valid;
 
+import java.util.List;
 import org.aion.base.type.IBlockHeader;
 
-import java.util.List;
-
 public class BlockNumberRule<BH extends IBlockHeader> extends DependentBlockHeaderRule<BH> {
+
+    private static String formatError(long headerNumber, long parentNumber) {
+        return "blockNumber ("
+            + headerNumber
+            + ") is not equal to parentBlock number + 1 ("
+            + parentNumber + ")";
+    }
 
     @Override
     public boolean validate(BH header, BH parent, List<RuleError> errors) {
@@ -37,12 +41,5 @@ public class BlockNumberRule<BH extends IBlockHeader> extends DependentBlockHead
             return false;
         }
         return true;
-    }
-
-    private static String formatError(long headerNumber, long parentNumber) {
-        return "blockNumber ("
-                + headerNumber
-                + ") is not equal to parentBlock number + 1 ("
-                + parentNumber + ")";
     }
 }

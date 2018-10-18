@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,11 +22,12 @@
  */
 package org.aion.wallet.ui.components.account;
 
+import java.io.IOException;
+import java.io.InputStream;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ListCell;
@@ -45,13 +46,20 @@ import org.aion.wallet.dto.AccountDTO;
 import org.aion.wallet.ui.components.partials.SaveKeystoreDialog;
 import org.aion.wallet.ui.components.partials.UnlockAccountDialog;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 public class AccountCellItem extends ListCell<AccountDTO> {
+
+    private static final String ICON_CONNECTED = "/org/aion/wallet/ui/components/icons/icon-connected-50.png";
+    private static final String ICON_DISCONNECTED = "/org/aion/wallet/ui/components/icons/icon-disconnected-50.png";
+    private static final String ICON_EDIT = "/org/aion/wallet/ui/components/icons/pencil-edit-button.png";
+    private static final String ICON_CONFIRM = "/org/aion/wallet/ui/components/icons/icons8-checkmark-50.png";
+    private static final String NAME_INPUT_FIELDS_SELECTED_STYLE = "name-input-fields-selected";
+    private static final String NAME_INPUT_FIELDS_STYLE = "name-input-fields";
+    private static final Tooltip CONNECT_ACCOUNT_TOOLTIP = new Tooltip("Connect with this account");
+    private static final Tooltip CONNECTED_ACCOUNT_TOOLTIP = new Tooltip("Connected account");
+    private static final Tooltip EDIT_NAME_TOOLTIP = new Tooltip("Edit account name");
+    private static final Tooltip EXPORT_ACCOUNT_TOOLTIP = new Tooltip("Export to keystore");
     private final UnlockAccountDialog accountUnlockDialog;
     private final SaveKeystoreDialog saveKeystoreDialog;
-
     @FXML
     private TextField importedLabel;
     @FXML
@@ -68,21 +76,10 @@ public class AccountCellItem extends ListCell<AccountDTO> {
     private ImageView editNameButton;
     @FXML
     private ImageView accountExportButton;
-
     private boolean nameInEditMode;
 
-    private static final String ICON_CONNECTED = "/org/aion/wallet/ui/components/icons/icon-connected-50.png";
-    private static final String ICON_DISCONNECTED = "/org/aion/wallet/ui/components/icons/icon-disconnected-50.png";
-    private static final String ICON_EDIT = "/org/aion/wallet/ui/components/icons/pencil-edit-button.png";
-    private static final String ICON_CONFIRM = "/org/aion/wallet/ui/components/icons/icons8-checkmark-50.png";
-    private static final String NAME_INPUT_FIELDS_SELECTED_STYLE = "name-input-fields-selected";
-    private static final String NAME_INPUT_FIELDS_STYLE = "name-input-fields";
-    private static final Tooltip CONNECT_ACCOUNT_TOOLTIP = new Tooltip("Connect with this account");
-    private static final Tooltip CONNECTED_ACCOUNT_TOOLTIP = new Tooltip("Connected account");
-    private static final Tooltip EDIT_NAME_TOOLTIP = new Tooltip("Edit account name");
-    private static final Tooltip EXPORT_ACCOUNT_TOOLTIP = new Tooltip("Export to keystore");
-
-    public AccountCellItem(UnlockAccountDialog unlockAccountDialog, SaveKeystoreDialog saveKeystoreDialog) {
+    public AccountCellItem(UnlockAccountDialog unlockAccountDialog,
+        SaveKeystoreDialog saveKeystoreDialog) {
         this.accountUnlockDialog = unlockAccountDialog;
         this.saveKeystoreDialog = saveKeystoreDialog;
         loadFXML();
@@ -191,7 +188,7 @@ public class AccountCellItem extends ListCell<AccountDTO> {
     }
 
     @FXML
-    public void onExportClicked(final MouseEvent mouseEvent){
+    public void onExportClicked(final MouseEvent mouseEvent) {
         final AccountDTO account = getItem();
         if (!account.isUnlocked()) {
             accountUnlockDialog.open(mouseEvent);

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,15 +17,12 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.types;
 
 import java.util.Arrays;
-
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.util.Hex;
 import org.aion.rlp.RLP;
@@ -86,6 +83,7 @@ public abstract class AbstractBlockHeaderWrapper<BH extends IBlockHeader> {
 
     @Override
     public String toString() {
-        return "BlockHeaderWrapper {" + "header=" + header + ", nodeId=" + Hex.toHexString(nodeId) + '}';
+        return "BlockHeaderWrapper {" + "header=" + header + ", nodeId=" + Hex.toHexString(nodeId)
+            + '}';
     }
 }

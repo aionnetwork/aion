@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,18 +31,19 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.base.util;
 
 import java.util.Arrays;
 
 /**
- * Immutable byte array wrapper used when storing keys inside HashMap,
- * this way we guarantee that keys inside HashMap never change
- * @author yao
+ * Immutable byte array wrapper used when storing keys inside HashMap, this way we guarantee that
+ * keys inside HashMap never change
  *
+ * @author yao
  */
 public class ImmutableByteArrayWrapper implements Comparable<ImmutableByteArrayWrapper> {
+
     protected byte[] data;
     protected int hashCode;
 
@@ -55,30 +56,16 @@ public class ImmutableByteArrayWrapper implements Comparable<ImmutableByteArrayW
     }
 
     public ImmutableByteArrayWrapper(byte[] data) {
-        if (data == null)
+        if (data == null) {
             throw new NullPointerException("data cannot be null");
+        }
         this.data = new byte[data.length];
         System.arraycopy(data, 0, this.data, 0, data.length);
         this.hashCode = Arrays.hashCode(this.data);
     }
-    
-    public ByteArrayWrapper toByteArrayWrapper() {
-        byte[] d = new byte[data.length];
-        System.arraycopy(this.data, 0, d, 0, this.data.length);
-        return new ByteArrayWrapper(d);
-    }
-    
-    public byte[] getData() {
-        byte[] d = new byte[data.length];
-        System.arraycopy(this.data, 0, d, 0, this.data.length);
-        return d;
-    }
 
     /**
-     * Utility constructor, for us to easily convert ByteArrayWrapper over to
-     * immutable form
-     * 
-     * @param other
+     * Utility constructor, for us to easily convert ByteArrayWrapper over to immutable form
      */
     public ImmutableByteArrayWrapper(ByteArrayWrapper other) {
         this(other.getData());
@@ -86,16 +73,25 @@ public class ImmutableByteArrayWrapper implements Comparable<ImmutableByteArrayW
 
     /**
      * Copy constructor
-     * 
-     * @param other
      */
     public ImmutableByteArrayWrapper(ImmutableByteArrayWrapper other) {
         this(other.data);
     }
 
+    public ByteArrayWrapper toByteArrayWrapper() {
+        byte[] d = new byte[data.length];
+        System.arraycopy(this.data, 0, d, 0, this.data.length);
+        return new ByteArrayWrapper(d);
+    }
+
+    public byte[] getData() {
+        byte[] d = new byte[data.length];
+        System.arraycopy(this.data, 0, d, 0, this.data.length);
+        return d;
+    }
+
     /**
-     * Allow comparisons between both ByteArrayWrapper and
-     * ImmutableByteArrayWrapper
+     * Allow comparisons between both ByteArrayWrapper and ImmutableByteArrayWrapper
      */
     @Override
     public boolean equals(Object other) {
@@ -104,17 +100,21 @@ public class ImmutableByteArrayWrapper implements Comparable<ImmutableByteArrayW
         }
 
         byte[] otherData = null;
-        if (other instanceof ByteArrayWrapper)
+        if (other instanceof ByteArrayWrapper) {
             otherData = ((ByteArrayWrapper) other).getData();
+        }
 
-        if (other instanceof ImmutableByteArrayWrapper)
+        if (other instanceof ImmutableByteArrayWrapper) {
             otherData = ((ImmutableByteArrayWrapper) other).data;
+        }
 
         // probably impossible, but be safe
-        if (otherData == null)
+        if (otherData == null) {
             return false;
+        }
 
-        return FastByteComparisons.compareTo(data, 0, data.length, otherData, 0, otherData.length) == 0;
+        return FastByteComparisons.compareTo(data, 0, data.length, otherData, 0, otherData.length)
+            == 0;
     }
 
     @Override

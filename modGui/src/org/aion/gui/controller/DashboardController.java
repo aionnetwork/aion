@@ -1,6 +1,31 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.gui.controller;
 
 import com.google.common.eventbus.Subscribe;
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -23,10 +48,9 @@ import org.aion.os.UnixKernelProcessHealthChecker;
 import org.aion.wallet.console.ConsoleManager;
 import org.slf4j.Logger;
 
-import java.net.URL;
-import java.util.ResourceBundle;
-
 public class DashboardController extends AbstractController {
+
+    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
     private final EventBusRegistry ebr;
     private final KernelLauncher kernelLauncher;
     private final KernelConnection kernelConnection;
@@ -35,26 +59,28 @@ public class DashboardController extends AbstractController {
     private final GeneralKernelInfoRetriever generalKernelInfoRetriever;
     private final UnixKernelProcessHealthChecker unixKernelProcessHealthChecker;
     private final SyncInfoDto syncInfoDTO;
-
-    @FXML private Button launchKernelButton;
-    @FXML private Button terminateKernelButton;
-
+    @FXML
+    private Button launchKernelButton;
+    @FXML
+    private Button terminateKernelButton;
     // These should probably be in their own classes
-    @FXML private Label kernelStatusLabel;
-    @FXML private Label numPeersLabel;
-    @FXML private Label isMining;
-    @FXML private Label blocksLabel;
-
-    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+    @FXML
+    private Label kernelStatusLabel;
+    @FXML
+    private Label numPeersLabel;
+    @FXML
+    private Label isMining;
+    @FXML
+    private Label blocksLabel;
 
     public DashboardController(EventBusRegistry eventBusRegistry,
-                               KernelLauncher kernelLauncher,
-                               KernelConnection kernelConnection,
-                               KernelUpdateTimer kernelUpdateTimer,
-                               GeneralKernelInfoRetriever generalKernelInfoRetriever,
-                               SyncInfoDto syncInfoDTO,
-                               ConsoleManager consoleManager,
-                               UnixKernelProcessHealthChecker unixKernelProcessHealthChecker) {
+        KernelLauncher kernelLauncher,
+        KernelConnection kernelConnection,
+        KernelUpdateTimer kernelUpdateTimer,
+        GeneralKernelInfoRetriever generalKernelInfoRetriever,
+        SyncInfoDto syncInfoDTO,
+        ConsoleManager consoleManager,
+        UnixKernelProcessHealthChecker unixKernelProcessHealthChecker) {
         this.ebr = eventBusRegistry;
         this.kernelConnection = kernelConnection;
         this.kernelLauncher = kernelLauncher;
@@ -74,40 +100,47 @@ public class DashboardController extends AbstractController {
         ebr.getBus(EventBusRegistry.KERNEL_BUS).register(this);
         ebr.getBus(RefreshEvent.ID).register(this);
     }
+
     // -- Handlers for Events coming from Model ---------------------------------------------------
     @Subscribe
     private void handleUiTimerTick(RefreshEvent event) {
         // peer count
-        final Task<Integer> getPeerCountTask = getApiTask(o -> generalKernelInfoRetriever.getPeerCount(), null);
+        final Task<Integer> getPeerCountTask = getApiTask(
+            o -> generalKernelInfoRetriever.getPeerCount(), null);
         runApiTask(
-                getPeerCountTask,
-                evt -> Platform.runLater(() -> {
-                    if(getPeerCountTask.getValue() != null ) {
-                        numPeersLabel.setText(String.valueOf(getPeerCountTask.getValue()));
-                    }
-                }),
-                getErrorEvent(throwable -> {}, getPeerCountTask),
-                getEmptyEvent()
+            getPeerCountTask,
+            evt -> Platform.runLater(() -> {
+                if (getPeerCountTask.getValue() != null) {
+                    numPeersLabel.setText(String.valueOf(getPeerCountTask.getValue()));
+                }
+            }),
+            getErrorEvent(throwable -> {
+            }, getPeerCountTask),
+            getEmptyEvent()
         );
         // sync status
         Task<Void> getSyncInfoTask = getApiTask(o -> syncInfoDTO.loadFromApi(), null);
         runApiTask(
-                getSyncInfoTask,
-                evt -> Platform.runLater(() -> blocksLabel.setText(String.valueOf(SyncStatusFormatter.formatSyncStatusByBlockNumbers(syncInfoDTO)))),
-                getErrorEvent(throwable -> {}, getSyncInfoTask),
-                getEmptyEvent()
+            getSyncInfoTask,
+            evt -> Platform.runLater(() -> blocksLabel.setText(
+                String.valueOf(SyncStatusFormatter.formatSyncStatusByBlockNumbers(syncInfoDTO)))),
+            getErrorEvent(throwable -> {
+            }, getSyncInfoTask),
+            getEmptyEvent()
         );
         // mining status
-        Task<Boolean> getMiningStatusTask = getApiTask(o -> generalKernelInfoRetriever.isMining(), null);
+        Task<Boolean> getMiningStatusTask = getApiTask(o -> generalKernelInfoRetriever.isMining(),
+            null);
         runApiTask(
-                getMiningStatusTask,
-                evt -> Platform.runLater(() -> {
-                    if(getMiningStatusTask.getValue() != null) {
-                        isMining.setText(String.valueOf(getMiningStatusTask.getValue()));
-                    }
-                }),
-                getErrorEvent(throwable -> {}, getSyncInfoTask),
-                getEmptyEvent()
+            getMiningStatusTask,
+            evt -> Platform.runLater(() -> {
+                if (getMiningStatusTask.getValue() != null) {
+                    isMining.setText(String.valueOf(getMiningStatusTask.getValue()));
+                }
+            }),
+            getErrorEvent(throwable -> {
+            }, getSyncInfoTask),
+            getEmptyEvent()
         );
     }
 
@@ -116,7 +149,7 @@ public class DashboardController extends AbstractController {
         kernelConnection.connect(); // TODO: what if we launched the process but can't connect?
 
         kernelUpdateTimer.start();
-        Platform.runLater( () -> {
+        Platform.runLater(() -> {
             kernelStatusLabel.setText("Running");
             enableTerminateButton();
         });
@@ -124,7 +157,7 @@ public class DashboardController extends AbstractController {
 
     @Subscribe
     private void handleKernelTerminated(final KernelProcEvent.KernelTerminatedEvent ev) {
-        Platform.runLater( () -> {
+        Platform.runLater(() -> {
             enableLaunchButton();
             kernelStatusLabel.setText("Not running");
             numPeersLabel.setText("--");
@@ -135,9 +168,12 @@ public class DashboardController extends AbstractController {
 
     @Subscribe
     private void handleLaunchKernelFailed(final KernelProcEvent.KernelLaunchFailedEvent ev) {
-        Platform.runLater( () -> {
-            String kernelLog = kernelLauncher.getStorageLocation().getAbsolutePath() + "/aion-kernel-output";
-            consoleManager.addLog("Kernel launch failed; check kernel logs for details: " + kernelLog, ConsoleManager.LogType.KERNEL);
+        Platform.runLater(() -> {
+            String kernelLog =
+                kernelLauncher.getStorageLocation().getAbsolutePath() + "/aion-kernel-output";
+            consoleManager
+                .addLog("Kernel launch failed; check kernel logs for details: " + kernelLog,
+                    ConsoleManager.LogType.KERNEL);
             enableLaunchButton();
             kernelStatusLabel.setText("Not running");
             numPeersLabel.setText("--");
@@ -148,27 +184,32 @@ public class DashboardController extends AbstractController {
 
     @Subscribe
     private void handleUnexpectedApiDisconnect(UnexpectedApiDisconnectedEvent event) {
-        if(!kernelLauncher.hasLaunchedInstance()) {
+        if (!kernelLauncher.hasLaunchedInstance()) {
             // Probably in the middle of disconnecting; no action needed
             return;
         }
         final boolean actuallyRunning;
         try {
             actuallyRunning = unixKernelProcessHealthChecker.checkIfKernelRunning(
-                            kernelLauncher.getLaunchedInstance().getPid());
+                kernelLauncher.getLaunchedInstance().getPid());
         } catch (KernelControlException kce) {
             // If we get here we're so broken we don't know how to proceed; either the OS
             // is in a broken state or there's a bug/defect within our code.
-            LOG.error("Detected connection error with Kernel API, but was not able to determine state of Kernel process.  " +
+            LOG.error(
+                "Detected connection error with Kernel API, but was not able to determine state of Kernel process.  "
+                    +
                     "It is recommended that you restart the GUI.");
             return;
         }
 
-        if(actuallyRunning) {
-            LOG.error("Detected connection error from Kernel API, but Kernel process is still running.  " +
+        if (actuallyRunning) {
+            LOG.error(
+                "Detected connection error from Kernel API, but Kernel process is still running.  "
+                    +
                     "Please check that Java API is enabled in its configuration.");
         } else {
-            LOG.info("Detected unexpected termination of Kernel process.  Internal resources will be cleaned up.");
+            LOG.info(
+                "Detected unexpected termination of Kernel process.  Internal resources will be cleaned up.");
             kernelUpdateTimer.stop();
             kernelConnection.disconnect();
             kernelLauncher.cleanUpDeadProcess();
@@ -193,7 +234,7 @@ public class DashboardController extends AbstractController {
         kernelStatusLabel.setText("Terminating...");
 
         if (kernelLauncher.hasLaunchedInstance()
-                || (!kernelLauncher.hasLaunchedInstance() && kernelLauncher.tryResume())) {
+            || (!kernelLauncher.hasLaunchedInstance() && kernelLauncher.tryResume())) {
             kernelUpdateTimer.stop();
             final Task<Integer> termKernel = getApiTask(o -> {
                 kernelConnection.disconnect();
@@ -205,17 +246,19 @@ public class DashboardController extends AbstractController {
                 return null;
             }, null);
             runApiTask(
-                    termKernel,
-                    evt -> {
-                        enableLaunchButton();
-                        consoleManager.addLog("Kernel successfully terminated", ConsoleManager.LogType.KERNEL);
-                    },
-                    getErrorEvent(throwable -> {
-                        consoleManager.addLog("Error terminating the kernel", ConsoleManager.LogType.KERNEL);
-                        LOG.error("Error terminating the kernel", throwable);
-                        enableTerminateButton();
-                    }, termKernel),
-                    getEmptyEvent()
+                termKernel,
+                evt -> {
+                    enableLaunchButton();
+                    consoleManager
+                        .addLog("Kernel successfully terminated", ConsoleManager.LogType.KERNEL);
+                },
+                getErrorEvent(throwable -> {
+                    consoleManager
+                        .addLog("Error terminating the kernel", ConsoleManager.LogType.KERNEL);
+                    LOG.error("Error terminating the kernel", throwable);
+                    enableTerminateButton();
+                }, termKernel),
+                getEmptyEvent()
             );
         }
     }

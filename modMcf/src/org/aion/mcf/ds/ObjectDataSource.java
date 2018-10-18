@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,28 +17,23 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.ds;
-
-import org.aion.base.db.Flushable;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 
 import java.io.Closeable;
 import java.util.Optional;
+import org.aion.base.db.Flushable;
+import org.aion.base.db.IByteArrayKeyValueDatabase;
 
 /**
  * Object Datasource.
- *
- * @param <V>
  */
 public class ObjectDataSource<V> implements Flushable, Closeable {
 
-    private IByteArrayKeyValueDatabase src;
     Serializer<V, byte[]> serializer;
+    private IByteArrayKeyValueDatabase src;
 
     public ObjectDataSource(IByteArrayKeyValueDatabase src, Serializer<V, byte[]> serializer) {
         this.src = src;
@@ -89,8 +84,6 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
 
     /**
      * Returns the underlying cache source.
-     *
-     * @return
      */
     protected IByteArrayKeyValueDatabase getSrc() {
         return src;

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.evtmgr;
 
@@ -28,23 +27,31 @@ import java.util.List;
 
 /**
  * @author jay
- *
  */
 public interface IEvent {
+
+    int getEventType();
+
+    List<Object> getFuncArgs();
+
+    void setFuncArgs(final List<Object> _objs);
+
+    int getCallbackType();
 
     enum TYPE {
         DUMMY(0), TX0(1), BLOCK0(2), MINER0(3), CONSENSUS0(4);
 
         final static int MAX = 16;
         final static int MIN = 0;
-        private int value;
-
         private final static TYPE[] intMapType = new TYPE[MAX + 1];
+
         static {
             for (TYPE type : TYPE.values()) {
                 intMapType[0xff & type.value] = type;
             }
         }
+
+        private int value;
 
         TYPE(final int _value) {
             this.value = _value;
@@ -54,12 +61,4 @@ public interface IEvent {
             return this.value;
         }
     }
-
-    int getEventType();
-
-    void setFuncArgs(final List<Object> _objs);
-
-    List<Object> getFuncArgs();
-
-    int getCallbackType();
 }

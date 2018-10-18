@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.mcf.trie;
 
 import static org.aion.base.util.ByteArrayWrapper.wrap;
@@ -44,7 +44,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
@@ -78,11 +77,8 @@ public class Cache {
     /**
      * Put the node in the cache if RLP encoded value is longer than 32 bytes
      *
-     * @param o
-     *         the Node which could be a pair-, multi-item Node or single
-     *         Value
-     * @return keccak hash of RLP encoded node if length &gt; 32 otherwise
-     * return node itself
+     * @param o the Node which could be a pair-, multi-item Node or single Value
+     * @return keccak hash of RLP encoded node if length &gt; 32 otherwise return node itself
      */
     public synchronized Object put(Object o) {
         Value value = new Value(o);
@@ -108,7 +104,8 @@ public class Cache {
             return node.getValue();
         }
         if (this.dataSource != null) {
-            Optional<byte[]> data = (this.dataSource == null) ? Optional.empty() : this.dataSource.get(key);
+            Optional<byte[]> data =
+                (this.dataSource == null) ? Optional.empty() : this.dataSource.get(key);
             if (data.isPresent()) {
                 // dbhits++;
                 Value val = fromRlpEncoded(data.get());
@@ -208,7 +205,8 @@ public class Cache {
         for (ByteArrayWrapper key : nodes.keySet()) {
             Node node = nodes.get(key);
             if (node.getValue() != null) {
-                cacheDump.append(key.toString()).append(" : ").append(node.getValue().toString()).append("\n");
+                cacheDump.append(key.toString()).append(" : ").append(node.getValue().toString())
+                    .append("\n");
             }
         }
 

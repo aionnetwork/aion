@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,17 +31,15 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.base.util;
 
 /**
- * Alternative to Cloneable from java read:
- * http://www.artima.com/intv/bloch13.html
- * 
- * @author yao
+ * Alternative to Cloneable from java read: http://www.artima.com/intv/bloch13.html
  *
- * @param <T>
+ * @author yao
  */
 public interface Copyable<T> {
+
     T copy();
 }

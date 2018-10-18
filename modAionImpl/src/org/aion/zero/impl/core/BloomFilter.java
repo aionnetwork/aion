@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl.core;
 
 import org.aion.base.type.Address;
@@ -29,6 +27,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
 
 public class BloomFilter {
+
     public static boolean containsAddress(Bloom bloom, Address address) {
         Bloom targetBloom = Bloom.create(HashUtil.h256(address.toBytes()));
         return bloom.contains(targetBloom);

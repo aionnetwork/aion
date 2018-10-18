@@ -22,25 +22,27 @@
  */
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-
-import com.google.common.base.Objects;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public class CfgLog {
 
-    private Map<String, String> modules;
     boolean logFile;
     String logPath;
+    private Map<String, String> modules;
 
     public CfgLog() {
         modules = new HashMap<>();
@@ -76,8 +78,9 @@ public class CfgLog {
                             this.logPath = Cfg.readValue(sr);
                             break;
                         default:
-                            if (LogEnum.contains(elementName))
+                            if (LogEnum.contains(elementName)) {
                                 this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
+                            }
                             break;
                     }
                     break;
@@ -106,7 +109,8 @@ public class CfgLog {
              * Boolean value to allow logger to be toggled ON and OFF
              */
             xmlWriter.writeCharacters("\t\t");
-            xmlWriter.writeComment("Enable/Disable logback service; if disabled, output will not be logged.");
+            xmlWriter.writeComment(
+                "Enable/Disable logback service; if disabled, output will not be logged.");
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("log-file");
             xmlWriter.writeCharacters(this.logFile + "");
@@ -118,7 +122,8 @@ public class CfgLog {
              * String value to determine the folder path for log files
              */
             xmlWriter.writeCharacters("\t\t");
-            xmlWriter.writeComment("Sets the physical location on disk where log files will be stored.");
+            xmlWriter
+                .writeComment("Sets the physical location on disk where log files will be stored.");
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("log-path");
             xmlWriter.writeCharacters(this.logPath + "");
@@ -149,38 +154,50 @@ public class CfgLog {
         return this.modules;
     }
 
-    public void setLogPath(String value) {
-        logPath = value;
-    }
-
-    /** Method checks whether LOGGER is enabled/disabled */
+    /**
+     * Method checks whether LOGGER is enabled/disabled
+     */
     public boolean getLogFile() {
         return this.logFile;
     }
 
-    /** Used to turn off logging in case of incorrect configuration. */
+    /**
+     * Used to turn off logging in case of incorrect configuration.
+     */
     public void disableLogging() {
         this.logFile = false;
     }
 
-    /** Method returns user input folder path of logger */
+    /**
+     * Method returns user input folder path of logger
+     */
     public String getLogPath() {
         return logPath;
     }
 
-    /** Method checks folder path for illegal inputs */
+    public void setLogPath(String value) {
+        logPath = value;
+    }
+
+    /**
+     * Method checks folder path for illegal inputs
+     */
     public boolean isValidPath() {
         return logPath.length() > 0 && !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         CfgLog cfgLog = (CfgLog) o;
         return logFile == cfgLog.logFile &&
-                Objects.equal(modules, cfgLog.modules) &&
-                Objects.equal(logPath, cfgLog.logPath);
+            Objects.equal(modules, cfgLog.modules) &&
+            Objects.equal(logPath, cfgLog.logPath);
     }
 
     @Override

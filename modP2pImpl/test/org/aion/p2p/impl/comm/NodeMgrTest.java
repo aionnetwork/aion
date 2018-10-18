@@ -99,7 +99,7 @@ public class NodeMgrTest {
 
     private byte[] randomIP() {
         byte[] ip = new byte[8];
-        for (int i = 1; i<8; i+=2) {
+        for (int i = 1; i < 8; i += 2) {
             ip[i] = (byte) r.nextInt(256);
         }
         return ip;

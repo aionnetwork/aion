@@ -1,23 +1,25 @@
-/*******************************************************************************
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017 Aion foundation.
+ *     This file is part of the aion network project.
  *
- *     This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.vm;
 
 import java.nio.ByteBuffer;
@@ -31,18 +33,17 @@ import org.aion.mcf.vm.types.DataWord;
  * @author yulong
  */
 public class ExecutionContext {
+
     private static final int ENCODE_BASE_LEN = (Address.ADDRESS_LEN * 4) + (DataWord.BYTES * 3) +
         (Long.BYTES * 4) + (Integer.BYTES * 4);
     public static int CALL = 0;
     public static int DELEGATECALL = 1;
     public static int CALLCODE = 2;
     public static int CREATE = 3;
-
+    public Address address;
+    public Address sender;
     private ExecutionHelper helper;
     private Address origin;
-
-    public  Address address;
-     public Address sender;
     private Address blockCoinbase;
     private DataWord nrgPrice;
     private DataWord callValue;
@@ -108,9 +109,9 @@ public class ExecutionContext {
     /**
      * Returns a big-endian binary encoding of this ExecutionContext in the following format:
      *
-     * |32b - address|32b - origin|32b - caller|16b - nrgPrice|8b - nrgLimit|16b - callValue|
-     * 4b - callDataLength|?b - callData|4b - depth|4b - kind|4b - flags|32b - blockCoinbase|
-     * 8b - blockNumber|8b - blockTimestamp|8b - blockNrgLimit|16b - blockDifficulty|
+     * |32b - address|32b - origin|32b - caller|16b - nrgPrice|8b - nrgLimit|16b - callValue| 4b -
+     * callDataLength|?b - callData|4b - depth|4b - kind|4b - flags|32b - blockCoinbase| 8b -
+     * blockNumber|8b - blockTimestamp|8b - blockNrgLimit|16b - blockDifficulty|
      *
      * where callDataLength is the length of callData.
      *

@@ -52,8 +52,8 @@ import org.aion.rlp.RLPList;
 public class AionTxExecSummary implements ITxExecSummary {
 
     /**
-     * The receipt associated with {@link AionTransaction} that indicates the
-     * results of the execution
+     * The receipt associated with {@link AionTransaction} that indicates the results of the
+     * execution
      */
     private AionTxReceipt receipt;
 
@@ -73,8 +73,7 @@ public class AionTxExecSummary implements ITxExecSummary {
     private TransactionStatus failed;
 
     /**
-     * RLP related, parsed indicates whether the class has already been
-     * deserialized.
+     * RLP related, parsed indicates whether the class has already been deserialized.
      */
     private byte[] rlpEncoded;
     private boolean parsed;
@@ -90,43 +89,8 @@ public class AionTxExecSummary implements ITxExecSummary {
         this.parsed = false;
     }
 
-    public void rlpParse() {
-        if (parsed) {
-            return;
-        }
-
-        RLPList decodedTxList = RLP.decode2(rlpEncoded);
-        RLPList summary = (RLPList) decodedTxList.get(0);
-
-        this.receipt = new AionTxReceipt(summary.get(0).getRLPData());
-        this.value = decodeBigInteger(summary.get(1).getRLPData());
-        this.deletedAccounts = decodeDeletedAccounts((RLPList) summary.get(2));
-        this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(3));
-        this.touchedStorage = decodeTouchedStorage(summary.get(4));
-        this.result = summary.get(5).getRLPData();
-        this.logs = decodeLogs((RLPList) summary.get(6));
-        byte[] failed = summary.get(7).getRLPData();
-        int value = RLP.decodeInt(failed, 0);
-        this.failed = TransactionStatus.getStatus(value);
-
-        this.parsed = true;
-    }
-
     private static BigInteger decodeBigInteger(byte[] encoded) {
         return isEmpty(encoded) ? BigInteger.ZERO : new BigInteger(1, encoded);
-    }
-
-    public byte[] getEncoded() {
-        if (rlpEncoded != null) {
-            return rlpEncoded;
-        }
-
-        this.rlpEncoded = RLP.encodeList(this.receipt.getEncoded(), RLP.encodeBigInteger(this.value),
-                encodeDeletedAccounts(this.deletedAccounts), encodeInternalTransactions(this.internalTransactions),
-                encodeTouchedStorage(this.touchedStorage), RLP.encodeElement(this.result), encodeLogs(this.logs),
-                RLP.encodeInt(this.failed.getCode()));
-
-        return rlpEncoded;
     }
 
     public static byte[] encodeTouchedStorage(TxTouchedStorage touchedStorage) {
@@ -236,6 +200,48 @@ public class AionTxExecSummary implements ITxExecSummary {
         return result;
     }
 
+    public static Builder builderFor(AionTxReceipt receipt) {
+        return new Builder(receipt);
+    }
+
+    public void rlpParse() {
+        if (parsed) {
+            return;
+        }
+
+        RLPList decodedTxList = RLP.decode2(rlpEncoded);
+        RLPList summary = (RLPList) decodedTxList.get(0);
+
+        this.receipt = new AionTxReceipt(summary.get(0).getRLPData());
+        this.value = decodeBigInteger(summary.get(1).getRLPData());
+        this.deletedAccounts = decodeDeletedAccounts((RLPList) summary.get(2));
+        this.internalTransactions = decodeInternalTransactions((RLPList) summary.get(3));
+        this.touchedStorage = decodeTouchedStorage(summary.get(4));
+        this.result = summary.get(5).getRLPData();
+        this.logs = decodeLogs((RLPList) summary.get(6));
+        byte[] failed = summary.get(7).getRLPData();
+        int value = RLP.decodeInt(failed, 0);
+        this.failed = TransactionStatus.getStatus(value);
+
+        this.parsed = true;
+    }
+
+    public byte[] getEncoded() {
+        if (rlpEncoded != null) {
+            return rlpEncoded;
+        }
+
+        this.rlpEncoded = RLP
+            .encodeList(this.receipt.getEncoded(), RLP.encodeBigInteger(this.value),
+                encodeDeletedAccounts(this.deletedAccounts),
+                encodeInternalTransactions(this.internalTransactions),
+                encodeTouchedStorage(this.touchedStorage), RLP.encodeElement(this.result),
+                encodeLogs(this.logs),
+                RLP.encodeInt(this.failed.getCode()));
+
+        return rlpEncoded;
+    }
+
     public AionTransaction getTransaction() {
         if (!parsed) {
             rlpParse();
@@ -281,7 +287,6 @@ public class AionTxExecSummary implements ITxExecSummary {
      * Indicates whether the transaction was rejected.
      *
      * @see TransactionStatus
-     * @return
      */
     public boolean isRejected() {
         if (!parsed) {
@@ -291,11 +296,10 @@ public class AionTxExecSummary implements ITxExecSummary {
     }
 
     /**
-     * To keep compatibility with any previously written code, isFailed() now
-     * returns true both when the transaction was rejected or the VM failed.
+     * To keep compatibility with any previously written code, isFailed() now returns true both when
+     * the transaction was rejected or the VM failed.
      *
      * @see TransactionStatus
-     * @return
      */
     public boolean isFailed() {
         if (!parsed) {
@@ -333,7 +337,8 @@ public class AionTxExecSummary implements ITxExecSummary {
 
         BigInteger energyLimit = BigInteger.valueOf(this.getTransaction().getNrg());
         BigInteger energyUsed = BigInteger.valueOf(this.getReceipt().getEnergyUsed());
-        return energyLimit.subtract(energyUsed).multiply(BigInteger.valueOf(this.getTransaction().getNrgPrice()));
+        return energyLimit.subtract(energyUsed)
+            .multiply(BigInteger.valueOf(this.getTransaction().getNrgPrice()));
     }
 
     public BigInteger getFee() {
@@ -341,7 +346,7 @@ public class AionTxExecSummary implements ITxExecSummary {
             rlpParse();
         }
         return BigInteger.valueOf(this.getReceipt().getEnergyUsed())
-                .multiply(BigInteger.valueOf(this.getTransaction().getNrgPrice()));
+            .multiply(BigInteger.valueOf(this.getTransaction().getNrgPrice()));
     }
 
     public BigInteger getNrgUsed() {
@@ -352,24 +357,63 @@ public class AionTxExecSummary implements ITxExecSummary {
         return touchedStorage;
     }
 
-    public static Builder builderFor(AionTxReceipt receipt) {
-        return new Builder(receipt);
-    }
-
     @Override
     public Object getBuilder(ITxReceipt receipt) {
         return builderFor((AionTxReceipt) receipt);
     }
 
+    public enum TransactionStatus {
+
+        /**
+         * Rejected indicates the transaction was not valid for processing this indicates the
+         * transaction should not be included in the block. Subsequently, no effort was made to
+         * process this transaction.
+         */
+        REJECTED(0),
+
+        /**
+         * Failed indicates the transaction failed to process, this can occur due to OutOfEnergy
+         * errors or VM Exception errors. Transactions that Failed are still placed into the block,
+         * with corresponding consequences for the sender.
+         */
+        FAILED(1),
+
+        /**
+         * Successful transaction are transactions that were processed successfully these are placed
+         * into the block.
+         */
+        SUCCESS(2);
+
+        private int code;
+
+        TransactionStatus(int code) {
+            this.code = code;
+        }
+
+        public static TransactionStatus getStatus(int code) {
+            switch (code) {
+                case 0:
+                    return REJECTED;
+                case 1:
+                    return FAILED;
+                case 2:
+                    return SUCCESS;
+            }
+            return null;
+        }
+
+        public int getCode() {
+            return this.code;
+        }
+    }
+
     /**
-     * Builder for {@link AionTxExecSummary}, responsible for the correct
-     * creation of the transaction summary. Contains all elements useful for
-     * referencing both the transactions and the results of the transaction.
-     * This also includes results like which rows of the storage (account
-     * storage {@link DetailsDataStore}) were {@code touched} by virtual machine.
+     * Builder for {@link AionTxExecSummary}, responsible for the correct creation of the
+     * transaction summary. Contains all elements useful for referencing both the transactions and
+     * the results of the transaction. This also includes results like which rows of the storage
+     * (account storage {@link DetailsDataStore}) were {@code touched} by virtual machine.
      *
-     * Prefer using this builder, as rules will be enforced and the system will
-     * fast fail.
+     * Prefer using this builder, as rules will be enforced and the system will fast fail.
      *
      * Any non-critical elements will be set to a default value
      */
@@ -397,7 +441,8 @@ public class AionTxExecSummary implements ITxExecSummary {
             return this;
         }
 
-        public Builder touchedStorage(Map<DataWord, DataWord> touched, Map<DataWord, DataWord> changed) {
+        public Builder touchedStorage(Map<DataWord, DataWord> touched,
+            Map<DataWord, DataWord> changed) {
             summary.touchedStorage.addReading(touched);
             summary.touchedStorage.addWriting(changed);
             return this;
@@ -434,8 +479,9 @@ public class AionTxExecSummary implements ITxExecSummary {
                 summary.logs = Collections.emptyList();
             }
 
-            if (summary.internalTransactions == null)
+            if (summary.internalTransactions == null) {
                 summary.internalTransactions = Collections.emptyList();
+            }
 
             if (summary.failed != null && summary.failed != TransactionStatus.SUCCESS) {
                 for (AionInternalTx transaction : summary.internalTransactions) {
@@ -443,52 +489,6 @@ public class AionTxExecSummary implements ITxExecSummary {
                 }
             }
             return summary;
-        }
-    }
-
-    public enum TransactionStatus {
-
-        /**
-         * Rejected indicates the transaction was not valid for processing this
-         * indicates the transaction should not be included in the block.
-         * Subsequently, no effort was made to process this transaction.
-         */
-        REJECTED(0),
-
-        /**
-         * Failed indicates the transaction failed to process, this can occur
-         * due to OutOfEnergy errors or VM Exception errors. Transactions that
-         * Failed are still placed into the block, with corresponding
-         * consequences for the sender.
-         */
-        FAILED(1),
-
-        /**
-         * Successful transaction are transactions that were processed
-         * successfully these are placed into the block.
-         */
-        SUCCESS(2);
-
-        private int code;
-
-        TransactionStatus(int code) {
-            this.code = code;
-        }
-
-        public int getCode() {
-            return this.code;
-        }
-
-        public static TransactionStatus getStatus(int code) {
-            switch (code) {
-            case 0:
-                return REJECTED;
-            case 1:
-                return FAILED;
-            case 2:
-                return SUCCESS;
-            }
-            return null;
         }
     }
 }

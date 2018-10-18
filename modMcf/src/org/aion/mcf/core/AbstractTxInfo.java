@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.mcf.core;
 
 import org.aion.mcf.types.AbstractTransaction;
@@ -27,9 +27,6 @@ import org.aion.mcf.types.AbstractTxReceipt;
 
 /**
  * Abstract transaction info.
- *
- * @param <TXR>
- * @param <TX>
  */
 
 public abstract class AbstractTxInfo<TXR extends AbstractTxReceipt<?>, TX extends AbstractTransaction> {

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,11 +19,12 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.api.server.types;
 
+import java.math.BigInteger;
+import java.util.List;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.zero.impl.types.AionBlock;
@@ -31,18 +32,19 @@ import org.aion.zero.types.AionTransaction;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.math.BigInteger;
-import java.util.List;
-
 /**
- * JSON representation of a block, with more information
- * TODO: one big hack atm to get this out the door. Refactor to make it more OOP
+ * JSON representation of a block, with more information TODO: one big hack atm to get this out the
+ * door. Refactor to make it more OOP
+ *
  * @author ali
  */
 public class Blk {
 
-    public static Object AionBlockToJson(AionBlock block, BigInteger totalDifficulty, boolean fullTransaction) {
-        if (block == null) return null;
+    public static Object AionBlockToJson(AionBlock block, BigInteger totalDifficulty,
+        boolean fullTransaction) {
+        if (block == null) {
+            return null;
+        }
 
         JSONObject obj = new JSONObject();
         obj.put("number", block.getNumber());
@@ -52,7 +54,8 @@ public class Blk {
         obj.put("transactionsRoot", TypeConverter.toJsonHex(block.getTxTrieRoot()));
         obj.put("stateRoot", TypeConverter.toJsonHex(block.getStateRoot()));
         obj.put("receiptsRoot",
-                TypeConverter.toJsonHex(block.getReceiptsRoot() == null ? new byte[0] : block.getReceiptsRoot()));
+            TypeConverter.toJsonHex(
+                block.getReceiptsRoot() == null ? new byte[0] : block.getReceiptsRoot()));
         obj.put("difficulty", TypeConverter.toJsonHex(block.getDifficulty()));
         obj.put("totalDifficulty", TypeConverter.toJsonHex(totalDifficulty));
 
@@ -75,7 +78,8 @@ public class Blk {
             AionTransaction tx = txs.get(i);
             if (fullTransaction) {
                 JSONObject jsonTx = new JSONObject();
-                jsonTx.put("contractAddress", (tx.getContractAddress() != null)? TypeConverter.toJsonHex(tx.getContractAddress().toString()):null);
+                jsonTx.put("contractAddress", (tx.getContractAddress() != null) ? TypeConverter
+                    .toJsonHex(tx.getContractAddress().toString()) : null);
                 jsonTx.put("hash", TypeConverter.toJsonHex(tx.getHash()));
                 jsonTx.put("transactionIndex", i);
                 jsonTx.put("value", TypeConverter.toJsonHex(tx.getValue()));
@@ -100,7 +104,9 @@ public class Blk {
 
     @SuppressWarnings("Duplicates")
     public static JSONObject AionBlockOnlyToJson(AionBlock block, BigInteger totalDifficulty) {
-        if (block == null) return null;
+        if (block == null) {
+            return null;
+        }
 
         JSONObject obj = new JSONObject();
         obj.put("number", block.getNumber());
@@ -110,7 +116,8 @@ public class Blk {
         obj.put("transactionsRoot", TypeConverter.toJsonHex(block.getTxTrieRoot()));
         obj.put("stateRoot", TypeConverter.toJsonHex(block.getStateRoot()));
         obj.put("receiptsRoot",
-                TypeConverter.toJsonHex(block.getReceiptsRoot() == null ? new byte[0] : block.getReceiptsRoot()));
+            TypeConverter.toJsonHex(
+                block.getReceiptsRoot() == null ? new byte[0] : block.getReceiptsRoot()));
         obj.put("difficulty", TypeConverter.toJsonHex(block.getDifficulty()));
         obj.put("totalDifficulty", TypeConverter.toJsonHex(totalDifficulty));
 

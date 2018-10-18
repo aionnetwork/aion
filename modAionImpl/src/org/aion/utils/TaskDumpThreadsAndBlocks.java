@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,15 +19,14 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.utils;
-
-import org.aion.zero.impl.db.AionBlockStore;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.zero.impl.db.AionBlockStore;
 
 /**
  * Thread for printing heap dumps.
@@ -44,8 +43,9 @@ public class TaskDumpThreadsAndBlocks implements Runnable {
     private final AionBlockStore store;
     private final int blockCount;
 
-    public TaskDumpThreadsAndBlocks(final AtomicBoolean _start, final int _interval, final AionBlockStore _store,
-            final int _blockCount, final String _reportFolder) {
+    public TaskDumpThreadsAndBlocks(final AtomicBoolean _start, final int _interval,
+        final AionBlockStore _store,
+        final int _blockCount, final String _reportFolder) {
         this.start = _start;
         this.interval = _interval;
         this.store = _store;
@@ -61,8 +61,9 @@ public class TaskDumpThreadsAndBlocks implements Runnable {
 
             // printing threads
             try {
-                Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-thread-report.out"),
-                        ThreadDumper.dumpThreadInfo().getBytes());
+                Files.write(
+                    Paths.get(reportFolder, System.currentTimeMillis() + "-thread-report.out"),
+                    ThreadDumper.dumpThreadInfo().getBytes());
             } catch (IOException e) {
                 e.printStackTrace();
             }

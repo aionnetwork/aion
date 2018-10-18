@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.log;
 
@@ -32,8 +31,9 @@ public enum LogLevel {
     public static boolean contains(String _level) {
         for (LogLevel level : values()) {
             // maybe use equalsIgnoreCase here?
-            if (level.name().equals(_level))
+            if (level.name().equals(_level)) {
                 return true;
+            }
         }
         return false;
     }

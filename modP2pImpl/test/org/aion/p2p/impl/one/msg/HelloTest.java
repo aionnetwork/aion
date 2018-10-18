@@ -30,6 +30,7 @@ import java.io.UnsupportedEncodingException;
 import org.junit.Test;
 
 public class HelloTest {
+
     @Test
     public void testHello() {
         String msg = "Hello";

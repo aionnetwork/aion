@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,15 +17,12 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-
 import org.aion.base.type.Address;
 import org.spongycastle.util.BigIntegers;
 
@@ -103,7 +100,7 @@ public abstract class AbstractBlockHeader {
     protected byte[] solution; // The equihash solution in compressed format
 
     /*
-    * A long value containing energy consumed within this block
+     * A long value containing energy consumed within this block
      */
     protected long energyConsumed;
 
@@ -112,15 +109,15 @@ public abstract class AbstractBlockHeader {
      */
     protected long energyLimit;
 
+    public AbstractBlockHeader() {
+    }
+
     public byte[] getSolution() {
         return solution;
     }
 
     public void setSolution(byte[] solution) {
         this.solution = solution;
-    }
-
-    public AbstractBlockHeader() {
     }
 
     public byte[] getParentHash() {
@@ -151,12 +148,12 @@ public abstract class AbstractBlockHeader {
         this.txTrieRoot = txTrieRoot;
     }
 
-    public void setReceiptsRoot(byte[] receiptTrieRoot) {
-        this.receiptTrieRoot = receiptTrieRoot;
-    }
-
     public byte[] getReceiptsRoot() {
         return receiptTrieRoot;
+    }
+
+    public void setReceiptsRoot(byte[] receiptTrieRoot) {
+        this.receiptTrieRoot = receiptTrieRoot;
     }
 
     public void setTransactionsRoot(byte[] stateRoot) {
@@ -167,16 +164,20 @@ public abstract class AbstractBlockHeader {
         return logsBloom;
     }
 
+    public void setLogsBloom(byte[] logsBloom) {
+        this.logsBloom = logsBloom;
+    }
+
     public byte[] getDifficulty() {
         return difficulty;
     }
 
-    public BigInteger getDifficultyBI() {
-        return new BigInteger(1, difficulty);
-    }
-
     public void setDifficulty(byte[] difficulty) {
         this.difficulty = difficulty;
+    }
+
+    public BigInteger getDifficultyBI() {
+        return new BigInteger(1, difficulty);
     }
 
     public long getTimestamp() {
@@ -199,6 +200,10 @@ public abstract class AbstractBlockHeader {
         return extraData;
     }
 
+    public void setExtraData(byte[] extraData) {
+        this.extraData = extraData;
+    }
+
     public byte[] getNonce() {
         return nonce;
     }
@@ -207,20 +212,13 @@ public abstract class AbstractBlockHeader {
         this.nonce = nonce;
     }
 
-    public void setLogsBloom(byte[] logsBloom) {
-        this.logsBloom = logsBloom;
-    }
-
-    public void setExtraData(byte[] extraData) {
-        this.extraData = extraData;
-    }
-
     public boolean isGenesis() {
         return this.number == 0;
     }
 
     public byte[] getPowBoundary() {
-        return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
+        return BigIntegers
+            .asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
     }
 
     public BigInteger getPowBoundaryBI() {

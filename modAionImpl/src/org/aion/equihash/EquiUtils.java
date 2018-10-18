@@ -41,8 +41,11 @@ public class EquiUtils {
      */
     public static void extendArray(byte[] in, int inLen, byte[] out, int bitLen, int bytePad) {
 
-        if (in == null) throw new NullPointerException("null input array");
-        else if (out == null) throw new NullPointerException("null output array");
+        if (in == null) {
+            throw new NullPointerException("null input array");
+        } else if (out == null) {
+            throw new NullPointerException("null output array");
+        }
 
         int outWidth = (bitLen + 7) / 8 + bytePad;
         int bitLenMask = (1 << bitLen) - 1;
@@ -81,8 +84,11 @@ public class EquiUtils {
      */
     public static void extendArray(byte[] in, byte[] out, int bitLen, int bytePad) {
 
-        if (in == null) throw new NullPointerException("null input array");
-        else if (out == null) throw new NullPointerException("null output array");
+        if (in == null) {
+            throw new NullPointerException("null input array");
+        } else if (out == null) {
+            throw new NullPointerException("null output array");
+        }
 
         int outWidth = (bitLen + 7) / 8 + bytePad;
         int bitLenMask = (1 << bitLen) - 1;
@@ -123,14 +129,18 @@ public class EquiUtils {
      * @throws NullPointerException when given null input
      */
     public static boolean indicesBefore(StepRow a, StepRow b, int len, int lenIndices) {
-        if (a == null || b == null)
+        if (a == null || b == null) {
             throw new NullPointerException("null StepRow passed for comparison");
+        }
 
         byte[] hashA = a.getHash();
         byte[] hashB = b.getHash();
 
-        if (hashA == null) throw new NullPointerException("null hash within StepRow a");
-        else if (hashB == null) throw new NullPointerException("null hash within StepRow b");
+        if (hashA == null) {
+            throw new NullPointerException("null hash within StepRow a");
+        } else if (hashB == null) {
+            throw new NullPointerException("null hash within StepRow b");
+        }
 
         int i = 0;
         while ((hashA[i + len] & 0xff) == (hashB[i + len] & 0xff) && i < lenIndices) {
@@ -151,8 +161,11 @@ public class EquiUtils {
      */
     private static void compressArray(byte[] in, byte[] out, int bitLen, int bytePad) {
 
-        if (in == null) throw new NullPointerException("null input array");
-        else if (out == null) throw new NullPointerException("null output array");
+        if (in == null) {
+            throw new NullPointerException("null input array");
+        } else if (out == null) {
+            throw new NullPointerException("null output array");
+        }
 
         int inWidth = (bitLen + 7) / 8 + bytePad;
         int bitLenMask = (1 << bitLen) - 1;
@@ -188,7 +201,9 @@ public class EquiUtils {
      */
     public static byte[] getMinimalFromIndices(int[] indices, int cBitLen) {
 
-        if (indices == null) throw new NullPointerException("null indices array");
+        if (indices == null) {
+            throw new NullPointerException("null indices array");
+        }
 
         int lenIndices = indices.length * Integer.BYTES;
         int minLen = (cBitLen + 1) * lenIndices / (8 * Integer.BYTES);

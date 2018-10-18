@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,22 +19,18 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl.valid;
 
+import java.util.List;
 import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.zero.types.A0BlockHeader;
-
-import java.math.BigInteger;
-import java.util.List;
 
 /**
  * Energy limit rule is defined as the following (no documentation yet)
  * <p>
- * if EnergyLimit(n) > MIN_ENERGY EnergyLimit(n-1) - EnergyLimit(n-1)/1024 <=
- * EnergyLimit(n) <= EnergyLimit(n-1) + EnergyLimit(n-1)/1024
+ * if EnergyLimit(n) > MIN_ENERGY EnergyLimit(n-1) - EnergyLimit(n-1)/1024 <= EnergyLimit(n) <=
+ * EnergyLimit(n-1) + EnergyLimit(n-1)/1024
  * <p>
  * This rule depends on the parent to implement
  */
@@ -57,10 +53,10 @@ public class EnergyLimitRule extends DependentBlockHeaderRule<A0BlockHeader> {
         // check that energy is atleast equal to lower bounds, otherwise block is invalid
         if (energyLimit < this.energyLimitLowerBounds) {
             addError("energyLimit ("
-                    + energyLimit
-                    + ") lower than lower bound ("
-                    + this.energyLimitLowerBounds
-                    + ")", errors);
+                + energyLimit
+                + ") lower than lower bound ("
+                + this.energyLimitLowerBounds
+                + ")", errors);
             return false;
         }
 
@@ -68,11 +64,11 @@ public class EnergyLimitRule extends DependentBlockHeaderRule<A0BlockHeader> {
         long energyDeltaMag = Math.abs(energyLimit - parentEnergyLimit);
         if (energyDeltaMag > parentEnergyQuotient) {
             addError("energyLimit ("
-                    + energyLimit
-                    + ") of current block has delta ("
-                    + energyDeltaMag
-                    + ") greater than bounds ("
-                    + parentEnergyQuotient +")", errors);
+                + energyLimit
+                + ") of current block has delta ("
+                + energyDeltaMag
+                + ") greater than bounds ("
+                + parentEnergyQuotient + ")", errors);
             return false;
         }
         return true;

@@ -34,19 +34,18 @@
  */
 package org.aion.db.impl.h2;
 
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.db.impl.AbstractDB;
-import org.h2.mvstore.FileStore;
-import org.h2.mvstore.MVMap;
-import org.h2.mvstore.MVStore;
-import org.h2.mvstore.MVStoreTool;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.db.impl.AbstractDB;
+import org.h2.mvstore.FileStore;
+import org.h2.mvstore.MVMap;
+import org.h2.mvstore.MVStore;
+import org.h2.mvstore.MVStoreTool;
 
 /*
  * IMPORTANT IMPLEMENTATION NOTE:
@@ -64,9 +63,8 @@ public class H2MVMap extends AbstractDB {
 
     private final String dbFilePath; // path tp db file
     /**
-     * it's OK to hold a reference here as opposed to getting a reference every time
-     * from MVStore since store.getFileStore() transparently passes a reference back
-     * up to the fs object
+     * it's OK to hold a reference here as opposed to getting a reference every time from MVStore
+     * since store.getFileStore() transparently passes a reference back up to the fs object
      */
     private FileStore mvStoreFileRef;
 
@@ -105,7 +103,8 @@ public class H2MVMap extends AbstractDB {
         }
 
         builder.backgroundExceptionHandler((t, e) -> {
-            LOG.error("H2 MVStore Uncaught Exception at Thread: {}\nException: {}", t.toString(), e.toString());
+            LOG.error("H2 MVStore Uncaught Exception at Thread: {}\nException: {}", t.toString(),
+                e.toString());
             throw new RuntimeException(e);
         });
 
@@ -270,19 +269,16 @@ public class H2MVMap extends AbstractDB {
     }
 
     /**
-     * MVMap implements the ConcurrentMap interface and does not support batch
-     * writes; internally, all writes to disk are batched since this implementation
-     * of MVMap uses a WRITE_BUFFER_SIZE of 10mb (ie. up to 10mb of writes may be
-     * stored in the write buffer before being flushed to disk).
+     * MVMap implements the ConcurrentMap interface and does not support batch writes; internally,
+     * all writes to disk are batched since this implementation of MVMap uses a WRITE_BUFFER_SIZE of
+     * 10mb (ie. up to 10mb of writes may be stored in the write buffer before being flushed to
+     * disk).
      * <p>
-     * This implementation of putBatch provides no guarantees on WHEN the batched
-     * data gets flushed to disk. It is the application developer's responsibility
-     * to call flush()
+     * This implementation of putBatch provides no guarantees on WHEN the batched data gets flushed
+     * to disk. It is the application developer's responsibility to call flush()
      * <p>
-     * Places a batch of key value mappings into the DB, one guarantee that should
-     * be made is that this function should execute atomically
-     *
-     * @param inputMap
+     * Places a batch of key value mappings into the DB, one guarantee that should be made is that
+     * this function should execute atomically
      */
     @Override
     public void putBatch(Map<byte[], byte[]> inputMap) {
@@ -304,7 +300,8 @@ public class H2MVMap extends AbstractDB {
                 }
             }
         } catch (Exception e) {
-            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".",
+                e);
         }
     }
 
@@ -362,9 +359,9 @@ public class H2MVMap extends AbstractDB {
     }
 
     /**
-     * Compact the database file, that is, compact blocks that have a low fill rate,
-     * and move chunks next to each other. This will typically shrink the database
-     * file. Changes are flushed to the file, and old chunks are overwritten.
+     * Compact the database file, that is, compact blocks that have a low fill rate, and move chunks
+     * next to each other. This will typically shrink the database file. Changes are flushed to the
+     * file, and old chunks are overwritten.
      */
     public void compact() {
         LOG.info("Compacting " + this.toString() + ".");
@@ -387,10 +384,9 @@ public class H2MVMap extends AbstractDB {
     // TODO: Find a way to expose flush() up to the application level
 
     /**
-     * It is recommended by the authors of MVMap to rely on the auto-commit feature
-     * (enabled in this DB driver implementation) to auto flush the changes to disk.
-     * (auto-commit internally calls commit() from time to time or when enough
-     * changes have accumulated.
+     * It is recommended by the authors of MVMap to rely on the auto-commit feature (enabled in this
+     * DB driver implementation) to auto flush the changes to disk. (auto-commit internally calls
+     * commit() from time to time or when enough changes have accumulated.
      */
     public void flush() {
         check();

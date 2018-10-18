@@ -29,7 +29,9 @@ import static org.junit.Assert.assertEquals;
 import java.util.concurrent.ThreadLocalRandom;
 import org.junit.Test;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public class ActTest {
 
     @Test

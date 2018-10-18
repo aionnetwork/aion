@@ -1,16 +1,27 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.os;
-
-import com.google.common.eventbus.EventBus;
-import org.aion.gui.events.EventBusRegistry;
-import org.aion.gui.events.KernelProcEvent;
-import org.aion.mcf.config.CfgGuiLauncher;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentMatchers;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.util.concurrent.ExecutorService;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -18,7 +29,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.eventbus.EventBus;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import org.aion.gui.events.EventBusRegistry;
+import org.aion.gui.events.KernelProcEvent;
+import org.aion.mcf.config.CfgGuiLauncher;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.ArgumentMatchers;
+
 public class KernelLauncherTest {
+
     private KernelLaunchConfigurator klc;
     private EventBusRegistry ebr;
     private File storageLoc;
@@ -29,7 +51,7 @@ public class KernelLauncherTest {
     @Before
     public void before() {
         klc = mock(KernelLaunchConfigurator.class);
-        ebr =  mock(EventBusRegistry.class);
+        ebr = mock(EventBusRegistry.class);
         storageLoc = mock(File.class);
         pidFile = mock(File.class);
         processTerminator = mock(UnixProcessTerminator.class);
@@ -39,7 +61,8 @@ public class KernelLauncherTest {
     @Test
     public void testCapturePid() throws Exception {
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc, pidFile);
+            CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc,
+            pidFile);
 
         String expectedPid = "1337";
         Process process = mock(Process.class);
@@ -51,7 +74,8 @@ public class KernelLauncherTest {
     @Test(expected = KernelControlException.class)
     public void testCapturePidWhenInterrupted() throws Exception {
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc, pidFile);
+            CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc,
+            pidFile);
 
         Process process = mock(Process.class);
         when(process.waitFor()).thenThrow(new InterruptedException());
@@ -61,7 +85,8 @@ public class KernelLauncherTest {
     @Test(expected = KernelControlException.class)
     public void testCapturePidWhenStdoutReadError() throws Exception {
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc, pidFile);
+            CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc,
+            pidFile);
 
         String stdout = "something_that_is_not_a_number";
         Process process = mock(Process.class);
@@ -74,7 +99,8 @@ public class KernelLauncherTest {
     public void testTryResumeWhenAlreadyHaveInstance() throws Exception {
         when(ebr.getBus(EventBusRegistry.KERNEL_BUS)).thenReturn(mock(EventBus.class));
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc, pidFile);
+            CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc,
+            pidFile);
 
         unit.setCurrentInstance(mock(KernelInstanceId.class));
         unit.tryResume();
@@ -83,7 +109,8 @@ public class KernelLauncherTest {
     @Test
     public void testTryResumeWhenPidFileNotPresent() throws Exception {
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc, pidFile);
+            CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc,
+            pidFile);
 
         when(pidFile.exists()).thenReturn(false);
         assertThat(unit.tryResume(), is(false));
@@ -94,7 +121,8 @@ public class KernelLauncherTest {
         EventBus eb = mock(EventBus.class);
         when(ebr.getBus(EventBusRegistry.KERNEL_BUS)).thenReturn(eb);
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc, pidFile);
+            CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc,
+            pidFile);
 
         unit.setCurrentInstance(mock(KernelInstanceId.class));
         verify(eb).post(ArgumentMatchers.any(KernelProcEvent.KernelLaunchedEvent.class));
@@ -106,7 +134,8 @@ public class KernelLauncherTest {
         EventBus eb = mock(EventBus.class);
         when(ebr.getBus(EventBusRegistry.KERNEL_BUS)).thenReturn(eb);
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc, pidFile);
+            CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc,
+            pidFile);
 
         unit.setCurrentInstance(null);
         verify(eb).post(ArgumentMatchers.any(KernelProcEvent.KernelTerminatedEvent.class));
@@ -116,7 +145,8 @@ public class KernelLauncherTest {
     @Test(expected = IllegalArgumentException.class)
     public void testTerminateWhenNoCurrentInstance() throws Exception {
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc, pidFile);
+            CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc,
+            pidFile);
         unit.terminate();
     }
 
@@ -124,7 +154,8 @@ public class KernelLauncherTest {
     public void testRemovePersistedPid() throws Exception {
 
         KernelLauncher unit = new KernelLauncher(
-                CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc, pidFile);
+            CfgGuiLauncher.DEFAULT_CONFIG, klc, ebr, processTerminator, healthChecker, storageLoc,
+            pidFile);
 
         when(pidFile.exists()).thenReturn(true);
         when(pidFile.isFile()).thenReturn(true);

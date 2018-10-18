@@ -22,7 +22,6 @@
 
 package org.aion.p2p.impl1.tasks;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -119,54 +118,6 @@ public class TaskInboundTest {
 
     private Random r = new Random();
 
-    public class MockSelector extends Selector {
-
-        @Override
-        public boolean isOpen() {
-            return false;
-        }
-
-        @Override
-        public SelectorProvider provider() {
-            return null;
-        }
-
-        @Override
-        public Set<SelectionKey> keys() {
-            return null;
-        }
-
-        @Override
-        public Set<SelectionKey> selectedKeys() {
-            return null;
-        }
-
-        @Override
-        public int selectNow() {
-            return 0;
-        }
-
-        @Override
-        public int select(long timeout) {
-            return 0;
-        }
-
-        @Override
-        public int select() {
-            return 0;
-        }
-
-        @Override
-        public Selector wakeup() {
-            return null;
-        }
-
-        @Override
-        public void close() {
-
-        }
-    }
-
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
@@ -178,7 +129,8 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
+            rhs1, msgInQue);
         assertNotNull(ti);
 
         when(selector.selectNow()).thenReturn(0);
@@ -188,7 +140,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(50);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -196,7 +148,8 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
+            rhs1, msgInQue);
         assertNotNull(ti);
 
         doThrow(ClosedSelectorException.class).when(selector).selectNow();
@@ -207,7 +160,7 @@ public class TaskInboundTest {
         Thread.sleep(50);
 
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -227,7 +180,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(50);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -266,7 +219,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -300,7 +253,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -335,7 +288,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -364,7 +317,6 @@ public class TaskInboundTest {
 
         when(sc.register(any(), anyInt())).thenReturn(sk);
 
-
         when(selector.selectNow()).thenReturn(1);
 
         Set<SelectionKey> ss = new LinkedHashSet<>();
@@ -376,7 +328,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -408,7 +360,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -443,9 +395,8 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
 
-
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -492,8 +443,56 @@ public class TaskInboundTest {
         Thread.sleep(300);
 
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
+        }
+    }
+
+    public class MockSelector extends Selector {
+
+        @Override
+        public boolean isOpen() {
+            return false;
+        }
+
+        @Override
+        public SelectorProvider provider() {
+            return null;
+        }
+
+        @Override
+        public Set<SelectionKey> keys() {
+            return null;
+        }
+
+        @Override
+        public Set<SelectionKey> selectedKeys() {
+            return null;
+        }
+
+        @Override
+        public int selectNow() {
+            return 0;
+        }
+
+        @Override
+        public int select(long timeout) {
+            return 0;
+        }
+
+        @Override
+        public int select() {
+            return 0;
+        }
+
+        @Override
+        public Selector wakeup() {
+            return null;
+        }
+
+        @Override
+        public void close() {
+
         }
     }
 }

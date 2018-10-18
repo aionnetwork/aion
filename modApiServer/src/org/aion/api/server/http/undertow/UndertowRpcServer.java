@@ -1,44 +1,54 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.api.server.http.undertow;
 
 import io.undertow.Undertow;
 import io.undertow.util.HttpString;
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.util.Map;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManagerFactory;
-import java.io.FileInputStream;
-import java.security.KeyStore;
-import java.util.Map;
-
 public class UndertowRpcServer extends RpcServer {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
     private static final int STUCK_THREAD_TIMEOUT_SECONDS = 600; // 10 min
-
-    Undertow server;
-
     private final Map<HttpString, String> CORS_HEADERS = Map.of(
-            HttpString.tryFromString("Access-Control-Allow-Origin"), corsOrigin,
-            HttpString.tryFromString("Access-Control-Allow-Headers"), "origin,accept,content-type",
-            HttpString.tryFromString("Access-Control-Allow-Credentials"), "true",
-            HttpString.tryFromString("Access-Control-Allow-Methods"), "POST,OPTIONS",
-            HttpString.tryFromString("Access-Control-Max-Age"), "86400"
+        HttpString.tryFromString("Access-Control-Allow-Origin"), corsOrigin,
+        HttpString.tryFromString("Access-Control-Allow-Headers"), "origin,accept,content-type",
+        HttpString.tryFromString("Access-Control-Allow-Credentials"), "true",
+        HttpString.tryFromString("Access-Control-Allow-Methods"), "POST,OPTIONS",
+        HttpString.tryFromString("Access-Control-Max-Age"), "86400"
     );
-
-    public static class Builder extends RpcServerBuilder<UndertowRpcServer.Builder> {
-        @Override
-        public UndertowRpcServer build() {
-            return new UndertowRpcServer(this);
-        }
-
-        @Override
-        protected UndertowRpcServer.Builder self() { return this; }
-    }
+    Undertow server;
 
     private UndertowRpcServer(Builder builder) {
         super(builder);
@@ -53,18 +63,23 @@ public class UndertowRpcServer extends RpcServer {
             KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
             keystore.load(new FileInputStream(sslCertCanonicalPath), sslCertPass);
 
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory
+                .getInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyManagerFactory.init(keystore, sslCertPass);
 
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            TrustManagerFactory trustManagerFactory = TrustManagerFactory
+                .getInstance(TrustManagerFactory.getDefaultAlgorithm());
             trustManagerFactory.init(keystore);
 
             SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
+            sslContext
+                .init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(),
+                    null);
 
             // if the keystore object got loaded, go ahead and clear out the password
-            for (char c : sslCertPass)
+            for (char c : sslCertPass) {
                 c = '\0'; // NUL
+            }
 
             return sslContext;
         } catch (Exception e) {
@@ -78,16 +93,18 @@ public class UndertowRpcServer extends RpcServer {
         try {
             Undertow.Builder undertowBuilder = Undertow.builder();
 
-            if (sslEnabled)
+            if (sslEnabled) {
                 undertowBuilder.addHttpsListener(port, hostName, sslContext());
-            else
+            } else {
                 undertowBuilder.addHttpListener(port, hostName);
+            }
 
             int effectiveIoThreadCount;
 
             if (getIoPoolSize().isPresent()) {
-                LOG.info("<rpc-server - setting io thread count manually not recommended. recommended io thread pool size: {}>",
-                        Math.max(Runtime.getRuntime().availableProcessors(), 2));
+                LOG.info(
+                    "<rpc-server - setting io thread count manually not recommended. recommended io thread pool size: {}>",
+                    Math.max(Runtime.getRuntime().availableProcessors(), 2));
                 undertowBuilder.setIoThreads(getIoPoolSize().get());
 
                 effectiveIoThreadCount = getIoPoolSize().get();
@@ -100,49 +117,57 @@ public class UndertowRpcServer extends RpcServer {
             int effectiveWorkerThreadCount;
 
             if (getWorkerPoolSize().isPresent()) {
-                LOG.info("<rpc-server - setting worker thread count manually not recommended. recommended worker thread pool size: {}>",
-                        Math.max(Runtime.getRuntime().availableProcessors(), 2) * 8);
+                LOG.info(
+                    "<rpc-server - setting worker thread count manually not recommended. recommended worker thread pool size: {}>",
+                    Math.max(Runtime.getRuntime().availableProcessors(), 2) * 8);
                 undertowBuilder.setWorkerThreads(getWorkerPoolSize().get());
 
                 effectiveWorkerThreadCount = getWorkerPoolSize().get();
             } else {
                 /** this number comes from {@link io.undertow.Undertow.Builder#Builder()} */
-                effectiveWorkerThreadCount = Math.max(Runtime.getRuntime().availableProcessors(), 2) * 8;
+                effectiveWorkerThreadCount =
+                    Math.max(Runtime.getRuntime().availableProcessors(), 2) * 8;
             }
 
             StuckThreadDetectorConfiguration stuckThreadDetector =
-                    new StuckThreadDetectorConfiguration(false, STUCK_THREAD_TIMEOUT_SECONDS);
+                new StuckThreadDetectorConfiguration(false, STUCK_THREAD_TIMEOUT_SECONDS);
             if (stuckThreadDetectorEnabled) {
                 stuckThreadDetector =
-                        new StuckThreadDetectorConfiguration(true, STUCK_THREAD_TIMEOUT_SECONDS);
+                    new StuckThreadDetectorConfiguration(true, STUCK_THREAD_TIMEOUT_SECONDS);
             }
 
             RequestLimitingConfiguration requestLimiting =
-                    new RequestLimitingConfiguration(false, -1, 1);
-            boolean isQueueBounded = getRequestQueueSize().isPresent() && getRequestQueueSize().get() > 0;
+                new RequestLimitingConfiguration(false, -1, 1);
+            boolean isQueueBounded =
+                getRequestQueueSize().isPresent() && getRequestQueueSize().get() > 0;
             if (isQueueBounded) {
                 requestLimiting = new RequestLimitingConfiguration(true, effectiveWorkerThreadCount,
-                        getRequestQueueSize().get());
+                    getRequestQueueSize().get());
             }
 
-            AionUndertowRpcHandler rpcHandler = new AionUndertowRpcHandler(corsEnabled, CORS_HEADERS, rpcProcessor);
+            AionUndertowRpcHandler rpcHandler = new AionUndertowRpcHandler(corsEnabled,
+                CORS_HEADERS, rpcProcessor);
 
-            undertowBuilder.setHandler(new AionUndertowRootHandler(rpcHandler, requestLimiting, stuckThreadDetector));
-
+            undertowBuilder.setHandler(
+                new AionUndertowRootHandler(rpcHandler, requestLimiting, stuckThreadDetector));
 
             server = undertowBuilder.build();
             server.start();
 
-            LOG.info("<rpc-server - (UNDERTOW) started on {}://{}:{}>", sslEnabled ? "https" : "http", hostName, port);
+            LOG.info("<rpc-server - (UNDERTOW) started on {}://{}:{}>",
+                sslEnabled ? "https" : "http", hostName, port);
 
             LOG.debug("----------------------------------------");
             LOG.debug("UNDERTOW RPC Server Started with Options");
             LOG.debug("----------------------------------------");
-            LOG.debug("SSL: {}", sslEnabled ? "Enabled; Certificate = "+sslCertCanonicalPath : "Not Enabled");
-            LOG.debug("CORS: {}", corsEnabled ? "Enabled; Allowed Origins = \""+corsOrigin+"\"" : "Not Enabled");
+            LOG.debug("SSL: {}",
+                sslEnabled ? "Enabled; Certificate = " + sslCertCanonicalPath : "Not Enabled");
+            LOG.debug("CORS: {}",
+                corsEnabled ? "Enabled; Allowed Origins = \"" + corsOrigin + "\"" : "Not Enabled");
             LOG.debug("Worker Thread Count: {}", effectiveWorkerThreadCount);
             LOG.debug("I/O Thread Count: {}", effectiveIoThreadCount);
-            LOG.debug("Request Queue Size: {}", isQueueBounded ? getRequestQueueSize().get() : "Unbounded");
+            LOG.debug("Request Queue Size: {}",
+                isQueueBounded ? getRequestQueueSize().get() : "Unbounded");
             LOG.debug("----------------------------------------");
 
         } catch (Exception e) {
@@ -156,5 +181,18 @@ public class UndertowRpcServer extends RpcServer {
     public void stop() {
         server.stop();
         rpcProcessor.shutdown();
+    }
+
+    public static class Builder extends RpcServerBuilder<UndertowRpcServer.Builder> {
+
+        @Override
+        public UndertowRpcServer build() {
+            return new UndertowRpcServer(this);
+        }
+
+        @Override
+        protected UndertowRpcServer.Builder self() {
+            return this;
+        }
     }
 }

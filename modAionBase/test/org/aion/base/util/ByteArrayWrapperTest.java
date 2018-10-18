@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,20 +31,19 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.base.util;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import static org.aion.base.util.ByteUtil.hexStringToBytes;
+import static org.junit.Assert.assertEquals;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.aion.base.util.ByteUtil.hexStringToBytes;
-import static org.junit.Assert.assertEquals;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class ByteArrayWrapperTest {
@@ -68,8 +67,7 @@ public class ByteArrayWrapperTest {
     }
 
     /**
-     * 1. Wrap the input data
-     * 2. Assert to see if equal
+     * 1. Wrap the input data 2. Assert to see if equal
      */
     @Test
     @Parameters(method = "hexValues")

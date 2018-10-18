@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.utils;
 
 import java.io.File;
@@ -37,7 +37,8 @@ public class TaskDumpHeap implements Runnable {
 
     private final String reportFolder;
 
-    public TaskDumpHeap(final AtomicBoolean _start, final int _interval, final String _reportFolder) {
+    public TaskDumpHeap(final AtomicBoolean _start, final int _interval,
+        final String _reportFolder) {
         this.start = _start;
         this.interval = _interval;
         this.reportFolder = _reportFolder;

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.log;
 
@@ -32,8 +31,9 @@ public enum LogEnum {
 
     public static boolean contains(String _module) {
         for (LogEnum module : values()) {
-            if (module.name().equalsIgnoreCase(_module))
+            if (module.name().equalsIgnoreCase(_module)) {
                 return true;
+            }
         }
 
         return false;

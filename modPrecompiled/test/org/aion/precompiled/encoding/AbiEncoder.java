@@ -1,32 +1,60 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.precompiled.encoding;
 
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.crypto.HashUtil;
-import org.aion.precompiled.PrecompiledUtilities;
-
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.ThreadSafe;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.ThreadSafe;
+import org.aion.base.util.ByteUtil;
+import org.aion.crypto.HashUtil;
+import org.aion.precompiled.PrecompiledUtilities;
 
 @ThreadSafe
 public class AbiEncoder {
+
+    private static final int STATIC_OFFSET_LEN = 16;
     private List<BaseTypeFVM> params;
     private volatile StringBuffer buffer;
     private String signature;
 
-    private static final int STATIC_OFFSET_LEN = 16;
-
-    public AbiEncoder(@Nonnull final byte[] signature, @Nonnull BaseTypeFVM ...params) {
+    public AbiEncoder(@Nonnull final byte[] signature, @Nonnull BaseTypeFVM... params) {
         this(ByteUtil.toHexString(signature), params);
     }
 
-    public AbiEncoder(@Nonnull String signature, @Nonnull BaseTypeFVM ...params) {
+    public AbiEncoder(@Nonnull String signature, @Nonnull BaseTypeFVM... params) {
         this.params = new ArrayList<>(Arrays.asList(params));
         this.signature = signature;
+    }
+
+    private static byte[] encodeSignature(String s) {
+        // encode signature
+        byte[] sig = new byte[4];
+        System.arraycopy(HashUtil.keccak256(s.getBytes()), 0, sig, 0, 4);
+        return sig;
     }
 
     public synchronized AbiEncoder setParam(BaseTypeFVM param) {
@@ -71,8 +99,9 @@ public class AbiEncoder {
     }
 
     public String encode() {
-        if (buffer == null)
+        if (buffer == null) {
             createBuffer();
+        }
         return "0x" + buffer.toString();
     }
 
@@ -84,12 +113,5 @@ public class AbiEncoder {
     @Override
     public String toString() {
         return encode();
-    }
-
-    private static byte[] encodeSignature(String s) {
-        // encode signature
-        byte[] sig = new byte[4];
-        System.arraycopy(HashUtil.keccak256(s.getBytes()), 0, sig, 0, 4);
-        return sig;
     }
 }

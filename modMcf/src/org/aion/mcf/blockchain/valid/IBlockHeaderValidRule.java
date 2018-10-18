@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,17 +31,14 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.mcf.blockchain.valid;
 
-import org.aion.base.type.IBlockHeader;
-
 import java.util.List;
+import org.aion.base.type.IBlockHeader;
 
 /**
  * Block header validation rules.
- *
- * @param <BH>
  */
 public interface IBlockHeaderValidRule<BH extends IBlockHeader> extends IValidRule {
 

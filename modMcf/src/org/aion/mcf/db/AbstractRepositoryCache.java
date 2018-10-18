@@ -1,23 +1,25 @@
-/*******************************************************************************
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ *     This file is part of the aion network project.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- *******************************************************************************/
+ */
 package org.aion.mcf.db;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -45,7 +47,7 @@ import org.slf4j.Logger;
  * @author Alexandra Roatis
  */
 public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
-        implements IRepositoryCache<AccountState, IDataWord, BSB> {
+    implements IRepositoryCache<AccountState, IDataWord, BSB> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -88,9 +90,9 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     /**
      * Retrieves the current state of the account associated with the given address.
      *
-     * @param address
-     *         the address of the account of interest
-     * @return a {@link AccountState} object representing the account state as is stored in the database or cache
+     * @param address the address of the account of interest
+     * @return a {@link AccountState} object representing the account state as is stored in the
+     * database or cache
      * @implNote If there is no account associated with the given address, it will create it.
      */
     @Override
@@ -186,11 +188,12 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     /**
-     * @implNote The loaded objects are fresh copies of the locally cached account state and contract details.
+     * @implNote The loaded objects are fresh copies of the locally cached account state and
+     * contract details.
      */
     @Override
     public void loadAccountState(Address address, Map<Address, AccountState> accounts,
-            Map<Address, IContractDetails<IDataWord>> details) {
+        Map<Address, IContractDetails<IDataWord>> details) {
         fullyReadLock();
 
         try {
@@ -213,10 +216,11 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     /**
-     * Loads the state of the account into <b>this object' caches</b>.
-     * Requires write locks on both {@link #lockAccounts} and {@link #lockDetails}.
+     * Loads the state of the account into <b>this object' caches</b>. Requires write locks on both
+     * {@link #lockAccounts} and {@link #lockDetails}.
      *
-     * @implNote If the calling method has acquired a weaker lock, the lock must be released before calling this method.
+     * @implNote If the calling method has acquired a weaker lock, the lock must be released before
+     * calling this method.
      * @apiNote If the account was never stored this call will create it.
      */
     private void loadAccountState(Address address) {
@@ -263,14 +267,16 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     public BigInteger getNonce(Address address) {
         AccountState accountState = getAccountState(address);
         // account state can never be null, but may be empty or deleted
-        return (accountState.isEmpty() || accountState.isDeleted()) ? BigInteger.ZERO : accountState.getNonce();
+        return (accountState.isEmpty() || accountState.isDeleted()) ? BigInteger.ZERO
+            : accountState.getNonce();
     }
 
     @Override
     public BigInteger getBalance(Address address) {
         AccountState accountState = getAccountState(address);
         // account state can never be null, but may be empty or deleted
-        return (accountState.isEmpty() || accountState.isDeleted()) ? BigInteger.ZERO : accountState.getBalance();
+        return (accountState.isEmpty() || accountState.isDeleted()) ? BigInteger.ZERO
+            : accountState.getBalance();
     }
 
     @Override
@@ -328,7 +334,9 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     @Override
     public IDataWord getStorageValue(Address address, IDataWord key) {
         IDataWord value = getContractDetails(address).get(key);
-        if (value == null) { return null; }
+        if (value == null) {
+            return null;
+        }
         return (value.isZero()) ? null : value;
     }
 

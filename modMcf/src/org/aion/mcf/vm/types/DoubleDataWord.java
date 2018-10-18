@@ -36,7 +36,9 @@ import org.aion.base.vm.IDataWord;
  * often have need of 32-byte storage keys.
  */
 public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
-    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE);
+
+    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(256)
+        .subtract(BigInteger.ONE);
 
     public static final DoubleDataWord ZERO = new DoubleDataWord(0);
     public static final DoubleDataWord ONE = new DoubleDataWord(1);

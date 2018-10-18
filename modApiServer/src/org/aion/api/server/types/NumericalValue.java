@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,15 +19,13 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.api.server.types;
 
-import org.aion.base.util.ByteUtil;
-
 import java.math.BigInteger;
 import java.util.regex.Pattern;
+import org.aion.base.util.ByteUtil;
 
 /**
  * Base type for a numerical value derived from some JSON string, or vice versa
@@ -68,8 +66,9 @@ public class NumericalValue {
     }
 
     private void generateIntermediateState() {
-        if (this.cachedStringValue == null)
+        if (this.cachedStringValue == null) {
             this.cachedStringValue = ByteUtil.toHexStringWithPrefix(this.value.toByteArray());
+        }
     }
 
     public String toHexString() {

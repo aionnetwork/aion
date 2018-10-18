@@ -38,7 +38,7 @@ public class UtilsTest {
     @Test
     public void testHexEncode_wSingleByte() {
         for (byte b : Utils.encodingTable) {
-            byte[] input = new byte[] {b};
+            byte[] input = new byte[]{b};
             assertThat(Utils.hexEncode(input)).isEqualTo(Hex.encode(input));
         }
     }
@@ -67,34 +67,34 @@ public class UtilsTest {
 
     @Test(expected = NullPointerException.class)
     public void testConcatenate_wNullA() {
-        Utils.concatenate(new byte[] {1, 2}, null);
+        Utils.concatenate(new byte[]{1, 2}, null);
     }
 
     @Test(expected = NullPointerException.class)
     public void testConcatenate_wNullB() {
-        Utils.concatenate(null, new byte[] {1, 2});
+        Utils.concatenate(null, new byte[]{1, 2});
     }
 
     @Test
     public void testConcatenate() {
-        assertThat(Utils.concatenate(new byte[] {1, 2}, new byte[] {3, 4}))
-                .isEqualTo(new byte[] {1, 2, 3, 4});
+        assertThat(Utils.concatenate(new byte[]{1, 2}, new byte[]{3, 4}))
+            .isEqualTo(new byte[]{1, 2, 3, 4});
     }
 
     @Test
     public void testConcatenate_wEmptyFirstArray() {
-        assertThat(Utils.concatenate(new byte[] {}, new byte[] {3, 4}))
-                .isEqualTo(new byte[] {3, 4});
+        assertThat(Utils.concatenate(new byte[]{}, new byte[]{3, 4}))
+            .isEqualTo(new byte[]{3, 4});
     }
 
     @Test
     public void testConcatenate_wEmptySecondArray() {
-        assertThat(Utils.concatenate(new byte[] {1, 2}, new byte[] {}))
-                .isEqualTo(new byte[] {1, 2});
+        assertThat(Utils.concatenate(new byte[]{1, 2}, new byte[]{}))
+            .isEqualTo(new byte[]{1, 2});
     }
 
     @Test
     public void testConcatenate_wEmptyArrays() {
-        assertThat(Utils.concatenate(new byte[] {}, new byte[] {})).isEqualTo(new byte[] {});
+        assertThat(Utils.concatenate(new byte[]{}, new byte[]{})).isEqualTo(new byte[]{});
     }
 }

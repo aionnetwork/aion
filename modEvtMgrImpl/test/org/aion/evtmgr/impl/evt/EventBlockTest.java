@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,20 +19,20 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 
 package org.aion.evtmgr.impl.evt;
 
-import org.aion.evtmgr.IEvent;
-import org.junit.Test;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
+
+import org.aion.evtmgr.IEvent;
+import org.junit.Test;
 
 public class EventBlockTest {
 
     @Test
-    public void testONBLOCK0(){
+    public void testONBLOCK0() {
         EventBlock eventBlock = new EventBlock(EventBlock.CALLBACK.ONBLOCK0);
 
         assertEquals(IEvent.TYPE.BLOCK0.getValue(), eventBlock.getEventType());
@@ -40,7 +40,7 @@ public class EventBlockTest {
     }
 
     @Test
-    public void testONTRACE0(){
+    public void testONTRACE0() {
         EventBlock eventBlock = new EventBlock(EventBlock.CALLBACK.ONTRACE0);
 
         assertEquals(IEvent.TYPE.BLOCK0.getValue(), eventBlock.getEventType());
@@ -48,7 +48,7 @@ public class EventBlockTest {
     }
 
     @Test
-    public void testONBEST0(){
+    public void testONBEST0() {
         EventBlock eventBlock = new EventBlock(EventBlock.CALLBACK.ONBEST0);
 
         assertEquals(IEvent.TYPE.BLOCK0.getValue(), eventBlock.getEventType());
@@ -56,7 +56,7 @@ public class EventBlockTest {
     }
 
     @Test
-    public void testGETCALLBACK(){
+    public void testGETCALLBACK() {
         assertEquals(EventBlock.CALLBACK.ONBLOCK0, EventBlock.CALLBACK.GETCALLBACK(0));
         assertEquals(EventBlock.CALLBACK.ONTRACE0, EventBlock.CALLBACK.GETCALLBACK(1));
         assertEquals(EventBlock.CALLBACK.ONBEST0, EventBlock.CALLBACK.GETCALLBACK(2));

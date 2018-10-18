@@ -29,6 +29,42 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 
 public class MsgTest {
+
+    MockMsg mockMsg;
+
+    @Test
+    public void testConstruct() {
+        mockMsg = new MockMsg((short) 0, (byte) 0, (byte) 0);
+        Header hdr = mockMsg.getHeader();
+        assertNotNull(hdr);
+        assertEquals(hdr.getVer(), (short) 0);
+        assertEquals(hdr.getCtrl(), (byte) 0);
+        assertEquals(hdr.getAction(), (byte) 0);
+        assertEquals(hdr.getLen(), (byte) 0);
+    }
+
+    @Test
+    public void testConstruct_corner() {
+        mockMsg = new MockMsg(Short.MIN_VALUE, (byte) 0, (byte) 0);
+        Header hdr = mockMsg.getHeader();
+        assertNotNull(hdr);
+        assertEquals(hdr.getVer(), Short.MIN_VALUE);
+        assertEquals(hdr.getCtrl(), (byte) 0);
+        assertEquals(hdr.getAction(), (byte) 0);
+        assertEquals(hdr.getLen(), (byte) 0);
+    }
+
+    @Test
+    public void testConstruct_corner2() {
+        mockMsg = new MockMsg(Short.MAX_VALUE, (byte) 255, (byte) 255);
+        Header hdr = mockMsg.getHeader();
+        assertNotNull(hdr);
+        assertEquals(hdr.getVer(), Short.MAX_VALUE);
+        assertEquals(hdr.getCtrl(), (byte) 255);
+        assertEquals(hdr.getAction(), (byte) 255);
+        assertEquals(hdr.getLen(), (byte) 0);
+    }
+
     class MockMsg extends Msg {
 
         /**
@@ -46,40 +82,5 @@ public class MsgTest {
         public byte[] encode() {
             return new byte[0];
         }
-    }
-
-    MockMsg mockMsg;
-
-    @Test
-    public void testConstruct() {
-        mockMsg = new MockMsg((short)0, (byte)0, (byte)0);
-        Header hdr = mockMsg.getHeader();
-        assertNotNull(hdr);
-        assertEquals(hdr.getVer(), (short)0);
-        assertEquals(hdr.getCtrl(), (byte)0);
-        assertEquals(hdr.getAction(), (byte)0);
-        assertEquals(hdr.getLen(), (byte)0);
-    }
-
-    @Test
-    public void testConstruct_corner() {
-        mockMsg = new MockMsg(Short.MIN_VALUE, (byte)0, (byte)0);
-        Header hdr = mockMsg.getHeader();
-        assertNotNull(hdr);
-        assertEquals(hdr.getVer(), Short.MIN_VALUE);
-        assertEquals(hdr.getCtrl(), (byte)0);
-        assertEquals(hdr.getAction(), (byte)0);
-        assertEquals(hdr.getLen(), (byte)0);
-    }
-
-    @Test
-    public void testConstruct_corner2() {
-        mockMsg = new MockMsg(Short.MAX_VALUE, (byte)255, (byte)255);
-        Header hdr = mockMsg.getHeader();
-        assertNotNull(hdr);
-        assertEquals(hdr.getVer(), Short.MAX_VALUE);
-        assertEquals(hdr.getCtrl(), (byte)255);
-        assertEquals(hdr.getAction(), (byte)255);
-        assertEquals(hdr.getLen(), (byte)0);
     }
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,11 +17,9 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
@@ -29,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
@@ -55,18 +52,6 @@ public class AbstractBlockSummary<BLK extends IBlock<?, ?>, TX extends ITransact
 
     private Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.toString());
 
-    public BLK getBlock() {
-        return block;
-    }
-
-    public List<TXR> getReceipts() {
-        return receipts;
-    }
-
-    public List<TXES> getSummaries() {
-        return summaries;
-    }
-
     protected static byte[] encodeRewards(Map<Address, BigInteger> rewards) {
         return encodeMap(rewards, new Functional.Function<Address, byte[]>() {
             @Override
@@ -90,32 +75,14 @@ public class AbstractBlockSummary<BLK extends IBlock<?, ?>, TX extends ITransact
         }, new Functional.Function<byte[], BigInteger>() {
             @Override
             public BigInteger apply(byte[] bytes) {
-                return (bytes == null || bytes.length == 0) ? BigInteger.ZERO : new BigInteger(1, bytes);
+                return (bytes == null || bytes.length == 0) ? BigInteger.ZERO
+                    : new BigInteger(1, bytes);
             }
         });
     }
 
-    /**
-     * All the mining rewards paid out for this block, including the main block
-     * rewards, uncle rewards, and transaction fees.
-     */
-    public Map<Address, BigInteger> getRewards() {
-        return rewards;
-    }
-
-    public void setTotalDifficulty(BigInteger totalDifficulty) {
-        this.totalDifficulty = totalDifficulty;
-
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("The current total difficulty is: {}", totalDifficulty.toString());
-        }
-    }
-
-    public BigInteger getTotalDifficulty() {
-        return totalDifficulty;
-    }
-
-    protected static <T> byte[] encodeList(List<T> entries, Functional.Function<T, byte[]> encoder) {
+    protected static <T> byte[] encodeList(List<T> entries,
+        Functional.Function<T, byte[]> encoder) {
         byte[][] result = new byte[entries.size()][];
         for (int i = 0; i < entries.size(); i++) {
             result[i] = encoder.apply(entries.get(i));
@@ -132,8 +99,9 @@ public class AbstractBlockSummary<BLK extends IBlock<?, ?>, TX extends ITransact
         return result;
     }
 
-    protected static <K, V> byte[] encodeMap(Map<K, V> map, Functional.Function<K, byte[]> keyEncoder,
-            Functional.Function<V, byte[]> valueEncoder) {
+    protected static <K, V> byte[] encodeMap(Map<K, V> map,
+        Functional.Function<K, byte[]> keyEncoder,
+        Functional.Function<V, byte[]> valueEncoder) {
         byte[][] result = new byte[map.size()][];
         int i = 0;
         for (Map.Entry<K, V> entry : map.entrySet()) {
@@ -144,8 +112,9 @@ public class AbstractBlockSummary<BLK extends IBlock<?, ?>, TX extends ITransact
         return RLP.encodeList(result);
     }
 
-    protected static <K, V> Map<K, V> decodeMap(RLPList list, Functional.Function<byte[], K> keyDecoder,
-            Functional.Function<byte[], V> valueDecoder) {
+    protected static <K, V> Map<K, V> decodeMap(RLPList list,
+        Functional.Function<byte[], K> keyDecoder,
+        Functional.Function<byte[], V> valueDecoder) {
         Map<K, V> result = new HashMap<>();
         for (RLPElement entry : list) {
             K key = keyDecoder.apply(((RLPList) entry).get(0).getRLPData());
@@ -153,5 +122,37 @@ public class AbstractBlockSummary<BLK extends IBlock<?, ?>, TX extends ITransact
             result.put(key, value);
         }
         return result;
+    }
+
+    public BLK getBlock() {
+        return block;
+    }
+
+    public List<TXR> getReceipts() {
+        return receipts;
+    }
+
+    public List<TXES> getSummaries() {
+        return summaries;
+    }
+
+    /**
+     * All the mining rewards paid out for this block, including the main block rewards, uncle
+     * rewards, and transaction fees.
+     */
+    public Map<Address, BigInteger> getRewards() {
+        return rewards;
+    }
+
+    public BigInteger getTotalDifficulty() {
+        return totalDifficulty;
+    }
+
+    public void setTotalDifficulty(BigInteger totalDifficulty) {
+        this.totalDifficulty = totalDifficulty;
+
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("The current total difficulty is: {}", totalDifficulty.toString());
+        }
     }
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,13 +31,12 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.base.db;
-
-import org.aion.base.type.Address;
 
 import java.util.Map;
 import java.util.Set;
+import org.aion.base.type.Address;
 
 /**
  * Database-like functionality.
@@ -61,12 +60,11 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
     /**
      * Performs batch updates on the data.
      *
-     * @param accountStates
-     *         cached account states
-     * @param contractDetails
-     *         cached contract details
+     * @param accountStates cached account states
+     * @param contractDetails cached contract details
      */
-    void updateBatch(Map<Address, AS> accountStates, Map<Address, IContractDetails<DW>> contractDetails);
+    void updateBatch(Map<Address, AS> accountStates,
+        Map<Address, IContractDetails<DW>> contractDetails);
 
     /**
      * Reverts all the changes performed by this repository.
@@ -76,8 +74,7 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
     /**
      * Checks if the current repository has an open connection to the database.
      *
-     * @return {@code true} if the database connection is open, {@code false}
-     *         otherwise
+     * @return {@code true} if the database connection is open, {@code false} otherwise
      */
     boolean isClosed();
 
@@ -97,8 +94,7 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
     /**
      * Used to check for corruption in the state database.
      *
-     * @param root
-     *         a world state trie root
+     * @param root a world state trie root
      * @return {@code true} if the root is valid, {@code false} otherwise
      */
     boolean isValidRoot(byte[] root);
@@ -106,8 +102,7 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
     /**
      * Used to check for corruption in the index database.
      *
-     * @param hash
-     *         a block hash
+     * @param hash a block hash
      * @return {@code true} if the block hash has a corresponding index, {@code false} otherwise
      */
     boolean isIndexed(byte[] hash, long level);
@@ -117,21 +112,18 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
     /**
      * Return to one of the previous snapshots by moving the root.
      *
-     * @param root
-     *         - new root
+     * @param root - new root
      */
     void syncToRoot(byte[] root);
 
     /**
      * TODO: differentiate between the sync to root and snapshot functionality
-     *
-     * @param root
-     * @return
      */
     IRepository getSnapshotTo(byte[] root);
 
     /**
-     * @return {@code true} if the repository is a snapshot (with limited functionality), {@code false} otherwise
+     * @return {@code true} if the repository is a snapshot (with limited functionality), {@code
+     * false} otherwise
      */
     boolean isSnapshot();
 

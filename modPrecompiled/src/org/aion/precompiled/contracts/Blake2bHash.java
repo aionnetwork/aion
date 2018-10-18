@@ -22,7 +22,10 @@
  */
 package org.aion.precompiled.contracts;
 
-import org.aion.base.db.*;
+import static org.aion.crypto.HashUtil.blake128;
+import static org.aion.crypto.HashUtil.blake256;
+
+import org.aion.base.db.IRepositoryCache;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -30,9 +33,8 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 
-import static org.aion.crypto.HashUtil.*;
+public class Blake2bHash extends StatefulPrecompiledContract {
 
-public class Blake2bHash extends StatefulPrecompiledContract{
     private final static long COST = 100L;
     private static final String INPUT_LENGTH_ERROR_MESSAGE = "input too short";
     private static final String OPERATION_ERROR_MESSAGE = "invalid operation";
@@ -41,39 +43,48 @@ public class Blake2bHash extends StatefulPrecompiledContract{
         super(track);
     }
 
+    public static byte[] setupInput(int operation, byte[] inputByteArray) {
+        byte[] ret = new byte[1 + inputByteArray.length];
+        ret[0] = (byte) operation;
+        System.arraycopy(inputByteArray, 0, ret, 1, inputByteArray.length);
+        return ret;
+    }
+
     /**
      * Returns the hash of given input
      *
-     * input is defined as:
-     *      [1b operator] 0 for blake256, 1 for blake128
-     *      [nb input byte array]
+     * input is defined as: [1b operator] 0 for blake256, 1 for blake128 [nb input byte array]
      *
      * the returned hash is in ExecutionResult.getOutput
      */
-    public ExecutionResult execute(byte[] input, long nrg){
+    public ExecutionResult execute(byte[] input, long nrg) {
         long additionalNRG = Math.round(Math.sqrt(input.length));
         // check input nrg
-        if (nrg < COST + additionalNRG)
+        if (nrg < COST + additionalNRG) {
             return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+        }
 
         // check length
-        if (input.length < 2)
-            return  new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
+        if (input.length < 2) {
+            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST,
+                INPUT_LENGTH_ERROR_MESSAGE.getBytes());
+        }
 
         // check operation number
         int operation = input[0];
 
-        switch (operation){
+        switch (operation) {
             case 0:
                 return blake256Hash(input, nrg + additionalNRG);
             case 1:
                 return blake128Hash(input, nrg + additionalNRG);
             default:
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST, OPERATION_ERROR_MESSAGE.getBytes());
+                return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - COST,
+                    OPERATION_ERROR_MESSAGE.getBytes());
         }
     }
 
-    private ExecutionResult blake256Hash(byte[] input, long nrg){
+    private ExecutionResult blake256Hash(byte[] input, long nrg) {
         byte[] byteArray = new byte[input.length - 1];
         System.arraycopy(input, 1, byteArray, 0, input.length - 1);
         byte[] hash = blake256(byteArray);
@@ -81,18 +92,11 @@ public class Blake2bHash extends StatefulPrecompiledContract{
 
     }
 
-    private ExecutionResult blake128Hash(byte[] input, long nrg){
+    private ExecutionResult blake128Hash(byte[] input, long nrg) {
         byte[] byteArray = new byte[input.length - 1];
         System.arraycopy(input, 1, byteArray, 0, input.length - 1);
         byte[] hash = blake128(byteArray);
         return new ExecutionResult(ResultCode.SUCCESS, nrg - COST, hash);
-    }
-
-    public static byte[] setupInput(int operation, byte[] inputByteArray){
-        byte[] ret = new byte[1 + inputByteArray.length];
-        ret[0] = (byte) operation;
-        System.arraycopy(inputByteArray, 0, ret, 1, inputByteArray.length);
-        return ret;
     }
 
 }

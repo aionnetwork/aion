@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,22 +19,18 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 package org.aion.crypto.ed25519;
 
+import java.math.BigInteger;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.NativeLoader;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
-import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.libsodium.jni.NaCl;
 import org.libsodium.jni.Sodium;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 
 /**
  * ED25519 key implementation based on libsodium.
@@ -43,17 +39,14 @@ import java.nio.ByteBuffer;
  */
 public class ECKeyEd25519 implements ECKey {
 
+    /**
+     * Indicates the first type of accounts that we have a normal account, this is shared by both
+     * regular and contract accounts
+     */
+    private static final byte DEFAULT_ACCOUNT_ID = ByteUtil.hexStringToBytes("0xA0")[0];
     protected static int PUBKEY_BYTES;
     protected static int SECKEY_BYTES;
     protected static int SIG_BYTES;
-
-    /**
-     * Indicates the first type of accounts that we have a normal
-     * account, this is shared by both regular and contract accounts
-     */
-    private static final byte DEFAULT_ACCOUNT_ID = ByteUtil.hexStringToBytes("0xA0")[0];
-
-    private final byte[] address;
 
     static {
         NativeLoader.loadLibrary("sodium");
@@ -63,6 +56,7 @@ public class ECKeyEd25519 implements ECKey {
         SIG_BYTES = Sodium.crypto_sign_ed25519_bytes();
     }
 
+    private final byte[] address;
     private byte[] pk;
     private byte[] sk;
 
@@ -77,6 +71,17 @@ public class ECKeyEd25519 implements ECKey {
         sk = new byte[SECKEY_BYTES];
         Sodium.crypto_sign_ed25519_keypair(pk, sk);
         this.address = computeAddress(pk);
+    }
+
+    /**
+     * Verifies if a signature is valid or not.
+     */
+    public static boolean verify(byte[] msg, byte[] sig, byte[] pk) {
+        if (msg == null || sig == null || pk == null) {
+            return false;
+        }
+
+        return 0 == Sodium.crypto_sign_ed25519_verify_detached(sig, msg, msg.length, pk);
     }
 
     public ECKey fromPrivate(BigInteger privKey) {
@@ -96,9 +101,8 @@ public class ECKeyEd25519 implements ECKey {
 
     /**
      * <p>Modified address for Q2 testNet, this variant will have
-     * one byte reserved for further address space modifications,
-     * while the remaining 31-bytes contain a hash[1:] of the PK where
-     * [1:] denotes all but the first byte</p>
+     * one byte reserved for further address space modifications, while the remaining 31-bytes
+     * contain a hash[1:] of the PK where [1:] denotes all but the first byte</p>
      */
     public byte[] computeAddress(byte[] pubBytes) {
         return AddressSpecs.computeA0Address(pubBytes);
@@ -114,9 +118,6 @@ public class ECKeyEd25519 implements ECKey {
 
     /**
      * Signs a message with this key.
-     *
-     * @param msg
-     * @return
      */
     public ISignature sign(byte[] msg) {
         byte[] sig = new byte[SIG_BYTES];
@@ -128,22 +129,6 @@ public class ECKeyEd25519 implements ECKey {
         }
 
         return new Ed25519Signature(pk, sig);
-    }
-
-    /**
-     * Verifies if a signature is valid or not.
-     *
-     * @param msg
-     * @param sig
-     * @param pk
-     * @return
-     */
-    public static boolean verify(byte[] msg, byte[] sig, byte[] pk) {
-        if (msg == null || sig == null || pk == null) {
-            return false;
-        }
-
-        return 0 == Sodium.crypto_sign_ed25519_verify_detached(sig, msg, msg.length, pk);
     }
 
     public byte[] getPrivKeyBytes() {

@@ -56,7 +56,9 @@ import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
-/** @author chris */
+/**
+ * @author chris
+ */
 public final class SyncMgr {
 
     // interval - show status
@@ -159,11 +161,11 @@ public final class SyncMgr {
     }
 
     public void init(
-            final AionBlockchainImpl _chain,
-            final IP2pMgr _p2pMgr,
-            final IEventMgr _evtMgr,
-            final int _blocksQueueMax,
-            final boolean _showStatus) {
+        final AionBlockchainImpl _chain,
+        final IP2pMgr _p2pMgr,
+        final IEventMgr _evtMgr,
+        final int _blocksQueueMax,
+        final boolean _showStatus) {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
@@ -176,46 +178,46 @@ public final class SyncMgr {
         SyncStats stats = new SyncStats(selfBest);
 
         syncGb =
-                new Thread(
-                        new TaskGetBodies(
-                                p2pMgr,
-                                start,
-                                downloadedHeaders,
-                                headersWithBodiesRequested,
-                                peerStates,
-                                log),
-                        "sync-gb");
+            new Thread(
+                new TaskGetBodies(
+                    p2pMgr,
+                    start,
+                    downloadedHeaders,
+                    headersWithBodiesRequested,
+                    peerStates,
+                    log),
+                "sync-gb");
         syncGb.start();
         syncIb =
-                new Thread(
-                        new TaskImportBlocks(
-                                chain,
-                                start,
-                                stats,
-                                downloadedBlocks,
-                                importedBlockHashes,
-                                peerStates,
-                                log),
-                        "sync-ib");
+            new Thread(
+                new TaskImportBlocks(
+                    chain,
+                    start,
+                    stats,
+                    downloadedBlocks,
+                    importedBlockHashes,
+                    peerStates,
+                    log),
+                "sync-ib");
         syncIb.start();
         syncGs = new Thread(new TaskGetStatus(start, p2pMgr, log), "sync-gs");
         syncGs.start();
 
         if (_showStatus) {
             syncSs =
-                    new Thread(
-                            new TaskShowStatus(
-                                    start,
-                                    INTERVAL_SHOW_STATUS,
-                                    chain,
-                                    networkStatus,
-                                    stats,
-                                    false,
-                                    "", // TODO: fully remove
-                                    this.p2pMgr,
-                                    this.peerStates,
-                                    AionLoggerFactory.getLogger(LogEnum.P2P.name())),
-                            "sync-ss");
+                new Thread(
+                    new TaskShowStatus(
+                        start,
+                        INTERVAL_SHOW_STATUS,
+                        chain,
+                        networkStatus,
+                        stats,
+                        false,
+                        "", // TODO: fully remove
+                        this.p2pMgr,
+                        this.peerStates,
+                        AionLoggerFactory.getLogger(LogEnum.P2P.name())),
+                    "sync-ss");
             syncSs.start();
         }
 
@@ -386,6 +388,7 @@ public final class SyncMgr {
     }
 
     private static final class AionSyncMgrHolder {
+
         static final SyncMgr INSTANCE = new SyncMgr();
     }
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,20 +17,18 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.serial;
 
 /**
- * Not currently used yet, will use in future to determine type during
- * deserialization
+ * Not currently used yet, will use in future to determine type during deserialization
  *
  * @author yao
  */
 public class SerialHeaderValue {
+
     public static final int BLOCK = 0x0;
     public static final int BLOCKDATA = 0x1;
     public static final int BLOCKHEADER = 0x2;
@@ -40,7 +38,8 @@ public class SerialHeaderValue {
     public static final int PART = 0x6;
     public static final int PARTSETHEADER = 0x7;
 
-    public static String[] serialHeaderString = { "block", "blockData", "blockHeader", "commit", "proposal" };
+    public static String[] serialHeaderString = {"block", "blockData", "blockHeader", "commit",
+        "proposal"};
 
     public String getHeaderType(int a) {
         return serialHeaderString[a];
