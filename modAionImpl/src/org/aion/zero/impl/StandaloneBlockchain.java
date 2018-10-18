@@ -31,7 +31,6 @@ import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
