@@ -594,6 +594,49 @@ public abstract class ApiAion extends Api {
         return tx.getHash();
     }
 
+    protected AionTransaction signTransaction(ArgTxCall _params, String _address) {
+        Address address = null;
+        if (_address == null || _address.isEmpty()) {
+            LOG.error("<sign-transaction msg=invalid-signing-address>");
+            return null;
+        } else {
+            address = Address.wrap(_address);
+        }
+
+        ECKey key = getAccountKey(address.toString());
+        if (key == null) {
+            LOG.error("<sign-transaction msg=account-not-unlocked>");
+            return null;
+        }
+
+        try {
+            synchronized (pendingState) {
+                byte[] nonce =
+                    (!_params.getNonce().equals(BigInteger.ZERO))
+                        ? _params.getNonce().toByteArray()
+                        : pendingState
+                            .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                            .toByteArray();
+
+                AionTransaction tx =
+                    new AionTransaction(
+                        nonce,
+                        _params.getTo(),
+                        _params.getValue().toByteArray(),
+                        _params.getData(),
+                        _params.getNrg(),
+                        _params.getNrgPrice());
+                tx.sign(key);
+
+                return tx;
+            }
+        } catch (Exception ex) {
+            if(LOG.isDebugEnabled())
+                LOG.debug("Failed to sign the transaction");
+            return null;
+        }
+    }
+
     // --Commented out by Inspection START (02/02/18 6:58 PM):
     // public String getNodeId() {
     // return CfgAion.inst().getId();

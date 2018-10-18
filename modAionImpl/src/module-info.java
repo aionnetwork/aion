@@ -23,6 +23,7 @@ module aion.zero.impl {
     requires info.picocli;
     requires commons.lang3;
     requires commons.collections4;
+    requires libJson;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;

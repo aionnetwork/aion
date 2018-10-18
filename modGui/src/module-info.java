@@ -20,6 +20,10 @@ module aion.gui {
     requires com.google.common;
 
     requires BIP39;
+    requires richtextfx;
+    requires flowless;
+    requires libnsc;
+    requires core;
 
     exports org.aion;
     exports org.aion.gui.controller;

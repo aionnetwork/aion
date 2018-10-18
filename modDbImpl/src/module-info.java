@@ -5,6 +5,7 @@ module aion.db.impl {
     requires leveldbjni.all;
     requires rocksdbjni;
     requires h2.mvstore;
+    requires com.google.common;
 
 	exports org.aion.db.impl;
 	exports org.aion.db.impl.leveldb;

@@ -13,6 +13,11 @@ module aion.apiserver {
     requires com.google.common;
     requires libJson;
     requires commons.collections4;
+    requires nanohttpd;
+    requires undertow.core;
+    requires protobuf.java;
+    requires commons.lang3;
+    requires libnzmq;
 
     exports org.aion.api.server.pb;
     exports org.aion.api.server.zmq;
