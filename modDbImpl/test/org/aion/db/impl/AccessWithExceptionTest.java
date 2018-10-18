@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,18 +31,10 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.db.impl;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.db.impl.DatabaseFactory.Props.DB_NAME;
-
 import com.google.common.truth.Truth;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -53,6 +45,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.*;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.db.impl.DatabaseFactory.Props.DB_NAME;
 
 @RunWith(JUnitParamsRunner.class)
 public class AccessWithExceptionTest {
@@ -73,19 +70,20 @@ public class AccessWithExceptionTest {
         Truth.assertThat(DatabaseTestUtils.testDir.mkdirs()).isTrue();
     }
 
-    /**
-     * @return parameters for testing {@link #}
-     */
-    @SuppressWarnings("unused")
-    private static Object databaseInstanceDefinitions() {
-        return DatabaseTestUtils.databaseInstanceDefinitions();
-    }
-
     @Before
     public void deleteFromDisk() {
         // clean out the tmp directory
         assertThat(FileUtils.deleteRecursively(DatabaseTestUtils.testDir)).isTrue();
         Truth.assertThat(DatabaseTestUtils.testDir.mkdirs()).isTrue();
+    }
+
+    /**
+     * @return parameters for testing
+     *         {@link #}
+     */
+    @SuppressWarnings("unused")
+    private static Object databaseInstanceDefinitions() {
+        return DatabaseTestUtils.databaseInstanceDefinitions();
     }
 
     @Test(expected = RuntimeException.class)

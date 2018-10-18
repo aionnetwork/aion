@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,13 +19,13 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.api.server.zmq;
 
 import static org.aion.api.server.pb.ApiAion0.heartBeatMsg;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +34,9 @@ import org.zeromq.ZMQ.PollItem;
 import org.zeromq.ZMQ.Poller;
 import org.zeromq.ZMQ.Socket;
 
-public class Proxy {
+import java.util.concurrent.atomic.AtomicBoolean;
 
+public class Proxy {
     protected static final Logger LOG = LoggerFactory.getLogger(LogEnum.API.toString());
     private static AtomicBoolean shutDown = new AtomicBoolean(false);
 

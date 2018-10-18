@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,8 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.api.server.types;
 
@@ -28,23 +29,23 @@ import org.aion.mcf.evt.IListenerBase;
 
 public class TxPendingStatus {
 
-    private final static int txRetCodeOffset = 102;
     ByteArrayWrapper txhash;
     ByteArrayWrapper socketId;
     ByteArrayWrapper msgHash;
     ByteArrayWrapper txResult;
     String error;
+    private final static int txRetCodeOffset = 102;
 
     /*  */
     /**
      * @see IListenerBase DROPPED(0) NEW_PENDING(1) PENDING(2) INCLUDED(3)
+     * 
      */
 
     int state;
 
-    public TxPendingStatus(ByteArrayWrapper txHash, ByteArrayWrapper id, ByteArrayWrapper msgHash,
-        int v,
-        ByteArrayWrapper txRes, String error) {
+    public TxPendingStatus(ByteArrayWrapper txHash, ByteArrayWrapper id, ByteArrayWrapper msgHash, int v,
+            ByteArrayWrapper txRes, String error) {
         // TODO Auto-generated constructor stub
         this.txhash = txHash;
         this.socketId = id;
@@ -74,9 +75,7 @@ public class TxPendingStatus {
         return this.txResult.getData();
     }
 
-    public String getError() {
-        return this.error;
-    }
+    public String getError() { return this.error; }
 
     public int toTxReturnCode() {
         return this.state + txRetCodeOffset;

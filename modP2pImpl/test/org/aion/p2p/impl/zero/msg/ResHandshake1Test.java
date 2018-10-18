@@ -42,13 +42,11 @@ import org.aion.p2p.impl.comm.Act;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class ResHandshake1Test {
 
     @Before
-    public void setup() {
+    public void setup () {
         Map<String, String> logMap = new HashMap<>();
         logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
         AionLoggerFactory.init(logMap);
@@ -63,7 +61,7 @@ public class ResHandshake1Test {
         String randomBinaryVersion = new String(randomBytes, "UTF-8");
 
         ResHandshake1 rh1 =
-            new ResHandshake1(ThreadLocalRandom.current().nextBoolean(), randomBinaryVersion);
+                new ResHandshake1(ThreadLocalRandom.current().nextBoolean(), randomBinaryVersion);
 
         // test route
         assertEquals(Ver.V0, rh1.getHeader().getVer());
@@ -109,9 +107,9 @@ public class ResHandshake1Test {
 
         byte[] ec = rs1.encode();
         assertNotNull(ec);
-        assertEquals(7, ec.length);
-        assertEquals(0x01, ec[0]);
-        assertEquals(bv.length(), (int) ec[1]);
+        assertEquals( 7, ec.length);
+        assertEquals( 0x01, ec[0]);
+        assertEquals( bv.length(), (int)ec[1]);
         byte[] cmp = Arrays.copyOfRange(ec, 2, ec.length);
 
         assertArrayEquals(bv.getBytes(), cmp);
@@ -122,7 +120,7 @@ public class ResHandshake1Test {
         StringBuilder bv = new StringBuilder();
         String truncatedBv;
 
-        for (int i = 0; i < Byte.MAX_VALUE; i++) {
+        for (int i=0; i< Byte.MAX_VALUE; i++) {
             bv.append("1");
         }
         truncatedBv = bv.toString();

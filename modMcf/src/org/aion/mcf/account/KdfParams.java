@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,10 +19,12 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 package org.aion.mcf.account;
 
 import java.io.UnsupportedEncodingException;
+
 import org.aion.base.util.ByteUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
@@ -38,6 +40,16 @@ public class KdfParams {
 
     // rlp
 
+    public byte[] toRlp() {
+        byte[] bytesC = RLP.encodeInt(this.c);
+        byte[] bytesDklen = RLP.encodeInt(this.dklen);
+        byte[] bytesN = RLP.encodeInt(this.n);
+        byte[] bytesP = RLP.encodeInt(this.p);
+        byte[] bytesR = RLP.encodeInt(this.r);
+        byte[] bytesSalt = RLP.encodeString(this.salt);
+        return RLP.encodeList(bytesC, bytesDklen, bytesN, bytesP, bytesR, bytesSalt);
+    }
+
     public static KdfParams parse(byte[] bytes) throws UnsupportedEncodingException {
         RLPList list = (RLPList) RLP.decode2(bytes).get(0);
         KdfParams kdfParams = new KdfParams();
@@ -50,66 +62,56 @@ public class KdfParams {
         return kdfParams;
     }
 
-    public byte[] toRlp() {
-        byte[] bytesC = RLP.encodeInt(this.c);
-        byte[] bytesDklen = RLP.encodeInt(this.dklen);
-        byte[] bytesN = RLP.encodeInt(this.n);
-        byte[] bytesP = RLP.encodeInt(this.p);
-        byte[] bytesR = RLP.encodeInt(this.r);
-        byte[] bytesSalt = RLP.encodeString(this.salt);
-        return RLP.encodeList(bytesC, bytesDklen, bytesN, bytesP, bytesR, bytesSalt);
-    }
-
     // setters
-
-    public int getC() {
-        return c;
-    }
 
     public void setC(int c) {
         this.c = c;
-    }
-
-    public int getDklen() {
-        return dklen;
     }
 
     public void setDklen(int dklen) {
         this.dklen = dklen;
     }
 
-    public int getN() {
-        return n;
-    }
-
     public void setN(int n) {
         this.n = n;
-    }
-
-    // getters
-
-    public int getP() {
-        return p;
     }
 
     public void setP(int p) {
         this.p = p;
     }
 
-    public int getR() {
-        return r;
-    }
-
     public void setR(int r) {
         this.r = r;
     }
 
-    public String getSalt() {
-        return salt;
-    }
-
     public void setSalt(String salt) {
         this.salt = salt;
+    }
+
+    // getters
+
+    public int getC() {
+        return c;
+    }
+
+    public int getDklen() {
+        return dklen;
+    }
+
+    public int getN() {
+        return n;
+    }
+
+    public int getP() {
+        return p;
+    }
+
+    public int getR() {
+        return r;
+    }
+
+    public String getSalt() {
+        return salt;
     }
 
 }

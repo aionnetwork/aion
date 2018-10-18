@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
@@ -40,21 +40,24 @@
 package org.aion.base.timer;
 
 /**
+ *
  * @author jin
  */
 public class TimerTask {
 
+    public TimerTask(long timeOut) {
+        this.timeOut = timeOut;
+    }
+
     public Object lock = new Object();
+
     private long timeOut;
     private long startTime;
     private long timeoutAt;
     private long endTime;
+
     private boolean isTimeOut;
     private boolean isDone;
-
-    public TimerTask(long timeOut) {
-        this.timeOut = timeOut;
-    }
 
     public long getEndTime() {
         return this.endTime;

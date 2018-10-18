@@ -32,9 +32,7 @@ import java.util.List;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 
-/**
- * @author Alexandra Roatis
- */
+/** @author Alexandra Roatis */
 public class TestResources {
 
     private static final String userDir = System.getProperty("user.dir");
@@ -44,13 +42,11 @@ public class TestResources {
     private static final String testResourceDir = "test_resources";
 
     public static final File TEST_RESOURCE_DIR =
-        userDir.contains(moduleDir)
-            ? new File(userDir, testResourceDir)
-            : new File(userDir, moduleDir + File.separator + testResourceDir);
+            userDir.contains(moduleDir)
+                    ? new File(userDir, testResourceDir)
+                    : new File(userDir, moduleDir + File.separator + testResourceDir);
 
-    /**
-     * Extracts raw block data from a test resource file.
-     */
+    /** Extracts raw block data from a test resource file. */
     public static List<byte[]> rawBlockData(String rawDataFile) {
         List<byte[]> parameters = new ArrayList<>();
 
@@ -82,9 +78,7 @@ public class TestResources {
         return parameters;
     }
 
-    /**
-     * Extracts raw block data from a test resource file.
-     */
+    /** Extracts raw block data from a test resource file. */
     public static List<byte[]> rawBlockData(int limit, String rawDataFile) {
         List<byte[]> parameters = new ArrayList<>();
 
@@ -126,9 +120,7 @@ public class TestResources {
         return rawData;
     }
 
-    /**
-     * @return a set of block headers to be used for testing.
-     */
+    /** @return a set of block headers to be used for testing. */
     public static List<A0BlockHeader> blockHeaders() {
         List<A0BlockHeader> parameters = new ArrayList<>();
 
@@ -139,9 +131,7 @@ public class TestResources {
         return parameters;
     }
 
-    /**
-     * @return a set of blocks to be used for testing.
-     */
+    /** @return a set of blocks to be used for testing. */
     public static List<AionBlock> blocks() {
         List<AionBlock> parameters = new ArrayList<>();
 
@@ -152,9 +142,7 @@ public class TestResources {
         return parameters;
     }
 
-    /**
-     * @return a set of blocks to be used for testing.
-     */
+    /** @return a set of blocks to be used for testing. */
     public static List<AionBlock> blocks(int limit) {
         List<AionBlock> parameters = new ArrayList<>();
 
@@ -167,7 +155,7 @@ public class TestResources {
 
     /**
      * @return a set of consecutive blocks (in ascending order of the block number) to be used for
-     * testing.
+     *     testing.
      */
     public static List<AionBlock> consecutiveBlocks(int limit) {
         List<AionBlock> parameters = new ArrayList<>();

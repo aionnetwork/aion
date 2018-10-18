@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,15 +19,16 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.api.server.types;
 
 import static org.aion.api.server.types.Fltr.Type;
 
 public abstract class Evt {
-
+    
     public abstract Type getType();
-
+    
     public abstract Object toJSON();
 }

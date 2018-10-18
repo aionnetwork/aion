@@ -32,8 +32,8 @@ import org.aion.vm.ExecutionResult;
 
 /**
  * The PrivateTRScontract is a private version of the TRS contract that is used solely by The Aion
- * Foundation, for the foundation to lock its funds away over a number of months, ensuring continued
- * commitment to the project.
+ * Foundation, for the foundation to lock its funds away over a number of months, ensuring
+ * continued commitment to the project.
  *
  * Unlike the public-facing TRS contract, the logic for this private TRS contract is bound inside a
  * single class. This is for 2 reasons: there are fewer supported operations for the private TRS
@@ -43,7 +43,6 @@ import org.aion.vm.ExecutionResult;
  * that the latter calls this contract to perform any supported operations it needs.
  */
 public final class PrivateTRScontract extends StatefulPrecompiledContract {
-
     private final Address caller;
 
     /**
@@ -61,6 +60,7 @@ public final class PrivateTRScontract extends StatefulPrecompiledContract {
     }
 
     /**
+     *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
      * @return the result of calling execute on the specified input.

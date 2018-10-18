@@ -1,35 +1,6 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.gui.controller;
 
 import com.google.common.eventbus.Subscribe;
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -54,19 +25,23 @@ import org.aion.wallet.events.AccountEvent;
 import org.aion.wallet.util.URLManager;
 import org.slf4j.Logger;
 
-public class HeaderPaneControls extends AbstractController {
+import javax.management.OperationsException;
+import java.awt.*;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ResourceBundle;
 
-    private static final Logger log = AionLoggerFactory.getLogger(LogEnum.GUI.name());
-    private static final String STYLE_DEFAULT = "header-button-default";
-    private static final String STYLE_PRESSED = "header-button-pressed";
-    private final BalanceRetriever balanceRetriever;
-    private final Map<Node, HeaderPaneButtonEvent> headerButtons;
+public class HeaderPaneControls extends AbstractController {
     @FXML
     private TextField accountBalance;
-    //    @FXML
+//    @FXML
 //    private TextField activeAccount;
-    @FXML
-    private Label activeAccount;
+@FXML
+private Label activeAccount;
     @FXML
     private Label activeAccountLabel;
     @FXML
@@ -81,7 +56,15 @@ public class HeaderPaneControls extends AbstractController {
     private VBox accountsButton;
     @FXML
     private VBox settingsButton;
+
     private String accountAddress;
+
+    private final BalanceRetriever balanceRetriever;
+    private final Map<Node, HeaderPaneButtonEvent> headerButtons;
+
+    private static final Logger log = AionLoggerFactory.getLogger(LogEnum.GUI.name());
+    private static final String STYLE_DEFAULT = "header-button-default";
+    private static final String STYLE_PRESSED = "header-button-pressed";
 
     public HeaderPaneControls(BalanceRetriever balanceRetriever) {
         this.balanceRetriever = balanceRetriever;
@@ -91,17 +74,12 @@ public class HeaderPaneControls extends AbstractController {
 
     @Override
     public void internalInit(URL location, ResourceBundle resources) {
-        headerButtons
-            .put(homeButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.DASHBOARD));
-        headerButtons
-            .put(accountsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.ACCOUNTS));
+        headerButtons.put(homeButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.DASHBOARD));
+        headerButtons.put(accountsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.ACCOUNTS));
         headerButtons.put(sendButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.SEND));
-        headerButtons
-            .put(receiveButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.RECEIVE));
-        headerButtons
-            .put(historyButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.HISTORY));
-        headerButtons
-            .put(settingsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.SETTINGS));
+        headerButtons.put(receiveButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.RECEIVE));
+        headerButtons.put(historyButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.HISTORY));
+        headerButtons.put(settingsButton, new HeaderPaneButtonEvent(HeaderPaneButtonEvent.Type.SETTINGS));
 
         clickButton(homeButton);
     }
@@ -142,8 +120,8 @@ public class HeaderPaneControls extends AbstractController {
         final double layoutX = button.getLayoutX();
         final double layoutY = button.getLayoutY();
         final MouseEvent clickOnButton = new MouseEvent(MouseEvent.MOUSE_CLICKED,
-            layoutX, layoutY, layoutX, layoutY, MouseButton.PRIMARY, 1,
-            false, false, false, false, true, false, false, true, false, false, null);
+                layoutX, layoutY, layoutX, layoutY, MouseButton.PRIMARY, 1,
+                false, false, false, false, true, false, false, true, false, false, null);
         Event.fireEvent(button, clickOnButton);
     }
 
@@ -154,19 +132,17 @@ public class HeaderPaneControls extends AbstractController {
     @Subscribe
     private void handleAccountEvent(final AccountEvent event) {
         final AccountDTO account = event.getPayload();
-        if (EnumSet.of(AccountEvent.Type.CHANGED, AccountEvent.Type.ADDED)
-            .contains(event.getType())) {
+        if (EnumSet.of(AccountEvent.Type.CHANGED, AccountEvent.Type.ADDED).contains(event.getType())) {
             if (account.isActive()) {
-                accountBalance.setText(
-                    account.getBalance() + BalanceUtils.CCY_SEPARATOR + account.getCurrency());
+                accountBalance.setText(account.getBalance() + BalanceUtils.CCY_SEPARATOR + account.getCurrency());
                 accountBalance.setVisible(true);
                 activeAccount.setText(account.getName());
                 accountAddress = account.getPublicAddress();
 //                UIUtils.setWidth(activeAccount);
                 UIUtils.setWidth(accountBalance);
             }
-        } else if (AccountEvent.Type.LOCKED.equals(event.getType())) {
-            if (account.getPublicAddress().equals(accountAddress)) {
+        } else if (AccountEvent.Type.LOCKED.equals(event.getType())){
+            if (account.getPublicAddress().equals(accountAddress)){
                 accountAddress = "";
                 accountBalance.setVisible(false);
                 activeAccount.setText("(none selected)");
@@ -180,22 +156,18 @@ public class HeaderPaneControls extends AbstractController {
             final String[] text = accountBalance.getText().split(BalanceUtils.CCY_SEPARATOR);
             final String currency = text[1];
 
-            Task<BigInteger> getBalanceTask = getApiTask(balanceRetriever::getBalance,
-                accountAddress);
+            Task<BigInteger> getBalanceTask = getApiTask(balanceRetriever::getBalance, accountAddress);
             runApiTask(
-                getBalanceTask,
-                evt -> Platform
-                    .runLater(() -> updateNewBalance(currency, getBalanceTask.getValue())),
-                getErrorEvent(throwable -> {
-                }, getBalanceTask),
-                getEmptyEvent()
+                    getBalanceTask,
+                    evt -> Platform.runLater(() -> updateNewBalance(currency, getBalanceTask.getValue())),
+                    getErrorEvent(throwable -> {}, getBalanceTask),
+                    getEmptyEvent()
             );
         }
     }
 
     private void updateNewBalance(final String currency, final BigInteger bigInteger) {
-        final String newBalance =
-            BalanceUtils.formatBalance(bigInteger) + BalanceUtils.CCY_SEPARATOR + currency;
+        final String newBalance = BalanceUtils.formatBalance(bigInteger) + BalanceUtils.CCY_SEPARATOR + currency;
         if (!newBalance.equalsIgnoreCase(accountBalance.getText())) {
             accountBalance.setText(newBalance);
             UIUtils.setWidth(accountBalance);

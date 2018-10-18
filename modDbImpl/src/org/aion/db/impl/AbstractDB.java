@@ -1,4 +1,4 @@
-/*
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,16 +31,13 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.db.impl;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
@@ -72,7 +69,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     }
 
     protected AbstractDB(
-        String name, String path, boolean enableDbCache, boolean enableDbCompression) {
+            String name, String path, boolean enableDbCache, boolean enableDbCompression) {
         this(name);
 
         Objects.requireNonNull(path, "The database path cannot be null.");
@@ -82,35 +79,15 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
         this.enableDbCompression = enableDbCompression;
     }
 
-    /**
-     * Checks that the given key is not null. Throws a {@link IllegalArgumentException} if the key
-     * is null.
-     */
-    public static void check(byte[] k) {
-        if (k == null) {
-            throw new IllegalArgumentException("The database does not accept null keys.");
-        }
-    }
-
-    /**
-     * Checks that the given collection of keys does not contain null values. Throws a {@link
-     * IllegalArgumentException} if a null key is present.
-     */
-    public static void check(Collection<byte[]> keys) {
-        if (keys.contains(null)) {
-            throw new IllegalArgumentException("The database does not accept null keys.");
-        }
-    }
-
     protected String propertiesInfo() {
         return "<name="
-            + name
-            + ",autocommit=ON,cache="
-            + (enableDbCache ? "ON" : "OFF")
-            + //
-            ",compression="
-            + (enableDbCompression ? "ON" : "OFF")
-            + ">"; //
+                + name
+                + ",autocommit=ON,cache="
+                + (enableDbCache ? "ON" : "OFF")
+                + //
+                ",compression="
+                + (enableDbCompression ? "ON" : "OFF")
+                + ">"; //
     }
 
     @Override
@@ -118,7 +95,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
         // not implemented since we always commit the changes to the database for this
         // implementation
         throw new UnsupportedOperationException(
-            "Only automatic commits are supported by " + this.toString());
+                "Only automatic commits are supported by " + this.toString());
     }
 
     @Override
@@ -156,6 +133,26 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
         }
     }
 
+    /**
+     * Checks that the given key is not null. Throws a {@link IllegalArgumentException} if the key
+     * is null.
+     */
+    public static void check(byte[] k) {
+        if (k == null) {
+            throw new IllegalArgumentException("The database does not accept null keys.");
+        }
+    }
+
+    /**
+     * Checks that the given collection of keys does not contain null values. Throws a {@link
+     * IllegalArgumentException} if a null key is present.
+     */
+    public static void check(Collection<byte[]> keys) {
+        if (keys.contains(null)) {
+            throw new IllegalArgumentException("The database does not accept null keys.");
+        }
+    }
+
     @Override
     public boolean isClosed() {
         return !isOpen();
@@ -184,9 +181,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
         return false;
     }
 
-    /**
-     * Functionality for directly interacting with the heap cache.
-     */
+    /** Functionality for directly interacting with the heap cache. */
     public abstract boolean commitCache(Map<ByteArrayWrapper, byte[]> cache);
 
     // IKeyValueStore functionality

@@ -22,19 +22,11 @@
  */
 package org.aion.mcf.account;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
@@ -44,7 +36,20 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.junit.Assert.*;
+
 public class KeystoreTest {
+    private List<String> filesToRemove = new ArrayList<>();
+
+    private static String randomPassword() {
+        Random rand = new Random();
+        StringBuilder sb = new StringBuilder(10);
+        while (sb.length() < 10) {
+            char c = (char) (rand.nextInt() & Character.MAX_VALUE);
+            if (Character.isDefined(c)) sb.append(c);
+        }
+        return sb.toString();
+    }
 
     private static final String KEYSTORE_PATH;
 
@@ -56,54 +61,16 @@ public class KeystoreTest {
         KEYSTORE_PATH = storageDir + "/keystore";
     }
 
-    private List<String> filesToRemove = new ArrayList<>();
-
-    private static String randomPassword() {
-        Random rand = new Random();
-        StringBuilder sb = new StringBuilder(10);
-        while (sb.length() < 10) {
-            char c = (char) (rand.nextInt() & Character.MAX_VALUE);
-            if (Character.isDefined(c)) {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
-    }
-
-    private static void cleanFiles(String address) {
-        // get a list of all the files in keystore directory
-        File folder = new File(KEYSTORE_PATH);
-        File[] AllFilesInDirectory = folder.listFiles();
-
-        // check for invalid or wrong path - should not happen
-        if (AllFilesInDirectory == null) {
-            return;
-        }
-
-        for (File file : AllFilesInDirectory) {
-            String ending = "";
-            if (file.getName().length() > 64) {
-                ending = file.getName().substring(file.getName().length() - 64);
-            }
-
-            if (ending.equals(address.substring(2))) {
-                File f = new File(KEYSTORE_PATH + "/" + file.getName());
-                f.delete();
-            }
-        }
-    }
-
     @Before
     public void init() {
         ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
     }
 
     @After
-    public void clean() {
-        if (filesToRemove.size() == 0) {
+    public void clean(){
+        if(filesToRemove.size() == 0)
             return;
-        }
-        for (int i = 0; i < filesToRemove.size(); i++) {
+        for(int i = 0; i < filesToRemove.size(); i++){
             cleanFiles(filesToRemove.get(i));
             filesToRemove.remove(filesToRemove.get(i));
         }
@@ -241,13 +208,36 @@ public class KeystoreTest {
         filesToRemove.add(addr);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testBackupAccountWithNullInput() {
+    @Test (expected = NullPointerException.class)
+    public void testBackupAccountWithNullInput(){
         Keystore.backupAccount(null);
     }
 
-    @Test(expected = NullPointerException.class)
-    public void testImportAccountNull() {
+    @Test (expected = NullPointerException.class)
+    public void testImportAccountNull(){
         Keystore.importAccount(null);
+    }
+
+    private static void cleanFiles(String address){
+        // get a list of all the files in keystore directory
+        File folder = new File(KEYSTORE_PATH);
+        File[] AllFilesInDirectory = folder.listFiles();
+
+        // check for invalid or wrong path - should not happen
+        if(AllFilesInDirectory == null)
+            return;
+        
+
+        for (File file: AllFilesInDirectory){
+            String ending = "";
+            if (file.getName().length() > 64) {
+                ending = file.getName().substring(file.getName().length()-64);
+            }
+            
+            if(ending.equals(address.substring(2))){
+                File f = new File(KEYSTORE_PATH + "/"+ file.getName());
+                f.delete();
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,10 +19,12 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.impl.query;
 
-public interface QueryInterface extends BlockQueryInterface, SyncQueryInterface,
-    StateQueryInterface {
+import java.util.Optional;
 
+public interface QueryInterface extends BlockQueryInterface, SyncQueryInterface, StateQueryInterface {
 }

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,14 +31,15 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.base.util;
 
 public interface Functional {
 
     /**
-     * Represents an operation that accepts a single input argument and returns no result. Unlike
-     * most other functional interfaces, {@code Consumer} is expected to operate via side-effects.
+     * Represents an operation that accepts a single input argument and returns
+     * no result. Unlike most other functional interfaces, {@code Consumer} is
+     * expected to operate via side-effects.
      *
      * @param <T> the type of the input to the operation
      */
@@ -53,12 +54,14 @@ public interface Functional {
     }
 
     /**
-     * Represents an operation that accepts two input arguments and returns no result. This is the
-     * two-arity specialization of {@link java.util.function.Consumer}. Unlike most other functional
+     * Represents an operation that accepts two input arguments and returns no
+     * result. This is the two-arity specialization of
+     * {@link java.util.function.Consumer}. Unlike most other functional
      * interfaces, {@code BiConsumer} is expected to operate via side-effects.
      *
      * @param <T> the type of the first argument to the operation
      * @param <U> the type of the second argument to the operation
+     *
      * @see org.ethereum.util.Functional.Consumer
      */
     interface BiConsumer<T, U> {

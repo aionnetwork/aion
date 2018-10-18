@@ -1,11 +1,13 @@
 package org.libsodium.jni;
 
 /**
- * Created with IntelliJ IDEA. User: josh Date: 7/14/13 Time: 7:31 PM To change this template use
- * File | Settings | File Templates.
+ * Created with IntelliJ IDEA.
+ * User: josh
+ * Date: 7/14/13
+ * Time: 7:31 PM
+ * To change this template use File | Settings | File Templates.
  */
 public abstract class SodiumConstants {
-
     public static final int SHA256BYTES = 32;
     public static final int SHA512BYTES = 64;
     public static final int BLAKE2B_OUTBYTES = 64;

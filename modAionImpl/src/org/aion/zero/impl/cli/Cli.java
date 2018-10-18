@@ -61,68 +61,24 @@ public class Cli {
     private final String BASE_PATH = System.getProperty("user.dir");
 
     private final File keystoreDir =
-        new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
+            new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
     private final Arguments options = new Arguments();
     private final CommandLine parser = new CommandLine(options);
 
-    // Methods below taken from FileUtils class
-    public static boolean copyRecursively(File src, File target) {
-        if (src.isDirectory()) {
-            return copyDirectoryContents(src, target);
-        } else {
-            try {
-                Files.copy(src, target);
-                return true;
-            } catch (IOException e) {
-                return false;
-            }
-        }
-    }
+    public enum ReturnType {
+        RUN(2),
+        EXIT(0),
+        ERROR(1);
+        private final int value;
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static boolean copyDirectoryContents(File src, File target) {
-        Preconditions.checkArgument(src.isDirectory(), "Source dir is not a directory: %s", src);
-
-        // Don't delete symbolic link directories
-        if (isSymbolicLink(src)) {
-            return false;
+        ReturnType(int _value) {
+            this.value = _value;
         }
 
-        target.mkdirs();
-        Preconditions.checkArgument(target.isDirectory(), "Target dir is not a directory: %s", src);
-
-        boolean success = true;
-        for (File file : listFiles(src)) {
-            success = copyRecursively(file, new File(target, file.getName())) && success;
+        public int getValue() {
+            return value;
         }
-        return success;
-    }
-
-    private static boolean isSymbolicLink(File file) {
-        try {
-            File canonicalFile = file.getCanonicalFile();
-            File absoluteFile = file.getAbsoluteFile();
-            File parentFile = file.getParentFile();
-            // a symbolic link has a different name between the canonical and absolute path
-            return !canonicalFile.getName().equals(absoluteFile.getName())
-                ||
-                // or the canonical parent path is not the same as the file's parent path,
-                // provided the file has a parent path
-                parentFile != null
-                    && !parentFile.getCanonicalPath().equals(canonicalFile.getParent());
-        } catch (IOException e) {
-            // error on the side of caution
-            return true;
-        }
-    }
-
-    private static ImmutableList<File> listFiles(File dir) {
-        File[] files = dir.listFiles();
-        if (files == null) {
-            return ImmutableList.of();
-        }
-        return ImmutableList.copyOf(files);
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -164,7 +120,7 @@ public class Cli {
             // 2. determine the network configuration
 
             if (options.getNetwork() != null
-                || (options.getConfig() != null && !options.getConfig().isEmpty())) {
+                    || (options.getConfig() != null && !options.getConfig().isEmpty())) {
                 String strNet = options.getNetwork();
                 // the network given in config overwrites the -n option
                 if (options.getConfig() != null && !options.getConfig().isEmpty()) {
@@ -209,8 +165,8 @@ public class Cli {
                     if (!dir.exists()) {
                         if (!dir.mkdirs()) {
                             System.out.println(
-                                "ERROR: Unable to create directory: "
-                                    + getRelativePath(dir.getAbsolutePath()));
+                                    "ERROR: Unable to create directory: "
+                                            + getRelativePath(dir.getAbsolutePath()));
                             return ERROR;
                         }
                     }
@@ -218,8 +174,8 @@ public class Cli {
                         configFile.createNewFile();
                     } catch (IOException e) {
                         System.out.println(
-                            "ERROR: Unable to create file: "
-                                + getRelativePath(configFile.getAbsolutePath()));
+                                "ERROR: Unable to create file: "
+                                        + getRelativePath(configFile.getAbsolutePath()));
                         return ERROR;
                     }
                 }
@@ -228,8 +184,8 @@ public class Cli {
                 cfg.toXML(null, configFile);
 
                 System.out.println(
-                    "\nNew config generated at: "
-                        + getRelativePath(configFile.getAbsolutePath()));
+                        "\nNew config generated at: "
+                                + getRelativePath(configFile.getAbsolutePath()));
                 return ReturnType.EXIT;
             }
 
@@ -237,11 +193,11 @@ public class Cli {
 
             if (options.isInfo()) {
                 System.out.println(
-                    "Reading config file from: "
-                        + getRelativePath(configFile.getAbsolutePath()));
+                        "Reading config file from: "
+                                + getRelativePath(configFile.getAbsolutePath()));
                 if (overwrite) {
                     // updating the file in case the user id was not set
-                    cfg.toXML(new String[]{"--id=" + cfg.getId()}, configFile);
+                    cfg.toXML(new String[] {"--id=" + cfg.getId()}, configFile);
                 }
                 printInfo(cfg);
                 return ReturnType.EXIT;
@@ -252,7 +208,7 @@ public class Cli {
 
             if (overwrite) {
                 // only updating the file in case the user id was not set
-                cfg.toXML(new String[]{"--id=" + cfg.getId()}, cfg.getExecConfigFile());
+                cfg.toXML(new String[] {"--id=" + cfg.getId()}, cfg.getExecConfigFile());
             }
 
             // set correct keystore directory
@@ -309,8 +265,8 @@ public class Cli {
                     return EXIT;
                 } else {
                     System.out.println(
-                        "Incorrect usage of -s create command.\n"
-                            + "Command must enter both hostname AND ip or else neither one.");
+                            "Incorrect usage of -s create command.\n"
+                                    + "Command must enter both hostname AND ip or else neither one.");
                     return ERROR;
                 }
             }
@@ -325,21 +281,24 @@ public class Cli {
             if (options.getRevertToBlock() != null) {
                 String block = options.getRevertToBlock();
                 switch (revertTo(block)) {
-                    case SUCCESS: {
-                        System.out.println(
-                            "Blockchain successfully reverted to block number "
-                                + block
-                                + ".");
-                        return EXIT;
-                    }
-                    case FAILURE: {
-                        System.out.println("Unable to revert to block number " + block + ".");
-                        return ERROR;
-                    }
+                    case SUCCESS:
+                        {
+                            System.out.println(
+                                    "Blockchain successfully reverted to block number "
+                                            + block
+                                            + ".");
+                            return EXIT;
+                        }
+                    case FAILURE:
+                        {
+                            System.out.println("Unable to revert to block number " + block + ".");
+                            return ERROR;
+                        }
                     case ILLEGAL_ARGUMENT:
-                    default: {
-                        return ERROR;
-                    }
+                    default:
+                        {
+                            return ERROR;
+                        }
                 }
             }
 
@@ -368,9 +327,9 @@ public class Cli {
                         block_count = Long.parseLong(parameter);
                     } catch (NumberFormatException e) {
                         System.out.println(
-                            "The given argument «"
-                                + parameter
-                                + "» cannot be converted to a number.");
+                                "The given argument «"
+                                        + parameter
+                                        + "» cannot be converted to a number.");
                         return ERROR;
                     }
                     if (block_count < 1) {
@@ -397,16 +356,16 @@ public class Cli {
                         level = Long.parseLong(parameter);
                     } catch (NumberFormatException e) {
                         System.out.println(
-                            "The given argument «"
-                                + parameter
-                                + "» cannot be converted to a number.");
+                                "The given argument «"
+                                        + parameter
+                                        + "» cannot be converted to a number.");
                         return ERROR;
                     }
                     if (level == -1L) {
                         System.out.println("Retrieving state for top main chain block...");
                     } else {
                         System.out.println(
-                            "Retrieving state for main chain block at level " + level + "...");
+                                "Retrieving state for main chain block at level " + level + "...");
                     }
                     RecoveryUtils.printStateTrieDump(level);
                     return EXIT;
@@ -426,9 +385,9 @@ public class Cli {
                         count = Long.parseLong(parameter);
                     } catch (NumberFormatException e) {
                         System.out.println(
-                            "The given argument «"
-                                + parameter
-                                + "» cannot be converted to a number.");
+                                "The given argument «"
+                                        + parameter
+                                        + "» cannot be converted to a number.");
                         return ERROR;
                     }
                     if (count < 1) {
@@ -467,9 +426,7 @@ public class Cli {
         return path.replaceFirst(BASE_PATH, ".");
     }
 
-    /**
-     * Print the CLI help info.
-     */
+    /** Print the CLI help info. */
     private void printHelp() {
         String usage = parser.getUsageMessage();
 
@@ -485,14 +442,14 @@ public class Cli {
     private void printInfo(Cfg cfg) {
         System.out.println("\nInformation");
         System.out.println(
-            "----------------------------------------------------------------------------");
+                "----------------------------------------------------------------------------");
         System.out.println(
-            "current: p2p://"
-                + cfg.getId()
-                + "@"
-                + cfg.getNet().getP2p().getIp()
-                + ":"
-                + cfg.getNet().getP2p().getPort());
+                "current: p2p://"
+                        + cfg.getId()
+                        + "@"
+                        + cfg.getNet().getP2p().getIp()
+                        + ":"
+                        + cfg.getNet().getP2p().getPort());
         String[] nodes = cfg.getNet().getNodes();
         if (nodes != null && nodes.length > 0) {
             System.out.println("boot nodes list:");
@@ -503,7 +460,7 @@ public class Cli {
             System.out.println("boot nodes list is empty");
         }
         System.out.println(
-            "p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+                "p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
     }
 
     /**
@@ -608,12 +565,12 @@ public class Cli {
      * Creates a new account.
      *
      * @return {@code true} only if the new account was successfully created, {@code false}
-     * otherwise.
+     *     otherwise.
      */
     private boolean createAccount() {
         String password, password2;
         try (InputStreamReader isr = new InputStreamReader(System.in);
-            BufferedReader reader = new BufferedReader(isr)) {
+                BufferedReader reader = new BufferedReader(isr)) {
             password = readPassword("Please enter a password: ", reader);
             password2 = readPassword("Please re-enter your password: ", reader);
         } catch (IOException e) {
@@ -630,7 +587,7 @@ public class Cli {
         if (!address.equals("0x")) {
             System.out.println("A new account has been created: " + address);
             System.out.println(
-                "The account was stored in: " + getRelativePath(Keystore.getKeystorePath()));
+                    "The account was stored in: " + getRelativePath(Keystore.getKeystorePath()));
             return true;
         } else {
             System.out.println("Failed to create an account!");
@@ -638,23 +595,21 @@ public class Cli {
         }
     }
 
-    /**
-     * List all existing accounts.
-     */
+    /** List all existing accounts. */
     @SuppressWarnings("SameReturnValue")
     private boolean listAccounts() {
         String[] accounts = Keystore.list();
 
         if (ArrayUtils.isNotEmpty(accounts)) {
             System.out.println(
-                "All accounts from: " + getRelativePath(Keystore.getKeystorePath()) + "\n");
+                    "All accounts from: " + getRelativePath(Keystore.getKeystorePath()) + "\n");
 
             for (String account : accounts) {
                 System.out.println("\t" + account);
             }
         } else {
             System.out.println(
-                "No accounts found at: " + getRelativePath(Keystore.getKeystorePath()));
+                    "No accounts found at: " + getRelativePath(Keystore.getKeystorePath()));
         }
         return true;
     }
@@ -667,7 +622,7 @@ public class Cli {
      */
     private boolean exportPrivateKey(String address) {
         System.out.println(
-            "Searching for account in: " + getRelativePath(Keystore.getKeystorePath()));
+                "Searching for account in: " + getRelativePath(Keystore.getKeystorePath()));
 
         if (!Keystore.exist(address)) {
             System.out.println("The account does not exist!");
@@ -676,7 +631,7 @@ public class Cli {
 
         String password;
         try (InputStreamReader isr = new InputStreamReader(System.in);
-            BufferedReader reader = new BufferedReader(isr)) {
+                BufferedReader reader = new BufferedReader(isr)) {
             password = readPassword("Please enter your password: ", reader);
         } catch (IOException e) {
             e.printStackTrace();
@@ -711,14 +666,14 @@ public class Cli {
         ECKey key = ECKeyFac.inst().fromPrivate(raw);
         if (key == null) {
             System.out.println(
-                "Unable to recover private key."
-                    + "Are you sure you did not import a public key?");
+                    "Unable to recover private key."
+                            + "Are you sure you did not import a public key?");
             return false;
         }
 
         String password, password2;
         try (InputStreamReader isr = new InputStreamReader(System.in);
-            BufferedReader reader = new BufferedReader(isr)) {
+                BufferedReader reader = new BufferedReader(isr)) {
             password = readPassword("Please enter a password: ", reader);
             password2 = readPassword("Please re-enter your password: ", reader);
         } catch (IOException e) {
@@ -734,15 +689,15 @@ public class Cli {
         String address = Keystore.create(password, key);
         if (!address.equals("0x")) {
             System.out.println(
-                "The private key was imported to: "
-                    + getRelativePath(Keystore.getKeystorePath())
-                    + "\nThe address is: "
-                    + address);
+                    "The private key was imported to: "
+                            + getRelativePath(Keystore.getKeystorePath())
+                            + "\nThe address is: "
+                            + address);
             return true;
         } else {
             System.out.println(
-                "Failed to import the private key. It may already exist in: "
-                    + getRelativePath(Keystore.getKeystorePath()));
+                    "Failed to import the private key. It may already exist in: "
+                            + getRelativePath(Keystore.getKeystorePath()));
             return false;
         }
     }
@@ -799,7 +754,7 @@ public class Cli {
             block = Long.parseLong(blockNumber);
         } catch (NumberFormatException e) {
             System.out.println(
-                "The given argument «" + blockNumber + "» cannot be converted to a number.");
+                    "The given argument «" + blockNumber + "» cannot be converted to a number.");
             return RecoveryUtils.Status.ILLEGAL_ARGUMENT;
         }
 
@@ -810,21 +765,19 @@ public class Cli {
         if (!keystoreDir.isDirectory()) {
             if (!keystoreDir.mkdir()) {
                 System.out.println(
-                    "Ssl keystore directory could not be created. "
-                        + "Please check user permissions or create directory manually.");
+                        "Ssl keystore directory could not be created. "
+                                + "Please check user permissions or create directory manually.");
                 System.exit(1);
             }
             System.out.println();
         }
     }
 
-    /**
-     * For security reasons we only want the ssl option to run in a console environment.
-     */
+    /** For security reasons we only want the ssl option to run in a console environment. */
     private void checkConsoleExists(Console console) {
         if (console == null) {
             System.out.println(
-                "No console found. This command can only be run interactively in a console environment.");
+                    "No console found. This command can only be run interactively in a console environment.");
             System.exit(1);
         }
     }
@@ -842,36 +795,80 @@ public class Cli {
     private String getCertPass(Console console) {
         int minPassLen = 7;
         String certPass =
-            String.valueOf(
-                console.readPassword(
-                    "Enter certificate password (at least "
-                        + minPassLen
-                        + " characters):\n"));
+                String.valueOf(
+                        console.readPassword(
+                                "Enter certificate password (at least "
+                                        + minPassLen
+                                        + " characters):\n"));
         if (certPass.isEmpty()) {
             System.out.println("Error: no certificate password entered.");
             System.exit(1);
         } else if (certPass.length() < minPassLen) {
             System.out.println(
-                "Error: certificate password must be at least "
-                    + minPassLen
-                    + " characters long.");
+                    "Error: certificate password must be at least "
+                            + minPassLen
+                            + " characters long.");
             System.exit(1);
         }
         return certPass;
     }
 
-    public enum ReturnType {
-        RUN(2),
-        EXIT(0),
-        ERROR(1);
-        private final int value;
+    // Methods below taken from FileUtils class
+    public static boolean copyRecursively(File src, File target) {
+        if (src.isDirectory()) {
+            return copyDirectoryContents(src, target);
+        } else {
+            try {
+                Files.copy(src, target);
+                return true;
+            } catch (IOException e) {
+                return false;
+            }
+        }
+    }
 
-        ReturnType(int _value) {
-            this.value = _value;
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private static boolean copyDirectoryContents(File src, File target) {
+        Preconditions.checkArgument(src.isDirectory(), "Source dir is not a directory: %s", src);
+
+        // Don't delete symbolic link directories
+        if (isSymbolicLink(src)) {
+            return false;
         }
 
-        public int getValue() {
-            return value;
+        target.mkdirs();
+        Preconditions.checkArgument(target.isDirectory(), "Target dir is not a directory: %s", src);
+
+        boolean success = true;
+        for (File file : listFiles(src)) {
+            success = copyRecursively(file, new File(target, file.getName())) && success;
         }
+        return success;
+    }
+
+    private static boolean isSymbolicLink(File file) {
+        try {
+            File canonicalFile = file.getCanonicalFile();
+            File absoluteFile = file.getAbsoluteFile();
+            File parentFile = file.getParentFile();
+            // a symbolic link has a different name between the canonical and absolute path
+            return !canonicalFile.getName().equals(absoluteFile.getName())
+                    ||
+                    // or the canonical parent path is not the same as the file's parent path,
+                    // provided the file has a parent path
+                    parentFile != null
+                            && !parentFile.getCanonicalPath().equals(canonicalFile.getParent());
+        } catch (IOException e) {
+            // error on the side of caution
+            return true;
+        }
+    }
+
+    private static ImmutableList<File> listFiles(File dir) {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return ImmutableList.of();
+        }
+        return ImmutableList.copyOf(files);
     }
 }

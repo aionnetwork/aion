@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,13 +17,17 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- */
-
+ ******************************************************************************/
 package org.aion.db.impl;
 
-import java.util.Properties;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
@@ -40,6 +44,8 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
+import java.util.Properties;
+
 /**
  * Returns an instance of {@link IByteArrayKeyValueDatabase} based on the given properties.
  *
@@ -48,6 +54,33 @@ import org.slf4j.Logger;
 public abstract class DatabaseFactory {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+
+    public static class Props {
+        public static final String DB_TYPE = "db_type";
+
+        public static final String DB_NAME = "db_name";
+        public static final String DB_PATH = "db_path";
+
+        public static final String CHECK_INTEGRITY = "check_integrity";
+        public static final String PERSISTENT = "persistent";
+
+        public static final String ENABLE_AUTO_COMMIT = "enable_auto_commit";
+        public static final String ENABLE_DB_CACHE = "enable_db_cache";
+        public static final String ENABLE_DB_COMPRESSION = "enable_db_compression";
+        public static final String DB_CACHE_SIZE = "cache_size";
+
+        public static final String ENABLE_HEAP_CACHE = "enable_heap_cache";
+        public static final String ENABLE_HEAP_CACHE_STATS = "enable_heap_cache_stats";
+        public static final String MAX_HEAP_CACHE_SIZE = "max_heap_cache_size";
+
+        public static final String ENABLE_LOCKING = "enable_locking";
+
+        public static final String MAX_FD_ALLOC = "max_fd_alloc_size";
+        public static final String BLOCK_SIZE = "block_size";
+
+        public static final String WRITE_BUFFER_SIZE = "write_buffer_size";
+        public static final String READ_BUFFER_SIZE = "read_buffer_size";
+    }
 
     public static IByteArrayKeyValueDatabase connect(Properties info) {
         return connect(info, false);
@@ -111,9 +144,9 @@ public abstract class DatabaseFactory {
     private static IByteArrayKeyValueDatabase connectWithCache(Properties info) {
         boolean enableAutoCommit = getBoolean(info, Props.ENABLE_AUTO_COMMIT);
         return new DatabaseWithCache(connectBasic(info),
-            enableAutoCommit,
-            info.getProperty(Props.MAX_HEAP_CACHE_SIZE),
-            getBoolean(info, Props.ENABLE_HEAP_CACHE_STATS));
+                                     enableAutoCommit,
+                                     info.getProperty(Props.MAX_HEAP_CACHE_SIZE),
+                                     getBoolean(info, Props.ENABLE_HEAP_CACHE_STATS));
     }
 
     /**
@@ -133,8 +166,7 @@ public abstract class DatabaseFactory {
         String dbPath = info.getProperty(Props.DB_PATH);
 
         if (dbType == DBVendor.PERSISTENTMOCKDB) {
-            LOG.warn(
-                "WARNING: Active vendor is set to PersistentMockDB, data will be saved only at close!");
+            LOG.warn("WARNING: Active vendor is set to PersistentMockDB, data will be saved only at close!");
             return new PersistentMockDB(dbName, dbPath);
         }
 
@@ -157,24 +189,24 @@ public abstract class DatabaseFactory {
         switch (dbType) {
             case LEVELDB: {
                 return new LevelDB(dbName,
-                    dbPath,
-                    enableDbCache,
-                    enableDbCompression,
-                    getInt(info, Props.MAX_FD_ALLOC, LevelDBConstants.MAX_OPEN_FILES),
-                    getInt(info, Props.BLOCK_SIZE, LevelDBConstants.BLOCK_SIZE),
-                    getInt(info, Props.WRITE_BUFFER_SIZE, LevelDBConstants.WRITE_BUFFER_SIZE),
-                    getInt(info, Props.DB_CACHE_SIZE, LevelDBConstants.CACHE_SIZE));
+                                   dbPath,
+                                   enableDbCache,
+                                   enableDbCompression,
+                                   getInt(info, Props.MAX_FD_ALLOC, LevelDBConstants.MAX_OPEN_FILES),
+                                   getInt(info, Props.BLOCK_SIZE, LevelDBConstants.BLOCK_SIZE),
+                                   getInt(info, Props.WRITE_BUFFER_SIZE, LevelDBConstants.WRITE_BUFFER_SIZE),
+                                   getInt(info, Props.DB_CACHE_SIZE, LevelDBConstants.CACHE_SIZE));
             }
             case ROCKSDB: {
                 return new RocksDBWrapper(dbName,
-                    dbPath,
-                    enableDbCache,
-                    enableDbCompression,
-                    getInt(info, Props.MAX_FD_ALLOC, RocksDBConstants.MAX_OPEN_FILES),
-                    getInt(info, Props.BLOCK_SIZE, RocksDBConstants.BLOCK_SIZE),
-                    getInt(info, Props.WRITE_BUFFER_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE),
-                    getInt(info, Props.READ_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE),
-                    getInt(info, Props.DB_CACHE_SIZE, RocksDBConstants.CACHE_SIZE));
+                                          dbPath,
+                                          enableDbCache,
+                                          enableDbCompression,
+                                          getInt(info, Props.MAX_FD_ALLOC, RocksDBConstants.MAX_OPEN_FILES),
+                                          getInt(info, Props.BLOCK_SIZE, RocksDBConstants.BLOCK_SIZE),
+                                          getInt(info, Props.WRITE_BUFFER_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE),
+                                          getInt(info, Props.READ_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE),
+                                          getInt(info, Props.DB_CACHE_SIZE, RocksDBConstants.CACHE_SIZE));
             }
             case H2: {
                 return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
@@ -188,16 +220,14 @@ public abstract class DatabaseFactory {
     }
 
     /**
-     * @return A database implementation based on a driver implementing the {@link IDriver}
-     * interface.
+     * @return A database implementation based on a driver implementing the {@link IDriver} interface.
      */
     public static IByteArrayKeyValueDatabase connect(String driverName,
-        Properties info) {
+                                                     Properties info) {
         try {
             // see if the given name is a valid driver
-            IDriver driver = ((Class<? extends IDriver>) Class.forName(driverName))
-                .getDeclaredConstructor()
-                .newInstance();
+            IDriver driver = ((Class<? extends IDriver>) Class.forName(driverName)).getDeclaredConstructor()
+                    .newInstance();
             // return a connection
             return driver.connect(info);
         } catch (Exception e) {
@@ -220,36 +250,8 @@ public abstract class DatabaseFactory {
     }
 
     private static int getInt(Properties info,
-        String prop,
-        int defaultValue) {
+                              String prop,
+                              int defaultValue) {
         return Integer.parseInt(info.getProperty(prop, String.valueOf(defaultValue)));
-    }
-
-    public static class Props {
-
-        public static final String DB_TYPE = "db_type";
-
-        public static final String DB_NAME = "db_name";
-        public static final String DB_PATH = "db_path";
-
-        public static final String CHECK_INTEGRITY = "check_integrity";
-        public static final String PERSISTENT = "persistent";
-
-        public static final String ENABLE_AUTO_COMMIT = "enable_auto_commit";
-        public static final String ENABLE_DB_CACHE = "enable_db_cache";
-        public static final String ENABLE_DB_COMPRESSION = "enable_db_compression";
-        public static final String DB_CACHE_SIZE = "cache_size";
-
-        public static final String ENABLE_HEAP_CACHE = "enable_heap_cache";
-        public static final String ENABLE_HEAP_CACHE_STATS = "enable_heap_cache_stats";
-        public static final String MAX_HEAP_CACHE_SIZE = "max_heap_cache_size";
-
-        public static final String ENABLE_LOCKING = "enable_locking";
-
-        public static final String MAX_FD_ALLOC = "max_fd_alloc_size";
-        public static final String BLOCK_SIZE = "block_size";
-
-        public static final String WRITE_BUFFER_SIZE = "write_buffer_size";
-        public static final String READ_BUFFER_SIZE = "read_buffer_size";
     }
 }

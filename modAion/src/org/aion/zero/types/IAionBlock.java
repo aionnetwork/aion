@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,18 +17,23 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.types;
 
 import java.math.BigInteger;
 import java.util.List;
+
 import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 
 /**
  * aion block interface.
+ * 
  */
 public interface IAionBlock extends IBlock<AionTransaction, A0BlockHeader> {
 

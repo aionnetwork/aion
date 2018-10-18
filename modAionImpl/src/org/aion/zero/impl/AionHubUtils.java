@@ -30,9 +30,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 
-/**
- * {@link AionHub} functionality where a full instantiation of the class is not desirable.
- */
+/** {@link AionHub} functionality where a full instantiation of the class is not desirable. */
 public class AionHubUtils {
 
     public static void buildGenesis(AionGenesis genesis, AionRepositoryImpl repository) {
@@ -44,9 +42,9 @@ public class AionHubUtils {
 
         for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
             track.addStorageRow(
-                networkBalanceAddress,
-                new DataWord(addr.getKey()),
-                new DataWord(addr.getValue()));
+                    networkBalanceAddress,
+                    new DataWord(addr.getKey()),
+                    new DataWord(addr.getValue()));
         }
 
         for (Address addr : genesis.getPremine().keySet()) {

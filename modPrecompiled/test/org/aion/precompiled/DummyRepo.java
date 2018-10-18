@@ -40,16 +40,15 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 
 public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> {
-
-    // Made this alterable for testing since this default value is not always what real implementations
-    // do ... and don't want to break tests that rely on this value.
-    public IDataWord storageErrorReturn = DoubleDataWord.ZERO;
     private Map<Address, AccountState> accounts = new HashMap<>();
     private Map<Address, byte[]> contracts = new HashMap<>();
     private Map<Address, Map<String, byte[]>> storage = new HashMap<>();
 
-    public DummyRepo() {
-    }
+    // Made this alterable for testing since this default value is not always what real implementations
+    // do ... and don't want to break tests that rely on this value.
+    public IDataWord storageErrorReturn = DoubleDataWord.ZERO;
+
+    public DummyRepo() {}
 
     public DummyRepo(DummyRepo parent) {
         // Note: only references are copied

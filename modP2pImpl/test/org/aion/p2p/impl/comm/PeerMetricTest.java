@@ -87,7 +87,7 @@ public class PeerMetricTest {
         }
         metric.incFailedCount();
         assertTrue(metric.shouldNotConn());
-        Thread.sleep(P2pConstant.FAILED_CONN_RETRY_INTERVAL + 1);
+        Thread.sleep(P2pConstant.FAILED_CONN_RETRY_INTERVAL+1);
         assertFalse(metric.shouldNotConn());
     }
 
@@ -105,7 +105,7 @@ public class PeerMetricTest {
 
         metric.incFailedCount();
         assertTrue(metric.shouldNotConn());
-        Thread.sleep(P2pConstant.FAILED_CONN_RETRY_INTERVAL + 1);
+        Thread.sleep(P2pConstant.FAILED_CONN_RETRY_INTERVAL+1);
         assertFalse(metric.shouldNotConn());
     }
 
@@ -114,7 +114,7 @@ public class PeerMetricTest {
         assertFalse(metric.shouldNotConn());
         metric.ban();
         assertTrue(metric.shouldNotConn());
-        Thread.sleep(P2pConstant.FAILED_CONN_RETRY_INTERVAL + 1);
+        Thread.sleep(P2pConstant.FAILED_CONN_RETRY_INTERVAL+1);
         assertFalse(metric.shouldNotConn());
     }
 }

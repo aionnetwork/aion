@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,8 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.api.server.pb;
 
@@ -27,8 +28,6 @@ package org.aion.api.server.pb;
  *
  */
 public interface IHdlr {
-
     byte[] process(byte[] request);
-
     void shutDown();
 }

@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
+ *     The aion network project is free software: you can redistribute it 
+ *     and/or modify it under the terms of the GNU General Public License 
+ *     as published by the Free Software Foundation, either version 3 of 
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     The aion network project is distributed in the hope that it will 
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
+ *     along with the aion network project source files.  
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,25 +22,24 @@
  */
 package org.aion.zero.impl.config.dynamic;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.LinkedHashMap;
-import java.util.Optional;
-import java.util.function.Function;
-import javax.xml.stream.XMLStreamException;
 import org.aion.mcf.config.Cfg;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Test;
 
-public class InFlightConfigReceiverTest {
+import javax.xml.stream.XMLStreamException;
+import java.util.LinkedHashMap;
+import java.util.Optional;
+import java.util.function.Function;
 
-    private LinkedHashMap<String, Pair<Function<Cfg, ?>, Optional<IDynamicConfigApplier>>> registryMap;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+public class InFlightConfigReceiverTest {
+    private LinkedHashMap<String, Pair<Function<Cfg,?>, Optional<IDynamicConfigApplier>>> registryMap;
     private DynamicConfigKeyRegistry registry;
     private TestApplier successfulApplier;
     private TestApplier failingApplier;
@@ -61,12 +60,9 @@ public class InFlightConfigReceiverTest {
 
     @Test
     public void testApplyNewConfigSuccessful() throws Exception {
-        registryMap.put("good.key.one",
-            ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
-        registryMap.put("good.key.two",
-            ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
-        registryMap.put("no-op.key",
-            ImmutablePair.of(cfg -> cfg.getBasePath(), Optional.of(successfulApplier)));
+        registryMap.put("good.key.one", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
+        registryMap.put("good.key.two", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
+        registryMap.put("no-op.key", ImmutablePair.of(cfg -> cfg.getBasePath(), Optional.of(successfulApplier)));
         when(oldCfg.getId()).thenReturn("old");
         when(oldCfg.getBasePath()).thenReturn("same");
         when(newCfg.getId()).thenReturn("new");
@@ -81,10 +77,8 @@ public class InFlightConfigReceiverTest {
 
     @Test
     public void testApplyNewConfigUnsuccessfulApplierThenRollback() throws Exception {
-        registryMap
-            .put("good.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
-        registryMap
-            .put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(failingApplier)));
+        registryMap.put("good.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
+        registryMap.put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(failingApplier)));
         when(oldCfg.getId()).thenReturn("old");
         when(newCfg.getId()).thenReturn("new");
 
@@ -97,10 +91,8 @@ public class InFlightConfigReceiverTest {
 
     @Test
     public void testApplyNewConfigApplierThrowsThenRollback() throws Exception {
-        registryMap
-            .put("good.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
-        registryMap
-            .put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(throwingApplier)));
+        registryMap.put("good.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(successfulApplier)));
+        registryMap.put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(throwingApplier)));
         when(oldCfg.getId()).thenReturn("old");
         when(newCfg.getId()).thenReturn("new");
 
@@ -113,13 +105,10 @@ public class InFlightConfigReceiverTest {
 
     @Test(expected = RollbackException.class)
     public void testApplyNewConfigUnsuccessfulApplierThenRollbackUnsuccessful() throws Exception {
-        TestApplier cannotRollbackApplier = new TestApplier(
-            TestApplier.Behaviour.THROW_ON_UNDO_ONLY);
+        TestApplier cannotRollbackApplier = new TestApplier(TestApplier.Behaviour.THROW_ON_UNDO_ONLY);
 
-        registryMap.put("good.key",
-            ImmutablePair.of(cfg -> cfg.getId(), Optional.of(cannotRollbackApplier)));
-        registryMap
-            .put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(failingApplier)));
+        registryMap.put("good.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(cannotRollbackApplier)));
+        registryMap.put("bad.key", ImmutablePair.of(cfg -> cfg.getId(), Optional.of(failingApplier)));
         when(oldCfg.getId()).thenReturn("old");
         when(newCfg.getId()).thenReturn("new");
 
@@ -144,12 +133,11 @@ public class InFlightConfigReceiverTest {
         assertThat(result.isSuccess(), is(false));
     }
 
-    /**
-     * Applier used for testing.  Its apply operation increments the counter {@link #timesApplied}
-     */
+    /** Applier used for testing.  Its apply operation increments the counter {@link #timesApplied}*/
     private static class TestApplier implements IDynamicConfigApplier {
-
         public int timesApplied;
+
+        enum Behaviour { SUCCEED, FAIL, THROW, THROW_ON_UNDO_ONLY }
         private Behaviour behaviour;
 
         public TestApplier(Behaviour behaviour) {
@@ -158,11 +146,9 @@ public class InFlightConfigReceiverTest {
         }
 
         @Override
-        public InFlightConfigChangeResult apply(Cfg oldCfg, Cfg newCfg)
-            throws InFlightConfigChangeException {
-            switch (behaviour) {
-                case SUCCEED:
-                case THROW_ON_UNDO_ONLY:
+        public InFlightConfigChangeResult apply(Cfg oldCfg, Cfg newCfg) throws InFlightConfigChangeException {
+            switch(behaviour) {
+                case SUCCEED: case THROW_ON_UNDO_ONLY:
                     timesApplied += 1;
                     return new InFlightConfigChangeResult(true, this);
                 case FAIL:
@@ -176,23 +162,19 @@ public class InFlightConfigReceiverTest {
         }
 
         @Override
-        public InFlightConfigChangeResult undo(Cfg oldCfg, Cfg newCfg)
-            throws InFlightConfigChangeException {
-            switch (behaviour) {
+        public InFlightConfigChangeResult undo(Cfg oldCfg, Cfg newCfg) throws InFlightConfigChangeException {
+            switch(behaviour) {
                 case SUCCEED:
                     timesApplied -= 1;
                     return new InFlightConfigChangeResult(true, this);
                 case FAIL:
                     return new InFlightConfigChangeResult(false, this);
-                case THROW:
-                case THROW_ON_UNDO_ONLY:
+                case THROW: case THROW_ON_UNDO_ONLY:
                     throw new InFlightConfigChangeException("error");
                 default:
                     fail("Test error"); // test has a bug
                     return null;
             }
         }
-
-        enum Behaviour {SUCCEED, FAIL, THROW, THROW_ON_UNDO_ONLY}
     }
 }

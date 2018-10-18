@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,10 +19,12 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 package org.aion.mcf.account;
 
 import java.io.UnsupportedEncodingException;
+
 import org.aion.base.util.ByteUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
@@ -39,6 +41,14 @@ public class KeystoreItem {
 
     // rlp
 
+    public byte[] toRlp() {
+        byte[] bytesId = RLP.encodeString(this.id);
+        byte[] bytesVersion = RLP.encodeInt(this.version);
+        byte[] bytesAddress = RLP.encodeString(this.address);
+        byte[] bytesCrypto = RLP.encodeElement(this.crypto.toRlp());
+        return RLP.encodeList(bytesId, bytesVersion, bytesAddress, bytesCrypto);
+    }
+
     public static KeystoreItem parse(byte[] bytes) throws UnsupportedEncodingException {
         RLPList list = (RLPList) RLP.decode2(bytes).get(0);
         KeystoreItem ki = new KeystoreItem();
@@ -49,47 +59,39 @@ public class KeystoreItem {
         return ki;
     }
 
-    public byte[] toRlp() {
-        byte[] bytesId = RLP.encodeString(this.id);
-        byte[] bytesVersion = RLP.encodeInt(this.version);
-        byte[] bytesAddress = RLP.encodeString(this.address);
-        byte[] bytesCrypto = RLP.encodeElement(this.crypto.toRlp());
-        return RLP.encodeList(bytesId, bytesVersion, bytesAddress, bytesCrypto);
-    }
-
     // setters
-
-    public String getId() {
-        return id;
-    }
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public Integer getVersion() {
-        return version;
     }
 
     public void setVersion(int version) {
         this.version = version;
     }
 
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setKeystoreCrypto(KeystoreCrypto crypto) {
+        this.crypto = crypto;
+    }
+
     // getters
+
+    public String getId() {
+        return id;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
 
     public String getAddress() {
         return address;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
     public KeystoreCrypto getKeystoreCrypto() {
         return crypto;
-    }
-
-    public void setKeystoreCrypto(KeystoreCrypto crypto) {
-        this.crypto = crypto;
     }
 }

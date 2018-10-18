@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,8 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 package org.aion.crypto;
 
 /**
@@ -31,6 +32,8 @@ public interface ISignature {
 
     /**
      * Converts into a byte array.
+     *
+     * @return
      */
     byte[] toBytes();
 
@@ -42,7 +45,9 @@ public interface ISignature {
     /**
      * Returns the public key, encoded or recovered.
      *
-     * @param msg Only required by Secp256k1; pass null if you're using ED25519
+     * @param msg
+     *            Only required by Secp256k1; pass null if you're using ED25519
+     * @return
      */
     byte[] getPubkey(byte[] msg);
 

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,16 +19,26 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.impl.valid;
 
-import java.util.List;
+import org.aion.base.util.ByteUtil;
+import org.aion.crypto.HashUtil;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.zero.types.A0BlockHeader;
+import org.aion.equihash.EquiValidator;
+
+import java.math.BigInteger;
+import java.util.List;
+
+import static org.aion.base.util.Hex.toHexString;
 
 /**
  * Checks if {@link A0BlockHeader#solution} is a valid Equihash solution.
+ *
  */
 public class EquihashSolutionRule extends BlockHeaderRule<A0BlockHeader> {
 
@@ -40,8 +50,7 @@ public class EquihashSolutionRule extends BlockHeaderRule<A0BlockHeader> {
 
     @Override
     public boolean validate(A0BlockHeader header, List<RuleError> errors) {
-        if (!validator
-            .isValidSolutionNative(header.getSolution(), header.getMineHash(), header.getNonce())) {
+        if (!validator.isValidSolutionNative(header.getSolution(), header.getMineHash(), header.getNonce())) {
             addError("Invalid solution", errors);
             return false;
         }

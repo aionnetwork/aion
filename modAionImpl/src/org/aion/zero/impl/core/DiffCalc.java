@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,16 +19,20 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.impl.core;
 
 import static org.aion.base.util.BIUtil.max;
 import static org.aion.base.util.BIUtil.min;
 
 import java.math.BigInteger;
+
 import org.aion.mcf.blockchain.IBlockConstants;
-import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.zero.api.BlockConstants;
+import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.mcf.types.AbstractBlockHeader;
 
 public class DiffCalc {
 
@@ -38,14 +42,6 @@ public class DiffCalc {
 
     public DiffCalc(IBlockConstants constants) {
         this.constants = constants;
-    }
-
-    static private BigInteger getCalcDifficultyMultiplier(AbstractBlockHeader curBlock,
-        AbstractBlockHeader parent) {
-        return BigInteger
-            .valueOf(
-                curBlock.getTimestamp() >= (parent.getTimestamp() + BlockConstants.DURATION_LIMIT)
-                    ? -1 : 1);
     }
 
     public BigInteger calcDifficulty(AbstractBlockHeader curBlock, AbstractBlockHeader parent) {
@@ -60,18 +56,22 @@ public class DiffCalc {
         return difficulty;
     }
 
+    static private BigInteger getCalcDifficultyMultiplier(AbstractBlockHeader curBlock, AbstractBlockHeader parent) {
+        return BigInteger
+                .valueOf(curBlock.getTimestamp() >= (parent.getTimestamp() + BlockConstants.DURATION_LIMIT) ? -1 : 1);
+    }
+
     public BigInteger calcDifficultyAlt(BigInteger currentTimestamp, BigInteger parentTimestamp,
-        BigInteger parentDifficulty) {
+            BigInteger parentDifficulty) {
         BigInteger diffBase = parentDifficulty.divide(this.constants.getDifficultyBoundDivisor());
         BigInteger diffMultiplier = max(
-            BigInteger.ONE
-                .subtract(currentTimestamp.subtract(parentTimestamp).divide(BigInteger.TEN)),
-            LOWER_BOUND);
+                BigInteger.ONE.subtract(currentTimestamp.subtract(parentTimestamp).divide(BigInteger.TEN)),
+                LOWER_BOUND);
         return parentDifficulty.add(diffBase.multiply(diffMultiplier));
     }
 
     public BigInteger calcDifficultyTarget(BigInteger currentTimestamp, BigInteger parentTimestamp,
-        BigInteger parentDifficulty) {
+            BigInteger parentDifficulty) {
         BigInteger diffBase = parentDifficulty.divide(this.constants.getDifficultyBoundDivisor());
 
         // if smaller than our bound divisor, always round up
@@ -88,13 +88,12 @@ public class DiffCalc {
         BigInteger outputDifficulty = null;
         if (delta <= this.constants.getBlockTimeLowerBound()) {
             outputDifficulty = parentDifficulty.add(diffBase);
-        } else if (this.constants.getBlockTimeLowerBound() < delta && delta < this.constants
-            .getBlockTimeUpperBound()) {
+        } else if (this.constants.getBlockTimeLowerBound() < delta && delta < this.constants.getBlockTimeUpperBound()) {
             outputDifficulty = parentDifficulty;
         } else {
 
             BigInteger boundQuotient = BigInteger
-                .valueOf(((delta - this.constants.getBlockTimeUpperBound()) / boundDomain) + 1);
+                    .valueOf(((delta - this.constants.getBlockTimeUpperBound()) / boundDomain) + 1);
             BigInteger multiplier = min(boundQuotient, LOWER_BOUND);
             outputDifficulty = parentDifficulty.subtract(multiplier.multiply(diffBase));
         }

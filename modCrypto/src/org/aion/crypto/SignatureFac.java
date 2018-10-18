@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,8 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 package org.aion.crypto;
 
 import org.aion.crypto.ecdsa.ECDSASignature;
@@ -54,6 +55,7 @@ public class SignatureFac {
      *
      * @param msg message for signing
      * @param sig the signature
+     * @return
      */
     public static boolean verify(byte[] msg, ISignature sig) {
         switch (ECKeyFac.type) {

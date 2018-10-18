@@ -32,12 +32,11 @@ import java.util.Set;
 public class Test {
 
     @org.junit.Test
-    public void testParseFromP2p() {
+    public void testParseFromP2p(){
 
         Set<String> ips = new HashSet<>();
-        for (int i = 0; i < 3; i++) {
+        for(int i = 0; i < 3; i++)
             ips.add("192.168.0." + i);
-        }
         assertTrue(ips.contains("192.168.0.2"));
         assertFalse(ips.contains("192.168.0.3"));
 

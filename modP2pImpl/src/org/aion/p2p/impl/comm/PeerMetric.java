@@ -28,10 +28,10 @@ import org.aion.p2p.P2pConstant;
 
 public final class PeerMetric implements IPeerMetric {
 
-    private final int banInterval;
     private int metricFailedConn;
     private long metricFailedConnTs;
     private long metricBanConnTs;
+    private final int banInterval;
 
     PeerMetric() {
         banInterval = P2pConstant.BAN_CONN_RETRY_INTERVAL;

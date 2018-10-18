@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,16 +19,16 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 
 package org.aion.evtmgr.impl.evt;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNull;
-
-import java.util.LinkedList;
 import org.aion.evtmgr.IEvent;
 import org.junit.Test;
+import java.util.LinkedList;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
 
 public class EventDummyTest {
 
@@ -42,7 +42,7 @@ public class EventDummyTest {
     }
 
     @Test
-    public void testDummyFunctions() {
+    public void testDummyFunctions(){
         EventDummy eventDummy = new EventDummy();
 
         eventDummy.setFuncArgs(new LinkedList<>());

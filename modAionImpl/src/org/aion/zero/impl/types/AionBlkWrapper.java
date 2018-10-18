@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,18 +19,20 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.mcf.types.AbstractBlockWrapper;
+
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.mcf.types.AbstractBlockWrapper;
 
-public class AionBlkWrapper extends AbstractBlockWrapper<AionBlock> implements
-    Comparable<AionBlkWrapper> {
+public class AionBlkWrapper extends AbstractBlockWrapper<AionBlock> implements Comparable<AionBlkWrapper> {
 
     public AionBlkWrapper(AionBlock block, byte[] nodeId) {
         super(block, false, nodeId);
@@ -55,10 +57,8 @@ public class AionBlkWrapper extends AbstractBlockWrapper<AionBlock> implements
         byte[] newBlockBytes = wrapper.get(3).getRLPData();
 
         this.block = new AionBlock(blockBytes);
-        this.importFailedAt =
-            importFailedBytes == null ? 0 : new BigInteger(1, importFailedBytes).longValue();
-        this.receivedAt =
-            receivedAtBytes == null ? 0 : new BigInteger(1, receivedAtBytes).longValue();
+        this.importFailedAt = importFailedBytes == null ? 0 : new BigInteger(1, importFailedBytes).longValue();
+        this.receivedAt = receivedAtBytes == null ? 0 : new BigInteger(1, receivedAtBytes).longValue();
         byte newBlock = newBlockBytes == null ? 0 : new BigInteger(1, newBlockBytes).byteValue();
         this.newBlock = newBlock == 1;
         this.nodeId = wrapper.get(4).getRLPData();

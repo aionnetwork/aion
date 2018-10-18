@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ ******************************************************************************/
 package org.aion.utils;
 
 import java.lang.management.LockInfo;
@@ -31,7 +31,6 @@ import java.lang.management.ThreadMXBean;
  * Prints out thread information.
  */
 public class ThreadDumper {
-
     public static String dumpThreadInfo() {
         final StringBuilder sb = new StringBuilder();
         final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
@@ -41,10 +40,8 @@ public class ThreadDumper {
                 sb.append(threadInfo.toString());
                 sb.deleteCharAt(sb.length() - 1);
                 for (StackTraceElement ste : t.getStackTrace()) {
-                    sb.append("\tat ").append(ste.getClassName()).append(".")
-                        .append(ste.getMethodName()).append("(")
-                        .append(ste.getFileName()).append(":").append(ste.getLineNumber())
-                        .append(")");
+                    sb.append("\tat ").append(ste.getClassName()).append(".").append(ste.getMethodName()).append("(")
+                            .append(ste.getFileName()).append(":").append(ste.getLineNumber()).append(")");
                     sb.append("\n");
                 }
                 sb.append("Ownable synchronizers:");
@@ -54,9 +51,8 @@ public class ThreadDumper {
                 } else {
                     sb.append("\n");
                     for (final LockInfo lockInfo : s) {
-                        sb.append(lockInfo.getClassName()).append(" <")
-                            .append(lockInfo.getIdentityHashCode())
-                            .append("> \n");
+                        sb.append(lockInfo.getClassName()).append(" <").append(lockInfo.getIdentityHashCode())
+                                .append("> \n");
                     }
                 }
                 sb.append("\n");

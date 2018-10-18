@@ -34,25 +34,21 @@
  */
 package org.aion.db.impl.leveldb;
 
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.db.impl.AbstractDB;
+import org.fusesource.leveldbjni.JniDBFactory;
+import org.iq80.leveldb.*;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.db.impl.AbstractDB;
-import org.fusesource.leveldbjni.JniDBFactory;
-import org.iq80.leveldb.CompressionType;
-import org.iq80.leveldb.DB;
-import org.iq80.leveldb.DBException;
-import org.iq80.leveldb.DBIterator;
-import org.iq80.leveldb.Options;
-import org.iq80.leveldb.WriteBatch;
 
 /**
- * @implNote The read-write lock is used only for those operations that are not synchronized by the
- * JNI on top of the native LevelDB, namely open and close operations.
+ * @implNote The read-write lock is used only for those operations that are not synchronized
+ *         by the JNI on top of the native LevelDB, namely open and close operations.
  */
 public class LevelDB extends AbstractDB {
 
@@ -60,17 +56,17 @@ public class LevelDB extends AbstractDB {
     private final int blockSize;
     private final int writeBufferSize;
     private final int cacheSize;
-    WriteBatch batch = null;
+
     private DB db;
 
     public LevelDB(String name,
-        String path,
-        boolean enableCache,
-        boolean enableCompression,
-        int maxOpenFiles,
-        int blockSize,
-        int writeBufferSize,
-        int cacheSize) {
+                   String path,
+                   boolean enableCache,
+                   boolean enableCompression,
+                   int maxOpenFiles,
+                   int blockSize,
+                   int writeBufferSize,
+                   int cacheSize) {
         super(name, path, enableCache, enableCompression);
         this.maxOpenFiles = maxOpenFiles;
         this.blockSize = blockSize;
@@ -87,17 +83,17 @@ public class LevelDB extends AbstractDB {
      */
     @Deprecated
     public LevelDB(String name,
-        String path,
-        boolean enableCache,
-        boolean enableCompression) {
+                   String path,
+                   boolean enableCache,
+                   boolean enableCompression) {
         this(name,
-            path,
-            enableCache,
-            enableCompression,
-            LevelDBConstants.MAX_OPEN_FILES,
-            LevelDBConstants.BLOCK_SIZE,
-            LevelDBConstants.WRITE_BUFFER_SIZE,
-            LevelDBConstants.CACHE_SIZE);
+             path,
+             enableCache,
+             enableCompression,
+             LevelDBConstants.MAX_OPEN_FILES,
+             LevelDBConstants.BLOCK_SIZE,
+             LevelDBConstants.WRITE_BUFFER_SIZE,
+             LevelDBConstants.CACHE_SIZE);
     }
 
     @Override
@@ -105,14 +101,11 @@ public class LevelDB extends AbstractDB {
         return this.getClass().getSimpleName() + ":" + propertiesInfo();
     }
 
-    // IDatabase functionality -----------------------------------------------------------------------------------------
-
     private Options setupLevelDbOptions() {
         Options options = new Options();
 
         options.createIfMissing(true);
-        options
-            .compressionType(enableDbCompression ? CompressionType.SNAPPY : CompressionType.NONE);
+        options.compressionType(enableDbCompression ? CompressionType.SNAPPY : CompressionType.NONE);
         options.blockSize(this.blockSize);
         options.writeBufferSize(this.writeBufferSize); // (levelDb default: 8mb)
         options.cacheSize(enableDbCache ? this.cacheSize : 0);
@@ -122,6 +115,8 @@ public class LevelDB extends AbstractDB {
 
         return options;
     }
+
+    // IDatabase functionality -----------------------------------------------------------------------------------------
 
     @Override
     public boolean open() {
@@ -197,7 +192,7 @@ public class LevelDB extends AbstractDB {
     @Override
     public void compact() {
         LOG.info("Compacting " + this.toString() + ".");
-        db.compactRange(new byte[]{(byte) 0x00}, new byte[]{(byte) 0xff});
+        db.compactRange(new byte[] { (byte) 0x00 }, new byte[] { (byte) 0xff });
     }
 
     @Override
@@ -211,8 +206,6 @@ public class LevelDB extends AbstractDB {
         // TODO: implement a platform independent way to do this
         return new File(path, "LOCK").exists() && new File(path, "LOG").exists();
     }
-
-    // IKeyValueStore functionality ------------------------------------------------------------------------------------
 
     @Override
     public long approximateSize() {
@@ -234,6 +227,8 @@ public class LevelDB extends AbstractDB {
 
         return count;
     }
+
+    // IKeyValueStore functionality ------------------------------------------------------------------------------------
 
     @Override
     public boolean isEmpty() {
@@ -319,12 +314,13 @@ public class LevelDB extends AbstractDB {
             // bulk atomic update
             db.write(batch);
         } catch (DBException e) {
-            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".",
-                e);
+            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
         } catch (IOException e) {
             LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
         }
     }
+
+    WriteBatch batch = null;
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {
@@ -349,8 +345,7 @@ public class LevelDB extends AbstractDB {
             try {
                 db.write(batch);
             } catch (DBException e) {
-                LOG.error(
-                    "Unable to execute batch put/update operation on " + this.toString() + ".", e);
+                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
             }
             try {
                 batch.close();

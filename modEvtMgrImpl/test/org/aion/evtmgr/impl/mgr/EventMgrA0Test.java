@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,32 +19,32 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 
 package org.aion.evtmgr.impl.mgr;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
 import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class EventMgrA0Test {
-
     private Properties properties = new Properties();
 
-    @Test(expected = NullPointerException.class)
-    public void testNullConfig() {
+    @Test (expected = NullPointerException.class)
+    public void testNullConfig(){
         EventMgrA0 testManager = new EventMgrA0(null);
     }
 
     @Test
-    public void testRegisterEvent() {
+    public void testRegisterEvent(){
         EventMgrA0 testManager = new EventMgrA0(properties);
 
         boolean res = testManager.registerEvent(getEventsList());
@@ -55,7 +55,7 @@ public class EventMgrA0Test {
     }
 
     @Test
-    public void tesUnregisterEvent() {
+    public void tesUnregisterEvent(){
         EventMgrA0 testManager = new EventMgrA0(properties);
 
         boolean res = testManager.unregisterEvent(getEventsList());
@@ -66,7 +66,7 @@ public class EventMgrA0Test {
     }
 
     @Test
-    public void testNewEvent() {
+    public void testNewEvent(){
         EventMgrA0 testManager = new EventMgrA0(properties);
 
         boolean res = testManager.newEvent(new EventDummy());
@@ -77,7 +77,7 @@ public class EventMgrA0Test {
     }
 
     @Test
-    public void testNewEvents() {
+    public void testNewEvents(){
         EventMgrA0 testManager = new EventMgrA0(properties);
 
         boolean res = testManager.newEvents(getEventsList());
@@ -87,7 +87,7 @@ public class EventMgrA0Test {
         assertTrue(res2);
     }
 
-    private List<IEvent> getEventsList() {
+    private List<IEvent> getEventsList(){
         List<IEvent> eventsList = new ArrayList<>();
         eventsList.add(new EventBlock(EventBlock.CALLBACK.ONBEST0));
         eventsList.add(new EventBlock(EventBlock.CALLBACK.ONTRACE0));
@@ -97,7 +97,7 @@ public class EventMgrA0Test {
         return eventsList;
     }
 
-    private List<IEvent> getEventsList2() {
+    private List<IEvent> getEventsList2(){
         List<IEvent> eventsList = new ArrayList<>();
         eventsList.add(new EventBlock(EventBlock.CALLBACK.ONBEST0));
         eventsList.add(new EventBlock(EventBlock.CALLBACK.ONTRACE0));

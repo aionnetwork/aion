@@ -1,4 +1,4 @@
-/*
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,15 +17,22 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- */
+ ******************************************************************************/
 package org.aion.mcf.config;
 
-import com.google.common.base.Objects;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+
+import com.google.common.base.Objects;
 import org.aion.base.db.IPruneConfig;
 
 /**
@@ -35,12 +42,13 @@ import org.aion.base.db.IPruneConfig;
  */
 public class CfgPrune implements IPruneConfig {
 
-    private static final int MINIMUM_CURRENT_COUNT = 128;
-    private static final int MINIMUM_ARCHIVE_RATE = 1000;
     private boolean enabled;
     private boolean archived;
     private int current_count = MINIMUM_CURRENT_COUNT;
     private int archive_rate = MINIMUM_ARCHIVE_RATE;
+
+    private static final int MINIMUM_CURRENT_COUNT = 128;
+    private static final int MINIMUM_ARCHIVE_RATE = 1000;
 
     public CfgPrune(boolean _enabled) {
         this.enabled = _enabled;
@@ -51,7 +59,7 @@ public class CfgPrune implements IPruneConfig {
         // enable journal pruning
         this.enabled = true;
         this.current_count =
-            _current_count > MINIMUM_CURRENT_COUNT ? _current_count : MINIMUM_CURRENT_COUNT;
+                _current_count > MINIMUM_CURRENT_COUNT ? _current_count : MINIMUM_CURRENT_COUNT;
         // disable archiving
         this.archived = false;
     }
@@ -60,11 +68,11 @@ public class CfgPrune implements IPruneConfig {
         // enable journal pruning
         this.enabled = true;
         this.current_count =
-            _current_count > MINIMUM_CURRENT_COUNT ? _current_count : MINIMUM_CURRENT_COUNT;
+                _current_count > MINIMUM_CURRENT_COUNT ? _current_count : MINIMUM_CURRENT_COUNT;
         // enable archiving
         this.archived = true;
         this.archive_rate =
-            _archive_rate > MINIMUM_ARCHIVE_RATE ? _archive_rate : MINIMUM_ARCHIVE_RATE;
+                _archive_rate > MINIMUM_ARCHIVE_RATE ? _archive_rate : MINIMUM_ARCHIVE_RATE;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -126,7 +134,7 @@ public class CfgPrune implements IPruneConfig {
 
         xmlWriter.writeCharacters("\r\n\t\t\t");
         xmlWriter.writeComment(
-            "Integer value with minimum set to 128. Only blocks older than best block level minus this number are candidates for pruning.");
+                "Integer value with minimum set to 128. Only blocks older than best block level minus this number are candidates for pruning.");
         xmlWriter.writeCharacters("\r\n\t\t\t");
         xmlWriter.writeStartElement("current_count");
         xmlWriter.writeCharacters(String.valueOf(this.current_count));
@@ -134,7 +142,7 @@ public class CfgPrune implements IPruneConfig {
 
         xmlWriter.writeCharacters("\r\n\t\t\t");
         xmlWriter.writeComment(
-            "Integer value with minimum set to 1000. States for blocks that are exact multiples of this number will not be pruned.");
+                "Integer value with minimum set to 1000. States for blocks that are exact multiples of this number will not be pruned.");
         xmlWriter.writeCharacters("\r\n\t\t\t");
         xmlWriter.writeStartElement("archive_rate");
         xmlWriter.writeCharacters(String.valueOf(this.archive_rate));
@@ -166,17 +174,13 @@ public class CfgPrune implements IPruneConfig {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         CfgPrune cfgPrune = (CfgPrune) o;
         return enabled == cfgPrune.enabled &&
-            archived == cfgPrune.archived &&
-            current_count == cfgPrune.current_count &&
-            archive_rate == cfgPrune.archive_rate;
+                archived == cfgPrune.archived &&
+                current_count == cfgPrune.current_count &&
+                archive_rate == cfgPrune.archive_rate;
     }
 
     @Override

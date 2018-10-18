@@ -51,10 +51,11 @@ import org.aion.vm.ExecutionResult;
  * interacts with primarily. The operations provided here are all operations that only the contract
  * owner can use and are related to the overall integrity of the contract itself.
  *
- * The following operations are supported: create -- creates a new public TRS contract. lock --
- * locks the TRS contract so that no more deposits may be made. start -- starts the distribution of
- * the savings in the TRS contract. openFunds -- kills the TRS contract and unlocks all of the funds
- * for depositors to withdraw.
+ * The following operations are supported:
+ *      create -- creates a new public TRS contract.
+ *      lock -- locks the TRS contract so that no more deposits may be made.
+ *      start -- starts the distribution of the savings in the TRS contract.
+ *      openFunds -- kills the TRS contract and unlocks all of the funds for depositors to withdraw.
  */
 public final class TRSstateContract extends AbstractTRS {
 
@@ -81,63 +82,74 @@ public final class TRSstateContract extends AbstractTRS {
      * where arguments is defined differently for different operations. The supported operations
      * along with their expected arguments are outlined as follows:
      *
-     * <b>operation 0x0</b> - creates a new public-facing TRS contract.
-     * [<1b - isDirectDeposit> | <2b - periods> | <9b - percent> | <1b - precision>] total = 14
-     * bytes where: isDirectDeposit is 0x0 if direct depositing is disabled for this TRS
-     * isDirectDeposit is 0x1 if direct depositing is enabled for this TRS all other values of
-     * isDirectDeposit are invalid. periods is the number of 30-day withdrawal periods for this TRS
-     * (unsigned). percent is the percentage of the total savings that are withdrawable during the
-     * one-off special withdraw event. precision is the number of decimal places to left-shift
-     * percent in order to achieve greater precision.
+     *   <b>operation 0x0</b> - creates a new public-facing TRS contract.
+     *     [<1b - isDirectDeposit> | <2b - periods> | <9b - percent> | <1b - precision>]
+     *     total = 14 bytes
+     *   where:
+     *     isDirectDeposit is 0x0 if direct depositing is disabled for this TRS
+     *     isDirectDeposit is 0x1 if direct depositing is enabled for this TRS
+     *     all other values of isDirectDeposit are invalid.
+     *     periods is the number of 30-day withdrawal periods for this TRS (unsigned).
+     *     percent is the percentage of the total savings that are withdrawable during the one-off
+     *       special withdraw event.
+     *     precision is the number of decimal places to left-shift percent in order to achieve
+     *       greater precision.
      *
-     * All input values interpreted as numbers will be interpreted as unsigned and positive.
+     *     All input values interpreted as numbers will be interpreted as unsigned and positive.
      *
-     * conditions: precision must be in the range [0, 18] and after the shifts have been applied to
-     * percent the resulting percentage must be in the range [0, 1]. periods must be in the range
-     * [1, 1200].
+     *     conditions: precision must be in the range [0, 18] and after the shifts have been applied
+     *       to percent the resulting percentage must be in the range [0, 1]. periods must be in the
+     *       range [1, 1200].
      *
-     * returns: the address of the newly created TRS contract in the output field of the
-     * ExecutionResult.
+     *     returns: the address of the newly created TRS contract in the output field of the
+     *       ExecutionResult.
      *
-     * ~~~***~~~
+     *                                          ~~~***~~~
      *
-     * <b>operation 0x1</b> - locks a public-facing TRS contract. Once a contract is locked no
-     * more deposits can be made into it and ability to refund a participant is disabled. [<32b -
-     * contractAddress>] total = 33 bytes where: contractAddress is the address of the public-facing
-     * TRS contract to lock.
+     *     <b>operation 0x1</b> - locks a public-facing TRS contract. Once a contract is locked no
+     *       more deposits can be made into it and ability to refund a participant is disabled.
+     *       [<32b - contractAddress>]
+     *       total = 33 bytes
+     *     where:
+     *       contractAddress is the address of the public-facing TRS contract to lock.
      *
-     * conditions: the caller of this method must be the owner of the specified contract otherwise
-     * this method will fail. A contract cannot be locked until the total amount of funds deposited
-     * into the contract is a strictly positive number. A contract cannot be locked if the
-     * contract's funds are open.
+     *     conditions: the caller of this method must be the owner of the specified contract
+     *       otherwise this method will fail. A contract cannot be locked until the total amount of
+     *       funds deposited into the contract is a strictly positive number. A contract cannot be
+     *       locked if the contract's funds are open.
      *
-     * returns: void.
+     *     returns: void.
      *
-     * ~~~***~~~
+     *                                            ~~~***~~~
      *
-     * <b>operation 0x2</b> - starts a public-facing TRS contract. Once a contract starts it is
-     * considered live and the first withdrawal period has officially begun. A contract must first
-     * be locked before it can be made live. [<32b - contractAddress>] total = 33 bytes where:
-     * contractAddress is the address of the public-facing TRS contract to start.
+     *     <b>operation 0x2</b> - starts a public-facing TRS contract. Once a contract starts it is
+     *       considered live and the first withdrawal period has officially begun. A contract must
+     *       first be locked before it can be made live.
+     *       [<32b - contractAddress>]
+     *       total = 33 bytes
+     *     where:
+     *       contractAddress is the address of the public-facing TRS contract to start.
      *
-     * conditions: the caller of this method must be the owner of the specified contract otherwise
-     * this method will fail. A contract cannot be started if its funds are open.
+     *     conditions: the caller of this method must be the owner of the specified contract
+     *       otherwise this method will fail. A contract cannot be started if its funds are open.
      *
-     * returns: void.
+     *     returns: void.
      *
-     * ~~~***~~~
+     *                                            ~~~***~~~
      *
-     * <b>operation 0x3</b> - kills the public-facing TRS contract so that it can never again be
-     * locked or made live and unlocks all of the funds in it so that any account that has a
-     * positive deposit balance in the contract is freely able to withdraw all of their funds using
-     * one withdraw operation (bulkWithdraw will also produce the same effect). [<32b -
-     * contractAddress>] total = 33 bytes where: contractAddress is the address of the public-facing
-     * TRS contract to open up.
+     *     <b>operation 0x3</b> - kills the public-facing TRS contract so that it can never again be
+     *       locked or made live and unlocks all of the funds in it so that any account that has a
+     *       positive deposit balance in the contract is freely able to withdraw all of their funds
+     *       using one withdraw operation (bulkWithdraw will also produce the same effect).
+     *       [<32b - contractAddress>]
+     *       total = 33 bytes
+     *     where:
+     *       contractAddress is the address of the public-facing TRS contract to open up.
      *
-     * conditions: the caller of this method must be the owner of the specified contract otherwise
-     * this method will fail. The contract must not already be live.
+     *     conditions: the caller of this method must be the owner of the specified contract
+     *       otherwise this method will fail. The contract must not already be live.
      *
-     * returns: void.
+     *     returns: void.
      *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
@@ -160,41 +172,42 @@ public final class TRSstateContract extends AbstractTRS {
 
         int operation = input[0];
         switch (operation) {
-            case 0:
-                return create(input, nrgLimit);
-            case 1:
-                return lock(input, nrgLimit);
-            case 2:
-                return start(input, nrgLimit);
-            case 3:
-                return openFunds(input, nrgLimit);
-            default:
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            case 0: return create(input, nrgLimit);
+            case 1: return lock(input, nrgLimit);
+            case 2: return start(input, nrgLimit);
+            case 3: return openFunds(input, nrgLimit);
+            default: return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
 
     /**
      * Logic to create a new public-facing TRS contract where caller is the owner of the contract.
      *
-     * The input byte array format is defined as follows: [<1b - 0x0> | <1b - isDirectDeposit> | <2b
-     * - periods> | <9b - percent> | <1b - precision>] total = 14 bytes where: isDirectDeposit is
-     * 0x0 if direct depositing is disabled for this TRS isDirectDeposit is 0x1 if direct depositing
-     * is enabled for this TRS isDirectDeposit is 0x2 to create a public-facing TRS contract for
-     * testing with direct depositing disabled. (Aion-only). isDirectDeposit is 0x3 to create a
-     * public-facing TRS contract for testing with direct depositing enabled. (Aion-only). all other
-     * values of isDirectDeposit are invalid. periods is the number of 30-day withdrawal periods for
-     * this TRS (unsigned). percent is the percentage of the total savings that are withdrawable
-     * during the one-off special withdraw event. precision is the number of decimal places to
-     * left-shift percent in order to achieve greater precision.
+     * The input byte array format is defined as follows:
+     *   [<1b - 0x0> | <1b - isDirectDeposit> | <2b - periods> | <9b - percent> | <1b - precision>]
+     *   total = 14 bytes
+     * where:
+     *   isDirectDeposit is 0x0 if direct depositing is disabled for this TRS
+     *   isDirectDeposit is 0x1 if direct depositing is enabled for this TRS
+     *   isDirectDeposit is 0x2 to create a public-facing TRS contract for testing with direct
+     *     depositing disabled. (Aion-only).
+     *   isDirectDeposit is 0x3 to create a public-facing TRS contract for testing with direct
+     *     depositing enabled. (Aion-only).
+     *   all other values of isDirectDeposit are invalid.
+     *   periods is the number of 30-day withdrawal periods for this TRS (unsigned).
+     *   percent is the percentage of the total savings that are withdrawable during the one-off
+     *     special withdraw event.
+     *   precision is the number of decimal places to left-shift percent in order to achieve
+     *     greater precision.
      *
-     * All input values interpreted as numbers will be interpreted as unsigned and positive.
+     *   All input values interpreted as numbers will be interpreted as unsigned and positive.
      *
-     * conditions: precision must be in the range [0, 18] and after the shifts have been applied to
-     * percent the resulting percentage must be in the range [0, 1]. periods must be in the range
-     * [1, 1200].
+     *   conditions: precision must be in the range [0, 18] and after the shifts have been applied
+     *     to percent the resulting percentage must be in the range [0, 1]. periods must be in the
+     *     range [1, 1200].
      *
-     * Note: a TRS contract created for testing will set its period duration to 30 SECONDS instead
-     * of days. Nothing else about the contract will be different.
+     *   Note: a TRS contract created for testing will set its period duration to 30 SECONDS instead
+     *   of days. Nothing else about the contract will be different.
      *
      * @param input The input to the create public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -243,7 +256,7 @@ public final class TRSstateContract extends AbstractTRS {
 
         // Keep first byte of percentBytes unused (as zero) so result is always unsigned.
         byte[] percentBytes = new byte[indexPrecision - indexPercent + 1];
-        System.arraycopy(input, indexPercent, percentBytes, 1, indexPrecision - indexPercent);
+        System.arraycopy(input, indexPercent, percentBytes, 1,  indexPrecision - indexPercent);
         percentBytes[0] = (byte) 0x0;   // sanity
         BigInteger percent = new BigInteger(percentBytes);
         BigDecimal realPercent = new BigDecimal(percent).movePointLeft(precision);
@@ -267,17 +280,18 @@ public final class TRSstateContract extends AbstractTRS {
     }
 
     /**
-     * Logic to lock an existing public-facing TRS contract where caller is the owner of the
-     * contract.
+     * Logic to lock an existing public-facing TRS contract where caller is the owner of the contract.
      *
-     * The input byte array format is defined as follows: [<1b - 0x1> | <32b - contractAddress>]
-     * total = 33 bytes where: contractAddress is the address of the public-facing TRS contract to
-     * lock.
+     * The input byte array format is defined as follows:
+     *   [<1b - 0x1> | <32b - contractAddress>]
+     *   total = 33 bytes
+     * where:
+     *   contractAddress is the address of the public-facing TRS contract to lock.
      *
-     * conditions: the caller of this method must be the owner of the specified contract otherwise
-     * this method will fail. A contract cannot be locked until the total amount of funds deposited
-     * into the contract is a strictly positive number. A contract cannot be locked if its funds are
-     * open.
+     * conditions: the caller of this method must be the owner of the specified contract
+     *   otherwise this method will fail. A contract cannot be locked until the total amount of funds
+     *   deposited into the contract is a strictly positive number. A contract cannot be locked if
+     *   its funds are open.
      *
      * @param input The input to the lock public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -293,8 +307,7 @@ public final class TRSstateContract extends AbstractTRS {
         }
 
         // The caller must also be the owner of this contract.
-        Address contract = new Address(
-            Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
+        Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
         if (!caller.equals(getContractOwner(contract))) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -324,15 +337,16 @@ public final class TRSstateContract extends AbstractTRS {
     }
 
     /**
-     * Logic to start an existing public-facing TRS contract where caller is the owner of the
-     * contract.
+     * Logic to start an existing public-facing TRS contract where caller is the owner of the contract.
      *
-     * The input byte array format is defined as follows: [<1b - 0x2> | <32b - contractAddress>]
-     * total = 33 bytes where: contractAddress is the address of the public-facing TRS contract to
-     * lock.
+     * The input byte array format is defined as follows:
+     *   [<1b - 0x2> | <32b - contractAddress>]
+     *   total = 33 bytes
+     * where:
+     *   contractAddress is the address of the public-facing TRS contract to lock.
      *
-     * conditions: the caller of this method must be the owner of the specified contract otherwise
-     * this method will fail. A contract can only be started if its funds are not open.
+     * conditions: the caller of this method must be the owner of the specified contract
+     *   otherwise this method will fail. A contract can only be started if its funds are not open.
      *
      * @param input The input to the lock public-facing TRS contract logic.
      * @param nrgLimit The energy limit.
@@ -348,8 +362,7 @@ public final class TRSstateContract extends AbstractTRS {
         }
 
         // The caller must also be the owner of this contract.
-        Address contract = new Address(
-            Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
+        Address contract = new Address(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.ADDRESS_LEN));
         if (!caller.equals(getContractOwner(contract))) {
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
@@ -378,11 +391,13 @@ public final class TRSstateContract extends AbstractTRS {
      * Logic to open up an existing public-facing TRS contract where caller is the owner of the
      * contract.
      *
-     * [<1b - 0x3> | <32b - contractAddress>] total = 33 bytes where: contractAddress is the address
-     * of the public-facing TRS contract to open up.
+     * [<1b - 0x3> | <32b - contractAddress>]
+     *   total = 33 bytes
+     * where:
+     *   contractAddress is the address of the public-facing TRS contract to open up.
      *
-     * conditions: the caller of this method must be the owner of the specified contract otherwise
-     * this method will fail. The contract must not already be live.
+     * conditions: the caller of this method must be the owner of the specified contract
+     *   otherwise this method will fail. The contract must not already be live.
      *
      * returns: void.
      *
@@ -427,6 +442,7 @@ public final class TRSstateContract extends AbstractTRS {
         return new ExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
     }
 
+
     // <------------------------------------HELPER METHODS----------------------------------------->
 
     /**
@@ -454,9 +470,7 @@ public final class TRSstateContract extends AbstractTRS {
     private void saveNewContract(Address contract, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
-        if (getContractOwner(contract) != null) {
-            return;
-        } // contract exists already.
+        if (getContractOwner(contract) != null) { return; } // contract exists already.
         track.createAccount(contract);
         setContractOwner(contract);
         setContractSpecs(contract, isTest, isDirectDeposit, periods, percent, precision);

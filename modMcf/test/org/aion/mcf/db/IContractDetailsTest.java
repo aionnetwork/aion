@@ -42,7 +42,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class IContractDetailsTest {
-
     // The two ways of instantiating the cache.
     private IContractDetails<IDataWord> cache1, cache2;
 
@@ -317,8 +316,7 @@ public class IContractDetailsTest {
      */
     private void doGetNoSuchDoubleKeyTest(IContractDetails<IDataWord> cache) {
         checkGetNonExistentPairing(cache, DoubleDataWord.ZERO);
-        checkGetNonExistentPairing(cache,
-            new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)));
+        checkGetNonExistentPairing(cache, new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)));
     }
 
     /**
@@ -338,8 +336,8 @@ public class IContractDetailsTest {
     }
 
     /**
-     * Tests putting key and value into cache and then putting a zero-byte IDataWord into cache with
-     * key and then calling get() on that key.
+     * Tests putting key and value into cache and then putting a zero-byte IDataWord into cache
+     * with key and then calling get() on that key.
      */
     private void doPutKeyValueThenOverwriteValueWithZero(IContractDetails<IDataWord> cache,
         IDataWord key, IDataWord value) {
@@ -391,8 +389,7 @@ public class IContractDetailsTest {
                 try {
                     assertNull(storage.get(key));
                 } catch (AssertionError e) {
-                    System.err
-                        .println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+                    System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
                     e.printStackTrace();
                 }
             } else {
@@ -406,8 +403,7 @@ public class IContractDetailsTest {
      * Iterates over every key in keys -- which are assumed to exist in cache -- and then deletes
      * any key-value pair in cache for every n'th key in keys.
      */
-    private void deleteEveryNthEntry(IContractDetails<IDataWord> cache, List<IDataWord> keys,
-        int n) {
+    private void deleteEveryNthEntry(IContractDetails<IDataWord> cache, List<IDataWord> keys, int n) {
         int count = 1;
         for (IDataWord key : keys) {
             if (count % n == 0) {
@@ -460,7 +456,7 @@ public class IContractDetailsTest {
      * Returns a random DataWord if isSingleWord is true, otherwise a random DoubleDataWord.
      */
     private IDataWord getRandomWord(boolean isSingleWord) {
-        return (isSingleWord) ?
+        return  (isSingleWord) ?
             new DataWord(RandomUtils.nextBytes(DataWord.BYTES)) :
             new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
     }
@@ -514,8 +510,8 @@ public class IContractDetailsTest {
     }
 
     /**
-     * Assumption: key has no valid value mapping in cache. This method calls cache.get(key) and
-     * checks its result.
+     * Assumption: key has no valid value mapping in cache.
+     * This method calls cache.get(key) and checks its result.
      */
     private void checkGetNonExistentPairing(IContractDetails<IDataWord> cache, IDataWord key) {
         try {

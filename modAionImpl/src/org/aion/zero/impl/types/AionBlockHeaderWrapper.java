@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,15 +19,18 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.impl.types;
 
 import java.util.List;
-import org.aion.mcf.types.AbstractBlockHeaderWrapper;
+
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.zero.types.A0BlockHeader;
+import org.aion.mcf.types.AbstractBlockHeaderWrapper;
 
 public class AionBlockHeaderWrapper extends AbstractBlockHeaderWrapper<A0BlockHeader> {
 

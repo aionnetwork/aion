@@ -48,7 +48,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class AionRepositoryCacheTest {
-
     private AionRepositoryCache cache;
 
     @Before
@@ -88,8 +87,7 @@ public class AionRepositoryCacheTest {
 
     @Test
     public void testGetStorageValueNoSuchAddress() {
-        assertNull(cache
-            .getStorageValue(getNewAddress(), new DataWord(RandomUtils.nextBytes(DataWord.BYTES))));
+        assertNull(cache.getStorageValue(getNewAddress(), new DataWord(RandomUtils.nextBytes(DataWord.BYTES))));
     }
 
     @Test
@@ -223,8 +221,7 @@ public class AionRepositoryCacheTest {
      * Checks that cache's storage, given by cache.getStorage(), contains all key-value pairs in
      * keys and values, where it is assumed every n'th pair was deleted.
      */
-    private void checkStorage(Address address, List<IDataWord> keys, List<IDataWord> values,
-        int n) {
+    private void checkStorage(Address address, List<IDataWord> keys, List<IDataWord> values, int n) {
         Map<IDataWord, IDataWord> storage = cache.getStorage(address, keys);
         int count = 1;
         for (IDataWord key : keys) {
@@ -292,7 +289,7 @@ public class AionRepositoryCacheTest {
      * Returns a random DataWord if isSingleWord is true, otherwise a random DoubleDataWord.
      */
     private IDataWord getRandomWord(boolean isSingleWord) {
-        return (isSingleWord) ?
+        return  (isSingleWord) ?
             new DataWord(RandomUtils.nextBytes(DataWord.BYTES)) :
             new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
     }

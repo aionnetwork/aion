@@ -130,16 +130,14 @@ public class TaskInbound implements Runnable {
                         if (key.isReadable()) {
                             cb = (ChannelBuffer) key.attachment();
                             if (cb == null) {
-                                p2pLOG.error("inbound exception={}",
-                                    new P2pException("attachment is null").getMessage());
+                                p2pLOG.error("inbound exception={}", new P2pException("attachment is null").getMessage());
                                 continue;
                             }
                             readBuffer(key, cb, readBuf);
                         }
                     } catch (Exception e) {
                         this.mgr.closeSocket(key != null ? (SocketChannel) key.channel() : null,
-                            (cb != null ? cb.getDisplayId() : null) + "-read-msg-exception " + e
-                                .toString());
+                            (cb != null ? cb.getDisplayId() : null) + "-read-msg-exception " + e.toString());
                         if (cb != null) {
                             cb.setClosed();
                         }
@@ -182,7 +180,7 @@ public class TaskInbound implements Runnable {
             try {
                 node = this.nodeMgr.allocNode(ip, port);
             } catch (IllegalArgumentException e) {
-                p2pLOG.error("illegal ip / port : {} {}", ip, port);
+                p2pLOG.error("illegal ip / port : {} {}", ip , port);
                 channel.close();
                 return;
             }

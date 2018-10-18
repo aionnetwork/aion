@@ -49,13 +49,11 @@ public class TxRecptLg {
     // true when the log was removed, due to a chain reorganization. false if its a valid log.
     public boolean removed;
 
-    public <TX extends ITransaction> TxRecptLg(Log logInfo, IBlock b, Integer txIndex, TX tx,
-        int logIdx, boolean isMainchain) {
+    public <TX extends ITransaction> TxRecptLg(Log logInfo, IBlock b, Integer txIndex, TX tx, int logIdx, boolean isMainchain) {
         this.logIndex = TypeConverter.toJsonHex(logIdx);
         this.blockNumber = b == null ? null : TypeConverter.toJsonHex(b.getNumber());
         this.blockHash = b == null ? null : TypeConverter.toJsonHex(b.getHash());
-        this.transactionIndex =
-            (b == null || txIndex == null) ? null : TypeConverter.toJsonHex(txIndex);
+        this.transactionIndex = (b == null || txIndex == null) ? null : TypeConverter.toJsonHex(txIndex);
         this.transactionHash = TypeConverter.toJsonHex(tx.getHash());
         this.address = TypeConverter.toJsonHex(logInfo.getAddress().toString());
         this.data = TypeConverter.toJsonHex(logInfo.getData());

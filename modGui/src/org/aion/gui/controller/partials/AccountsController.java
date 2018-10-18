@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
+ *     The aion network project is free software: you can redistribute it 
+ *     and/or modify it under the terms of the GNU General Public License 
+ *     as published by the Free Software Foundation, either version 3 of 
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     The aion network project is distributed in the hope that it will 
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
+ *     along with the aion network project source files.  
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -24,10 +24,8 @@ package org.aion.gui.controller.partials;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
-import java.net.URL;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.ResourceBundle;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -50,40 +48,47 @@ import org.aion.wallet.ui.components.partials.ImportAccountDialog;
 import org.aion.wallet.ui.components.partials.UnlockMasterAccountDialog;
 import org.slf4j.Logger;
 
-public class AccountsController extends AbstractController {
+import java.net.URL;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.ResourceBundle;
 
-    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+public class AccountsController extends AbstractController {
     private final AccountManager accountManager;
     private final WalletStorage walletStorage;
     private final AddAccountDialog addAccountDialog;
     private final ImportAccountDialog importAccountDialog;
     private final UnlockMasterAccountDialog unlockMasterAccountDialog;
     private final ConsoleManager consoleManager;
+
     @FXML
     private Button addMasterAccountButton;
     @FXML
     private Button unlockMasterAccountButton;
     @FXML
     private ListView<AccountDTO> accountListView;
+
     private AccountDTO account;
 
+    private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+
     public AccountsController(AccountManager accountManager,
-        WalletStorage walletStorage,
-        ConsoleManager consoleManager) {
+                              WalletStorage walletStorage,
+                              ConsoleManager consoleManager) {
         this(accountManager, walletStorage,
-            new AddAccountDialog(accountManager, consoleManager),
-            new ImportAccountDialog(accountManager, consoleManager),
-            new UnlockMasterAccountDialog(accountManager, consoleManager),
-            consoleManager);
+                new AddAccountDialog(accountManager, consoleManager),
+                new ImportAccountDialog(accountManager, consoleManager),
+                new UnlockMasterAccountDialog(accountManager, consoleManager),
+                consoleManager);
     }
 
     @VisibleForTesting
     AccountsController(AccountManager accountManager,
-        WalletStorage walletStorage,
-        AddAccountDialog addAccountDialog,
-        ImportAccountDialog importAccountDialog,
-        UnlockMasterAccountDialog unlockMasterAccountDialog,
-        ConsoleManager consoleManager) {
+                       WalletStorage walletStorage,
+                       AddAccountDialog addAccountDialog,
+                       ImportAccountDialog importAccountDialog,
+                       UnlockMasterAccountDialog unlockMasterAccountDialog,
+                       ConsoleManager consoleManager) {
         this.accountManager = accountManager;
         this.walletStorage = walletStorage;
         this.addAccountDialog = addAccountDialog;
@@ -115,14 +120,13 @@ public class AccountsController extends AbstractController {
     }
 
     private void reloadAccounts() {
-        final Task<List<AccountDTO>> getAccountsTask = getApiTask(o -> accountManager.getAccounts(),
-            null);
+        final Task<List<AccountDTO>> getAccountsTask = getApiTask(o -> accountManager.getAccounts(), null);
         runApiTask(
-            getAccountsTask,
-            evt -> reloadAccountObservableList(getAccountsTask.getValue()),
-            getErrorEvent(t -> {
-            }, getAccountsTask),
-            getEmptyEvent()
+                getAccountsTask,
+                evt -> reloadAccountObservableList(getAccountsTask.getValue()),
+                getErrorEvent(t -> {
+                }, getAccountsTask),
+                getEmptyEvent()
         );
         displayFooterActions();
     }
@@ -137,8 +141,7 @@ public class AccountsController extends AbstractController {
     @Subscribe
     private void handleAccountEvent(final AccountEvent event) {
         final AccountDTO account = event.getPayload();
-        if (EnumSet.of(AccountEvent.Type.CHANGED, AccountEvent.Type.ADDED)
-            .contains(event.getType())) {
+        if (EnumSet.of(AccountEvent.Type.CHANGED, AccountEvent.Type.ADDED).contains(event.getType())) {
             if (account.isActive()) {
                 this.account = account;
             }
@@ -181,8 +184,7 @@ public class AccountsController extends AbstractController {
                 accountManager.createAccount();
                 consoleManager.addLog("New address created", ConsoleManager.LogType.ACCOUNT);
             } catch (ValidationException e) {
-                consoleManager.addLog("Address cannot be created", ConsoleManager.LogType.ACCOUNT,
-                    ConsoleManager.LogLevel.WARNING);
+                consoleManager.addLog("Address cannot be created", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
                 LOG.error(e.getMessage(), e);
                 // todo: display on yui
             }

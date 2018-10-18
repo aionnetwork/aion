@@ -30,15 +30,21 @@ import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 
 /**
+ *
  * @author chris
+ *
  */
 public class ReqHandshake extends Msg {
 
-    public final static int LEN = 36 + 4 + 8 + 4;
     byte[] nodeId; // 36 bytes
+
     private int netId; // 4 bytes
+
     private byte[] ip; // 8 bytes
+
     private int port; // 4 bytes
+
+    public final static int LEN = 36 + 4 + 8 + 4;
 
     ReqHandshake(final byte[] _nodeId, int _netId, final byte[] _ip, int _port) {
         super(Ver.V0, Ctrl.NET, Act.REQ_HANDSHAKE);
@@ -48,14 +54,31 @@ public class ReqHandshake extends Msg {
         this.port = _port;
     }
 
+    public byte[] getNodeId() {
+        return this.nodeId;
+    }
+
+    public int getNetId() {
+        return this.netId;
+    }
+
+    byte[] getIp() {
+        return this.ip;
+    }
+
+    public int getPort() {
+        return this.port;
+    }
+
     /**
      * @param _bytes byte[]
-     * @return ReqHandshake decode body
+     * @return ReqHandshake
+     * decode body
      */
     public static ReqHandshake decode(final byte[] _bytes) {
-        if (_bytes == null || _bytes.length != LEN) {
+        if (_bytes == null || _bytes.length != LEN)
             return null;
-        } else {
+        else {
             ByteBuffer buf = ByteBuffer.wrap(_bytes);
 
             // decode node id
@@ -76,27 +99,11 @@ public class ReqHandshake extends Msg {
         }
     }
 
-    public byte[] getNodeId() {
-        return this.nodeId;
-    }
-
-    public int getNetId() {
-        return this.netId;
-    }
-
-    byte[] getIp() {
-        return this.ip;
-    }
-
-    public int getPort() {
-        return this.port;
-    }
-
     @Override
     public byte[] encode() {
-        if (this.nodeId.length != 36) {
+        if (this.nodeId.length != 36)
             return null;
-        } else {
+        else {
             ByteBuffer buf = ByteBuffer.allocate(LEN);
             buf.put(this.nodeId);
             buf.putInt(this.netId);

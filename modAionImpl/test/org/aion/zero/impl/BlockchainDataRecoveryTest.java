@@ -41,9 +41,7 @@ import org.aion.zero.types.AionTransaction;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * @author Alexandra Roatis
- */
+/** @author Alexandra Roatis */
 public class BlockchainDataRecoveryTest {
 
     private static final List<ECKey> accounts = BlockchainTestUtils.generateAccounts(10);
@@ -60,15 +58,13 @@ public class BlockchainDataRecoveryTest {
         AionLoggerFactory.init(cfg);
     }
 
-    /**
-     * Test the recovery of the world state with start from the state of an ancestor block.
-     */
+    /** Test the recovery of the world state with start from the state of an ancestor block. */
     @Test
     public void testRecoverWorldStateWithPartialWorldState() {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -81,7 +77,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // second half of blocks will miss the state root
@@ -91,7 +87,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(context.block.getStateRoot());
             blocksToImport.add(context.block);
         }
@@ -149,15 +145,13 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isTrue();
     }
 
-    /**
-     * Test the recovery of the world state with start from the state of the genesis block.
-     */
+    /** Test the recovery of the world state with start from the state of the genesis block. */
     @Test
     public void testRecoverWorldStateWithStartFromGenesis() {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -172,7 +166,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(context.block.getStateRoot());
             blocksToImport.add(context.block);
         }
@@ -240,7 +234,7 @@ public class BlockchainDataRecoveryTest {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -254,7 +248,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToImport.add(context.block);
         }
 
@@ -330,7 +324,7 @@ public class BlockchainDataRecoveryTest {
     public void testRecoverWorldState_wRepositorySnapshot() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -344,13 +338,12 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
         }
         repo.flush();
 
-        assertThat(
-            chain.recoverWorldState(repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock()))
-            .isFalse();
+        assertThat(chain.recoverWorldState(repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock()))
+                .isFalse();
     }
 
     @Test
@@ -358,7 +351,7 @@ public class BlockchainDataRecoveryTest {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -373,7 +366,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             statesToDelete.add(context.block.getStateRoot());
             // skipping middle block
             if (context.block.getNumber() != NUMBER_OF_BLOCKS / 2) {
@@ -462,15 +455,13 @@ public class BlockchainDataRecoveryTest {
         assertThat(trie.isValidRoot(chain.getBestBlock().getStateRoot())).isTrue();
     }
 
-    /**
-     * Test the recovery of the index with start from the index of an ancestor block.
-     */
+    /** Test the recovery of the index with start from the index of an ancestor block. */
     @Test
     public void testRecoverIndexWithPartialIndex_MainChain() {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -483,7 +474,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // second half of blocks will miss the index
@@ -493,7 +484,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToImport.add(context.block);
             blocksToDelete.put(context.block.getNumber(), context.block.getHash());
         }
@@ -584,18 +575,16 @@ public class BlockchainDataRecoveryTest {
         assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
     }
 
-    /**
-     * Test the recovery of the index with start from the index of an ancestor block.
-     */
+    /** Test the recovery of the index with start from the index of an ancestor block. */
     @Test
     public void testRecoverIndexWithPartialIndex_ShorterSideChain() {
         final int EVEN_NUMBER_OF_BLOCKS =
-            NUMBER_OF_BLOCKS % 2 == 0 ? NUMBER_OF_BLOCKS : NUMBER_OF_BLOCKS + 1;
+                NUMBER_OF_BLOCKS % 2 == 0 ? NUMBER_OF_BLOCKS : NUMBER_OF_BLOCKS + 1;
 
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -608,7 +597,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
         }
 
         // splitting chains
@@ -619,7 +608,7 @@ public class BlockchainDataRecoveryTest {
         txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
         context = chain.createNewBlockInternal(mainChainBlock, txs, true, time / 10000L);
         assertThat(chain.tryToConnectInternal(context.block, (time + 10)))
-            .isEqualTo(ImportResult.IMPORTED_BEST);
+                .isEqualTo(ImportResult.IMPORTED_BEST);
         mainChainBlock = context.block;
 
         // starting side chain
@@ -627,7 +616,7 @@ public class BlockchainDataRecoveryTest {
         context = chain.createNewBlockInternal(sideChainBlock, txs, true, time / 10000L);
         context.block.setExtraData("other".getBytes());
         assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-            .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+                .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
         sideChainBlock = context.block;
 
         // building chains; sidechain will have missing index
@@ -638,7 +627,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(mainChainBlock, txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time + 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             mainChainBlock = context.block;
             blocksToImportMainChain.add(context.block);
 
@@ -646,7 +635,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(sideChainBlock, txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_NOT_BEST);
             sideChainBlock = context.block;
             blocksToDelete.put(sideChainBlock.getNumber(), sideChainBlock.getHash());
             blocksToImportSideChain.add(context.block);
@@ -656,7 +645,7 @@ public class BlockchainDataRecoveryTest {
         txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
         context = chain.createNewBlockInternal(mainChainBlock, txs, true, time / 10000L);
         assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-            .isEqualTo(ImportResult.IMPORTED_BEST);
+                .isEqualTo(ImportResult.IMPORTED_BEST);
         mainChainBlock = context.block;
 
         AionBlock bestBlock = chain.getBestBlock();
@@ -682,7 +671,7 @@ public class BlockchainDataRecoveryTest {
 
         // call the recovery functionality for the main chain subsection
         boolean worked =
-            chain.recoverIndexEntry(repo, chain.getBlockByHash(mainChainBlock.getParentHash()));
+                chain.recoverIndexEntry(repo, chain.getBlockByHash(mainChainBlock.getParentHash()));
 
         // ensure that the index was corrupted only for the side chain
         assertThat(repo.isIndexed(sideChainBlock.getHash(), sideChainBlock.getNumber())).isFalse();
@@ -766,15 +755,13 @@ public class BlockchainDataRecoveryTest {
         assertThat(indexDatabase.get(sizeKey).isPresent()).isTrue();
     }
 
-    /**
-     * Test the index recovery when the index database contains only the size and genesis index.
-     */
+    /** Test the index recovery when the index database contains only the size and genesis index. */
     @Test
     public void testRecoverIndexWithStartFromGenesis() {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -789,7 +776,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToDelete.put(context.block.getNumber(), context.block.getHash());
             blocksToImport.add(context.block);
         }
@@ -890,7 +877,7 @@ public class BlockchainDataRecoveryTest {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -903,7 +890,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToImport.add(context.block);
         }
 
@@ -963,7 +950,7 @@ public class BlockchainDataRecoveryTest {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -978,7 +965,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToDelete.put(context.block.getNumber(), context.block.getHash());
             blocksToImport.add(context.block);
         }
@@ -1096,7 +1083,7 @@ public class BlockchainDataRecoveryTest {
     public void testRecoverIndex_wRepositorySnapshot() {
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -1110,13 +1097,12 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
         }
         repo.flush();
 
-        assertThat(
-            chain.recoverIndexEntry(repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock()))
-            .isFalse();
+        assertThat(chain.recoverIndexEntry(repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock()))
+                .isFalse();
     }
 
     @Test
@@ -1124,7 +1110,7 @@ public class BlockchainDataRecoveryTest {
         // build a blockchain with a few blocks
         StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
         StandaloneBlockchain.Bundle bundle =
-            builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
+                builder.withValidatorConfiguration("simple").withDefaultAccounts(accounts).build();
 
         StandaloneBlockchain chain = bundle.bc;
         AionRepositoryImpl repo = chain.getRepository();
@@ -1139,7 +1125,7 @@ public class BlockchainDataRecoveryTest {
             txs = BlockchainTestUtils.generateTransactions(MAX_TX_PER_BLOCK, accounts, repo);
             context = chain.createNewBlockInternal(chain.getBestBlock(), txs, true, time / 10000L);
             assertThat(chain.tryToConnectInternal(context.block, (time += 10)))
-                .isEqualTo(ImportResult.IMPORTED_BEST);
+                    .isEqualTo(ImportResult.IMPORTED_BEST);
             blocksToDelete.put(context.block.getNumber(), context.block.getHash());
             // skipping middle block
             if (context.block.getNumber() != NUMBER_OF_BLOCKS / 2) {

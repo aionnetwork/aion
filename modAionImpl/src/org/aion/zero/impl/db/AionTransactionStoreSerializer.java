@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,19 +19,21 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.impl.db;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import org.aion.mcf.ds.Serializer;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.zero.impl.types.AionTxInfo;
 
 public class AionTransactionStoreSerializer {
-
     public final static Serializer<List<AionTxInfo>, byte[]> serializer = new Serializer<List<AionTxInfo>, byte[]>() {
         @Override
         public byte[] serialize(List<AionTxInfo> object) {

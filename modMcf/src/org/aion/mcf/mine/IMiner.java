@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,17 +17,23 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  * Contributors:
  *     Aion foundation.
- */
+
+ ******************************************************************************/
 package org.aion.mcf.mine;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import org.aion.base.type.IBlock;
 import org.aion.mcf.types.AbstractBlockHeader;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 /**
  * Miner interface.
+ *
+ * @param <Blk>
+ * @param <BH>
  */
 public interface IMiner<Blk extends IBlock<?, ?>, BH extends AbstractBlockHeader> {
 

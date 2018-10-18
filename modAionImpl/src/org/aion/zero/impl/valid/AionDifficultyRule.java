@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,18 +19,23 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.impl.valid;
 
 import static org.aion.base.util.BIUtil.isEqual;
 
 import java.math.BigInteger;
 import java.util.List;
+
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
+import org.aion.mcf.valid.DependentBlockHeaderRule;
 import org.aion.zero.types.IAionBlock;
 
 /**
@@ -44,24 +49,17 @@ public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule<A0Bl
         this.diffCalc = configuration.getDifficultyCalculator();
     }
 
-    private static String formatError(BigInteger expectedDifficulty, BigInteger actualDifficulty) {
-        return "difficulty ("
-            + actualDifficulty
-            + ") != expected difficulty ("
-            + expectedDifficulty + ")";
-    }
-
     /**
      * @inheritDoc
-     * @implNote There is a special case in block 1 where we do not have a grandparent, to get
-     * around this we must apply a different rule.
      *
-     * Currently that rule will be defined to "pass on" the difficulty of the parent block {@code
-     * block 0} to the current block {@code block 1}
+     * @implNote There is a special case in block 1 where we do not have a
+     * grandparent, to get around this we must apply a different rule.
+     *
+     * Currently that rule will be defined to "pass on" the difficulty of
+     * the parent block {@code block 0} to the current block {@code block 1}
      */
     @Override
-    public boolean validate(A0BlockHeader grandParent, A0BlockHeader parent, A0BlockHeader current,
-        List<RuleError> errors) {
+    public boolean validate(A0BlockHeader grandParent, A0BlockHeader parent, A0BlockHeader current, List<RuleError> errors) {
         if (parent.getNumber() == 0L) {
             if (!isEqual(parent.getDifficultyBI(), current.getDifficultyBI())) {
                 addError(formatError(parent.getDifficultyBI(), current.getDifficultyBI()), errors);
@@ -78,5 +76,12 @@ public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule<A0Bl
             return false;
         }
         return true;
+    }
+
+    private static String formatError(BigInteger expectedDifficulty, BigInteger actualDifficulty) {
+        return "difficulty ("
+                + actualDifficulty
+                + ") != expected difficulty ("
+                + expectedDifficulty + ")";
     }
 }

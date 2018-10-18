@@ -58,143 +58,47 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * CliTest for new version with use of different networks.
- */
+/** CliTest for new version with use of different networks. */
 @RunWith(JUnitParamsRunner.class)
 public class CliTest {
+
+    private final Cli cli = new Cli();
+    private final CfgAion cfg = CfgAion.inst();
+    private final Cli mockCli = spy(cli);
 
     // base paths
     private static final String BASE_PATH = System.getProperty("user.dir");
     private static final File MAIN_BASE_PATH = new File(BASE_PATH, "mainnet");
     private static final File TEST_BASE_PATH = new File(BASE_PATH, "mastery");
+
     // config paths
     private static final File CONFIG_PATH = new File(BASE_PATH, "config");
     private static final File MAIN_CONFIG_PATH = new File(CONFIG_PATH, "mainnet");
     private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, "mastery");
+
     private static final String module = "modAionImpl";
+
     private static final String configFileName = "config.xml";
     private static final String genesisFileName = "genesis.json";
+
     private static final String dataDirectory = "datadir";
     private static final String alternativeDirectory = "random";
+
     private static final File path = new File(BASE_PATH, dataDirectory);
     private static final File alternativePath = new File(BASE_PATH, alternativeDirectory);
+
     private static final File config = new File(TEST_RESOURCE_DIR, configFileName);
     private static final File oldConfig = new File(CONFIG_PATH, configFileName);
     private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
     private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
+
     private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
     private static final File oldGenesis = new File(CONFIG_PATH, genesisFileName);
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
-    /**
-     * @implNote set this to true to enable printing
-     */
+
+    /** @implNote set this to true to enable printing */
     private static final boolean verbose = false;
-    private final Cli cli = new Cli();
-    private final CfgAion cfg = CfgAion.inst();
-    private final Cli mockCli = spy(cli);
-
-    // Methods below taken from FileUtils class
-    private static boolean copyRecursively(File src, File target) {
-        if (src.isDirectory()) {
-            return copyDirectoryContents(src, target);
-        } else {
-            try {
-                Files.copy(src, target);
-                return true;
-            } catch (IOException e) {
-                return false;
-            }
-        }
-    }
-
-    private static boolean copyDirectoryContents(File src, File target) {
-        Preconditions.checkArgument(src.isDirectory(), "Source dir is not a directory: %s", src);
-
-        // Don't delete symbolic link directories
-        if (isSymbolicLink(src)) {
-            return false;
-        }
-
-        target.mkdirs();
-        Preconditions.checkArgument(target.isDirectory(), "Target dir is not a directory: %s", src);
-
-        boolean success = true;
-        for (File file : listFiles(src)) {
-            success = copyRecursively(file, new File(target, file.getName())) && success;
-        }
-        return success;
-    }
-
-    private static boolean isSymbolicLink(File file) {
-        try {
-            File canonicalFile = file.getCanonicalFile();
-            File absoluteFile = file.getAbsoluteFile();
-            File parentFile = file.getParentFile();
-            // a symbolic link has a different name between the canonical and absolute path
-            return !canonicalFile.getName().equals(absoluteFile.getName())
-                ||
-                // or the canonical parent path is not the same as the file's parent path,
-                // provided the file has a parent path
-                parentFile != null
-                    && !parentFile.getCanonicalPath().equals(canonicalFile.getParent());
-        } catch (IOException e) {
-            // error on the side of caution
-            return true;
-        }
-    }
-
-    private static ImmutableList<File> listFiles(File dir) {
-        File[] files = dir.listFiles();
-        if (files == null) {
-            return ImmutableList.of();
-        }
-        return ImmutableList.copyOf(files);
-    }
-
-    private static boolean deleteRecursively(File file) {
-        Path path = file.toPath();
-        try {
-            java.nio.file.Files.walkFileTree(
-                path,
-                new SimpleFileVisitor<>() {
-                    @Override
-                    public FileVisitResult visitFile(
-                        final Path file, final BasicFileAttributes attrs)
-                        throws IOException {
-                        java.nio.file.Files.delete(file);
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    @Override
-                    public FileVisitResult visitFileFailed(
-                        final Path file, final IOException e) {
-                        return handleException(e);
-                    }
-
-                    private FileVisitResult handleException(final IOException e) {
-                        // e.printStackTrace();
-                        return FileVisitResult.TERMINATE;
-                    }
-
-                    @Override
-                    public FileVisitResult postVisitDirectory(
-                        final Path dir, final IOException e) throws IOException {
-                        if (e != null) {
-                            return handleException(e);
-                        }
-                        java.nio.file.Files.delete(dir);
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
-    }
 
     @Before
     public void setup() {
@@ -245,60 +149,58 @@ public class CliTest {
     @Test
     @Parameters({"-h", "--help", "-v", "--version"})
     public void testHelpAndVersion(String option) {
-        assertThat(cli.call(new String[]{option}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
     }
 
-    /**
-     * Parameters for testing {@link #testDirectoryAndNetwork(String[], ReturnType, String)}.
-     */
+    /** Parameters for testing {@link #testDirectoryAndNetwork(String[], ReturnType, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithDirectoryAndNetwork() {
         List<Object> parameters = new ArrayList<>();
 
-        String[] dir_options = new String[]{"-d", "--datadir"};
-        String[] net_options = new String[]{"-n", "--network"};
+        String[] dir_options = new String[] {"-d", "--datadir"};
+        String[] net_options = new String[] {"-n", "--network"};
         String expected = new File(path, "mainnet").getAbsolutePath();
         String expOnError = MAIN_BASE_PATH.getAbsolutePath();
 
         // data directory alone
         for (String op : dir_options) {
             // with relative path
-            parameters.add(new Object[]{new String[]{op, dataDirectory}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, dataDirectory}, RUN, expected});
             // with absolute path
-            parameters.add(new Object[]{new String[]{op, path.getAbsolutePath()}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, path.getAbsolutePath()}, RUN, expected});
             // without value
-            parameters.add(new Object[]{new String[]{op}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op}, ERROR, expOnError});
             // with invalid characters (Linux & Win)
-            parameters.add(new Object[]{new String[]{op, "/\\<>:\"|?*"}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op, "/\\<>:\"|?*"}, ERROR, expOnError});
         }
 
         // network and directory
-        String[] net_values = new String[]{"mainnet", "invalid"};
+        String[] net_values = new String[] {"mainnet", "invalid"};
         for (String opDir : dir_options) {
             for (String opNet : net_options) {
                 for (String valNet : net_values) {
                     // with relative path
                     parameters.add(
-                        new Object[]{
-                            new String[]{opDir, dataDirectory, opNet, valNet}, RUN, expected
-                        });
+                            new Object[] {
+                                new String[] {opDir, dataDirectory, opNet, valNet}, RUN, expected
+                            });
                     parameters.add(
-                        new Object[]{
-                            new String[]{opNet, valNet, opDir, dataDirectory}, RUN, expected
-                        });
+                            new Object[] {
+                                new String[] {opNet, valNet, opDir, dataDirectory}, RUN, expected
+                            });
                     // with absolute path
                     parameters.add(
-                        new Object[]{
-                            new String[]{opDir, path.getAbsolutePath(), opNet, valNet},
-                            RUN,
-                            expected
-                        });
+                            new Object[] {
+                                new String[] {opDir, path.getAbsolutePath(), opNet, valNet},
+                                RUN,
+                                expected
+                            });
                     parameters.add(
-                        new Object[]{
-                            new String[]{opNet, valNet, opDir, path.getAbsolutePath()},
-                            RUN,
-                            expected
-                        });
+                            new Object[] {
+                                new String[] {opNet, valNet, opDir, path.getAbsolutePath()},
+                                RUN,
+                                expected
+                            });
                 }
             }
         }
@@ -307,23 +209,23 @@ public class CliTest {
         expected = MAIN_BASE_PATH.getAbsolutePath();
         for (String op : net_options) {
             // without parameter
-            parameters.add(new Object[]{new String[]{op}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op}, ERROR, expOnError});
             // with two parameters
             parameters.add(
-                new Object[]{new String[]{op, "testnet", "mastery"}, ERROR, expOnError});
+                    new Object[] {new String[] {op, "testnet", "mastery"}, ERROR, expOnError});
             // invalid parameter
-            parameters.add(new Object[]{new String[]{op, "invalid"}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, "invalid"}, RUN, expected});
             // mainnet as parameter
-            parameters.add(new Object[]{new String[]{op, "mainnet"}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, RUN, expected});
         }
 
         // network alone with testnet
-        net_values = new String[]{"mastery", "testnet"};
+        net_values = new String[] {"mastery", "testnet"};
         expected = TEST_BASE_PATH.getAbsolutePath();
         for (String op : net_options) {
             for (String netVal : net_values) {
                 // mastery as parameter
-                parameters.add(new Object[]{new String[]{op, netVal}, RUN, expected});
+                parameters.add(new Object[] {new String[] {op, netVal}, RUN, expected});
             }
         }
 
@@ -334,26 +236,26 @@ public class CliTest {
                 for (String netVal : net_values) {
                     // with relative path
                     parameters.add(
-                        new Object[]{
-                            new String[]{opDir, dataDirectory, opNet, netVal}, RUN, expected
-                        });
+                            new Object[] {
+                                new String[] {opDir, dataDirectory, opNet, netVal}, RUN, expected
+                            });
                     parameters.add(
-                        new Object[]{
-                            new String[]{opNet, netVal, opDir, dataDirectory}, RUN, expected
-                        });
+                            new Object[] {
+                                new String[] {opNet, netVal, opDir, dataDirectory}, RUN, expected
+                            });
                     // with absolute path
                     parameters.add(
-                        new Object[]{
-                            new String[]{opDir, path.getAbsolutePath(), opNet, netVal},
-                            RUN,
-                            expected
-                        });
+                            new Object[] {
+                                new String[] {opDir, path.getAbsolutePath(), opNet, netVal},
+                                RUN,
+                                expected
+                            });
                     parameters.add(
-                        new Object[]{
-                            new String[]{opNet, netVal, opDir, path.getAbsolutePath()},
-                            RUN,
-                            expected
-                        });
+                            new Object[] {
+                                new String[] {opNet, netVal, opDir, path.getAbsolutePath()},
+                                RUN,
+                                expected
+                            });
                 }
             }
         }
@@ -364,28 +266,27 @@ public class CliTest {
         expected = new File(path, "mainnet").getAbsolutePath();
         for (String op : dir_options) {
             // with relative path with subdirectories
-            parameters.add(new Object[]{new String[]{op, dir}, RUN, expected});
+            parameters.add(new Object[] {new String[] {op, dir}, RUN, expected});
             // with multiple values
-            parameters.add(new Object[]{new String[]{op, dataDirectory, dir}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op, dataDirectory, dir}, ERROR, expOnError});
         }
 
         return parameters.toArray();
     }
 
     /**
-     * Ensures that the { <i>-d</i>, <i>--datadir</i>, <i>-n</i>, <i>--network</i> } arguments
-     * work.
+     * Ensures that the { <i>-d</i>, <i>--datadir</i>, <i>-n</i>, <i>--network</i> } arguments work.
      */
     @Test
     @Parameters(method = "parametersWithDirectoryAndNetwork")
     public void testDirectoryAndNetwork(
-        String[] input, ReturnType expectedReturn, String expectedPath) {
+            String[] input, ReturnType expectedReturn, String expectedPath) {
         assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigFile())
-            .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
         assertThat(cfg.getExecGenesisFile())
-            .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
         assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
         assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
         assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
@@ -397,23 +298,23 @@ public class CliTest {
 
     private void printPaths(Cfg cfg) {
         System.out.println(
-            "\n-------------------------------- USED PATHS --------------------------------"
-                + "\n> Logger path:   "
-                + cfg.getLogDir().getAbsolutePath()
-                + "\n> Database path: "
-                + cfg.getDatabaseDir().getAbsolutePath()
-                + "\n> Keystore path: "
-                + cfg.getKeystoreDir().getAbsolutePath()
-                + "\n> Config write:  "
-                + cfg.getExecConfigFile().getAbsolutePath()
-                + "\n> Genesis write: "
-                + cfg.getExecGenesisFile().getAbsolutePath()
-                + "\n----------------------------------------------------------------------------"
-                + "\n> Config read:   "
-                + cfg.getInitialConfigFile().getAbsolutePath()
-                + "\n> Genesis read:  "
-                + cfg.getInitialGenesisFile().getAbsolutePath()
-                + "\n----------------------------------------------------------------------------\n\n");
+                "\n-------------------------------- USED PATHS --------------------------------"
+                        + "\n> Logger path:   "
+                        + cfg.getLogDir().getAbsolutePath()
+                        + "\n> Database path: "
+                        + cfg.getDatabaseDir().getAbsolutePath()
+                        + "\n> Keystore path: "
+                        + cfg.getKeystoreDir().getAbsolutePath()
+                        + "\n> Config write:  "
+                        + cfg.getExecConfigFile().getAbsolutePath()
+                        + "\n> Genesis write: "
+                        + cfg.getExecGenesisFile().getAbsolutePath()
+                        + "\n----------------------------------------------------------------------------"
+                        + "\n> Config read:   "
+                        + cfg.getInitialConfigFile().getAbsolutePath()
+                        + "\n> Genesis read:  "
+                        + cfg.getInitialGenesisFile().getAbsolutePath()
+                        + "\n----------------------------------------------------------------------------\n\n");
     }
 
     /**
@@ -424,7 +325,7 @@ public class CliTest {
     @Test
     @Parameters(method = "parametersWithDirectoryAndNetwork")
     public void testDirectoryAndNetwork_wAbsoluteDbAndLogPath(
-        String[] input, ReturnType expectedReturn, String expectedPath) {
+            String[] input, ReturnType expectedReturn, String expectedPath) {
 
         File db = new File(alternativePath, "database");
         cfg.getDb().setPath(db.getAbsolutePath());
@@ -449,104 +350,102 @@ public class CliTest {
         }
     }
 
-    /**
-     * Parameters for testing {@link #testConfig(String[], File, String)}.
-     */
+    /** Parameters for testing {@link #testConfig(String[], File, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithConfig() {
         List<Object> parameters = new ArrayList<>();
 
-        String[] options = new String[]{"-c", "--config"};
+        String[] options = new String[] {"-c", "--config"};
         String expected = MAIN_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
             // without parameter
-            parameters.add(new Object[]{new String[]{op}, mainnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op}, mainnetConfig, expected});
             // invalid parameter
-            parameters.add(new Object[]{new String[]{op, "invalid"}, mainnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op, "invalid"}, mainnetConfig, expected});
             // mainnet as parameter
-            parameters.add(new Object[]{new String[]{op, "mainnet"}, mainnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, mainnetConfig, expected});
         }
 
         expected = TEST_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
             // mastery as parameter
-            parameters.add(new Object[]{new String[]{op, "mastery"}, testnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op, "mastery"}, testnetConfig, expected});
             // testnet as parameter
-            parameters.add(new Object[]{new String[]{op, "testnet"}, testnetConfig, expected});
+            parameters.add(new Object[] {new String[] {op, "testnet"}, testnetConfig, expected});
         }
 
         // config and directory
-        String[] dir_options = new String[]{"-d", "--datadir"};
+        String[] dir_options = new String[] {"-d", "--datadir"};
         File config =
-            new File(
-                path,
-                "mainnet" + File.separator + "config" + File.separator + configFileName);
+                new File(
+                        path,
+                        "mainnet" + File.separator + "config" + File.separator + configFileName);
         expected = new File(path, "mainnet").getAbsolutePath();
 
-        String[] net_values = new String[]{"mainnet", "invalid"};
+        String[] net_values = new String[] {"mainnet", "invalid"};
         for (String opDir : dir_options) {
             for (String opCfg : options) {
                 for (String valNet : net_values) {
                     // with relative path
                     parameters.add(
-                        new Object[]{
-                            new String[]{opDir, dataDirectory, opCfg, valNet}, config, expected
-                        });
+                            new Object[] {
+                                new String[] {opDir, dataDirectory, opCfg, valNet}, config, expected
+                            });
                     parameters.add(
-                        new Object[]{
-                            new String[]{opCfg, valNet, opDir, dataDirectory}, config, expected
-                        });
+                            new Object[] {
+                                new String[] {opCfg, valNet, opDir, dataDirectory}, config, expected
+                            });
                     // with absolute path
                     parameters.add(
-                        new Object[]{
-                            new String[]{opDir, path.getAbsolutePath(), opCfg, valNet},
-                            config,
-                            expected
-                        });
+                            new Object[] {
+                                new String[] {opDir, path.getAbsolutePath(), opCfg, valNet},
+                                config,
+                                expected
+                            });
                     parameters.add(
-                        new Object[]{
-                            new String[]{opCfg, valNet, opDir, path.getAbsolutePath()},
-                            config,
-                            expected
-                        });
+                            new Object[] {
+                                new String[] {opCfg, valNet, opDir, path.getAbsolutePath()},
+                                config,
+                                expected
+                            });
                 }
             }
         }
 
         // config and directory with testnet
-        net_values = new String[]{"mastery", "testnet"};
+        net_values = new String[] {"mastery", "testnet"};
         config =
-            new File(
-                path,
-                "mastery" + File.separator + "config" + File.separator + configFileName);
+                new File(
+                        path,
+                        "mastery" + File.separator + "config" + File.separator + configFileName);
         expected = new File(path, "mastery").getAbsolutePath();
         for (String opDir : dir_options) {
             for (String opCfg : options) {
                 for (String netVal : net_values) {
                     // with relative path
                     parameters.add(
-                        new Object[]{
-                            new String[]{opDir, dataDirectory, opCfg, netVal}, config, expected
-                        });
+                            new Object[] {
+                                new String[] {opDir, dataDirectory, opCfg, netVal}, config, expected
+                            });
                     parameters.add(
-                        new Object[]{
-                            new String[]{opCfg, netVal, opDir, dataDirectory}, config, expected
-                        });
+                            new Object[] {
+                                new String[] {opCfg, netVal, opDir, dataDirectory}, config, expected
+                            });
                     // with absolute path
                     parameters.add(
-                        new Object[]{
-                            new String[]{opDir, path.getAbsolutePath(), opCfg, netVal},
-                            config,
-                            expected
-                        });
+                            new Object[] {
+                                new String[] {opDir, path.getAbsolutePath(), opCfg, netVal},
+                                config,
+                                expected
+                            });
                     parameters.add(
-                        new Object[]{
-                            new String[]{opCfg, netVal, opDir, path.getAbsolutePath()},
-                            config,
-                            expected
-                        });
+                            new Object[] {
+                                new String[] {opCfg, netVal, opDir, path.getAbsolutePath()},
+                                config,
+                                expected
+                            });
                 }
             }
         }
@@ -554,9 +453,7 @@ public class CliTest {
         return parameters.toArray();
     }
 
-    /**
-     * Ensures that the { <i>-c</i>, <i>--config</i> } arguments work.
-     */
+    /** Ensures that the { <i>-c</i>, <i>--config</i> } arguments work. */
     @Test
     @Parameters(method = "parametersWithConfig")
     public void testConfig(String[] input, File expectedFile, String expectedPath) {
@@ -567,9 +464,9 @@ public class CliTest {
         assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigFile())
-            .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
         assertThat(cfg.getExecGenesisFile())
-            .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
 
         assertThat(expectedFile.exists()).isTrue();
         assertThat(cfg.fromXML(expectedFile)).isFalse();
@@ -579,32 +476,30 @@ public class CliTest {
         }
     }
 
-    /**
-     * Parameters for testing {@link #testConfig_oldLocation(String[], String)}.
-     */
+    /** Parameters for testing {@link #testConfig_oldLocation(String[], String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithConfigForOldLocation() {
         List<Object> parameters = new ArrayList<>();
 
-        String[] options = new String[]{"-c", "--config"};
+        String[] options = new String[] {"-c", "--config"};
         String expected = MAIN_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
             // without parameter
-            parameters.add(new Object[]{new String[]{op}, BASE_PATH});
+            parameters.add(new Object[] {new String[] {op}, BASE_PATH});
             // invalid parameter
-            parameters.add(new Object[]{new String[]{op, "invalid"}, expected});
+            parameters.add(new Object[] {new String[] {op, "invalid"}, expected});
             // mainnet as parameter
-            parameters.add(new Object[]{new String[]{op, "mainnet"}, expected});
+            parameters.add(new Object[] {new String[] {op, "mainnet"}, expected});
         }
 
         expected = TEST_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
             // mastery as parameter
-            parameters.add(new Object[]{new String[]{op, "mastery"}, expected});
+            parameters.add(new Object[] {new String[] {op, "mastery"}, expected});
             // testnet as parameter
-            parameters.add(new Object[]{new String[]{op, "testnet"}, expected});
+            parameters.add(new Object[] {new String[] {op, "testnet"}, expected});
         }
 
         return parameters.toArray();
@@ -630,66 +525,64 @@ public class CliTest {
         assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigFile())
-            .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
         assertThat(cfg.getExecGenesisFile())
-            .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
 
         if (verbose) {
             printPaths(cfg);
         }
     }
 
-    /**
-     * Parameters for testing {@link #testInfo(String[], ReturnType, String)}.
-     */
+    /** Parameters for testing {@link #testInfo(String[], ReturnType, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithInfo() {
         List<Object> parameters = new ArrayList<>();
 
-        String[] options = new String[]{"-i", "--info"};
+        String[] options = new String[] {"-i", "--info"};
         String expected = MAIN_BASE_PATH.getAbsolutePath();
         String expOnError = expected;
 
         // only info
         for (String op : options) {
             // without parameter
-            parameters.add(new Object[]{new String[]{op}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op}, EXIT, expected});
             // invalid parameter
-            parameters.add(new Object[]{new String[]{op, "value"}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op, "value"}, ERROR, expOnError});
         }
 
         // with network
         expected = TEST_BASE_PATH.getAbsolutePath();
         for (String op : options) {
             // mastery as parameter
-            parameters.add(new Object[]{new String[]{op, "-n", "mastery"}, EXIT, expected});
-            parameters.add(new Object[]{new String[]{"-n", "mastery", op}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "-n", "mastery"}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {"-n", "mastery", op}, EXIT, expected});
             // invalid parameter
             parameters.add(
-                new Object[]{new String[]{op, "value", "-n", "mastery"}, ERROR, expOnError});
+                    new Object[] {new String[] {op, "value", "-n", "mastery"}, ERROR, expOnError});
         }
 
         // with directory
         expected = new File(path, "mainnet").getAbsolutePath();
         for (String op : options) {
             // with relative path
-            parameters.add(new Object[]{new String[]{op, "-d", dataDirectory}, EXIT, expected});
-            parameters.add(new Object[]{new String[]{"-d", dataDirectory, op}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "-d", dataDirectory}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {"-d", dataDirectory, op}, EXIT, expected});
             // + invalid parameter
             parameters.add(
-                new Object[]{
-                    new String[]{op, "value", "-d", dataDirectory}, ERROR, expOnError
-                });
+                    new Object[] {
+                        new String[] {op, "value", "-d", dataDirectory}, ERROR, expOnError
+                    });
             // with absolute path
             parameters.add(
-                new Object[]{new String[]{op, "-d", path.getAbsolutePath()}, EXIT, expected});
+                    new Object[] {new String[] {op, "-d", path.getAbsolutePath()}, EXIT, expected});
             parameters.add(
-                new Object[]{new String[]{"-d", path.getAbsolutePath(), op}, EXIT, expected});
+                    new Object[] {new String[] {"-d", path.getAbsolutePath(), op}, EXIT, expected});
             // + invalid parameter
             parameters.add(
-                new Object[]{
-                    new String[]{op, "value", "-d", path.getAbsolutePath()}, ERROR, expOnError
-                });
+                    new Object[] {
+                        new String[] {op, "value", "-d", path.getAbsolutePath()}, ERROR, expOnError
+                    });
         }
 
         // with network and directory
@@ -697,44 +590,42 @@ public class CliTest {
         for (String op : options) {
             // with relative path
             parameters.add(
-                new Object[]{
-                    new String[]{op, "-d", dataDirectory, "-n", "mastery"}, EXIT, expected
-                });
+                    new Object[] {
+                        new String[] {op, "-d", dataDirectory, "-n", "mastery"}, EXIT, expected
+                    });
             parameters.add(
-                new Object[]{
-                    new String[]{"-n", "mastery", op, "-d", dataDirectory}, EXIT, expected
-                });
+                    new Object[] {
+                        new String[] {"-n", "mastery", op, "-d", dataDirectory}, EXIT, expected
+                    });
             parameters.add(
-                new Object[]{
-                    new String[]{"-n", "mastery", "-d", dataDirectory, op}, EXIT, expected
-                });
+                    new Object[] {
+                        new String[] {"-n", "mastery", "-d", dataDirectory, op}, EXIT, expected
+                    });
             // with absolute path
             parameters.add(
-                new Object[]{
-                    new String[]{op, "-n", "mastery", "-d", path.getAbsolutePath()},
-                    EXIT,
-                    expected
-                });
+                    new Object[] {
+                        new String[] {op, "-n", "mastery", "-d", path.getAbsolutePath()},
+                        EXIT,
+                        expected
+                    });
             parameters.add(
-                new Object[]{
-                    new String[]{"-d", path.getAbsolutePath(), op, "-n", "mastery"},
-                    EXIT,
-                    expected
-                });
+                    new Object[] {
+                        new String[] {"-d", path.getAbsolutePath(), op, "-n", "mastery"},
+                        EXIT,
+                        expected
+                    });
             parameters.add(
-                new Object[]{
-                    new String[]{"-d", path.getAbsolutePath(), "-n", "mastery", op},
-                    EXIT,
-                    expected
-                });
+                    new Object[] {
+                        new String[] {"-d", path.getAbsolutePath(), "-n", "mastery", op},
+                        EXIT,
+                        expected
+                    });
         }
 
         return parameters.toArray();
     }
 
-    /**
-     * Ensures that the { <i>-i</i>, <i>--info</i> } arguments work.
-     */
+    /** Ensures that the { <i>-i</i>, <i>--info</i> } arguments work. */
     @Test
     @Parameters(method = "parametersWithInfo")
     public void testInfo(String[] input, ReturnType expectedReturn, String expectedPath) {
@@ -758,11 +649,9 @@ public class CliTest {
             Cli.copyRecursively(genesis, oldGenesis);
         }
 
-        assertThat(cli.call(new String[]{option}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(BASE_PATH);
     }
-
-    // TODO: add test for create account with old config location
 
     /**
      * Ensures that the { <i>-i</i>, <i>--info</i> } arguments work when using the config location
@@ -772,12 +661,12 @@ public class CliTest {
     @Parameters({"-i", "--info"})
     public void testInfo_execLocation(String option) {
         // generates the config at the required destination
-        cli.call(new String[]{"-c", "-d", dataDirectory}, cfg);
+        cli.call(new String[] {"-c", "-d", dataDirectory}, cfg);
 
         // ensure config exists on disk at expected location for old kernel
         assertThat(cfg.getExecConfigFile().exists()).isTrue();
 
-        assertThat(cli.call(new String[]{option, "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {option, "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
     }
 
     private List<Object> parametersWithAccount(String[] options) {
@@ -786,74 +675,70 @@ public class CliTest {
         // only info
         for (String op : options) {
             // without parameter
-            parameters.add(new Object[]{new String[]{op}, EXIT});
+            parameters.add(new Object[] {new String[] {op}, EXIT});
             // invalid parameter
-            parameters.add(new Object[]{new String[]{op, "value"}, ERROR});
+            parameters.add(new Object[] {new String[] {op, "value"}, ERROR});
         }
 
         // with network
         for (String op : options) {
             // mastery as parameter
-            parameters.add(new Object[]{new String[]{op, "-n", "mastery"}, EXIT});
-            parameters.add(new Object[]{new String[]{"-n", "mastery", op}, EXIT});
+            parameters.add(new Object[] {new String[] {op, "-n", "mastery"}, EXIT});
+            parameters.add(new Object[] {new String[] {"-n", "mastery", op}, EXIT});
             // invalid parameter
-            parameters.add(new Object[]{new String[]{op, "value", "-n", "mastery"}, ERROR});
+            parameters.add(new Object[] {new String[] {op, "value", "-n", "mastery"}, ERROR});
         }
 
         // with directory
         for (String op : options) {
             // with relative path
-            parameters.add(new Object[]{new String[]{op, "-d", dataDirectory}, EXIT});
-            parameters.add(new Object[]{new String[]{"-d", dataDirectory, op}, EXIT});
+            parameters.add(new Object[] {new String[] {op, "-d", dataDirectory}, EXIT});
+            parameters.add(new Object[] {new String[] {"-d", dataDirectory, op}, EXIT});
             // + invalid parameter
-            parameters.add(new Object[]{new String[]{op, "value", "-d", dataDirectory}, ERROR});
+            parameters.add(new Object[] {new String[] {op, "value", "-d", dataDirectory}, ERROR});
             // with absolute path
-            parameters.add(new Object[]{new String[]{op, "-d", path.getAbsolutePath()}, EXIT});
-            parameters.add(new Object[]{new String[]{"-d", path.getAbsolutePath(), op}, EXIT});
+            parameters.add(new Object[] {new String[] {op, "-d", path.getAbsolutePath()}, EXIT});
+            parameters.add(new Object[] {new String[] {"-d", path.getAbsolutePath(), op}, EXIT});
             // + invalid parameter
             parameters.add(
-                new Object[]{new String[]{op, "value", "-d", path.getAbsolutePath()}, ERROR});
+                    new Object[] {new String[] {op, "value", "-d", path.getAbsolutePath()}, ERROR});
         }
 
         // with network and directory
         for (String op : options) {
             // with relative path
             parameters.add(
-                new Object[]{new String[]{op, "-d", dataDirectory, "-n", "mastery"}, EXIT});
+                    new Object[] {new String[] {op, "-d", dataDirectory, "-n", "mastery"}, EXIT});
             parameters.add(
-                new Object[]{new String[]{"-n", "mastery", op, "-d", dataDirectory}, EXIT});
+                    new Object[] {new String[] {"-n", "mastery", op, "-d", dataDirectory}, EXIT});
             parameters.add(
-                new Object[]{new String[]{"-n", "mastery", "-d", dataDirectory, op}, EXIT});
+                    new Object[] {new String[] {"-n", "mastery", "-d", dataDirectory, op}, EXIT});
             // with absolute path
             parameters.add(
-                new Object[]{
-                    new String[]{op, "-n", "mastery", "-d", path.getAbsolutePath()}, EXIT
-                });
+                    new Object[] {
+                        new String[] {op, "-n", "mastery", "-d", path.getAbsolutePath()}, EXIT
+                    });
             parameters.add(
-                new Object[]{
-                    new String[]{"-d", path.getAbsolutePath(), op, "-n", "mastery"}, EXIT
-                });
+                    new Object[] {
+                        new String[] {"-d", path.getAbsolutePath(), op, "-n", "mastery"}, EXIT
+                    });
             parameters.add(
-                new Object[]{
-                    new String[]{"-d", path.getAbsolutePath(), "-n", "mastery", op}, EXIT
-                });
+                    new Object[] {
+                        new String[] {"-d", path.getAbsolutePath(), "-n", "mastery", op}, EXIT
+                    });
         }
 
         return parameters;
     }
 
-    /**
-     * Parameters for testing {@link #testCreateAccount(String[], ReturnType)}.
-     */
+    /** Parameters for testing {@link #testCreateAccount(String[], ReturnType)}. */
     @SuppressWarnings("unused")
     private Object parametersWithCreateAccount() {
-        return parametersWithAccount(new String[]{"-a create", "ac", "--account create"})
-            .toArray();
+        return parametersWithAccount(new String[] {"-a create", "ac", "--account create"})
+                .toArray();
     }
 
-    /**
-     * Ensures that the { <i>-a create</i>, <i>ac</i> } arguments work.
-     */
+    /** Ensures that the { <i>-a create</i>, <i>ac</i> } arguments work. */
     @Test
     @Parameters(method = "parametersWithCreateAccount")
     public void testCreateAccount(String[] input, ReturnType expectedReturn) {
@@ -874,38 +759,36 @@ public class CliTest {
         // number of accounts before create call
         int count = Keystore.list().length;
 
-        assertThat(mockCli.call(new String[]{"-a"}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a"}, cfg)).isEqualTo(ERROR);
         // ensure number of accounts is unchanged
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[]{"-a", "cre"}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a", "cre"}, cfg)).isEqualTo(ERROR);
         // ensure number of accounts is unchanged
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[]{"--acc", "create"}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"--acc", "create"}, cfg)).isEqualTo(ERROR);
         // ensure number of accounts is unchanged
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(mockCli.call(new String[]{"-a", "create"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"-a", "create"}, cfg)).isEqualTo(EXIT);
         // ensure number of accounts was incremented
         assertThat(Keystore.list().length).isEqualTo(count + 1);
 
-        assertThat(mockCli.call(new String[]{"--account", "create"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"--account", "create"}, cfg)).isEqualTo(EXIT);
         // ensure number of accounts was incremented
         assertThat(Keystore.list().length).isEqualTo(count + 2);
     }
 
-    /**
-     * Parameters for testing {@link #testListAccounts(String[], ReturnType)}.
-     */
+    // TODO: add test for create account with old config location
+
+    /** Parameters for testing {@link #testListAccounts(String[], ReturnType)}. */
     @SuppressWarnings("unused")
     private Object parametersWithListAccount() {
-        return parametersWithAccount(new String[]{"-a list", "al", "--account list"}).toArray();
+        return parametersWithAccount(new String[] {"-a list", "al", "--account list"}).toArray();
     }
 
-    /**
-     * Ensures that the { <i>-a list</i>, <i>al</i> } arguments work.
-     */
+    /** Ensures that the { <i>-a list</i>, <i>al</i> } arguments work. */
     @Test
     @Parameters(method = "parametersWithListAccount")
     public void testListAccounts(String[] input, ReturnType expectedReturn) {
@@ -917,33 +800,31 @@ public class CliTest {
         // used to ensure number of accounts is unchanged
         int count = Keystore.list().length;
 
-        assertThat(cli.call(new String[]{"-a"}, cfg)).isEqualTo(ERROR);
+        assertThat(cli.call(new String[] {"-a"}, cfg)).isEqualTo(ERROR);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(cli.call(new String[]{"-a", "lis"}, cfg)).isEqualTo(ERROR);
+        assertThat(cli.call(new String[] {"-a", "lis"}, cfg)).isEqualTo(ERROR);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(cli.call(new String[]{"--acc", "list"}, cfg)).isEqualTo(ERROR);
+        assertThat(cli.call(new String[] {"--acc", "list"}, cfg)).isEqualTo(ERROR);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(cli.call(new String[]{"-a", "list"}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {"-a", "list"}, cfg)).isEqualTo(EXIT);
         assertThat(Keystore.list().length).isEqualTo(count);
 
-        assertThat(cli.call(new String[]{"--account", "list"}, cfg)).isEqualTo(EXIT);
+        assertThat(cli.call(new String[] {"--account", "list"}, cfg)).isEqualTo(EXIT);
         assertThat(Keystore.list().length).isEqualTo(count);
     }
 
-    /**
-     * Ensures that the { <i>-a export</i>, <i>ae</i>, <i>--account export</i> } arguments work.
-     */
+    /** Ensures that the { <i>-a export</i>, <i>ae</i>, <i>--account export</i> } arguments work. */
     @Test
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey(String option) {
         // create account
-        assertThat(mockCli.call(new String[]{"ac"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(EXIT, mockCli.call(new String[]{option, account}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {option, account}, cfg));
     }
 
     /**
@@ -954,11 +835,11 @@ public class CliTest {
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey_withDataDir(String option) {
         // create account
-        assertThat(mockCli.call(new String[]{"ac", "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac", "-d", dataDirectory}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(EXIT, mockCli.call(new String[]{option, account, "-d", dataDirectory}, cfg));
-        assertEquals(EXIT, mockCli.call(new String[]{"-d", dataDirectory, option, account}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {option, account, "-d", dataDirectory}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, option, account}, cfg));
     }
 
     /**
@@ -969,11 +850,11 @@ public class CliTest {
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey_withNetwork(String option) {
         // create account
-        assertThat(mockCli.call(new String[]{"ac", "-n", "mastery"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac", "-n", "mastery"}, cfg)).isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
-        assertEquals(EXIT, mockCli.call(new String[]{option, account, "-n", "mastery"}, cfg));
-        assertEquals(EXIT, mockCli.call(new String[]{"-n", "mastery", option, account}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {option, account, "-n", "mastery"}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", option, account}, cfg));
     }
 
     /**
@@ -984,22 +865,22 @@ public class CliTest {
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey_withDataDirAndNetwork(String option) {
         // create account
-        assertThat(mockCli.call(new String[]{"ac", "-d", dataDirectory, "-n", "mastery"}, cfg))
-            .isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac", "-d", dataDirectory, "-n", "mastery"}, cfg))
+                .isEqualTo(EXIT);
 
         String account = Keystore.list()[0];
         assertEquals(
-            EXIT,
-            mockCli.call(
-                new String[]{"-n", "mastery", option, account, "-d", dataDirectory}, cfg));
+                EXIT,
+                mockCli.call(
+                        new String[] {"-n", "mastery", option, account, "-d", dataDirectory}, cfg));
         assertEquals(
-            EXIT,
-            mockCli.call(
-                new String[]{"-n", "mastery", "-d", dataDirectory, option, account}, cfg));
+                EXIT,
+                mockCli.call(
+                        new String[] {"-n", "mastery", "-d", dataDirectory, option, account}, cfg));
         assertEquals(
-            EXIT,
-            mockCli.call(
-                new String[]{option, account, "-d", dataDirectory, "-n", "mastery"}, cfg));
+                EXIT,
+                mockCli.call(
+                        new String[] {option, account, "-d", dataDirectory, "-n", "mastery"}, cfg));
     }
 
     /**
@@ -1010,34 +891,32 @@ public class CliTest {
     @Parameters({"-a export", "ae", "--account export"})
     public void testExportPrivateKey_wSubstringOfAccount(String prefix) {
         // create account
-        assertThat(mockCli.call(new String[]{"ac"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac"}, cfg)).isEqualTo(EXIT);
 
         String subStrAcc = Keystore.list()[0].substring(1);
 
-        assertEquals(ERROR, cli.call(new String[]{prefix, subStrAcc}, cfg));
+        assertEquals(ERROR, cli.call(new String[] {prefix, subStrAcc}, cfg));
     }
 
     @Test
     public void testExportPrivateKey_withSplitInput() {
         // create account
-        assertThat(mockCli.call(new String[]{"ac"}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"ac"}, cfg)).isEqualTo(EXIT);
         String account = Keystore.list()[0];
 
-        assertThat(mockCli.call(new String[]{"-a", account}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a", account}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[]{"-a", "exp", account}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a", "exp", account}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[]{"--acc", "export", account}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"--acc", "export", account}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[]{"-a", "export", account}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"-a", "export", account}, cfg)).isEqualTo(EXIT);
 
-        assertThat(mockCli.call(new String[]{"--account", "export", account}, cfg))
-            .isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"--account", "export", account}, cfg))
+                .isEqualTo(EXIT);
     }
 
-    /**
-     * Ensures that the { <i>-a import</i>, <i>a</i>, <i>--account import</i> } arguments work.
-     */
+    /** Ensures that the { <i>-a import</i>, <i>a</i>, <i>--account import</i> } arguments work. */
     @Test
     @Parameters({"-a import", "ai", "--account import"})
     public void testImportPrivateKey(String option) {
@@ -1045,11 +924,11 @@ public class CliTest {
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[]{option, pKey}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 2: error -> known key
-        assertEquals(ERROR, mockCli.call(new String[]{option, pKey}, cfg));
+        assertEquals(ERROR, mockCli.call(new String[] {option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
     }
 
@@ -1064,18 +943,18 @@ public class CliTest {
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[]{option, pKey, "-d", dataDirectory}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {option, pKey, "-d", dataDirectory}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 2: known key
-        assertEquals(ERROR, mockCli.call(new String[]{option, pKey, "-d", dataDirectory}, cfg));
+        assertEquals(ERROR, mockCli.call(new String[] {option, pKey, "-d", dataDirectory}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 3: -d first
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[]{"-d", dataDirectory, option, pKey}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-d", dataDirectory, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(2);
     }
 
@@ -1090,18 +969,18 @@ public class CliTest {
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[]{option, pKey, "-n", "mastery"}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {option, pKey, "-n", "mastery"}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 2: known key
-        assertEquals(ERROR, mockCli.call(new String[]{option, pKey, "-n", "mastery"}, cfg));
+        assertEquals(ERROR, mockCli.call(new String[] {option, pKey, "-n", "mastery"}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 3: -n first
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertEquals(EXIT, mockCli.call(new String[]{"-n", "mastery", option, pKey}, cfg));
+        assertEquals(EXIT, mockCli.call(new String[] {"-n", "mastery", option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(2);
     }
 
@@ -1117,16 +996,16 @@ public class CliTest {
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
         assertEquals(
-            EXIT,
-            mockCli.call(
-                new String[]{option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
+                EXIT,
+                mockCli.call(
+                        new String[] {option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 2: known key
         assertEquals(
-            ERROR,
-            mockCli.call(
-                new String[]{option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
+                ERROR,
+                mockCli.call(
+                        new String[] {option, pKey, "-d", dataDirectory, "-n", "mastery"}, cfg));
         assertThat(Keystore.list().length).isEqualTo(1);
 
         // test 3: -d -n first
@@ -1134,9 +1013,9 @@ public class CliTest {
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
         assertEquals(
-            EXIT,
-            mockCli.call(
-                new String[]{"-n", "mastery", "-d", dataDirectory, option, pKey}, cfg));
+                EXIT,
+                mockCli.call(
+                        new String[] {"-n", "mastery", "-d", dataDirectory, option, pKey}, cfg));
         assertThat(Keystore.list().length).isEqualTo(2);
 
         // test 4: ai middle
@@ -1144,9 +1023,9 @@ public class CliTest {
         pKey = Hex.toHexString(key.getPrivKeyBytes());
 
         assertEquals(
-            EXIT,
-            mockCli.call(
-                new String[]{"-n", "mastery", option, pKey, "-d", dataDirectory}, cfg));
+                EXIT,
+                mockCli.call(
+                        new String[] {"-n", "mastery", option, pKey, "-d", dataDirectory}, cfg));
         assertThat(Keystore.list().length).isEqualTo(3);
     }
 
@@ -1156,18 +1035,18 @@ public class CliTest {
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
 
-        assertThat(mockCli.call(new String[]{"-a", pKey}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a", pKey}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[]{"-a", "imp", pKey}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"-a", "imp", pKey}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[]{"--acc", "import", pKey}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {"--acc", "import", pKey}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[]{"-a", "import", pKey}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"-a", "import", pKey}, cfg)).isEqualTo(EXIT);
         assertThat(Keystore.list().length).isEqualTo(1);
 
         key = ECKeyFac.inst().create();
         pKey = Hex.toHexString(key.getPrivKeyBytes());
-        assertThat(mockCli.call(new String[]{"--account", "import", pKey}, cfg)).isEqualTo(EXIT);
+        assertThat(mockCli.call(new String[] {"--account", "import", pKey}, cfg)).isEqualTo(EXIT);
         assertThat(Keystore.list().length).isEqualTo(2);
     }
 
@@ -1180,8 +1059,109 @@ public class CliTest {
     public void testImportNonPrivateKey(String option) {
         String fakePKey = Hex.toHexString("random".getBytes());
 
-        assertThat(mockCli.call(new String[]{option, fakePKey}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {option, fakePKey}, cfg)).isEqualTo(ERROR);
 
-        assertThat(mockCli.call(new String[]{option, "hello"}, cfg)).isEqualTo(ERROR);
+        assertThat(mockCli.call(new String[] {option, "hello"}, cfg)).isEqualTo(ERROR);
+    }
+
+    // Methods below taken from FileUtils class
+    private static boolean copyRecursively(File src, File target) {
+        if (src.isDirectory()) {
+            return copyDirectoryContents(src, target);
+        } else {
+            try {
+                Files.copy(src, target);
+                return true;
+            } catch (IOException e) {
+                return false;
+            }
+        }
+    }
+
+    private static boolean copyDirectoryContents(File src, File target) {
+        Preconditions.checkArgument(src.isDirectory(), "Source dir is not a directory: %s", src);
+
+        // Don't delete symbolic link directories
+        if (isSymbolicLink(src)) {
+            return false;
+        }
+
+        target.mkdirs();
+        Preconditions.checkArgument(target.isDirectory(), "Target dir is not a directory: %s", src);
+
+        boolean success = true;
+        for (File file : listFiles(src)) {
+            success = copyRecursively(file, new File(target, file.getName())) && success;
+        }
+        return success;
+    }
+
+    private static boolean isSymbolicLink(File file) {
+        try {
+            File canonicalFile = file.getCanonicalFile();
+            File absoluteFile = file.getAbsoluteFile();
+            File parentFile = file.getParentFile();
+            // a symbolic link has a different name between the canonical and absolute path
+            return !canonicalFile.getName().equals(absoluteFile.getName())
+                    ||
+                    // or the canonical parent path is not the same as the file's parent path,
+                    // provided the file has a parent path
+                    parentFile != null
+                            && !parentFile.getCanonicalPath().equals(canonicalFile.getParent());
+        } catch (IOException e) {
+            // error on the side of caution
+            return true;
+        }
+    }
+
+    private static ImmutableList<File> listFiles(File dir) {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return ImmutableList.of();
+        }
+        return ImmutableList.copyOf(files);
+    }
+
+    private static boolean deleteRecursively(File file) {
+        Path path = file.toPath();
+        try {
+            java.nio.file.Files.walkFileTree(
+                    path,
+                    new SimpleFileVisitor<>() {
+                        @Override
+                        public FileVisitResult visitFile(
+                                final Path file, final BasicFileAttributes attrs)
+                                throws IOException {
+                            java.nio.file.Files.delete(file);
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(
+                                final Path file, final IOException e) {
+                            return handleException(e);
+                        }
+
+                        private FileVisitResult handleException(final IOException e) {
+                            // e.printStackTrace();
+                            return FileVisitResult.TERMINATE;
+                        }
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(
+                                final Path dir, final IOException e) throws IOException {
+                            if (e != null) {
+                                return handleException(e);
+                            }
+                            java.nio.file.Files.delete(dir);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 }

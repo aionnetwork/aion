@@ -1,4 +1,4 @@
-/*
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.base.db;
 
 import java.util.Collection;
@@ -46,7 +46,7 @@ import java.util.Set;
  * @param <V> the data type of the values
  * @author Alexandra Roatis
  * @implNote For the underlying DB connection, if [isClosed() == true], then all function calls
- * which are documented to throw RuntimeException, will throw a RuntimeException.
+ *     which are documented to throw RuntimeException, will throw a RuntimeException.
  */
 public interface IKeyValueStore<K, V> extends AutoCloseable {
 
@@ -74,6 +74,7 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      * get retrieves a value from the database, returning an optional, it is fulfilled if a value
      * was able to be retrieved from the DB, otherwise the optional is empty
      *
+     * @param k
      * @throws RuntimeException if the data store is closed
      * @throws IllegalArgumentException if the key is null
      */
@@ -91,14 +92,14 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      * @throws RuntimeException if the underlying data store is closed
      * @throws IllegalArgumentException if the key is null
      * @implNote The choice of when to push the changes to the data store is left up to the
-     * implementation.
+     *     implementation.
      * @apiNote Put must have the following properties:
-     * <ol>
-     * <li>Creates a new entry in the cache, if the key-value pair does not exist in the cache
-     * or underlying data store.
-     * <li>Updates the entry in the cache when the key-value pair already exists.
-     * <li>Deletes the entry when given a {@code null} value.
-     * </ol>
+     *     <ol>
+     *       <li>Creates a new entry in the cache, if the key-value pair does not exist in the cache
+     *           or underlying data store.
+     *       <li>Updates the entry in the cache when the key-value pair already exists.
+     *       <li>Deletes the entry when given a {@code null} value.
+     *     </ol>
      */
     void put(K k, V v);
 
@@ -110,7 +111,7 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      * @throws RuntimeException if the underlying data store is closed
      * @throws IllegalArgumentException if the key is null
      * @implNote The choice of when to push the changes to the data store is left up to the
-     * implementation.
+     *     implementation.
      */
     void delete(K k);
 
@@ -121,11 +122,11 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      * Puts or updates the data store with the given <i>key-value</i> pairs, as follows:
      *
      * <ul>
-     * <li>if the <i>key</i> is present in the data store, the stored <i>value</i> is overwritten
-     * <li>if the <i>key</i> is not present in the data store, the new <i>key-value</i> pair is
-     * stored
-     * <li>if the <i>value</i> is null, the matching stored <i>key</i> will be deleted from the
-     * data store, or
+     *   <li>if the <i>key</i> is present in the data store, the stored <i>value</i> is overwritten
+     *   <li>if the <i>key</i> is not present in the data store, the new <i>key-value</i> pair is
+     *       stored
+     *   <li>if the <i>value</i> is null, the matching stored <i>key</i> will be deleted from the
+     *       data store, or
      * </ul>
      *
      * @param inputMap a {@link Map} of key-value pairs to be updated in the database
@@ -141,6 +142,7 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
     /**
      * Similar to delete, except operates on a list of keys
      *
+     * @param keys
      * @throws RuntimeException if the data store is closed
      * @throws IllegalArgumentException if the collection contains a null key
      */
@@ -151,7 +153,7 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      * store connection is closed.
      *
      * @implNote Always do this check after acquiring a lock on the class/data. Otherwise it might
-     * produce inconsistent results due to lack of synchronization.
+     *     produce inconsistent results due to lack of synchronization.
      */
     void check();
 }

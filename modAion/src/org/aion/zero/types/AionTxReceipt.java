@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.types;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -42,7 +43,7 @@ import org.aion.rlp.RLPList;
 /**
  * aion transaction receipt class.
  */
-public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
+public class AionTxReceipt extends AbstractTxReceipt<AionTransaction>  {
 
     private long energyUsed;
 
@@ -61,8 +62,7 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
 
         postTxState = nullToEmpty(postTxStateRLP.getRLPData());
         bloomFilter = new Bloom(bloomRLP.getRLPData());
-        executionResult =
-            (executionResult = result.getRLPData()) == null ? EMPTY_BYTE_ARRAY : executionResult;
+        executionResult = (executionResult = result.getRLPData()) == null ? EMPTY_BYTE_ARRAY : executionResult;
         energyUsed = ByteUtil.byteArrayToLong(receipt.get(4).getRLPData());
 
         if (receipt.size() > 5) {
@@ -85,8 +85,8 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
     }
 
     /**
-     * Used for Receipt trie hash calculation. Should contain only the following items encoded:
-     * [postTxState, bloomFilter, logInfoList]
+     * Used for Receipt trie hash calculation. Should contain only the following
+     * items encoded: [postTxState, bloomFilter, logInfoList]
      */
     public byte[] getReceiptTrieEncoded() {
         return getEncoded(true);
@@ -120,12 +120,13 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
     }
 
     /**
-     * Encodes the receipt, depending on whether the intended destination is for calculation of the
-     * receipts trie, or for storage purposes. In effect the receipt stores more information than
-     * what is defined in the
+     * Encodes the receipt, depending on whether the intended destination is for
+     * calculation of the receipts trie, or for storage purposes. In effect the
+     * receipt stores more information than what is defined in the
      * <a href="http://http://yellowpaper.io/">YP</a>.
      *
-     * @param receiptTrie true if target is "strictly" adhering to YP
+     * @param receiptTrie
+     *            true if target is "strictly" adhering to YP
      * @return {@code rlpEncoded} byte array representing the receipt
      */
     private byte[] getEncoded(boolean receiptTrie) {
@@ -148,10 +149,8 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
         }
 
         return receiptTrie ? RLP.encodeList(postTxStateRLP, bloomRLP, logInfoListRLP)
-            : RLP.encodeList(postTxStateRLP, bloomRLP, logInfoListRLP,
-                RLP.encodeElement(executionResult),
-                RLP.encodeLong(energyUsed),
-                RLP.encodeElement(error.getBytes(StandardCharsets.UTF_8)));
+                : RLP.encodeList(postTxStateRLP, bloomRLP, logInfoListRLP, RLP.encodeElement(executionResult),
+                        RLP.encodeLong(energyUsed), RLP.encodeElement(error.getBytes(StandardCharsets.UTF_8)));
 
     }
 
@@ -164,36 +163,29 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
 
     @Override
     public String toString() {
-        return "TransactionReceipt[" + "\n  , postTxState=" + Hex.toHexString(postTxState)
-            + "\n  , error=" + error
-            + "\n  , executionResult=" + Hex.toHexString(executionResult) + "\n  , bloom="
-            + bloomFilter.toString()
-            + "\n  , logs=" + logInfoList + "\n  , nrgUsed=" + this.energyUsed + ']';
+        return "TransactionReceipt[" + "\n  , postTxState=" + Hex.toHexString(postTxState) + "\n  , error=" + error
+                + "\n  , executionResult=" + Hex.toHexString(executionResult) + "\n  , bloom=" + bloomFilter.toString()
+                + "\n  , logs=" + logInfoList + "\n  , nrgUsed=" + this.energyUsed + ']';
     }
 
     @Override
     public boolean equals(Object other) {
-        if (other == null) {
+        if (other == null)
             return false;
-        }
 
-        if (!(other instanceof AionTxReceipt)) {
+        if (!(other instanceof AionTxReceipt))
             return false;
-        }
 
         AionTxReceipt o = (AionTxReceipt) other;
 
-        if (!Arrays.equals(this.executionResult, o.executionResult)) {
+        if (!Arrays.equals(this.executionResult, o.executionResult))
             return false;
-        }
 
-        if (!Arrays.equals(this.postTxState, o.postTxState)) {
+        if (!Arrays.equals(this.postTxState, o.postTxState))
             return false;
-        }
 
-        if (!Objects.equals(this.error, o.error)) {
+        if (!Objects.equals(this.error, o.error))
             return false;
-        }
 
         return Objects.equals(this.bloomFilter, o.bloomFilter);
     }

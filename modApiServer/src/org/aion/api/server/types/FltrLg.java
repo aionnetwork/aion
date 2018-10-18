@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,24 +19,24 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.api.server.types;
+
+import org.aion.base.type.*;
+import org.aion.mcf.vm.types.Log;
+import org.aion.mcf.vm.types.Bloom;
+import org.aion.zero.impl.core.BloomFilter;
+import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.types.AionTxReceipt;
+import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.types.IAionBlock;
+import org.aion.zero.impl.core.IAionBlockchain;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.base.type.IBlock;
-import org.aion.base.type.IBlockSummary;
-import org.aion.base.type.ITransaction;
-import org.aion.mcf.vm.types.Bloom;
-import org.aion.mcf.vm.types.Log;
-import org.aion.zero.impl.core.BloomFilter;
-import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 
 /**
  * @author chris
@@ -81,9 +81,7 @@ public final class FltrLg extends Fltr {
                         int logIndex = 0;
                         for (Log logInfo : receipt.getLogInfoList()) {
                             if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
-                                add(new EvtLg(
-                                    new TxRecptLg(logInfo, blk, txIndex, receipt.getTransaction(),
-                                        logIndex, true)));
+                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, receipt.getTransaction(), logIndex, true)));
                             }
                             logIndex++;
                         }
@@ -111,8 +109,7 @@ public final class FltrLg extends Fltr {
                         int logIndex = 0;
                         for (Log logInfo : receipt.getLogInfoList()) {
                             if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
-                                add(new EvtLg(
-                                    new TxRecptLg(logInfo, blk, txIndex, txn, logIndex, true)));
+                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, txn, logIndex, true)));
                             }
                             logIndex++;
                         }
@@ -127,9 +124,7 @@ public final class FltrLg extends Fltr {
     // -------------------------------------------------------------------------------
 
     private void initBlooms() {
-        if (filterBlooms != null) {
-            return;
-        }
+        if (filterBlooms != null) return;
 
         List<byte[][]> addrAndTopics = new ArrayList<>(topics);
         addrAndTopics.add(contractAddresses);
@@ -138,7 +133,7 @@ public final class FltrLg extends Fltr {
         for (int i = 0; i < addrAndTopics.size(); i++) {
             byte[][] orTopics = addrAndTopics.get(i);
             if (orTopics == null || orTopics.length == 0) {
-                filterBlooms[i] = new Bloom[]{new Bloom()}; // always matches
+                filterBlooms[i] = new Bloom[] {new Bloom()}; // always matches
             } else {
                 filterBlooms[i] = new Bloom[orTopics.length];
                 for (int j = 0; j < orTopics.length; j++) {
@@ -158,9 +153,7 @@ public final class FltrLg extends Fltr {
                     break;
                 }
             }
-            if (!orMatches) {
-                return false;
-            }
+            if (!orMatches) return false;
         }
         return true;
     }
@@ -168,36 +161,28 @@ public final class FltrLg extends Fltr {
     public boolean matchesContractAddress(byte[] toAddr) {
         initBlooms();
         for (byte[] address : contractAddresses) {
-            if (Arrays.equals(address, toAddr)) {
-                return true;
-            }
+            if (Arrays.equals(address, toAddr)) return true;
         }
         return contractAddresses.length == 0;
     }
 
     public boolean matchesExactly(Log logInfo) {
         initBlooms();
-        if (!matchesContractAddress(logInfo.getAddress().toBytes())) {
-            return false;
-        }
+        if (!matchesContractAddress(logInfo.getAddress().toBytes())) return false;
         List<byte[]> logTopics = logInfo.getTopics();
         for (int i = 0; i < this.topics.size(); i++) {
-            if (i >= logTopics.size()) {
-                return false;
-            }
+            if (i >= logTopics.size()) return false;
             byte[][] orTopics = topics.get(i);
             if (orTopics != null && orTopics.length > 0) {
                 boolean orMatches = false;
                 byte[] logTopic = logTopics.get(i);
                 for (byte[] orTopic : orTopics) {
-                    if (Arrays.equals(orTopic, logTopic)) {
+                    if (Arrays.equals(orTopic,logTopic)) {
                         orMatches = true;
                         break;
                     }
                 }
-                if (!orMatches) {
-                    return false;
-                }
+                if (!orMatches) return false;
             }
         }
         return true;

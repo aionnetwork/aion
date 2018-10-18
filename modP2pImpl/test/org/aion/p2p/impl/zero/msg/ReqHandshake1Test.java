@@ -42,16 +42,20 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class ReqHandshake1Test {
 
-    private static Logger p2pLOG = LoggerFactory.getLogger("P2P");
     private byte[] validNodeId = UUID.randomUUID().toString().getBytes();
+
     private int netId = ThreadLocalRandom.current().nextInt();
+
     private byte[] invalidNodeId = UUID.randomUUID().toString().substring(0, 34).getBytes();
+
     private int port = ThreadLocalRandom.current().nextInt();
+
+    private static Logger p2pLOG = LoggerFactory.getLogger("P2P");
+
+
     private String randomIp = ThreadLocalRandom.current().nextInt(0, 256) + "." +
         ThreadLocalRandom.current().nextInt(0, 256) + "." +
         ThreadLocalRandom.current().nextInt(0, 256) + "." +
@@ -95,7 +99,7 @@ public class ReqHandshake1Test {
         assertArrayEquals(req1.getIp(), req2.getIp());
         assertEquals(req1.getNetId(), req2.getNetId());
         assertEquals(req1.getPort(), req2.getPort());
-        assertArrayEquals(req1.getRevision(), req2.getRevision());
+        assertArrayEquals(req1.getRevision(),req2.getRevision());
     }
 
     @Test
@@ -126,14 +130,14 @@ public class ReqHandshake1Test {
         ReqHandshake rhs = ReqHandshake.decode(null);
         assertNull(rhs);
 
-        rhs = ReqHandshake.decode(new byte[ReqHandshake.LEN - 1]);
+        rhs = ReqHandshake.decode(new byte[ReqHandshake.LEN-1]);
         assertNull(rhs);
     }
 
     @Test
     public void testdecodeException() {
-        byte[] msg = new byte[ReqHandshake1.LEN + 2];
-        msg[ReqHandshake1.LEN + 1] = 2; // versions Length
+        byte[] msg = new byte [ReqHandshake1.LEN+2];
+        msg[ReqHandshake1.LEN+1] = 2; // versions Length
         ReqHandshake rhs1 = ReqHandshake1.decode(msg);
         assertNull(rhs1);
     }

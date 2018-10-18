@@ -48,17 +48,18 @@ import org.aion.vm.ExecutionResult;
  * TRS contract supports many operations, rather than have a single execute method and one very
  * large document specifying its use, the contract was split into 3 logical components instead.
  *
- * The TRSqueryContract is the component of the public-facing TRS contract that users of the
- * contract (as well as the owner) interact with in order to make simple queries on the contract.
- * None of the operations supported here will change the state of the contract. This contract
- * extends StatefulPrecompiledContract not because it changes state but only for database access.
+ * The TRSqueryContract is the component of the public-facing TRS contract that users of the contract
+ * (as well as the owner) interact with in order to make simple queries on the contract. None of the
+ * operations supported here will change the state of the contract. This contract extends
+ * StatefulPrecompiledContract not because it changes state but only for database access.
  *
- * The following operations are supported: isStarted -- checks whether a TRS contract is live.
- * isLocked -- checks whether a TRS contract is locked. isDirectDeposit -- checks whether a
- * depositor can directly deposit to a TRS contract or not. period -- checks the current period that
- * a TRS contract is in. periodAt -- checks the period that a TRS contract is in at a specific
- * block. availableForWithdrawalAt -- checks the fraction of total withdrawable funds for a
- * contract.
+ * The following operations are supported:
+ *      isStarted -- checks whether a TRS contract is live.
+ *      isLocked -- checks whether a TRS contract is locked.
+ *      isDirectDeposit -- checks whether a depositor can directly deposit to a TRS contract or not.
+ *      period -- checks the current period that a TRS contract is in.
+ *      periodAt -- checks the period that a TRS contract is in at a specific block.
+ *      availableForWithdrawalAt -- checks the fraction of total withdrawable funds for a contract.
  */
 public final class TRSqueryContract extends AbstractTRS {
 
@@ -84,93 +85,110 @@ public final class TRSqueryContract extends AbstractTRS {
      * where arguments is defined differently for different operations. The supported operations
      * along with their expected arguments are outlined as follows:
      *
-     * <b>operation 0x0</b> - returns true iff the specified public-facing TRS contract is live.
-     * Note that a contract with its funds open is not considered live. [<32b - contractAddress>]
-     * total = 33 bytes where: contractAddress is the address of the public-facing TRS contract to
-     * query.
+     *   <b>operation 0x0</b> - returns true iff the specified public-facing TRS contract is live.
+     *     Note that a contract with its funds open is not considered live.
+     *     [<32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
      *
-     * conditions: none.
+     *     conditions: none.
      *
-     * returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and 0x0
-     * for false.
+     *     returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and
+     *       0x0 for false.
      *
-     * ~~~***~~~
+     *                                           ~~~***~~~
      *
-     * <b>operation 0x1</b> - returns true iff the specified public-facing TRS contract is locked.
-     * If a contract is live then it must also be locked and so a live contract will return true.
-     * Note that a contract with its funds open is not considered locked. [<32b - contractAddress>]
-     * total = 33 bytes where: contractAddress is the address of the public-facing TRS contract to
-     * query.
+     *   <b>operation 0x1</b> - returns true iff the specified public-facing TRS contract is locked.
+     *     If a contract is live then it must also be locked and so a live contract will return true.
+     *     Note that a contract with its funds open is not considered locked.
+     *     [<32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
      *
-     * conditions: none.
+     *     conditions: none.
      *
-     * returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and 0x0
-     * for false.
+     *     returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and
+     *       0x0 for false.
      *
-     * ~~~***~~~
+     *                                           ~~~***~~~
      *
-     * <b>operation 0x2</b> - returns true iff the specified public-facing TRS contract has direct
-     * deposits enabled. Note that this operation returns false if the contract has its funds open.
-     * [<32b - contractAddress>] total = 33 bytes where: contractAddress is the address of the
-     * public-facing TRS contract to query.
+     *   <b>operation 0x2</b> - returns true iff the specified public-facing TRS contract has direct
+     *     deposits enabled.
+     *     Note that this operation returns false if the contract has its funds open.
+     *     [<32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
      *
-     * coditions: none.
+     *     coditions: none.
      *
-     * returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and 0x0
-     * for false.
+     *     returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and
+     *       0x0 for false.
      *
-     * ~~~***~~~
+     *                                           ~~~***~~~
      *
-     * <b>operation 0x3</b> - returns the current period that the specified public-facing TRS
-     * contract is in. The current time that is used to determine this period is the timestamp of
-     * the blockchain's best block. Note that if a contract's funds are open then the returned value
-     * is meaningless. [<32b - contractAddress>] total = 33 bytes where: contractAddress is the
-     * address of the public-facing TRS contract to query.
+     *   <b>operation 0x3</b> - returns the current period that the specified public-facing TRS
+     *     contract is in. The current time that is used to determine this period is the timestamp
+     *     of the blockchain's best block.
+     *     Note that if a contract's funds are open then the returned value is meaningless.
+     *     [<32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
      *
-     * coditions: none.
+     *     coditions: none.
      *
-     * returns: a byte array of length 4 that is the byte representation of a signed integer. This
-     * value is equal to the period the contract is in at the current best block. The contract is
-     * defined as being in period 0 at all times prior to the moment when the contract was made
-     * live. Once the contract becomes live it is in period 1 and this proceeds until it is in
-     * period P, the maximum period defined for the contract. From this point onwards the contract
-     * remains in period P. The duration of a period is 30 days.
+     *     returns: a byte array of length 4 that is the byte representation of a signed integer.
+     *       This value is equal to the period the contract is in at the current best block. The
+     *       contract is defined as being in period 0 at all times prior to the moment when the
+     *       contract was made live. Once the contract becomes live it is in period 1 and this
+     *       proceeds until it is in period P, the maximum period defined for the contract. From
+     *       this point onwards the contract remains in period P. The duration of a period is 30
+     *       days.
      *
-     * ~~~***~~~
+     *                                           ~~~***~~~
      *
-     * <b>operation 0x4</b> - returns the period that the specified public-facing TRS contract is
-     * in at the specified block number. Note that if a contract's funds are open then the returned
-     * value is meaningless. [<32b - contractAddress> | <8b - blockNumber>] total = 41 bytes where:
-     * contractAddress is the address of the public-facing TRS contract to query. blockNumber is the
-     * block number at which time to assess what period the contract is in. This value will be
-     * interpreted as signed.
+     *   <b>operation 0x4</b> - returns the period that the specified public-facing TRS contract is
+     *     in at the specified block number.
+     *     Note that if a contract's funds are open then the returned value is meaningless.
+     *     [<32b - contractAddress> | <8b - blockNumber>]
+     *     total = 41 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     blockNumber is the block number at which time to assess what period the contract is in.
+     *       This value will be interpreted as signed.
      *
-     * coditions: blockNumber must be non-negative.
+     *     coditions: blockNumber must be non-negative.
      *
-     * returns: a byte array of length 4 that is the byte representation of a signed integer. This
-     * value is equal to the period the contract is in at the specified block. The contract is
-     * defined as being in period 0 at all times prior to the moment when the contract was made
-     * live. Once the contract becomes live it is in period 1 and this proceeds until it is in
-     * period P, the maximum period defined for the contract. From this point onwards the contract
-     * remains in period P. The duration of a period is 30 days.
+     *     returns: a byte array of length 4 that is the byte representation of a signed integer.
+     *       This value is equal to the period the contract is in at the specified block. The
+     *       contract is defined as being in period 0 at all times prior to the moment when the
+     *       contract was made live. Once the contract becomes live it is in period 1 and this
+     *       proceeds until it is in period P, the maximum period defined for the contract. From
+     *       this point onwards the contract remains in period P. The duration of a period is 30
+     *       days.
      *
-     * ~~~***~~~
+     *                                           ~~~***~~~
      *
-     * <b>operation 0x5</b> - returns the fraction of the caller's total owings that is
-     * withdrawable at some time given by a block's timestamp. The total owings is the amount that
-     * the caller will collect over the full lifetime of the contract. The fraction returned is
-     * cumulative, so it represents the fraction of funds that the caller will have cumulatively
-     * collected by the specified time if they withdraw in the corresponding period.
+     *   <b>operation 0x5</b> - returns the fraction of the caller's total owings that is
+     *     withdrawable at some time given by a block's timestamp. The total owings is the amount
+     *     that the caller will collect over the full lifetime of the contract. The fraction
+     *     returned is cumulative, so it represents the fraction of funds that the caller will have
+     *     cumulatively collected by the specified time if they withdraw in the corresponding period.
      *
-     * [<32b - contractAddress> | <8b - timestamp>] total = 41 bytes where: contractAddress is the
-     * address of the public-facing TRS contract to query. timestamp is the timestamp (a long value
-     * denoting seconds) of a block in the blockchain.
+     *     [<32b - contractAddress> | <8b - timestamp>]
+     *     total = 41 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     timestamp is the timestamp (a long value denoting seconds) of a block in the blockchain.
      *
-     * coditions: contractAddress must be a valid TRS contract address.
+     *     coditions: contractAddress must be a valid TRS contract address.
      *
-     * returns: a byte array representing a BigInteger (the resulting of BigInteger's toByteArray
-     * method). The returned BigInteger must then have its decimal point shifted 18 places to the
-     * left to reconstruct the appropriate fraction, accurate to 18 decimal places.
+     *     returns: a byte array representing a BigInteger (the resulting of BigInteger's toByteArray
+     *       method). The returned BigInteger must then have its decimal point shifted 18 places to
+     *       the left to reconstruct the appropriate fraction, accurate to 18 decimal places.
      *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
@@ -193,33 +211,29 @@ public final class TRSqueryContract extends AbstractTRS {
 
         int operation = input[0];
         switch (operation) {
-            case 0:
-                return isStarted(input, nrgLimit);
-            case 1:
-                return isLocked(input, nrgLimit);
-            case 2:
-                return isDirectDepositEnabled(input, nrgLimit);
-            case 3:
-                return period(input, nrgLimit);
-            case 4:
-                return periodAt(input, nrgLimit);
-            case 5:
-                return availableForWithdrawalAt(input, nrgLimit);
-            default:
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            case 0: return isStarted(input, nrgLimit);
+            case 1: return isLocked(input, nrgLimit);
+            case 2: return isDirectDepositEnabled(input, nrgLimit);
+            case 3: return period(input, nrgLimit);
+            case 4: return periodAt(input, nrgLimit);
+            case 5: return availableForWithdrawalAt(input, nrgLimit);
+            default: return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
 
     /**
      * Logic to query a public-facing TRS contract to determine whether or not it is live.
      *
-     * The input byte array format is defined as follows: [<1b - 0x0> | <32b - contractAddress>]
-     * total = 33 bytes where: contractAddress is the address of the public-facing TRS contract.
+     * The input byte array format is defined as follows:
+     *     [<1b - 0x0> | <32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract.
      *
-     * conditions: none.
+     *     conditions: none.
      *
-     * returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and 0x0
-     * for false.
+     *     returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and
+     *       0x0 for false.
      *
      * @param input The input to query a public-facing TRS contract for liveness.
      * @param nrgLimit The energy limit.
@@ -245,13 +259,16 @@ public final class TRSqueryContract extends AbstractTRS {
     /**
      * Logic to query a public-facing TRS contract to determine whether or not it is locked.
      *
-     * The input byte array format is defined as follows: [<1b - 0x0> | <32b - contractAddress>]
-     * total = 33 bytes where: contractAddress is the address of the public-facing TRS contract.
+     * The input byte array format is defined as follows:
+     *     [<1b - 0x0> | <32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract.
      *
-     * conditions: none.
+     *     conditions: none.
      *
-     * returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and 0x0
-     * for false.
+     *     returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and
+     *       0x0 for false.
      *
      * @param input The input to query a public-facing TRS contract for lockedness.
      * @param nrgLimit The energy limit.
@@ -278,13 +295,16 @@ public final class TRSqueryContract extends AbstractTRS {
      * Logic to query a public-facing TRS contract to determine whether or not direct deposits are
      * enabled for it.
      *
-     * The input byte array format is defined as follows: [<1b - 0x2> | <32b - contractAddress>]
-     * total = 33 bytes where: contractAddress is the address of the public-facing TRS contract.
+     * The input byte array format is defined as follows:
+     *     [<1b - 0x2> | <32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract.
      *
-     * conditions: none.
+     *     conditions: none.
      *
-     * returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and 0x0
-     * for false.
+     *     returns: a byte array of length 1 with the only byte in the array set to 0x1 for true and
+     *       0x0 for false.
      *
      * @param input The input to query a public-facing TRS contract for direct deposits.
      * @param nrgLimit The energy limit.
@@ -312,21 +332,22 @@ public final class TRSqueryContract extends AbstractTRS {
      * currently. That is, what period the contract is in at the time given by the timestamp of the
      * current best block in the blockchain.
      *
-     * The input byte array format is defined as follows: [<1b - 0x3> | <32b - contractAddress>]
-     * total = 33 bytes where: contractAddress is the address of the public-facing TRS contract to
-     * query.
+     * The input byte array format is defined as follows:
+     *     [<1b - 0x3> | <32b - contractAddress>]
+     *     total = 33 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
      *
-     * coditions: none.
+     *     coditions: none.
      *
-     * returns: a byte array of length 4 that is the byte representation of a signed integer. This
-     * value is equal to the period the contract is in at the current best block. The contract is
-     * defined as being in period 0 at all times prior to the moment when the contract was made
-     * live. Once the contract becomes live it is in period 1 and this proceeds until it is in
-     * period P, the maximum period defined for the contract. From this point onwards the contract
-     * remains in period P.
+     *     returns: a byte array of length 4 that is the byte representation of a signed integer.
+     *       This value is equal to the period the contract is in at the current best block. The
+     *       contract is defined as being in period 0 at all times prior to the moment when the
+     *       contract was made live. Once the contract becomes live it is in period 1 and this
+     *       proceeds until it is in period P, the maximum period defined for the contract. From
+     *       this point onwards the contract remains in period P.
      *
-     * @param input The input to query a public-facing TRS contract for its period at the best
-     * block.
+     * @param input The input to query a public-facing TRS contract for its period at the best block.
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
@@ -349,19 +370,22 @@ public final class TRSqueryContract extends AbstractTRS {
      * Logic to query a public-facing TRS contract to determine which period the contract is in at
      * the specified block number.
      *
-     * The input byte array format is defined as follows: [<1b - 0x4> | <32b - contractAddress> |
-     * <8b - blockNumber>] total = 41 bytes where: contractAddress is the address of the
-     * public-facing TRS contract to query. blockNumber is the block number at which time to assess
-     * what period the contract is in. This value will be interpreted as signed.
+     * The input byte array format is defined as follows:
+     *     [<1b - 0x4> | <32b - contractAddress> | <8b - blockNumber>]
+     *     total = 41 bytes
+     *   where:
+     *     contractAddress is the address of the public-facing TRS contract to query.
+     *     blockNumber is the block number at which time to assess what period the contract is in.
+     *       This value will be interpreted as signed.
      *
-     * coditions: blockNumber must be non-negative.
+     *     coditions: blockNumber must be non-negative.
      *
-     * returns: a byte array of length 4 that is the byte representation of a signed integer. This
-     * value is equal to the period the contract is in at the specified block. The contract is
-     * defined as being in period 0 at all times prior to the moment when the contract was made
-     * live. Once the contract becomes live it is in period 1 and this proceeds until it is in
-     * period P, the maximum period defined for the contract. From this point onwards the contract
-     * remains in period P.
+     *     returns: a byte array of length 4 that is the byte representation of a signed integer.
+     *       This value is equal to the period the contract is in at the specified block. The
+     *       contract is defined as being in period 0 at all times prior to the moment when the
+     *       contract was made live. Once the contract becomes live it is in period 1 and this
+     *       proceeds until it is in period P, the maximum period defined for the contract. From
+     *       this point onwards the contract remains in period P.
      *
      * @param input The input to query a public-facing TRS contract for its period at some block.
      * @param nrgLimit The energy limit.
@@ -396,19 +420,20 @@ public final class TRSqueryContract extends AbstractTRS {
      * Logic to query a public-facing TRS contract to determine the fraction of total withdrawables
      * available at a specified time.
      *
-     * The input byte array format is defined as follows: [<1b - 0x5> | <32b - contractAddress> |
-     * <8b - timestamp>] total = 41 bytes where: contractAddress is the address of the public-facing
-     * TRS contract to query. timestamp is the timestamp (a long value denoting seconds) of a block
-     * in the blockchain.
+     * The input byte array format is defined as follows:
+     *   [<1b - 0x5> | <32b - contractAddress> | <8b - timestamp>]
+     *     total = 41 bytes
+     * where:
+     *   contractAddress is the address of the public-facing TRS contract to query.
+     *   timestamp is the timestamp (a long value denoting seconds) of a block in the blockchain.
      *
      * coditions: contractAddress must be a valid TRS contract address.
      *
      * returns: a byte array representing a BigInteger (the resulting of BigInteger's toByteArray
-     * method). The returned BigInteger must then have its decimal point shifted 18 places to the
-     * left to reconstruct the appropriate fraction, accurate to 18 decimal places.
+     *   method). The returned BigInteger must then have its decimal point shifted 18 places to
+     *   the left to reconstruct the appropriate fraction, accurate to 18 decimal places.
      *
-     * @param input The input to query a public-facing TRS contract for the fraction of
-     * withdrawables.
+     * @param input The input to query a public-facing TRS contract for the fraction of withdrawables.
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
@@ -472,8 +497,8 @@ public final class TRSqueryContract extends AbstractTRS {
     // <---------------------------------------HELPERS--------------------------------------------->
 
     /**
-     * Attempts to determine the period that the TRS contract whose address is contract is in at the
-     * time denoted by the timestamp of block.
+     * Attempts to determine the period that the TRS contract whose address is contract is in at
+     * the time denoted by the timestamp of block.
      *
      * If the contract does not exist or block is null then this method returns a result with an
      * internal error.

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,21 +31,22 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.base.type;
 
 import java.math.BigInteger;
 
 /**
  * @author jay
+ *
  */
 public interface IPowBlockHeader extends IBlockHeader {
 
     byte[] getDifficulty();
 
-    void setDifficulty(byte[] _diff);
-
     BigInteger getDifficultyBI();
+
+    void setDifficulty(byte[] _diff);
 
     byte[] getPowBoundary();
 }

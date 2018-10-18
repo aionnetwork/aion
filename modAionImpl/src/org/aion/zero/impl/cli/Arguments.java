@@ -37,139 +37,137 @@ public class Arguments {
 
     // usage information
     @Option(
-        names = {"-h", "--help"},
-        usageHelp = true,
-        description = "display help information")
+            names = {"-h", "--help"},
+            usageHelp = true,
+            description = "display help information")
     private boolean help = false;
 
     // account management
     @Option(
-        names = {"ac", "-a create", "--account create"},
-        description = "create a new account")
+            names = {"ac", "-a create", "--account create"},
+            description = "create a new account")
     private boolean createAccount = false;
 
     @Option(
-        names = {"al", "-a list", "--account list"},
-        description = "list all existing accounts")
+            names = {"al", "-a list", "--account list"},
+            description = "list all existing accounts")
     private boolean listAccounts = false;
 
     @Option(
-        names = {"ae", "-a export", "--account export"},
-        paramLabel = "<account>",
-        description = "export private key of an account")
+            names = {"ae", "-a export", "--account export"},
+            paramLabel = "<account>",
+            description = "export private key of an account")
     private String exportAccount = null;
 
     @Option(
-        names = {"ai", "-a import", "--account import"},
-        paramLabel = "<key>",
-        description = "import private key")
+            names = {"ai", "-a import", "--account import"},
+            paramLabel = "<key>",
+            description = "import private key")
     private String importAccount = null;
 
     // config generation
     @Option(
-        names = {"-c", "--config"},
-        arity = "0..1",
-        paramLabel = "<network>",
-        description =
-            "create config for the selected network\noptions: mainnet, conquest, mastery")
+            names = {"-c", "--config"},
+            arity = "0..1",
+            paramLabel = "<network>",
+            description =
+                    "create config for the selected network\noptions: mainnet, conquest, mastery")
     private String config = null;
 
     // get information and version
     @Option(
-        names = {"-i", "--info"},
-        description = "display information")
+            names = {"-i", "--info"},
+            description = "display information")
     private boolean info = false;
 
     @Option(
-        names = {"-v"},
-        description = "display version")
+            names = {"-v"},
+            description = "display version")
     private boolean version = false;
 
     @Option(
-        names = {"--version"},
-        description = "display version tag")
+            names = {"--version"},
+            description = "display version tag")
     private boolean versionTag = false;
 
     // create ssl certificate
     @Option(
-        names = {"sc", "-s create"},
-        arity = "0..2",
-        paramLabel = "<hostname> <ip>",
-        description =
-            "create a ssl certificate for:\n - localhost (when no parameters are given), or"
-                + "\n - the given hostname and ip")
+            names = {"sc", "-s create"},
+            arity = "0..2",
+            paramLabel = "<hostname> <ip>",
+            description =
+                    "create a ssl certificate for:\n - localhost (when no parameters are given), or"
+                            + "\n - the given hostname and ip")
     private String[] ssl = null;
 
     // offline block management
     @Option(
-        names = {"pb", "--prune-blocks"},
-        description = "remove blocks on side chains and update block info")
+            names = {"pb", "--prune-blocks"},
+            description = "remove blocks on side chains and update block info")
     private boolean rebuildBlockInfo = false;
 
     @Option(
-        names = {"-r", "--revert"},
-        arity = "1",
-        paramLabel = "<block_number>",
-        description = "revert database state to given block number")
+            names = {"-r", "--revert"},
+            arity = "1",
+            paramLabel = "<block_number>",
+            description = "revert database state to given block number")
     private String revertToBlock = null;
 
     // network and directory setup
     @Option(
-        names = {"-n", "--network"},
-        description =
-            "execute kernel with selected network\noptions: mainnet, conquest, mastery")
+            names = {"-n", "--network"},
+            description =
+                    "execute kernel with selected network\noptions: mainnet, conquest, mastery")
     private String network = null;
 
     @Option(
-        names = {"-d", "--datadir"},
-        description = "execute kernel with selected database directory")
+            names = {"-d", "--datadir"},
+            description = "execute kernel with selected database directory")
     private String directory = null;
 
     // offline database query and update
     @Option(
-        names = {"ps", "--state"},
-        paramLabel = "<prune_mode>",
-        description = "reorganize the state storage\noptions: FULL, TOP, SPREAD")
+            names = {"ps", "--state"},
+            paramLabel = "<prune_mode>",
+            description = "reorganize the state storage\noptions: FULL, TOP, SPREAD")
     private String pruntStateOption = null;
 
     // print info from db
     @Option(
-        names = {"--dump-blocks"},
-        arity = "0..1",
-        paramLabel = "<block_count>",
-        description = "print top blocks from database")
+            names = {"--dump-blocks"},
+            arity = "0..1",
+            paramLabel = "<block_count>",
+            description = "print top blocks from database")
     private String dumpBlocksCount = null;
 
     @Option(
-        names = {"--dump-state-size"},
-        arity = "0..1",
-        paramLabel = "<block_count>",
-        description = "retrieves the state size (node count) for the top blocks")
+            names = {"--dump-state-size"},
+            arity = "0..1",
+            paramLabel = "<block_count>",
+            description = "retrieves the state size (node count) for the top blocks")
     private String dumpStateSizeCount = null;
 
     @Option(
-        names = {"--dump-state"},
-        arity = "0..1",
-        paramLabel = "<block_count>",
-        description = "retrieves the state for the top main chain blocks")
+            names = {"--dump-state"},
+            arity = "0..1",
+            paramLabel = "<block_count>",
+            description = "retrieves the state for the top main chain blocks")
     private String dumpStateCount = null;
 
     @Option(
-        names = {"--db-compact"},
-        description = "if using leveldb, it triggers its database compaction processes")
+            names = {"--db-compact"},
+            description = "if using leveldb, it triggers its database compaction processes")
     private boolean dbCompact;
 
-    /**
-     * Compacts the account options into specific commands.
-     */
+    /** Compacts the account options into specific commands. */
     public static String[] preProcess(String[] arguments) {
         List<String> list = new ArrayList<>();
 
         int i = 0;
         while (i < arguments.length) {
             if (arguments[i].equals("-a")
-                || arguments[i].equals("--account")
-                || arguments[i].equals("-s")) {
+                    || arguments[i].equals("--account")
+                    || arguments[i].equals("-s")) {
                 if (i + 1 < arguments.length) {
                     list.add(arguments[i] + " " + arguments[i + 1]);
                 } else {

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,8 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.evtmgr.impl.abs;
 
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.evtmgr.IHandler;
 import org.aion.log.AionLoggerFactory;
@@ -35,6 +37,7 @@ import org.slf4j.Logger;
 
 /**
  * @author jay
+ *
  */
 public abstract class AbstractEventMgr {
 

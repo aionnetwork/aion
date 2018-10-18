@@ -27,7 +27,9 @@ import java.math.BigInteger;
 import java.nio.channels.SocketChannel;
 
 /**
+ *
  * @author chris
+ *
  */
 public interface INode {
 
@@ -35,8 +37,6 @@ public interface INode {
      * @return byte[]
      */
     byte[] getId();
-
-    void setId(byte[] _id);
 
     /**
      * @return int
@@ -63,8 +63,6 @@ public interface INode {
      */
     int getPort();
 
-    void setPort(int _port);
-
     /**
      * @return long
      */
@@ -84,12 +82,9 @@ public interface INode {
      * @param _bestBlockHash byte[]
      * @param _totalDifficulty long
      */
-    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash,
-        BigInteger _totalDifficulty);
+    void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty);
 
     String getBinaryVersion();
-
-    void setBinaryVersion(String _revision);
 
     boolean getIfFromBootList();
 
@@ -97,17 +92,23 @@ public interface INode {
 
     String getConnection();
 
-    void setConnection(String _connection);
-
     SocketChannel getChannel();
 
-    void setChannel(SocketChannel _channel);
-
     void setFromBootList(boolean _ifBoot);
+
+    void setConnection(String _connection);
 
     IPeerMetric getPeerMetric();
 
     void refreshTimestamp();
+
+    void setChannel(SocketChannel _channel);
+
+    void setId(byte[] _id);
+
+    void setPort(int _port);
+
+    void setBinaryVersion(String _revision);
 
     String toString();
 }

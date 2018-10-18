@@ -27,8 +27,8 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 /**
- * A ExecutionResult is the result of a VM execution. It contains the VM status code, nrg usage,
- * output, etc.
+ * A ExecutionResult is the result of a VM execution. It contains the VM status
+ * code, nrg usage, output, etc.
  *
  * @author yulong
  */
@@ -56,8 +56,8 @@ public class ExecutionResult extends AbstractExecutionResult {
     }
 
     /**
-     * Constructs a new ExecutionResult from encoding, where encoding is a big-endian binary
-     * encoding of an ExecutionResult.
+     * Constructs a new ExecutionResult from encoding, where encoding is a big-endian binary encoding
+     * of an ExecutionResult.
      *
      * @param encoding A big-endian binary encoding of an ExecutionResult.
      */
@@ -89,23 +89,13 @@ public class ExecutionResult extends AbstractExecutionResult {
      */
     @Override
     public boolean equals(Object o) {
-        if (o == null) {
-            return false;
-        }
-        if (o == this) {
-            return true;
-        }
-        if (!(o instanceof ExecutionResult)) {
-            return false;
-        }
+        if (o == null) { return false; }
+        if (o == this) { return true; }
+        if (!(o instanceof ExecutionResult)) { return false; }
 
         ExecutionResult other = (ExecutionResult) o;
-        if (!this.code.equals(other.code)) {
-            return false;
-        }
-        if (this.nrgLeft != other.nrgLeft) {
-            return false;
-        }
+        if (!this.code.equals(other.code)) { return false; }
+        if (this.nrgLeft != other.nrgLeft) { return false; }
         return Arrays.equals(this.output, other.output);
     }
 

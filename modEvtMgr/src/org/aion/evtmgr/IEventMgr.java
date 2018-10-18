@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,14 +19,14 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.evtmgr;
 
 import java.util.List;
 
 public interface IEventMgr {
-
     boolean registerEvent(List<IEvent> _evt);
 
     boolean unregisterEvent(List<IEvent> _evt);

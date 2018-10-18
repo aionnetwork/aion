@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,19 +17,17 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- */
+ ******************************************************************************/
 package org.aion.zero.impl;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
-
-import java.math.BigInteger;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteUtil;
 import org.aion.log.AionLoggerFactory;
@@ -41,6 +39,15 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
 
 /**
  * @author Alexandra Roatis
@@ -57,8 +64,7 @@ public class BlockchainIndexIntegrityTest {
     }
 
     /**
-     * Test the index integrity check and recovery when the index database is missing the genesis
-     * block information.
+     * Test the index integrity check and recovery when the index database is missing the genesis block information.
      *
      * Under these circumstances the recovery process will fail.
      */
@@ -74,8 +80,7 @@ public class BlockchainIndexIntegrityTest {
 
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next = chain
-                .createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
+            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }
@@ -94,13 +99,11 @@ public class BlockchainIndexIntegrityTest {
         AionBlockStore blockStore = repo.getBlockStore();
 
         // check that the index recovery failed
-        assertThat(blockStore.indexIntegrityCheck())
-            .isEqualTo(AionBlockStore.IntegrityCheckResult.MISSING_GENESIS);
+        assertThat(blockStore.indexIntegrityCheck()).isEqualTo(AionBlockStore.IntegrityCheckResult.MISSING_GENESIS);
     }
 
     /**
-     * Test the index integrity check and recovery when the index database is missing a level
-     * information.
+     * Test the index integrity check and recovery when the index database is missing a level information.
      *
      * Under these circumstances the recovery process will fail.
      */
@@ -116,8 +119,7 @@ public class BlockchainIndexIntegrityTest {
 
         ImportResult result;
         for (int i = 0; i < NUMBER_OF_BLOCKS; i++) {
-            AionBlock next = chain
-                .createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
+            AionBlock next = chain.createNewBlock(chain.getBestBlock(), Collections.emptyList(), true);
             result = chain.tryToConnect(next);
             assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         }
@@ -136,8 +138,7 @@ public class BlockchainIndexIntegrityTest {
         AionBlockStore blockStore = repo.getBlockStore();
 
         // check that the index recovery failed
-        assertThat(blockStore.indexIntegrityCheck())
-            .isEqualTo(AionBlockStore.IntegrityCheckResult.MISSING_LEVEL);
+        assertThat(blockStore.indexIntegrityCheck()).isEqualTo(AionBlockStore.IntegrityCheckResult.MISSING_LEVEL);
     }
 
     /**
@@ -177,8 +178,7 @@ public class BlockchainIndexIntegrityTest {
         IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // corrupting the index at level 2
-        DataSourceArray<List<AionBlockStore.BlockInfo>> index = new DataSourceArray<>(
-            new ObjectDataSource<>(
+        DataSourceArray<List<AionBlockStore.BlockInfo>> index = new DataSourceArray<>(new ObjectDataSource<>(
                 indexDatabase,
                 BLOCK_INFO_SERIALIZER));
         List<AionBlockStore.BlockInfo> infos = index.get(2);
@@ -193,8 +193,7 @@ public class BlockchainIndexIntegrityTest {
         AionBlockStore blockStore = repo.getBlockStore();
 
         // check that the index recovery succeeded
-        assertThat(blockStore.indexIntegrityCheck())
-            .isEqualTo(AionBlockStore.IntegrityCheckResult.FIXED);
+        assertThat(blockStore.indexIntegrityCheck()).isEqualTo(AionBlockStore.IntegrityCheckResult.FIXED);
     }
 
     /**
@@ -234,7 +233,6 @@ public class BlockchainIndexIntegrityTest {
         AionBlockStore blockStore = repo.getBlockStore();
 
         // check that the index recovery succeeded
-        assertThat(blockStore.indexIntegrityCheck())
-            .isEqualTo(AionBlockStore.IntegrityCheckResult.CORRECT);
+        assertThat(blockStore.indexIntegrityCheck()).isEqualTo(AionBlockStore.IntegrityCheckResult.CORRECT);
     }
 }

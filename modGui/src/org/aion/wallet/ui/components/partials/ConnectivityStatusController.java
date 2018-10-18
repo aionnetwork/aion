@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
+ *     The aion network project is free software: you can redistribute it 
+ *     and/or modify it under the terms of the GNU General Public License 
+ *     as published by the Free Software Foundation, either version 3 of 
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     The aion network project is distributed in the hope that it will 
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
+ *     along with the aion network project source files.  
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -23,8 +23,6 @@
 package org.aion.wallet.ui.components.partials;
 
 import com.google.common.eventbus.Subscribe;
-import java.net.URL;
-import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -34,13 +32,17 @@ import org.aion.gui.events.KernelProcEvent;
 import org.aion.gui.events.RefreshEvent;
 import org.aion.gui.model.KernelConnection;
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
 public class ConnectivityStatusController extends AbstractController {
+    private KernelConnection kc;
 
     private static final String STATUS_DISCONNECTED = "DISCONNECTED";
     private static final String STATUS_CONNECTED = "CONNECTED";
     private static final String STATUS_CONNECTING = "CONNECTING";
     private static final String STATUS_NOT_RUNNING = "NOT RUNNING";
-    private KernelConnection kc;
+
     @FXML
     private Label connectivityLabel;
 

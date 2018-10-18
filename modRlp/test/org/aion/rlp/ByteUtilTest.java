@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,17 +31,16 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.rlp;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.Hex;
@@ -252,11 +251,11 @@ public class ByteUtilTest {
     }
 
     /**
-     * This test shows the difference between iterating over, and comparing byte[] vs BigInteger
-     * value.
+     * This test shows the difference between iterating over, and comparing
+     * byte[] vs BigInteger value.
      *
-     * Results indicate that the former has ~15x better performance. Therefore this is used in the
-     * Miner.mine() method.
+     * Results indicate that the former has ~15x better performance. Therefore
+     * this is used in the Miner.mine() method.
      */
     @Test
     public void testIncrementPerformance() {
@@ -271,8 +270,7 @@ public class ByteUtilTest {
                     break;
                 }
             }
-            System.out.println(
-                System.currentTimeMillis() - start1 + "ms to reach: " + Hex.toHexString(counter1));
+            System.out.println(System.currentTimeMillis() - start1 + "ms to reach: " + Hex.toHexString(counter1));
 
             BigInteger counter2 = BigInteger.ZERO;
             long start2 = System.currentTimeMillis();
@@ -282,16 +280,14 @@ public class ByteUtilTest {
                 }
                 counter2 = counter2.add(BigInteger.ONE);
             }
-            System.out.println(System.currentTimeMillis() - start2 + "ms to reach: " + Hex
-                .toHexString(BigIntegers.asUnsignedByteArray(4, counter2)));
+            System.out.println(System.currentTimeMillis() - start2 + "ms to reach: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(4, counter2)));
         }
     }
 
     @Test
     public void firstNonZeroByte_1() {
 
-        byte[] data = Hex
-            .decode("0000000000000000000000000000000000000000000000000000000000000000");
+        byte[] data = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000");
         int result = ByteUtil.firstNonZeroByte(data);
 
         assertEquals(-1, result);
@@ -300,8 +296,7 @@ public class ByteUtilTest {
     @Test
     public void firstNonZeroByte_2() {
 
-        byte[] data = Hex
-            .decode("0000000000000000000000000000000000000000000000000000000000332211");
+        byte[] data = Hex.decode("0000000000000000000000000000000000000000000000000000000000332211");
         int result = ByteUtil.firstNonZeroByte(data);
 
         assertEquals(29, result);
@@ -310,8 +305,7 @@ public class ByteUtilTest {
     @Test
     public void firstNonZeroByte_3() {
 
-        byte[] data = Hex
-            .decode("2211009988776655443322110099887766554433221100998877665544332211");
+        byte[] data = Hex.decode("2211009988776655443322110099887766554433221100998877665544332211");
         int result = ByteUtil.firstNonZeroByte(data);
 
         assertEquals(0, result);

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,17 +19,18 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.txpool.common;
+
+import org.aion.base.type.Address;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.base.type.Address;
 
 public class TxDependList<BW> {
-
     private final List<BW> txList;
     private BW dependTx;
     private Address address;

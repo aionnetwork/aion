@@ -22,14 +22,7 @@
  */
 package org.aion.precompiled;
 
-import static junit.framework.TestCase.assertEquals;
-
-import java.io.UnsupportedEncodingException;
-import java.util.Properties;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IPruneConfig;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.db.IRepositoryConfig;
+import org.aion.base.db.*;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
@@ -41,42 +34,20 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.junit.Before;
 import org.junit.Test;
+import java.io.UnsupportedEncodingException;
+import java.util.Properties;
+import static junit.framework.TestCase.assertEquals;
 
 public class HashTest {
-
     private static final long INPUT_NRG = 1000;
-    private static IRepositoryConfig repoConfig =
-        new IRepositoryConfig() {
-            @Override
-            public String getDbPath() {
-                return "";
-            }
 
-            @Override
-            public IPruneConfig getPruneConfig() {
-                return new CfgPrune(false);
-            }
-
-            @Override
-            public IContractDetails contractDetailsImpl() {
-                return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-            }
-
-            @Override
-            public Properties getDatabaseConfig(String db_name) {
-                Properties props = new Properties();
-                props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                return props;
-            }
-        };
     private byte[] byteArray1 = "a0010101010101010101010101".getBytes();
     private byte[] shortByteArray = "".getBytes();
     private Blake2bHash blake2bHasher;
     private KeccakHash keccakHasher;
 
     @Before
-    public void setUp() {
+    public void setUp(){
         IRepositoryCache repo = AionRepositoryImpl.createForTesting(repoConfig).startTracking();
         blake2bHasher = new Blake2bHash(repo);
         keccakHasher = new KeccakHash(repo);
@@ -93,14 +64,13 @@ public class HashTest {
 
         System.out.println("The blake256 hash for '" + new String(byteArray1, "UTF-8") + "' is:");
         System.out.print("      ");
-        for (byte b : output) {
+        for (byte b: output)
             System.out.print(b + " ");
-        }
         System.out.println();
     }
 
     @Test
-    public void testBlake128() throws UnsupportedEncodingException {
+    public void testBlake128() throws UnsupportedEncodingException{
         byte[] input = Blake2bHash.setupInput(1, byteArray1);
         ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
         byte[] output = res.getOutput();
@@ -110,14 +80,13 @@ public class HashTest {
 
         System.out.println("The blake128 hash for '" + new String(byteArray1, "UTF-8") + "' is:");
         System.out.print("      ");
-        for (byte b : output) {
+        for (byte b: output)
             System.out.print(b + " ");
-        }
         System.out.println();
     }
 
     @Test
-    public void testKeccak256() throws UnsupportedEncodingException {
+    public void testKeccak256() throws UnsupportedEncodingException{
         ExecutionResult res = keccakHasher.execute(byteArray1, INPUT_NRG);
         byte[] output = res.getOutput();
 
@@ -126,14 +95,13 @@ public class HashTest {
 
         System.out.println("The keccak256 hash for '" + new String(byteArray1, "UTF-8") + "' is:");
         System.out.print("      ");
-        for (byte b : output) {
+        for (byte b: output)
             System.out.print(b + " ");
-        }
         System.out.println();
     }
 
     @Test
-    public void invalidInputLength() {
+    public void invalidInputLength(){
         byte[] input = Blake2bHash.setupInput(0, shortByteArray);
         ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
@@ -143,7 +111,7 @@ public class HashTest {
     }
 
     @Test
-    public void insufficientNRG() {
+    public void insufficientNRG(){
         byte[] input = Blake2bHash.setupInput(0, byteArray1);
         ExecutionResult res = blake2bHasher.execute(input, 100);
         assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
@@ -153,10 +121,36 @@ public class HashTest {
     }
 
     @Test
-    public void testInvalidOperation() {
+    public void testInvalidOperation(){
         byte[] input = Blake2bHash.setupInput(3, byteArray1);
         ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
     }
+
+    private static IRepositoryConfig repoConfig =
+            new IRepositoryConfig() {
+                @Override
+                public String getDbPath() {
+                    return "";
+                }
+
+                @Override
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
+                }
+
+                @Override
+                public IContractDetails contractDetailsImpl() {
+                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                }
+
+                @Override
+                public Properties getDatabaseConfig(String db_name) {
+                    Properties props = new Properties();
+                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                    return props;
+                }
+            };
 
 }

@@ -49,11 +49,10 @@ import org.slf4j.LoggerFactory;
  *
  * Loglevels in Aion map to Loglevels in logback.
  *
- * Upon factory instantiation, LogEnum appropriate log-levels are assigned and the logger objects
- * are instantiated.
+ * Upon factory instantiation, LogEnum appropriate log-levels are assigned and the logger objects are instantiated.
  *
- * If a logger is requested by String that does not match the loggers defined in the LogEnum, the
- * GEN (general) logger is returned.
+ * If a logger is requested by String that does not match the loggers defined in the LogEnum, the GEN (general) logger
+ * is returned.
  *
  * @author github.com/ali-sharif
  */
@@ -85,8 +84,7 @@ public class AionLoggerFactory {
         init(requestedLogLevels, false, "");
     }
 
-    private static Map<LogEnum, Level> constructModuleLoglevelMap(
-        Map<String, String> _moduleToLevelMap) {
+    private static Map<LogEnum, Level> constructModuleLoglevelMap(Map<String, String> _moduleToLevelMap) {
         // condition the input hashmap so keys are all uppercase
         Map<String, String> moduleToLevelMap = new HashMap<>();
         if (_moduleToLevelMap != null) {
@@ -111,14 +109,12 @@ public class AionLoggerFactory {
         return modules;
     }
 
-    private static List<Appender<ILoggingEvent>> constructAppenders(boolean shouldLogToFile,
-        String _logDirectory) {
+    private static List<Appender<ILoggingEvent>> constructAppenders(boolean shouldLogToFile, String _logDirectory) {
         List<Appender<ILoggingEvent>> appenders = new ArrayList<>();
 
         String logDirectory = DEFAULT_LOG_DIR;
-        if (_logDirectory != null && !_logDirectory.trim().isEmpty()) {
+        if (_logDirectory != null && !_logDirectory.trim().isEmpty())
             logDirectory = _logDirectory;
-        }
 
         PatternLayoutEncoder encoder = new PatternLayoutEncoder();
         encoder.setContext(context);
@@ -144,9 +140,7 @@ public class AionLoggerFactory {
         consoleAsync.start();
 
         appenders.add(consoleAsync);
-        if (!shouldLogToFile) {
-            return appenders;
-        }
+        if (!shouldLogToFile) return  appenders;
 
         RollingFileAppender<ILoggingEvent> fileSync = new RollingFileAppender<>();
 
@@ -159,8 +153,7 @@ public class AionLoggerFactory {
         // roll-over each day
         // notice that we don't use the OS-agnostic File.separator here since logback is converts the FileNamePattern
         // to a unix-style path using ch.qos.logback.core.rolling.helper.FileFilterUtil.slashify
-        FileNamePattern fnp = new FileNamePattern(
-            logDirectory + "/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log", context);
+        FileNamePattern fnp = new FileNamePattern(logDirectory + "/%d{yyyy/MM, aux}/aion.%d{yyyy-MM-dd}.%i.log", context);
         rp.setFileNamePattern(fnp.getPattern());
         // max rollover file size = 100MB
         rp.setMaxFileSize(FileSize.valueOf("100mb"));
@@ -193,9 +186,9 @@ public class AionLoggerFactory {
     }
 
     public synchronized static void init(
-        Map<String, String> requestedLogLevels,
-        boolean shouldLogToFile,
-        String logDirectory) {
+            Map<String, String> requestedLogLevels,
+            boolean shouldLogToFile,
+            String logDirectory) {
 
         Map<LogEnum, Level> modules = constructModuleLoglevelMap(requestedLogLevels);
         List<Appender<ILoggingEvent>> appenders = constructAppenders(shouldLogToFile, logDirectory);
@@ -223,9 +216,7 @@ public class AionLoggerFactory {
     // note: this method is thread safe; delegated all thread safety down to logback
     public static Logger getLogger(String label) {
         Logger logger = context.exists(label);
-        if (logger != null) {
-            return logger;
-        }
+        if (logger != null) return logger;
 
         // root logger should always be available and should not return null
         return context.getLogger(Logger.ROOT_LOGGER_NAME);
