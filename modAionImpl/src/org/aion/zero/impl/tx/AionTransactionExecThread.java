@@ -33,8 +33,13 @@ import org.aion.zero.types.AionTransaction;
  * @author yao
  */
 public class AionTransactionExecThread
-    extends TransactionExecThread<AionPendingStateImpl, AionTransaction>
-    implements ITransactionExecThread<AionTransaction> {
+        extends TransactionExecThread<AionPendingStateImpl, AionTransaction>
+        implements ITransactionExecThread<AionTransaction> {
+
+    private static class AionTransactionExecThreadHolder {
+        public static final AionTransactionExecThread INSTANCE =
+                new AionTransactionExecThread(AionPendingStateImpl.inst());
+    }
 
     private AionTransactionExecThread(AionPendingStateImpl pendingState) {
         super(pendingState);
@@ -46,11 +51,5 @@ public class AionTransactionExecThread
 
     public static AionTransactionExecThread getInstance() {
         return AionTransactionExecThreadHolder.INSTANCE;
-    }
-
-    private static class AionTransactionExecThreadHolder {
-
-        public static final AionTransactionExecThread INSTANCE =
-            new AionTransactionExecThread(AionPendingStateImpl.inst());
     }
 }

@@ -27,7 +27,7 @@ public class P2pConstant {
 
     public static final int //
 
-        STOP_CONN_AFTER_FAILED_CONN = 8, //
+    STOP_CONN_AFTER_FAILED_CONN = 8, //
 
     FAILED_CONN_RETRY_INTERVAL = 3000, //
 

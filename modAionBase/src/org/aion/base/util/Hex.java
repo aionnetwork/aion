@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.base.util;
 
 import java.io.ByteArrayOutputStream;
@@ -90,8 +90,7 @@ public class Hex {
      *
      * @return the number of bytes produced.
      */
-    public static int encode(byte[] data, int off, int length, OutputStream out)
-        throws IOException {
+    public static int encode(byte[] data, int off, int length, OutputStream out) throws IOException {
         return encoder.encode(data, off, length, out);
     }
 
@@ -129,8 +128,8 @@ public class Hex {
     }
 
     /**
-     * decode the Hex encoded String data writing it to the given output stream, whitespace
-     * characters will be ignored.
+     * decode the Hex encoded String data writing it to the given output stream,
+     * whitespace characters will be ignored.
      *
      * @return the number of bytes produced.
      */

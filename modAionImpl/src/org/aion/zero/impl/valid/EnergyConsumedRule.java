@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,12 +19,15 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.impl.valid;
 
-import java.util.List;
 import org.aion.mcf.blockchain.valid.BlockHeaderRule;
 import org.aion.zero.types.A0BlockHeader;
+
+import java.util.List;
 
 /**
  * Rule for checking that energyConsumed does not exceed energyLimit:
@@ -32,20 +35,19 @@ import org.aion.zero.types.A0BlockHeader;
  */
 public class EnergyConsumedRule extends BlockHeaderRule<A0BlockHeader> {
 
-    private static String formatError(long energyConsumed, long energyLimit) {
-        return "energyConsumed ("
-            + energyConsumed
-            + ") > energyLimit("
-            + energyLimit + ")";
-    }
-
     @Override
     public boolean validate(A0BlockHeader blockHeader, List<RuleError> error) {
         if (blockHeader.getEnergyConsumed() > blockHeader.getEnergyLimit()) {
-            addError(formatError(blockHeader.getEnergyConsumed(), blockHeader.getEnergyLimit()),
-                error);
+            addError(formatError(blockHeader.getEnergyConsumed(), blockHeader.getEnergyLimit()), error);
             return false;
         }
         return true;
+    }
+
+    private static String formatError(long energyConsumed, long energyLimit) {
+        return "energyConsumed ("
+                + energyConsumed
+                + ") > energyLimit("
+                + energyLimit +")";
     }
 }

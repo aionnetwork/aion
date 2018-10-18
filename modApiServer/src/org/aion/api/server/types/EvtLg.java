@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,16 +19,18 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.api.server.types;
 
 import org.aion.api.server.types.Fltr.Type;
+import org.aion.base.util.TypeConverter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class EvtLg extends Evt {
-
+    
     private final TxRecptLg el;
 
     public EvtLg(TxRecptLg el) {
@@ -39,7 +41,7 @@ public class EvtLg extends Evt {
     public Type getType() {
         return Type.LOG;
     }
-
+    
     @Override
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();

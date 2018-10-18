@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,19 +17,25 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- */
+ ******************************************************************************/
 package org.aion.base.util;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
-
 /**
- * @author: ali sharif Implements a simple Moving Average Filter This class is thread safe
+ * @author: ali sharif
+ * Implements a simple Moving Average Filter
+ * This class is thread safe
  */
 public class MAF {
-
     //rationale for using ArrayDeque - doc: 'This class is likely to be faster than Stack when used as a stack,
     // and faster than LinkedList when used as a queue.'
     private final Queue<Double> myQ = new ArrayDeque<>();
@@ -50,11 +56,10 @@ public class MAF {
 
     public MAF(int window) {
         // can't have a window less than 2 elements
-        if (window < 2) {
+        if (window < 2)
             this.window = 2;
-        } else {
+        else
             this.window = window;
-        }
     }
 
     public void add(double value) {

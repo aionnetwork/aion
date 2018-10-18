@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,30 +17,35 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 package org.aion.mcf.db;
+
+import org.aion.base.db.IContractDetails;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.Hex;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
-
-import java.util.HashMap;
-import java.util.Map;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
 
 /**
  * Abstract contract details.
  */
 public abstract class AbstractContractDetails<DW> implements IContractDetails<DW> {
 
-    protected int prune;
-    protected int detailsInMemoryStorageLimit;
     private boolean dirty = false;
     private boolean deleted = false;
+
+    protected int prune;
+    protected int detailsInMemoryStorageLimit;
+
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
 
     protected AbstractContractDetails() {
@@ -58,6 +63,15 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
     }
 
     @Override
+    public byte[] getCode(byte[] codeHash) {
+        if (java.util.Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
+            return EMPTY_BYTE_ARRAY;
+        }
+        byte[] code = codes.get(new ByteArrayWrapper(codeHash));
+        return code == null ? EMPTY_BYTE_ARRAY : code;
+    }
+
+    @Override
     public void setCode(byte[] code) {
         if (code == null) {
             return;
@@ -69,15 +83,6 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
             return;
         }
         setDirty(true);
-    }
-
-    @Override
-    public byte[] getCode(byte[] codeHash) {
-        if (java.util.Arrays.equals(codeHash, EMPTY_DATA_HASH)) {
-            return EMPTY_BYTE_ARRAY;
-        }
-        byte[] code = codes.get(new ByteArrayWrapper(codeHash));
-        return code == null ? EMPTY_BYTE_ARRAY : code;
     }
 
     public Map<ByteArrayWrapper, byte[]> getCodes() {
@@ -93,18 +98,13 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
     }
 
     @Override
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    @Override
     public void setDirty(boolean dirty) {
         this.dirty = dirty;
     }
 
     @Override
-    public boolean isDeleted() {
-        return deleted;
+    public boolean isDirty() {
+        return dirty;
     }
 
     @Override
@@ -113,9 +113,13 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
     }
 
     @Override
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    @Override
     public String toString() {
-        String ret = "  Code: " + (codes.size() < 2 ? Hex.toHexString(getCode())
-            : codes.size() + " versions") + "\n";
+        String ret = "  Code: " + (codes.size() < 2 ? Hex.toHexString(getCode()) : codes.size() + " versions") + "\n";
         ret += "  Storage: " + getStorageHash();
         return ret;
     }

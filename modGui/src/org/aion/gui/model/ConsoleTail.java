@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
+ *     The aion network project is free software: you can redistribute it 
+ *     and/or modify it under the terms of the GNU General Public License 
+ *     as published by the Free Software Foundation, either version 3 of 
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     The aion network project is distributed in the hope that it will 
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
+ *     along with the aion network project source files.  
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -23,6 +23,7 @@
 package org.aion.gui.model;
 
 import com.google.common.annotations.VisibleForTesting;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -31,12 +32,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ConsoleTail {
-
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter
-        .ofPattern("dd-MM-YY hh:mm a");
     private final ScheduledExecutorService timer;
+
     private LocalDateTime lastStatusTime;
     private String message;
+
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-YY hh:mm a");
 
     public ConsoleTail() {
         this(Executors.newSingleThreadScheduledExecutor());
@@ -56,14 +57,14 @@ public class ConsoleTail {
     }
 
     /**
-     * Create a user-friendly string representing the time interval between now and the last status
-     * update
+     * Create a user-friendly string representing the time interval between now and the last status update
      *
      * The string will be as follows:
      *
-     * if interval is larger than 1 day: "YYYY-mm-dd HH:mm AM/PM" if interval is between 1 hour and
-     * 1 day: "today HH:mm AM/PM" if interval is between 1 minute and 1 hour: "x minutes ago" if
-     * interval is between 1 second and 1 minute: "less than a minute ago"
+     * if interval is larger than 1 day: "YYYY-mm-dd HH:mm AM/PM"
+     * if interval is between 1 hour and 1 day: "today HH:mm AM/PM"
+     * if interval is between 1 minute and 1 hour: "x minutes ago"
+     * if interval is between 1 second and 1 minute: "less than a minute ago"
      */
     @VisibleForTesting
     String makeTimeIntervalString(LocalDateTime now) {
@@ -80,21 +81,21 @@ public class ConsoleTail {
     }
 
     /**
-     * Create a user-friendly string representing the time interval between now and the last status
-     * update
+     * Create a user-friendly string representing the time interval between now and the last status update
      *
      * The string will be as follows:
      *
-     * if interval is larger than 1 day: "YYYY-mm-dd HH:mm AM/PM" if interval is between 1 hour and
-     * 1 day: "today HH:mm AM/PM" if interval is between 1 minute and 1 hour: "x minutes ago" if
-     * interval is between 1 second and 1 minute: "less than a minute ago"
+     * if interval is larger than 1 day: "YYYY-mm-dd HH:mm AM/PM"
+     * if interval is between 1 hour and 1 day: "today HH:mm AM/PM"
+     * if interval is between 1 minute and 1 hour: "x minutes ago"
+     * if interval is between 1 second and 1 minute: "less than a minute ago"
      */
     private String makeTimeIntervalString() {
         return makeTimeIntervalString(LocalDateTime.now());
     }
 
     public String makeStatus() {
-        if (message == null) {
+        if(message == null) {
             return "";
         } else {
             return String.format("%s (%s)", message, makeTimeIntervalString());

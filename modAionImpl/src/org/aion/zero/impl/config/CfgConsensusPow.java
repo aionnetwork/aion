@@ -1,42 +1,60 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
+ * The aion network project leverages useful source code from other
+ * open source projects. We greatly appreciate the effort that was
+ * invested in these projects and we thank the individual contributors
+ * for their work. For provenance information and contributors
+ * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
+ * Aion foundation.
+ *
  */
+
 package org.aion.zero.impl.config;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
 import org.aion.base.type.Address;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgConsensus;
 
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+
 public final class CfgConsensusPow extends CfgConsensus {
 
     private final CfgEnergyStrategy cfgEnergyStrategy;
-    protected String extraData;
+
+    CfgConsensusPow() {
+        this.mining = false;
+        this.minerAddress = Address.ZERO_ADDRESS().toString();
+        this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1); // half the available processors
+        this.extraData = "AION";
+        this.cfgEnergyStrategy = new CfgEnergyStrategy();
+        this.seed = false;
+    }
+
     private boolean mining;
 
     private boolean seed;
@@ -45,19 +63,10 @@ public final class CfgConsensusPow extends CfgConsensus {
 
     private byte cpuMineThreads;
 
-    CfgConsensusPow() {
-        this.mining = false;
-        this.minerAddress = Address.ZERO_ADDRESS().toString();
-        this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors()
-            >> 1); // half the available processors
-        this.extraData = "AION";
-        this.cfgEnergyStrategy = new CfgEnergyStrategy();
-        this.seed = false;
-    }
+    protected String extraData;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
-        loop:
-        while (sr.hasNext()) {
+        loop: while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
@@ -68,7 +77,7 @@ public final class CfgConsensusPow extends CfgConsensus {
                             break;
                         case "seed":
                             this.seed = Boolean.parseBoolean(Cfg.readValue(sr));
-                            break;
+                                break;
                         case "miner-address":
                             this.minerAddress = Cfg.readValue(sr);
                             break;
@@ -143,12 +152,16 @@ public final class CfgConsensusPow extends CfgConsensus {
         }
     }
 
-    public boolean getMining() {
-        return this.mining;
+    public void setExtraData(final String _extraData) {
+        this.extraData = _extraData;
     }
 
     public void setMining(final boolean value) {
         this.mining = value;
+    }
+
+    public boolean getMining() {
+        return this.mining;
     }
 
     public byte getCpuMineThreads() {
@@ -158,10 +171,6 @@ public final class CfgConsensusPow extends CfgConsensus {
 
     public String getExtraData() {
         return this.extraData;
-    }
-
-    public void setExtraData(final String _extraData) {
-        this.extraData = _extraData;
     }
 
     public String getMinerAddress() {

@@ -27,7 +27,7 @@ import static org.aion.base.util.ByteUtil.intToBytes;
 class FullStepRow extends StepRow {
 
     public FullStepRow(int width, byte[] hashIn, int hInLen, int hLen, int cBitLen, int index)
-        throws NullPointerException {
+            throws NullPointerException {
         super(width, hashIn, hInLen, cBitLen);
 
         byte[] indexBytes = intToBytes(index);
@@ -35,7 +35,7 @@ class FullStepRow extends StepRow {
     }
 
     public FullStepRow(int width, FullStepRow a, FullStepRow b, int len, int lenIndices, int trim)
-        throws NullPointerException {
+            throws NullPointerException {
         super(width, a);
 
         // Value of a is checked in super()

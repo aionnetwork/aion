@@ -1,35 +1,30 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
+/*******************************************************************************
  *
- *     This file is part of the aion network project.
+ * Copyright (c) 2017 Aion foundation.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ *     This program is free software: you can redistribute it and/or modify
+ *     it under the terms of the GNU General Public License as published by
+ *     the Free Software Foundation, either version 3 of the License, or
+ *     (at your option) any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ *     along with this program.  If not, see <https://www.gnu.org/licenses/>
  *
  * Contributors:
  *     Aion foundation.
- */
+ ******************************************************************************/
 package org.aion.vm;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.Log;
 import org.aion.zero.types.AionInternalTx;
+
+import java.util.*;
 
 /**
  * An internal helper class which holds all the dynamically generated effects:
@@ -49,6 +44,31 @@ public class ExecutionHelper {
     private List<Log> logs = new ArrayList<>();
     private List<Call> calls = new ArrayList<>();
 
+    public static class Call {
+
+        private final byte[] data;
+        private final byte[] destination;
+        private final byte[] value;
+
+        Call(byte[] data, byte[] destination, byte[] value) {
+            this.data = data;
+            this.destination = destination;
+            this.value = value;
+        }
+
+        public byte[] getData() {
+            return data;
+        }
+
+        public byte[] getDestination() {
+            return destination;
+        }
+
+        public byte[] getValue() {
+            return value;
+        }
+    }
+
     /**
      * Adds address to the set of deleted accounts if address is non-null and is not already in the
      * set.
@@ -66,9 +86,7 @@ public class ExecutionHelper {
      */
     public void addDeleteAccounts(Collection<Address> addresses) {
         for (Address addr : addresses) {
-            if (addr != null) {
-                deleteAccounts.add(addr);
-            }
+            if (addr != null) { deleteAccounts.add(addr); }
         }
     }
 
@@ -88,9 +106,7 @@ public class ExecutionHelper {
      */
     public void addLogs(Collection<Log> logs) {
         for (Log log : logs) {
-            if (log != null) {
-                this.logs.add(log);
-            }
+            if (log != null) { this.logs.add(log); }
         }
     }
 
@@ -121,9 +137,7 @@ public class ExecutionHelper {
      */
     public void addInternalTransactions(Collection<AionInternalTx> txs) {
         for (AionInternalTx tx : txs) {
-            if (tx != null) {
-                this.internalTxs.add(tx);
-            }
+            if (tx != null) { this.internalTxs.add(tx); }
         }
     }
 
@@ -155,60 +169,27 @@ public class ExecutionHelper {
      *
      * @return the deleted accounts list.
      */
-    public List<Address> getDeleteAccounts() {
-        return new ArrayList<>(deleteAccounts);
-    }
+    public List<Address> getDeleteAccounts() { return new ArrayList<>(deleteAccounts); }
 
     /**
      * Returns the execution logs.
      *
      * @return the execution logs.
      */
-    public List<Log> getLogs() {
-        return logs;
-    }
+    public List<Log> getLogs() { return logs; }
 
     /**
      * Returns the calls.
      *
      * @return the calls.
      */
-    public List<Call> getCalls() {
-        return calls;
-    }
+    public List<Call> getCalls() { return calls; }
 
     /**
      * Returns the internal transactions.
      *
      * @return the internal transactions.
      */
-    public List<AionInternalTx> getInternalTransactions() {
-        return internalTxs;
-    }
-
-    public static class Call {
-
-        private final byte[] data;
-        private final byte[] destination;
-        private final byte[] value;
-
-        Call(byte[] data, byte[] destination, byte[] value) {
-            this.data = data;
-            this.destination = destination;
-            this.value = value;
-        }
-
-        public byte[] getData() {
-            return data;
-        }
-
-        public byte[] getDestination() {
-            return destination;
-        }
-
-        public byte[] getValue() {
-            return value;
-        }
-    }
+    public List<AionInternalTx> getInternalTransactions() { return internalTxs; }
 
 }

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,21 +31,15 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.crypto;
-
-import static org.junit.Assert.assertTrue;
 
 import org.junit.AfterClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
+
 public class SignatureTest {
-
-    @AfterClass
-    public static void teardown() {
-        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
-    }
-
     @Test
     public void testSecp256k1Signature() {
         ECKeyFac.setType(ECKeyFac.ECKeyType.SECP256K1);
@@ -74,5 +68,10 @@ public class SignatureTest {
         ISignature sig = key.sign(msgHash);
         assertTrue(SignatureFac.verify(msgHash, sig));
         assertTrue(SignatureFac.verify(msgHash, SignatureFac.fromBytes(sig.toBytes())));
+    }
+
+    @AfterClass
+    public static void teardown() {
+        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
     }
 }

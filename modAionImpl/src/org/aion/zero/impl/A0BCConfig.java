@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,25 +19,27 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 package org.aion.zero.impl;
 
 import org.aion.base.type.Address;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
+import org.aion.zero.impl.core.energy.EnergyStrategies;
 
 public interface A0BCConfig {
 
     /**
-     * Retrieve the currently set coinbase for this particular node, blocks mined with this node
-     * will use this as the coinbase.
+     * Retrieve the currently set coinbase for this particular node, blocks
+     * mined with this node will use this as the coinbase.
      *
      * @return {@code coinbase} a 32-bytes address
      */
     Address getCoinbase();
 
     /**
-     * Retrieve the currently set extra data for this particular node, blocks mined with this node
-     * will use this as extra data.
+     * Retrieve the currently set extra data for this particular node, blocks
+     * mined with this node will use this as extra data.
      *
      * @return {@code extraData} a (up to) 32-byte value
      */

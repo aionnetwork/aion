@@ -23,13 +23,7 @@
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryCache;
@@ -37,6 +31,7 @@ import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -67,163 +62,60 @@ import org.aion.zero.types.A0BlockHeader;
  */
 public class StandaloneBlockchain extends AionBlockchainImpl {
 
-    private static IRepositoryConfig repoConfig =
-        new IRepositoryConfig() {
-            @Override
-            public String getDbPath() {
-                return "";
-            }
-
-            @Override
-            public IPruneConfig getPruneConfig() {
-                return new CfgPrune(false);
-            }
-
-            @Override
-            public IContractDetails contractDetailsImpl() {
-                return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-            }
-
-            @Override
-            public Properties getDatabaseConfig(String db_name) {
-                Properties props = new Properties();
-                props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                return props;
-            }
-        };
     public AionGenesis genesis;
+
+    private static IRepositoryConfig repoConfig =
+            new IRepositoryConfig() {
+                @Override
+                public String getDbPath() {
+                    return "";
+                }
+
+                @Override
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
+                }
+
+                @Override
+                public IContractDetails contractDetailsImpl() {
+                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                }
+
+                @Override
+                public Properties getDatabaseConfig(String db_name) {
+                    Properties props = new Properties();
+                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                    return props;
+                }
+            };
 
     protected StandaloneBlockchain(final A0BCConfig config, final ChainConfiguration chainConfig) {
         super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig);
     }
 
     protected StandaloneBlockchain(
-        final A0BCConfig config,
-        final ChainConfiguration chainConfig,
-        IRepositoryConfig repoConfig) {
+            final A0BCConfig config,
+            final ChainConfiguration chainConfig,
+            IRepositoryConfig repoConfig) {
         super(config, AionRepositoryImpl.createForTesting(repoConfig), chainConfig);
-    }
-
-    public AionGenesis getGenesis() {
-        return this.genesis;
     }
 
     public void setGenesis(AionGenesis genesis) {
         this.genesis = genesis;
     }
 
-    public void loadJSON(String json) {
+    public AionGenesis getGenesis() {
+        return this.genesis;
     }
+
+    public void loadJSON(String json) {}
 
     public BlockHeaderValidator getBlockHeaderValidator() {
         return this.chainConfiguration.createBlockHeaderValidator();
     }
 
-    /**
-     * for testing
-     */
-    public BigInteger getCachedTotalDifficulty() {
-        return getCacheTD();
-    }
-
-    public void assertEqualTotalDifficulty() {
-        BigInteger tdForHash, tdCached, tdPublic;
-        byte[] bestBlockHash;
-
-        synchronized (this) {
-            bestBlockHash = getBestBlock().getHash();
-            tdForHash = getBlockStore().getTotalDifficultyForHash(getBestBlock().getHash());
-            tdCached = getCacheTD();
-            tdPublic = getTotalDifficulty();
-        }
-
-        assert (tdPublic.equals(tdForHash));
-        assert (tdPublic.equals(tdCached));
-        assert (tdForHash.equals(getTotalDifficultyByHash(new Hash256(bestBlockHash))));
-    }
-
-    @Override
-    public synchronized ImportResult tryToConnect(final AionBlock block) {
-        ImportResult result = tryToConnectInternal(block, System.currentTimeMillis() / 1000);
-
-        if (result == ImportResult.IMPORTED_BEST) {
-            BigInteger tdForHash = getBlockStore().getTotalDifficultyForHash(block.getHash());
-            assert (getTotalDifficulty().equals(tdForHash));
-            assert (getCacheTD().equals(tdForHash));
-        }
-        return result;
-    }
-
-    /**
-     * @param blockNumber to be set in the blockchain
-     * @apiNote users should beware that this will cause a disconnect in the blockchain, one should
-     * not expect to use any block that is below {@code blockNumber}
-     * @apiNote as a consequence of the creation behaviour do not attempt to conduct VM bytecode
-     * that queries the history of the chain.
-     *
-     * This should <i>always</i> be used first, do not attempt to use this function after a
-     * blockchain has already been altered in some state.
-     * @implNote creates a new block that does not reference any parent and adds it into the
-     * blockchain (note that this will cause a disconnect in the blockchain)
-     */
-    public synchronized void setBlockNumber(long blockNumber) {
-        // cannot replace genesis
-        assert blockNumber > 0;
-        assert blockNumber > this.getBestBlock().getNumber();
-
-        // enforce that we have just created the blockchain, and have not
-        // altered it in any drastic fashion
-        assert this.getBestBlock() == this.genesis;
-
-        try {
-            // we also need a grandparent block to calculate difficulty
-            AionBlock grandParentBlock = null;
-            if (this.getBlockStore().getBlocksByNumber((int) blockNumber - 1).size() == 0) {
-                // create a grandparent block if none exists
-                A0BlockHeader header = new A0BlockHeader.Builder()
-                    .withStateRoot(this.getBestBlock().getStateRoot())
-                    .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                    .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                    .withNumber((int) blockNumber - 1)
-                    .withEnergyLimit(this.genesis.getNrgLimit())
-                    .withDifficulty(this.genesis.getDifficulty())
-                    .withTimestamp(0)
-                    .build();
-
-                AionBlock block = new AionBlock(header, Collections.emptyList());
-                this.setBestBlock(block);
-                this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
-                grandParentBlock = block;
-            } else {
-                // grab the grandparent block from the database if it exists
-                grandParentBlock = this.getBlockStore()
-                    .getBlocksByNumber((int) blockNumber - 1).get(0).getKey();
-            }
-
-            A0BlockHeader bestHeader = this.getBestBlock().getHeader();
-            A0BlockHeader header = new A0BlockHeader.Builder()
-                .withParentHash(grandParentBlock.getHash())
-                .withStateRoot(this.getBestBlock().getStateRoot())
-                .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                .withDifficulty(this.getBestBlock().getDifficulty())
-                .withEnergyLimit(this.getBestBlock().getNrgLimit())
-                .withTimestamp(1)
-                .withNumber(blockNumber)
-                .build();
-            AionBlock block = new AionBlock(header, Collections.emptyList());
-            this.setBestBlock(block);
-            this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
-        } catch (Exception e) {
-            // any exception here should kill the tests
-            // rethrow as runtime
-            throw new RuntimeException(e);
-        }
-    }
-
     public static class Bundle {
-
         public final List<ECKey> privateKeys;
         public final StandaloneBlockchain bc;
 
@@ -234,10 +126,20 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     }
 
     public static class Builder {
+        private A0BCConfig a0Config;
+
+        // note that this parameter is usually not injected into the blockchain
+        // it remains here so we can replace the default validator
+        private ChainConfiguration configuration;
+        private List<ECKey> defaultKeys = new ArrayList<>();
+        private Map<ByteArrayWrapper, AccountState> initialState = new HashMap<>();
+
+        private IRepositoryConfig repoConfig;
 
         public static final int INITIAL_ACC_LEN = 10;
         public static final BigInteger DEFAULT_BALANCE =
-            new BigInteger("1000000000000000000000000");
+                new BigInteger("1000000000000000000000000");
+
         /**
          * The type of validator selected for the blockchain, a "full" validator validates blocks as
          * if they were broadcasted from the network. Therefore the header validator will require a
@@ -246,13 +148,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
          * <p>{@code validatorType -> (full|simple)}
          */
         String validatorType;
-        private A0BCConfig a0Config;
-        // note that this parameter is usually not injected into the blockchain
-        // it remains here so we can replace the default validator
-        private ChainConfiguration configuration;
-        private List<ECKey> defaultKeys = new ArrayList<>();
-        private Map<ByteArrayWrapper, AccountState> initialState = new HashMap<>();
-        private IRepositoryConfig repoConfig;
 
         public Builder withValidatorConfiguration(String type) {
             this.validatorType = type;
@@ -264,8 +159,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 ECKey pk = ECKeyFac.inst().create();
                 this.defaultKeys.add(pk);
                 initialState.put(
-                    new ByteArrayWrapper(pk.getAddress()),
-                    new AccountState(BigInteger.ZERO, DEFAULT_BALANCE));
+                        new ByteArrayWrapper(pk.getAddress()),
+                        new AccountState(BigInteger.ZERO, DEFAULT_BALANCE));
             }
             return this;
         }
@@ -273,10 +168,10 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         public Builder withDefaultAccounts(List<ECKey> defaultAccounts) {
             this.defaultKeys.addAll(defaultAccounts);
             this.defaultKeys.forEach(
-                k ->
-                    initialState.put(
-                        new ByteArrayWrapper(k.getAddress()),
-                        new AccountState(BigInteger.ZERO, DEFAULT_BALANCE)));
+                    k ->
+                            initialState.put(
+                                    new ByteArrayWrapper(k.getAddress()),
+                                    new AccountState(BigInteger.ZERO, DEFAULT_BALANCE)));
             return this;
         }
 
@@ -333,44 +228,44 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         public Bundle build() {
             this.a0Config =
-                this.a0Config == null
-                    ? new A0BCConfig() {
-                    @Override
-                    public Address getCoinbase() {
-                        return Address.ZERO_ADDRESS();
-                    }
+                    this.a0Config == null
+                            ? new A0BCConfig() {
+                                @Override
+                                public Address getCoinbase() {
+                                    return Address.ZERO_ADDRESS();
+                                }
 
-                    @Override
-                    public byte[] getExtraData() {
-                        return new byte[32];
-                    }
+                                @Override
+                                public byte[] getExtraData() {
+                                    return new byte[32];
+                                }
 
-                    @Override
-                    public boolean getExitOnBlockConflict() {
-                        return false;
-                    }
+                                @Override
+                                public boolean getExitOnBlockConflict() {
+                                    return false;
+                                }
 
-                    @Override
-                    public Address getMinerCoinbase() {
-                        return Address.ZERO_ADDRESS();
-                    }
+                                @Override
+                                public Address getMinerCoinbase() {
+                                    return Address.ZERO_ADDRESS();
+                                }
 
-                    @Override
-                    public int getFlushInterval() {
-                        return 1;
-                    }
+                                @Override
+                                public int getFlushInterval() {
+                                    return 1;
+                                }
 
-                    @Override
-                    public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
-                        return new TargetStrategy(
-                            configuration.getConstants().getEnergyLowerBoundLong(),
-                            configuration
-                                .getConstants()
-                                .getEnergyDivisorLimitLong(),
-                            10_000_000L);
-                    }
-                }
-                    : this.a0Config;
+                                @Override
+                                public AbstractEnergyStrategyLimit getEnergyLimitStrategy() {
+                                    return new TargetStrategy(
+                                            configuration.getConstants().getEnergyLowerBoundLong(),
+                                            configuration
+                                                    .getConstants()
+                                                    .getEnergyDivisorLimitLong(),
+                                            10_000_000L);
+                                }
+                            }
+                            : this.a0Config;
 
             if (this.configuration == null) {
                 if (this.validatorType == null) {
@@ -379,28 +274,28 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                     this.configuration = new ChainConfiguration();
                 } else if (this.validatorType.equals("simple")) {
                     this.configuration =
-                        new ChainConfiguration() {
-                            /*
-                             * Remove the equiHash solution for the simplified
-                             * validator this gives us the ability to connect new
-                             * blocks without validating the solution and POW.
-                             *
-                             * This is good for transaction testing, but another set
-                             * of tests need to ensure that the equihash and POW
-                             * generated are valid.
-                             */
-                            @Override
-                            public BlockHeaderValidator<A0BlockHeader>
-                            createBlockHeaderValidator() {
-                                return new BlockHeaderValidator<A0BlockHeader>(
-                                    Arrays.asList(
-                                        new AionExtraDataRule(
-                                            this.constants
-                                                .getMaximumExtraDataSize()),
-                                        new EnergyConsumedRule(),
-                                        new AionHeaderVersionRule()));
-                            }
-                        };
+                            new ChainConfiguration() {
+                                /*
+                                 * Remove the equiHash solution for the simplified
+                                 * validator this gives us the ability to connect new
+                                 * blocks without validating the solution and POW.
+                                 *
+                                 * This is good for transaction testing, but another set
+                                 * of tests need to ensure that the equihash and POW
+                                 * generated are valid.
+                                 */
+                                @Override
+                                public BlockHeaderValidator<A0BlockHeader>
+                                        createBlockHeaderValidator() {
+                                    return new BlockHeaderValidator<A0BlockHeader>(
+                                            Arrays.asList(
+                                                    new AionExtraDataRule(
+                                                            this.constants
+                                                                    .getMaximumExtraDataSize()),
+                                                    new EnergyConsumedRule(),
+                                                    new AionHeaderVersionRule()));
+                                }
+                            };
                 } else {
                     throw new IllegalArgumentException("validatorType != (full|simple)");
                 }
@@ -411,7 +306,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             }
 
             StandaloneBlockchain bc =
-                new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig);
+                    new StandaloneBlockchain(this.a0Config, this.configuration, this.repoConfig);
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
@@ -431,9 +326,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
                 track.addStorageRow(
-                    ContractFactory.getTotalCurrencyContractAddress(),
-                    new DataWord(key.getKey()),
-                    new DataWord(key.getValue()));
+                        ContractFactory.getTotalCurrencyContractAddress(),
+                        new DataWord(key.getKey()),
+                        new DataWord(key.getValue()));
             }
 
             for (Address key : genesis.getPremine().keySet()) {
@@ -452,6 +347,112 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             }
 
             return new Bundle(this.defaultKeys, bc);
+        }
+    }
+
+    /** for testing */
+    public BigInteger getCachedTotalDifficulty() {
+        return getCacheTD();
+    }
+
+    public void assertEqualTotalDifficulty() {
+        BigInteger tdForHash, tdCached, tdPublic;
+        byte[] bestBlockHash;
+
+        synchronized (this) {
+            bestBlockHash = getBestBlock().getHash();
+            tdForHash = getBlockStore().getTotalDifficultyForHash(getBestBlock().getHash());
+            tdCached = getCacheTD();
+            tdPublic = getTotalDifficulty();
+        }
+
+        assert (tdPublic.equals(tdForHash));
+        assert (tdPublic.equals(tdCached));
+        assert (tdForHash.equals(getTotalDifficultyByHash(new Hash256(bestBlockHash))));
+    }
+
+    @Override
+    public synchronized ImportResult tryToConnect(final AionBlock block) {
+        ImportResult result = tryToConnectInternal(block, System.currentTimeMillis() / 1000);
+
+        if (result == ImportResult.IMPORTED_BEST) {
+            BigInteger tdForHash = getBlockStore().getTotalDifficultyForHash(block.getHash());
+            assert (getTotalDifficulty().equals(tdForHash));
+            assert (getCacheTD().equals(tdForHash));
+        }
+        return result;
+    }
+
+    /**
+     * @apiNote users should beware that this will cause a disconnect
+     * in the blockchain, one should not expect to use any block that
+     * is below {@code blockNumber}
+     *
+     * @apiNote as a consequence of the creation behaviour do not attempt
+     * to conduct VM bytecode that queries the history of the chain.
+     *
+     * This should <i>always</i> be used first, do not attempt to use
+     * this function after a blockchain has already been altered in
+     * some state.
+     *
+     * @implNote creates a new block that does not reference any parent
+     * and adds it into the blockchain (note that this will cause a
+     * disconnect in the blockchain)
+     *
+     * @param blockNumber to be set in the blockchain
+     */
+    public synchronized void setBlockNumber(long blockNumber) {
+        // cannot replace genesis
+        assert blockNumber > 0;
+        assert blockNumber > this.getBestBlock().getNumber();
+
+        // enforce that we have just created the blockchain, and have not
+        // altered it in any drastic fashion
+        assert this.getBestBlock() == this.genesis;
+
+        try {
+            // we also need a grandparent block to calculate difficulty
+            AionBlock grandParentBlock = null;
+            if (this.getBlockStore().getBlocksByNumber((int) blockNumber - 1).size() == 0) {
+                // create a grandparent block if none exists
+                A0BlockHeader header = new A0BlockHeader.Builder()
+                        .withStateRoot(this.getBestBlock().getStateRoot())
+                        .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                        .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                        .withNumber((int) blockNumber - 1)
+                        .withEnergyLimit(this.genesis.getNrgLimit())
+                        .withDifficulty(this.genesis.getDifficulty())
+                        .withTimestamp(0)
+                        .build();
+
+                AionBlock block = new AionBlock(header, Collections.emptyList());
+                this.setBestBlock(block);
+                this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
+                grandParentBlock = block;
+            } else {
+                // grab the grandparent block from the database if it exists
+                grandParentBlock = this.getBlockStore()
+                        .getBlocksByNumber((int) blockNumber - 1).get(0).getKey();
+            }
+
+            A0BlockHeader bestHeader = this.getBestBlock().getHeader();
+            A0BlockHeader header = new A0BlockHeader.Builder()
+                    .withParentHash(grandParentBlock.getHash())
+                    .withStateRoot(this.getBestBlock().getStateRoot())
+                    .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                    .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                    .withDifficulty(this.getBestBlock().getDifficulty())
+                    .withEnergyLimit(this.getBestBlock().getNrgLimit())
+                    .withTimestamp(1)
+                    .withNumber(blockNumber)
+                    .build();
+            AionBlock block = new AionBlock(header, Collections.emptyList());
+            this.setBestBlock(block);
+            this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);
+        } catch (Exception e) {
+            // any exception here should kill the tests
+            // rethrow as runtime
+            throw new RuntimeException(e);
         }
     }
 }

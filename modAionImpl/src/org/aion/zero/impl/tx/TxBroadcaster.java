@@ -1,4 +1,4 @@
-/*
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,8 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 package org.aion.zero.impl.tx;
 
 import java.util.List;
@@ -32,22 +33,20 @@ import org.aion.mcf.types.AbstractTransaction;
 @SuppressWarnings("rawtypes")
 public class TxBroadcaster<TX extends AbstractTransaction, TXTASK extends AbstractTxTask> {
 
-    private ExecutorService executor = Executors.newFixedThreadPool(1);
+    private TxBroadcaster() {}
 
-    private TxBroadcaster() {
+    private static class Holder {
+        static final TxBroadcaster INSTANCE = new TxBroadcaster();
     }
 
     public static TxBroadcaster getInstance() {
         return Holder.INSTANCE;
     }
 
+    private ExecutorService executor = Executors.newFixedThreadPool(1);
+
     @SuppressWarnings("unchecked")
     public Future<List<TX>> submitTransaction(TXTASK task) {
         return executor.submit(task);
-    }
-
-    private static class Holder {
-
-        static final TxBroadcaster INSTANCE = new TxBroadcaster();
     }
 }

@@ -43,11 +43,8 @@ import org.aion.zero.impl.types.AionBlock;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * @author Alexandra Roatis
- */
+/** @author Alexandra Roatis */
 public class PendingBlockStoreTest {
-
     @BeforeClass
     public static void setup() {
         // logging to see errors

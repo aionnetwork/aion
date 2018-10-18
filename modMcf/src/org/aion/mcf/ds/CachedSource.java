@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,9 +17,10 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  * Contributors:
  *     Aion foundation.
- */
+ ******************************************************************************/
 package org.aion.mcf.ds;
 
 import java.util.Collection;
@@ -33,6 +34,5 @@ public interface CachedSource<Key, Value> extends Source<Key, Value> {
     long estimateCacheSize();
 
     interface BytesKey<Value> extends CachedSource<byte[], Value> {
-
     }
 }

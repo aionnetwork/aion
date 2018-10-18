@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,13 +31,13 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.zero.impl.blockchain;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.when;
-
-import java.math.BigInteger;
+import org.aion.base.util.ByteUtil;
+import org.aion.equihash.EquiUtils;
+import org.aion.equihash.Equihash;
+import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
@@ -47,6 +47,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.base.util.ByteUtil.toLEByteArray;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 
 public class ChainConfigurationTest {
@@ -66,10 +73,10 @@ public class ChainConfigurationTest {
     public void testValidation() throws HeaderStructureException {
         int n = 210;
         int k = 9;
-        byte[] nonce = {1, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0};
+        byte[] nonce = {1,0,0,0,0,0,0,
+                        0,0,0,0,0,0,0,
+                        0,0,0,0,0,0,0,
+                        0,0,0,0,0,0,0};
         // setup mock
 //        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
 //        builder.withDifficulty(BigInteger.valueOf(1).toByteArray());
@@ -116,10 +123,10 @@ public class ChainConfigurationTest {
 
         ChainConfiguration config = new ChainConfiguration();
         BigInteger increment = config.getConstants()
-            .getBlockReward()
-            .subtract(config.getConstants().getRampUpStartValue())
-            .divide(BigInteger.valueOf(upperBound))
-            .add(config.getConstants().getRampUpStartValue());
+                .getBlockReward()
+                .subtract(config.getConstants().getRampUpStartValue())
+                .divide(BigInteger.valueOf(upperBound))
+                .add(config.getConstants().getRampUpStartValue());
 
         // UPPER BOUND
         when(header.getNumber()).thenReturn(upperBound);

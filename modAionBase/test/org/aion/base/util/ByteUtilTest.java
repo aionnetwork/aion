@@ -20,57 +20,22 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.base.util;
 
-import static org.aion.base.util.ByteUtil.and;
-import static org.aion.base.util.ByteUtil.appendByte;
-import static org.aion.base.util.ByteUtil.bigEndianToShort;
-import static org.aion.base.util.ByteUtil.bigIntegerToBytes;
-import static org.aion.base.util.ByteUtil.bigIntegerToBytesSigned;
-import static org.aion.base.util.ByteUtil.byteArrayToInt;
-import static org.aion.base.util.ByteUtil.byteArrayToLong;
-import static org.aion.base.util.ByteUtil.bytesToBigInteger;
-import static org.aion.base.util.ByteUtil.copyToArray;
-import static org.aion.base.util.ByteUtil.encodeValFor32Bits;
-import static org.aion.base.util.ByteUtil.firstNonZeroByte;
-import static org.aion.base.util.ByteUtil.getBit;
-import static org.aion.base.util.ByteUtil.hexStringToBytes;
-import static org.aion.base.util.ByteUtil.increment;
-import static org.aion.base.util.ByteUtil.intToBytes;
-import static org.aion.base.util.ByteUtil.intToBytesBE;
-import static org.aion.base.util.ByteUtil.intToBytesLE;
-import static org.aion.base.util.ByteUtil.intToBytesNoLeadZeroes;
-import static org.aion.base.util.ByteUtil.isNullOrZeroArray;
-import static org.aion.base.util.ByteUtil.isSingleZero;
-import static org.aion.base.util.ByteUtil.length;
-import static org.aion.base.util.ByteUtil.longToBytes;
-import static org.aion.base.util.ByteUtil.longToBytesLE;
-import static org.aion.base.util.ByteUtil.longToBytesNoLeadZeroes;
-import static org.aion.base.util.ByteUtil.numBytes;
-import static org.aion.base.util.ByteUtil.oneByteToHexString;
-import static org.aion.base.util.ByteUtil.or;
-import static org.aion.base.util.ByteUtil.setBit;
-import static org.aion.base.util.ByteUtil.shortToBytes;
-import static org.aion.base.util.ByteUtil.stripLeadingZeroes;
-import static org.aion.base.util.ByteUtil.toByte;
-import static org.aion.base.util.ByteUtil.toHexString;
-import static org.aion.base.util.ByteUtil.toHexStringWithPrefix;
-import static org.aion.base.util.ByteUtil.toLEByteArray;
-import static org.aion.base.util.ByteUtil.xor;
-import static org.aion.base.util.ByteUtil.xorAlignRight;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+
+import static org.aion.base.util.ByteUtil.*;
+import static org.junit.Assert.*;
 
 @RunWith(JUnitParamsRunner.class)
 public class ByteUtilTest {
@@ -78,43 +43,43 @@ public class ByteUtilTest {
     private static final Random random = new Random();
 
     private final String[] testHex = {
-        null,                                                                   // 0 - Null
-        "",                                                                     // 1 - Empty
-        "eF",                                                                   // 2 - One Byte
-        "aA11bB22cC33dd44aA11bB22cC33dd44aA11bB22cC33dd44aA11bB22cC33dd44",     // 3 - Upper/Lower
-        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",     // 4 - Negative (-1)
-        "0000000000000000000000000000000000000000000000000000000000000000",     // 5 - Zeroes
-        "0000000000000000000000000000000000000000000000000000000000000001",     // 6 - Positive (+1)
+            null,                                                                   // 0 - Null
+            "",                                                                     // 1 - Empty
+            "eF",                                                                   // 2 - One Byte
+            "aA11bB22cC33dd44aA11bB22cC33dd44aA11bB22cC33dd44aA11bB22cC33dd44",     // 3 - Upper/Lower
+            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",     // 4 - Negative (-1)
+            "0000000000000000000000000000000000000000000000000000000000000000",     // 5 - Zeroes
+            "0000000000000000000000000000000000000000000000000000000000000001",     // 6 - Positive (+1)
     };  // 1byte
 
     private final byte[][] testByte = {
-        null,
-        hexStringToBytes(testHex[1]),
-        hexStringToBytes(testHex[2]),
-        hexStringToBytes(testHex[3]),
-        hexStringToBytes(testHex[4]),
-        hexStringToBytes(testHex[5]),
-        hexStringToBytes(testHex[6]),
+            null,
+            hexStringToBytes(testHex[1]),
+            hexStringToBytes(testHex[2]),
+            hexStringToBytes(testHex[3]),
+            hexStringToBytes(testHex[4]),
+            hexStringToBytes(testHex[5]),
+            hexStringToBytes(testHex[6]),
     };
 
     private final String[][] testNum = {
-        {null, null},
-        {"-00000000000000000000", "00000000000000000000"},
-        {"-00000000000000000001", "00000000000000000001"},
-        {"-10000000000000000000", "10000000000000000000"},
-        {"-20000000000000000000", "20000000000000000000"},
-        {"-30000000000000000000", "30000000000000000000"},
-        {"-99999999999999999999", "99999999999999999999"},
+            { null, null },
+            { "-00000000000000000000", "00000000000000000000" },
+            { "-00000000000000000001", "00000000000000000001" },
+            { "-10000000000000000000", "10000000000000000000" },
+            { "-20000000000000000000", "20000000000000000000" },
+            { "-30000000000000000000", "30000000000000000000" },
+            { "-99999999999999999999", "99999999999999999999" },
     };
 
     private final BigInteger[][] testBigInt = {
-        {null, null},
-        {new BigInteger(testNum[1][0]), new BigInteger(testNum[1][1])},
-        {new BigInteger(testNum[2][0]), new BigInteger(testNum[2][1])},
-        {new BigInteger(testNum[3][0]), new BigInteger(testNum[3][1])},
-        {new BigInteger(testNum[4][0]), new BigInteger(testNum[4][1])},
-        {new BigInteger(testNum[5][0]), new BigInteger(testNum[5][1])},
-        {new BigInteger(testNum[6][0]), new BigInteger(testNum[6][1])},
+            { null, null },
+            { new BigInteger(testNum[1][0]), new BigInteger(testNum[1][1])},
+            { new BigInteger(testNum[2][0]), new BigInteger(testNum[2][1])},
+            { new BigInteger(testNum[3][0]), new BigInteger(testNum[3][1])},
+            { new BigInteger(testNum[4][0]), new BigInteger(testNum[4][1])},
+            { new BigInteger(testNum[5][0]), new BigInteger(testNum[5][1])},
+            { new BigInteger(testNum[6][0]), new BigInteger(testNum[6][1])},
 
     };
 
@@ -168,13 +133,13 @@ public class ByteUtilTest {
     private Object shortValues() {
 
         Short[] temp = {
-            0,
-            1,
-            10,
-            15,
-            20,
-            (short) random.nextInt(Integer.MAX_VALUE),
-            (short) Integer.MAX_VALUE};
+                0,
+                1,
+                10,
+                15,
+                20,
+                (short) random.nextInt(Integer.MAX_VALUE),
+                (short) Integer.MAX_VALUE  };
 
         return temp;
 
@@ -182,13 +147,17 @@ public class ByteUtilTest {
 
 
     /**
-     * TEST: BI <--> Bytes (+ve) bigIntegerToBytes(BI) bigIntegerToBytes(BI, num)
-     * bigIntegerToBytesSigned(BI, num) bytesToBigInteger(byte) {@link #intValues()}.
+     * TEST: BI <--> Bytes (+ve)
+     * bigIntegerToBytes(BI)
+     * bigIntegerToBytes(BI, num)
+     * bigIntegerToBytesSigned(BI, num)
+     * bytesToBigInteger(byte)
+     * {@link #intValues()}.
      */
     @Test
     public void bigIntegerTest() {
-        for (int b = 1; b < 2; b++) {
-            for (int a = 0; a < testBigInt.length; a++) {
+        for(int b = 1; b < 2; b++) {
+            for(int a = 0; a < testBigInt.length; a++) {
                 try {
                     byte[] temp1 = bigIntegerToBytes(testBigInt[a][b]);
                     byte[] temp2 = bigIntegerToBytes(testBigInt[a][b], temp1.length);
@@ -222,7 +191,10 @@ public class ByteUtilTest {
     }
 
     /**
-     * TEST: hex <--> Bytes hexStringToBytes(hex) toHexString(byte) toHexStringWithPrefix(byte)
+     * TEST: hex <--> Bytes
+     * hexStringToBytes(hex)
+     * toHexString(byte)
+     * toHexStringWithPrefix(byte)
      */
     @Test
     public void hexTest() {
@@ -230,7 +202,7 @@ public class ByteUtilTest {
         assertEquals("", toHexString(temp0));
         assertEquals("0x", toHexStringWithPrefix(temp0));
 
-        for (int a = 1; a < testHex.length; a++) {
+        for(int a = 1; a < testHex.length; a++) {
             byte[] temp1 = hexStringToBytes(testHex[a]);
             assertEquals(testHex[a].toLowerCase(), toHexString(temp1));
             assertEquals("0x" + testHex[a].toLowerCase(), toHexStringWithPrefix(temp1));
@@ -238,7 +210,10 @@ public class ByteUtilTest {
     }
 
     /**
-     * TEST: long <--> Bytes longToBytes(long) longToBytesNoLeadZeroes(long) byteArrayToLong(byte)
+     * TEST: long <--> Bytes
+     * longToBytes(long)
+     * longToBytesNoLeadZeroes(long)
+     * byteArrayToLong(byte)
      * longToBytesLE(long)
      */
     @Test
@@ -258,8 +233,10 @@ public class ByteUtilTest {
     }
 
     /**
-     * TEST: short <--> Bytes shortToBytes(short) bigEndianToShort(byte) ~ bigEndianToShort(byte,
-     * offset)
+     * TEST: short <--> Bytes
+     * shortToBytes(short)
+     * bigEndianToShort(byte)
+     * ~ bigEndianToShort(byte, offset)
      */
 
     @Test
@@ -270,9 +247,16 @@ public class ByteUtilTest {
     }
 
     /**
-     * TEST: int <--> Bytes intToBytes(int) intToBytesLE(int) intToBytesBE(int)
-     * intToBytesNoLeadZeroes(int) byteArrayToInt(byte) ~ intsToBytes(array, BE) ~
-     * intsToBytes(array, byte, BE) ~ bytesToInts(byte, BE) ~ bytesToInts(byte, array, BE)
+     * TEST: int <--> Bytes
+     * intToBytes(int)
+     * intToBytesLE(int)
+     * intToBytesBE(int)
+     * intToBytesNoLeadZeroes(int)
+     * byteArrayToInt(byte)
+     * ~ intsToBytes(array, BE)
+     * ~ intsToBytes(array, byte, BE)
+     * ~ bytesToInts(byte, BE)
+     * ~ bytesToInts(byte, array, BE)
      */
     @Test
     @Parameters(method = "intValues")
@@ -293,10 +277,20 @@ public class ByteUtilTest {
     }
 
     /**
-     * TEST: Byte validation toByte(byte) toLEByteArray(byte) firstNonZeroByte(byte) numBytes(hex)
-     * isNullOrZeroArray(byte) isSingleZero(byte) length(byte) stripLeadingZeroes(byte)
-     * appendByte(byte1, byte2) oneByteToHexString(byte) ~ matchingNibbleLength(byte1, byte2) ~
-     * nibblesToPrettyString(byte) ~ difference(byteSet1, byteSet2)
+     * TEST: Byte validation
+     * toByte(byte)
+     * toLEByteArray(byte)
+     * firstNonZeroByte(byte)
+     * numBytes(hex)
+     * isNullOrZeroArray(byte)
+     * isSingleZero(byte)
+     * length(byte)
+     * stripLeadingZeroes(byte)
+     * appendByte(byte1, byte2)
+     * oneByteToHexString(byte)
+     * ~ matchingNibbleLength(byte1, byte2)
+     * ~ nibblesToPrettyString(byte)
+     * ~ difference(byteSet1, byteSet2)
      */
     @Test
     public void byteTest() {
@@ -350,15 +344,15 @@ public class ByteUtilTest {
         // 1) numBytes(number)
         // 2) bigInt.length
         // 3) hex.length()/2
-        for (int a = 1; a < testBigInt.length; a++) {
+        for(int a = 1; a < testBigInt.length; a++) {
             byte[] temp4 = bigIntegerToBytes(testBigInt[a][1]);
             String temp5 = toHexString(temp4);
-            assertEquals(temp5.length() / 2, temp4.length);
-            assertEquals(temp5.length() / 2, numBytes(testNum[a][1]));
+            assertEquals(temp5.length()/2, temp4.length);
+            assertEquals(temp5.length()/2, numBytes(testNum[a][1]));
         }
 
         // Append
-        for (int a = 0; a < testHex.length; a++) {
+        for(int a = 0; a < testHex.length; a++) {
             byte[] temp6 = hexStringToBytes(testHex[a]);
             byte temp7 = toByte(testByte[2]);
             byte[] temp8 = appendByte(temp6, temp7);
@@ -369,8 +363,15 @@ public class ByteUtilTest {
     }
 
     /**
-     * TEST: Bit manipulation increment(byte) copyToArray(byte) setBit(byte, pos, val) getBit(byte,
-     * pos) and(byte1, byte2) or(byte1, byte2) xor(byte1, byte2) xorAlignRight(byte1, byte2)
+     * TEST: Bit manipulation
+     * increment(byte)
+     * copyToArray(byte)
+     * setBit(byte, pos, val)
+     * getBit(byte, pos)
+     * and(byte1, byte2)
+     * or(byte1, byte2)
+     * xor(byte1, byte2)
+     * xorAlignRight(byte1, byte2)
      */
     @Test
     public void bitTest() {
@@ -378,11 +379,11 @@ public class ByteUtilTest {
         // Increment for all byte size (+ve)
         int increment = 123;
         boolean max = false;
-        for (int a = 1; a < testBigInt.length; a++) {
+        for(int a = 1; a < testBigInt.length; a++) {
 
             BigInteger temp1 = testBigInt[a][1];
             byte[] temp2 = bigIntegerToBytes(temp1);
-            BigInteger capacity = BigInteger.valueOf((long) Math.pow(255, temp2.length));
+            BigInteger capacity = BigInteger.valueOf( (long) Math.pow(255, temp2.length) );
 
             for (int i = 0; i < increment; i++) {
                 while (!max) {
@@ -398,7 +399,7 @@ public class ByteUtilTest {
         }
 
         // Copy array, convert and assert (+ve)
-        for (int a = 1; a < testBigInt.length; a++) {
+        for(int a = 1; a < testBigInt.length; a++) {
             byte[] temp5 = copyToArray(testBigInt[a][1]);
             BigInteger temp6 = bytesToBigInteger(temp5);
             assertEquals(testBigInt[a][1], temp6);
@@ -406,7 +407,7 @@ public class ByteUtilTest {
 
         // Set bit, get bit for every bit
         int shifts = 8;
-        for (int c = 0; c < shifts; c++) {
+        for(int c = 0; c < shifts; c++) {
             byte[] temp6 = bigIntegerToBytesSigned(testBigInt[1][1], 1);
             setBit(temp6, c, 1);
             assertEquals(1, getBit(temp6, c));
@@ -414,36 +415,34 @@ public class ByteUtilTest {
         }
 
         // AND + OR with zero (+ve)
-        for (int a = 2; a < testBigInt.length; a++) {
+        for(int a = 2; a < testBigInt.length; a++) {
             byte[] temp8 = bigIntegerToBytes(testBigInt[a][1]);
             byte[] temp9 = bigIntegerToBytes(testBigInt[1][1], temp8.length);
             byte[] temp10 = or(temp8, temp9);
             byte[] temp11 = and(temp8, temp9);
             assertEquals(testBigInt[a][1], bytesToBigInteger(temp10));
             assertEquals(testBigInt[1][1], bytesToBigInteger(temp11));
-            System.out.println(
-                testBigInt[a][1] + " || " + testBigInt[1][1] + " --> " + bytesToBigInteger(temp10));
-            System.out.println(
-                testBigInt[a][1] + " && " + testBigInt[1][1] + " --> " + bytesToBigInteger(temp11));
+            System.out.println(testBigInt[a][1] + " || " + testBigInt[1][1] + " --> " + bytesToBigInteger(temp10));
+            System.out.println(testBigInt[a][1] + " && " + testBigInt[1][1] + " --> " + bytesToBigInteger(temp11));
         }
 
         // 2's compliment -ve BI --> +ve BI
-        for (int a = 1; a < testBigInt.length; a++) {
+        for(int a = 1; a < testBigInt.length; a++) {
             boolean found = false;
             int rightMost = 0;
             byte[] temp7 = bigIntegerToBytes(testBigInt[a][0]);
-            while (!found && rightMost < temp7.length * 8) {
-                if (getBit(temp7, rightMost) == 1) {
+            while(!found && rightMost < temp7.length*8) {
+                if(getBit(temp7, rightMost) == 1) {
                     found = true;
                 } else {
                     rightMost++;
                 }
             }
-            if (found) {
-                for (int b = rightMost + 1; b < temp7.length * 8; b++) {
-                    if (getBit(temp7, b) == 0) {
+            if(found) {
+                for(int b = rightMost+1; b < temp7.length*8; b++) {
+                    if(getBit(temp7, b) == 0) {
                         setBit(temp7, b, 1);
-                    } else if (getBit(temp7, b) == 1) {
+                    } else if(getBit(temp7, b) == 1) {
                         setBit(temp7, b, 0);
                     }
                 }
@@ -453,7 +452,7 @@ public class ByteUtilTest {
         }
 
         // 1's compliment | XOR with "FF" * numBytes
-        for (int b = 0; b < 2; b++) {
+        for(int b = 0; b < 2; b++) {
             for (int a = 1; a < testBigInt.length; a++) {
                 byte[] temp12 = bigIntegerToBytes(testBigInt[a][b]);
                 StringBuilder allForOne = new StringBuilder();

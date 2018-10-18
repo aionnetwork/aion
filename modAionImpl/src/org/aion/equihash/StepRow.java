@@ -27,13 +27,9 @@ class StepRow {
     private int width;
     private byte[] hash;
 
-    /**
-     * @throws NullPointerException when given null input
-     */
+    /** @throws NullPointerException when given null input */
     StepRow(int width, byte[] hashIn, int hInLen, int cBitLength) {
-        if (hashIn == null) {
-            throw new NullPointerException("Null hashIn");
-        }
+        if (hashIn == null) throw new NullPointerException("Null hashIn");
 
         this.width = width;
         this.hash = new byte[width];

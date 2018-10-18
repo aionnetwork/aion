@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,24 +19,35 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 package org.aion.mcf.account;
 
 import java.io.UnsupportedEncodingException;
+
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 
 /**
- * keystore crypto class
+ *  keystore crypto class
  */
 public class KeystoreCrypto {
-
     private String cipher;
     private String cipherText;
     private String kdf;
     private String mac;
     private CipherParams cipherParams;
     private KdfParams kdfParams;
+
+    public byte[] toRlp() {
+        byte[] bytesCipher = RLP.encodeString(this.cipher);
+        byte[] bytesCipherText = RLP.encodeString(this.cipherText);
+        byte[] bytesKdf = RLP.encodeString(this.kdf);
+        byte[] bytesMac = RLP.encodeString(this.mac);
+        byte[] bytesCipherParams = RLP.encodeElement(this.cipherParams.toRlp());
+        byte[] bytesKdfParams = RLP.encodeElement(this.kdfParams.toRlp());
+        return RLP.encodeList(bytesCipher, bytesCipherText, bytesKdf, bytesMac, bytesCipherParams, bytesKdfParams);
+    }
 
     public static KeystoreCrypto parse(byte[] bytes) throws UnsupportedEncodingException {
         RLPList list = (RLPList) RLP.decode2(bytes).get(0);
@@ -50,66 +61,55 @@ public class KeystoreCrypto {
         return kc;
     }
 
-    public byte[] toRlp() {
-        byte[] bytesCipher = RLP.encodeString(this.cipher);
-        byte[] bytesCipherText = RLP.encodeString(this.cipherText);
-        byte[] bytesKdf = RLP.encodeString(this.kdf);
-        byte[] bytesMac = RLP.encodeString(this.mac);
-        byte[] bytesCipherParams = RLP.encodeElement(this.cipherParams.toRlp());
-        byte[] bytesKdfParams = RLP.encodeElement(this.kdfParams.toRlp());
-        return RLP.encodeList(bytesCipher, bytesCipherText, bytesKdf, bytesMac, bytesCipherParams,
-            bytesKdfParams);
-    }
-
     // setters
-
-    public String getCipher() {
-        return cipher;
-    }
 
     public void setCipher(String cipher) {
         this.cipher = cipher;
-    }
-
-    public String getCipherText() {
-        return cipherText;
     }
 
     public void setCipherText(String ciphertext) {
         this.cipherText = ciphertext;
     }
 
-    public String getKdf() {
-        return kdf;
-    }
-
     public void setKdf(String kdf) {
         this.kdf = kdf;
-    }
-
-    // getters
-
-    public String getMac() {
-        return mac;
     }
 
     public void setMac(String mac) {
         this.mac = mac;
     }
 
-    public CipherParams getCipherParams() {
-        return cipherParams;
-    }
-
     public void setCipherParams(CipherParams cipherparams) {
         this.cipherParams = cipherparams;
     }
 
-    public KdfParams getKdfParams() {
-        return kdfParams;
-    }
-
     public void setKdfParams(KdfParams kdfparams) {
         this.kdfParams = kdfparams;
+    }
+
+    // getters
+
+    public String getCipher() {
+        return cipher;
+    }
+
+    public String getCipherText() {
+        return cipherText;
+    }
+
+    public String getKdf() {
+        return kdf;
+    }
+
+    public String getMac() {
+        return mac;
+    }
+
+    public CipherParams getCipherParams() {
+        return cipherParams;
+    }
+
+    public KdfParams getKdfParams() {
+        return kdfParams;
     }
 }

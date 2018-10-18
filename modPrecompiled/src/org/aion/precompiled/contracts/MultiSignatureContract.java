@@ -60,16 +60,16 @@ import org.aion.vm.ExecutionResult;
  * @author nick nadeau
  */
 public final class MultiSignatureContract extends StatefulPrecompiledContract {
-
-    public static final int MAX_OWNERS = 10;
-    public static final int MIN_OWNERS = 2;
-    public static final int MIN_THRESH = 1;
     private static final long COST = 21000L; // default cost for now; will need to be adjusted.
     private static final byte AION_PREFIX = (byte) 0xa0;
     private static final int AMOUNT_LEN = 128;
     private static final int SIG_LEN = 96;
     private static final int ADDR_LEN = 32;
     private final Address caller;
+
+    public static final int MAX_OWNERS = 10;
+    public static final int MIN_OWNERS = 2;
+    public static final int MIN_THRESH = 1;
 
     /**
      * Constructs a new MultiSignatureContract object. This is not a multi-sig wallet itself, simply
@@ -83,9 +83,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address caller) {
 
         super(track);
-        if (caller == null) {
-            throw new IllegalArgumentException("Null caller.");
-        }
+        if (caller == null) { throw new IllegalArgumentException("Null caller."); }
         this.caller = caller;
     }
 
@@ -103,7 +101,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         byte[] input = new byte[len];
 
         ByteBuffer buffer = ByteBuffer.allocate(len);
-        buffer.put(new byte[]{(byte) 0x0});
+        buffer.put(new byte[]{ (byte) 0x0 });
         buffer.putLong(threshold);
         for (Address addr : owners) {
             buffer.put(addr.toBytes());
@@ -129,8 +127,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     public static byte[] constructSendTxInput(Address wallet, List<ISignature> signatures,
         BigInteger amount, long nrgPrice, Address to) {
 
-        int len =
-            1 + (Address.ADDRESS_LEN * 2) + (signatures.size() * SIG_LEN) + AMOUNT_LEN + Long.BYTES;
+        int len = 1 + (Address.ADDRESS_LEN * 2) + (signatures.size() * SIG_LEN) + AMOUNT_LEN + Long.BYTES;
         byte[] input = new byte[len];
 
         int index = 0;
@@ -206,59 +203,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns the key to query a multi-sig wallet for its meta data value.
-     *
-     * @return the meta data query key.
-     */
-    private static byte[] getMetaDataKey() {
-        byte[] metaKey = new byte[DataWord.BYTES];
-        metaKey[0] = (byte) 0x80;
-        return metaKey;
-    }
-
-    /**
-     * Returns the key to query a multi-sig wallet for its owner data value.
-     *
-     * @param isFirstHalf True if querying first half of address.
-     * @param ownerId The owner id.
-     * @return the owner data query key.
-     */
-    private static byte[] getOwnerDataKey(boolean isFirstHalf, long ownerId) {
-        byte[] ownerKey = new byte[DataWord.BYTES];
-        if (!isFirstHalf) {
-            ownerKey[0] = (byte) 0x40;
-        }
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-        buffer.putLong(ownerId);
-        System.arraycopy(buffer.array(), 0, ownerKey, DataWord.BYTES - Long.BYTES, Long.BYTES);
-        return ownerKey;
-    }
-
-    /**
-     * Copies a byte array representing a negative BigInteger, bigIntBytes, into a byte array of
-     * appropriate length and sign-extends the array. This method returns the resulting array.
-     *
-     * @param bigIntBytes A negative BigInteger as bytes.
-     * @return a properly-sized and sign-extended byte array of the same BigInteger.
-     */
-    private static byte[] handleNegativeBigInt(byte[] bigIntBytes) {
-        byte[] result = new byte[AMOUNT_LEN];
-        int pushback = AMOUNT_LEN - bigIntBytes.length;
-        for (int i = 0; i < AMOUNT_LEN; i++) {
-            if ((i < pushback) || (bigIntBytes[i - pushback] == 0)) {
-                result[i] = (byte) 0xFF;
-            } else {
-                result[i] = bigIntBytes[i - pushback];
-            }
-        }
-        return result;
-    }
-
-    /**
      * The input parameter of this method is a byte array whose bytes should be supplied in the
-     * below formats depending on the desired operation. It is <b>highly recommended</b> that the
-     * constructCreateWalletInput method be used to create the input for creating a wallet and the
-     * constructSendTxInput method be used for sending a transaction.
+     * below formats depending on the desired operation.
+     * It is <b>highly recommended</b> that the constructCreateWalletInput method be used to create
+     * the input for creating a wallet and the constructSendTxInput method be used for sending a
+     * transaction.
      *
      * The format of the input byte array is as follows:
      *
@@ -267,17 +216,19 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * Where arguments is determined by operation. The following operations and corresponding
      * arguments are supported:
      *
-     * operation 0x0 - create a new multi-sig wallet (minimum 2 owners): arguments: [<8b -
-     * threshold> | <64b to 320b - owners>] total: 66-322 bytes
+     * operation 0x0 - create a new multi-sig wallet (minimum 2 owners):
+     *   arguments: [<8b - threshold> | <64b to 320b - owners>]
+     *   total: 66-322 bytes
      *
-     * operation 0x1 - send a transaction (minimum 1 signature): arguments: [<32b - walletId> | <96b
-     * to 960b - signatures> | <128b - amount> | <8b - nrgPrice> | <32b - to>] total: 297-1161
-     * bytes
+     * operation 0x1 - send a transaction (minimum 1 signature):
+     *   arguments:
+     * [<32b - walletId> | <96b to 960b - signatures> | <128b - amount> | <8b - nrgPrice> | <32b - to>]
+     *   total: 297-1161 bytes
      *
      *
      * Important: the output of a successful call to this method using operation 0x0 will return a
-     * ExecutionResult whose output field is the address of the newly created wallet. This address
-     * is the walletId that is required by operation 0x1 in order to send a transaction
+     * ExecutionResult whose output field is the address of the newly created wallet. This
+     * address is the walletId that is required by operation 0x1 in order to send a transaction
      * successfully.
      *
      * The account address that calls this execute method must be one of the owners of the wallet
@@ -286,32 +237,23 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      *
      * The signatures must all sign the exact same message that must obey the following format:
      *
-     * | nonce | recipientAddr | amount | nrgLimit | nrgPrice |
+     *   | nonce | recipientAddr | amount | nrgLimit | nrgPrice |
      *
      * It is <b>highly recommended</b> that the constructMsg method be used to produce this message
      * so that all parties can be sure they are signing identical transactions.
      */
     @Override
     public ExecutionResult execute(byte[] input, long nrg) {
-        if (nrg < COST) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
-        }
-        if (input == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
-        }
-        if (input.length < 1) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
-        }
+        if (nrg < COST) { return new ExecutionResult(ResultCode.OUT_OF_NRG, 0); }
+        if (input == null) { return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0); }
+        if (input.length < 1) { return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0); }
 
         int operation = input[0];
 
         switch (operation) {
-            case 0:
-                return createWallet(input, nrg);
-            case 1:
-                return sendTransaction(input, nrg);
-            default:
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            case 0: return createWallet(input, nrg);
+            case 1: return sendTransaction(input, nrg);
+            default: return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
         }
     }
 
@@ -331,8 +273,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         thresh.put(Arrays.copyOfRange(input, 1, 1 + Long.BYTES));
         thresh.flip();
         long threshold = thresh.getLong();
-        Set<Address> owners = extractAddresses(
-            Arrays.copyOfRange(input, 1 + Long.BYTES, input.length));
+        Set<Address> owners = extractAddresses(Arrays.copyOfRange(input, 1 + Long.BYTES, input.length));
 
         if (!isValidTxNrg(nrg)) {
             return new ExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
@@ -422,11 +363,14 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * Returns a set of addresses that have been extracted from addresses under the assumption
      * addresses is a byte array consisting only of consecutive owner addresses.
      *
-     * Returns null if: 1. addresses is an empty array. 2. The length of addresses is incorrect (not
-     * a multiple of ADDR_LEN). 3. The length of addresses is too long (more than ADDR_LEN *
-     * MAX_OWNERS). 4. An address appears more than once in addresses. 5. The address of the account
-     * that called execute is not in addresses. 6. An address does not exist in the repository. 7.
-     * An address is the address of a multi-sig wallet.
+     * Returns null if:
+     *   1. addresses is an empty array.
+     *   2. The length of addresses is incorrect (not a multiple of ADDR_LEN).
+     *   3. The length of addresses is too long (more than ADDR_LEN * MAX_OWNERS).
+     *   4. An address appears more than once in addresses.
+     *   5. The address of the account that called execute is not in addresses.
+     *   6. An address does not exist in the repository.
+     *   7. An address is the address of a multi-sig wallet.
      *
      * @param addresses A byte array of consecutive addresses.
      * @return The addresses extracted from the byte array.
@@ -444,15 +388,9 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         boolean addressIsOwner = false;
         for (int i = 0; i < length; i += ADDR_LEN) {
             addr = new Address(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
-            if (result.contains(addr)) {
-                return null;
-            }
-            if (track.getStorageValue(addr, new DataWord(getMetaDataKey())) != null) {
-                return null;
-            }
-            if (addr.equals(this.caller)) {
-                addressIsOwner = true;
-            }
+            if (result.contains(addr)) { return null; }
+            if (track.getStorageValue(addr, new DataWord(getMetaDataKey())) != null) { return null; }
+            if (addr.equals(this.caller)) { addressIsOwner = true; }
             result.add(addr);
         }
         return (addressIsOwner) ? result : null;
@@ -462,9 +400,10 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * Returns a list of signatures (as byte arrays) that have been extracted from signatures under
      * the assumption signatures is a byte array consisting only of consecutive signatures.
      *
-     * Returns null if: 1. signatures is an empty array. 2. The length of signatures is incorrect
-     * (not a multiple of SIG_LEN). 3. The length of signatures is too long (more than SIG_LEN *
-     * MAX_OWNERS).
+     * Returns null if:
+     *   1. signatures is an empty array.
+     *   2. The length of signatures is incorrect (not a multiple of SIG_LEN).
+     *   3. The length of signatures is too long (more than SIG_LEN * MAX_OWNERS).
      *
      * @param signatures A byte array of consecutive signatures.
      * @return The signatures extracted from the byte array.
@@ -499,7 +438,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private Address initNewWallet(Set<Address> owners, long threshold) {
         List<byte[]> ownerAddrs = new ArrayList<>();
         List<byte[]> ownerNonces = new ArrayList<>();
-        for (Address owner : owners) {
+        for (Address owner: owners) {
             ownerAddrs.add(owner.toBytes());
             ownerNonces.add(track.getNonce(owner).toByteArray());
         }
@@ -531,10 +470,10 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     }
 
     /**
-     * Saves the wallet's meta-data: its threshold and the number of owners it has. This data is
-     * stored in a single 128-bit data word using the following format:
+     * Saves the wallet's meta-data: its threshold and the number of owners it has.
+     * This data is stored in a single 128-bit data word using the following format:
      *
-     * | bits 127-65: threshold | bits 63-0: numOwners |
+     *   | bits 127-65: threshold | bits 63-0: numOwners |
      *
      * where 0 is the least significant bit.
      *
@@ -561,15 +500,16 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     }
 
     /**
-     * Saves the wallet's owners. Each 32 byte owner address is split into two 16 byte portions. The
-     * 128-bit KEY for each owner has the following format:
+     * Saves the wallet's owners. Each 32 byte owner address is split into two 16 byte portions.
+     * The 128-bit KEY for each owner has the following format:
      *
-     * | bit 127: <zero> | bit 126: portion | bits 125-0: ownerId |
+     *   | bit 127: <zero> | bit 126: portion | bits 125-0: ownerId |
      *
-     * where 0 is the least significant bit and bit 127 is always set to 0. If bit 126 is 0 then the
-     * corresponding VALUE is the first half of the owner's address. If bit 126 is 1 then the
-     * corresponding VALUE is the second half of the owner's address. The remaining bits are the
-     * ownerId, which is simply a counter from 0 up to numOwners - 1. The ordering is arbitrary.
+     * where 0 is the least significant bit and bit 127 is always set to 0.
+     * If bit 126 is 0 then the corresponding VALUE is the first half of the owner's address.
+     * If bit 126 is 1 then the corresponding VALUE is the second half of the owner's address.
+     * The remaining bits are the ownerId, which is simply a counter from 0 up to numOwners - 1.
+     * The ordering is arbitrary.
      *
      * @param walletId The address of the multi-sig wallet.
      * @param owners The owners of the multi-sig wallet.
@@ -595,11 +535,12 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns true only if the following conditions are met: 1. ALL signatures have been signed by
-     * unique signers. 2. ALL signers are owners of the multi-sig wallet whose address is wallet. 3.
-     * ALL signatures are valid signatures that sign the current transaction. 4. The number of
-     * signatures is at least the threshold value of the multi-sig wallet wallet. 5. The account
-     * that called execute is one of the owners of the wallet.
+     * Returns true only if the following conditions are met:
+     *   1. ALL signatures have been signed by unique signers.
+     *   2. ALL signers are owners of the multi-sig wallet whose address is wallet.
+     *   3. ALL signatures are valid signatures that sign the current transaction.
+     *   4. The number of signatures is at least the threshold value of the multi-sig wallet wallet.
+     *   5. The account that called execute is one of the owners of the wallet.
      *
      * Returns false otherwise.
      *
@@ -610,23 +551,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      */
     private boolean areValidSignatures(Address wallet, List<byte[]> signatures, byte[] msg) {
         Set<Address> owners = getOwners(wallet);
-        if (!owners.contains(this.caller)) {
-            return false;
-        }
+        if (!owners.contains(this.caller)) { return false; }
 
         Set<Address> txSigners = new HashSet<>();
         Address signer;
         for (byte[] sig : signatures) {
-            if (!signatureIsCorrect(sig, msg)) {
-                return false;
-            }
+            if (!signatureIsCorrect(sig, msg)) { return false; }
             signer = new Address(AddressSpecs.computeA0Address(Arrays.copyOfRange(sig, 0, 32)));
-            if (txSigners.contains(signer)) {
-                return false;
-            }
-            if (!owners.contains(signer)) {
-                return false;
-            }
+            if (txSigners.contains(signer)) { return false; }
+            if (!owners.contains(signer)) { return false; }
             txSigners.add(signer);
         }
 
@@ -652,8 +585,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns a set of all of the addresses that own the multi-sig wallet whose address is
-     * walletId.
+     * Returns a set of all of the addresses that own the multi-sig wallet whose address is walletId.
      *
      * This method assumes that walletId is a valid multi-sig wallet.
      *
@@ -698,6 +630,55 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         System.arraycopy(addrPortion.getData(), 0, address, DataWord.BYTES, DataWord.BYTES);
 
         return new Address(address);
+    }
+
+    /**
+     * Returns the key to query a multi-sig wallet for its meta data value.
+     *
+     * @return the meta data query key.
+     */
+    private static byte[] getMetaDataKey() {
+        byte[] metaKey = new byte[DataWord.BYTES];
+        metaKey[0] = (byte) 0x80;
+        return metaKey;
+    }
+
+    /**
+     * Returns the key to query a multi-sig wallet for its owner data value.
+     *
+     * @param isFirstHalf True if querying first half of address.
+     * @param ownerId The owner id.
+     * @return the owner data query key.
+     */
+    private static byte[] getOwnerDataKey(boolean isFirstHalf, long ownerId) {
+        byte[] ownerKey = new byte[DataWord.BYTES];
+        if (!isFirstHalf) {
+            ownerKey[0] = (byte) 0x40;
+        }
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(ownerId);
+        System.arraycopy(buffer.array(), 0, ownerKey, DataWord.BYTES - Long.BYTES, Long.BYTES);
+        return ownerKey;
+    }
+
+    /**
+     * Copies a byte array representing a negative BigInteger, bigIntBytes, into a byte array of
+     * appropriate length and sign-extends the array. This method returns the resulting array.
+     *
+     * @param bigIntBytes A negative BigInteger as bytes.
+     * @return a properly-sized and sign-extended byte array of the same BigInteger.
+     */
+    private static byte[] handleNegativeBigInt(byte[] bigIntBytes) {
+        byte[] result = new byte[AMOUNT_LEN];
+        int pushback = AMOUNT_LEN - bigIntBytes.length;
+        for (int i = 0; i < AMOUNT_LEN; i++) {
+            if ((i < pushback) || (bigIntBytes[i - pushback] == 0)) {
+                result[i] = (byte) 0xFF;
+            } else {
+                result[i] = bigIntBytes[i - pushback];
+            }
+        }
+        return result;
     }
 
 }

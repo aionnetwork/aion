@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.zero.impl.tx;
 
 import java.util.ArrayList;
@@ -75,11 +53,10 @@ public class TxCollector {
         int broadcastLoop = 1;
         int initDelay = 10;
         broadcastTxExec.scheduleAtFixedRate(
-            this::broadcastTransactionsTask, initDelay, broadcastLoop, TimeUnit.SECONDS);
+                this::broadcastTransactionsTask, initDelay, broadcastLoop, TimeUnit.SECONDS);
     }
 
-    public TxCollector(IP2pMgr p2pMgr) {
-    }
+    public TxCollector(IP2pMgr p2pMgr) {}
 
     /*
      * Submit a batch list of tx
@@ -89,9 +66,8 @@ public class TxCollector {
         for (AionTransaction tx : txs) {
             try {
                 transactionQueue.offer(tx, offerTimeout, TimeUnit.MILLISECONDS);
-                if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize) {
+                if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize)
                     broadcastTx();
-                }
 
             } catch (InterruptedException e) {
                 // Interrupted, no problem
@@ -105,9 +81,8 @@ public class TxCollector {
     public void submitTx(AionTransaction tx) {
         try {
             transactionQueue.offer(tx, offerTimeout, TimeUnit.MILLISECONDS);
-            if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize) {
+            if (queueSizeBytes.addAndGet(tx.getEncoded().length) >= this.maxTxBufferSize)
                 broadcastTx();
-            }
 
         } catch (InterruptedException e) {
             // Interrupted, no problem
@@ -121,9 +96,7 @@ public class TxCollector {
         try {
 
             // Check tx queue has not already been emptied
-            if (transactionQueue.isEmpty()) {
-                return;
-            }
+            if (transactionQueue.isEmpty()) return;
 
             // Grab everything in the queue
             transactions = new ArrayList<>(transactionQueue.size());
@@ -146,8 +119,8 @@ public class TxCollector {
             }
 
             TxBroadcaster.getInstance()
-                .submitTransaction(
-                    new A0TxTask(transactions, this.p2p, new BroadcastTx(transactions)));
+                    .submitTransaction(
+                            new A0TxTask(transactions, this.p2p, new BroadcastTx(transactions)));
         }
     }
 
@@ -156,9 +129,7 @@ public class TxCollector {
      */
     private void broadcastTransactionsTask() {
         int maxDelay = 1000;
-        if (System.currentTimeMillis() - this.lastBroadcast.get() < maxDelay) {
-            return;
-        }
+        if (System.currentTimeMillis() - this.lastBroadcast.get() < maxDelay) return;
 
         broadcastTx();
     }

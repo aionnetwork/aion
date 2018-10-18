@@ -1,48 +1,25 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.evtmgr.impl.es;
+
+import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.impl.evt.EventDummy;
+import org.slf4j.Logger;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.aion.evtmgr.IEvent;
-import org.aion.evtmgr.impl.evt.EventDummy;
-import org.slf4j.Logger;
 
 public class EventExecuteService {
 
-    private static Logger LOG;
     private LinkedBlockingQueue<IEvent> callbackEvt;
     private ExecutorService es;
+    private static Logger LOG;
     private String thName;
     private Set<Integer> filter;
 
-    public EventExecuteService(final int qSize, final String threadName, final int threadPriority,
-        final Logger log) {
-        if (threadName == null || log == null) {
+    public EventExecuteService(final int qSize, final String threadName, final int threadPriority, final Logger log ) {
+        if (threadName == null || log == null ) {
             throw new NullPointerException();
         }
 
@@ -88,9 +65,7 @@ public class EventExecuteService {
         return null;
     }
 
-    /**
-     * Clear all events from queue
-     */
+    /** Clear all events from queue */
     public void clear() {
         callbackEvt.clear();
     }

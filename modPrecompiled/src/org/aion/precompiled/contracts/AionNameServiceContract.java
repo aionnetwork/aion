@@ -26,11 +26,8 @@ import static org.aion.crypto.HashUtil.blake128;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
@@ -67,22 +64,15 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private static final String TTL_HASH = "TTLHash";
     private static final String ALL_ADDR_KEY = "allAddressKey";
     private static final String ALL_ADDR_COUNTER_KEY = "allAddressKey";
-    private static LRUMap<String, AionAuctionContract.AuctionDomainsData> activeDomains = new LRUMap(
-        4);
-    private Address activeDomainsAddress = Address
-        .wrap("0000000000000000000000000000000000000000000000000000000000000600");
-    private Address activeDomainsAddressTime = Address
-        .wrap("0000000000000000000000000000000000000000000000000000000000000601");
-    private Address activeDomainsAddressValue = Address
-        .wrap("0000000000000000000000000000000000000000000000000000000000000603");
-    private Address allAddresses = Address
-        .wrap("0000000000000000000000000000000000000000000000000000000000000800");
-    private Address domainAddressNamePair = Address
-        .wrap("0000000000000000000000000000000000000000000000000000000000000802");
-    private Address registeredDomainAddressName = Address
-        .wrap("0000000000000000000000000000000000000000000000000000000000000803");
-    private Address registeredDomainNameAddress = Address
-        .wrap("0000000000000000000000000000000000000000000000000000000000000804");
+
+    private Address activeDomainsAddress = Address.wrap("0000000000000000000000000000000000000000000000000000000000000600");
+    private Address activeDomainsAddressTime = Address.wrap("0000000000000000000000000000000000000000000000000000000000000601");
+    private Address activeDomainsAddressValue = Address.wrap("0000000000000000000000000000000000000000000000000000000000000603");
+    private Address allAddresses = Address.wrap("0000000000000000000000000000000000000000000000000000000000000800");
+    private Address domainAddressNamePair = Address.wrap("0000000000000000000000000000000000000000000000000000000000000802");
+    private Address registeredDomainAddressName =  Address.wrap("0000000000000000000000000000000000000000000000000000000000000803");
+    private Address registeredDomainNameAddress =  Address.wrap("0000000000000000000000000000000000000000000000000000000000000804");
+
     private Address address;
     private Address ownerAddress;
     private Address ownerAddressKey;
@@ -90,37 +80,35 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private Address TTLKey;
     private String domainName;
 
-    /**
-     * Construct a new ANS Contract
-     */
-    public AionNameServiceContract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address,
-        Address ownerAddress) { // byte
+    private static LRUMap<String, AionAuctionContract.AuctionDomainsData> activeDomains = new LRUMap(4);
+
+    /** Construct a new ANS Contract */
+    public AionNameServiceContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address, Address ownerAddress) { // byte
         super(track);
         this.address = address;
         setUpKeys();
         if (!isValidDomainAddress(address)) {
             throw new IllegalArgumentException(
-                "Invalid domain address, check for aion prefix: 0xa0(66char) or a0(64char)\n");
+                    "Invalid domain address, check for aion prefix: 0xa0(66char) or a0(64char)\n");
         }
         if (!isValidOwnerAddress(ownerAddress)) {
             throw new IllegalArgumentException(
-                "The owner address does not exist in the given repository\n");
+                    "The owner address does not exist in the given repository\n");
         }
         if (!(getOwnerAddress().equals(ownerAddress))
-            && !(getOwnerAddress()
-            .equals(
-                Address.wrap(
-                    "0000000000000000000000000000000000000000000000000000000000000000")))) {
+                && !(getOwnerAddress()
+                .equals(
+                        Address.wrap(
+                                "0000000000000000000000000000000000000000000000000000000000000000")))) {
             throw new IllegalArgumentException(
-                "The owner address of this domain from repository is different than the given"
-                    + "owner address from the input\n");
+                    "The owner address of this domain from repository is different than the given"
+                            + "owner address from the input\n");
         }
 
         if (!isAvailableDomain(address, ownerAddress)) {
             System.out.print(" This domain is not available for you\n");
             throw new IllegalArgumentException(
-                address.toString() + " This domain is not available for you\n");
+                    address.toString() + " This domain is not available for you\n");
 
         }
         this.ownerAddress = ownerAddress;
@@ -130,27 +118,28 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         addToRegistered(this.address, domainName);
     }
 
-    public static void clearDomainList() {
-        domains.clear();
-    }
-
     /**
      * Execute the ANS contract
      *
-     * input[] is defined as: [1b chainID] - chainId is intended to be our current chainId, in the
-     * case of the first AION network this should be set to 1 [1b operation] - <1: set resolver, 2:
-     * set time to live, 3: transfer domain ownership, 4: transfer subdomain ownership> [32 new
-     * address] [96 signature] 1 + 1 + 32 + 96 = 130
+     * input[] is defined as:
+     *      [1b chainID] - chainId is intended to be our current chainId, in the case of the first AION network this
+     *                     should be set to 1
+     *      [1b operation] - <1: set resolver, 2: set time to live, 3: transfer domain ownership, 4: transfer subdomain
+     *                       ownership>
+     *      [32 new address]
+     *      [96 signature]
+     *      1 + 1 + 32 + 96 = 130
      *
-     * [32b subdomain address] - optional [96b signature] - optional [32b subdomain name in bytes] -
-     * optional 130 + 32 + 32 + 32 = 226
+     *      [32b subdomain address] - optional
+     *      [96b signature] - optional
+     *      [32b subdomain name in bytes] - optional
+     *      130 + 32 + 32 + 32 = 226
      */
     @Override
     public ExecutionResult execute(byte[] input, long nrg) {
         // check for correct input length
-        if (input.length != 130 && input.length != 226) {
+        if (input.length != 130 && input.length != 226)
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
-        }
 
         // declare variables for parsing the byte[] input and storing each value
         byte[] addressFirstPart = new byte[16];
@@ -188,7 +177,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 this.domainName = new String(trimmedDomainNameInBytes, "UTF-8");
                 subdomainName = new String(trimmedSubdomainNameInBytes, "UTF-8");
 
-                if (!isValidDomainName(this.domainName)) {
+                if(!isValidDomainName(this.domainName)){
                     return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
                 }
 
@@ -219,7 +208,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 byte[] resolverHash1 = blake128(RESOLVER_HASH.getBytes());
                 byte[] resolverHash2 = blake128(resolverHash1);
                 return setResolver(
-                    resolverHash1, resolverHash2, addressFirstPart, addressSecondPart, nrg);
+                        resolverHash1, resolverHash2, addressFirstPart, addressSecondPart, nrg);
             case 2:
                 byte[] TTLHash1 = blake128(TTL_HASH.getBytes());
                 byte[] TTLHash2 = blake128(TTLHash1);
@@ -228,32 +217,28 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 byte[] ownerHash1 = blake128(OWNER_HASH.getBytes());
                 byte[] ownerHash2 = blake128(ownerHash1);
                 return transferOwnership(
-                    ownerHash1, ownerHash2, addressFirstPart, addressSecondPart, nrg);
+                        ownerHash1, ownerHash2, addressFirstPart, addressSecondPart, nrg);
             case 4:
                 byte[] subownerHash1 = blake128(OWNER_HASH.getBytes());
                 byte[] subownerHash2 = blake128(subownerHash1);
                 return transferSubdomainOwnership(
-                    subdomainAddress,
-                    nrg,
-                    subownerHash1,
-                    subownerHash2,
-                    addressFirstPart,
-                    addressSecondPart,
-                    subdomainName);
+                        subdomainAddress,
+                        nrg,
+                        subownerHash1,
+                        subownerHash2,
+                        addressFirstPart,
+                        addressSecondPart,
+                        subdomainName);
             default:
                 return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg); // unsupported operation
+                        ResultCode.INTERNAL_ERROR, nrg); // unsupported operation
         }
     }
 
-    /**
-     * Set Resolver for this domain
-     */
+    /** Set Resolver for this domain */
     private ExecutionResult setResolver(
-        byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
-        if (nrg < SET_COST) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
-        }
+            byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
+        if (nrg < SET_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         storeResult(hash1, hash2, addr1, addr2);
 
@@ -264,14 +249,10 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return new ExecutionResult(ResultCode.SUCCESS, nrg - SET_COST);
     }
 
-    /**
-     * Set Time to Live for this domain
-     */
+    /** Set Time to Live for this domain */
     private ExecutionResult setTTL(
-        byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
-        if (nrg < SET_COST) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
-        }
+            byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
+        if (nrg < SET_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         storeResult(hash1, hash2, addr1, addr2);
 
@@ -282,18 +263,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return new ExecutionResult(ResultCode.SUCCESS, nrg - SET_COST);
     }
 
-    /**
-     * Transfer the ownership of this domain
-     */
+    /** Transfer the ownership of this domain */
     private ExecutionResult transferOwnership(
-        byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
-        if (nrg < TRANSFER_COST) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
-        }
+            byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
+        if (nrg < TRANSFER_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
-        if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2)))) {
+        if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg);
-        }
 
         Address.wrap(combineTwoBytes(addr1, addr2));
         storeResult(hash1, hash2, addr1, addr2);
@@ -305,24 +281,19 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return new ExecutionResult(ResultCode.SUCCESS, nrg - TRANSFER_COST);
     }
 
-    /**
-     * Transfer the ownership of subdomain
-     */
+    /** Transfer the ownership of subdomain */
     private ExecutionResult transferSubdomainOwnership(
-        byte[] subdomainAddress,
-        long nrg,
-        byte[] hash1,
-        byte[] hash2,
-        byte[] addr1,
-        byte[] addr2,
-        String subdomain) {
-        if (nrg < TRANSFER_COST) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
-        }
+            byte[] subdomainAddress,
+            long nrg,
+            byte[] hash1,
+            byte[] hash2,
+            byte[] addr1,
+            byte[] addr2,
+            String subdomain) {
+        if (nrg < TRANSFER_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
-        if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2)))) {
+        if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
             return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg);
-        }
 
         Address sdAddress = Address.wrap(subdomainAddress);
 
@@ -373,9 +344,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     }
 
     private Address getValueFromStorage(Address key) {
-        if (key == null) {
-            return null;
-        }
+        if (key == null) return null;
         byte[] byteKey = key.toBytes();
         byte[] key1 = new byte[16];
         byte[] key2 = new byte[16];
@@ -392,11 +361,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return (new Address(addrCombined));
     }
 
-    private void addToRegistered(Address domainAddress, String domainName) {
+    private void addToRegistered(Address domainAddress, String domainName){
         // set up domain name for storage
         byte[] domainNameInBytes = domainName.getBytes();
         byte[] domainNameInBytesWithLeadingZeros = addLeadingZeros(domainNameInBytes);
-        String domainNameWithLeadingZeros = new String(domainNameInBytesWithLeadingZeros);
+        String domainNameWithLeadingZeros =  new String(domainNameInBytesWithLeadingZeros);
         String fullDomainName = domainNameWithLeadingZeros.substring(0, 32);
         byte[] nameFirstPart = fullDomainName.substring(0, 16).getBytes();
         byte[] nameSecondPart = fullDomainName.substring(16, 32).getBytes();
@@ -409,33 +378,22 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         //store
         // store name -> address pair
-        this.track.addStorageRow(registeredDomainNameAddress,
-            new DataWord(blake128(domainName.getBytes())), new DataWord(addressFirstPart));
-        this.track.addStorageRow(registeredDomainNameAddress,
-            new DataWord(blake128(blake128(domainName.getBytes()))),
-            new DataWord(addressSecondPart));
+        this.track.addStorageRow(registeredDomainNameAddress, new DataWord(blake128(domainName.getBytes())), new DataWord(addressFirstPart));
+        this.track.addStorageRow(registeredDomainNameAddress, new DataWord(blake128(blake128(domainName.getBytes()))), new DataWord(addressSecondPart));
 
         // store address -> name pair
-        this.track.addStorageRow(registeredDomainAddressName,
-            new DataWord(blake128(domainAddress.toBytes())), new DataWord(nameFirstPart));
-        this.track.addStorageRow(registeredDomainAddressName,
-            new DataWord(blake128(blake128(domainAddress.toBytes()))),
-            new DataWord(nameSecondPart));
+        this.track.addStorageRow(registeredDomainAddressName, new DataWord(blake128(domainAddress.toBytes())), new DataWord(nameFirstPart));
+        this.track.addStorageRow(registeredDomainAddressName, new DataWord(blake128(blake128(domainAddress.toBytes()))), new DataWord(nameSecondPart));
     }
 
     private boolean isSubdomain(String subdomainName) {
         String[] domainPartitioned = this.domainName.split("\\.");
         String[] subdomainPartitioned = subdomainName.split("\\.");
 
-        if (domainPartitioned.length >= subdomainPartitioned.length) {
-            return false;
-        }
+        if (domainPartitioned.length >= subdomainPartitioned.length) return false;
 
-        for (int i = domainPartitioned.length - 1, j = subdomainPartitioned.length - 1;
-            j >= subdomainPartitioned.length - domainPartitioned.length; i--, j--) {
-            if (!domainPartitioned[i].equals(subdomainPartitioned[j])) {
-                return false;
-            }
+        for (int i = domainPartitioned.length-1, j = subdomainPartitioned.length-1; j >= subdomainPartitioned.length - domainPartitioned.length; i--, j--) {
+            if (!domainPartitioned[i].equals(subdomainPartitioned[j])) return false;
         }
         return true;
     }
@@ -448,29 +406,21 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
     private boolean isValidOwnerAddress(Address ownerAddress) {
         // checks if the owner address is registered in the repository
-        if (this.track.hasAccountState(ownerAddress)) {
-            return true;
-        }
+        if (this.track.hasAccountState(ownerAddress)) return true;
         return (this.track.hasContractDetails(ownerAddress));
     }
 
     private boolean isValidDomainName(String domainName) {
-        if (domains.containsKey(domainName)) {
+        if (domains.containsKey(domainName))
             return domains.get(domainName).equals(this.address);
-        }
-        return true;
-    }
+        return true; }
 
     private byte[] trimTrailingZeros(byte[] b) {
-        if (b == null) {
-            return null;
-        }
+        if (b == null) return null;
 
         int counter = 0;
         for (int i = 0; i < 32; i++) {
-            if (b[i] == 0) {
-                break;
-            }
+            if (b[i] == 0) break;
             counter++;
         }
 
@@ -479,20 +429,15 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return ret;
     }
 
-    private boolean isAvailableDomain(Address domainAddress, Address ownerAddress) {
-        IDataWord addrFirstPart = this.track
-            .getStorageValue(activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())));
-        IDataWord addrSecondPart = this.track.getStorageValue(activeDomainsAddress,
-            new DataWord(blake128(blake128(domainAddress.toBytes()))));
-        Address addrFromRepo = Address
-            .wrap(combineTwoBytes(addrFirstPart.getData(), addrSecondPart.getData()));
+    private boolean isAvailableDomain(Address domainAddress, Address ownerAddress){
+        IDataWord addrFirstPart = this.track.getStorageValue(activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())));
+        IDataWord addrSecondPart = this.track.getStorageValue(activeDomainsAddress, new DataWord(blake128(blake128(domainAddress.toBytes()))));
+        Address addrFromRepo = Address.wrap(combineTwoBytes(addrFirstPart.getData(), addrSecondPart.getData()));
 
         return addrFromRepo.equals(ownerAddress);
     }
 
-    /**
-     * getter functions
-     */
+    /** getter functions */
     public Address getResolverAddress() {
         return getValueFromStorage(this.resolverAddressKey);
     }
@@ -509,17 +454,19 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return getValueFromStorage(key);
     }
 
+    public static void clearDomainList() {
+        domains.clear();
+    }
+
+
     // query helpers
     private byte[] trimLeadingZeros(byte[] b) {
-        if (b == null) {
-            return null;
-        }
+        if (b == null) return null;
 
         int counter = 0;
         for (int i = 0; i < 32; i++) {
-            if (b[i] != 0) {
+            if (b[i] != 0)
                 break;
-            }
             counter++;
         }
 
@@ -529,15 +476,12 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     }
 
     private byte[] trimLeadingZeros16(byte[] b) {
-        if (b == null) {
-            return null;
-        }
+        if (b == null) return null;
 
         int counter = 0;
         for (int i = 0; i < 16; i++) {
-            if (b[i] != 0) {
+            if (b[i] != 0)
                 break;
-            }
             counter++;
         }
 
@@ -552,16 +496,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         return ret;
     }
 
-    private String getDomainNameFromAddress(Address domainAddress) {
+    private String getDomainNameFromAddress(Address domainAddress){
         String rawDomainName = "";
-        IDataWord nameFirstPartData = this.track.getStorageValue(domainAddressNamePair,
-            new DataWord(blake128(domainAddress.toBytes())));
-        IDataWord nameSecondPartData = this.track.getStorageValue(domainAddressNamePair,
-            new DataWord(blake128(blake128(domainAddress.toBytes()))));
-        byte[] nameData = trimLeadingZeros(
-            combineTwoBytes(nameFirstPartData.getData(), nameSecondPartData.getData()));
+        IDataWord nameFirstPartData = this.track.getStorageValue(domainAddressNamePair, new DataWord(blake128(domainAddress.toBytes())));
+        IDataWord nameSecondPartData = this.track.getStorageValue(domainAddressNamePair, new DataWord(blake128(blake128(domainAddress.toBytes()))));
+        byte[] nameData = trimLeadingZeros(combineTwoBytes(nameFirstPartData.getData(), nameSecondPartData.getData()));
         try {
-            rawDomainName = new String(nameData, "UTF-8");
+            rawDomainName = new String (nameData, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -574,34 +515,26 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
      * Query Functions
      */
     private List<ActiveDomainsData> getAllActiveDomains() {
-        IDataWord numberOfDomainsTotalData = this.track
-            .getStorageValue(allAddresses, new DataWord(blake128(ALL_ADDR_COUNTER_KEY.getBytes())));
+        IDataWord numberOfDomainsTotalData = this.track.getStorageValue(allAddresses, new DataWord(blake128(ALL_ADDR_COUNTER_KEY.getBytes())));
         BigInteger numberOfDomainsTotal = new BigInteger(numberOfDomainsTotalData.getData());
 
         int counter = numberOfDomainsTotal.intValue();
         List<ActiveDomainsData> actives = new ArrayList<>();
 
-        for (int i = 0; i < counter; i++) {
+        for (int i = 0; i < counter; i++){
             byte[] firstHash = blake128((ALL_ADDR_KEY + i).getBytes());
             byte[] secondHash = blake128(blake128((ALL_ADDR_KEY + i).getBytes()));
-            byte[] addrFirstPart = this.track.getStorageValue(allAddresses, new DataWord(firstHash))
-                .getData();
-            byte[] addrSecondPart = this.track
-                .getStorageValue(allAddresses, new DataWord(secondHash)).getData();
+            byte[] addrFirstPart = this.track.getStorageValue(allAddresses, new DataWord(firstHash)).getData();
+            byte[] addrSecondPart = this.track.getStorageValue(allAddresses, new DataWord(secondHash)).getData();
             Address tempDomainAddr = Address.wrap(combineTwoBytes(addrFirstPart, addrSecondPart));
 
             // if domain exists
-            if (!this.track.getStorageValue(activeDomainsAddress,
-                new DataWord(blake128(tempDomainAddr.toBytes()))).equals(DoubleDataWord.ZERO)) {
-                byte[] ownerAddrFirstPart = this.track.getStorageValue(activeDomainsAddress,
-                    new DataWord(blake128(tempDomainAddr.toBytes()))).getData();
-                byte[] ownerAddrSecondPart = this.track.getStorageValue(activeDomainsAddress,
-                    new DataWord(blake128(blake128(tempDomainAddr.toBytes())))).getData();
-                Address tempOwnerAddr = Address
-                    .wrap(combineTwoBytes(ownerAddrFirstPart, ownerAddrSecondPart));
+            if(!this.track.getStorageValue(activeDomainsAddress, new DataWord(blake128(tempDomainAddr.toBytes()))).equals(DoubleDataWord.ZERO)) {
+                byte[] ownerAddrFirstPart = this.track.getStorageValue(activeDomainsAddress, new DataWord(blake128(tempDomainAddr.toBytes()))).getData();
+                byte[] ownerAddrSecondPart = this.track.getStorageValue(activeDomainsAddress, new DataWord(blake128(blake128(tempDomainAddr.toBytes())))).getData();
+                Address tempOwnerAddr = Address.wrap(combineTwoBytes(ownerAddrFirstPart, ownerAddrSecondPart));
 
-                byte[] expireDateData = this.track.getStorageValue(activeDomainsAddressTime,
-                    new DataWord(blake128(tempDomainAddr.toBytes()))).getData();
+                byte[] expireDateData = this.track.getStorageValue(activeDomainsAddressTime, new DataWord(blake128(tempDomainAddr.toBytes()))).getData();
                 byte[] trimmedExpireDateData = trimLeadingZeros16(expireDateData);
                 String expireDateStr = null;
                 try {
@@ -611,25 +544,20 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 }
                 Date tempExpireDate = new Date(Long.parseLong(expireDateStr));
 
-                byte[] domainNameFirstPart = this.track.getStorageValue(domainAddressNamePair,
-                    new DataWord(blake128(tempDomainAddr.toBytes()))).getData();
-                byte[] domainNameSecondPart = this.track.getStorageValue(domainAddressNamePair,
-                    new DataWord(blake128(blake128(tempDomainAddr.toBytes())))).getData();
+                byte[] domainNameFirstPart = this.track.getStorageValue(domainAddressNamePair, new DataWord(blake128(tempDomainAddr.toBytes()))).getData();
+                byte[] domainNameSecondPart = this.track.getStorageValue(domainAddressNamePair, new DataWord(blake128(blake128(tempDomainAddr.toBytes())))).getData();
                 String tempDomainName = null;
                 try {
-                    tempDomainName = new String(trimLeadingZeros(
-                        combineTwoBytes(domainNameFirstPart, domainNameSecondPart)), "UTF-8");
+                    tempDomainName = new String(trimLeadingZeros(combineTwoBytes(domainNameFirstPart, domainNameSecondPart)), "UTF-8");
                 } catch (UnsupportedEncodingException e) {
                     tempDomainName = "";
                 }
                 tempDomainName = tempDomainName + ".aion";
 
-                byte[] valueData = this.track.getStorageValue(activeDomainsAddressValue,
-                    new DataWord(blake128(tempDomainAddr.toBytes()))).getData();
+                byte[] valueData = this.track.getStorageValue(activeDomainsAddressValue, new DataWord(blake128(tempDomainAddr.toBytes()))).getData();
                 BigInteger tempValue = new BigInteger(valueData);
 
-                ActiveDomainsData tempData = new ActiveDomainsData(tempDomainName, tempDomainAddr,
-                    tempOwnerAddr, tempExpireDate, tempValue);
+                ActiveDomainsData tempData = new ActiveDomainsData(tempDomainName, tempDomainAddr, tempOwnerAddr, tempExpireDate, tempValue);
                 actives.add(tempData);
             }
         }
@@ -639,29 +567,26 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     public void displayAllActiveDomains() {
         List<ActiveDomainsData> activeDomainsList = getAllActiveDomains();
 
-        System.out.println("--------------------------AION NAME SERVICE QUERY: Active Domains ("
-            + activeDomainsList.size() + ")-----------------------------");
-        for (ActiveDomainsData domain : activeDomainsList) {
+        System.out.println("--------------------------AION NAME SERVICE QUERY: Active Domains (" + activeDomainsList.size() + ")-----------------------------");
+        for (ActiveDomainsData domain: activeDomainsList){
             System.out.println("Domain name: " + domain.domainName);
             System.out.println("    Owner address: " + domain.ownerAddress);
             System.out.println("    Domain address: " + domain.domainAddress);
             System.out.println("    Expire Date: " + domain.expireDate);
             System.out.println("    Value: " + domain.auctionValue);
-            if (domains.containsKey(domain.domainName)) {
+            if(domains.containsKey(domain.domainName))
                 System.out.println("    Registered for aion name service: Yes");
-            } else {
+            else
                 System.out.println("    Registered for aion name service: No");
-            }
         }
         System.out.println();
     }
 
-    public void displayMyDomains(ECKey key) {
+    public void displayMyDomains(ECKey key){
         Address callerAddress = Address.wrap(key.getAddress());
-        System.out.println(
-            "----------------------------AION NAME SERVICE QUERY: displayMyDomains-----------------------------");
+        System.out.println("----------------------------AION NAME SERVICE QUERY: displayMyDomains-----------------------------");
 
-        if (!this.track.hasAccountState(callerAddress)) {
+        if (!this.track.hasAccountState(callerAddress)){
             System.out.println("    The given account: " + callerAddress + " is not registered\n");
             return;
         }
@@ -670,95 +595,80 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         boolean notAnOwner = true;
         System.out.println("DOMAINS FOR ACCOUNT: " + callerAddress.toString());
-        for (ActiveDomainsData domain : activeDomainsList) {
-            if (domain.ownerAddress.equals(callerAddress)) {
+        for(ActiveDomainsData domain: activeDomainsList){
+            if(domain.ownerAddress.equals(callerAddress)){
                 notAnOwner = false;
                 System.out.println("Domain name: " + domain.domainName);
                 System.out.println("    Owner address: " + domain.ownerAddress);
                 System.out.println("    Domain address: " + domain.domainAddress);
                 System.out.println("    Expire Date: " + domain.expireDate);
                 System.out.println("    Value: " + domain.auctionValue);
-                if (domains.containsKey(domain.domainName)) {
+                if(domains.containsKey(domain.domainName))
                     System.out.println("    Registered for aion name service: Yes");
-                } else {
+                else
                     System.out.println("    Registered for aion name service: No");
-                }
             }
         }
 
-        if (notAnOwner) {
+        if (notAnOwner)
             System.out.println("    You do not own any domains\n");
-        }
         System.out.println();
     }
 
-    public void displayRegisteredDomains() {
+    public void displayRegisteredDomains(){
         List<ActiveDomainsData> activeDomainsList = getAllActiveDomains();
         int counter = 0;
 
-        System.out.println(
-            "------------------------AION NAME SERVICE QUERY: Registered Active Domains --------------------------");
+        System.out.println("------------------------AION NAME SERVICE QUERY: Registered Active Domains --------------------------");
         System.out.println("List of active domains registered for ANS: ");
-        for (ActiveDomainsData domain : activeDomainsList) {
-            if (domains.containsKey(domain.domainName)) {
+        for (ActiveDomainsData domain: activeDomainsList){
+            if(domains.containsKey(domain.domainName)){
                 System.out.println("    " + domain.domainAddress + ": " + domain.domainName);
                 counter++;
             }
         }
 
-        if (counter == 0) {
+        if (counter == 0)
             System.out.println("    Currently there are no active domains registered");
-        }
 
         System.out.println();
     }
 
-    public String getRegisteredDomainName(Address domainAddress) {
-        byte[] domainNameFirstPart = this.track
-            .getStorageValue(domainAddressNamePair, new DataWord(blake128(domainAddress.toBytes())))
-            .getData();
-        byte[] domainNameSecondPart = this.track.getStorageValue(domainAddressNamePair,
-            new DataWord(blake128(blake128(domainAddress.toBytes())))).getData();
+    public String getRegisteredDomainName(Address domainAddress){
+        byte[] domainNameFirstPart = this.track.getStorageValue(domainAddressNamePair, new DataWord(blake128(domainAddress.toBytes()))).getData();
+        byte[] domainNameSecondPart = this.track.getStorageValue(domainAddressNamePair, new DataWord(blake128(blake128(domainAddress.toBytes())))).getData();
         String domainName;
         try {
-            domainName = new String(
-                trimLeadingZeros(combineTwoBytes(domainNameFirstPart, domainNameSecondPart)),
-                "UTF-8");
+            domainName = new String(trimLeadingZeros(combineTwoBytes(domainNameFirstPart, domainNameSecondPart)), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             domainName = "";
         }
 
-        if (domainName.equals("")) {
+        if (domainName.equals(""))
             return null;
-        }
 
         domainName = domainName + ".aion";
         return domainName;
     }
 
-    public Address getRegisteredDomainAddress(String domainName) {
-        byte[] addressFirstPart = this.track.getStorageValue(registeredDomainNameAddress,
-            new DataWord(blake128(domainName.getBytes()))).getData();
-        byte[] addressSecondPart = this.track.getStorageValue(registeredDomainNameAddress,
-            new DataWord(blake128(blake128(domainName.getBytes())))).getData();
+    public Address getRegisteredDomainAddress(String domainName){
+        byte[] addressFirstPart = this.track.getStorageValue(registeredDomainNameAddress, new DataWord(blake128(domainName.getBytes()))).getData();
+        byte[] addressSecondPart = this.track.getStorageValue(registeredDomainNameAddress, new DataWord(blake128(blake128(domainName.getBytes())))).getData();
         Address domainAddress = Address.wrap(combineTwoBytes(addressFirstPart, addressSecondPart));
-        if (domainAddress.isZeroAddress()) {
+        if (domainAddress.isZeroAddress())
             return null;
-        }
         return domainAddress;
     }
 
     // data structures used to store pass data for query
-    class ActiveDomainsData {
-
+    class ActiveDomainsData{
         String domainName;
         Address domainAddress;
         Address ownerAddress;
         Date expireDate;
         BigInteger auctionValue;
 
-        ActiveDomainsData(String domainName, Address domainAddress, Address ownerAddress,
-            Date expireDate, BigInteger auctionValue) {
+        ActiveDomainsData(String domainName, Address domainAddress, Address ownerAddress, Date expireDate, BigInteger auctionValue){
             this.domainName = domainName;
             this.domainAddress = domainAddress;
             this.ownerAddress = ownerAddress;

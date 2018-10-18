@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,15 +17,18 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  * Contributors:
  *     Aion foundation.
- */
+
+ ******************************************************************************/
 package org.aion.mcf.types;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.aion.base.type.IBlock;
 import org.aion.base.type.IBlockHeader;
 import org.aion.rlp.RLP;
@@ -33,8 +36,7 @@ import org.aion.rlp.RLP;
 /**
  * Abstract Block class.
  */
-public abstract class AbstractBlock<BH extends IBlockHeader, TX extends AbstractTransaction> implements
-    IBlock<TX, BH> {
+public abstract class AbstractBlock<BH extends IBlockHeader, TX extends AbstractTransaction> implements IBlock<TX, BH> {
 
     protected BH header;
 
@@ -52,7 +54,8 @@ public abstract class AbstractBlock<BH extends IBlockHeader, TX extends Abstract
     /**
      * check if param block is son of this block
      *
-     * @param block - possible a son of this
+     * @param block
+     *         - possible a son of this
      * @return - true if this block is parent of param block
      */
     public boolean isParentOf(IBlock<TX, BH> block) {

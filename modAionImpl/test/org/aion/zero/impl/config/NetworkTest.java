@@ -39,26 +39,24 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class NetworkTest {
 
-    /**
-     * Parameters for testing {@link #testDetermineNetwork(String, Network)}.
-     */
+    /** Parameters for testing {@link #testDetermineNetwork(String, Network)}. */
     @SuppressWarnings("unused")
     private Object stringToNetworkMappings() {
         List<Object> parameters = new ArrayList<>();
 
         for (Network net : Network.values()) {
-            parameters.add(new Object[]{net.toString(), net});
-            parameters.add(new Object[]{net.toString().toUpperCase(), net});
+            parameters.add(new Object[] {net.toString(), net});
+            parameters.add(new Object[] {net.toString().toUpperCase(), net});
         }
 
-        parameters.add(new Object[]{"testnet", Network.MASTERY});
-        parameters.add(new Object[]{"TESTNET", Network.MASTERY});
+        parameters.add(new Object[] {"testnet", Network.MASTERY});
+        parameters.add(new Object[] {"TESTNET", Network.MASTERY});
 
-        parameters.add(new Object[]{"custom", Network.CUSTOM});
-        parameters.add(new Object[]{"CUSTOM", Network.CUSTOM});
-        parameters.add(new Object[]{"custom", Network.getCustomNet(1000)});
+        parameters.add(new Object[] {"custom", Network.CUSTOM});
+        parameters.add(new Object[] {"CUSTOM", Network.CUSTOM});
+        parameters.add(new Object[] {"custom", Network.getCustomNet(1000)});
 
-        parameters.add(new Object[]{"undefined", null});
+        parameters.add(new Object[] {"undefined", null});
 
         return parameters.toArray();
     }
@@ -69,19 +67,17 @@ public class NetworkTest {
         assertThat(Network.determineNetwork(input)).isEqualTo(expected);
     }
 
-    /**
-     * Parameters for testing {@link #testDetermineNetwork(int, Network)}.
-     */
+    /** Parameters for testing {@link #testDetermineNetwork(int, Network)}. */
     @SuppressWarnings("unused")
     private Object intToNetworkMappings() {
         List<Object> parameters = new ArrayList<>();
 
         for (Network net : Network.values()) {
-            parameters.add(new Object[]{net.getChainId(), net});
+            parameters.add(new Object[] {net.getChainId(), net});
         }
 
-        parameters.add(new Object[]{-1, null});
-        parameters.add(new Object[]{1000, Network.getCustomNet(1000)});
+        parameters.add(new Object[] {-1, null});
+        parameters.add(new Object[] {1000, Network.getCustomNet(1000)});
 
         return parameters.toArray();
     }

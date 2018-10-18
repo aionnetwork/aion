@@ -62,10 +62,11 @@ public class ProtocolProcessor implements Runnable {
     private static final String AION_ZMQ_CB_TH = "inproc://aionZmqCbTh";
     private static final String AION_ZMQ_EV_TH = "inproc://aionZmqEvTh";
     private static final String AION_ZMQ_HB_TH = "inproc://aionZmqHbTh";
+    private final Path PATH;
     private static final long zmqHWM = 100_000;
     private static final int SOCKETID_LEN = 5;
     private static final int SOCKET_RECV_TIMEOUT = 3000;
-    private final Path PATH;
+
     private final IHdlr handler;
     private CfgApiZmq cfgApi;
     private AtomicBoolean shutDown = new AtomicBoolean();
@@ -115,8 +116,7 @@ public class ProtocolProcessor implements Runnable {
                     feSock.setCurveSecretKey(curveSecKey);
                     LOG.info("Secure connection enabled!");
                 } else {
-                    LOG.info(
-                        "Can't find the keyfile for setup the connection. Secure connection disabled!");
+                    LOG.info("Can't find the keyfile for setup the connection. Secure connection disabled!");
                 }
             } else {
                 LOG.info("Secure connection disabled!");
@@ -194,7 +194,7 @@ public class ProtocolProcessor implements Runnable {
                 } catch (IOException e) {
                     LOG.error("Get zmqCurveSeckey exception! {}", e.toString());
                 }
-            } else if (nextLoad.contentEquals(f.getName())) {
+            } else if (nextLoad.contentEquals(f.getName())){
                 try {
                     if (nextLoad.contains("zmqCurveSeckey")) {
                         curveSecKey = Files.readAllBytes(f.toPath());

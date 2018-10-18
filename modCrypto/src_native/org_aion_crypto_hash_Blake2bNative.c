@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,8 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ ******************************************************************************/
+
 #include "org_aion_crypto_hash_Blake2bNative.h"
 #include "blake2.h"
 #include <string.h> // for functions memset

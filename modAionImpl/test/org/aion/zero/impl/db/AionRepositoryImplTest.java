@@ -1,4 +1,4 @@
-/*
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -62,37 +62,38 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AionRepositoryImplTest {
 
-    private static String value1 =
-        "CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3";
-    private static String value2 =
-        "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE";
-    private static String value3 =
-        "BEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEF";
     protected IRepositoryConfig repoConfig =
-        new IRepositoryConfig() {
-            @Override
-            public String getDbPath() {
-                return "";
-            }
+            new IRepositoryConfig() {
+                @Override
+                public String getDbPath() {
+                    return "";
+                }
 
-            @Override
-            public IPruneConfig getPruneConfig() {
-                return new CfgPrune(false);
-            }
+                @Override
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
+                }
 
-            @Override
-            public IContractDetails contractDetailsImpl() {
-                return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-            }
+                @Override
+                public IContractDetails contractDetailsImpl() {
+                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                }
 
-            @Override
-            public Properties getDatabaseConfig(String db_name) {
-                Properties props = new Properties();
-                props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                return props;
-            }
-        };
+                @Override
+                public Properties getDatabaseConfig(String db_name) {
+                    Properties props = new Properties();
+                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                    return props;
+                }
+            };
+
+    private static String value1 =
+            "CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3";
+    private static String value2 =
+            "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE";
+    private static String value3 =
+            "BEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEFBEEF";
 
     @Test
     public void testAccountStateUpdate() {
@@ -150,7 +151,7 @@ public class AionRepositoryImplTest {
         track.flush();
 
         byte[] retrievedValue =
-            repository.getStorageValue(defaultAccount, new DataWord(key)).getNoLeadZeroesData();
+                repository.getStorageValue(defaultAccount, new DataWord(key)).getNoLeadZeroesData();
         assertThat(retrievedValue).isEqualTo(value);
 
         byte[] newRoot = repository.getRoot();
@@ -199,7 +200,7 @@ public class AionRepositoryImplTest {
     public void testRepoTrackUpdateStorageRow() {
         final AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         final IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repoTrack =
-            repository.startTracking();
+                repository.startTracking();
         final Address defaultAccount = Address.wrap(ByteUtil.hexStringToBytes(value1));
         final byte[] key = HashUtil.blake128("hello".getBytes());
         final byte[] value = HashUtil.blake128("world".getBytes());
@@ -218,7 +219,7 @@ public class AionRepositoryImplTest {
         repoTrack.flush();
 
         assertThat(repository.getStorageValue(defaultAccount, new DataWord(key)))
-            .isEqualTo(retrievedStorageValue);
+                .isEqualTo(retrievedStorageValue);
 
         final byte[] newRoot = repository.getRoot();
         assertThat(newRoot).isNotEqualTo(originalRoot);

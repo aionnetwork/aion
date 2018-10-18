@@ -3,24 +3,29 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
+ *     The aion network project is free software: you can redistribute it 
+ *     and/or modify it under the terms of the GNU General Public License 
+ *     as published by the Free Software Foundation, either version 3 of 
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     The aion network project is distributed in the hope that it will 
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
+ *     along with the aion network project source files.  
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
  */
 package org.aion.wallet.dto;
+
+import org.aion.base.util.TypeConverter;
+import org.aion.wallet.connector.dto.BlockDTO;
+import org.aion.wallet.connector.dto.SendTransactionDTO;
+import org.aion.wallet.util.QRCodeUtils;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -30,10 +35,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import org.aion.base.util.TypeConverter;
-import org.aion.wallet.connector.dto.BlockDTO;
-import org.aion.wallet.connector.dto.SendTransactionDTO;
-import org.aion.wallet.util.QRCodeUtils;
 
 public class AccountDTO {
 
@@ -50,8 +51,7 @@ public class AccountDTO {
     private boolean active;
     private BlockDTO lastSafeBlock = null;
 
-    public AccountDTO(final String name, final String publicAddress, final String balance,
-        final String currency, boolean isImported, int derivationIndex) {
+    public AccountDTO(final String name, final String publicAddress, final String balance, final String currency, boolean isImported, int derivationIndex) {
         this.name = name;
         this.publicAddress = TypeConverter.toJsonHex(publicAddress);
         this.balance = balance;
@@ -153,15 +153,11 @@ public class AccountDTO {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         final AccountDTO that = (AccountDTO) o;
         return Objects.equals(currency, that.currency) &&
-            Objects.equals(publicAddress, that.publicAddress);
+                Objects.equals(publicAddress, that.publicAddress);
     }
 
     @Override
@@ -176,18 +172,18 @@ public class AccountDTO {
     @Override
     public String toString() {
         return "AccountDTO{" +
-            "currency='" + currency + '\'' +
-            ", publicAddress='" + publicAddress + '\'' +
-            ", isImported=" + isImported +
-            ", derivationIndex=" + derivationIndex +
-            ", qrCode=" + qrCode +
-            ", transactions=" + transactions +
-            ", timedOutTransactions=" + timedOutTransactions +
-            ", privateKey=" + privateKey +
-            ", balance='" + balance + '\'' +
-            ", name='" + name + '\'' +
-            ", active=" + active +
-            ", lastSafeBlock=" + lastSafeBlock +
-            '}';
+                "currency='" + currency + '\'' +
+                ", publicAddress='" + publicAddress + '\'' +
+                ", isImported=" + isImported +
+                ", derivationIndex=" + derivationIndex +
+                ", qrCode=" + qrCode +
+                ", transactions=" + transactions +
+                ", timedOutTransactions=" + timedOutTransactions +
+                ", privateKey=" + privateKey +
+                ", balance='" + balance + '\'' +
+                ", name='" + name + '\'' +
+                ", active=" + active +
+                ", lastSafeBlock=" + lastSafeBlock +
+                '}';
     }
 }

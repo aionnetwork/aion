@@ -27,7 +27,6 @@ package org.aion.p2p.impl1.tasks;
  * An incoming message.
  */
 public class MsgIn {
-
     private final int nodeId;
     private final String displayId;
     private final int route;

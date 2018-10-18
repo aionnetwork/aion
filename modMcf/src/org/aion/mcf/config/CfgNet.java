@@ -1,38 +1,41 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * The aion network project is free software: you can redistribute it
+ * and/or modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation, either version 3 of
+ * the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * The aion network project is distributed in the hope that it will
+ * be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU General Public License
+ * along with the aion network project source files.
+ * If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
+ * Contributors to the aion source files in decreasing order of code volume:
+ *
+ * Aion foundation.
+ *
  */
 
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
+
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
 
 /**
  * @author chris
@@ -40,8 +43,7 @@ import javax.xml.stream.XMLStreamWriter;
 public final class CfgNet {
 
     private static final boolean SINGLE = false;
-    protected String[] nodes;
-    protected CfgNetP2p p2p;
+
     private int id;
 
     public CfgNet() {
@@ -50,43 +52,47 @@ public final class CfgNet {
         this.p2p = new CfgNetP2p();
     }
 
+    protected String[] nodes;
+
+    protected CfgNetP2p p2p;
+
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-                case XMLStreamReader.START_ELEMENT:
-                    String elementName = sr.getLocalName().toLowerCase();
-                    switch (elementName) {
-                        case "id":
-                            int _id = Integer.parseInt(Cfg.readValue(sr));
-                            this.id = _id < 0 ? 0 : _id;
-                            break;
-                        case "nodes":
-                            List<String> nodes = new ArrayList<>();
-                            loopNode:
-                            while (sr.hasNext()) {
-                                int eventType1 = sr.next();
-                                switch (eventType1) {
-                                    case XMLStreamReader.START_ELEMENT:
-                                        nodes.add(Cfg.readValue(sr));
-                                        break;
-                                    case XMLStreamReader.END_ELEMENT:
-                                        this.nodes = nodes.toArray(new String[nodes.size()]);
-                                        break loopNode;
-                                }
+            case XMLStreamReader.START_ELEMENT:
+                String elementName = sr.getLocalName().toLowerCase();
+                switch (elementName) {
+                    case "id":
+                        int _id = Integer.parseInt(Cfg.readValue(sr));
+                        this.id = _id < 0 ? 0 : _id;
+                        break;
+                    case "nodes":
+                        List<String> nodes = new ArrayList<>();
+                        loopNode:
+                        while (sr.hasNext()) {
+                            int eventType1 = sr.next();
+                            switch (eventType1) {
+                            case XMLStreamReader.START_ELEMENT:
+                                nodes.add(Cfg.readValue(sr));
+                                break;
+                            case XMLStreamReader.END_ELEMENT:
+                                this.nodes = nodes.toArray(new String[nodes.size()]);
+                                break loopNode;
                             }
-                            break;
-                        case "p2p":
-                            this.p2p.fromXML(sr);
-                            break;
-                        default:
-                            Cfg.skipElement(sr);
-                            break;
-                    }
-                    break;
-                case XMLStreamReader.END_ELEMENT:
-                    break loop;
+                        }
+                        break;
+                    case "p2p":
+                        this.p2p.fromXML(sr);
+                        break;
+                    default:
+                        Cfg.skipElement(sr);
+                        break;
+                }
+                break;
+            case XMLStreamReader.END_ELEMENT:
+                break loop;
             }
         }
     }
@@ -141,24 +147,22 @@ public final class CfgNet {
         }
     }
 
-    public int getId() {
+    public void setNodes(String[] _nodes) {
+        if (SINGLE)
+            this.nodes = new String[0];
+        else
+            this.nodes = _nodes;
+    }
+
+    public int getId(){
         return this.id;
     }
 
     public String[] getNodes() {
-        if (SINGLE) {
+        if (SINGLE)
             return new String[0];
-        } else {
+        else
             return this.nodes;
-        }
-    }
-
-    public void setNodes(String[] _nodes) {
-        if (SINGLE) {
-            this.nodes = new String[0];
-        } else {
-            this.nodes = _nodes;
-        }
     }
 
     public CfgNetP2p getP2p() {
@@ -167,16 +171,12 @@ public final class CfgNet {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         CfgNet cfgNet = (CfgNet) o;
         return id == cfgNet.id &&
-            Objects.equal(nodes, cfgNet.nodes) &&
-            Objects.equal(p2p, cfgNet.p2p);
+                Objects.equal(nodes, cfgNet.nodes) &&
+                Objects.equal(p2p, cfgNet.p2p);
     }
 
     @Override

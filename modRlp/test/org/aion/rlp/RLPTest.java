@@ -93,26 +93,15 @@ import org.junit.Test;
 
 public class RLPTest {
 
-    // Code from: http://stackoverflow.com/a/4785776/459349
-    static String bytesToAscii(byte[] b) {
-        String hex = Hex.toHexString(b);
-        StringBuilder output = new StringBuilder();
-        for (int i = 0; i < hex.length(); i += 2) {
-            String str = hex.substring(i, i + 2);
-            output.append((char) Integer.parseInt(str, 16));
-        }
-        return output.toString();
-    }
-
     @Test
     public void testDecodeOneIntFromPacket() {
 
         String peersPacket = "F8 4E 11 F8 4B C5 36 81 "
-            + "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C "
-            + "FC 03 13 EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 "
-            + "F7 82 FF A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 "
-            + "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 "
-            + "17 08 9F EA F8 4C 21 B0";
+                + "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C "
+                + "FC 03 13 EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 "
+                + "F7 82 FF A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 "
+                + "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 "
+                + "17 08 9F EA F8 4C 21 B0";
 
         byte[] payload = Hex.decode(peersPacket);
         int oneInt = decodeInt(payload, 11);
@@ -242,8 +231,7 @@ public class RLPTest {
         byte[] data = encodeString("");
         assertArrayEquals(new byte[]{(byte) 0x80}, data);
 
-        byte[] expected = {(byte) 0x90, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65,
-            (byte) 0x72, (byte) 0x65,
+        byte[] expected = {(byte) 0x90, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
             (byte) 0x75, (byte) 0x6D, (byte) 0x4A, (byte) 0x20, (byte) 0x43, (byte) 0x6C,
             (byte) 0x69, (byte) 0x65, (byte) 0x6E, (byte) 0x74};
 
@@ -254,18 +242,12 @@ public class RLPTest {
 
         String test2 = "Ethereum(++)/ZeroGox/v0.5.0/ncurses/Linux/g++";
 
-        byte[] expected2 = {(byte) 0xAD, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65,
-            (byte) 0x72, (byte) 0x65,
-            (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29,
-            (byte) 0x2F,
-            (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F,
-            (byte) 0x78,
-            (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E,
-            (byte) 0x30,
-            (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73,
-            (byte) 0x65,
-            (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75,
-            (byte) 0x78,
+        byte[] expected2 = {(byte) 0xAD, (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
+            (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29, (byte) 0x2F,
+            (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F, (byte) 0x78,
+            (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E, (byte) 0x30,
+            (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73, (byte) 0x65,
+            (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78,
             (byte) 0x2F, (byte) 0x67, (byte) 0x2B, (byte) 0x2B};
 
         data = encodeString(test2);
@@ -275,28 +257,18 @@ public class RLPTest {
 
         byte[] expected3 = {(byte) 0xB8, (byte) 0x5A,
             (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
-            (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29,
-            (byte) 0x2F,
-            (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F,
-            (byte) 0x78,
-            (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E,
-            (byte) 0x30,
-            (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73,
-            (byte) 0x65,
-            (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75,
-            (byte) 0x78,
+            (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29, (byte) 0x2F,
+            (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F, (byte) 0x78,
+            (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E, (byte) 0x30,
+            (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73, (byte) 0x65,
+            (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78,
             (byte) 0x2F, (byte) 0x67, (byte) 0x2B, (byte) 0x2B,
             (byte) 0x45, (byte) 0x74, (byte) 0x68, (byte) 0x65, (byte) 0x72, (byte) 0x65,
-            (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29,
-            (byte) 0x2F,
-            (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F,
-            (byte) 0x78,
-            (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E,
-            (byte) 0x30,
-            (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73,
-            (byte) 0x65,
-            (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75,
-            (byte) 0x78,
+            (byte) 0x75, (byte) 0x6D, (byte) 0x28, (byte) 0x2B, (byte) 0x2B, (byte) 0x29, (byte) 0x2F,
+            (byte) 0x5A, (byte) 0x65, (byte) 0x72, (byte) 0x6F, (byte) 0x47, (byte) 0x6F, (byte) 0x78,
+            (byte) 0x2F, (byte) 0x76, (byte) 0x30, (byte) 0x2E, (byte) 0x35, (byte) 0x2E, (byte) 0x30,
+            (byte) 0x2F, (byte) 0x6E, (byte) 0x63, (byte) 0x75, (byte) 0x72, (byte) 0x73, (byte) 0x65,
+            (byte) 0x73, (byte) 0x2F, (byte) 0x4C, (byte) 0x69, (byte) 0x6E, (byte) 0x75, (byte) 0x78,
             (byte) 0x2F, (byte) 0x67, (byte) 0x2B, (byte) 0x2B};
 
         data = encodeString(test3);
@@ -310,7 +282,7 @@ public class RLPTest {
     public void test8() {
 
         String byteArr = "ce73660a06626c1b3fda7b18ef7ba3ce17b6bf604f9541d3c6c654b7ae88b239"
-            + "407f659c78f419025d785727ed017b6add21952d7e12007373e321dbc31824ba";
+                + "407f659c78f419025d785727ed017b6add21952d7e12007373e321dbc31824ba";
 
         byte[] byteArray = Hex.decode(byteArr);
 
@@ -366,7 +338,7 @@ public class RLPTest {
      */
     public void test10() {
 
-        // missing sha3
+        // missing sha3 
         /* 2 */
 //        byte[] prevHash
 //                = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -408,8 +380,7 @@ public class RLPTest {
     /* very long peers msg */
     public void test13() {
 
-        String peers =
-            "f9 14 90 11 f8 4c c6 81 83 68 81 fc 04 82 76 5f b8 40 07 7e 53 7a 8b 36 73 e8 f1 b6 25 db cc "
+        String peers = "f9 14 90 11 f8 4c c6 81 83 68 81 fc 04 82 76 5f b8 40 07 7e 53 7a 8b 36 73 e8 f1 b6 25 db cc "
                 + "90 2e a7 d4 ce d9 40 2e 46 64 e8 73 67 95 12 cc 23 60 69 8e 53 42 56 52 a0 46 24 fc f7 8c db a1 a3 "
                 + "23 30 87 a9 19 a3 4d 11 ae da ce ee b7 d8 33 fc bf 26 f8 4c c6 63 81 e7 58 81 af 82 76 5f b8 40 0a "
                 + "b2 cd e8 3a 09 84 03 dd c2 ea 54 14 74 0d 8a 01 93 e4 49 c9 6e 11 24 19 96 7a bc 62 eb 17 cd ce d7 "
@@ -594,8 +565,7 @@ public class RLPTest {
     /* hello msg */
     public void test15() {
 
-        String helloMsg =
-            "f8 91 80 0b 80 b8 46 45 74 68 65 72 65 75 6d 28 2b 2b 29 2f 5a 65 72 6f 47 6f 78 2e 70 72 "
+        String helloMsg = "f8 91 80 0b 80 b8 46 45 74 68 65 72 65 75 6d 28 2b 2b 29 2f 5a 65 72 6f 47 6f 78 2e 70 72 "
                 + "69 63 6b 6c 79 5f 6d 6f 72 73 65 2f 76 30 2e 34 2e 32 2f 52 65 6c 65 61 73 65 2d 57 69 6e 33 32 2f "
                 + "57 69 6e 64 6f 77 73 2f 56 53 32 30 31 33 07 82 76 5f b8 40 ea 99 2c 13 68 7c 20 e7 90 a9 ff a6 df "
                 + "8b 1a 16 86 88 e2 a8 87 36 5d 7a 50 21 86 fa 0d 62 20 e8 3e 11 3a 1f e7 7d c0 68 9d 55 ba 2e 8a 83 "
@@ -609,10 +579,11 @@ public class RLPTest {
     }
 
     /**
-     * ********************************** Test data from: https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-RLP
+     * **********************************
+     * Test data from: https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-RLP
      *
-     * Using assertEquals(String, String) instead of assertArrayEquals to see the actual content
-     * when the test fails.
+     * Using assertEquals(String, String) instead of assertArrayEquals to see
+     * the actual content when the test fails.
      */
     @Test(expected = RuntimeException.class)
     public void testEncodeNull() {
@@ -709,8 +680,7 @@ public class RLPTest {
 
     @Test
     public void testEncodeBigInteger() {
-        BigInteger test = new BigInteger(
-            "100102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", 16);
+        BigInteger test = new BigInteger("100102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", 16);
         String expected = "a0100102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
         byte[] encoderesult = RLP.encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
@@ -817,8 +787,7 @@ public class RLPTest {
     @Test
     public void testEncodeRepOfTwoListOfList() {
         //list: [ [], [[]], [ [], [[]] ] ]
-        Object[] test = new Object[]{new Object[]{}, new Object[]{new Object[]{}},
-            new Object[]{new Object[]{}, new Object[]{new Object[]{}}}};
+        Object[] test = new Object[]{new Object[]{}, new Object[]{new Object[]{}}, new Object[]{new Object[]{}, new Object[]{new Object[]{}}}};
         String expected = "c7c0c1c0c3c0c1c0";
         byte[] encoderesult = RLP.encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
@@ -938,6 +907,17 @@ public class RLPTest {
         assertEquals(expected, Hex.toHexString(encodedLength));
     }
 
+    // Code from: http://stackoverflow.com/a/4785776/459349
+    static String bytesToAscii(byte[] b) {
+        String hex = Hex.toHexString(b);
+        StringBuilder output = new StringBuilder();
+        for (int i = 0; i < hex.length(); i += 2) {
+            String str = hex.substring(i, i + 2);
+            output.append((char) Integer.parseInt(str, 16));
+        }
+        return output.toString();
+    }
+
     @Test
     public void performanceDecode() throws IOException {
         boolean performanceEnabled = false;
@@ -963,12 +943,8 @@ public class RLPTest {
             }
             long end2 = System.currentTimeMillis();
 
-            System.out.println(
-                "Result RLP.decode()\t: " + (end1 - start1) + "ms and\t " + determineSize(result)
-                    + " bytes for each resulting object list");
-            System.out.println(
-                "Result RLP.decode2()\t: " + (end2 - start2) + "ms and\t " + determineSize(list)
-                    + " bytes for each resulting object list");
+            System.out.println("Result RLP.decode()\t: " + (end1 - start1) + "ms and\t " + determineSize(result) + " bytes for each resulting object list");
+            System.out.println("Result RLP.decode2()\t: " + (end2 - start2) + "ms and\t " + determineSize(list) + " bytes for each resulting object list");
         } else {
             System.out.println("Performance test for RLP.decode() disabled");
         }
@@ -989,8 +965,7 @@ public class RLPTest {
 
         byte[] rlpKeysList = Hex.decode("c0");
         byte[] rlpValuesList = Hex.decode("c0");
-        byte[] rlpCode = Hex.decode(
-            "b4600160003556601359506301000000600035040f6018590060005660805460016080530160005760003560805760203560003557");
+        byte[] rlpCode = Hex.decode("b4600160003556601359506301000000600035040f6018590060005660805460016080530160005760003560805760203560003557");
         byte[] output = encodeList(rlpKeysList, rlpValuesList, rlpCode);
 
         assertEquals(expectedOutput, Hex.toHexString(output));
@@ -1049,7 +1024,7 @@ public class RLPTest {
     public void testEncodeHelloMessageCap0() {
 
         // missing Capability.
-
+        
 //        List<Capability> capabilities = new ArrayList<>();
 //        capabilities.add(new Capability("eth", (byte) 0x60));
 //        capabilities.add(new Capability("shh", (byte) 0x02));
@@ -1085,162 +1060,159 @@ public class RLPTest {
 
     @Test
     public void partialDataParseTest() {
-
+        
         // missing  Util.rlpDecodeInt
-
+        
 //        String hex = "000080c180000000000000000000000042699b1104e93abf0008be55f912c2ff";
 //        RLPList el = (RLPList) decode2OneItem(Hex.decode(hex), 3);
 //        assertEquals(1, el.size());
 //        assertEquals(0, Util.rlpDecodeInt(el.get(0)));
     }
-
+    
     /**
      * Verifies functionality of LongInt
      */
     @Test
     public void testEncodeDecodeLongInt() {
-        Long num = 314159L;
-        byte[] res = RLP.encodeLong(num);
-
-        // decode and see if same
-        Long ret = RLP.decodeBigInteger(res, 0).longValue();
-        assertEquals(num, ret);
+	Long num = 314159L;
+	byte[] res = RLP.encodeLong(num);
+	
+	// decode and see if same
+	Long ret = RLP.decodeBigInteger(res, 0).longValue();
+	assertEquals(num, ret);
     }
-
+    
     /**
      * Verifies that DecodeLongInt successfully is able to decode to int
      */
     @Test
     public void testEncodeDecodeLongToInt() {
-        Long num = 314159L;
-        Integer intNum = 314159;
-
-        // decode to int and see if same
-        // expect to use encodeInt(<int>)
-        byte[] res = RLP.encodeLong(num);
-        Integer ret = RLP.decodeInt(res, 0);
-        assertEquals(intNum, ret);
+	Long num = 314159L;
+	Integer intNum = 314159;
+	
+	// decode to int and see if same
+	// expect to use encodeInt(<int>)
+	byte[] res = RLP.encodeLong(num);
+	Integer ret = RLP.decodeInt(res, 0);
+	assertEquals(intNum, ret);
     }
-
+    
     /**
      * Verifies that long properly recursively iterates down to byte encoding
      */
     @Test
     public void testEncodeDecodeDownToByte() {
-        Long num = 1L; //very small value so we should be able to downcast to byte
-        byte[] res = RLP.encodeLong(num);
-        assertEquals(res.length, 1);
+	Long num = 1L; //very small value so we should be able to downcast to byte
+	byte[] res = RLP.encodeLong(num);
+	assertEquals(res.length, 1);
     }
-
     @Test
     public void testInt() {
-        int i = 0xFFFFFFFF;
-        byte[] in1 = RLP.encodeInt(i);
-        int o1 = RLP.decodeInt(in1, 0);
+	int i = 0xFFFFFFFF;
+	byte[] in1 = RLP.encodeInt(i);
+	int o1 = RLP.decodeInt(in1, 0);
     }
-
+   
     @Test
     public void testEncodeIntList() {
-        int i = 5;
-        int i2 = 6;
-        int i3 = 7;
-        byte[] in1 = RLP.encode(i);
-        byte[] in2 = RLP.encode(i2);
-        byte[] in3 = RLP.encode(i3);
-
-        byte[] l = RLP.encodeList(in1, in2, in3);
-        RLPList out = (RLPList) RLP.decode2(l).get(0);
-
-        int o1 = RLP.decodeInt(out.get(0).getRLPData(), 0);
-        int o2 = RLP.decodeInt(out.get(0).getRLPData(), 0);
-        int o3 = RLP.decodeInt(out.get(0).getRLPData(), 0);
+	int i = 5;
+	int i2 = 6;
+	int i3 = 7;
+	byte[] in1 = RLP.encode(i);
+	byte[] in2 = RLP.encode(i2);
+	byte[] in3 = RLP.encode(i3);
+	
+	byte[] l = RLP.encodeList(in1, in2, in3);
+	RLPList out = (RLPList) RLP.decode2(l).get(0);
+	
+	int o1 = RLP.decodeInt(out.get(0).getRLPData(), 0);
+	int o2 = RLP.decodeInt(out.get(0).getRLPData(), 0);
+	int o3 = RLP.decodeInt(out.get(0).getRLPData(), 0);
     }
-
+    
     @Test
     public void testBigInteger() {
-        long in = 255;
-        byte[] encoded = RLP.encode(in);
-        byte[] encodedList = RLP.encodeList(encoded);
-
-        // decode
-        RLPList params = (RLPList) RLP.decode2(encodedList).get(0);
-        BigInteger o = new BigInteger(1, params.get(0).getRLPData());
+	long in = 255;
+	byte[] encoded = RLP.encode(in);
+	byte[] encodedList = RLP.encodeList(encoded);
+	
+	// decode
+	RLPList params = (RLPList) RLP.decode2(encodedList).get(0);
+	BigInteger o = new BigInteger(1, params.get(0).getRLPData());
     }
-
+    
     @Test
     public void testEncodeStructAsList() {
-        long in = 314159;
-        int in2 = 55;
-        byte[] byteArr = null;
-        byte[] encodedList = RLP
-            .encodeList(RLP.encode(in), RLP.encode(in2), RLP.encodeElement(byteArr));
-
-        RLPList params = (RLPList) RLP.decode2(encodedList).get(0);
-
-        long o1 = new BigInteger(1, params.get(0).getRLPData()).longValue();
-        int o2 = RLP.decodeInt(params.get(1).getRLPData(), 0);
-        byte[] o3 = params.get(2).getRLPData();
+	long in = 314159;
+	int in2 = 55;
+	byte[] byteArr = null;
+	byte[] encodedList = RLP.encodeList(RLP.encode(in), RLP.encode(in2), RLP.encodeElement(byteArr));
+	
+	RLPList params = (RLPList) RLP.decode2(encodedList).get(0);
+	
+	long o1 = new BigInteger(1, params.get(0).getRLPData()).longValue();
+	int o2 = RLP.decodeInt(params.get(1).getRLPData(), 0);
+	byte[] o3 = params.get(2).getRLPData();
     }
-
+    
     @Test
     public void testLargeLong() {
-        long largeLong = 0xFFFFFFFFFL;
-        byte[] encoded = RLP.encodeLong(largeLong);
-        long out = RLP.decodeBigInteger(encoded, 0).longValue();
-        assertThat(out, is(equalTo(largeLong)));
+	long largeLong = 0xFFFFFFFFFL;
+	byte[] encoded = RLP.encodeLong(largeLong);
+	long out = RLP.decodeBigInteger(encoded, 0).longValue();
+	assertThat(out, is(equalTo(largeLong)));
     }
-
+    
     @Test
     public void testShortInt() {
-        int shortInt = 0xFFFF;
-        byte[] encoded = RLP.encodeInt(shortInt);
-        int out = RLP.decodeInt(encoded, 0);
-        assertThat(shortInt, is(equalTo(out)));
+	int shortInt = 0xFFFF;
+	byte[] encoded = RLP.encodeInt(shortInt);
+	int out = RLP.decodeInt(encoded, 0);
+	assertThat(shortInt, is(equalTo(out)));
     }
-
+    
     @Test
     public void testIntegerLong() {
-        long largeLong = 0xFFFFFFFFL;
-        byte[] encoded = RLP.encodeLong(largeLong);
-        long out = RLP.decodeBigInteger(encoded, 0).longValue();
-        assertThat(out, is(equalTo(largeLong)));
+	long largeLong = 0xFFFFFFFFL;
+	byte[] encoded = RLP.encodeLong(largeLong);
+	long out = RLP.decodeBigInteger(encoded, 0).longValue();
+	assertThat(out, is(equalTo(largeLong)));
     }
-
+    
     /**
-     * Can ignore/delete this test later, just trying to verify the functionality of RLP
+     * Can ignore/delete this test later, just trying to verify the
+     * functionality of RLP
      */
     @Test
     public void testblockBodiesRLP() {
-        byte[][] elements = new byte[10][];
-
-        for (int i = 0; i < 10; i++) {
-            elements[i] = RLP.encodeElement(Hex.decode("deadbeef"));
-        }
-
-        byte[] rlpEncoded3Times = RLP
-            .encodeList(RLP.encodeList(elements), RLP.encodeList(elements));
-        System.out.println(Hex.toHexString(rlpEncoded3Times));
-
-        RLPList list = RLP.decode2(rlpEncoded3Times);
-        System.out.println(list);
+	byte[][] elements = new byte[10][];
+	
+	for (int i = 0; i < 10; i++) {
+	    elements[i] = RLP.encodeElement(Hex.decode("deadbeef"));
+	}
+	
+	byte[] rlpEncoded3Times = RLP.encodeList(RLP.encodeList(elements), RLP.encodeList(elements));
+	System.out.println(Hex.toHexString(rlpEncoded3Times));
+	
+	RLPList list = RLP.decode2(rlpEncoded3Times);
+	System.out.println(list);
     }
-
+    
     @Test
     public void testNullRLP() {
-        byte[][] elements = new byte[2][];
-        byte[][] notNullElements = new byte[2][];
-
-        for (int i = 0; i < 2; i++) {
-            elements[i] = RLP.encodeElement(null);
-            notNullElements[i] = RLP.encodeElement(Hex.decode("deadbeef"));
-        }
-
-        byte[] rlpEncoded = RLP
-            .encodeList(RLP.encodeList(elements), RLP.encodeList(notNullElements));
-        System.out.println(Hex.toHexString(rlpEncoded));
-
-        RLPList out = RLP.decode2(rlpEncoded);
-
-        System.out.println(out);
+	byte[][] elements = new byte[2][];
+	byte[][] notNullElements = new byte[2][];
+	
+	for (int i = 0; i < 2; i++) {
+	    elements[i] = RLP.encodeElement(null);
+	    notNullElements[i] = RLP.encodeElement(Hex.decode("deadbeef"));
+	}
+	
+	byte[] rlpEncoded = RLP.encodeList(RLP.encodeList(elements), RLP.encodeList(notNullElements));
+	System.out.println(Hex.toHexString(rlpEncoded));
+	
+	RLPList out = RLP.decode2(rlpEncoded);
+	
+	System.out.println(out);
     }
 }

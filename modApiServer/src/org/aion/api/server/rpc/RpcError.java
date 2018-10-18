@@ -1,73 +1,69 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.api.server.rpc;
 
 /**
  * @author ali sharif
  *
- * Json rpc error object http://www.jsonrpc.org/specification#error_object
+ * Json rpc error object
+ * http://www.jsonrpc.org/specification#error_object
  *
- * Further support for rpc error code EIP https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
+ * Further support for rpc error code EIP
+ * https://github.com/ethereum/wiki/wiki/JSON-RPC-Error-Codes-Improvement-Proposal
  *
- * There are various errors you can get back from the API. Here we will detail what they mean, and
- * sometimes how to handle them.
+ * There are various errors you can get back from the API. Here we will detail what
+ * they mean, and sometimes how to handle them.
  *
- * RPC Error Types: 1. Parse error 2. Invalid request 3. Method not found 4. Invalid params 5.
- * Internal error
+ * RPC Error Types:
+ *   1. Parse error
+ *   2. Invalid request
+ *   3. Method not found
+ *   4. Invalid params
+ *   5. Internal error
  *
- * 1. Parse Error --------------
+ * 1. Parse Error
+ * --------------
  *
- * What does this mean? The server had an error parsing the JSON
+ * What does this mean?
+ * The server had an error parsing the JSON
  *
- * What to do? Check the JSON you provided and ensure it is valid.
+ * What to do?
+ * Check the JSON you provided and ensure it is valid.
  *
- * 2. Invalid Request ------------------
+ * 2. Invalid Request
+ * ------------------
  *
- * What does this mean? The JSON sent is not a valid Request object.
+ * What does this mean?
+ * The JSON sent is not a valid Request object.
  *
- * What to do? Ensure that your request matches our JSON-RPC standard.
+ * What to do?
+ * Ensure that your request matches our JSON-RPC standard.
  *
- * 3. Method not found -------------------
+ * 3. Method not found
+ * -------------------
  *
- * What does this mean? If you provide a method that is not a supported API method, this error will
- * be returned.
+ * What does this mean?
+ * If you provide a method that is not a supported API method, this error will be returned.
  *
- * What to do? Check the method you provided for a typo.
+ * What to do?
+ * Check the method you provided for a typo.
  *
- * 4. Invalid params -----------------
+ * 4. Invalid params
+ * -----------------
  *
- * What does this mean? The params sent do not match the expected parameters
+ * What does this mean?
+ * The params sent do not match the expected parameters
  *
- * What to do? Ensure that your parameters are correct for the API endpoint you are trying to call.
- * Also, ensure that you have all the required fields.
+ * What to do?
+ * Ensure that your parameters are correct for the API endpoint you are trying to call. Also, ensure that you have all the required fields.
  *
- * 5. Internal error -----------------
+ * 5. Internal error
+ * -----------------
  *
- * What does this mean? There was an internal error when processing your request.
+ * What does this mean?
+ * There was an internal error when processing your request.
  *
- * What to do? This error is hard to fix from the clientside, many times it is related to database
- * lookups.
+ * What to do?
+ * This error is hard to fix from the clientside, many times it is related to database lookups.
+ *
  */
 public enum RpcError {
 

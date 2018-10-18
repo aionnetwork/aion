@@ -29,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class File {
-
     public static List<java.io.File> getFiles(final Path path) {
         if (path == null) {
             System.out.println("getFiles null path input!");

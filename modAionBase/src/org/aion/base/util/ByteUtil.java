@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.base.util;
 
 import java.io.ByteArrayOutputStream;
@@ -48,7 +48,7 @@ public class ByteUtil {
     public static final byte[] EMPTY_WORD = new byte[32];
     public static final byte[] EMPTY_HALFWORD = new byte[16];
     public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-    public static final byte[] ZERO_BYTE_ARRAY = new byte[]{0};
+    public static final byte[] ZERO_BYTE_ARRAY = new byte[] { 0 };
     public static final String EMPTY_STRING = "";
 
     /**
@@ -61,11 +61,14 @@ public class ByteUtil {
     }
 
     /**
-     * The regular {@link java.math.BigInteger#toByteArray()} method isn't quite what we often need:
-     * it appends a leading zero to indicate that the number is positive and may need padding.
+     * The regular {@link java.math.BigInteger#toByteArray()} method isn't quite
+     * what we often need: it appends a leading zero to indicate that the number
+     * is positive and may need padding.
      *
-     * @param b the integer to format into a byte array
-     * @param numBytes the desired size of the resulting byte array
+     * @param b
+     *            the integer to format into a byte array
+     * @param numBytes
+     *            the desired size of the resulting byte array
      * @return numBytes byte long array.
      */
     public static byte[] bigIntegerToBytes(BigInteger b, int numBytes) {
@@ -96,14 +99,18 @@ public class ByteUtil {
     /**
      * Omitting sign indication byte. <br>
      * <br>
-     * Instead of {@link org.spongycastle.util.BigIntegers#asUnsignedByteArray(BigInteger)}
+     * Instead of
+     * {@link org.spongycastle.util.BigIntegers#asUnsignedByteArray(BigInteger)}
      * <br>
-     * we use this custom method to avoid an empty array in case of BigInteger.ZERO
+     * we use this custom method to avoid an empty array in case of
+     * BigInteger.ZERO
      *
-     * @param value - any big integer number. A <code>null</code>-value will return
-     * <code>null</code>
-     * @return A byte array without a leading zero byte if present in the signed encoding.
-     * BigInteger.ZERO will return an array with length 1 and byte-value 0.
+     * @param value
+     *            - any big integer number. A <code>null</code>-value will
+     *            return <code>null</code>
+     * @return A byte array without a leading zero byte if present in the signed
+     *         encoding. BigInteger.ZERO will return an array with length 1 and
+     *         byte-value 0.
      */
     public static byte[] bigIntegerToBytes(BigInteger value) {
         if (value == null) {
@@ -125,11 +132,13 @@ public class ByteUtil {
     }
 
     /**
-     * Returns the amount of nibbles that match each other from 0 ... amount will never be larger
-     * than smallest input
+     * Returns the amount of nibbles that match each other from 0 ... amount
+     * will never be larger than smallest input
      *
-     * @param a - first input
-     * @param b - second input
+     * @param a
+     *            - first input
+     * @param b
+     *            - second input
      * @return Number of bytes that match
      */
     public static int matchingNibbleLength(byte[] a, byte[] b) {
@@ -143,27 +152,28 @@ public class ByteUtil {
         }
         return i;
     }
-
+    
     /**
      * Perform an in-place conversion of a byte array from big endian to little endian.
      */
     public static void toLEByteArray(byte[] toConvert) {
-
-        if (toConvert == null) {
+        
+        if(toConvert == null) {
             return;
         }
-
-        for (int i = 0; i < toConvert.length / 2; i++) {
+        
+        for(int i = 0; i < toConvert.length/2; i++) {
             byte temp = toConvert[i];
-            toConvert[i] = toConvert[toConvert.length - 1 - i];
-            toConvert[toConvert.length - 1 - i] = temp;
+            toConvert[i] = toConvert[toConvert.length-1 - i];
+            toConvert[toConvert.length-1 - i ] = temp;            
         }
     }
 
     /**
      * Converts a long value into a byte array.
      *
-     * @param val - long value to convert
+     * @param val
+     *            - long value to convert
      * @return <code>byte[]</code> of length 8, representing the long value
      */
     public static byte[] longToBytes(long val) {
@@ -179,7 +189,8 @@ public class ByteUtil {
     /**
      * Converts a long value into a byte array.
      *
-     * @param val - long value to convert
+     * @param val
+     *            - long value to convert
      * @return decimal value with leading byte that are zeroes striped
      */
     public static byte[] longToBytesNoLeadZeroes(long val) {
@@ -198,7 +209,8 @@ public class ByteUtil {
     /**
      * Converts int value into a byte array.
      *
-     * @param val - int value to convert
+     * @param val
+     *            - int value to convert
      * @return <code>byte[]</code> of length 4, representing the int value
      */
     public static byte[] intToBytes(int val) {
@@ -207,33 +219,36 @@ public class ByteUtil {
 
     /**
      * Converts and int value to a byte array (Little Endian)
-     *
-     * @return <code>byte[]</code> of length 4; representing the int value in LE order
+     * 
      * @ param val
+     * 
+     * @return <code>byte[]</code> of length 4; representing the int value in LE order
      */
     public static byte[] intToBytesLE(int val) {
         ByteBuffer bb = ByteBuffer.allocate(4);
         bb.order(ByteOrder.LITTLE_ENDIAN);
         return bb.putInt(val).array();
     }
-
+    
     /**
      * Converts and int value to a byte array (Big Endian)
-     *
-     * @return <code>byte[]</code> of length 4; representing the int value in LE order
+     * 
      * @ param val
+     * 
+     * @return <code>byte[]</code> of length 4; representing the int value in LE order
      */
     public static byte[] intToBytesBE(int val) {
         ByteBuffer bb = ByteBuffer.allocate(4);
         bb.order(ByteOrder.BIG_ENDIAN);
         return bb.putInt(val).array();
     }
-
-
+    
+    
     /**
      * Converts a int value into a byte array.
      *
-     * @param val - int value to convert
+     * @param val
+     *            - int value to convert
      * @return value with leading byte that are zeroes striped
      */
     public static byte[] intToBytesNoLeadZeroes(int val) {
@@ -264,14 +279,17 @@ public class ByteUtil {
     }
 
     /**
-     * Convert a byte-array into a hex String.<br> Works similar to {@link Hex#toHexString} but
-     * allows for <code>null</code>
+     * Convert a byte-array into a hex String.<br>
+     * Works similar to {@link Hex#toHexString} but allows for <code>null</code>
      *
-     * @param data - byte-array to convert to a hex-string
-     * @return hex representation of the data.<br> Returns an empty String if the input is
-     * <code>null</code>
+     * @param data
+     *            - byte-array to convert to a hex-string
+     * @return hex representation of the data.<br>
+     *         Returns an empty String if the input is <code>null</code>
      *
-     * TODO: swap out with more efficient implementation, for now seems like we are stuck with this
+     *         TODO: swap out with more efficient implementation, for now seems
+     *         like we are stuck with this
+     *
      * @see Hex#toHexString
      */
     public static String toHexString(byte[] data) {
@@ -285,13 +303,14 @@ public class ByteUtil {
     /**
      * Calculate packet length
      *
-     * @param msg byte[]
+     * @param msg
+     *            byte[]
      * @return byte-array with 4 elements
      */
     public static byte[] calcPacketLength(byte[] msg) {
         int msgLen = msg.length;
-        return new byte[]{(byte) ((msgLen >> 24) & 0xFF), (byte) ((msgLen >> 16) & 0xFF),
-            (byte) ((msgLen >> 8) & 0xFF), (byte) ((msgLen) & 0xFF)};
+        return new byte[] { (byte) ((msgLen >> 24) & 0xFF), (byte) ((msgLen >> 16) & 0xFF),
+                (byte) ((msgLen >> 8) & 0xFF), (byte) ((msgLen) & 0xFF) };
     }
 
     /**
@@ -299,7 +318,8 @@ public class ByteUtil {
      *
      * Limited to Integer.MAX_VALUE: 2^31-1 (4 bytes)
      *
-     * @param b array contains the values
+     * @param b
+     *            array contains the values
      * @return unsigned positive int value.
      */
     public static int byteArrayToInt(byte[] b) {
@@ -314,7 +334,8 @@ public class ByteUtil {
      *
      * Limited to Long.MAX_VALUE: 2^63-1 (8 bytes)
      *
-     * @param b array contains the values
+     * @param b
+     *            array contains the values
      * @return unsigned positive long value.
      */
     public static long byteArrayToLong(byte[] b) {
@@ -339,7 +360,9 @@ public class ByteUtil {
      *
      * Example. [ 1, 2, 3, 4, 5 ] becomes '\x11\x23\x45'
      *
-     * @param nibbles - getting byte of data [ 04 ] and turning it to a '\x04' representation
+     * @param nibbles
+     *            - getting byte of data [ 04 ] and turning it to a '\x04'
+     *            representation
      * @return pretty string of nibbles
      */
     public static String nibblesToPrettyString(byte[] nibbles) {
@@ -362,7 +385,8 @@ public class ByteUtil {
     /**
      * Calculate the number of bytes need to encode the number
      *
-     * @param val - number
+     * @param val
+     *            - number
      * @return number of min bytes used to encode the number
      */
     public static int numBytes(String val) {
@@ -381,7 +405,8 @@ public class ByteUtil {
     }
 
     /**
-     * @param arg - not more that 32 bits
+     * @param arg
+     *            - not more that 32 bits
      * @return - bytes of the value pad with complete to 32 zeroes
      */
     public static byte[] encodeValFor32Bits(Object arg) {
@@ -415,7 +440,8 @@ public class ByteUtil {
     /**
      * encode the values and concatenate together
      *
-     * @param args Object
+     * @param args
+     *            Object
      * @return byte[]
      */
     public static byte[] encodeDataList(Object... args) {
@@ -448,24 +474,25 @@ public class ByteUtil {
 
         final int firstNonZero = firstNonZeroByte(data);
         switch (firstNonZero) {
-            case -1:
-                return ZERO_BYTE_ARRAY;
+        case -1:
+            return ZERO_BYTE_ARRAY;
 
-            case 0:
-                return data;
+        case 0:
+            return data;
 
-            default:
-                byte[] result = new byte[data.length - firstNonZero];
-                System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
+        default:
+            byte[] result = new byte[data.length - firstNonZero];
+            System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
 
-                return result;
+            return result;
         }
     }
 
     /**
      * increment byte array as a number until max is reached
      *
-     * @param bytes byte[]
+     * @param bytes
+     *            byte[]
      * @return boolean
      */
     public static boolean increment(byte[] bytes) {
@@ -482,10 +509,12 @@ public class ByteUtil {
     }
 
     /**
-     * Utility function to copy a byte array into a new byte array with given size. If the src
-     * length is smaller than the given size, the result will be left-padded with zeros.
+     * Utility function to copy a byte array into a new byte array with given
+     * size. If the src length is smaller than the given size, the result will
+     * be left-padded with zeros.
      *
-     * @param value - a BigInteger with a maximum value of 2^256-1
+     * @param value
+     *            - a BigInteger with a maximum value of 2^256-1
      * @return Byte array of given size with a copy of the <code>src</code>
      */
     public static byte[] copyToArray(BigInteger value) {
@@ -562,8 +591,8 @@ public class ByteUtil {
     }
 
     /**
-     * XORs byte arrays of different lengths by aligning length of the shortest via adding zeros at
-     * beginning
+     * XORs byte arrays of different lengths by aligning length of the shortest
+     * via adding zeros at beginning
      */
     public static byte[] xorAlignRight(byte[] b1, byte[] b2) {
         if (b1.length > b2.length) {
@@ -580,7 +609,8 @@ public class ByteUtil {
     }
 
     /**
-     * @param arrays - arrays to merge
+     * @param arrays
+     *            - arrays to merge
      * @return - merged array
      */
     public static byte[] merge(byte[]... arrays) {
@@ -708,10 +738,11 @@ public class ByteUtil {
     }
 
     /**
-     * Converts string hex representation to data bytes Accepts following hex: - with or without 0x
-     * prefix - with no leading 0, like 0xabc -> 0x0abc
+     * Converts string hex representation to data bytes Accepts following hex: -
+     * with or without 0x prefix - with no leading 0, like 0xabc -> 0x0abc
      *
-     * @param data String like '0xa5e..' or just 'a5e..'
+     * @param data
+     *            String like '0xa5e..' or just 'a5e..'
      * @return decoded bytes array
      */
     public static byte[] hexStringToBytes(String data) {
@@ -728,9 +759,10 @@ public class ByteUtil {
     }
 
     /**
-     * Chops a 32-byte value into a 16-byte value. Keep in mind the subtlety that a "chopped"
-     * bytearray is a different reference from a "unchopped" bytearray, so make no assummptions as
-     * to whether this function news the element.
+     * Chops a 32-byte value into a 16-byte value. Keep in mind
+     * the subtlety that a "chopped" bytearray is a different
+     * reference from a "unchopped" bytearray, so make no assummptions
+     * as to whether this function news the element.
      *
      * @return 16-byte value representing the LOWER portion of the original
      */

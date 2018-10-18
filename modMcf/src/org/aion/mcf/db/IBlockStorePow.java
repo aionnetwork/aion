@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,20 +17,25 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  * Contributors:
  *     Aion foundation.
- */
+ ******************************************************************************/
 package org.aion.mcf.db;
 
 import java.math.BigInteger;
+
 import org.aion.base.type.IBlock;
 import org.aion.mcf.types.AbstractBlockHeader;
 
 /**
  * POW BLockstore interface.
+ *
+ * @param <BLK>
+ * @param <BH>
  */
 public interface IBlockStorePow<BLK extends IBlock<?, ?>, BH extends AbstractBlockHeader>
-    extends IBlockStoreBase<BLK, BH> {
+        extends IBlockStoreBase<BLK, BH> {
 
     BigInteger getTotalDifficultyForHash(byte[] hash);
 

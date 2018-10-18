@@ -22,7 +22,6 @@
  */
 package org.aion.precompiled.contracts;
 
-import java.math.BigInteger;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.BIUtil;
@@ -36,11 +35,12 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 
+import java.math.BigInteger;
+
 /**
  * A pre-compiled contract for retrieving and updating the total amount of currency.
  */
 public class TotalCurrencyContract extends StatefulPrecompiledContract {
-
     // set to a default cost for now, this will need to be adjusted
     private final static long COST = 21000L;
 
@@ -49,10 +49,12 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
 
     /**
      * Constructs a new TotalCurrencyContract.
+     *
+     * @param track
+     * @param address
+     * @param ownerAddress
      */
-    public TotalCurrencyContract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address,
-        Address ownerAddress) {
+    public TotalCurrencyContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address, Address ownerAddress) {
         super(track);
         this.address = address;
         this.ownerAddress = ownerAddress;
@@ -68,13 +70,13 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      *   }
      * </pre>
      * <p>
-     * Where the chainId is intended to be our current chainId, in the case of the first AION
-     * network this should be set to 1. Note the presence of signum byte (bit) to check for addition
-     * or subtraction
+     * Where the chainId is intended to be our current chainId, in the case of
+     * the first AION network this should be set to 1. Note the presence of signum
+     * byte (bit) to check for addition or subtraction
      * <p>
-     * Note: as a consequence of us storing the pk and signature as part of the call we can send a
-     * transaction to this contract from any address. As long as we hold the private key preset in
-     * this contract.
+     * Note: as a consequence of us storing the pk and signature as part of the call
+     * we can send a transaction to this contract from any address. As long as we
+     * hold the private key preset in this contract.
      * <p>
      * Within the contract, the storage is modelled as the following:
      * <pre>
@@ -86,10 +88,10 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      *   }
      * </pre>
      * <p>
-     * Therefore retrieval should be relatively simple. There is also a retrieval (query) function
-     * provided, given that the input length is 4. In such a case, the input value is treated as a
-     * integer indicating the chainId, and thus the corresponding offset in the storage row to query
-     * the value from.
+     * Therefore retrieval should be relatively simple. There is also a retrieval (query)
+     * function provided, given that the input length is 4. In such a case, the input value
+     * is treated as a integer indicating the chainId, and thus the corresponding offset
+     * in the storage row to query the value from.
      * <p>
      * <pre>
      *     {@code
@@ -163,8 +165,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
 
         // payload processing
         IDataWord totalCurr = this.track.getStorageValue(this.address, chainId);
-        BigInteger totalCurrBI =
-            totalCurr == null ? BigInteger.ZERO : BIUtil.toBI(totalCurr.getData());
+        BigInteger totalCurrBI = totalCurr == null ? BigInteger.ZERO : BIUtil.toBI(totalCurr.getData());
         BigInteger value = BIUtil.toBI(amount);
 
         if (signum != 0x0 && signum != 0x1) {

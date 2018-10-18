@@ -53,7 +53,20 @@ public class Value {
 
     private boolean decoded = false;
 
-    private Value() {
+    public static Value fromRlpEncoded(byte[] data) {
+
+        if (data != null && data.length != 0) {
+            Value v = new Value();
+            v.init(data);
+            return v;
+        }
+        return null;
+    }
+
+    private Value() {}
+
+    private void init(byte[] rlp) {
+        this.rlp = rlp;
     }
 
     public Value(Object obj) {
@@ -68,20 +81,6 @@ public class Value {
         } else {
             this.value = obj;
         }
-    }
-
-    public static Value fromRlpEncoded(byte[] data) {
-
-        if (data != null && data.length != 0) {
-            Value v = new Value();
-            v.init(data);
-            return v;
-        }
-        return null;
-    }
-
-    private void init(byte[] rlp) {
-        this.rlp = rlp;
     }
 
     // Convert
@@ -99,7 +98,7 @@ public class Value {
 
     /**
      * @return the numerical value as an {@link Integer}. If called for values that are not integers
-     * or byte arrays it will return 0.
+     *     or byte arrays it will return 0.
      */
     public int asInt() {
         decode();
@@ -113,7 +112,7 @@ public class Value {
 
     /**
      * @return the numerical value as a {@link Long}. If called for values that are not integers or
-     * byte arrays it will return 0.
+     *     byte arrays it will return 0.
      */
     public long asLong() {
         decode();
@@ -127,7 +126,7 @@ public class Value {
 
     /**
      * @return the numerical value as a {@link BigInteger}. If called for values that are not
-     * numbers or byte arrays it will return {@link BigInteger#ZERO}.
+     *     numbers or byte arrays it will return {@link BigInteger#ZERO}.
      */
     public BigInteger asBigInt() {
         decode();
@@ -149,7 +148,7 @@ public class Value {
 
     /**
      * @implNote If called for values that are not strings or byte arrays it will return an empty
-     * string.
+     *     string.
      */
     public String asString() {
         decode();
@@ -163,7 +162,7 @@ public class Value {
 
     /**
      * @implNote If called for values that are not strings or byte arrays it will return an empty
-     * byte array.
+     *     byte array.
      */
     public byte[] asBytes() {
         decode();
@@ -228,8 +227,8 @@ public class Value {
     public boolean isList() {
         decode();
         return value != null
-            && value.getClass().isArray()
-            && !value.getClass().getComponentType().isPrimitive();
+                && value.getClass().isArray()
+                && !value.getClass().getComponentType().isPrimitive();
     }
 
     public boolean isString() {
@@ -275,9 +274,9 @@ public class Value {
     private boolean isEmpty() {
         decode();
         return isNull() // null
-            || isBytes() && asBytes().length == 0 // empty byte array
-            || isList() && asList().isEmpty() // empty list
-            || isString() && asString().isEmpty(); // empty string
+                || isBytes() && asBytes().length == 0 // empty byte array
+                || isList() && asList().isEmpty() // empty list
+                || isString() && asString().isEmpty(); // empty string
     }
 
     public int length() {

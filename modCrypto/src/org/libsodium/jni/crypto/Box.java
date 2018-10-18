@@ -1,34 +1,37 @@
-/*
+/**
  * Copyright 2013 Bruno Oliveira, and individual contributors
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.libsodium.jni.crypto;
 
-import static org.libsodium.jni.NaCl.sodium;
+import org.libsodium.jni.encoders.Encoder;
+import org.libsodium.jni.keys.PrivateKey;
+import org.libsodium.jni.keys.PublicKey;
+
 import static org.libsodium.jni.SodiumConstants.BOXZERO_BYTES;
 import static org.libsodium.jni.SodiumConstants.NONCE_BYTES;
 import static org.libsodium.jni.SodiumConstants.PUBLICKEY_BYTES;
 import static org.libsodium.jni.SodiumConstants.SECRETKEY_BYTES;
 import static org.libsodium.jni.SodiumConstants.ZERO_BYTES;
+import static org.libsodium.jni.NaCl.sodium;
 import static org.libsodium.jni.crypto.Util.checkLength;
 import static org.libsodium.jni.crypto.Util.isValid;
 import static org.libsodium.jni.crypto.Util.prependZeros;
 import static org.libsodium.jni.crypto.Util.removeZeros;
 
 import org.libsodium.jni.Sodium;
-import org.libsodium.jni.encoders.Encoder;
-import org.libsodium.jni.keys.PrivateKey;
-import org.libsodium.jni.keys.PublicKey;
 
 /**
  * Based on Curve25519XSalsa20Poly1305 and Box classes from rbnacl
@@ -58,8 +61,8 @@ public class Box {
         byte[] msg = prependZeros(ZERO_BYTES, message);
         byte[] ct = new byte[msg.length];
         sodium();
-        isValid(Sodium.crypto_box_curve25519xsalsa20poly1305(ct, msg,
-            msg.length, nonce, publicKey, privateKey), "Encryption failed");
+		isValid(Sodium.crypto_box_curve25519xsalsa20poly1305(ct, msg,
+                msg.length, nonce, publicKey, privateKey), "Encryption failed");
         return removeZeros(BOXZERO_BYTES, ct);
     }
 
@@ -72,9 +75,8 @@ public class Box {
         byte[] ct = prependZeros(BOXZERO_BYTES, ciphertext);
         byte[] message = new byte[ct.length];
         sodium();
-        isValid(Sodium.crypto_box_curve25519xsalsa20poly1305_open(message, ct,
-            message.length, nonce, publicKey, privateKey),
-            "Decryption failed. Ciphertext failed verification.");
+		isValid(Sodium.crypto_box_curve25519xsalsa20poly1305_open(message, ct,
+                message.length, nonce, publicKey, privateKey), "Decryption failed. Ciphertext failed verification.");
         return removeZeros(ZERO_BYTES, message);
     }
 

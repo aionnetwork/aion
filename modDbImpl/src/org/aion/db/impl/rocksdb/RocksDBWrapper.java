@@ -22,42 +22,31 @@
  */
 package org.aion.db.impl.rocksdb;
 
-import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
-import org.rocksdb.BlockBasedTableConfig;
-import org.rocksdb.CompressionType;
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.RocksIterator;
-import org.rocksdb.WriteBatch;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
+
+import java.io.File;
+import java.util.*;
 
 public class RocksDBWrapper extends AbstractDB {
 
+    private RocksDB db;
     private final int maxOpenFiles;
     private final int blockSize;
     private final int writeBufferSize;
     private final int readBufferSize;
     private final int cacheSize;
-    WriteBatch batch = null;
-    private RocksDB db;
 
     public RocksDBWrapper(String name,
-        String path,
-        boolean enableDbCache,
-        boolean enableDbCompression,
-        int maxOpenFiles,
-        int blockSize,
-        int writeBufferSize,
-        int readBufferSize,
-        int cacheSize) {
+                          String path,
+                          boolean enableDbCache,
+                          boolean enableDbCompression,
+                          int maxOpenFiles,
+                          int blockSize,
+                          int writeBufferSize,
+                          int readBufferSize,
+                          int cacheSize) {
         super(name, path, enableDbCache, enableDbCompression);
 
         this.maxOpenFiles = maxOpenFiles;
@@ -78,8 +67,7 @@ public class RocksDBWrapper extends AbstractDB {
         Options options = new Options();
 
         options.setCreateIfMissing(true);
-        options.setCompressionType(enableDbCompression ? CompressionType.SNAPPY_COMPRESSION
-            : CompressionType.NO_COMPRESSION);
+        options.setCompressionType(enableDbCompression ? CompressionType.SNAPPY_COMPRESSION : CompressionType.NO_COMPRESSION);
 
         options.setWriteBufferSize(this.writeBufferSize);
         options.setRandomAccessMaxBufferSize(this.readBufferSize);
@@ -97,6 +85,7 @@ public class RocksDBWrapper extends AbstractDB {
 
         return bbtc;
     }
+
 
     // IDatabase Functionality
     @Override
@@ -147,6 +136,7 @@ public class RocksDBWrapper extends AbstractDB {
 
         LOG.info("Closing database " + this.toString());
 
+
         // attempt to close the database
         db.close();
         db = null;
@@ -156,7 +146,7 @@ public class RocksDBWrapper extends AbstractDB {
     public void compact() {
         LOG.info("Compacting " + this.toString() + ".");
         try {
-            db.compactRange(new byte[]{(byte) 0x00}, new byte[]{(byte) 0xff});
+            db.compactRange(new byte[] { (byte) 0x00 }, new byte[] { (byte) 0xff });
         } catch (RocksDBException e) {
             LOG.error("Cannot compact data.");
             e.printStackTrace();
@@ -174,8 +164,6 @@ public class RocksDBWrapper extends AbstractDB {
         // TODO: implement a platform independent way to do this
         return new File(path, "LOCK").exists() && new File(path, "LOG").exists();
     }
-
-    // IKetValueStore functionality
 
     @Override
     public long approximateSize() {
@@ -197,6 +185,8 @@ public class RocksDBWrapper extends AbstractDB {
 
         return count;
     }
+
+    // IKetValueStore functionality
 
     @Override
     public boolean isEmpty() {
@@ -235,8 +225,6 @@ public class RocksDBWrapper extends AbstractDB {
         return set;
     }
 
-    // AbstractDB functionality
-
     @Override
     protected byte[] getInternal(byte[] k) {
         try {
@@ -247,6 +235,8 @@ public class RocksDBWrapper extends AbstractDB {
 
         return null;
     }
+
+    // AbstractDB functionality
 
     @Override
     public void put(byte[] k, byte[] v) {
@@ -276,6 +266,8 @@ public class RocksDBWrapper extends AbstractDB {
             LOG.error("Unable to delete key " + Arrays.toString(k) + ". " + e);
         }
     }
+
+    WriteBatch batch = null;
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {
@@ -309,8 +301,7 @@ public class RocksDBWrapper extends AbstractDB {
             try {
                 db.write(new WriteOptions(), batch);
             } catch (RocksDBException e) {
-                LOG.error(
-                    "Unable to execute batch put/update operation on " + this.toString() + ".", e);
+                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
             }
             batch.close();
             batch = null;
@@ -340,8 +331,7 @@ public class RocksDBWrapper extends AbstractDB {
             // bulk atomic update
             db.write(new WriteOptions(), batch);
         } catch (RocksDBException e) {
-            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".",
-                e);
+            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
         }
     }
 
@@ -372,7 +362,7 @@ public class RocksDBWrapper extends AbstractDB {
 
         // try-with-resources will automatically close to batch object
 
-        try (WriteBatch batch = new WriteBatch()) {
+        try (WriteBatch batch = new WriteBatch()){
             for (Map.Entry<ByteArrayWrapper, byte[]> e : cache.entrySet()) {
                 if (e.getValue() == null) {
                     batch.delete(e.getKey().getData());

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.zero.impl.sync.msg;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -40,6 +40,8 @@ import static org.junit.Assert.assertArrayEquals;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Test;
 
@@ -52,10 +54,10 @@ public class ResBlocksHeadersTest {
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
         bh1 = builder.build();
     }
-
+    
     @Test
     public void testHeader() {
-
+        
         byte[] dd = bh1.getEncoded();
         A0BlockHeader bh2 = null;
         try {
@@ -68,11 +70,11 @@ public class ResBlocksHeadersTest {
         assertArrayEquals(bh1.getParentHash(), bh2.getParentHash());
         assertArrayEquals(bh1.getParentHash(), bh2.getParentHash());
         assertTrue(bh1.getCoinbase().equals(bh2.getCoinbase()));
-
+        
         byte[] log1 = bh1.getLogsBloom();
         byte[] log2 = bh2.getLogsBloom();
         assertThat(log2).isEqualTo(log1);
-
+        
         byte[] dif1 = bh1.getDifficulty();
         byte[] dif2 = bh2.getDifficulty();
         assertThat(dif2).isEqualTo(dif1);
@@ -83,11 +85,11 @@ public class ResBlocksHeadersTest {
         byte[] data1 = bh1.getExtraData();
         byte[] data2 = bh2.getExtraData();
         assertThat(data2).isEqualTo(data1);
-
+        
         byte[] nonc1 = bh1.getNonce();
         byte[] nonc2 = bh2.getNonce();
         assertThat(nonc2).isEqualTo(nonc1);
-
+        
         byte[] sol1 = bh1.getSolution();
         byte[] sol2 = bh2.getSolution();
         assertThat(sol2).isEqualTo(sol1);
@@ -99,9 +101,9 @@ public class ResBlocksHeadersTest {
     @Test
     public void testHeaders() {
         int m = 192;
-
+        
         List<A0BlockHeader> bhs1 = new ArrayList<A0BlockHeader>();
-        for (int i = 0; i < m; i++) {
+        for(int i = 0; i < m; i++) {
             bhs1.add(bh1);
         }
         ResBlocksHeaders rbhs1 = new ResBlocksHeaders(bhs1);
@@ -110,6 +112,6 @@ public class ResBlocksHeadersTest {
         List<A0BlockHeader> bhs2 = rbhs2.getHeaders();
         assertThat(bhs2.size()).isEqualTo(m);
     }
-
+    
 
 }

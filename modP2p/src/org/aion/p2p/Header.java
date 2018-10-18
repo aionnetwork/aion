@@ -52,26 +52,6 @@ public class Header {
     }
 
     /**
-     * @param _headerBytes byte[]
-     * @return Header
-     */
-    public static Header decode(final byte[] _headerBytes) {
-        if (_headerBytes == null || _headerBytes.length != LEN) {
-            throw new IllegalArgumentException("invalid-header-bytes");
-        } else {
-            ByteBuffer bb1 = ByteBuffer.wrap(_headerBytes);
-            short ver = bb1.getShort();
-            byte ctrl = bb1.get();
-            byte action = bb1.get();
-            int len = bb1.getInt();
-            if (len > MAX_BODY_LEN_BYTES) {
-                throw new IndexOutOfBoundsException("exceed-max-body-size");
-            }
-            return new Header(ver, ctrl, action, len);
-        }
-    }
-
-    /**
      * @return short
      */
     public short getVer() {
@@ -115,5 +95,25 @@ public class Header {
      */
     public byte[] encode() {
         return ByteBuffer.allocate(LEN).putInt(this.getRoute()).putInt(len).array();
+    }
+
+    /**
+     * @param _headerBytes byte[]
+     * @return Header
+     */
+    public static Header decode(final byte[] _headerBytes) {
+        if (_headerBytes == null || _headerBytes.length != LEN) {
+            throw new IllegalArgumentException("invalid-header-bytes");
+        } else {
+            ByteBuffer bb1 = ByteBuffer.wrap(_headerBytes);
+            short ver = bb1.getShort();
+            byte ctrl = bb1.get();
+            byte action = bb1.get();
+            int len = bb1.getInt();
+            if (len > MAX_BODY_LEN_BYTES) {
+                throw new IndexOutOfBoundsException("exceed-max-body-size");
+            }
+            return new Header(ver, ctrl, action, len);
+        }
     }
 }

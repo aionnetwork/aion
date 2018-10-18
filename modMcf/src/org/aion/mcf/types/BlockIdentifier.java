@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,14 +17,17 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  * Contributors:
  *     Aion foundation.
- */
+
+ ******************************************************************************/
 package org.aion.mcf.types;
 
 import static org.aion.base.util.ByteUtil.byteArrayToLong;
 
 import java.math.BigInteger;
+
 import org.aion.base.type.IBlockIdentifier;
 import org.aion.base.util.Hex;
 import org.aion.rlp.RLP;

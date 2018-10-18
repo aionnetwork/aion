@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,9 +17,12 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
+
 package org.aion.zero.types;
 
 import static org.aion.base.util.ByteUtil.toHexString;
@@ -29,6 +32,7 @@ import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
@@ -38,6 +42,7 @@ import org.aion.rlp.RLPList;
 
 /**
  * aion internal transaction class.
+ *
  */
 
 public class AionInternalTx extends AionTransaction {
@@ -53,7 +58,7 @@ public class AionInternalTx extends AionTransaction {
     }
 
     public AionInternalTx(byte[] parentHash, int deep, int index, byte[] nonce, Address sendAddress,
-        Address receiveAddress, byte[] value, byte[] data, String note) {
+            Address receiveAddress, byte[] value, byte[] data, String note) {
 
         // @TODO: pass null to nrg and nrgprice for base class ( Transaction )
         // will be safe?
@@ -70,14 +75,6 @@ public class AionInternalTx extends AionTransaction {
     // @TODO: check this functions used by whom
     private static byte[] getData(DataWord nrgPrice) {
         return (nrgPrice == null) ? ByteUtil.EMPTY_BYTE_ARRAY : nrgPrice.getData();
-    }
-
-    private static byte[] encodeInt(int value) {
-        return RLP.encodeElement(ByteBuffer.allocate(Integer.BYTES).putInt(value).array());
-    }
-
-    private static int decodeInt(byte[] encoded) {
-        return isEmpty(encoded) ? 0 : new BigInteger(encoded).intValue();
     }
 
     public void reject() {
@@ -136,10 +133,10 @@ public class AionInternalTx extends AionTransaction {
             boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
 
             this.rlpEncoded = RLP.encodeList(RLP.encodeElement(isEmptyNonce ? null : nonce),
-                RLP.encodeElement(this.parentHash), RLP.encodeElement(getFrom().toBytes()),
-                RLP.encodeElement(to), RLP.encodeElement(getValue()), RLP.encodeElement(getData()),
-                RLP.encodeString(this.note), encodeInt(this.deep), encodeInt(this.index),
-                encodeInt(this.rejected ? 1 : 0));
+                    RLP.encodeElement(this.parentHash), RLP.encodeElement(getFrom().toBytes()),
+                    RLP.encodeElement(to), RLP.encodeElement(getValue()), RLP.encodeElement(getData()),
+                    RLP.encodeString(this.note), encodeInt(this.deep), encodeInt(this.index),
+                    encodeInt(this.rejected ? 1 : 0));
         }
 
         return rlpEncoded;
@@ -170,6 +167,14 @@ public class AionInternalTx extends AionTransaction {
         this.rejected = decodeInt(transaction.get(rlpIdx++).getRLPData()) == 1;
 
         this.parsed = true;
+    }
+
+    private static byte[] encodeInt(int value) {
+        return RLP.encodeElement(ByteBuffer.allocate(Integer.BYTES).putInt(value).array());
+    }
+
+    private static int decodeInt(byte[] encoded) {
+        return isEmpty(encoded) ? 0 : new BigInteger(encoded).intValue();
     }
 
     @Override

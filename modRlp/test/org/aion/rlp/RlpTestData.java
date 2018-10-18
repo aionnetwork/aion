@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.rlp;
 
 import java.math.BigInteger;
@@ -74,24 +74,20 @@ public class RlpTestData {
     public static int test11 = 1000;
     public static String result11 = "8203e8";
 
-    public static BigInteger test12 = new BigInteger(
-        "115792089237316195423570985008687907853269984665640564039457584007913129639935");
+    public static BigInteger test12 = new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639935");
     public static String result12 = "a0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
-    public static BigInteger test13 = new BigInteger(
-        "115792089237316195423570985008687907853269984665640564039457584007913129639936");
+    public static BigInteger test13 = new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639936");
     public static String result13 = "a1010000000000000000000000000000000000000000000000000000000000000000";
 
     public static Object[] test14 = new Object[]{1, 2, new Object[]{}};
     public static String result14 = "c30102c0";
     public static Object[] expected14 = new Object[]{new byte[]{1}, new byte[]{2}, new Object[]{}};
 
-    public static Object[] test15 = new Object[]{new Object[]{new Object[]{}, new Object[]{}},
-        new Object[]{}};
+    public static Object[] test15 = new Object[]{new Object[]{new Object[]{}, new Object[]{}}, new Object[]{}};
     public static String result15 = "c4c2c0c0c0";
 
     public static Object[] test16 = new Object[]{"zw", new Object[]{4}, "wz"};
     public static String result16 = "c8827a77c10482777a";
-    public static Object[] expected16 = new Object[]{new byte[]{122, 119},
-        new Object[]{new byte[]{4}}, new byte[]{119, 122}};
+    public static Object[] expected16 = new Object[]{new byte[]{122, 119}, new Object[]{new byte[]{4}}, new byte[]{119, 122}};
 }

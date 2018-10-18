@@ -1,29 +1,6 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.db;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 import java.util.Random;
@@ -53,7 +30,6 @@ import org.junit.Test;
  * Tests the DoubleDataWord class, mainly that it integrates well with the db.
  */
 public class DoubleDataWordTest {
-
     private IRepositoryConfig repoConfig;
     private IRepository repo;
     private IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
@@ -89,7 +65,7 @@ public class DoubleDataWordTest {
 
         this.repo = AionRepositoryImpl.createForTesting(repoConfig);
         this.track = new AionRepositoryCache(repo);
-        this.rand = new Random();
+        this.rand =  new Random();
         this.addr = Address.wrap(ECKeyFac.inst().create().getAddress());
     }
 
@@ -126,17 +102,13 @@ public class DoubleDataWordTest {
         doubleValLast[0] = (byte) 0x3;
 
         track.addStorageRow(addr, new DataWord(singleKey), new DataWord(singleVal));
-        track.addStorageRow(addr, new DoubleDataWord(doubleKeyFirst),
-            new DoubleDataWord(doubleValFirst));
-        track.addStorageRow(addr, new DoubleDataWord(doubleKeyLast),
-            new DoubleDataWord(doubleValLast));
+        track.addStorageRow(addr, new DoubleDataWord(doubleKeyFirst), new DoubleDataWord(doubleValFirst));
+        track.addStorageRow(addr, new DoubleDataWord(doubleKeyLast), new DoubleDataWord(doubleValLast));
         track.flush();
 
         byte[] singleRes = track.getStorageValue(addr, new DataWord(singleKey)).getData();
-        byte[] doubleResFirst = track.getStorageValue(addr, new DoubleDataWord(doubleKeyFirst))
-            .getData();
-        byte[] doubleResLast = track.getStorageValue(addr, new DoubleDataWord(doubleKeyLast))
-            .getData();
+        byte[] doubleResFirst = track.getStorageValue(addr, new DoubleDataWord(doubleKeyFirst)).getData();
+        byte[] doubleResLast = track.getStorageValue(addr, new DoubleDataWord(doubleKeyLast)).getData();
 
         assertArrayEquals(singleVal, singleRes);
         assertArrayEquals(doubleValFirst, doubleResFirst);

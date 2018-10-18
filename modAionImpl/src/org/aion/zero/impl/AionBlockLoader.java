@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl;
 
 import java.text.DateFormat;
@@ -37,9 +38,9 @@ import org.slf4j.LoggerFactory;
 public class AionBlockLoader {
 
     private static final Logger logger = LoggerFactory.getLogger(LogEnum.GEN.toString());
-    ExecutorPipeline<AionBlock, AionBlock> exec1;
-    ExecutorPipeline<AionBlock, ?> exec2;
+
     private AionBlockchainImpl blockchain = AionBlockchainImpl.inst();
+
     private DateFormat df = new SimpleDateFormat("HH:mm:ss.SSSS");
 
     private void blockWork(AionBlock block) {
@@ -64,6 +65,9 @@ public class AionBlockLoader {
             }
         }
     }
+
+    ExecutorPipeline<AionBlock, AionBlock> exec1;
+    ExecutorPipeline<AionBlock, ?> exec2;
 
     public void loadBlocks() {
         exec1 = new ExecutorPipeline<>(8, 1000, true,

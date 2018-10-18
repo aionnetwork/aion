@@ -1,4 +1,4 @@
-/*
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,22 +17,21 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- */
-
+ ******************************************************************************/
 package org.aion.mcf.trie;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,37 +44,21 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-/**
- * @author Alexandra Roatis
- */
+/** @author Alexandra Roatis */
 public class JournalPruneDataSourceTest {
 
     private static final String dbName = "TestDB";
-    private static final byte[] k1 = "key1".getBytes();
-    private static final byte[] v1 = "value1".getBytes();
-    private static final byte[] k2 = "key2".getBytes();
-    private static final byte[] v2 = "value2".getBytes();
-    private static final byte[] k3 = "key3".getBytes();
-    private static final byte[] v3 = "value3".getBytes();
-    private static final byte[] b0 = "block0".getBytes();
-    private static final int CONCURRENT_THREADS = 200;
-    private static final int TIME_OUT = 100; // in seconds
-    private static final boolean DISPLAY_MESSAGES = false;
-    private static final byte[] b1 = "block1".getBytes();
-
-    // Pruning disabled tests ----------------------------------------------------
-    private static final byte[] b2 = "block2".getBytes();
-    private static final byte[] b3 = "block3".getBytes();
-    private static final byte[] k4 = "key4".getBytes();
-    private static final byte[] v4 = "value4".getBytes();
-    private static final byte[] k5 = "key5".getBytes();
-    private static final byte[] v5 = "value5".getBytes();
-    private static final byte[] k6 = "key6".getBytes();
-    private static final byte[] v6 = "value6".getBytes();
-
-    // Pruning enabled tests ----------------------------------------------------
     private static IByteArrayKeyValueDatabase source_db = DatabaseFactory.connect(dbName);
     private static JournalPruneDataSource db;
+
+    private static final byte[] k1 = "key1".getBytes();
+    private static final byte[] v1 = "value1".getBytes();
+
+    private static final byte[] k2 = "key2".getBytes();
+    private static final byte[] v2 = "value2".getBytes();
+
+    private static final byte[] k3 = "key3".getBytes();
+    private static final byte[] v3 = "value3".getBytes();
 
     @BeforeClass
     public static void setup() {
@@ -84,64 +67,6 @@ public class JournalPruneDataSourceTest {
         cfg.put("DB", "WARN");
 
         AionLoggerFactory.init(cfg);
-    }
-
-    public static byte[] randomBytes(int length) {
-        byte[] result = new byte[length];
-        new Random().nextBytes(result);
-        return result;
-    }
-
-    /**
-     * From <a href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit
-     * Wiki on multithreaded code and concurrency</a>
-     */
-    public static void assertConcurrent(
-        final String message,
-        final List<? extends Runnable> runnables,
-        final int maxTimeoutSeconds)
-        throws InterruptedException {
-        final int numThreads = runnables.size();
-        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
-        final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
-        try {
-            final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
-            final CountDownLatch afterInitBlocker = new CountDownLatch(1);
-            final CountDownLatch allDone = new CountDownLatch(numThreads);
-            for (final Runnable submittedTestRunnable : runnables) {
-                threadPool.submit(
-                    () -> {
-                        allExecutorThreadsReady.countDown();
-                        try {
-                            afterInitBlocker.await();
-                            submittedTestRunnable.run();
-                        } catch (final Throwable e) {
-                            exceptions.add(e);
-                        } finally {
-                            allDone.countDown();
-                        }
-                    });
-            }
-            // wait until all threads are ready
-            assertTrue(
-                "Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent",
-                allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
-            // start all test runners
-            afterInitBlocker.countDown();
-            assertTrue(
-                message + " timeout! More than" + maxTimeoutSeconds + "seconds",
-                allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
-        } finally {
-            threadPool.shutdownNow();
-        }
-        if (!exceptions.isEmpty()) {
-            for (Throwable e : exceptions) {
-                e.printStackTrace();
-            }
-        }
-        assertTrue(
-            message + "failed with " + exceptions.size() + " exception(s):" + exceptions,
-            exceptions.isEmpty());
     }
 
     @Before
@@ -155,6 +80,8 @@ public class JournalPruneDataSourceTest {
         source_db.close();
         assertThat(source_db.isClosed()).isTrue();
     }
+
+    // Pruning disabled tests ----------------------------------------------------
 
     @Test
     public void testPut_woPrune() {
@@ -195,8 +122,6 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k1).get()).isEqualTo(v1);
         assertThat(source_db.get(k2).get()).isEqualTo(v2);
     }
-
-    // Access with exception tests ----------------------------------------------------
 
     @Test
     public void testUpdate_woPrune() {
@@ -393,6 +318,10 @@ public class JournalPruneDataSourceTest {
         assertThat(db.getInsertedKeysCount()).isEqualTo(0);
         assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
+
+    // Pruning enabled tests ----------------------------------------------------
+
+    private static final byte[] b0 = "block0".getBytes();
 
     @Test
     public void testPut_wPrune() {
@@ -672,6 +601,8 @@ public class JournalPruneDataSourceTest {
         assertThat(db.getDeletedKeysCount()).isEqualTo(0);
     }
 
+    // Access with exception tests ----------------------------------------------------
+
     @Test(expected = RuntimeException.class)
     public void testIsEmpty_wClosedDatabase() {
         source_db.close();
@@ -702,8 +633,6 @@ public class JournalPruneDataSourceTest {
         // attempt keys on closed db
         db.keys();
     }
-
-    // Concurrent access tests ----------------------------------------------------
 
     @Test(expected = RuntimeException.class)
     public void testGet_wClosedDatabase() {
@@ -846,146 +775,156 @@ public class JournalPruneDataSourceTest {
         db.deleteBatch(list);
     }
 
+    public static byte[] randomBytes(int length) {
+        byte[] result = new byte[length];
+        new Random().nextBytes(result);
+        return result;
+    }
+
+    // Concurrent access tests ----------------------------------------------------
+
+    private static final int CONCURRENT_THREADS = 200;
+    private static final int TIME_OUT = 100; // in seconds
+    private static final boolean DISPLAY_MESSAGES = false;
+
     private void addThread_IsEmpty(List<Runnable> threads, JournalPruneDataSource db) {
         threads.add(
-            () -> {
-                boolean check = db.isEmpty();
-                if (DISPLAY_MESSAGES) {
-                    System.out.println(
-                        Thread.currentThread().getName()
-                            + ": "
-                            + (check ? "EMPTY" : "NOT EMPTY"));
-                }
-            });
+                () -> {
+                    boolean check = db.isEmpty();
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": "
+                                        + (check ? "EMPTY" : "NOT EMPTY"));
+                    }
+                });
     }
 
     private void addThread_Keys(List<Runnable> threads, JournalPruneDataSource db) {
         threads.add(
-            () -> {
-                Set<byte[]> keys = db.keys();
-                if (DISPLAY_MESSAGES) {
-                    System.out.println(
-                        Thread.currentThread().getName() + ": #keys = " + keys.size());
-                }
-            });
+                () -> {
+                    Set<byte[]> keys = db.keys();
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName() + ": #keys = " + keys.size());
+                    }
+                });
     }
 
     private void addThread_Get(List<Runnable> threads, JournalPruneDataSource db, String key) {
         threads.add(
-            () -> {
-                boolean hasValue = db.get(key.getBytes()).isPresent();
-                if (DISPLAY_MESSAGES) {
-                    System.out.println(
-                        Thread.currentThread().getName()
-                            + ": "
-                            + key
-                            + " "
-                            + (hasValue ? "PRESENT" : "NOT PRESENT"));
-                }
-            });
+                () -> {
+                    boolean hasValue = db.get(key.getBytes()).isPresent();
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": "
+                                        + key
+                                        + " "
+                                        + (hasValue ? "PRESENT" : "NOT PRESENT"));
+                    }
+                });
     }
 
     private void addThread_Put(List<Runnable> threads, JournalPruneDataSource db, String key) {
         threads.add(
-            () -> {
-                db.put(key.getBytes(), randomBytes(32));
-                if (DISPLAY_MESSAGES) {
-                    System.out.println(
-                        Thread.currentThread().getName() + ": " + key + " ADDED");
-                }
-            });
+                () -> {
+                    db.put(key.getBytes(), randomBytes(32));
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName() + ": " + key + " ADDED");
+                    }
+                });
     }
-
-    // Pruning tests ----------------------------------------------------
 
     private void addThread_Delete(List<Runnable> threads, JournalPruneDataSource db, String key) {
         threads.add(
-            () -> {
-                db.delete(key.getBytes());
-                if (DISPLAY_MESSAGES) {
-                    System.out.println(
-                        Thread.currentThread().getName() + ": " + key + " DELETED");
-                }
-            });
+                () -> {
+                    db.delete(key.getBytes());
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName() + ": " + key + " DELETED");
+                    }
+                });
     }
 
     private void addThread_PutBatch(List<Runnable> threads, JournalPruneDataSource db, String key) {
         threads.add(
-            () -> {
-                Map<byte[], byte[]> map = new HashMap<>();
-                map.put((key + 1).getBytes(), randomBytes(32));
-                map.put((key + 2).getBytes(), randomBytes(32));
-                map.put((key + 3).getBytes(), randomBytes(32));
-                db.putBatch(map);
-                if (DISPLAY_MESSAGES) {
-                    System.out.println(
-                        Thread.currentThread().getName()
-                            + ": "
-                            + (key + 1)
-                            + ", "
-                            + (key + 2)
-                            + ", "
-                            + (key + 3)
-                            + " ADDED");
-                }
-            });
+                () -> {
+                    Map<byte[], byte[]> map = new HashMap<>();
+                    map.put((key + 1).getBytes(), randomBytes(32));
+                    map.put((key + 2).getBytes(), randomBytes(32));
+                    map.put((key + 3).getBytes(), randomBytes(32));
+                    db.putBatch(map);
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": "
+                                        + (key + 1)
+                                        + ", "
+                                        + (key + 2)
+                                        + ", "
+                                        + (key + 3)
+                                        + " ADDED");
+                    }
+                });
     }
 
     private void addThread_DeleteBatch(
-        List<Runnable> threads, JournalPruneDataSource db, String key) {
+            List<Runnable> threads, JournalPruneDataSource db, String key) {
         threads.add(
-            () -> {
-                List<byte[]> list = new ArrayList<>();
-                list.add((key + 1).getBytes());
-                list.add((key + 2).getBytes());
-                list.add((key + 3).getBytes());
-                db.deleteBatch(list);
-                if (DISPLAY_MESSAGES) {
-                    System.out.println(
-                        Thread.currentThread().getName()
-                            + ": "
-                            + (key + 1)
-                            + ", "
-                            + (key + 2)
-                            + ", "
-                            + (key + 3)
-                            + " DELETED");
-                }
-            });
+                () -> {
+                    List<byte[]> list = new ArrayList<>();
+                    list.add((key + 1).getBytes());
+                    list.add((key + 2).getBytes());
+                    list.add((key + 3).getBytes());
+                    db.deleteBatch(list);
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": "
+                                        + (key + 1)
+                                        + ", "
+                                        + (key + 2)
+                                        + ", "
+                                        + (key + 3)
+                                        + " DELETED");
+                    }
+                });
     }
 
     private void addThread_StoreBlockChanges(
-        List<Runnable> threads, JournalPruneDataSource db, String hash, long number) {
+            List<Runnable> threads, JournalPruneDataSource db, String hash, long number) {
         threads.add(
-            () -> {
-                db.storeBlockChanges(hash.getBytes(), number);
-                if (DISPLAY_MESSAGES) {
-                    System.out.println(
-                        Thread.currentThread().getName()
-                            + ": block ("
-                            + hash
-                            + ", "
-                            + number
-                            + ") STORED");
-                }
-            });
+                () -> {
+                    db.storeBlockChanges(hash.getBytes(), number);
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": block ("
+                                        + hash
+                                        + ", "
+                                        + number
+                                        + ") STORED");
+                    }
+                });
     }
 
     private void addThread_Prune(
-        List<Runnable> threads, JournalPruneDataSource db, String hash, long number) {
+            List<Runnable> threads, JournalPruneDataSource db, String hash, long number) {
         threads.add(
-            () -> {
-                db.prune(hash.getBytes(), number);
-                if (DISPLAY_MESSAGES) {
-                    System.out.println(
-                        Thread.currentThread().getName()
-                            + ": block ("
-                            + hash
-                            + ", "
-                            + number
-                            + ") PRUNED");
-                }
-            });
+                () -> {
+                    db.prune(hash.getBytes(), number);
+                    if (DISPLAY_MESSAGES) {
+                        System.out.println(
+                                Thread.currentThread().getName()
+                                        + ": block ("
+                                        + hash
+                                        + ", "
+                                        + number
+                                        + ") PRUNED");
+                    }
+                });
     }
 
     @Test
@@ -1136,6 +1075,74 @@ public class JournalPruneDataSourceTest {
         db.close();
         assertThat(source_db.isClosed()).isTrue();
     }
+
+    /**
+     * From <a
+     * href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit
+     * Wiki on multithreaded code and concurrency</a>
+     */
+    public static void assertConcurrent(
+            final String message,
+            final List<? extends Runnable> runnables,
+            final int maxTimeoutSeconds)
+            throws InterruptedException {
+        final int numThreads = runnables.size();
+        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
+        try {
+            final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
+            final CountDownLatch afterInitBlocker = new CountDownLatch(1);
+            final CountDownLatch allDone = new CountDownLatch(numThreads);
+            for (final Runnable submittedTestRunnable : runnables) {
+                threadPool.submit(
+                        () -> {
+                            allExecutorThreadsReady.countDown();
+                            try {
+                                afterInitBlocker.await();
+                                submittedTestRunnable.run();
+                            } catch (final Throwable e) {
+                                exceptions.add(e);
+                            } finally {
+                                allDone.countDown();
+                            }
+                        });
+            }
+            // wait until all threads are ready
+            assertTrue(
+                    "Timeout initializing threads! Perform long lasting initializations before passing runnables to assertConcurrent",
+                    allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
+            // start all test runners
+            afterInitBlocker.countDown();
+            assertTrue(
+                    message + " timeout! More than" + maxTimeoutSeconds + "seconds",
+                    allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
+        } finally {
+            threadPool.shutdownNow();
+        }
+        if (!exceptions.isEmpty()) {
+            for (Throwable e : exceptions) {
+                e.printStackTrace();
+            }
+        }
+        assertTrue(
+                message + "failed with " + exceptions.size() + " exception(s):" + exceptions,
+                exceptions.isEmpty());
+    }
+
+    // Pruning tests ----------------------------------------------------
+
+    private static final byte[] b1 = "block1".getBytes();
+    private static final byte[] b2 = "block2".getBytes();
+    private static final byte[] b3 = "block3".getBytes();
+
+    private static final byte[] k4 = "key4".getBytes();
+    private static final byte[] v4 = "value4".getBytes();
+
+    private static final byte[] k5 = "key5".getBytes();
+    private static final byte[] v5 = "value5".getBytes();
+
+    private static final byte[] k6 = "key6".getBytes();
+    private static final byte[] v6 = "value6".getBytes();
 
     @Test
     public void pruningTest() {

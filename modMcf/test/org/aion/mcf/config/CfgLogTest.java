@@ -45,62 +45,23 @@ import org.junit.Test;
 public class CfgLogTest extends CfgLog {
 
     private final static String[] toggle = {
-        "true",                             // valid entry
-        "maybe?",                           // invalid entry
-        "tRuE",                             // special entry
-        ""                                  // null entry
+            "true",                             // valid entry
+            "maybe?",                           // invalid entry
+            "tRuE",                             // special entry
+            ""                                  // null entry
     };
 
     private final static String[] path = {
-        "LOGGER",                           // valid entry
-        "l!@#*g",                           // invalid entry
-        "log/logging/LOGGER",               // special entry
-        ""                                  // null entry
+            "LOGGER",                           // valid entry
+            "l!@#*g",                           // invalid entry
+            "log/logging/LOGGER",               // special entry
+            ""                                  // null entry
     };
 
     private File testRoot;                      // Path: /home/joey/Desktop/IDE/aion/modMcf
     private File generatedPath;
     private String accumulatedPath;
     private Map<String, String> _logModules;
-
-    public static boolean deleteRecursively(File file) {
-        Path path = file.toPath();
-        try {
-            java.nio.file.Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-                @Override
-                public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs)
-                    throws IOException {
-                    java.nio.file.Files.delete(file);
-                    return FileVisitResult.CONTINUE;
-                }
-
-                @Override
-                public FileVisitResult visitFileFailed(final Path file, final IOException e) {
-                    return handleException(e);
-                }
-
-                private FileVisitResult handleException(final IOException e) {
-                    // e.printStackTrace();
-                    return FileVisitResult.TERMINATE;
-                }
-
-                @Override
-                public FileVisitResult postVisitDirectory(final Path dir, final IOException e)
-                    throws IOException {
-                    if (e != null) {
-                        return handleException(e);
-                    }
-                    java.nio.file.Files.delete(dir);
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
-
-        return true;
-    }
 
     @Before
     public void setup() {
@@ -122,8 +83,9 @@ public class CfgLogTest extends CfgLog {
     }
 
     /**
-     * Test for: - if parseBoolean() correctly parses user input - if getLogFile() returns the
-     * correct configuration
+     * Test for:
+     *  - if parseBoolean() correctly parses user input
+     *  - if getLogFile() returns the correct configuration
      */
     @Test
     public void testToggle() {
@@ -151,8 +113,9 @@ public class CfgLogTest extends CfgLog {
     }
 
     /**
-     * Test for: - if isValidPath() validates user input log path - if getLogPath() returns the
-     * correct log path
+     * Test for:
+     *  - if isValidPath() validates user input log path
+     *  - if getLogPath() returns the correct log path
      */
     @Test
     public void testPathInput() {
@@ -183,7 +146,8 @@ public class CfgLogTest extends CfgLog {
     }
 
     /**
-     * Test for: - if archives are stored under correct file name
+     * Test for:
+     *  - if archives are stored under correct file name
      */
     @Test
     public void testLoggedPath() {
@@ -192,7 +156,7 @@ public class CfgLogTest extends CfgLog {
         CfgLog config = new CfgLog();
         assertFalse(config.logFile && config.isValidPath());
 
-        if (config.logFile && config.isValidPath()) {
+        if(config.logFile && config.isValidPath()) {
             AionLoggerFactory.init(_logModules, config.logFile, "testLog/" + config.logPath);
             generatedPath = testRoot.listFiles()[0];
             assertEquals("log", generatedPath.getName());
@@ -200,18 +164,17 @@ public class CfgLogTest extends CfgLog {
         }
 
         // All Test Case
-        for (int a = 0; a < 4; a++) {
-            for (int b = 0; b < 4; b++) {
+        for(int a = 0; a < 4; a++){
+            for(int b = 0; b < 4; b++){
                 config.logFile = Boolean.parseBoolean(toggle[a]);
                 config.logPath = path[b];
 
-                if (config.logFile && config.isValidPath()) {
-                    AionLoggerFactory
-                        .init(_logModules, config.logFile, "testLog/" + config.logPath);
+                if(config.logFile && config.isValidPath()) {
+                    AionLoggerFactory.init(_logModules, config.logFile, "testLog/" + config.logPath);
                     generatedPath = testRoot.listFiles()[0];
 
                     accumulatedPath = generatedPath.getName();
-                    while (generatedPath.listFiles()[0].isDirectory()) {
+                    while(generatedPath.listFiles()[0].isDirectory()) {
                         generatedPath = generatedPath.listFiles()[0];
                         accumulatedPath = accumulatedPath + "/" + generatedPath.getName();
                     }
@@ -225,5 +188,41 @@ public class CfgLogTest extends CfgLog {
     public void reset() {
         deleteRecursively(testRoot);
         testRoot.mkdirs();
+    }
+
+    public static boolean deleteRecursively(File file) {
+        Path path = file.toPath();
+        try {
+            java.nio.file.Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                    java.nio.file.Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(final Path file, final IOException e) {
+                    return handleException(e);
+                }
+
+                private FileVisitResult handleException(final IOException e) {
+                    // e.printStackTrace();
+                    return FileVisitResult.TERMINATE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(final Path dir, final IOException e) throws IOException {
+                    if (e != null)
+                        return handleException(e);
+                    java.nio.file.Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
     }
 }

@@ -49,14 +49,23 @@ public enum Network {
         this.chainId = _chainId;
     }
 
+    @Override
+    public String toString() {
+        return this.name;
+    }
+
+    public int getChainId() {
+        return chainId;
+    }
+
     /**
      * Utility method that determines the correct network based on the given name.
      *
      * @param network a string value representing the network name
      * @return the network object corresponding to the string value or null when the value is not
-     * mapped to an object.
+     *     mapped to an object.
      * @implNote There may be several test networks active. The term {@code testnet} is defined to
-     * correspond to the current default test network.
+     *     correspond to the current default test network.
      */
     public static Network determineNetwork(String network) {
         String netStr = network.toLowerCase();
@@ -79,7 +88,7 @@ public enum Network {
      *
      * @param chainId a positive integer value representing the network chain identifier
      * @return the network object corresponding to the int value or null when the value is not
-     * mapped to an object.
+     *     mapped to an object.
      */
     public static Network determineNetwork(int chainId) {
         if (chainId < 0) {
@@ -116,14 +125,5 @@ public enum Network {
         Network net = Network.CUSTOM;
         net.chainId = chainId;
         return net;
-    }
-
-    @Override
-    public String toString() {
-        return this.name;
-    }
-
-    public int getChainId() {
-        return chainId;
     }
 }

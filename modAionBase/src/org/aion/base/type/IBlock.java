@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,16 +31,17 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 /*
  * @Copyright Nuco Inc. 2016
- * @Author jin@nuco.io *
+ * @Author jin@nuco.io * 
  */
 package org.aion.base.type;
 
 import java.util.List;
 
 /**
+ *
  * @author jin
  */
 public interface IBlock<TX extends ITransaction, BH extends IBlockHeader> {
@@ -64,10 +65,13 @@ public interface IBlock<TX extends ITransaction, BH extends IBlockHeader> {
     BH getHeader();
 
     /**
-     * Newly added with the refactory of API for libNc, both chains should have implemented this
+     * Newly added with the refactory of API for libNc, both chains should have
+     * implemented this
+     * 
+     * @return
      */
     byte[] getReceiptsRoot();
 
     long getTimestamp();
-
+    
 }

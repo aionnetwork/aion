@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.base.util;
 
 import java.util.Arrays;
@@ -81,28 +81,24 @@ public class ByteArrayMap extends HashMap<byte[], byte[]> {
     }
 
     @Override
-    protected Node<byte[], byte[]> newNode(int hash, byte[] key, byte[] value,
-        Node<byte[], byte[]> next) {
+    protected Node<byte[], byte[]> newNode(int hash, byte[] key, byte[] value, Node<byte[], byte[]> next) {
         return new ByteArrayNode(hash, key, value, next);
 
     }
 
     @Override
-    protected Node<byte[], byte[]> replacementNode(Node<byte[], byte[]> p,
-        Node<byte[], byte[]> next) {
+    protected Node<byte[], byte[]> replacementNode(Node<byte[], byte[]> p, Node<byte[], byte[]> next) {
         return new ByteArrayNode(p.hash, p.key, p.value, next);
     }
 
     @Override
-    protected TreeNode<byte[], byte[]> newTreeNode(int hash, byte[] key, byte[] value,
-        Node<byte[], byte[]> next) {
+    protected TreeNode<byte[], byte[]> newTreeNode(int hash, byte[] key, byte[] value, Node<byte[], byte[]> next) {
         return new ByteArrayTreeNode(hash, key, value, next);
 
     }
 
     @Override
-    protected TreeNode<byte[], byte[]> replacementTreeNode(Node<byte[], byte[]> p,
-        Node<byte[], byte[]> next) {
+    protected TreeNode<byte[], byte[]> replacementTreeNode(Node<byte[], byte[]> p, Node<byte[], byte[]> next) {
         return new ByteArrayTreeNode(p.hash, p.key, p.value, next);
     }
 
@@ -120,7 +116,7 @@ public class ByteArrayMap extends HashMap<byte[], byte[]> {
             if (o instanceof Map.Entry) {
                 Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
                 if (Arrays.equals(key, (byte[]) e.getKey())
-                    && Arrays.equals(value, (byte[]) e.getValue())) {
+                        && Arrays.equals(value, (byte[]) e.getValue())) {
                     return true;
                 }
 
@@ -160,7 +156,7 @@ public class ByteArrayMap extends HashMap<byte[], byte[]> {
             if (o instanceof Map.Entry) {
                 Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
                 if (Arrays.equals(key, (byte[]) e.getKey())
-                    && Arrays.equals(value, (byte[]) e.getValue())) {
+                        && Arrays.equals(value, (byte[]) e.getValue())) {
                     return true;
                 }
 

@@ -35,10 +35,47 @@ import org.aion.base.util.Hex;
  * An abstract class representing the result of either a transaction or contract execution.
  */
 public abstract class AbstractExecutionResult implements IExecutionResult {
-
     ResultCode code;
     long nrgLeft;
     byte[] output;
+
+    public enum ResultCode {
+        SUCCESS(0),
+        FAILURE(1),
+        OUT_OF_NRG(2),
+        BAD_INSTRUCTION(3),
+        BAD_JUMP_DESTINATION(4),
+        STACK_OVERFLOW(5),
+        STACK_UNDERFLOW(6),
+        REVERT(7),
+        INVALID_NONCE(8),
+        INVALID_NRG_LIMIT(9),
+        INSUFFICIENT_BALANCE(10),
+        CONTRACT_ALREADY_EXISTS(11),
+        INTERNAL_ERROR(-1);
+
+        private static Map<Integer, ResultCode> intMap = new HashMap<>();
+
+        static {
+            for (ResultCode code : ResultCode.values()) {
+                intMap.put(code.val, code);
+            }
+        }
+
+        private int val;
+
+        ResultCode(int val) {
+            this.val = val;
+        }
+
+        public static ResultCode fromInt(int code) {
+            return intMap.get(code);
+        }
+
+        public int toInt() {
+            return val;
+        }
+    }
 
     /**
      * Constructs a new AbstractExecutionResult with the specified output.
@@ -94,23 +131,11 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
     }
 
     /**
-     * Sets the AbstractExecutionResult's code to the code whose integer representation is code.
-     *
-     * @param code the integer representation of the code to be set.
-     */
-    public void setCode(int code) {
-        ResultCode resCode = ResultCode.fromInt(code);
-        this.code = (resCode == null) ? this.code : resCode;
-    }
-
-    /**
      * Returns the AbstractExecutionResult's result code.
      *
      * @return the result code.
      */
-    public ResultCode getResultCode() {
-        return code;
-    }
+    public ResultCode getResultCode() { return code; }
 
     /**
      * Returns the AbstractExecutionResult's remaining energy.
@@ -119,15 +144,6 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      */
     public long getNrgLeft() {
         return nrgLeft;
-    }
-
-    /**
-     * Sets the energy left for the AbstractExecutionResult to nrgLeft.
-     *
-     * @param nrgLeft The energy remaining.
-     */
-    public void setNrgLeft(long nrgLeft) {
-        this.nrgLeft = nrgLeft;
     }
 
     /**
@@ -140,12 +156,22 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
     }
 
     /**
-     * Sets the AbstractExecutionResult's output to output.
+     * Sets the AbstractExecutionResult's code to the code whose integer representation is code.
      *
-     * @param output The new output.
+     * @param code the integer representation of the code to be set.
      */
-    public void setOutput(byte[] output) {
-        this.output = output;
+    public void setCode(int code) {
+        ResultCode resCode = ResultCode.fromInt(code);
+        this.code = (resCode == null) ? this.code : resCode;
+    }
+
+    /**
+     * Sets the energy left for the AbstractExecutionResult to nrgLeft.
+     *
+     * @param nrgLeft The energy remaining.
+     */
+    public void setNrgLeft(long nrgLeft) {
+        this.nrgLeft = nrgLeft;
     }
 
     /**
@@ -163,6 +189,15 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
     }
 
     /**
+     * Sets the AbstractExecutionResult's output to output.
+     *
+     * @param output The new output.
+     */
+    public void setOutput(byte[] output) {
+        this.output = output;
+    }
+
+    /**
      * Returns a string representation of the AbstractExecutionResult.
      *
      * @return a string representation of the AbstractExecutionResult.
@@ -171,44 +206,6 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
     public String toString() {
         String out = (output == null) ? "" : Hex.toHexString(output);
         return "[code = " + code + ", nrgLeft = " + nrgLeft + ", output = " + out + "]";
-    }
-
-    public enum ResultCode {
-        SUCCESS(0),
-        FAILURE(1),
-        OUT_OF_NRG(2),
-        BAD_INSTRUCTION(3),
-        BAD_JUMP_DESTINATION(4),
-        STACK_OVERFLOW(5),
-        STACK_UNDERFLOW(6),
-        REVERT(7),
-        INVALID_NONCE(8),
-        INVALID_NRG_LIMIT(9),
-        INSUFFICIENT_BALANCE(10),
-        CONTRACT_ALREADY_EXISTS(11),
-        INTERNAL_ERROR(-1);
-
-        private static Map<Integer, ResultCode> intMap = new HashMap<>();
-
-        static {
-            for (ResultCode code : ResultCode.values()) {
-                intMap.put(code.val, code);
-            }
-        }
-
-        private int val;
-
-        ResultCode(int val) {
-            this.val = val;
-        }
-
-        public static ResultCode fromInt(int code) {
-            return intMap.get(code);
-        }
-
-        public int toInt() {
-            return val;
-        }
     }
 
 }

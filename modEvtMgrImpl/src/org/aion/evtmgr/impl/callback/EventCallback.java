@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,8 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *     
+ ******************************************************************************/
 
 package org.aion.evtmgr.impl.callback;
 
@@ -30,13 +31,12 @@ import org.slf4j.Logger;
 
 /**
  * @author jay
+ *
  */
 @SuppressWarnings("hiding")
 public class EventCallback implements IEventCallback {
-
-    static Logger LOG;
     EventExecuteService ees;
-
+    static Logger LOG;
     public EventCallback(EventExecuteService _ees, Logger log) {
         if (_ees == null || log == null) {
             throw new NullPointerException();

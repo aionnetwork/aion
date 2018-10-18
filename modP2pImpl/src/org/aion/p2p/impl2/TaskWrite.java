@@ -30,9 +30,7 @@ import org.aion.p2p.Header;
 import org.aion.p2p.Msg;
 import org.aion.p2p.impl2.selector.MainIOLoop;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class TaskWrite implements Runnable {
 
     private MainIOLoop ioLoop;
@@ -42,12 +40,12 @@ public class TaskWrite implements Runnable {
     private Msg msg;
 
     TaskWrite(
-        final MainIOLoop ioLoop,
-        final ExecutorService worker,
-        boolean _showLog,
-        String _nodeShortId,
-        final SocketChannel _sc,
-        final Msg _msg) {
+            final MainIOLoop ioLoop,
+            final ExecutorService worker,
+            boolean _showLog,
+            String _nodeShortId,
+            final SocketChannel _sc,
+            final Msg _msg) {
         this.ioLoop = ioLoop;
         this.showLog = _showLog;
         this.nodeShortId = _nodeShortId;
@@ -72,9 +70,7 @@ public class TaskWrite implements Runnable {
             // h.getAction());
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
             buf.put(headerBytes);
-            if (bodyBytes != null) {
-                buf.put(bodyBytes);
-            }
+            if (bodyBytes != null) buf.put(bodyBytes);
             buf.flip();
 
             // send outbound event to ioLoop for I/O

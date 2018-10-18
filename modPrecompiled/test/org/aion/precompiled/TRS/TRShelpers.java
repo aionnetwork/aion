@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.TRS;
 
 import static junit.framework.TestCase.fail;
@@ -34,6 +11,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -43,35 +21,36 @@ import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
+import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
-import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
+import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.AionTransaction;
 import org.junit.Assert;
 
 /**
  * A class exposing all helper methods and some variables for TRS-related testing.
  */
 class TRShelpers {
-
-    static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;
     private static final byte[] OUT = new byte[1];
-    Address AION = Address
-        .wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+    static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;
+    private IAionBlockchain blockchain = StandaloneBlockchain.inst();
+    Address AION = Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo;
     List<Address> tempAddrs;
     ECKey senderKey;
     long COST = 21000L;
-    private IAionBlockchain blockchain = StandaloneBlockchain.inst();
 
     // Returns a new account with initial balance balance that exists in the repo.
     Address getNewExistentAccount(BigInteger balance) {
@@ -95,9 +74,7 @@ class TRShelpers {
     }
 
     // Returns a new TRSqueryContract that calls the contract using caller.
-    TRSqueryContract newTRSqueryContract(Address caller) {
-        return new TRSqueryContract(repo, caller, blockchain);
-    }
+    TRSqueryContract newTRSqueryContract(Address caller) { return new TRSqueryContract(repo, caller, blockchain); }
 
     // Returns the address of a newly created TRS contract, assumes all params are valid.
     Address createTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
@@ -106,9 +83,7 @@ class TRShelpers {
         byte[] input = getCreateInput(isTest, isDirectDeposit, periods, percent, precision);
         TRSstateContract trs = new TRSstateContract(repo, owner, blockchain);
         ExecutionResult res = trs.execute(input, COST);
-        if (!res.getResultCode().equals(ResultCode.SUCCESS)) {
-            fail("Unable to create contract!");
-        }
+        if (!res.getResultCode().equals(ResultCode.SUCCESS)) { fail("Unable to create contract!"); }
         Address contract = new Address(res.getOutput());
         tempAddrs.add(contract);
         repo.incrementNonce(owner);
@@ -121,17 +96,13 @@ class TRShelpers {
     Address createAndLockTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
-        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent,
-            precision);
+        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
-        if (!newTRSuseContract(owner).execute(input, COST).getResultCode()
-            .equals(ResultCode.SUCCESS)) {
-            fail("Owner failed to deposit 1 token into contract! Owner balance is: " + repo
-                .getBalance(owner));
+        if (!newTRSuseContract(owner).execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
+            fail("Owner failed to deposit 1 token into contract! Owner balance is: " + repo.getBalance(owner));
         }
         input = getLockInput(contract);
-        if (!newTRSstateContract(owner).execute(input, COST).getResultCode()
-            .equals(ResultCode.SUCCESS)) {
+        if (!newTRSstateContract(owner).execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
         return contract;
@@ -142,22 +113,17 @@ class TRShelpers {
     Address createLockedAndLiveTRScontract(Address owner, boolean isTest, boolean isDirectDeposit,
         int periods, BigInteger percent, int precision) {
 
-        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent,
-            precision);
+        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
-        if (!newTRSuseContract(owner).execute(input, COST).getResultCode()
-            .equals(ResultCode.SUCCESS)) {
-            fail("Owner failed to deposit 1 token into contract! Owner balance is: " + repo
-                .getBalance(owner));
+        if (!newTRSuseContract(owner).execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
+            fail("Owner failed to deposit 1 token into contract! Owner balance is: " + repo.getBalance(owner));
         }
         input = getLockInput(contract);
-        if (!newTRSstateContract(owner).execute(input, COST).getResultCode()
-            .equals(ResultCode.SUCCESS)) {
+        if (!newTRSstateContract(owner).execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
         input = getStartInput(contract);
-        if (!newTRSstateContract(owner).execute(input, COST).getResultCode()
-            .equals(ResultCode.SUCCESS)) {
+        if (!newTRSstateContract(owner).execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
             fail("Failed to start contract!");
         }
         return contract;
@@ -181,13 +147,11 @@ class TRShelpers {
     Address getContractMultipleDepositors(int numDepositors, Address owner, boolean isTest,
         boolean isDirectDeposit, int periods, BigInteger percent, int precision) {
 
-        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent,
-            precision);
+        Address contract = createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         for (int i = 0; i < numDepositors; i++) {
             Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-            if (!newTRSuseContract(acct).execute(input, COST).getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+            if (!newTRSuseContract(acct).execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
                 Assert.fail("Depositor #" + i + " failed to deposit!");
             }
         }
@@ -244,8 +208,7 @@ class TRShelpers {
     // Returns the period the contract is in at the block number blockNum.
     BigInteger getPeriodAt(AbstractTRS trs, Address contract, long blockNum) {
         long timestamp = blockchain.getBlockByNumber(blockNum).getTimestamp();
-        return BigInteger
-            .valueOf(trs.calculatePeriod(contract, getContractSpecs(trs, contract), timestamp));
+        return BigInteger.valueOf(trs.calculatePeriod(contract, getContractSpecs(trs, contract), timestamp));
     }
 
     // Returns the percentage configured for the TRS contract.
@@ -334,8 +297,7 @@ class TRShelpers {
     }
 
     // Returns the amount of extras account is able to withdraw in the current period.
-    BigInteger getExtraShare(AbstractTRS trs, Address contract, Address account,
-        BigDecimal fraction,
+    BigInteger getExtraShare(AbstractTRS trs, Address contract, Address account, BigDecimal fraction,
         int currPeriod) {
         return trs.computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
     }
@@ -393,8 +355,7 @@ class TRShelpers {
      * @param deposits The amount the caller deposited.
      * @param total The total amount of deposits in the contract.
      * @param bonus The bonus balance in the contract.
-     * @param percent The percentage of total owings the caller is eligible to receive in special
-     * event.
+     * @param percent The percentage of total owings the caller is eligible to receive in special event.
      * @param periods The number of periods the contract has.
      * @return the expected amount to withdraw on a first call to the contract.
      */
@@ -402,10 +363,8 @@ class TRShelpers {
         BigInteger total, BigInteger bonus, BigDecimal percent, int periods) {
 
         BigInteger currPeriod = getCurrentPeriod(trs, contract);
-        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total),
-            new BigDecimal(bonus));
-        BigInteger expectedSpecial = getSpecialAmount(new BigDecimal(deposits),
-            new BigDecimal(total),
+        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
+        BigInteger expectedSpecial = getSpecialAmount(new BigDecimal(deposits), new BigDecimal(total),
             new BigDecimal(bonus), percent);
         BigInteger expectedWithdraw = currPeriod.multiply(
             getWithdrawAmt(owings, expectedSpecial, periods));
@@ -413,12 +372,11 @@ class TRShelpers {
     }
 
     /**
-     * Creates a contract with AION as the owner and has numDepositors deposit deposits amount each.
-     * A bonus deposit of bonus is made. Then the contract is locked and made live.
+     * Creates a contract with AION as the owner and has numDepositors deposit deposits amount
+     * each. A bonus deposit of bonus is made. Then the contract is locked and made live.
      *
      * The contract is set to be in testing mode. It has a total of periods periods and percentage
-     * is the percent of the total owings that an account can withdraw in the special one-off
-     * event.
+     * is the percent of the total owings that an account can withdraw in the special one-off event.
      *
      * The owner does not deposit.
      *
@@ -443,8 +401,7 @@ class TRShelpers {
         byte[] input = getDepositInput(contract, deposits);
         for (int i = 0; i < numDepositors; i++) {
             Address acc = getNewExistentAccount(deposits);
-            assertEquals(ResultCode.SUCCESS,
-                newTRSuseContract(acc).execute(input, COST).getResultCode());
+            assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getResultCode());
         }
         repo.addBalance(contract, bonus);
 
@@ -493,22 +450,18 @@ class TRShelpers {
     // Returns a properly formatted byte array to be used as input for the deposit operation.
     byte[] getDepositInput(Address contract, BigInteger amount) {
         byte[] amtBytes = amount.toByteArray();
-        if (amtBytes.length > 128) {
-            fail();
-        }
+        if (amtBytes.length > 128) { fail(); }
         byte[] input = new byte[161];
         input[0] = 0x0;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length, amtBytes.length);
+        System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length , amtBytes.length);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the deposit-for operation.
     byte[] getDepositForInput(Address contract, Address beneficiary, BigInteger amount) {
         byte[] amtBytes = amount.toByteArray();
-        if (amtBytes.length > 128) {
-            fail();
-        }
+        if (amtBytes.length > 128) { fail(); }
         byte[] input = new byte[193];
         input[0] = 0x5;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
@@ -528,9 +481,7 @@ class TRShelpers {
     // Returns a properly formatted byte array to be used as input for the refund operation.
     byte[] getRefundInput(Address contract, Address account, BigInteger amount) {
         byte[] amtBytes = amount.toByteArray();
-        if (amtBytes.length > 128) {
-            Assert.fail();
-        }
+        if (amtBytes.length > 128) { Assert.fail(); }
         byte[] input = new byte[193];
         input[0] = 0x4;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
@@ -614,9 +565,7 @@ class TRShelpers {
         input[0] = 0x6;
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         byte[] amtBytes = amount.toByteArray();
-        if (amtBytes.length > 128) {
-            fail();
-        }
+        if (amtBytes.length > 128) { fail(); }
         System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length, amtBytes.length);
         return input;
     }
@@ -636,12 +585,8 @@ class TRShelpers {
     // This method does: deposit amounts[i] on behalf of beneficiaries[i]
     byte[] getBulkDepositForInput(Address contract, Address[] beneficiaries, BigInteger[] amounts) {
         int len = beneficiaries.length;
-        if ((len < 1) || (len > 100)) {
-            fail("Imporper length: " + len);
-        }
-        if (len != amounts.length) {
-            fail("beneficiaries and amounts differ in length!");
-        }
+        if ((len < 1) || (len > 100)) { fail("Imporper length: " + len); }
+        if (len != amounts.length) { fail("beneficiaries and amounts differ in length!"); }
         int arrLen = 33 + (len * 32) + (len * 128);
 
         byte[] input = new byte[arrLen];
@@ -652,9 +597,7 @@ class TRShelpers {
             System.arraycopy(beneficiaries[i].toBytes(), 0, input, index, Address.ADDRESS_LEN);
             index += 32 + 128;
             byte[] amtBytes = amounts[i].toByteArray();
-            if (amtBytes.length > 128) {
-                fail();
-            }
+            if (amtBytes.length > 128) { fail(); }
             System.arraycopy(amtBytes, 0, input, index - amtBytes.length, amtBytes.length);
         }
         return input;
@@ -732,9 +675,7 @@ class TRShelpers {
     // Returns the head of the list for contract or null if no head.
     Address getLinkedListHead(AbstractTRS trs, Address contract) {
         byte[] head = trs.getListHead(contract);
-        if (head == null) {
-            return null;
-        }
+        if (head == null) { return null; }
         head[0] = (byte) 0xA0;
         return new Address(head);
     }
@@ -743,9 +684,7 @@ class TRShelpers {
     Address getLinkedListNext(AbstractTRS trs, Address contract, Address current) {
         byte[] next = trs.getListNextBytes(contract, current);
         boolean noNext = (((next[0] & 0x80) == 0x80) || ((next[0] & 0x40) == 0x00));
-        if (noNext) {
-            return null;
-        }
+        if (noNext) { return null; }
         next[0] = (byte) 0xA0;
         return new Address(next);
     }
@@ -753,9 +692,7 @@ class TRShelpers {
     // Returns the previous account in the linked list prior to current, or null if no previous.
     Address getLinkedListPrev(AbstractTRS trs, Address contract, Address current) {
         byte[] prev = trs.getListPrev(contract, current);
-        if (prev == null) {
-            return null;
-        }
+        if (prev == null) { return null; }
         prev[0] = (byte) 0xA0;
         return new Address(prev);
     }
@@ -766,54 +703,44 @@ class TRShelpers {
 
         Set<Address> contributors = getAllDepositors(trs, contract);
         BigInteger total = deposits.multiply(BigInteger.valueOf(numDepositors));
-        BigDecimal fraction = BigDecimal.ONE
-            .divide(new BigDecimal(numDepositors), 18, RoundingMode.HALF_DOWN);
+        BigDecimal fraction = BigDecimal.ONE.divide(new BigDecimal(numDepositors), 18, RoundingMode.HALF_DOWN);
 
         for (Address acc : contributors) {
             BigInteger extraShare = getExtraShare(trs, contract, acc, fraction, currPeriod);
-            BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus,
-                percent, periods);
+            BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits, total, bonus, percent, periods);
 
             byte[] input = getWithdrawInput(contract);
-            assertEquals(ResultCode.SUCCESS,
-                newTRSuseContract(acc).execute(input, COST).getResultCode());
+            assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getResultCode());
             assertEquals(amt.add(extraShare), repo.getBalance(acc));
         }
     }
 
     // Checks that each account is paid out correctly when they withdraw in a final period.
-    void checkPayoutsFinal(AbstractTRS trs, Address contract, int numDepositors,
-        BigInteger deposits,
+    void checkPayoutsFinal(AbstractTRS trs, Address contract, int numDepositors, BigInteger deposits,
         BigInteger bonus, BigInteger extra) {
 
         Set<Address> contributors = getAllDepositors(trs, contract);
-        BigDecimal fraction = BigDecimal.ONE
-            .divide(new BigDecimal(numDepositors), 18, RoundingMode.HALF_DOWN);
+        BigDecimal fraction = BigDecimal.ONE.divide(new BigDecimal(numDepositors), 18, RoundingMode.HALF_DOWN);
         BigInteger extraShare = fraction.multiply(new BigDecimal(extra)).toBigInteger();
-        BigInteger amt = (fraction.multiply(new BigDecimal(bonus))).add(new BigDecimal(deposits))
-            .toBigInteger();
+        BigInteger amt = (fraction.multiply(new BigDecimal(bonus))).add(new BigDecimal(deposits)).toBigInteger();
         BigInteger collected = amt.add(extraShare);
 
         for (Address acc : contributors) {
             byte[] input = getWithdrawInput(contract);
-            assertEquals(ResultCode.SUCCESS,
-                newTRSuseContract(acc).execute(input, COST).getResultCode());
+            assertEquals(ResultCode.SUCCESS, newTRSuseContract(acc).execute(input, COST).getResultCode());
             assertEquals(collected, repo.getBalance(acc));
         }
 
         // Verify that the contract has enough funds to pay OUT.
-        BigInteger contractTotal = deposits.multiply(BigInteger.valueOf(numDepositors)).add(bonus)
-            .add(extra);
-        assertTrue(
-            collected.multiply(BigInteger.valueOf(numDepositors)).compareTo(contractTotal) <= 0);
+        BigInteger contractTotal = deposits.multiply(BigInteger.valueOf(numDepositors)).add(bonus).add(extra);
+        assertTrue(collected.multiply(BigInteger.valueOf(numDepositors)).compareTo(contractTotal) <= 0);
     }
 
     // Checks that availableForWithdrawalAt returns expected results for the specified query.
     void checkAvailableForResults(AbstractTRS trs, Address contract, long timestamp,
         int numDepositors, BigInteger deposits, BigInteger bonus, BigDecimal percent, int periods) {
         BigInteger total = deposits.multiply(BigInteger.valueOf(numDepositors));
-        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total),
-            new BigDecimal(bonus));
+        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
         BigInteger amt = expectedAmtFirstWithdraw(trs, contract, deposits,
             total, bonus, percent, periods, timestamp);
 
@@ -882,23 +809,18 @@ class TRShelpers {
      * @param deposits The amount the caller deposited.
      * @param total The total amount of deposits in the contract.
      * @param bonus The bonus balance in the contract.
-     * @param percent The percentage of total owings the caller is eligible to receive in special
-     * event.
+     * @param percent The percentage of total owings the caller is eligible to receive in special event.
      * @param periods The number of periods the contract has.
      * @param timestamp Timestamp for the current period the contract is in.
      * @return the expected amount to withdraw on a first call to the contract.
      */
-    private BigInteger expectedAmtFirstWithdraw(AbstractTRS trs, Address contract,
-        BigInteger deposits,
+    private BigInteger expectedAmtFirstWithdraw(AbstractTRS trs, Address contract, BigInteger deposits,
         BigInteger total, BigInteger bonus, BigDecimal percent, int periods, long timestamp) {
 
         //TODO - this should be computed here, not grabbed from the contract
-        BigInteger currPeriod = BigInteger
-            .valueOf(trs.calculatePeriod(contract, getContractSpecs(trs, contract), timestamp));
-        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total),
-            new BigDecimal(bonus));
-        BigInteger expectedSpecial = getSpecialAmount(new BigDecimal(deposits),
-            new BigDecimal(total),
+        BigInteger currPeriod = BigInteger.valueOf(trs.calculatePeriod(contract, getContractSpecs(trs, contract), timestamp));
+        BigInteger owings = grabOwings(new BigDecimal(deposits), new BigDecimal(total), new BigDecimal(bonus));
+        BigInteger expectedSpecial = getSpecialAmount(new BigDecimal(deposits), new BigDecimal(total),
             new BigDecimal(bonus), percent);
         BigInteger expectedWithdraw = currPeriod.multiply(
             getWithdrawAmt(owings, expectedSpecial, periods));

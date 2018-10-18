@@ -23,8 +23,6 @@
 
 package org.aion.api.server.zmq;
 
-import java.util.Map;
-import java.util.concurrent.BlockingQueue;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
 import org.aion.api.server.pb.IHdlr;
@@ -38,13 +36,16 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-public class HdlrZmq implements IHdlr {
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 
-    private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
+public class HdlrZmq implements IHdlr {
 
     static {
         NativeLoader.loadLibrary("zmq");
     }
+
+    private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     private final IApiAion api;
 
@@ -63,9 +64,8 @@ public class HdlrZmq implements IHdlr {
             return this.api.process(request, socketId);
         } catch (Exception e) {
             LOGGER.error("zmq incoming msg process failed! " + e.getMessage());
-            return ApiUtil.toReturnHeader(this.api.getApiVersion(),
-                Message.Retcode.r_fail_zmqHandler_exception_VALUE,
-                ApiUtil.getApiMsgHash(request));
+            return ApiUtil.toReturnHeader(this.api.getApiVersion(), Message.Retcode.r_fail_zmqHandler_exception_VALUE,
+                    ApiUtil.getApiMsgHash(request));
         }
     }
 
@@ -89,8 +89,7 @@ public class HdlrZmq implements IHdlr {
         }
 
         if (entry != null) {
-            this.api.getPendingStatus()
-                .add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
+            this.api.getPendingStatus().add(new TxPendingStatus(txWait.getTxHash(), entry.getValue(), entry.getKey(),
                     txWait.getState(), txWait.getTxResult(), txWait.getTxReceipt().getError()));
 
             // INCLUDED(3);
@@ -116,8 +115,7 @@ public class HdlrZmq implements IHdlr {
     }
 
     byte[] toRspMsg(byte[] msgHash, int txCode, String error, byte[] result) {
-        return ApiUtil
-            .toReturnHeader(this.api.getApiVersion(), txCode, msgHash, error.getBytes(), result);
+        return ApiUtil.toReturnHeader(this.api.getApiVersion(), txCode, msgHash, error.getBytes(), result);
     }
 
     @Override

@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,11 +31,12 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- */
+ ******************************************************************************/
 package org.aion.base.type;
 
 /**
  * @author jay
+ *
  */
 public interface IBlockHeader {
 
@@ -44,25 +45,15 @@ public interface IBlockHeader {
 
     byte[] getStateRoot();
 
-    void setStateRoot(byte[] _strt);
-
     byte[] getTxTrieRoot();
 
     byte[] getReceiptsRoot();
 
-    void setReceiptsRoot(byte[] _rcrt);
-
     byte[] getLogsBloom();
-
-    void setLogsBloom(byte[] _lb);
 
     byte[] getExtraData();
 
-    void setExtraData(byte[] _ed);
-
     byte[] getNonce();
-
-    void setNonce(byte[] _nc);
 
     byte[] getHash();
 
@@ -70,18 +61,28 @@ public interface IBlockHeader {
 
     Address getCoinbase();
 
-    // Setter
-    void setCoinbase(Address _cb);
-
     long getTimestamp();
-
-    void setTimestamp(long _ts);
 
     long getNumber();
 
-    void setNumber(long _nb);
+    // Setter
+    void setCoinbase(Address _cb);
+
+    void setStateRoot(byte[] _strt);
+
+    void setReceiptsRoot(byte[] _rcrt);
 
     void setTransactionsRoot(byte[] _txrt);
+
+    void setTimestamp(long _ts);
+
+    void setNumber(long _nb);
+
+    void setNonce(byte[] _nc);
+
+    void setLogsBloom(byte[] _lb);
+
+    void setExtraData(byte[] _ed);
 
     boolean isGenesis();
 }

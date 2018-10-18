@@ -40,11 +40,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.function.Consumer;
 import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
@@ -140,12 +136,10 @@ public class Aion {
         String[] filePath = new String[7];
         // Log/Database path
         if (!cfg.getLog().getLogFile()) {
-            System.out.println(
-                "Logger disabled; to enable please update log settings in config.xml and restart kernel.");
+            System.out.println("Logger disabled; to enable please update log settings in config.xml and restart kernel.");
             filePath[0] = "« disabled »";
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println(
-                "Logger disabled due to invalid file path; to enable please update log setting in config.xml and restart kernel.");
+            System.out.println("Logger disabled due to invalid file path; to enable please update log setting in config.xml and restart kernel.");
             cfg.getLog().disableLogging();
             filePath[0] = "« disabled »";
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
@@ -156,6 +150,7 @@ public class Aion {
         AionLoggerFactory
             .init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLogPath());
         Logger genLog = AionLoggerFactory.getLogger(LogEnum.GEN.name());
+
 
         filePath[1] = cfg.getDatabasePath();
         filePath[2] = Keystore.getKeystorePath();

@@ -36,15 +36,21 @@ import org.aion.mcf.types.AbstractTxReceipt;
 
 /**
  * Blockchain interface.
+ *
+ * @param <BLK>
+ * @param <BH>
+ * @param <TX>
+ * @param <TR>
+ * @param <INFO>
  */
 @SuppressWarnings("rawtypes")
 public interface IBlockchain<
-    BLK extends IBlock,
-    BH extends AbstractBlockHeader,
-    TX extends ITransaction,
-    TR extends AbstractTxReceipt,
-    INFO extends AbstractTxInfo>
-    extends IPowChain<BLK, BH> {
+                BLK extends IBlock,
+                BH extends AbstractBlockHeader,
+                TX extends ITransaction,
+                TR extends AbstractTxReceipt,
+                INFO extends AbstractTxInfo>
+        extends IPowChain<BLK, BH> {
 
     long getSize();
 
@@ -62,7 +68,7 @@ public interface IBlockchain<
      *
      * @param block a future block that cannot be imported due to height
      * @return {@code true} when the block was imported, {@code false} if the block is already
-     * stored and saving it was not necessary.
+     *     stored and saving it was not necessary.
      * @apiNote Functionality used to store blocks coming from <b>status requests</b>.
      */
     boolean storePendingStatusBlock(BLK block);
@@ -72,10 +78,9 @@ public interface IBlockchain<
      * imported later when the chain has reached the required height or has imported the needed
      * parent block. The blocks from the range that are already stored with be skipped.
      *
-     * @param blocks a range of blocks that cannot be imported due to height or lack of parent
-     * block
+     * @param blocks a range of blocks that cannot be imported due to height or lack of parent block
      * @return an integer value (ranging from zero to the number of given blocks) representing the
-     * number of blocks that were stored from the given input.
+     *     number of blocks that were stored from the given input.
      * @apiNote Functionality used to store blocks coming from <b>range import requests</b>.
      */
     int storePendingBlockRange(List<BLK> blocks);
@@ -85,9 +90,9 @@ public interface IBlockchain<
      *
      * @param level the blockchain height of interest
      * @return a map containing all the block ranges that are stored in the pending block store at
-     * the given height. The map may be empty if there is no data stored for the given height. It
-     * may also contain several entries if there are multiple ranges starting at the given level due
-     * to the storage of different chains.
+     *     the given height. The map may be empty if there is no data stored for the given height.
+     *     It may also contain several entries if there are multiple ranges starting at the given
+     *     level due to the storage of different chains.
      */
     Map<ByteArrayWrapper, List<BLK>> loadPendingBlocksAtLevel(long level);
 
@@ -97,7 +102,7 @@ public interface IBlockchain<
      *
      * @param current the starting point value for the next base
      * @param knownStatus value retrieved from the last best block status update for the peer
-     * requesting a base value for a subsequent LIGHTNING request.
+     *     requesting a base value for a subsequent LIGHTNING request.
      * @return the next generated base value for the request.
      */
     long nextBase(long current, long knownStatus);
@@ -108,10 +113,10 @@ public interface IBlockchain<
      * @param level the block height of the range starting point
      * @param ranges the identifiers for the ranges to be deleted
      * @param blocks the range identifier to blocks mappings to me deleted (used to ensure that if
-     * the ranges have been expanded, only the relevant blocks get deleted)
+     *     the ranges have been expanded, only the relevant blocks get deleted)
      */
     void dropImported(
-        long level, List<ByteArrayWrapper> ranges, Map<ByteArrayWrapper, List<BLK>> blocks);
+            long level, List<ByteArrayWrapper> ranges, Map<ByteArrayWrapper, List<BLK>> blocks);
 
     void setBestBlock(BLK block);
 

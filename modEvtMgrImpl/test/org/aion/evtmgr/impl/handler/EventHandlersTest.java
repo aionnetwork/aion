@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,19 +19,19 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 
 package org.aion.evtmgr.impl.handler;
 
-import static junit.framework.TestCase.assertEquals;
-
 import org.aion.evtmgr.IHandler;
 import org.junit.Test;
+import static junit.framework.TestCase.assertEquals;
 
 public class EventHandlersTest {
 
     @Test
-    public void testInstantiate() {
+    public void testInstantiate(){
         IHandler blkHdr = new BlockHandler();
         IHandler txHdr = new TxHandler();
         IHandler consHdr = new ConsensusHandler();

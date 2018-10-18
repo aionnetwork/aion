@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,24 +17,18 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
+ * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- */
-
+ ******************************************************************************/
 package org.aion.db.impl;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.db.impl.DatabaseFactory.Props.DB_NAME;
-import static org.aion.db.impl.DatabaseFactory.Props.ENABLE_LOCKING;
-import static org.aion.db.impl.DatabaseTestUtils.assertConcurrent;
-
 import com.google.common.truth.Truth;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -45,6 +39,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.*;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.db.impl.DatabaseFactory.Props.DB_NAME;
+import static org.aion.db.impl.DatabaseFactory.Props.ENABLE_LOCKING;
+import static org.aion.db.impl.DatabaseTestUtils.assertConcurrent;
 
 /**
  * @author Alexandra Roatis
@@ -95,18 +96,17 @@ public class ConcurrencyTest {
     }
 
     private void addThread4IsEmpty(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db) {
+                                   IByteArrayKeyValueDatabase db) {
         threads.add(() -> {
             boolean check = db.isEmpty();
             if (DISPLAY_MESSAGES) {
-                System.out.println(
-                    Thread.currentThread().getName() + ": " + (check ? "EMPTY" : "NOT EMPTY"));
+                System.out.println(Thread.currentThread().getName() + ": " + (check ? "EMPTY" : "NOT EMPTY"));
             }
         });
     }
 
     private void addThread4Keys(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db) {
+                                IByteArrayKeyValueDatabase db) {
         threads.add(() -> {
             Set<byte[]> keys = db.keys();
             if (DISPLAY_MESSAGES) {
@@ -116,43 +116,38 @@ public class ConcurrencyTest {
     }
 
     private void addThread4Get(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db,
-        String key) {
+                               IByteArrayKeyValueDatabase db,
+                               String key) {
         threads.add(() -> {
             boolean hasValue = db.get(key.getBytes()).isPresent();
             if (DISPLAY_MESSAGES) {
                 System.out.println(
-                    Thread.currentThread().getName() + ": " + key + " " + (hasValue ? "PRESENT"
-                        : "NOT PRESENT"));
+                        Thread.currentThread().getName() + ": " + key + " " + (hasValue ? "PRESENT" : "NOT PRESENT"));
             }
         });
     }
 
     private void addThread4Put(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db,
-        String key) {
+                               IByteArrayKeyValueDatabase db,
+                               String key) {
         threads.add(() -> {
             db.put(key.getBytes(), DatabaseTestUtils.randomBytes(32));
-            if (DISPLAY_MESSAGES) {
-                System.out.println(Thread.currentThread().getName() + ": " + key + " ADDED");
-            }
+            if (DISPLAY_MESSAGES) { System.out.println(Thread.currentThread().getName() + ": " + key + " ADDED");}
         });
     }
 
     private void addThread4Delete(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db,
-        String key) {
+                                  IByteArrayKeyValueDatabase db,
+                                  String key) {
         threads.add(() -> {
             db.delete(key.getBytes());
-            if (DISPLAY_MESSAGES) {
-                System.out.println(Thread.currentThread().getName() + ": " + key + " DELETED");
-            }
+            if (DISPLAY_MESSAGES) {System.out.println(Thread.currentThread().getName() + ": " + key + " DELETED");}
         });
     }
 
     private void addThread4PutBatch(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db,
-        String key) {
+                                    IByteArrayKeyValueDatabase db,
+                                    String key) {
         threads.add(() -> {
             Map<byte[], byte[]> map = new HashMap<>();
             map.put((key + 1).getBytes(), DatabaseTestUtils.randomBytes(32));
@@ -161,16 +156,15 @@ public class ConcurrencyTest {
             db.putBatch(map);
             if (DISPLAY_MESSAGES) {
                 System.out.println(
-                    Thread.currentThread().getName() + ": " + (key + 1) + ", " + (key + 2) + ", "
-                        + (key + 3)
-                        + " ADDED");
+                        Thread.currentThread().getName() + ": " + (key + 1) + ", " + (key + 2) + ", " + (key + 3)
+                                + " ADDED");
             }
         });
     }
 
     private void addThread4DeleteBatch(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db,
-        String key) {
+                                       IByteArrayKeyValueDatabase db,
+                                       String key) {
         threads.add(() -> {
             List<byte[]> list = new ArrayList<>();
             list.add((key + 1).getBytes());
@@ -179,16 +173,15 @@ public class ConcurrencyTest {
             db.deleteBatch(list);
             if (DISPLAY_MESSAGES) {
                 System.out.println(
-                    Thread.currentThread().getName() + ": " + (key + 1) + ", " + (key + 2) + ", "
-                        + (key + 3)
-                        + " DELETED");
+                        Thread.currentThread().getName() + ": " + (key + 1) + ", " + (key + 2) + ", " + (key + 3)
+                                + " DELETED");
             }
         });
 
     }
 
     private void addThread4Open(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db) {
+                                IByteArrayKeyValueDatabase db) {
         threads.add(() -> {
             db.open();
             if (DISPLAY_MESSAGES) {
@@ -199,7 +192,7 @@ public class ConcurrencyTest {
     }
 
     private void addThread4Close(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db) {
+                                 IByteArrayKeyValueDatabase db) {
         threads.add(() -> {
             db.close();
             if (DISPLAY_MESSAGES) {
@@ -210,7 +203,7 @@ public class ConcurrencyTest {
     }
 
     private void addThread4Size(List<Runnable> threads,
-        IByteArrayKeyValueDatabase db) {
+                                IByteArrayKeyValueDatabase db) {
         threads.add(() -> {
             long size = db.approximateSize();
             if (DISPLAY_MESSAGES) {
@@ -233,9 +226,7 @@ public class ConcurrencyTest {
         List<Runnable> threads = new ArrayList<>();
 
         int threadSetCount = CONCURRENT_THREADS / 8;
-        if (threadSetCount < 3) {
-            threadSetCount = 3;
-        }
+        if (threadSetCount < 3) { threadSetCount = 3; }
 
         for (int i = 0; i < threadSetCount; i++) {
             // 1. thread that checks empty
@@ -341,9 +332,7 @@ public class ConcurrencyTest {
         List<Runnable> threads = new ArrayList<>();
 
         int threadSetCount = CONCURRENT_THREADS / 4;
-        if (threadSetCount < 3) {
-            threadSetCount = 3;
-        }
+        if (threadSetCount < 3) { threadSetCount = 3; }
 
         for (int i = 0; i < threadSetCount; i++) {
             String keyStr = "key-" + i + ".";

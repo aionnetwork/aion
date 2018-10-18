@@ -33,8 +33,8 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IPeerMetric;
 
 /**
- * @author Chris p2p://{node-id}@{ip}:{port} node-id could be any non-empty string update to 36
- * bytes
+ * @author Chris p2p://{node-id}@{ip}:{port}
+ * node-id could be any non-empty string update to 36 bytes
  */
 public final class Node implements INode {
 
@@ -338,8 +338,7 @@ public final class Node implements INode {
             + "timestamp:" + timestamp + "\n"
             + "bestBlockNumber:" + bestBlockNumber + "\n"
             + "totalDifficulty:" + totalDifficulty.toString() + "\n"
-            + "bestBlockHash:" + (bestBlockHash == null ? "null"
-            : ByteUtil.toHexString(bestBlockHash)) + "\n"
+            + "bestBlockHash:" + (bestBlockHash == null ? "null" : ByteUtil.toHexString(bestBlockHash)) + "\n"
             + "binaryVersion:" + binaryVersion + "\n\n";
     }
 }

@@ -34,7 +34,6 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 public class CfgSsl {
-
     public static final String SSL_KEYSTORE_DIR = "ssl_keystore";
     private static final String ENABLED_TAG = "enabled";
     private static final String CERTIFICATE_TAG = "cert";
@@ -62,8 +61,7 @@ public class CfgSsl {
                                 this.enabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
                                 System.out.println("failed to read config node: " +
-                                    "aion.api.rpc.ssl." + ENABLED_TAG + ". Using default value: "
-                                    + this.enabled);
+                                    "aion.api.rpc.ssl."+ENABLED_TAG+". Using default value: " + this.enabled);
                                 e.printStackTrace();
                             }
                             break;
@@ -72,8 +70,7 @@ public class CfgSsl {
                                 this.cert = String.valueOf(Cfg.readValue(sr));
                             } catch (Exception e) {
                                 System.out.println("failed to read config node: " +
-                                    "aion.api.rpc.ssl" + CERTIFICATE_TAG + "; Using default value: "
-                                    + this.cert);
+                                    "aion.api.rpc.ssl"+CERTIFICATE_TAG+"; Using default value: " + this.cert);
                                 e.printStackTrace();
                             }
                             break;
@@ -82,7 +79,7 @@ public class CfgSsl {
                                 this.pass = String.valueOf(Cfg.readValue(sr)).toCharArray();
                             } catch (Exception e) {
                                 System.out.println("failed to read config node: " +
-                                    "aion.api.rpc.ssl." + PASSWORD_TAG + ".");
+                                    "aion.api.rpc.ssl."+PASSWORD_TAG+".");
                                 e.printStackTrace();
                             }
                             break;
@@ -138,40 +135,26 @@ public class CfgSsl {
         }
     }
 
-    public boolean getEnabled() {
-        return this.enabled;
-    }
-
-    public String getCert() {
-        return this.cert;
-    }
-
-    public char[] getPass() {
-        return this.pass;
-    }
+    public boolean getEnabled() { return this.enabled; }
+    public String getCert() { return this.cert; }
+    public char[] getPass() { return this.pass; }
 
     /**
-     * @implNote this should theoretically work, but should be tested for correctness by any future
-     * consumer
+     * @implNote this should theoretically work, but should be tested for correctness by any future consumer
      */
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         CfgSsl cfgSsl = (CfgSsl) o;
 
         return enabled == cfgSsl.enabled &&
-            Objects.equals(cert, cfgSsl.cert) &&
-            Arrays.equals(pass, cfgSsl.pass);
+                Objects.equals(cert, cfgSsl.cert) &&
+                Arrays.equals(pass, cfgSsl.pass);
     }
 
     /**
-     * @implNote this should theoretically work, but should be tested for correctness by any future
-     * consumer
+     * @implNote this should theoretically work, but should be tested for correctness by any future consumer
      */
     @Override
     public int hashCode() {

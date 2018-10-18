@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -32,16 +32,17 @@
  *     Zcash project team.
  *     Bitcoinj team.
  *     H2 Group.
- */
+ ******************************************************************************/
 package org.aion.db.utils.slices;
 
-public final class SizeOf {
-
+public final class SizeOf
+{
     public static final byte SIZE_OF_BYTE = 1;
     public static final byte SIZE_OF_SHORT = 2;
     public static final byte SIZE_OF_INT = 4;
     public static final byte SIZE_OF_LONG = 8;
 
-    private SizeOf() {
+    private SizeOf()
+    {
     }
 }

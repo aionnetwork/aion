@@ -80,19 +80,6 @@ public class NodeMgr implements INodeMgr {
         return new String(hexChars);
     }
 
-    private static String appendColumnFormat() {
-        return "\n          s"
-            + "               td"
-            + "          #"
-            + "                                                             hash"
-            + "              ip"
-            + "  port"
-            + "     conn"
-            + "              bv"
-            + "           ci\n"
-            + "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
-    }
-
     /**
      * @param selfShortId String
      */
@@ -133,6 +120,19 @@ public class NodeMgr implements INodeMgr {
             }
         }
         return sb.toString();
+    }
+
+    private static String appendColumnFormat() {
+        return "\n          s"
+            + "               td"
+            + "          #"
+            + "                                                             hash"
+            + "              ip"
+            + "  port"
+            + "     conn"
+            + "              bv"
+            + "           ci\n"
+            + "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
     }
 
     private String appendNodeInfo(INode n) {

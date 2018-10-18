@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.gui.model;
 
 import org.aion.api.IAionAPI;
@@ -35,26 +12,31 @@ import org.slf4j.Logger;
  * Example implementation: {@link GeneralKernelInfoRetriever}.
  */
 public abstract class AbstractAionApiClient {
-
-    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
     private final IAionAPI api;
     private final IApiMsgErrorHandler errorHandler;
+
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
     /**
      * Constructor
      *
      * @param kernelConnection connection containing the API instance to interact with
      * @param errorHander error handler that executes whenever API call is made.  use null if no
-     * error handling needed.
+     *                    error handling needed.
      */
     protected AbstractAionApiClient(KernelConnection kernelConnection,
-        IApiMsgErrorHandler errorHander) {
+                                    IApiMsgErrorHandler errorHander) {
         this.api = kernelConnection.getApi();
         this.errorHandler = errorHander;
     }
 
     protected AbstractAionApiClient(KernelConnection kernelConnection) {
         this(kernelConnection, null);
+    }
+
+    @FunctionalInterface
+    protected interface ApiFunction {
+        ApiMsg call(IAionAPI api);
     }
 
     /**
@@ -72,7 +54,7 @@ public abstract class AbstractAionApiClient {
         synchronized (api) {
             msg = func.call(api);
         }
-        if (errorHandler != null) {
+        if(errorHandler != null) {
             errorHandler.handleError(msg);
         }
         return msg;
@@ -83,11 +65,5 @@ public abstract class AbstractAionApiClient {
      */
     protected boolean apiIsConnected() {
         return api.isConnected();
-    }
-
-    @FunctionalInterface
-    protected interface ApiFunction {
-
-        ApiMsg call(IAionAPI api);
     }
 }

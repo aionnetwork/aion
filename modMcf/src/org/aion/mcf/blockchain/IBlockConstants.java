@@ -1,4 +1,4 @@
-/*
+/*******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,14 +19,15 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
 
 /**
- * Interface for declaring general block related constant files. This can change depending on the
- * chain configuration that is loaded.
+ * Interface for declaring general block related constant files. This can
+ * change depending on the chain configuration that is loaded.
  */
 public interface IBlockConstants {
 
@@ -41,7 +42,8 @@ public interface IBlockConstants {
     BigInteger getMinimumDifficulty();
 
     /**
-     * The divisor for energy, energy being the units consumed by VM operations and Transactions
+     * The divisor for energy, energy being the units consumed by
+     * VM operations and Transactions
      */
     BigInteger getEnergyDivisorLimit();
 
@@ -62,23 +64,27 @@ public interface IBlockConstants {
 
     /**
      * The intended block time, specified in seconds
+     *
+     * @return
      */
     int getDurationLimit();
 
     /**
      * The reward for mining a new block
+     *
+     * @return
      */
     BigInteger getBlockReward();
 
     /**
-     * The lower bound of expected block time, blocktimes lower than this indicate the necessity of
-     * a difficulty increase.
+     * The lower bound of expected block time, blocktimes lower than this indicate
+     * the necessity of a difficulty increase.
      */
     long getBlockTimeLowerBound();
 
     /**
-     * The upper bound of expected block time, blocktimes higher than this indicate the necessity of
-     * a difficulty decrease.
+     * The upper bound of expected block time, blocktimes higher than this indicate
+     * the necessity of a difficulty decrease.
      */
     long getBlockTimeUpperBound();
 

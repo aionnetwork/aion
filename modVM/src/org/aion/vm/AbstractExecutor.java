@@ -39,13 +39,12 @@ import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.slf4j.Logger;
 
 public abstract class AbstractExecutor {
-
     protected static Logger LOGGER;
     protected static Object lock = new Object();
     protected IRepository repo;
     protected IRepositoryCache repoTrack;
-    protected IExecutionResult exeResult;
     private boolean isLocalCall;
+    protected IExecutionResult exeResult;
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
@@ -94,15 +93,16 @@ public abstract class AbstractExecutor {
     }
 
     /**
-     * Checks that the transaction passes the basic validation criteria. These criteria are: 1. the
-     * transaction energy limit is within the acceptable limit range and is larger than the
-     * remaining energy in the block that contains the transaction. 2. contextNrgLimit is
-     * non-negative. 3. the transaction nonce is equal to the transaction sender's nonce. 4. the
-     * transaction sender has enough funds to cover the cost of the transaction.
+     * Checks that the transaction passes the basic validation criteria. These criteria are:
+     *   1. the transaction energy limit is within the acceptable limit range and is larger than the
+     *      remaining energy in the block that contains the transaction.
+     *   2. contextNrgLimit is non-negative.
+     *   3. the transaction nonce is equal to the transaction sender's nonce.
+     *   4. the transaction sender has enough funds to cover the cost of the transaction.
      *
-     * Returns true if all crtieria are met or if the call is local. Returns false if the call is
-     * not local and at least one criterion is not met. In this case, the execution result has its
-     * result code and energy left set appropriately.
+     * Returns true if all crtieria are met or if the call is local.
+     * Returns false if the call is not local and at least one criterion is not met. In this case,
+     *   the execution result has its result code and energy left set appropriately.
      *
      * @param tx The transaction to check.
      * @param contextNrgLmit The execution context's energy limit.
@@ -165,8 +165,7 @@ public abstract class AbstractExecutor {
     protected abstract void create();
 
     /**
-     * Tells the ContractExecutor to bypass incrementing the account's nonce when execute is
-     * called.
+     * Tells the ContractExecutor to bypass incrementing the account's nonce when execute is called.
      */
     public void setBypassNonce() {
         this.askNonce = false;
@@ -176,8 +175,7 @@ public abstract class AbstractExecutor {
      * Returns the energy remaining after the transaction was executed. Prior to execution this
      * method simply returns the energy limit for the transaction.
      *
-     * @return The energy left after the transaction executes or its energy limit prior to
-     * execution.
+     * @return The energy left after the transaction executes or its energy limit prior to execution.
      */
     protected long getNrgLeft() {
         return exeResult.getNrgLeft();
@@ -219,11 +217,11 @@ public abstract class AbstractExecutor {
      * Updates the repository only if the call is not local and the transaction summary was not
      * marked as rejected.
      *
-     * If the repository qualifies for an update then it is updated as follows: 1. The transaction
-     * sender is refunded for whatever outstanding energy was not consumed. 2. The transaction
-     * energy consumption amount is set accordingly. 3. The fee is transferred to the coinbase
-     * account. 4. All accounts marked for deletion (given that the transaction was successful) are
-     * deleted.
+     * If the repository qualifies for an update then it is updated as follows:
+     *   1. The transaction sender is refunded for whatever outstanding energy was not consumed.
+     *   2. The transaction energy consumption amount is set accordingly.
+     *   3. The fee is transferred to the coinbase account.
+     *   4. All accounts marked for deletion (given that the transaction was successful) are deleted.
      *
      * @param summary The transaction summary.
      * @param tx The transaction.

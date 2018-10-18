@@ -27,12 +27,11 @@ import java.io.IOException;
 import java.net.ServerSocket;
 
 public class TestUtilities {
-
-    private TestUtilities() {
-    }
+    private TestUtilities() {}
 
     /**
      * Tries to return a free port thats currently not used
+     * @return
      */
     public static int getFreePort() {
         try {
