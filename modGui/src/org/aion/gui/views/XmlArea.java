@@ -6,7 +6,7 @@ import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.LineNumberFactory;
 
 /**
- * Encapsulates logic of using RichTextFX's CodeArea.  Because {@link VirtualizedScrollPane} doesn't
+ * Encapsulates logic of using RichTextFX's CodeArea. Because {@link VirtualizedScrollPane} doesn't
  * play nice with FXML, we will take care of all that set up in this class, which can be used with
  * FXML properly.
  */
@@ -29,5 +29,4 @@ public class XmlArea extends StackPane {
     public String getText() {
         return codeArea.getText();
     }
-
 }

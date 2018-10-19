@@ -1,7 +1,6 @@
 package org.aion.os;
 
 import com.google.common.base.Charsets;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,11 +26,9 @@ public class UnixKernelProcessHealthChecker {
         Process proc = new ProcessBuilder().command(command).start();
         proc.waitFor();
 
-        try (
-                final InputStream is = proc.getInputStream();
+        try (final InputStream is = proc.getInputStream();
                 final InputStreamReader isr = new InputStreamReader(is, Charsets.UTF_8);
-                final BufferedReader br = new BufferedReader(isr);
-        ) {
+                final BufferedReader br = new BufferedReader(isr); ) {
             return br.lines().collect(Collectors.toList());
         } catch (IOException ioe) {
             throw new IOException("Could not get the output of ps program", ioe);

@@ -1,7 +1,6 @@
 package org.aion.gui.events;
 
 import com.google.common.eventbus.EventBus;
-
 import java.util.HashMap;
 import java.util.Map;
 

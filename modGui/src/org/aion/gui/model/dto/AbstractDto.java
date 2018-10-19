@@ -27,5 +27,5 @@ public abstract class AbstractDto extends AbstractAionApiClient {
         return null;
     }
 
-    abstract protected void loadFromApiInternal();
+    protected abstract void loadFromApiInternal();
 }

@@ -1,16 +1,15 @@
 package org.aion.gui.controller;
 
-import org.aion.gui.model.ConfigManipulator;
-import org.aion.gui.model.KernelConnection;
-import org.aion.gui.model.KernelUpdateTimer;
-import org.aion.mcf.config.Cfg;
-import org.aion.os.KernelLauncher;
-import org.junit.Before;
-import org.junit.Test;
-
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
+
+import org.aion.gui.model.ConfigManipulator;
+import org.aion.gui.model.KernelConnection;
+import org.aion.gui.model.KernelUpdateTimer;
+import org.aion.os.KernelLauncher;
+import org.junit.Before;
+import org.junit.Test;
 
 public class ControllerFactoryTest {
     private KernelConnection kernelConnection;
@@ -28,11 +27,12 @@ public class ControllerFactoryTest {
 
     @Test
     public void testSettersAndGetters() {
-        ControllerFactory unit = new ControllerFactory()
-                .withKernelConnection(kernelConnection)
-                .withKernelLauncher(kernelLauncher)
-                .withTimer(kernelUpdateTimer)
-                .withConfigManipulator(configManipulator);
+        ControllerFactory unit =
+                new ControllerFactory()
+                        .withKernelConnection(kernelConnection)
+                        .withKernelLauncher(kernelLauncher)
+                        .withTimer(kernelUpdateTimer)
+                        .withConfigManipulator(configManipulator);
 
         assertThat(unit.getKernelConnection(), is(kernelConnection));
         assertThat(unit.getKernelLauncher(), is(kernelLauncher));
@@ -42,26 +42,29 @@ public class ControllerFactoryTest {
 
     @Test
     public void testCallForClassWithZeroArgConstructor() {
-        ControllerFactory unit = new ControllerFactory()
-                .withKernelConnection(kernelConnection)
-                .withKernelLauncher(kernelLauncher);
+        ControllerFactory unit =
+                new ControllerFactory()
+                        .withKernelConnection(kernelConnection)
+                        .withKernelLauncher(kernelLauncher);
         ZeroArgConstructor result = (ZeroArgConstructor) unit.call(ZeroArgConstructor.class);
         assertThat(result instanceof ZeroArgConstructor, is(true));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCallForClassWithoutZeroArgConstructor() {
-        ControllerFactory unit = new ControllerFactory()
-                .withKernelConnection(kernelConnection)
-                .withKernelLauncher(kernelLauncher);
+        ControllerFactory unit =
+                new ControllerFactory()
+                        .withKernelConnection(kernelConnection)
+                        .withKernelLauncher(kernelLauncher);
         unit.call(NoZeroArgConstructorClass.class);
     }
 
     @Test
     public void testCallForPredefinedClasses() {
-        ControllerFactory unit = new ControllerFactory()
-                .withKernelConnection(kernelConnection)
-                .withKernelLauncher(kernelLauncher);
+        ControllerFactory unit =
+                new ControllerFactory()
+                        .withKernelConnection(kernelConnection)
+                        .withKernelLauncher(kernelLauncher);
 
         assertThat(unit.call(DashboardController.class) instanceof DashboardController, is(true));
         assertThat(unit.call(SettingsController.class) instanceof SettingsController, is(true));

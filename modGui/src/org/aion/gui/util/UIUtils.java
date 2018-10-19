@@ -16,7 +16,6 @@ public class UIUtils {
 
     private static final int SIZE_BUFFER = 20;
 
-
     private static double computeTextWidth(final Font font, final String text) {
         HELPER.setText(text);
         HELPER.setFont(font);
@@ -34,6 +33,7 @@ public class UIUtils {
     }
 
     public static void setWidth(final TextField field) {
-        field.setPrefWidth(UIUtils.computeTextWidth(field.getFont(), field.getText()) + SIZE_BUFFER);
+        field.setPrefWidth(
+                UIUtils.computeTextWidth(field.getFont(), field.getText()) + SIZE_BUFFER);
     }
 }

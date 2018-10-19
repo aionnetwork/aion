@@ -1,16 +1,14 @@
 package org.aion.gui.model;
 
+import java.util.List;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.model.dto.SyncInfoDto;
 import org.aion.log.AionLoggerFactory;
-import org.aion.os.KernelInstanceId;
 import org.slf4j.Logger;
 
-import java.util.List;
-
 /**
- * Class contains methods for retrieving info from the API that is too simple to warrant
- * its own DTO class, i.e. {@link SyncInfoDto}.
+ * Class contains methods for retrieving info from the API that is too simple to warrant its own DTO
+ * class, i.e. {@link SyncInfoDto}.
  */
 public class GeneralKernelInfoRetriever extends AbstractAionApiClient {
     private static final Logger LOG = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
@@ -19,12 +17,13 @@ public class GeneralKernelInfoRetriever extends AbstractAionApiClient {
         this(kernelConnection, SimpleApiMsgErrorHandler.INSTANCE);
     }
 
-    public GeneralKernelInfoRetriever(KernelConnection kernelConnection, IApiMsgErrorHandler errorHandler) {
+    public GeneralKernelInfoRetriever(
+            KernelConnection kernelConnection, IApiMsgErrorHandler errorHandler) {
         super(kernelConnection, errorHandler);
     }
 
     public Boolean isMining() throws ApiDataRetrievalException {
-        if(apiIsConnected()) {
+        if (apiIsConnected()) {
             ApiMsg resp = callApi(api -> api.getMine().isMining());
             return (boolean) resp.getObject();
         } else {
@@ -33,7 +32,7 @@ public class GeneralKernelInfoRetriever extends AbstractAionApiClient {
     }
 
     public Integer getPeerCount() throws ApiDataRetrievalException {
-        if(apiIsConnected()) {
+        if (apiIsConnected()) {
             ApiMsg resp = callApi(api -> api.getNet().getActiveNodes());
             return ((List) resp.getObject()).size();
         } else {

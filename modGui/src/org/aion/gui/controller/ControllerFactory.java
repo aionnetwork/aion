@@ -1,5 +1,8 @@
 package org.aion.gui.controller;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 import javafx.util.Callback;
 import org.aion.gui.controller.partials.AccountsController;
 import org.aion.gui.controller.partials.ConsoleTailController;
@@ -26,18 +29,14 @@ import org.aion.wallet.ui.components.partials.UnlockAccountDialog;
 import org.aion.wallet.ui.components.partials.UnlockMasterAccountDialog;
 import org.slf4j.Logger;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
-
 /**
- * Factory for constructing controller objects of a given {@link Class}.  All
- * controller objects for the GUI will be instantiated through this class, so
- * it kind of resembles an injector from Guice or Spring.  If this starts
- * getting unmanageable, might want to look into using a DI framework like Guice.
+ * Factory for constructing controller objects of a given {@link Class}. All controller objects for
+ * the GUI will be instantiated through this class, so it kind of resembles an injector from Guice
+ * or Spring. If this starts getting unmanageable, might want to look into using a DI framework like
+ * Guice.
  *
- * Class implements {@link Callback} so it may be used by
- * {@link javafx.fxml.FXMLLoader#setControllerFactory(Callback)}.
+ * <p>Class implements {@link Callback} so it may be used by {@link
+ * javafx.fxml.FXMLLoader#setControllerFactory(Callback)}.
  */
 public class ControllerFactory implements Callback<Class<?>, Object> {
     /** maps a class to a method that constructs an instance of it */
@@ -57,8 +56,8 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     private EventBusRegistry eventBusRegistry;
     private BalanceRetriever balanceRetriever;
 
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
+    private static final Logger LOG =
+            org.aion.log.AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
     @FunctionalInterface
     protected interface BuildMethod {
@@ -66,56 +65,94 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     }
 
     /**
-     * Constructor.  See "withXXX" methods for setting factory parameters, i.e.
-     * {@link #withKernelConnection(KernelConnection)}
+     * Constructor. See "withXXX" methods for setting factory parameters, i.e. {@link
+     * #withKernelConnection(KernelConnection)}
      */
     public ControllerFactory() {
-        this.builderChooser = new HashMap<>() {{
-            put(DashboardController.class, () -> new DashboardController(
-                    eventBusRegistry,
-                    kernelLauncher,
-                    kernelConnection,
-                    kernelUpdateTimer,
-                    generalKernelInfoRetriever,
-                    syncInfoDto,
-                    consoleManager,
-                    healthChecker));
-            put(SettingsController.class, () -> new SettingsController(
-                    configManipulator));
-            put(AccountsController.class, () -> new AccountsController(
-                    accountManager, walletStorage, consoleManager));
-            put(HeaderPaneControls.class, () -> new HeaderPaneControls(
-                    new BalanceRetriever(kernelConnection)));
-            put(SendController.class, () -> new SendController(
-                    accountManager,
-                    transactionProcessor,
-                    consoleManager,
-                    balanceRetriever));
-            put(HistoryController.class, () -> new HistoryController(
-                    transactionProcessor,
-                    accountManager,
-                    new SyncInfoDto(kernelConnection)));
-            put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager, consoleManager));
-            put(ImportAccountDialog.class, () -> new ImportAccountDialog(accountManager, consoleManager));
-            put(UnlockMasterAccountDialog.class, () -> new UnlockMasterAccountDialog(accountManager, consoleManager));
-            put(UnlockAccountDialog.class, () -> new UnlockAccountDialog(accountManager, consoleManager));
-            put(TransactionResubmissionDialog.class, () -> new TransactionResubmissionDialog(
-                    accountManager, consoleManager));
-            put(SaveKeystoreDialog.class, () -> new SaveKeystoreDialog(accountManager, consoleManager));
-            put(ConsoleTailController.class, () -> new ConsoleTailController(new ConsoleTail(), consoleManager));
-            put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(kernelConnection));
-            put(SettingsController.class, () -> new SettingsController(
-                    configManipulator
-            ));
-            /*put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
-                    kernelConnection));
-            put(PeerCountController.class, () -> new PeerCountController(
-                    kernelConnection
-            ));
-            put(SyncStatusController.class, () -> new SyncStatusController(
-                    kernelConnection
-            ));*/
-        }};
+        this.builderChooser =
+                new HashMap<>() {
+                    {
+                        put(
+                                DashboardController.class,
+                                () ->
+                                        new DashboardController(
+                                                eventBusRegistry,
+                                                kernelLauncher,
+                                                kernelConnection,
+                                                kernelUpdateTimer,
+                                                generalKernelInfoRetriever,
+                                                syncInfoDto,
+                                                consoleManager,
+                                                healthChecker));
+                        put(
+                                SettingsController.class,
+                                () -> new SettingsController(configManipulator));
+                        put(
+                                AccountsController.class,
+                                () ->
+                                        new AccountsController(
+                                                accountManager, walletStorage, consoleManager));
+                        put(
+                                HeaderPaneControls.class,
+                                () ->
+                                        new HeaderPaneControls(
+                                                new BalanceRetriever(kernelConnection)));
+                        put(
+                                SendController.class,
+                                () ->
+                                        new SendController(
+                                                accountManager,
+                                                transactionProcessor,
+                                                consoleManager,
+                                                balanceRetriever));
+                        put(
+                                HistoryController.class,
+                                () ->
+                                        new HistoryController(
+                                                transactionProcessor,
+                                                accountManager,
+                                                new SyncInfoDto(kernelConnection)));
+                        put(
+                                AddAccountDialog.class,
+                                () -> new AddAccountDialog(accountManager, consoleManager));
+                        put(
+                                ImportAccountDialog.class,
+                                () -> new ImportAccountDialog(accountManager, consoleManager));
+                        put(
+                                UnlockMasterAccountDialog.class,
+                                () ->
+                                        new UnlockMasterAccountDialog(
+                                                accountManager, consoleManager));
+                        put(
+                                UnlockAccountDialog.class,
+                                () -> new UnlockAccountDialog(accountManager, consoleManager));
+                        put(
+                                TransactionResubmissionDialog.class,
+                                () ->
+                                        new TransactionResubmissionDialog(
+                                                accountManager, consoleManager));
+                        put(
+                                SaveKeystoreDialog.class,
+                                () -> new SaveKeystoreDialog(accountManager, consoleManager));
+                        put(
+                                ConsoleTailController.class,
+                                () -> new ConsoleTailController(new ConsoleTail(), consoleManager));
+                        put(
+                                ConnectivityStatusController.class,
+                                () -> new ConnectivityStatusController(kernelConnection));
+                        put(
+                                SettingsController.class,
+                                () -> new SettingsController(configManipulator));
+                        /*put(ConnectivityStatusController.class, () -> new ConnectivityStatusController(
+                                kernelConnection));
+                        put(PeerCountController.class, () -> new PeerCountController(
+                                kernelConnection
+                        ));
+                        put(SyncStatusController.class, () -> new SyncStatusController(
+                                kernelConnection
+                        ));*/
+                    }
+                };
     }
 
     /**
@@ -127,7 +164,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
     @Override
     public Object call(Class<?> clazz) {
         BuildMethod builder = builderChooser.get(clazz);
-        if(null != builder) {
+        if (null != builder) {
             LOG.debug("Instantiating {} with predefined build method", clazz.toString());
             return builder.build();
         } else {
@@ -142,10 +179,12 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
                     | InstantiationException
                     | InvocationTargetException
                     | IllegalAccessException ex) {
-                throw new IllegalArgumentException(String.format(
-                        "Error trying to construct Controller class '%s'.  It was not configured " +
-                                "with a constructor call and we could not call its default constructor",
-                                clazz.toString()), ex);
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Error trying to construct Controller class '%s'.  It was not configured "
+                                        + "with a constructor call and we could not call its default constructor",
+                                clazz.toString()),
+                        ex);
             }
         }
     }
@@ -163,9 +202,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         return this;
     }
 
-    /**
-     * @return the kernel connection used by this factory
-     */
+    /** @return the kernel connection used by this factory */
     public KernelConnection getKernelConnection() {
         return kernelConnection;
     }
@@ -179,9 +216,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         return this;
     }
 
-    /**
-     * @return the kernel launcher used by this factory
-     */
+    /** @return the kernel launcher used by this factory */
     public KernelLauncher getKernelLauncher() {
         return kernelLauncher;
     }
@@ -195,9 +230,7 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         return this;
     }
 
-    /**
-     * @return the timer used by this factory
-     */
+    /** @return the timer used by this factory */
     public KernelUpdateTimer getTimer() {
         return kernelUpdateTimer;
     }
@@ -206,14 +239,13 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
      * @param generalKernelInfoRetriever sets the generalKernelInfoRetriever used by this factory
      * @return this
      */
-    public ControllerFactory withGeneralKernelInfoRetriever(GeneralKernelInfoRetriever generalKernelInfoRetriever) {
+    public ControllerFactory withGeneralKernelInfoRetriever(
+            GeneralKernelInfoRetriever generalKernelInfoRetriever) {
         this.generalKernelInfoRetriever = generalKernelInfoRetriever;
         return this;
     }
 
-    /**
-     * @return the generalKernelInfoRetriever used by this factory
-     */
+    /** @return the generalKernelInfoRetriever used by this factory */
     public GeneralKernelInfoRetriever getGeneralKernelInfoRetriever() {
         return generalKernelInfoRetriever;
     }
@@ -236,13 +268,10 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         return this;
     }
 
-    /**
-     * @return the ConfigManipulator used by this factory
-     */
+    /** @return the ConfigManipulator used by this factory */
     public ConfigManipulator getConfigManipulator() {
         return configManipulator;
     }
-
 
     public AccountManager getAccountManager() {
         return accountManager;
@@ -266,7 +295,8 @@ public class ControllerFactory implements Callback<Class<?>, Object> {
         return this.transactionProcessor;
     }
 
-    public ControllerFactory withBlockTransactionProcessor(TransactionProcessor transactionProcessor) {
+    public ControllerFactory withBlockTransactionProcessor(
+            TransactionProcessor transactionProcessor) {
         this.transactionProcessor = transactionProcessor;
         return this;
     }

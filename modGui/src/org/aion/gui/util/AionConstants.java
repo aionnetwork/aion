@@ -10,7 +10,7 @@ public class AionConstants {
 
     private static final long AMP = (long) 1E9;
 
-    public final static String CCY = "AION";
+    public static final String CCY = "AION";
 
     public static final String DEFAULT_NRG = "22000";
 

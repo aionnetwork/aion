@@ -29,8 +29,7 @@ public class SyncInfoDto extends AbstractDto {
      *
      * @param kernelConnection connection containing the API instance to interact with
      */
-    public SyncInfoDto(KernelConnection kernelConnection,
-                       IApiMsgErrorHandler handler) {
+    public SyncInfoDto(KernelConnection kernelConnection, IApiMsgErrorHandler handler) {
         super(kernelConnection, handler);
     }
 
@@ -50,11 +49,11 @@ public class SyncInfoDto extends AbstractDto {
         this.chainBestBlkNumber = chainBestBlkNumber;
     }
 
-    public void loadFromApiInternal() throws ApiDataRetrievalException  {
+    public void loadFromApiInternal() throws ApiDataRetrievalException {
         Long chainBest;
         long netBest;
         SyncInfo syncInfo;
-        if(!apiIsConnected()) {
+        if (!apiIsConnected()) {
             LOG.warn("Tried to call API, but API is not connected, so aborting the call");
             return;
         }
@@ -73,7 +72,7 @@ public class SyncInfoDto extends AbstractDto {
     }
 
     private Long getLatest() throws ApiDataRetrievalException {
-        if(!apiIsConnected()) {
+        if (!apiIsConnected()) {
             return 0l;
         } else {
             ApiMsg msg = callApi(api -> api.getChain().blockNumber());

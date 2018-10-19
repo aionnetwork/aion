@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -23,15 +23,6 @@
 package org.aion.wallet.storage;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.aion.gui.model.ApiType;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.wallet.dto.LightAppSettings;
-import org.aion.wallet.exception.ValidationException;
-import org.slf4j.Logger;
-
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +33,14 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Properties;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import org.aion.gui.model.ApiType;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.wallet.dto.LightAppSettings;
+import org.aion.wallet.exception.ValidationException;
+import org.slf4j.Logger;
 
 public class WalletStorage {
     private final String storageDir;
@@ -65,20 +64,17 @@ public class WalletStorage {
         this(storageDir, getDefaultKeystorePath(storageDir));
     }
 
-    public WalletStorage(String storageDir,
-                         Path keystorePath) throws IOException {
-        this(storageDir,
+    public WalletStorage(String storageDir, Path keystorePath) throws IOException {
+        this(
+                storageDir,
                 keystorePath,
                 getDefaultAccountsFile(storageDir),
                 getDefaultWalletFile(storageDir));
     }
 
     @VisibleForTesting
-    WalletStorage(
-            String storageDir,
-            Path keystorePath,
-            String accountsFile,
-            String walletFile) throws IOException {
+    WalletStorage(String storageDir, Path keystorePath, String accountsFile, String walletFile)
+            throws IOException {
         this.storageDir = storageDir;
         this.keystorePath = keystorePath;
         this.accountsFile = accountsFile;
@@ -117,7 +113,9 @@ public class WalletStorage {
     }
 
     public String getAccountName(final String address) {
-        return Optional.ofNullable(accountsProperties.get(address + ACCOUNT_NAME_PROP)).map(Object::toString).orElse(BLANK);
+        return Optional.ofNullable(accountsProperties.get(address + ACCOUNT_NAME_PROP))
+                .map(Object::toString)
+                .orElse(BLANK);
     }
 
     public void setAccountName(final String address, final String accountName) {
@@ -143,10 +141,12 @@ public class WalletStorage {
         }
     }
 
-    public void setMasterAccountMnemonic(final String mnemonic, String password) throws ValidationException {
+    public void setMasterAccountMnemonic(final String mnemonic, String password)
+            throws ValidationException {
         try {
             if (mnemonic != null) {
-                accountsProperties.setProperty(MASTER_MNEMONIC_PROP, encryptMnemonic(mnemonic, password));
+                accountsProperties.setProperty(
+                        MASTER_MNEMONIC_PROP, encryptMnemonic(mnemonic, password));
                 saveWalletSettings();
             }
         } catch (Exception e) {
@@ -161,11 +161,14 @@ public class WalletStorage {
 
     public int getMasterAccountDerivations() {
 
-        return Optional.ofNullable(accountsProperties.getProperty(MASTER_DERIVATIONS_PROP)).map(Integer::parseInt).orElse(0);
+        return Optional.ofNullable(accountsProperties.getProperty(MASTER_DERIVATIONS_PROP))
+                .map(Integer::parseInt)
+                .orElse(0);
     }
 
     public void incrementMasterAccountDerivations() {
-        accountsProperties.setProperty(MASTER_DERIVATIONS_PROP, getMasterAccountDerivations() + 1 + "");
+        accountsProperties.setProperty(
+                MASTER_DERIVATIONS_PROP, getMasterAccountDerivations() + 1 + "");
         saveAccounts();
     }
 
@@ -189,14 +192,14 @@ public class WalletStorage {
     }
 
     private String decryptMnemonic(String encryptedMnemonic, String password) throws Exception {
-        SecretKeySpec skeyspec = new SecretKeySpec(password.getBytes(), MNEMONIC_ENCRYPTION_ALGORITHM);
+        SecretKeySpec skeyspec =
+                new SecretKeySpec(password.getBytes(), MNEMONIC_ENCRYPTION_ALGORITHM);
         Cipher cipher = Cipher.getInstance(MNEMONIC_ENCRYPTION_ALGORITHM);
         cipher.init(Cipher.DECRYPT_MODE, skeyspec);
-        byte[] decrypted = cipher.doFinal(encryptedMnemonic.getBytes(MNEMONIC_STRING_CONVERSION_CHARSET_NAME));
+        byte[] decrypted =
+                cipher.doFinal(encryptedMnemonic.getBytes(MNEMONIC_STRING_CONVERSION_CHARSET_NAME));
         return new String(decrypted);
     }
-
-
 
     private static Path getDefaultKeystorePath(String storageDir) {
         return Paths.get(storageDir + File.separator + "keystore");

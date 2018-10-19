@@ -1,5 +1,10 @@
 package org.aion.gui.model.dto;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import org.aion.api.IAionAPI;
 import org.aion.api.IChain;
 import org.aion.api.INet;
@@ -10,18 +15,12 @@ import org.aion.gui.model.KernelConnectionMockSetter;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class SyncInfoDtoTest {
     private IAionAPI api;
     private KernelConnection kernelConnection;
     private ApiMsg msg;
     private SyncInfoDto unit;
     private IChain chain;
-
 
     @Before
     public void before() {
@@ -57,7 +56,8 @@ public class SyncInfoDtoTest {
         long chainBest = 792531;
         long networkBest = 1141;
 
-        SyncInfo syncInfo = new SyncInfo(syncing, networkBest, chainBest, 7 /*not used*/, 1 /* not used */);
+        SyncInfo syncInfo =
+                new SyncInfo(syncing, networkBest, chainBest, 7 /*not used*/, 1 /* not used */);
 
         msg.set(syncInfo, ApiMsg.cast.OTHERS);
         when(api.isConnected()).thenReturn(true);
@@ -72,7 +72,6 @@ public class SyncInfoDtoTest {
     public void testLoadFromApiInternalWhenFallBackToLatestBlock() {
         when(api.isConnected()).thenReturn(true);
         msg.set(0 /*signal for error*/, null, ApiMsg.cast.NULL);
-
 
         long blockNum = 20531;
         ApiMsg secondMsg = new ApiMsg();

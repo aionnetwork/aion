@@ -1,6 +1,21 @@
 package org.aion.gui.model;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.google.common.io.CharSource;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
 import org.aion.api.IAionAPI;
 import org.aion.api.type.ApiMsg;
 import org.aion.gui.events.EventPublisher;
@@ -9,23 +24,6 @@ import org.aion.wallet.console.ConsoleManager;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamReader;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 public class KernelConnectionTest {
     private IAionAPI api;
     private CfgApi cfgApi;
@@ -33,7 +31,7 @@ public class KernelConnectionTest {
     private ExecutorService executorService;
     private KernelConnection unit;
 
-    private final static int EXECUTOR_SERVICE_TIMEOUT_SEC = 2;
+    private static final int EXECUTOR_SERVICE_TIMEOUT_SEC = 2;
 
     @Before
     public void before() throws Exception {
@@ -41,13 +39,16 @@ public class KernelConnectionTest {
 
         cfgApi = new CfgApi();
         String cfgXml = "<java ip=\"someIpAddress\" port=\"12345\" />";
-        XMLStreamReader xmlStream = XMLInputFactory.newInstance()
-                .createXMLStreamReader(CharSource.wrap(cfgXml).openStream());
+        XMLStreamReader xmlStream =
+                XMLInputFactory.newInstance()
+                        .createXMLStreamReader(CharSource.wrap(cfgXml).openStream());
         cfgApi.fromXML(xmlStream);
 
         eventPublisher = mock(EventPublisher.class);
         executorService = Executors.newSingleThreadExecutor();
-        unit = new KernelConnection(api, cfgApi, eventPublisher, mock(ConsoleManager.class), executorService);
+        unit =
+                new KernelConnection(
+                        api, cfgApi, eventPublisher, mock(ConsoleManager.class), executorService);
     }
 
     @Test

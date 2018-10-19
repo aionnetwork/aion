@@ -1,11 +1,10 @@
 package org.aion.os;
 
-import org.junit.Test;
-
-import java.util.EmptyStackException;
-
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+
+import java.util.EmptyStackException;
+import org.junit.Test;
 
 public class KernelControlExceptionTest {
     @Test
@@ -13,7 +12,8 @@ public class KernelControlExceptionTest {
         assertThat(new KernelControlException("someMessage").getMessage(), is("someMessage"));
 
         Throwable someThrowable = new EmptyStackException();
-        assertThat(new KernelControlException("someMessage",
-                someThrowable).getCause(), is(someThrowable));
+        assertThat(
+                new KernelControlException("someMessage", someThrowable).getCause(),
+                is(someThrowable));
     }
 }

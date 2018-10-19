@@ -2,6 +2,12 @@ package org.aion.gui.controller;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
+import java.net.URL;
+import java.util.ResourceBundle;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.event.EventHandler;
@@ -10,27 +16,17 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.RefreshEvent;
-import org.aion.gui.util.DataUpdater;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
-
-import java.net.URL;
-import java.util.ResourceBundle;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 public abstract class AbstractController implements Initializable {
     protected static final String ERROR_STYLE = "error-label";
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
 
-    @FXML
-    private Node parent;
+    @FXML private Node parent;
 
-    private final static ExecutorService API_EXECUTOR = Executors.newSingleThreadExecutor();
-
+    private static final ExecutorService API_EXECUTOR = Executors.newSingleThreadExecutor();
 
     @Override
     public final void initialize(final URL location, final ResourceBundle resources) {
@@ -56,10 +52,11 @@ public abstract class AbstractController implements Initializable {
         };
     }
 
-    protected final <T> void runApiTask(final Task<T> executeAppTask,
-                                        final EventHandler<WorkerStateEvent> successHandler,
-                                        final EventHandler<WorkerStateEvent> errorHandler,
-                                        final EventHandler<WorkerStateEvent> cancelledHandler) {
+    protected final <T> void runApiTask(
+            final Task<T> executeAppTask,
+            final EventHandler<WorkerStateEvent> successHandler,
+            final EventHandler<WorkerStateEvent> errorHandler,
+            final EventHandler<WorkerStateEvent> cancelledHandler) {
         executeAppTask.setOnSucceeded(successHandler);
         executeAppTask.setOnFailed(errorHandler);
         executeAppTask.setOnCancelled(cancelledHandler);
@@ -68,11 +65,11 @@ public abstract class AbstractController implements Initializable {
     }
 
     protected final EventHandler<WorkerStateEvent> getEmptyEvent() {
-        return event -> {
-        };
+        return event -> {};
     }
 
-    protected final EventHandler<WorkerStateEvent> getErrorEvent(Consumer<Throwable> consumer, Task t) {
+    protected final EventHandler<WorkerStateEvent> getErrorEvent(
+            Consumer<Throwable> consumer, Task t) {
         return event -> {
             Throwable e = t.getException();
             if (e != null) {
@@ -86,12 +83,12 @@ public abstract class AbstractController implements Initializable {
         return parent != null && parent.isVisible();
     }
 
-    protected void refreshView(final RefreshEvent event) {
-    }
+    protected void refreshView(final RefreshEvent event) {}
 
     protected abstract void internalInit(final URL location, final ResourceBundle resources);
 
-    @VisibleForTesting ExecutorService getExecutor() {
+    @VisibleForTesting
+    ExecutorService getExecutor() {
         return API_EXECUTOR;
     }
 }
