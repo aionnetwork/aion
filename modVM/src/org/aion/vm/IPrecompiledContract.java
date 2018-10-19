@@ -23,9 +23,7 @@ package org.aion.vm;
 
 import org.aion.base.type.IExecutionResult;
 
-/**
- * A pre-compiled contract interface.
- */
+/** A pre-compiled contract interface. */
 public interface IPrecompiledContract {
 
     /**
@@ -37,5 +35,4 @@ public interface IPrecompiledContract {
      * @return the contract execution result.
      */
     IExecutionResult execute(byte[] input, long nrgLimit);
-
 }

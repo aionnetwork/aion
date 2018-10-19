@@ -10,5 +10,4 @@ public interface IContractFactory {
     IPrecompiledContract getPrecompiledContract(
             ExecutionContext context,
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track);
-
 }
