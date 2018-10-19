@@ -22,7 +22,6 @@
 
 package org.aion.p2p.impl1.tasks;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -43,14 +42,11 @@ import org.mockito.MockitoAnnotations;
 
 public class TaskStatusTest {
 
-    @Mock
-    private BlockingQueue<MsgOut> msgOutQue;
+    @Mock private BlockingQueue<MsgOut> msgOutQue;
 
-    @Mock
-    private BlockingQueue<MsgIn> msgInQue;
+    @Mock private BlockingQueue<MsgIn> msgInQue;
 
-    @Mock
-    private INodeMgr nodeMgr;
+    @Mock private INodeMgr nodeMgr;
 
     @Before
     public void setup() {
@@ -60,7 +56,6 @@ public class TaskStatusTest {
         logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
     }
-
 
     @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
@@ -73,7 +68,7 @@ public class TaskStatusTest {
         t.start();
         assertTrue(t.isAlive());
 
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }

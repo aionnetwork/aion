@@ -1,4 +1,4 @@
-///*
+/// *
 // * Copyright (c) 2017-2018 Aion foundation.
 // *
 // * This file is part of the aion network project.
@@ -23,39 +23,39 @@
 // *
 // */
 //
-//package org.aion.p2p.impl2;
+// package org.aion.p2p.impl2;
 //
-//import org.aion.p2p.*;
-//import org.aion.p2p.impl.TaskRequestActiveNodes;
-//import org.aion.p2p.impl.TaskUPnPManager;
-//import org.aion.p2p.impl.comm.Act;
-//import org.aion.p2p.impl.comm.ChannelBuffer;
-//import org.aion.p2p.impl.comm.Node;
-//import org.aion.p2p.impl.comm.NodeMgr;
-//import org.aion.p2p.impl.zero.msg.*;
-//import org.aion.p2p.impl2.selector.MainIOLoop;
-//import org.aion.p2p.impl2.selector.Task;
-//import org.apache.commons.collections4.map.LRUMap;
+// import org.aion.p2p.*;
+// import org.aion.p2p.impl.TaskRequestActiveNodes;
+// import org.aion.p2p.impl.TaskUPnPManager;
+// import org.aion.p2p.impl.comm.Act;
+// import org.aion.p2p.impl.comm.ChannelBuffer;
+// import org.aion.p2p.impl.comm.Node;
+// import org.aion.p2p.impl.comm.NodeMgr;
+// import org.aion.p2p.impl.zero.msg.*;
+// import org.aion.p2p.impl2.selector.MainIOLoop;
+// import org.aion.p2p.impl2.selector.Task;
+// import org.apache.commons.collections4.map.LRUMap;
 //
-//import java.io.IOException;
-//import java.io.UnsupportedEncodingException;
-//import java.net.InetSocketAddress;
-//import java.net.StandardSocketOptions;
-//import java.nio.ByteBuffer;
-//import java.nio.channels.*;
-//import java.nio.channels.spi.SelectorProvider;
-//import java.util.*;
-//import java.util.concurrent.*;
-//import java.util.concurrent.atomic.AtomicBoolean;
-//import java.util.concurrent.atomic.AtomicInteger;
+// import java.io.IOException;
+// import java.io.UnsupportedEncodingException;
+// import java.net.InetSocketAddress;
+// import java.net.StandardSocketOptions;
+// import java.nio.ByteBuffer;
+// import java.nio.channels.*;
+// import java.nio.channels.spi.SelectorProvider;
+// import java.util.*;
+// import java.util.concurrent.*;
+// import java.util.concurrent.atomic.AtomicBoolean;
+// import java.util.concurrent.atomic.AtomicInteger;
 //
 //// import org.aion.p2p.impl.one.msg.Hello;
 //
-///**
+/// **
 // * @author Chris p2p://{uuid}@{ip}:{port} TODO: 1) simplify id bytest to int, ip
 // *         bytest to str 2) upnp protocal 3) framing
 // */
-//public final class P2pMgr implements IP2pMgr {
+// public final class P2pMgr implements IP2pMgr {
 //
 //	private final static int PERIOD_SHOW_STATUS = 10000;
 //	private final static int PERIOD_REQUEST_ACTIVE_NODES = 1000;
@@ -128,8 +128,10 @@
 //	 * @param _showLog
 //	 *            boolean
 //	 */
-//	public P2pMgr(int _netId, String _revision, String _nodeId, String _ip, int _port, final String[] _bootNodes,
-//			boolean _upnpEnable, int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean _showLog,
+//	public P2pMgr(int _netId, String _revision, String _nodeId, String _ip, int _port, final String[]
+// _bootNodes,
+//			boolean _upnpEnable, int _maxTempNodes, int _maxActiveNodes, boolean _showStatus, boolean
+// _showLog,
 //			boolean _bootlistSyncOnly) {
 //		this.selfNetId = _netId;
 //		this.selfRevision = _revision;
@@ -155,7 +157,8 @@
 //
 //		// rem out for bug:
 //		// nodeMgr.loadPersistedNodes();
-//		cachedReqHandshake = new ReqHandshake(_nodeId.getBytes(), selfNetId, this.selfIp, this.selfPort);
+//		cachedReqHandshake = new ReqHandshake(_nodeId.getBytes(), selfNetId, this.selfIp,
+// this.selfPort);
 //		cachedResHandshake = new ResHandshake(true);
 //		cachedResHandshake1 = new ResHandshake1(true, this.selfRevision);
 //		this.ioLoop = new MainIOLoop(SelectorProvider.provider());
@@ -173,7 +176,8 @@
 //	private boolean validateNode(final Node _node) {
 //		boolean notNull = _node != null;
 //		boolean notSelfId = _node.getIdHash() != this.selfNodeIdHash;
-//		boolean notSameIpOrPort = !(Arrays.equals(selfIp, _node.getIp()) && selfPort == _node.getPort());
+//		boolean notSameIpOrPort = !(Arrays.equals(selfIp, _node.getIp()) && selfPort ==
+// _node.getPort());
 //		boolean notActive = !nodeMgr.hasActiveNode(_node.getIdHash());
 //		boolean notOutbound = !nodeMgr.getOutboundNodes().containsKey(_node.getIdHash());
 //		return notNull && notSelfId && notSameIpOrPort && notActive && notOutbound;
@@ -232,7 +236,8 @@
 //	 * @param ops
 //	 *            the items/events we're interested in
 //	 */
-//	private static void registerChannel(MainIOLoop loop, SocketChannel channel, int ops, NodeMgr nodeMgr, Task task)
+//	private static void registerChannel(MainIOLoop loop, SocketChannel channel, int ops, NodeMgr
+// nodeMgr, Task task)
 //			throws IOException {
 //		if (channel == null)
 //			return;
@@ -402,7 +407,8 @@
 //	 *
 //	 *            Construct node info after handshake request success
 //	 */
-//	private void handleReqHandshake(final ChannelBuffer _buffer, int _channelHash, final byte[] _nodeId, int _netId,
+//	private void handleReqHandshake(final ChannelBuffer _buffer, int _channelHash, final byte[]
+// _nodeId, int _netId,
 //			int _port, final byte[] _revision) {
 //		Node node = nodeMgr.getInboundNode(_channelHash);
 //		if (node != null) {
@@ -466,7 +472,8 @@
 //			} else {
 //				ReqHandshake reqHandshake = ReqHandshake.decode(_msgBytes);
 //				if (reqHandshake != null)
-//					handleReqHandshake(rb, _sk.channel().hashCode(), reqHandshake.getNodeId(), reqHandshake.getNetId(),
+//					handleReqHandshake(rb, _sk.channel().hashCode(), reqHandshake.getNodeId(),
+// reqHandshake.getNetId(),
 //							reqHandshake.getPort(), null);
 //			}
 //
@@ -561,7 +568,8 @@
 //			selector = Selector.open();
 //
 //			scheduledWorkers = new ScheduledThreadPoolExecutor(1);
-//			workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2, 16),
+//			workers = Executors.newFixedThreadPool(Math.min(Runtime.getRuntime().availableProcessors() * 2,
+// 16),
 //					new ThreadFactory() {
 //						private AtomicInteger cnt = new AtomicInteger();
 //
@@ -578,7 +586,8 @@
 //			ChannelBuffer ibChannelBuffer = new ChannelBuffer();
 //			ibChannelBuffer.task = handleInbound;
 //
-//			this.ioLoop.attachChannel(tcpServer, SelectionKey.OP_ACCEPT, ibChannelBuffer, ibChannelBuffer.task);
+//			this.ioLoop.attachChannel(tcpServer, SelectionKey.OP_ACCEPT, ibChannelBuffer,
+// ibChannelBuffer.task);
 //
 //			// this is the main selector thread, this thread handles the following tasks:
 //			// 1) All selector registration is done through this channel, selector
@@ -590,11 +599,13 @@
 //			boss.start();
 //
 //			if (upnpEnable)
-//				scheduledWorkers.scheduleWithFixedDelay(new TaskUPnPManager(selfPort), 1, PERIOD_UPNP_PORT_MAPPING,
+//				scheduledWorkers.scheduleWithFixedDelay(new TaskUPnPManager(selfPort), 1,
+// PERIOD_UPNP_PORT_MAPPING,
 //						TimeUnit.MILLISECONDS);
 //
 //			if (showStatus)
-//				scheduledWorkers.scheduleWithFixedDelay(new TaskStatus(), 2, PERIOD_SHOW_STATUS, TimeUnit.MILLISECONDS);
+//				scheduledWorkers.scheduleWithFixedDelay(new TaskStatus(), 2, PERIOD_SHOW_STATUS,
+// TimeUnit.MILLISECONDS);
 //
 //			if (!syncSeedsOnly)
 //				scheduledWorkers.scheduleWithFixedDelay(new TaskRequestActiveNodes(this), 5000,
@@ -674,7 +685,8 @@
 //				if (showLog)
 //					System.out.println("sending: " + _msg.getClass().getSimpleName() + " to " + channel);
 //				this.workers
-//						.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(), _msg));
+//						.submit(new TaskWrite(ioLoop, workers, showLog, node.getIdShort(), node.getChannel(),
+// _msg));
 //			}
 //		}
 //	}
@@ -699,7 +711,8 @@
 //
 //	@Override
 //	public void errCheck(int nodeIdHashcode, String _displayId) {
-//		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1)) ;
+//		int cnt = (errCnt.get(nodeIdHashcode) == null ? 1 : (errCnt.get(nodeIdHashcode).intValue() + 1))
+// ;
 //
 //		if (cnt > 2) {
 //			dropActive(nodeIdHashcode);
@@ -777,7 +790,8 @@
 //				}
 //			} catch (IOException e) {
 //				if (showLog) {
-//					System.out.println("<p2p-io-exception ip=" + ((ChannelBuffer) key.attachment()).ip + " cause=\""
+//					System.out.println("<p2p-io-exception ip=" + ((ChannelBuffer) key.attachment()).ip + "
+// cause=\""
 //							+ e.toString() + "\">");
 //				}
 //
@@ -1018,4 +1032,4 @@
 //	public boolean isShowLog() {
 //		return showLog;
 //	};
-//}
+// }

@@ -51,8 +51,7 @@ public class ChannelBufferTest {
     private ChannelBuffer cb;
     private Random r;
 
-    @Mock
-    private Header header;
+    @Mock private Header header;
 
     private Header expectHeader;
 
@@ -72,12 +71,13 @@ public class ChannelBufferTest {
         ByteBuffer buffer = ByteBuffer.allocate(r.nextInt(LEN << 1));
         int len = buffer.remaining() - LEN;
         expectHeader = Header.decode(genHeader(len < 0 ? 0 : len));
-        //expectHeader.setLen(r.nextInt(P2pConstant.MAX_BODY_SIZE));
+        // expectHeader.setLen(r.nextInt(P2pConstant.MAX_BODY_SIZE));
 
         buffer.put(expectHeader.encode(), 0, len < 0 ? buffer.remaining() : LEN);
         byte[] rByte = new byte[expectHeader.getLen()];
         r.nextBytes(rByte);
-        buffer.put(rByte, 0, buffer.remaining() >= rByte.length ? rByte.length : buffer.remaining()).flip();
+        buffer.put(rByte, 0, buffer.remaining() >= rByte.length ? rByte.length : buffer.remaining())
+                .flip();
 
         return buffer;
     }
@@ -117,7 +117,7 @@ public class ChannelBufferTest {
 
     @Test
     public void testReadHead() {
-        for (int i=0 ; i<100 ; i++) {
+        for (int i = 0; i < 100; i++) {
             cb.refreshHeader();
             ByteBuffer bb = genBuffer();
             cb.readHead(bb);
@@ -148,7 +148,7 @@ public class ChannelBufferTest {
 
     @Test
     public void testReadBody() {
-        for (int i=0 ; i<100 ; i++) {
+        for (int i = 0; i < 100; i++) {
             cb.refreshHeader();
             cb.refreshBody();
             ByteBuffer bb = genBuffer();

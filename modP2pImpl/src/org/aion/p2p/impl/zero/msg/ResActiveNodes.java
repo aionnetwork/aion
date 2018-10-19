@@ -23,9 +23,8 @@
 package org.aion.p2p.impl.zero.msg;
 
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.ArrayList;
-
+import java.util.List;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.INode;
 import org.aion.p2p.Msg;
@@ -33,28 +32,19 @@ import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 import org.aion.p2p.impl.comm.Node;
 
-/**
- *
- * @author chris
- *
- */
+/** @author chris */
 public final class ResActiveNodes extends Msg {
 
     private final List<INode> nodes;
 
     private int count;
 
-    /**
-     * id 36 bytes, ipv4 8 bytes, port 4 bytes
-     */
-    private final static int NODE_BYTES_LENGTH = 36 + 8 + 4;
+    /** id 36 bytes, ipv4 8 bytes, port 4 bytes */
+    private static final int NODE_BYTES_LENGTH = 36 + 8 + 4;
 
-    private final static int MAX_NODES = 40;
+    private static final int MAX_NODES = 40;
 
-    /**
-     * @param _nodes
-     *            List
-     */
+    /** @param _nodes List */
     public ResActiveNodes(final List<INode> _nodes) {
         super(Ver.V0, Ctrl.NET, Act.RES_ACTIVE_NODES);
         this.count = Math.min(MAX_NODES, _nodes.size());
@@ -65,16 +55,13 @@ public final class ResActiveNodes extends Msg {
         }
     }
 
-    /**
-     * @return List
-     */
+    /** @return List */
     public List<INode> getNodes() {
         return this.nodes;
     }
 
     /**
-     * @param _bytes
-     *            byte[]
+     * @param _bytes byte[]
      * @return ResActiveNodes
      */
     public static ResActiveNodes decode(final byte[] _bytes) {
@@ -82,7 +69,7 @@ public final class ResActiveNodes extends Msg {
             return null;
         } else {
 
-            try{
+            try {
 
                 ByteBuffer buf = ByteBuffer.wrap(_bytes);
                 int count = buf.get();
@@ -122,5 +109,4 @@ public final class ResActiveNodes extends Msg {
         }
         return buf.array();
     }
-
 }

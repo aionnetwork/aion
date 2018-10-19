@@ -35,10 +35,11 @@ public class TaskStatus implements Runnable {
     private final BlockingQueue<MsgOut> sendMsgQue;
     private final BlockingQueue<MsgIn> receiveMsgQue;
 
-    public TaskStatus(final INodeMgr _nodeMgr,
-        final String _selfShortId,
-        final BlockingQueue<MsgOut> _sendMsgQue,
-        final BlockingQueue<MsgIn> _receiveMsgQue) {
+    public TaskStatus(
+            final INodeMgr _nodeMgr,
+            final String _selfShortId,
+            final BlockingQueue<MsgOut> _sendMsgQue,
+            final BlockingQueue<MsgIn> _receiveMsgQue) {
         this.nodeMgr = _nodeMgr;
         this.selfShortId = _selfShortId;
         this.sendMsgQue = _sendMsgQue;
@@ -52,8 +53,10 @@ public class TaskStatus implements Runnable {
 
         if (p2pLOG.isDebugEnabled()) {
             p2pLOG.debug(status);
-            p2pLOG.debug("recv queue[{}] send queue[{}]", this.receiveMsgQue.size(),
-                this.sendMsgQue.size());
+            p2pLOG.debug(
+                    "recv queue[{}] send queue[{}]",
+                    this.receiveMsgQue.size(),
+                    this.sendMsgQue.size());
         } else if (p2pLOG.isInfoEnabled()) {
             p2pLOG.info(status);
         }

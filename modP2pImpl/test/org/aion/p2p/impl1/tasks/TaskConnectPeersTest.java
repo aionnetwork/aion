@@ -58,20 +58,15 @@ import org.mockito.MockitoAnnotations;
 
 public class TaskConnectPeersTest {
 
-    @Mock
-    private INodeMgr nodeMgr;
+    @Mock private INodeMgr nodeMgr;
 
-    @Mock
-    private IP2pMgr p2pMgr;
+    @Mock private IP2pMgr p2pMgr;
 
-    @Mock
-    private BlockingQueue<MsgOut> sendMsgQue;
+    @Mock private BlockingQueue<MsgOut> sendMsgQue;
 
-    @Mock
-    private ReqHandshake1 rhs;
+    @Mock private ReqHandshake1 rhs;
 
-    @Mock
-    private INode node;
+    @Mock private INode node;
 
     private ServerSocketChannel ssc;
 
@@ -112,7 +107,7 @@ public class TaskConnectPeersTest {
                 while (itor.hasNext()) {
                     SelectionKey key;
                     try {
-                        key = (SelectionKey)itor.next();
+                        key = (SelectionKey) itor.next();
                         if (key.isAcceptable()) {
                             ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
                             sc = ssc.accept();
@@ -128,7 +123,7 @@ public class TaskConnectPeersTest {
                             }
                         }
 
-                    } catch ( IOException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                     itor.remove();
@@ -168,12 +163,11 @@ public class TaskConnectPeersTest {
         ssc.close();
     }
 
-
     @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
-            rhs);
+        TaskConnectPeers tcp =
+                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         Thread t = new Thread(tcp);
@@ -181,7 +175,7 @@ public class TaskConnectPeersTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().equals("TERMINATED")) {
+        while (!t.getState().toString().equals("TERMINATED")) {
             Thread.sleep(100);
         }
     }
@@ -189,8 +183,8 @@ public class TaskConnectPeersTest {
     @Test(timeout = 10_000)
     public void testRun1() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
-            rhs);
+        TaskConnectPeers tcp =
+                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         when(nodeMgr.activeNodesSize()).thenReturn(128);
@@ -221,7 +215,7 @@ public class TaskConnectPeersTest {
         Thread.sleep(2000);
 
         atb.set(false);
-        while(!t.getState().toString().equals("TERMINATED")) {
+        while (!t.getState().toString().equals("TERMINATED")) {
             Thread.sleep(100);
         }
     }
@@ -229,8 +223,8 @@ public class TaskConnectPeersTest {
     @Test(timeout = 10_000)
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
-            rhs);
+        TaskConnectPeers tcp =
+                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
@@ -259,7 +253,7 @@ public class TaskConnectPeersTest {
         Thread.sleep(2000);
 
         atb.set(false);
-        while(!t.getState().toString().equals("TERMINATED")) {
+        while (!t.getState().toString().equals("TERMINATED")) {
             Thread.sleep(100);
         }
     }
@@ -267,8 +261,8 @@ public class TaskConnectPeersTest {
     @Test(timeout = 10_000)
     public void testRunException2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
-            rhs);
+        TaskConnectPeers tcp =
+                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);

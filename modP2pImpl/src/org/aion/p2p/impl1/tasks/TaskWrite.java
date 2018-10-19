@@ -32,9 +32,7 @@ import org.aion.p2p.Header;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class TaskWrite implements Runnable {
 
     private final String nodeShortId;
@@ -44,11 +42,11 @@ public class TaskWrite implements Runnable {
     private final IP2pMgr p2pMgr;
 
     TaskWrite(
-        final String _nodeShortId,
-        final SocketChannel _sc,
-        final Msg _msg,
-        final ChannelBuffer _cb,
-        final IP2pMgr _p2pMgr) {
+            final String _nodeShortId,
+            final SocketChannel _sc,
+            final Msg _msg,
+            final ChannelBuffer _cb,
+            final IP2pMgr _p2pMgr) {
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;
         this.msg = _msg;
@@ -78,9 +76,13 @@ public class TaskWrite implements Runnable {
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 
-
             if (p2pLOG.isTraceEnabled()) {
-                p2pLOG.trace("write id:{} {}-{}-{}", nodeShortId, h.getVer(), h.getCtrl(), h.getAction());
+                p2pLOG.trace(
+                        "write id:{} {}-{}-{}",
+                        nodeShortId,
+                        h.getVer(),
+                        h.getCtrl(),
+                        h.getAction());
             }
 
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
@@ -105,8 +107,10 @@ public class TaskWrite implements Runnable {
                 channelBuffer.setClosed();
             } catch (IOException ex2) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("write-msg-io-exception node={} err={}", this.nodeShortId,
-                        ex2.getMessage());
+                    p2pLOG.debug(
+                            "write-msg-io-exception node={} err={}",
+                            this.nodeShortId,
+                            ex2.getMessage());
                 }
 
                 if (ex2.getMessage().equals("Broken pipe")) {

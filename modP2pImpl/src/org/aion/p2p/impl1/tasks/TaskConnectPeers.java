@@ -52,13 +52,13 @@ public class TaskConnectPeers implements Runnable {
     private final ReqHandshake1 cachedReqHS;
 
     public TaskConnectPeers(
-        final IP2pMgr _mgr,
-        final AtomicBoolean _start,
-        final INodeMgr _nodeMgr,
-        final int _maxActiveNodes,
-        final Selector _selector,
-        final BlockingQueue<MsgOut> _sendMsgQue,
-        final ReqHandshake1 _cachedReqHS) {
+            final IP2pMgr _mgr,
+            final AtomicBoolean _start,
+            final INodeMgr _nodeMgr,
+            final int _maxActiveNodes,
+            final Selector _selector,
+            final BlockingQueue<MsgOut> _sendMsgQue,
+            final ReqHandshake1 _cachedReqHS) {
 
         this.start = _start;
         this.nodeMgr = _nodeMgr;
@@ -99,21 +99,23 @@ public class TaskConnectPeers implements Runnable {
             }
             int nodeIdHash = node.getIdHash();
             if (this.nodeMgr.notAtOutboundList(nodeIdHash)
-                && this.nodeMgr.notActiveNode(nodeIdHash)) {
+                    && this.nodeMgr.notActiveNode(nodeIdHash)) {
                 int _port = node.getPort();
                 SocketChannel channel = null;
                 try {
                     channel = SocketChannel.open();
                     channel.socket()
-                        .connect(
-                            new InetSocketAddress(node.getIpStr(), _port),
-                            TIMEOUT_OUTBOUND_CONNECT);
+                            .connect(
+                                    new InetSocketAddress(node.getIpStr(), _port),
+                                    TIMEOUT_OUTBOUND_CONNECT);
                     this.mgr.configChannel(channel);
 
                     if (channel.isConnected()) {
                         if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG.debug("success-connect node-id={} ip={}", node.getIdShort(),
-                                node.getIpStr());
+                            p2pLOG.debug(
+                                    "success-connect node-id={} ip={}",
+                                    node.getIdShort(),
+                                    node.getIpStr());
                         }
 
                         channel.configureBlocking(false);
@@ -128,22 +130,25 @@ public class TaskConnectPeers implements Runnable {
                         this.nodeMgr.addOutboundNode(node);
 
                         if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG.debug("prepare-request-handshake -> id={} ip={}",
-                                node.getIdShort(), node.getIpStr());
+                            p2pLOG.debug(
+                                    "prepare-request-handshake -> id={} ip={}",
+                                    node.getIdShort(),
+                                    node.getIpStr());
                         }
 
                         this.sendMsgQue.offer(
-                            new MsgOut(
-                                node.getIdHash(),
-                                node.getIdShort(),
-                                this.cachedReqHS,
-                                Dest.OUTBOUND));
+                                new MsgOut(
+                                        node.getIdHash(),
+                                        node.getIdShort(),
+                                        this.cachedReqHS,
+                                        Dest.OUTBOUND));
                         // node.peerMetric.decFailedCount();
 
                     } else {
                         if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG
-                                .debug("fail-connect node-id -> id={} ip={}", node.getIdShort(),
+                            p2pLOG.debug(
+                                    "fail-connect node-id -> id={} ip={}",
+                                    node.getIdShort(),
                                     node.getIpStr());
                         }
 
@@ -152,9 +157,11 @@ public class TaskConnectPeers implements Runnable {
                     }
                 } catch (Exception e) {
                     if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG
-                            .debug("connect-outbound exception -> id={} ip={} reason={}", node.getIdShort(),
-                                node.getIpStr(), e.toString());
+                        p2pLOG.debug(
+                                "connect-outbound exception -> id={} ip={} reason={}",
+                                node.getIdShort(),
+                                node.getIpStr(),
+                                e.toString());
                     }
 
                     if (p2pLOG.isTraceEnabled()) {

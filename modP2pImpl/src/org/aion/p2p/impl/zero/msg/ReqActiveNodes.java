@@ -28,14 +28,10 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 
-/**
- *
- * @author chris
- *
- */
+/** @author chris */
 public final class ReqActiveNodes extends Msg {
 
-    public ReqActiveNodes(){
+    public ReqActiveNodes() {
         super(Ver.V0, Ctrl.NET, Act.REQ_ACTIVE_NODES);
     }
 

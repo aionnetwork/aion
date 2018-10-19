@@ -22,7 +22,6 @@
 
 package org.aion.p2p.impl1.tasks;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -51,21 +50,15 @@ import org.mockito.MockitoAnnotations;
 
 public class TaskSendTest {
 
-    @Mock
-    private
-    INodeMgr nodeMgr;
+    @Mock private INodeMgr nodeMgr;
 
-    @Mock
-    private IP2pMgr p2pMgr;
+    @Mock private IP2pMgr p2pMgr;
 
-    @Mock
-    private BlockingQueue<MsgOut> sendMsgQue;
+    @Mock private BlockingQueue<MsgOut> sendMsgQue;
 
-    @Mock
-    private INode node;
+    @Mock private INode node;
 
-    @Mock
-    private Msg msg;
+    @Mock private Msg msg;
 
     private Selector selector;
 
@@ -75,8 +68,7 @@ public class TaskSendTest {
 
     @Before
     public void setup() throws IOException {
-        lane = Math
-            .min(Runtime.getRuntime().availableProcessors() << 1, 32);
+        lane = Math.min(Runtime.getRuntime().availableProcessors() << 1, 32);
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
         logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
@@ -97,7 +89,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -118,7 +110,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -139,7 +131,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -171,7 +163,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -203,7 +195,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -235,7 +227,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -258,7 +250,7 @@ public class TaskSendTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }

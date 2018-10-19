@@ -36,8 +36,7 @@ import org.mockito.MockitoAnnotations;
 
 public class MsgOutTest {
 
-    @Mock
-    private Msg msg;
+    @Mock private Msg msg;
 
     private Random r = new Random();
 

@@ -45,11 +45,9 @@ import org.slf4j.Logger;
 
 public class TaskRequestActiveNodesTest {
 
-    @Mock
-    private IP2pMgr mgr;
+    @Mock private IP2pMgr mgr;
 
-    @Mock
-    private INode node;
+    @Mock private INode node;
 
     private Logger p2pLOG;
 

@@ -40,8 +40,8 @@ import org.aion.p2p.P2pConstant;
 
 public class TaskSend implements Runnable {
 
-    private static final int TOTAL_LANE = Math
-        .min(Runtime.getRuntime().availableProcessors() << 1, 32);
+    private static final int TOTAL_LANE =
+            Math.min(Runtime.getRuntime().availableProcessors() << 1, 32);
     private static final int THREAD_Q_LIMIT = 20000;
 
     private final IP2pMgr mgr;
@@ -54,12 +54,12 @@ public class TaskSend implements Runnable {
     private static ThreadPoolExecutor tpe;
 
     public TaskSend(
-        final IP2pMgr _mgr,
-        final int _lane,
-        final BlockingQueue<MsgOut> _sendMsgQue,
-        final AtomicBoolean _start,
-        final INodeMgr _nodeMgr,
-        final Selector _selector) {
+            final IP2pMgr _mgr,
+            final int _lane,
+            final BlockingQueue<MsgOut> _sendMsgQue,
+            final AtomicBoolean _start,
+            final INodeMgr _nodeMgr,
+            final Selector _selector) {
 
         this.mgr = _mgr;
         this.lane = _lane;
@@ -69,12 +69,14 @@ public class TaskSend implements Runnable {
         this.selector = _selector;
 
         if (tpe == null) {
-            tpe = new ThreadPoolExecutor(TOTAL_LANE
-                , TOTAL_LANE
-                , 0
-                , TimeUnit.MILLISECONDS
-                , new LinkedBlockingQueue<>(THREAD_Q_LIMIT)
-                , Executors.defaultThreadFactory());
+            tpe =
+                    new ThreadPoolExecutor(
+                            TOTAL_LANE,
+                            TOTAL_LANE,
+                            0,
+                            TimeUnit.MILLISECONDS,
+                            new LinkedBlockingQueue<>(THREAD_Q_LIMIT),
+                            Executors.defaultThreadFactory());
         }
     }
 
@@ -117,17 +119,21 @@ public class TaskSend implements Runnable {
                     if (sk != null) {
                         Object attachment = sk.attachment();
                         if (attachment != null) {
-                            tpe.execute(new TaskWrite(
-                                node.getIdShort(),
-                                node.getChannel(),
-                                mo.getMsg(),
-                                (ChannelBuffer) attachment,
-                                this.mgr));
+                            tpe.execute(
+                                    new TaskWrite(
+                                            node.getIdShort(),
+                                            node.getChannel(),
+                                            mo.getMsg(),
+                                            (ChannelBuffer) attachment,
+                                            this.mgr));
                         }
                     }
                 } else {
                     if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("msg-{} ->{} node-not-exist", mo.getDest().name(), mo.getDisplayId());
+                        p2pLOG.debug(
+                                "msg-{} ->{} node-not-exist",
+                                mo.getDest().name(),
+                                mo.getDisplayId());
                     }
                 }
             } catch (InterruptedException e) {
