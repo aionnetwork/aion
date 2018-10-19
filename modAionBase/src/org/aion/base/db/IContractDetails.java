@@ -32,6 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  */
+
 package org.aion.base.db;
 
 import java.util.Collection;
