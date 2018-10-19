@@ -1,40 +1,35 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.crypto.ed25519;
 
+import java.math.BigInteger;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.NativeLoader;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
-import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.libsodium.jni.NaCl;
 import org.libsodium.jni.Sodium;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 
 /**
  * ED25519 key implementation based on libsodium.
@@ -48,8 +43,8 @@ public class ECKeyEd25519 implements ECKey {
     protected static int SIG_BYTES;
 
     /**
-     * Indicates the first type of accounts that we have a normal
-     * account, this is shared by both regular and contract accounts
+     * Indicates the first type of accounts that we have a normal account, this is shared by both
+     * regular and contract accounts
      */
     private static final byte DEFAULT_ACCOUNT_ID = ByteUtil.hexStringToBytes("0xA0")[0];
 
@@ -95,10 +90,9 @@ public class ECKeyEd25519 implements ECKey {
     }
 
     /**
-     * <p>Modified address for Q2 testNet, this variant will have
-     * one byte reserved for further address space modifications,
-     * while the remaining 31-bytes contain a hash[1:] of the PK where
-     * [1:] denotes all but the first byte</p>
+     * Modified address for Q2 testNet, this variant will have one byte reserved for further address
+     * space modifications, while the remaining 31-bytes contain a hash[1:] of the PK where [1:]
+     * denotes all but the first byte
      */
     public byte[] computeAddress(byte[] pubBytes) {
         return AddressSpecs.computeA0Address(pubBytes);
@@ -154,5 +148,4 @@ public class ECKeyEd25519 implements ECKey {
     public String toString() {
         return "pub:" + Hex.toHexString(pk);
     }
-
 }

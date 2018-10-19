@@ -18,30 +18,28 @@
 package org.libsodium.jni.encoders;
 
 /**
- * Converts hexadecimal Strings.
- * This class is thread-safe.
+ * Converts hexadecimal Strings. This class is thread-safe.
  *
  * @version $Id$
  * @since 1.1
  */
 public class Hex implements Encoder {
 
-    /**
-     * Used to build output as Hex
-     */
-    private static final char[] DIGITS_LOWER =
-            {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    /** Used to build output as Hex */
+    private static final char[] DIGITS_LOWER = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+    };
+
+    /** Used to build output as Hex */
+    private static final char[] DIGITS_UPPER = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+    };
 
     /**
-     * Used to build output as Hex
-     */
-    private static final char[] DIGITS_UPPER =
-            {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-
-    /**
-     * Converts an array of characters representing hexadecimal values into an array of bytes of those same values. The
-     * returned array will be half the length of the passed array, as it takes two characters to represent any given
-     * byte. An exception is thrown if the passed char array has an odd number of elements.
+     * Converts an array of characters representing hexadecimal values into an array of bytes of
+     * those same values. The returned array will be half the length of the passed array, as it
+     * takes two characters to represent any given byte. An exception is thrown if the passed char
+     * array has an odd number of elements.
      *
      * @param data An array of characters containing hexadecimal digits
      * @return A byte array containing binary data decoded from the supplied char array.
@@ -76,9 +74,9 @@ public class Hex implements Encoder {
     }
 
     /**
-     * Converts an array of bytes into an array of characters representing the hexadecimal values of each byte in order.
-     * The returned array will be double the length of the passed array, as it takes two characters to represent any
-     * given byte.
+     * Converts an array of bytes into an array of characters representing the hexadecimal values of
+     * each byte in order. The returned array will be double the length of the passed array, as it
+     * takes two characters to represent any given byte.
      *
      * @param data a byte[] to convert to Hex characters
      * @return A char[] containing hexadecimal characters
@@ -88,11 +86,11 @@ public class Hex implements Encoder {
     }
 
     /**
-     * Converts an array of bytes into an array of characters representing the hexadecimal values of each byte in order.
-     * The returned array will be double the length of the passed array, as it takes two characters to represent any
-     * given byte.
+     * Converts an array of bytes into an array of characters representing the hexadecimal values of
+     * each byte in order. The returned array will be double the length of the passed array, as it
+     * takes two characters to represent any given byte.
      *
-     * @param data        a byte[] to convert to Hex characters
+     * @param data a byte[] to convert to Hex characters
      * @param toLowerCase {@code true} converts to lowercase, {@code false} to uppercase
      * @return A char[] containing hexadecimal characters
      * @since 1.4
@@ -102,11 +100,11 @@ public class Hex implements Encoder {
     }
 
     /**
-     * Converts an array of bytes into an array of characters representing the hexadecimal values of each byte in order.
-     * The returned array will be double the length of the passed array, as it takes two characters to represent any
-     * given byte.
+     * Converts an array of bytes into an array of characters representing the hexadecimal values of
+     * each byte in order. The returned array will be double the length of the passed array, as it
+     * takes two characters to represent any given byte.
      *
-     * @param data     a byte[] to convert to Hex characters
+     * @param data a byte[] to convert to Hex characters
      * @param toDigits the output alphabet
      * @return A char[] containing hexadecimal characters
      * @since 1.4
@@ -123,8 +121,9 @@ public class Hex implements Encoder {
     }
 
     /**
-     * Converts an array of bytes into a String representing the hexadecimal values of each byte in order. The returned
-     * String will be double the length of the passed array, as it takes two characters to represent any given byte.
+     * Converts an array of bytes into a String representing the hexadecimal values of each byte in
+     * order. The returned String will be double the length of the passed array, as it takes two
+     * characters to represent any given byte.
      *
      * @param data a byte[] to convert to Hex characters
      * @return A String containing hexadecimal characters
@@ -138,14 +137,15 @@ public class Hex implements Encoder {
     /**
      * Converts a hexadecimal character to an integer.
      *
-     * @param ch    A character to convert to an integer digit
+     * @param ch A character to convert to an integer digit
      * @param index The index of the character in the source
      * @return An integer
      */
     private static int toDigit(final char ch, final int index) {
         final int digit = Character.digit(ch, 16);
         if (digit == -1) {
-            throw new RuntimeException("Illegal hexadecimal character " + ch + " at index " + index);
+            throw new RuntimeException(
+                    "Illegal hexadecimal character " + ch + " at index " + index);
         }
         return digit;
     }

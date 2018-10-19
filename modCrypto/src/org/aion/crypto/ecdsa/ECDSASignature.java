@@ -1,37 +1,30 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ * <p>The aion network project leverages useful source code from other open source projects. We
+ * greatly appreciate the effort that was invested in these projects and we thank the individual
+ * contributors for their work. For provenance information and contributors please see
+ * <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
- * Contributors:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- ******************************************************************************/
+ * <p>Contributors: Aion foundation. <ether.camp> team through the ethereumJ library. Ether.Camp
+ * Inc. (US) team through Ethereum Harmony. John Tromp through the Equihash solver. Samuel Neves
+ * through the BLAKE2 implementation. Zcash project team. Bitcoinj team.
+ * ****************************************************************************
+ */
 package org.aion.crypto.ecdsa;
 
 import static org.aion.base.util.BIUtil.isLessThan;
@@ -44,7 +37,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ISignature;
@@ -53,16 +45,12 @@ import org.spongycastle.asn1.ASN1Integer;
 import org.spongycastle.asn1.DLSequence;
 import org.spongycastle.util.encoders.Base64;
 
-/**
- *
- * 
- */
+/** */
 public class ECDSASignature implements ISignature {
 
-    /**
-     * The two components of the signature.
-     */
+    /** The two components of the signature. */
     public final BigInteger r, s;
+
     public byte v;
     private static int LEN = 65;
 
@@ -91,12 +79,12 @@ public class ECDSASignature implements ISignature {
 
     @Override
     public byte[] getPubkey(byte[] msg) {
-         return new ECKeySecp256k1().recoverFromSignature(this.v - 27, this, msg).getPubKey();
+        return new ECKeySecp256k1().recoverFromSignature(this.v - 27, this, msg).getPubKey();
     }
 
     /**
-     * Constructs a signature with the given components. Does NOT automatically
-     * canonicalise the signature.
+     * Constructs a signature with the given components. Does NOT automatically canonicalise the
+     * signature.
      *
      * @param r
      * @param s
@@ -132,7 +120,6 @@ public class ECDSASignature implements ISignature {
     }
 
     /**
-     *
      * @param r
      * @param s
      * @param v
@@ -200,13 +187,12 @@ public class ECDSASignature implements ISignature {
     }
 
     /**
-     * Will automatically adjust the S component to be less than or equal to
-     * half the curve order, if necessary. This is required because for every
-     * signature (r,s) the signature (r, -s (mod N)) is a valid signature of the
-     * same message. However, we dislike the ability to modify the bits of a
-     * Ethereum transaction after it's been signed, as that violates various
-     * assumed invariants. Thus in future only one of those forms will be
-     * considered legal and the other will be banned.
+     * Will automatically adjust the S component to be less than or equal to half the curve order,
+     * if necessary. This is required because for every signature (r,s) the signature (r, -s (mod
+     * N)) is a valid signature of the same message. However, we dislike the ability to modify the
+     * bits of a Ethereum transaction after it's been signed, as that violates various assumed
+     * invariants. Thus in future only one of those forms will be considered legal and the other
+     * will be banned.
      *
      * @return -
      */
@@ -227,13 +213,10 @@ public class ECDSASignature implements ISignature {
         }
     }
 
-    /**
-     *
-     * @return -
-     */
+    /** @return - */
     public String toBase64() {
         byte[] sigData = new byte[65]; // 1 header + 32 bytes for R + 32 bytes
-                                       // for S
+        // for S
         sigData[0] = v;
         System.arraycopy(bigIntegerToBytes(this.r, 32), 0, sigData, 1, 32);
         System.arraycopy(bigIntegerToBytes(this.s, 32), 0, sigData, 33, 32);
@@ -243,8 +226,10 @@ public class ECDSASignature implements ISignature {
     public byte[] toByteArray() {
         final byte fixedV = this.v >= 27 ? (byte) (this.v - 27) : this.v;
 
-        return ByteUtil.merge(ByteUtil.bigIntegerToBytes(this.r), ByteUtil.bigIntegerToBytes(this.s),
-                new byte[] { fixedV });
+        return ByteUtil.merge(
+                ByteUtil.bigIntegerToBytes(this.r),
+                ByteUtil.bigIntegerToBytes(this.s),
+                new byte[] {fixedV});
     }
 
     public String toHex() {
@@ -276,9 +261,8 @@ public class ECDSASignature implements ISignature {
     }
 
     /**
-     * Throws unsupported operation for now since we don't yet
-     * have a definition/support/procedure for what ECDSA keys
-     * should look like.
+     * Throws unsupported operation for now since we don't yet have a definition/support/procedure
+     * for what ECDSA keys should look like.
      */
     @Override
     public byte[] getAddress() {

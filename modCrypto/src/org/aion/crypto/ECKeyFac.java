@@ -1,32 +1,30 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.crypto;
+
+import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 
 import org.aion.crypto.ecdsa.ECKeySecp256k1;
 import org.aion.crypto.ed25519.ECKeyEd25519;
-
-import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 
 /**
  * Factory class that generates key.
@@ -36,7 +34,8 @@ import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 public class ECKeyFac {
 
     public enum ECKeyType {
-        SECP256K1, ED25519
+        SECP256K1,
+        ED25519
     }
 
     protected static ECKeyType type = ED25519;
@@ -54,8 +53,7 @@ public class ECKeyFac {
         private static final ECKeyFac INSTANCE = new ECKeyFac();
     }
 
-    private ECKeyFac() {
-    }
+    private ECKeyFac() {}
 
     /**
      * Returns the ECKey factory singleton instance.
@@ -65,7 +63,6 @@ public class ECKeyFac {
     public static ECKeyFac inst() {
         return ECKeyFacHolder.INSTANCE;
     }
-
 
     /**
      * Creates a random key pair.
