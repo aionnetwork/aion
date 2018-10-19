@@ -32,6 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  */
+
 package org.aion.zero.impl.sync.handler;
 
 import org.aion.p2p.Ctrl;

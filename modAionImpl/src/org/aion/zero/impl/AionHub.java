@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;

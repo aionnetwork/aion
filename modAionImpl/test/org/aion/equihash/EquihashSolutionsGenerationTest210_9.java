@@ -32,6 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  */
+
 package org.aion.equihash;
 
 import static org.junit.Assert.assertArrayEquals;

@@ -32,6 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  */
+
 package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;

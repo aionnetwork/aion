@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl.db;
 
 import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
