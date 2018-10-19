@@ -1,50 +1,46 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ * <p>The aion network project leverages useful source code from other open source projects. We
+ * greatly appreciate the effort that was invested in these projects and we thank the individual
+ * contributors for their work. For provenance information and contributors please see
+ * <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- ******************************************************************************/
+ * <p>Contributors to the aion source files in decreasing order of code volume: Aion foundation.
+ * <ether.camp> team through the ethereumJ library. Ether.Camp Inc. (US) team through Ethereum
+ * Harmony. John Tromp through the Equihash solver. Samuel Neves through the BLAKE2 implementation.
+ * Zcash project team. Bitcoinj team.
+ * ****************************************************************************
+ */
 package org.aion.base.util;
 
-//import java.lang.reflect.Array;
+// import java.lang.reflect.Array;
+
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-//import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+// import java.util.List;
 
 public class Utils {
 
@@ -53,29 +49,26 @@ public class Utils {
     public static final Object dummy = new Object();
 
     /**
-     * @param number
-     *            should be in form '0x34fabd34....'
+     * @param number should be in form '0x34fabd34....'
      * @return String
      */
-//    public static BigInteger unifiedNumericToBigInteger(String number) {
-//
-//        boolean match = Pattern.matches("0[xX][0-9a-fA-F]+", number);
-//        if (!match) {
-//            return (new BigInteger(number));
-//        } else {
-//            number = number.substring(2);
-//            number = number.length() % 2 != 0 ? "0".concat(number) : number;
-//            byte[] numberBytes = Hex.decode(number);
-//            return (new BigInteger(1, numberBytes));
-//        }
-//    }
+    //    public static BigInteger unifiedNumericToBigInteger(String number) {
+    //
+    //        boolean match = Pattern.matches("0[xX][0-9a-fA-F]+", number);
+    //        if (!match) {
+    //            return (new BigInteger(number));
+    //        } else {
+    //            number = number.substring(2);
+    //            number = number.length() % 2 != 0 ? "0".concat(number) : number;
+    //            byte[] numberBytes = Hex.decode(number);
+    //            return (new BigInteger(1, numberBytes));
+    //        }
+    //    }
 
     /**
-     * Return formatted Date String: yyyy.MM.dd HH:mm:ss Based on Unix's time()
-     * input in seconds
+     * Return formatted Date String: yyyy.MM.dd HH:mm:ss Based on Unix's time() input in seconds
      *
-     * @param timestamp
-     *            seconds since start of Unix-time
+     * @param timestamp seconds since start of Unix-time
      * @return String formatted as - yyyy.MM.dd HH:mm:ss
      */
     public static String longToDateTime(long timestamp) {
@@ -104,70 +97,63 @@ public class Utils {
     /**
      * Decodes a hex string to address bytes and checks validity
      *
-     * @param hex
-     *            - a hex string of the address, e.g.,
-     *            6c386a4b26f73c802f34673f7248bb118f97424a
+     * @param hex - a hex string of the address, e.g., 6c386a4b26f73c802f34673f7248bb118f97424a
      * @return - decode and validated address byte[]
      */
-//    public static byte[] addressStringToBytes(String hex) {
-//        final byte[] addr;
-//        try {
-//            addr = Hex.decode(hex);
-//        } catch (Exception addressIsNotValid) {
-//            return null;
-//        }
-//
-//        if (isValidAddress(addr)) {
-//            return addr;
-//        }
-//        return null;
-//    }
+    //    public static byte[] addressStringToBytes(String hex) {
+    //        final byte[] addr;
+    //        try {
+    //            addr = Hex.decode(hex);
+    //        } catch (Exception addressIsNotValid) {
+    //            return null;
+    //        }
+    //
+    //        if (isValidAddress(addr)) {
+    //            return addr;
+    //        }
+    //        return null;
+    //    }
 
     public static boolean isValidAddress(byte[] addr) {
         return addr != null && addr.length == 20;
     }
 
-    /**
-     * Validate a passed hex string is a valid address
-     *
-     *
-     */
+    /** Validate a passed hex string is a valid address */
     public static boolean isValidAddress(String address) {
-        if(address == null || address.isEmpty() || address.length() < 64) {
+        if (address == null || address.isEmpty() || address.length() < 64) {
             return false;
         }
 
-        if(address.startsWith("0x")) {
+        if (address.startsWith("0x")) {
             address = address.substring(2);
         }
 
         // Will need to change this for a1, a2....
-        if(address.startsWith("a0")) {
+        if (address.startsWith("a0")) {
             return address.length() == 64 && address.substring(2).matches("^[0-9A-Fa-f]+$");
-        }else {
+        } else {
             return false;
         }
     }
 
     /**
-     * @param addr
-     *            length should be 20
+     * @param addr length should be 20
      * @return short string represent 1f21c...
      */
-//    public static String getAddressShortString(byte[] addr) {
-//
-//        if (!isValidAddress(addr)) {
-//            throw new Error("not an address");
-//        }
-//
-//        String addrShort = Hex.toHexString(addr, 0, 3);
-//
-//        StringBuffer sb = new StringBuffer();
-//        sb.append(addrShort);
-//        sb.append("...");
-//
-//        return sb.toString();
-//    }
+    //    public static String getAddressShortString(byte[] addr) {
+    //
+    //        if (!isValidAddress(addr)) {
+    //            throw new Error("not an address");
+    //        }
+    //
+    //        String addrShort = Hex.toHexString(addr, 0, 3);
+    //
+    //        StringBuffer sb = new StringBuffer();
+    //        sb.append(addrShort);
+    //        sb.append("...");
+    //
+    //        return sb.toString();
+    //    }
 
     public static SecureRandom getRandom() {
         return random;
@@ -204,43 +190,43 @@ public class Utils {
         return Double.parseDouble(version.substring(0, pos - 1));
     }
 
-//    public static String getHashListShort(List<byte[]> blockHashes) {
-//        if (blockHashes.isEmpty()) {
-//            return "[]";
-//        }
-//
-//        StringBuilder sb = new StringBuilder();
-//        String firstHash = Hex.toHexString(blockHashes.get(0));
-//        String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size() - 1));
-//        return sb.append(" ").append(firstHash).append("...").append(lastHash).toString();
-//    }
+    //    public static String getHashListShort(List<byte[]> blockHashes) {
+    //        if (blockHashes.isEmpty()) {
+    //            return "[]";
+    //        }
+    //
+    //        StringBuilder sb = new StringBuilder();
+    //        String firstHash = Hex.toHexString(blockHashes.get(0));
+    //        String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size() - 1));
+    //        return sb.append(" ").append(firstHash).append("...").append(lastHash).toString();
+    //    }
 
     public static String getNodeIdShort(String nodeId) {
         return nodeId == null ? "<null>" : nodeId.substring(0, 8);
     }
 
-//    public static long toUnixTime(long javaTime) {
-//        return javaTime / 1000;
-//    }
+    //    public static long toUnixTime(long javaTime) {
+    //        return javaTime / 1000;
+    //    }
 
-//    public static long fromUnixTime(long unixTime) {
-//        return unixTime * 1000;
-//    }
+    //    public static long fromUnixTime(long unixTime) {
+    //        return unixTime * 1000;
+    //    }
 
     @SuppressWarnings("unchecked")
-//    public static <T> T[] mergeArrays(T[]... arr) {
-//        int size = 0;
-//        for (T[] ts : arr) {
-//            size += ts.length;
-//        }
-//        T[] ret = (T[]) Array.newInstance(arr[0].getClass().getComponentType(), size);
-//        int off = 0;
-//        for (T[] ts : arr) {
-//            System.arraycopy(ts, 0, ret, off, ts.length);
-//            off += ts.length;
-//        }
-//        return ret;
-//    }
+    //    public static <T> T[] mergeArrays(T[]... arr) {
+    //        int size = 0;
+    //        for (T[] ts : arr) {
+    //            size += ts.length;
+    //        }
+    //        T[] ret = (T[]) Array.newInstance(arr[0].getClass().getComponentType(), size);
+    //        int off = 0;
+    //        for (T[] ts : arr) {
+    //            System.arraycopy(ts, 0, ret, off, ts.length);
+    //            off += ts.length;
+    //        }
+    //        return ret;
+    //    }
 
     public static String align(String s, char fillChar, int targetLen, boolean alignRight) {
         if (targetLen <= s.length()) {
@@ -248,7 +234,6 @@ public class Utils {
         }
         String alignString = repeat("" + fillChar, targetLen - s.length());
         return alignRight ? alignString + s : s + alignString;
-
     }
 
     public static String repeat(String s, int n) {
@@ -265,50 +250,73 @@ public class Utils {
         }
     }
 
-
     private static final Pattern matchPattern = Pattern.compile("^([0-9]+)([a-zA-Z]+)$");
     public static final long KILO_BYTE = 1024;
     public static final long MEGA_BYTE = 1048576;
     public static final long GIGA_BYTE = 1073741824;
     /**
-     * <p>
-     * Matches file sizes based on fileSize string, in the format:
-     * [numericalValue][sizeDescriptor]
-     * </p>
+     * Matches file sizes based on fileSize string, in the format: [numericalValue][sizeDescriptor]
      *
-     * <p>
-     * Examples of acceptable formats:
-     *
+     * <p>Examples of acceptable formats:
      * <li>
-     *   <ul>10b</ul>
-     *   <ul>10B</ul>
-     *   <ul>10K</ul>
-     *   <ul>10KB</ul>
-     *   <ul>10kB</ul>
-     *   <ul>10M</ul>
-     *   <ul>10mB</ul>
-     *   <ul>10MB</ul>
-     *   <ul>10G</ul>
-     *   <ul>10gB</ul>
-     *   <ul>10GB</ul>
-     * </li>
-     * </p>
      *
-     * <p>
-     * Commas are <b>not</b> accepted by the parser, and are considered invalid.
+     *     <ul>
+     *       10b
+     * </ul>
      *
-     * Note: Anything beyond {@code gigaByte (GB, G, gB)} is not considered valid, and will
-     * be treated as a parse exception.
+     * <ul>
+     *   10B
+     * </ul>
      *
-     * Note: this function assumes the binary representation of magnitudes,
-     * therefore 1kB (kiloByte) is not {@code 1000 bytes} but rather {@code 1024 bytes}.
-     * </p>
+     * <ul>
+     *   10K
+     * </ul>
+     *
+     * <ul>
+     *   10KB
+     * </ul>
+     *
+     * <ul>
+     *   10kB
+     * </ul>
+     *
+     * <ul>
+     *   10M
+     * </ul>
+     *
+     * <ul>
+     *   10mB
+     * </ul>
+     *
+     * <ul>
+     *   10MB
+     * </ul>
+     *
+     * <ul>
+     *   10G
+     * </ul>
+     *
+     * <ul>
+     *   10gB
+     * </ul>
+     *
+     * <ul>
+     *   10GB
+     * </ul>
+     *
+     * <p>Commas are <b>not</b> accepted by the parser, and are considered invalid.
+     *
+     * <p>Note: Anything beyond {@code gigaByte (GB, G, gB)} is not considered valid, and will be
+     * treated as a parse exception.
+     *
+     * <p>Note: this function assumes the binary representation of magnitudes, therefore 1kB
+     * (kiloByte) is not {@code 1000 bytes} but rather {@code 1024 bytes}.
      *
      * @param fileSize file size string
-     * @return {@code Optional.of(fileSizeInt)} if we were able to successfully decode
-     * the filesize string, otherwise outputs {@code Optional.empty()} indicating that
-     * we were unable to decode the file size string, this usually refers to some
-     * sort of syntactic error made by the user.
+     * @return {@code Optional.of(fileSizeInt)} if we were able to successfully decode the filesize
+     *     string, otherwise outputs {@code Optional.empty()} indicating that we were unable to
+     *     decode the file size string, this usually refers to some sort of syntactic error made by
+     *     the user.
      */
     public static Optional<Long> parseSize(String fileSize) {
         Matcher m = matchPattern.matcher(fileSize);

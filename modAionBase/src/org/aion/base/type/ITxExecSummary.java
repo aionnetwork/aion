@@ -22,7 +22,6 @@
  */
 package org.aion.base.type;
 
-
 import java.math.BigInteger;
 import java.util.List;
 

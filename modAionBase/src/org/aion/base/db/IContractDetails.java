@@ -34,11 +34,10 @@
  */
 package org.aion.base.db;
 
-import org.aion.base.type.Address;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.aion.base.type.Address;
 
 public interface IContractDetails<DW> {
 
@@ -57,7 +56,8 @@ public interface IContractDetails<DW> {
      *
      * @implNote Some implementations may handle a non-existent key-value pair differently.
      * @param key The key to query.
-     * @return The associated value or some non-value indicator in the case of no such key-value pair.
+     * @return The associated value or some non-value indicator in the case of no such key-value
+     *     pair.
      */
     DW get(DW key);
 
@@ -145,7 +145,8 @@ public interface IContractDetails<DW> {
 
     /**
      * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in storageValues.
+     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
+     * storageValues.
      *
      * @param storageKeys The keys.
      * @param storageValues The values.
@@ -180,9 +181,7 @@ public interface IContractDetails<DW> {
      */
     String toString();
 
-    /**
-     * Syncs the storage trie.
-     */
+    /** Syncs the storage trie. */
     void syncStorage();
 
     /**
