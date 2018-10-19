@@ -1,17 +1,14 @@
 package org.aion.net;
 
-import org.aion.base.util.ByteArrayWrapper;
-
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.aion.base.util.ByteArrayWrapper;
 
 /**
- * Peer is a class intended to represent application specific information
- * about a network node, whereas {@link org.aion.p2p.impl.Node} only records
- * and stores network information about a node.
+ * Peer is a class intended to represent application specific information about a network node,
+ * whereas {@link org.aion.p2p.impl.Node} only records and stores network information about a node.
  */
 public class Peer {
 
@@ -26,17 +23,13 @@ public class Peer {
 
     private final ReadWriteLock rwTxLock = new ReentrantReadWriteLock();
 
-    /**
-     * Metrics regarding application specific context (and some network context)
-     */
-
+    /** Metrics regarding application specific context (and some network context) */
     public Peer() {}
 
     public boolean addBlockHash(ByteArrayWrapper blockHash) {
         rwBlockLock.readLock().lock();
         try {
-            if (seenBlocks.contains(blockHash))
-                return false;
+            if (seenBlocks.contains(blockHash)) return false;
         } finally {
             rwBlockLock.readLock().unlock();
         }
@@ -44,8 +37,7 @@ public class Peer {
         rwBlockLock.writeLock().lock();
         try {
             seenBlocks.add(blockHash);
-            if (seenBlocks.size() > MAX_BLOCKS)
-                seenBlocks.iterator().remove();
+            if (seenBlocks.size() > MAX_BLOCKS) seenBlocks.iterator().remove();
             return true;
         } finally {
             rwBlockLock.writeLock().unlock();
@@ -55,8 +47,7 @@ public class Peer {
     public boolean addTxHash(ByteArrayWrapper txHash) {
         rwTxLock.readLock().lock();
         try {
-            if (seenTxs.contains(txHash))
-                return false;
+            if (seenTxs.contains(txHash)) return false;
         } finally {
             rwTxLock.readLock().unlock();
         }
@@ -64,8 +55,7 @@ public class Peer {
         rwTxLock.writeLock().lock();
         try {
             seenTxs.add(txHash);
-            if (seenTxs.size() > MAX_TXS)
-                seenTxs.iterator().remove();
+            if (seenTxs.size() > MAX_TXS) seenTxs.iterator().remove();
             return true;
         } finally {
             rwTxLock.writeLock().unlock();
@@ -89,7 +79,6 @@ public class Peer {
             rwTxLock.readLock().unlock();
         }
     }
-
 
     // TODO: implementation of serialization, so we can store this
     public byte[] getEncoded() {

@@ -342,7 +342,9 @@ public class BlockchainDataRecoveryTest {
         }
         repo.flush();
 
-        assertThat(chain.recoverWorldState(repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock()))
+        assertThat(
+                        chain.recoverWorldState(
+                                repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock()))
                 .isFalse();
     }
 
@@ -1101,7 +1103,9 @@ public class BlockchainDataRecoveryTest {
         }
         repo.flush();
 
-        assertThat(chain.recoverIndexEntry(repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock()))
+        assertThat(
+                        chain.recoverIndexEntry(
+                                repo.getSnapshotTo(repo.getRoot()), chain.getBestBlock()))
                 .isFalse();
     }
 

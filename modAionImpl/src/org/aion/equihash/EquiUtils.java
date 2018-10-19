@@ -59,12 +59,14 @@ public class EquiUtils {
 
                 for (int x = bytePad; x < outWidth; x++) {
 
-                    out[j + x] = (byte) ((
-                        // Big-endian
-                        accValue >>> (accBits + (8 * (outWidth - x - 1))))
-                        & (
-                        // Apply bit_len_mask across byte boundaries
-                        (bitLenMask >>> (8 * (outWidth - x - 1))) & 0xFF));
+                    out[j + x] =
+                            (byte)
+                                    ((
+                                            // Big-endian
+                                            accValue >>> (accBits + (8 * (outWidth - x - 1))))
+                                            & (
+                                            // Apply bit_len_mask across byte boundaries
+                                            (bitLenMask >>> (8 * (outWidth - x - 1))) & 0xFF));
                 }
                 j += outWidth;
             }
@@ -100,12 +102,14 @@ public class EquiUtils {
 
                 for (int x = bytePad; x < outWidth; x++) {
 
-                    out[j + x] = (byte) ((
-                        // Big-endian
-                        accValue >>> (accBits + (8 * (outWidth - x - 1))))
-                        & (
-                        // Apply bit_len_mask across byte boundaries
-                        (bitLenMask >>> (8 * (outWidth - x - 1))) & 0xFF));
+                    out[j + x] =
+                            (byte)
+                                    ((
+                                            // Big-endian
+                                            accValue >>> (accBits + (8 * (outWidth - x - 1))))
+                                            & (
+                                            // Apply bit_len_mask across byte boundaries
+                                            (bitLenMask >>> (8 * (outWidth - x - 1))) & 0xFF));
                 }
                 j += outWidth;
             }
@@ -165,9 +169,12 @@ public class EquiUtils {
             if (accBits < 8) {
                 accValue = accValue << bitLen;
                 for (int x = bytePad; x < inWidth; x++) {
-                    accValue = accValue | ((in[j + x] & ((bitLenMask
-                        >> (8 * (inWidth - x - 1))) & 0xFF))
-                        << (8 * (inWidth - x - 1)));
+                    accValue =
+                            accValue
+                                    | ((in[j + x]
+                                                    & ((bitLenMask >> (8 * (inWidth - x - 1)))
+                                                            & 0xFF))
+                                            << (8 * (inWidth - x - 1)));
                 }
                 j += inWidth;
                 accBits += bitLen;

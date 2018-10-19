@@ -1,29 +1,36 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
-
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.zero.impl.pow;
 
+import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import org.aion.base.util.Hex;
 import org.aion.equihash.Solution;
 import org.aion.evtmgr.IEvent;
@@ -46,15 +53,9 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-
-import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
-
 /**
- * {@link AionPoW} contains the logic to process new mined blocks and dispatch
- * new mining task to miners when needed.
+ * {@link AionPoW} contains the logic to process new mined blocks and dispatch new mining task to
+ * miners when needed.
  */
 public class AionPoW {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
@@ -76,20 +77,24 @@ public class AionPoW {
 
     private final class EpPOW implements Runnable {
         boolean go = true;
+
         @Override
         public void run() {
             while (go) {
                 IEvent e = ees.take();
 
-                if (e.getEventType() == IHandler.TYPE.TX0.getValue() && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
+                if (e.getEventType() == IHandler.TYPE.TX0.getValue()
+                        && e.getCallbackType() == EventTx.CALLBACK.PENDINGTXRECEIVED0.getValue()) {
                     newPendingTxReceived.set(true);
-                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue() && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
+                } else if (e.getEventType() == IHandler.TYPE.BLOCK0.getValue()
+                        && e.getCallbackType() == EventBlock.CALLBACK.ONBEST0.getValue()) {
                     // create a new block template every time the best block
                     // updates.
                     createNewBlockTemplate();
-                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue() && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
+                } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue()
+                        && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
                     processSolution((Solution) e.getFuncArgs().get(0));
-                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()){
+                } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
                     go = false;
                 }
             }
@@ -99,68 +104,67 @@ public class AionPoW {
     private final CfgAion config = CfgAion.inst();
 
     /**
-     * Creates an {@link AionPoW} instance. Be sure to call
-     * {@link #init(IAionBlockchain, IPendingState, IEventMgr)} to initialize
-     * the instance.
+     * Creates an {@link AionPoW} instance. Be sure to call {@link #init(IAionBlockchain,
+     * IPendingState, IEventMgr)} to initialize the instance.
      */
-    public AionPoW() {
-    }
+    public AionPoW() {}
 
     /**
      * Initializes this instance.
      *
-     * @param blockchain
-     *            Aion blockchain instance
-     * @param pendingState
-     *            List of Aion transactions
-     * @param eventMgr
-     *            Event manager
+     * @param blockchain Aion blockchain instance
+     * @param pendingState List of Aion transactions
+     * @param eventMgr Event manager
      */
-    public void init(IAionBlockchain blockchain, IPendingState<AionTransaction> pendingState, IEventMgr eventMgr) {
+    public void init(
+            IAionBlockchain blockchain,
+            IPendingState<AionTransaction> pendingState,
+            IEventMgr eventMgr) {
         if (initialized.compareAndSet(false, true)) {
             this.blockchain = blockchain;
             this.pendingState = pendingState;
             this.eventMgr = eventMgr;
             this.syncMgr = SyncMgr.inst();
 
-
             // return early if mining is disabled, otherwise we are doing needless
             // work by generating new block templates on IMPORT_BEST
-            if (!config.getConsensus().getMining())
-                return;
+            if (!config.getConsensus().getMining()) return;
 
             setupHandler();
             ees = new EventExecuteService(100_000, "EpPow", Thread.NORM_PRIORITY, LOG);
             ees.setFilter(setEvtFilter());
 
-
             registerCallback();
             ees.start(new EpPOW());
 
-            new Thread(() -> {
-                while (!shutDown.get()) {
-                    try {
-                        Thread.sleep(100);
+            new Thread(
+                            () -> {
+                                while (!shutDown.get()) {
+                                    try {
+                                        Thread.sleep(100);
 
-                        long now = System.currentTimeMillis();
-                        if (now - lastUpdate.get() > 3000 && newPendingTxReceived.compareAndSet(true, false)
-                                || now - lastUpdate.get() > 10000) { // fallback, when
-                                                               // we never
-                                                               // received any
-                                                               // events
-                            createNewBlockTemplate();
-                        }
-                    } catch (InterruptedException e) {
-                        break;
-                    }
-                }
-            }, "pow").start();
+                                        long now = System.currentTimeMillis();
+                                        if (now - lastUpdate.get() > 3000
+                                                        && newPendingTxReceived.compareAndSet(
+                                                                true, false)
+                                                || now - lastUpdate.get()
+                                                        > 10000) { // fallback, when
+                                            // we never
+                                            // received any
+                                            // events
+                                            createNewBlockTemplate();
+                                        }
+                                    } catch (InterruptedException e) {
+                                        break;
+                                    }
+                                }
+                            },
+                            "pow")
+                    .start();
         }
     }
 
-    /**
-     * Sets up the consensus event handler.
-     */
+    /** Sets up the consensus event handler. */
     private void setupHandler() {
         List<IEvent> txEvts = new ArrayList<>();
         txEvts.add(new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0));
@@ -189,9 +193,8 @@ public class AionPoW {
     }
 
     /**
-     * Registers callback for the
-     * {@link org.aion.evtmgr.impl.evt.EventConsensus.CALLBACK#ON_SOLUTION}
-     * event.
+     * Registers callback for the {@link
+     * org.aion.evtmgr.impl.evt.EventConsensus.CALLBACK#ON_SOLUTION} event.
      */
     public void registerCallback() {
         IHandler consensusHandler = eventMgr.getHandler(IHandler.TYPE.CONSENSUS.getValue());
@@ -207,19 +210,23 @@ public class AionPoW {
     /**
      * Processes a received solution.
      *
-     * @param solution
-     *            The generated equihash solution
+     * @param solution The generated equihash solution
      */
     protected synchronized void processSolution(Solution solution) {
         if (!shutDown.get()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Best block num [{}]", blockchain.getBestBlock().getNumber());
-                LOG.debug("Best block nonce [{}]", Hex.toHexString(blockchain.getBestBlock().getNonce()));
-                LOG.debug("Best block hash [{}]", Hex.toHexString(blockchain.getBestBlock().getHash()));
+                LOG.debug(
+                        "Best block nonce [{}]",
+                        Hex.toHexString(blockchain.getBestBlock().getNonce()));
+                LOG.debug(
+                        "Best block hash [{}]",
+                        Hex.toHexString(blockchain.getBestBlock().getHash()));
             }
 
             AionBlock block = (AionBlock) solution.getBlock();
-            if (!Arrays.equals(block.getHeader().getNonce(), new byte[32]) && !(block.getHeader().getNonce().length == 0)) {
+            if (!Arrays.equals(block.getHeader().getNonce(), new byte[32])
+                    && !(block.getHeader().getNonce().length == 0)) {
                 // block has been processed
                 return;
             }
@@ -234,31 +241,41 @@ public class AionPoW {
             // Check that the new block was successfully added
             if (importResult.isSuccessful()) {
                 if (importResult == IMPORTED_BEST) {
-                    LOG.info("block sealed <num={}, hash={}, diff={}, tx={}>", block.getNumber(), block.getShortHash(),
+                    LOG.info(
+                            "block sealed <num={}, hash={}, diff={}, tx={}>",
+                            block.getNumber(),
+                            block.getShortHash(),
                             // LogUtil.toHexF8(newBlock.getHash()),
-                            block.getHeader().getDifficultyBI().toString(), block.getTransactionsList().size());
+                            block.getHeader().getDifficultyBI().toString(),
+                            block.getTransactionsList().size());
                 } else {
-                    LOG.debug("block sealed <num={}, hash={}, diff={}, tx={}, result={}>", block.getNumber(),
+                    LOG.debug(
+                            "block sealed <num={}, hash={}, diff={}, tx={}, result={}>",
+                            block.getNumber(),
                             block.getShortHash(), // LogUtil.toHexF8(newBlock.getHash()),
-                            block.getHeader().getDifficultyBI().toString(), block.getTransactionsList().size(),
+                            block.getHeader().getDifficultyBI().toString(),
+                            block.getTransactionsList().size(),
                             importResult);
                 }
                 // TODO: fire block mined event
             } else {
-                LOG.info("Unable to import a new mined block; restarting mining.\n" + "Mined block import result is "
-                        + importResult + " : " + block.getShortHash());
+                LOG.info(
+                        "Unable to import a new mined block; restarting mining.\n"
+                                + "Mined block import result is "
+                                + importResult
+                                + " : "
+                                + block.getShortHash());
             }
         }
     }
 
-    /**
-     * Creates a new block template.
-     */
+    /** Creates a new block template. */
     protected synchronized void createNewBlockTemplate() {
         if (!shutDown.get()) {
             // TODO: Validate the trustworthiness of getNetworkBestBlock - can
             // it be used in DDOS?
-            if (this.syncMgr.getNetworkBestBlockNumber() - blockchain.getBestBlock().getNumber() > syncLimit) {
+            if (this.syncMgr.getNetworkBestBlockNumber() - blockchain.getBestBlock().getNumber()
+                    > syncLimit) {
                 return;
             }
 
@@ -266,7 +283,8 @@ public class AionPoW {
                 LOG.debug("Creating a new block template");
             }
 
-            AionBlock bestBlock = blockchain.getBlockByNumber(blockchain.getBestBlock().getNumber());
+            AionBlock bestBlock =
+                    blockchain.getBlockByNumber(blockchain.getBestBlock().getNumber());
 
             List<AionTransaction> txs = pendingState.getPendingTransactions();
 

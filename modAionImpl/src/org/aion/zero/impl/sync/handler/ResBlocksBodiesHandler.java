@@ -35,6 +35,7 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import java.util.List;
 import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -45,14 +46,7 @@ import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResBlocksBodies;
 import org.slf4j.Logger;
 
-import java.util.List;
-
-/**
- *
- * @author chris
- * handler for blocks bodies received from network
- *
- */
+/** @author chris handler for blocks bodies received from network */
 public final class ResBlocksBodiesHandler extends Handler {
 
     private final Logger log;
@@ -61,7 +55,8 @@ public final class ResBlocksBodiesHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    public ResBlocksBodiesHandler(final Logger _log, final SyncMgr _syncMgr, final IP2pMgr _p2pMgr) {
+    public ResBlocksBodiesHandler(
+            final Logger _log, final SyncMgr _syncMgr, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_BODIES);
         this.log = _log;
         this.syncMgr = _syncMgr;
@@ -72,7 +67,7 @@ public final class ResBlocksBodiesHandler extends Handler {
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
         ResBlocksBodies resBlocksBodies = ResBlocksBodies.decode(_msgBytes);
         List<byte[]> bodies = resBlocksBodies.getBlocksBodies();
-        if(bodies == null) {
+        if (bodies == null) {
             log.error("<res-bodies decoder-error from {}, len: {]>", _displayId, _msgBytes.length);
             p2pMgr.errCheck(_nodeIdHashcode, _displayId);
             if (log.isTraceEnabled()) {

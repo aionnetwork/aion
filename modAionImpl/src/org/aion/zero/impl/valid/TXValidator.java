@@ -1,51 +1,48 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
+ * <p>Contributors: Aion foundation.
  *
- ******************************************************************************/
-
+ * <p>****************************************************************************
+ */
 package org.aion.zero.impl.valid;
 
+import static org.aion.mcf.valid.TxNrgRule.isValidNrgContractCreate;
+import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
+
+import java.util.Collections;
+import java.util.Map;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
+import org.aion.log.LogEnum;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.types.AionTransaction;
-import org.aion.log.LogEnum;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.Map;
-
-import static org.aion.mcf.valid.TxNrgRule.isValidNrgContractCreate;
-import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 public class TXValidator {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.TX.name());
 
-    private static final Map<ByteArrayWrapper, Boolean> cache = Collections.synchronizedMap(new LRUMap<>(128 * 1024));
+    private static final Map<ByteArrayWrapper, Boolean> cache =
+            Collections.synchronizedMap(new LRUMap<>(128 * 1024));
 
     public static boolean isValid(AionTransaction tx) {
         Boolean valid = cache.get(ByteArrayWrapper.wrap(tx.getHash()));

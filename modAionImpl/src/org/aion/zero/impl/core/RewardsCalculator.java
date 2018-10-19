@@ -1,39 +1,34 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
-
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.zero.impl.core;
 
 import java.math.BigInteger;
-
-import org.aion.zero.api.BlockConstants;
 import org.aion.mcf.types.AbstractBlockHeader;
+import org.aion.zero.api.BlockConstants;
 
 /**
  * Multiple implementations for calculating the rewards
- * 
- * @author yao
  *
+ * @author yao
  */
 public class RewardsCalculator {
     private BlockConstants constants;
@@ -46,14 +41,14 @@ public class RewardsCalculator {
         long delta = constants.getRampUpUpperBound() - constants.getRampUpLowerBound();
         assert (delta > 0);
 
-        this.m = this.constants.getRampUpEndValue()
-                .subtract(this.constants.getRampUpStartValue())
-                .divide(BigInteger.valueOf(delta));
+        this.m =
+                this.constants
+                        .getRampUpEndValue()
+                        .subtract(this.constants.getRampUpStartValue())
+                        .divide(BigInteger.valueOf(delta));
     }
 
-    /**
-     * Linear ramp function that falls off after the upper bound
-     */
+    /** Linear ramp function that falls off after the upper bound */
     public BigInteger calculateReward(AbstractBlockHeader blockHeader) {
         long number = blockHeader.getNumber();
         if (number <= this.constants.getRampUpUpperBound()) {

@@ -8,8 +8,8 @@ public abstract class AbstractEnergyStrategyLimit {
     private long energyDivisorLimit;
 
     public AbstractEnergyStrategyLimit(long energyLowerBound, long energyDivisorLimit) {
-        assert(energyLowerBound >= 0);
-        assert(energyDivisorLimit > 0);
+        assert (energyLowerBound >= 0);
+        assert (energyDivisorLimit > 0);
 
         this.energyLowerBound = energyLowerBound;
         this.energyDivisorLimit = energyDivisorLimit;

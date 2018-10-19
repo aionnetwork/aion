@@ -40,16 +40,14 @@ import java.util.List;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
-import org.aion.rlp.RLPElement;
-import org.aion.zero.impl.sync.Act;
 import org.aion.rlp.RLP;
+import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.zero.impl.sync.Act;
 
 /**
- *
- * @author chris
- * TODO: follow same construction, decode & encode rule as
- * ResBlocksHeaders in future. Need to update INcBlockchain
+ * @author chris TODO: follow same construction, decode & encode rule as ResBlocksHeaders in future.
+ *     Need to update INcBlockchain
  */
 public final class ResBlocksBodies extends Msg {
 

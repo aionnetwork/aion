@@ -103,7 +103,7 @@ public final class ReqStatusHandler extends Handler {
         this.mgr.send(_nodeIdHashcode, _displayId, cache);
         if (log.isDebugEnabled()) {
             this.log.debug(
-                "<req-status node={} return-blk={}>", _displayId, cache.getBestBlockNumber());
+                    "<req-status node={} return-blk={}>", _displayId, cache.getBestBlockNumber());
         }
     }
 }

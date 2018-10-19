@@ -35,9 +35,17 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.p2p.*;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Handler;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.P2pConstant;
+import org.aion.p2p.Ver;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
@@ -46,17 +54,10 @@ import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-/**
- * @author chris handler for request block bodies broadcasted from network
- */
+/** @author chris handler for request block bodies broadcasted from network */
 public final class ReqBlocksBodiesHandler extends Handler {
 
-    private final static int MAX_NUM_OF_BLOCKS = 96;
+    private static final int MAX_NUM_OF_BLOCKS = 96;
 
     private final Logger log;
 
@@ -64,11 +65,16 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    private final Map<ByteArrayWrapper, byte[]> cache = Collections.synchronizedMap(new LRUMap<>(512));
+    private final Map<ByteArrayWrapper, byte[]> cache =
+            Collections.synchronizedMap(new LRUMap<>(512));
 
     private final boolean isSyncOnlyNode;
 
-    public ReqBlocksBodiesHandler(final Logger _log, final IAionBlockchain _blockchain, final IP2pMgr _p2pMgr, final boolean isSyncOnlyNode) {
+    public ReqBlocksBodiesHandler(
+            final Logger _log,
+            final IAionBlockchain _blockchain,
+            final IP2pMgr _p2pMgr,
+            final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
         this.blockchain = _blockchain;
@@ -78,15 +84,17 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if(isSyncOnlyNode)
-            return;
+        if (isSyncOnlyNode) return;
 
         ReqBlocksBodies reqBlocks = ReqBlocksBodies.decode(_msgBytes);
         if (reqBlocks != null) {
 
             // limit number of blocks
             List<byte[]> hashes = reqBlocks.getBlocksHashes();
-            hashes = hashes.size() > MAX_NUM_OF_BLOCKS ? hashes.subList(0, MAX_NUM_OF_BLOCKS) : hashes;
+            hashes =
+                    hashes.size() > MAX_NUM_OF_BLOCKS
+                            ? hashes.subList(0, MAX_NUM_OF_BLOCKS)
+                            : hashes;
 
             // results
             List<byte[]> blockBodies = new ArrayList<>();
@@ -116,23 +124,30 @@ public final class ReqBlocksBodiesHandler extends Handler {
                 }
 
                 if ((out += blockBytesForadd.length) > P2pConstant.MAX_BODY_SIZE) {
-                    log.debug("<req-blocks-bodies-max-size-reach size={}/{}>", out, P2pConstant.MAX_BODY_SIZE);
+                    log.debug(
+                            "<req-blocks-bodies-max-size-reach size={}/{}>",
+                            out,
+                            P2pConstant.MAX_BODY_SIZE);
                     break;
                 }
 
                 blockBodies.add(blockBytesForadd);
-
             }
 
             this.p2pMgr.send(_nodeIdHashcode, _displayId, new ResBlocksBodies(blockBodies));
 
             if (log.isDebugEnabled()) {
-                this.log.debug("<req-bodies req-size={} res-size={} node={}>", reqBlocks.getBlocksHashes().size(),
-                        blockBodies.size(), _displayId);
+                this.log.debug(
+                        "<req-bodies req-size={} res-size={} node={}>",
+                        reqBlocks.getBlocksHashes().size(),
+                        blockBodies.size(),
+                        _displayId);
             }
         } else {
 
-            this.log.error("<req-bodies decode-error, unable to decode bodies from {}, len: {}>", _displayId,
+            this.log.error(
+                    "<req-bodies decode-error, unable to decode bodies from {}, len: {}>",
+                    _displayId,
                     _msgBytes.length);
 
             if (this.log.isTraceEnabled()) {

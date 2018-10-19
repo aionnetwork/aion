@@ -43,9 +43,7 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 
-/**
- * @author chris
- */
+/** @author chris */
 public final class ReqBlocksBodies extends Msg {
 
     private final List<byte[]> blocksHashes;
@@ -56,8 +54,7 @@ public final class ReqBlocksBodies extends Msg {
     }
 
     public static ReqBlocksBodies decode(final byte[] _msgBytes) {
-        if (_msgBytes == null)
-            return null;
+        if (_msgBytes == null) return null;
         else {
             /*
              * _msgBytes % 32 needs to be equal to 0 TODO: need test & catch

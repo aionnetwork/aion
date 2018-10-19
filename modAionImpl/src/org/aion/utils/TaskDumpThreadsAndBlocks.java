@@ -1,33 +1,30 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- ******************************************************************************/
+ * <p>Contributors: Aion foundation.
+ * ****************************************************************************
+ */
 package org.aion.utils;
-
-import org.aion.zero.impl.db.AionBlockStore;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.zero.impl.db.AionBlockStore;
 
 /**
  * Thread for printing heap dumps.
@@ -44,8 +41,12 @@ public class TaskDumpThreadsAndBlocks implements Runnable {
     private final AionBlockStore store;
     private final int blockCount;
 
-    public TaskDumpThreadsAndBlocks(final AtomicBoolean _start, final int _interval, final AionBlockStore _store,
-            final int _blockCount, final String _reportFolder) {
+    public TaskDumpThreadsAndBlocks(
+            final AtomicBoolean _start,
+            final int _interval,
+            final AionBlockStore _store,
+            final int _blockCount,
+            final String _reportFolder) {
         this.start = _start;
         this.interval = _interval;
         this.store = _store;
@@ -61,7 +62,8 @@ public class TaskDumpThreadsAndBlocks implements Runnable {
 
             // printing threads
             try {
-                Files.write(Paths.get(reportFolder, System.currentTimeMillis() + "-thread-report.out"),
+                Files.write(
+                        Paths.get(reportFolder, System.currentTimeMillis() + "-thread-report.out"),
                         ThreadDumper.dumpThreadInfo().getBytes());
             } catch (IOException e) {
                 e.printStackTrace();
@@ -82,4 +84,3 @@ public class TaskDumpThreadsAndBlocks implements Runnable {
         }
     }
 }
-

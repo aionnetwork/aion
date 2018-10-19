@@ -35,9 +35,7 @@
 
 package org.aion.zero.impl.sync;
 
-/**
- * @author chris
- */
+/** @author chris */
 public final class Act {
 
     public static final byte REQ_STATUS = 0;
@@ -55,7 +53,4 @@ public final class Act {
     public static final byte BROADCAST_TX = 6;
 
     public static final byte BROADCAST_BLOCK = 7;
-
-
-
 }

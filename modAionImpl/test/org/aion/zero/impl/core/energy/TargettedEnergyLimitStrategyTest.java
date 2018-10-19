@@ -22,16 +22,13 @@ public class TargettedEnergyLimitStrategyTest {
 
     private static final ChainConfiguration config = new ChainConfiguration();
     private static final EnergyLimitRule rule =
-            new EnergyLimitRule(config.getConstants().getEnergyDivisorLimitLong(),
-                                config.getConstants().getEnergyLowerBoundLong());
+            new EnergyLimitRule(
+                    config.getConstants().getEnergyDivisorLimitLong(),
+                    config.getConstants().getEnergyLowerBoundLong());
 
-    @Mock
-    private
-    A0BlockHeader parentHeader;
+    @Mock private A0BlockHeader parentHeader;
 
-    @Mock
-    private
-    A0BlockHeader header;
+    @Mock private A0BlockHeader header;
 
     @Before
     public void before() {
@@ -52,10 +49,11 @@ public class TargettedEnergyLimitStrategyTest {
 
     @Test
     public void testTargettedEnergyLimitLowerBound() {
-        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
-                constants.getEnergyLowerBoundLong(),
-                constants.getEnergyDivisorLimitLong(),
-                10_000_000L);
+        AbstractEnergyStrategyLimit strategy =
+                new TargetStrategy(
+                        constants.getEnergyLowerBoundLong(),
+                        constants.getEnergyDivisorLimitLong(),
+                        10_000_000L);
 
         when(header.getEnergyLimit()).thenReturn(MINIMUM_ENERGY_LIMIT);
         long energyLimit = strategy.getEnergyLimit(header);
@@ -65,10 +63,11 @@ public class TargettedEnergyLimitStrategyTest {
     @Test
     public void testTargettedEnergyLimitEqual() {
         final long targetLimit = 10_000_000L;
-        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
-                constants.getEnergyLowerBoundLong(),
-                constants.getEnergyDivisorLimitLong(),
-                10_000_000L);
+        AbstractEnergyStrategyLimit strategy =
+                new TargetStrategy(
+                        constants.getEnergyLowerBoundLong(),
+                        constants.getEnergyDivisorLimitLong(),
+                        10_000_000L);
 
         when(header.getEnergyLimit()).thenReturn(targetLimit);
         long energyLimit = strategy.getEnergyLimit(header);
@@ -79,10 +78,11 @@ public class TargettedEnergyLimitStrategyTest {
     public void testTargettedEnergyLimitDeltaLowerBound() {
         final long parentEnergyLimit = 20_000_000L;
 
-        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
-                constants.getEnergyLowerBoundLong(),
-                constants.getEnergyDivisorLimitLong(),
-                10_000_000L);
+        AbstractEnergyStrategyLimit strategy =
+                new TargetStrategy(
+                        constants.getEnergyLowerBoundLong(),
+                        constants.getEnergyDivisorLimitLong(),
+                        10_000_000L);
 
         when(header.getEnergyLimit()).thenReturn(parentEnergyLimit);
 
@@ -96,10 +96,11 @@ public class TargettedEnergyLimitStrategyTest {
     public void testTargettedEnergyLimitDeltaUpperBound() {
         final long parentEnergyLimit = 5_000_000L;
 
-        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
-                constants.getEnergyLowerBoundLong(),
-                constants.getEnergyDivisorLimitLong(),
-                10_000_000L);
+        AbstractEnergyStrategyLimit strategy =
+                new TargetStrategy(
+                        constants.getEnergyLowerBoundLong(),
+                        constants.getEnergyDivisorLimitLong(),
+                        10_000_000L);
 
         when(header.getEnergyLimit()).thenReturn(parentEnergyLimit);
 
@@ -109,6 +110,7 @@ public class TargettedEnergyLimitStrategyTest {
     }
 
     private static final java.util.Random random = new Random();
+
     private long randLong(int lower, int upper) {
         return lower + random.nextInt((upper - lower) + 1);
     }
@@ -117,10 +119,11 @@ public class TargettedEnergyLimitStrategyTest {
     public void fuzzTest() {
         System.out.println("generating random inputs and testing...");
         System.out.println("this may take a short while");
-        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
-                constants.getEnergyLowerBoundLong(),
-                constants.getEnergyDivisorLimitLong(),
-                10_000_000L);
+        AbstractEnergyStrategyLimit strategy =
+                new TargetStrategy(
+                        constants.getEnergyLowerBoundLong(),
+                        constants.getEnergyDivisorLimitLong(),
+                        10_000_000L);
 
         int cycle_counter = 0;
         for (int i = 0; i < 1000; i++) {
@@ -131,7 +134,11 @@ public class TargettedEnergyLimitStrategyTest {
             validateHeaders(energyLimit, parentEnergyLimit);
 
             if (i % 100 == 0) {
-                System.out.println("completed 100 cycles: " + cycle_counter + " timestamp: " + System.currentTimeMillis());
+                System.out.println(
+                        "completed 100 cycles: "
+                                + cycle_counter
+                                + " timestamp: "
+                                + System.currentTimeMillis());
                 cycle_counter++;
             }
         }
@@ -141,10 +148,11 @@ public class TargettedEnergyLimitStrategyTest {
     // desired limit
     @Test
     public void testConvergence() {
-        AbstractEnergyStrategyLimit strategy = new TargetStrategy(
-                constants.getEnergyLowerBoundLong(),
-                constants.getEnergyDivisorLimitLong(),
-                10_000_000L);
+        AbstractEnergyStrategyLimit strategy =
+                new TargetStrategy(
+                        constants.getEnergyLowerBoundLong(),
+                        constants.getEnergyDivisorLimitLong(),
+                        10_000_000L);
 
         for (int k = 0; k < 5; k++) {
             long parentEnergy = randLong(5000, 20_000_000);
@@ -152,7 +160,7 @@ public class TargettedEnergyLimitStrategyTest {
                 when(header.getEnergyLimit()).thenReturn(parentEnergy);
                 parentEnergy = strategy.getEnergyLimit(header);
             }
-            System.out.println("tested " + (k+1) + " of 5 rounds");
+            System.out.println("tested " + (k + 1) + " of 5 rounds");
             assertThat(parentEnergy).isEqualTo(10_000_000L);
         }
     }

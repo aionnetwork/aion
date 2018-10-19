@@ -11,7 +11,8 @@ import org.aion.vm.VirtualMachine;
 public class AionExecutorProvider implements ExecutorProvider {
 
     @Override
-    public IPrecompiledContract getPrecompiledContract(ExecutionContext context, IRepositoryCache track) {
+    public IPrecompiledContract getPrecompiledContract(
+            ExecutionContext context, IRepositoryCache track) {
         return new ContractFactory().getPrecompiledContract(context, track);
     }
 

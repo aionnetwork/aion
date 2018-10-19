@@ -1,50 +1,43 @@
 package org.aion.zero.impl.config;
 
-import org.aion.zero.impl.core.energy.EnergyStrategies;
+import static org.aion.zero.impl.core.energy.EnergyStrategies.CLAMPED_DECAYING;
+import static org.aion.zero.impl.core.energy.EnergyStrategies.MONOTONIC;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import org.aion.zero.impl.core.energy.EnergyStrategies;
 
-import static org.aion.zero.impl.core.energy.EnergyStrategies.CLAMPED_DECAYING;
-import static org.aion.zero.impl.core.energy.EnergyStrategies.MONOTONIC;
-
-/**
- * Defines options for energy strategy, currently we only support
- * a handful
- */
+/** Defines options for energy strategy, currently we only support a handful */
 public class CfgEnergyStrategy {
 
     /**
-     * Set default strategy to clamped (safest option), allows the network
-     * to be somewhat flexible
+     * Set default strategy to clamped (safest option), allows the network to be somewhat flexible
      */
     private EnergyStrategies strategy = EnergyStrategies.CLAMPED_DECAYING;
 
-    /**
-     * Coefficients for {@link EnergyStrategies#CLAMPED_DECAYING}
-     */
+    /** Coefficients for {@link EnergyStrategies#CLAMPED_DECAYING} */
     private long lowerBound = 15_000_000L;
+
     private long upperBound = 20_000_000L;
     private static final String UPPER_BOUND = "upper-bound";
     private static final String LOWER_BOUND = "lower-bound";
 
-    /**
-     * Coefficients for {@link EnergyStrategies#TARGETTED}
-     */
+    /** Coefficients for {@link EnergyStrategies#TARGETTED} */
     private long target = 15_000_000L;
+
     private static final String TARGET = "target";
 
-    public CfgEnergyStrategy() {
-    }
+    public CfgEnergyStrategy() {}
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         int it = 0;
-        loop: while (sr.hasNext()) {
+        loop:
+        while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
@@ -119,7 +112,8 @@ public class CfgEnergyStrategy {
         String name = sr.getAttributeLocalName(0);
 
         if (!name.equals(TARGET))
-            throw new IllegalArgumentException("energyStrategy expecting ATTRIBUTED named " + TARGET);
+            throw new IllegalArgumentException(
+                    "energyStrategy expecting ATTRIBUTED named " + TARGET);
 
         String value = sr.getAttributeValue(0);
         long target = Long.parseLong(value);
@@ -132,7 +126,8 @@ public class CfgEnergyStrategy {
     // TODO: we did not cover the case where arguments are same
     public void parseClampedDecaying(final XMLStreamReader sr) {
         if (sr.getAttributeCount() != 2)
-            throw new IllegalArgumentException("energyStrategy expecting upper-bound, lower-bound ATTRIBUTE");
+            throw new IllegalArgumentException(
+                    "energyStrategy expecting upper-bound, lower-bound ATTRIBUTE");
 
         for (int i = 0; i < 2; i++) {
             String name = sr.getAttributeLocalName(i);
@@ -140,7 +135,7 @@ public class CfgEnergyStrategy {
             if (val < 0)
                 throw new IllegalArgumentException("energyStrategy value must be positive");
 
-            switch(name) {
+            switch (name) {
                 case UPPER_BOUND:
                     this.upperBound = val;
                     break;

@@ -1,14 +1,15 @@
 package org.aion.utils;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
-
-import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
+import javax.management.MBeanServer;
 
 /**
- * Source code form <b>https://blogs.oracle.com/sundararajan/programmatically-dumping-heap-from-java-applications</b>.
- * <p>
- * To analyse the report call <code>jhat filename.hprof</code> and open <b>http://localhost:7000/</b>.
+ * Source code form
+ * <b>https://blogs.oracle.com/sundararajan/programmatically-dumping-heap-from-java-applications</b>.
+ *
+ * <p>To analyse the report call <code>jhat filename.hprof</code> and open
+ * <b>http://localhost:7000/</b>.
  */
 public class HeapDumper {
     // This is the name of the HotSpot Diagnostic MBean
@@ -17,14 +18,11 @@ public class HeapDumper {
     private static volatile HotSpotDiagnosticMXBean hotspotMBean;
 
     /**
-     * Call this method from your application whenever you
-     * want to dump the heap snapshot into a file.
+     * Call this method from your application whenever you want to dump the heap snapshot into a
+     * file.
      *
-     * @param fileName
-     *         name of the heap dump file
-     * @param live
-     *         flag that tells whether to dump
-     *         only the live objects
+     * @param fileName name of the heap dump file
+     * @param live flag that tells whether to dump only the live objects
      */
     static void dumpHeap(String fileName, boolean live) {
         // initialize hotspot diagnostic MBean
@@ -54,8 +52,9 @@ public class HeapDumper {
     private static HotSpotDiagnosticMXBean getHotspotMBean() {
         try {
             MBeanServer server = ManagementFactory.getPlatformMBeanServer();
-            HotSpotDiagnosticMXBean bean = ManagementFactory
-                    .newPlatformMXBeanProxy(server, HOTSPOT_BEAN_NAME, HotSpotDiagnosticMXBean.class);
+            HotSpotDiagnosticMXBean bean =
+                    ManagementFactory.newPlatformMXBeanProxy(
+                            server, HOTSPOT_BEAN_NAME, HotSpotDiagnosticMXBean.class);
             return bean;
         } catch (RuntimeException re) {
             throw re;
@@ -64,9 +63,7 @@ public class HeapDumper {
         }
     }
 
-    /**
-     * Example of class usage.
-     */
+    /** Example of class usage. */
     public static void main(String[] args) {
         // default heap dump file name
         String fileName = "heap.bin.hprof";

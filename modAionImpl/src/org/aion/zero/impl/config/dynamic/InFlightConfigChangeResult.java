@@ -19,9 +19,6 @@ public class InFlightConfigChangeResult {
 
     @Override
     public String toString() {
-        return "InFlightConfigChangeResult{" +
-                "success=" + success +
-                ", applier=" + applier +
-                '}';
+        return "InFlightConfigChangeResult{" + "success=" + success + ", applier=" + applier + '}';
     }
 }

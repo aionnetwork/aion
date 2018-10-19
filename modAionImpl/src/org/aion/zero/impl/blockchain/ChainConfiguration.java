@@ -1,28 +1,28 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.zero.impl.blockchain;
 
+import java.math.BigInteger;
+import java.util.Arrays;
 import org.aion.base.type.Address;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
@@ -30,26 +30,32 @@ import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;
 import org.aion.mcf.mine.IMiner;
-import org.aion.mcf.valid.*;
+import org.aion.mcf.valid.BlockHeaderValidator;
+import org.aion.mcf.valid.BlockNumberRule;
+import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
+import org.aion.mcf.valid.ParentBlockHeaderValidator;
+import org.aion.mcf.valid.TimeStampRule;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
 import org.aion.zero.impl.core.RewardsCalculator;
-import org.aion.zero.impl.valid.*;
+import org.aion.zero.impl.valid.AionDifficultyRule;
+import org.aion.zero.impl.valid.AionExtraDataRule;
+import org.aion.zero.impl.valid.AionHeaderVersionRule;
+import org.aion.zero.impl.valid.AionPOWRule;
+import org.aion.zero.impl.valid.EnergyConsumedRule;
+import org.aion.zero.impl.valid.EnergyLimitRule;
+import org.aion.zero.impl.valid.EquihashSolutionRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.IAionBlock;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-
 /**
- * Chain configuration handles the default parameters on a particular chain.
- * Also handles the default values for the chain genesis. In general these are
- * hardcoded and must be overridden by the genesis.json file if appropriate.
+ * Chain configuration handles the default parameters on a particular chain. Also handles the
+ * default values for the chain genesis. In general these are hardcoded and must be overridden by
+ * the genesis.json file if appropriate.
  *
  * @author yao
- *
  */
 public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction> {
 
@@ -70,16 +76,18 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
         DiffCalc diffCalcInternal = new DiffCalc(constants);
         RewardsCalculator rewardsCalcInternal = new RewardsCalculator(constants);
 
-        this.difficultyCalculatorAdapter = (parent, grandParent) -> {
-            // special case to handle the corner case for first block
-            if (parent.getNumber() == 0L || parent.isGenesis()) {
-                return parent.getDifficultyBI();
-            }
+        this.difficultyCalculatorAdapter =
+                (parent, grandParent) -> {
+                    // special case to handle the corner case for first block
+                    if (parent.getNumber() == 0L || parent.isGenesis()) {
+                        return parent.getDifficultyBI();
+                    }
 
-            return diffCalcInternal.calcDifficultyTarget(
-                BigInteger.valueOf(parent.getTimestamp()), BigInteger.valueOf(grandParent.getTimestamp()),
-                parent.getDifficultyBI());
-        };
+                    return diffCalcInternal.calcDifficultyTarget(
+                            BigInteger.valueOf(parent.getTimestamp()),
+                            BigInteger.valueOf(grandParent.getTimestamp()),
+                            parent.getDifficultyBI());
+                };
         this.rewardsCalculatorAdapter = rewardsCalcInternal::calculateReward;
     }
 
@@ -105,10 +113,7 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
         return rewardsCalculatorAdapter;
     }
 
-    /**
-     *
-     * @return
-     */
+    /** @return */
     protected OptimizedEquiValidator getEquihashValidator() {
         if (this.equiValidator == null) {
             this.equiValidator = new OptimizedEquiValidator(CfgAion.getN(), CfgAion.getK());
@@ -124,8 +129,7 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
                         new EnergyConsumedRule(),
                         new AionPOWRule(),
                         new EquihashSolutionRule(this.getEquihashValidator()),
-                        new AionHeaderVersionRule()
-                ));
+                        new AionHeaderVersionRule()));
     }
 
     @Override
@@ -134,15 +138,12 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
                 Arrays.asList(
                         new BlockNumberRule<>(),
                         new TimeStampRule<>(),
-                        new EnergyLimitRule(this.getConstants().getEnergyDivisorLimitLong(),
-                            this.getConstants().getEnergyLowerBoundLong())
-                ));
+                        new EnergyLimitRule(
+                                this.getConstants().getEnergyDivisorLimitLong(),
+                                this.getConstants().getEnergyLowerBoundLong())));
     }
 
     public GrandParentBlockHeaderValidator<A0BlockHeader> createGrandParentHeaderValidator() {
-        return new GrandParentBlockHeaderValidator<>(
-                Arrays.asList(
-                        new AionDifficultyRule(this)
-                ));
+        return new GrandParentBlockHeaderValidator<>(Arrays.asList(new AionDifficultyRule(this)));
     }
 }

@@ -30,17 +30,16 @@
 
 package org.aion.zero.impl.config;
 
-import org.aion.base.type.Address;
-import org.aion.mcf.config.Cfg;
-import org.aion.mcf.config.CfgConsensus;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
+import org.aion.base.type.Address;
+import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.CfgConsensus;
 
 public final class CfgConsensusPow extends CfgConsensus {
 
@@ -49,7 +48,10 @@ public final class CfgConsensusPow extends CfgConsensus {
     CfgConsensusPow() {
         this.mining = false;
         this.minerAddress = Address.ZERO_ADDRESS().toString();
-        this.cpuMineThreads = (byte) (Runtime.getRuntime().availableProcessors() >> 1); // half the available processors
+        this.cpuMineThreads =
+                (byte)
+                        (Runtime.getRuntime().availableProcessors()
+                                >> 1); // half the available processors
         this.extraData = "AION";
         this.cfgEnergyStrategy = new CfgEnergyStrategy();
         this.seed = false;
@@ -66,7 +68,8 @@ public final class CfgConsensusPow extends CfgConsensus {
     protected String extraData;
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
-        loop: while (sr.hasNext()) {
+        loop:
+        while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
@@ -77,7 +80,7 @@ public final class CfgConsensusPow extends CfgConsensus {
                             break;
                         case "seed":
                             this.seed = Boolean.parseBoolean(Cfg.readValue(sr));
-                                break;
+                            break;
                         case "miner-address":
                             this.minerAddress = Cfg.readValue(sr);
                             break;

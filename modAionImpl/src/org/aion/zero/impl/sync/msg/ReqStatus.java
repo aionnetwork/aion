@@ -40,12 +40,10 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 
-/**
- * @author chris
- */
+/** @author chris */
 public final class ReqStatus extends Msg {
 
-    public ReqStatus(){
+    public ReqStatus() {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
     }
 
@@ -53,5 +51,4 @@ public final class ReqStatus extends Msg {
     public byte[] encode() {
         return null;
     }
-
 }

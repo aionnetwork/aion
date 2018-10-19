@@ -2,15 +2,6 @@ package org.aion.zero.impl.config.dynamic;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharSource;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.mcf.config.Cfg;
-import org.aion.zero.impl.config.CfgAion;
-import org.slf4j.Logger;
-
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -19,20 +10,28 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.mcf.config.Cfg;
+import org.aion.zero.impl.config.CfgAion;
+import org.slf4j.Logger;
 
 /**
- * Responsible for receiving new Aion kernel configurations and applying them to the kernel
- * while it is running ("in-flight").
+ * Responsible for receiving new Aion kernel configurations and applying them to the kernel while it
+ * is running ("in-flight").
  *
- * New configurations can be submitted through the {@link #propose(String)} method.  This is
+ * <p>New configurations can be submitted through the {@link #propose(String)} method. This is
  * exposed through the JMX interface if it needs to be called from a separate process.
  *
- * When new configurations are proposed, they can be accepted or rejected.  If any error occurs
- * while applying a new configuration, it is rejected.  When it is accepted, the new configuration
- * is used in its entirety; similarly, if it is rejected, no changes at all should be made to
- * kernel (any changes applied up until the error must be reverted).
+ * <p>When new configurations are proposed, they can be accepted or rejected. If any error occurs
+ * while applying a new configuration, it is rejected. When it is accepted, the new configuration is
+ * used in its entirety; similarly, if it is rejected, no changes at all should be made to kernel
+ * (any changes applied up until the error must be reverted).
  *
- * Not all properties in <tt>config.xml</tt> are modifiable in-flight.  If a change to a such a
+ * <p>Not all properties in <tt>config.xml</tt> are modifiable in-flight. If a change to a such a
  * property is present in the new configuration, it will be rejected.
  */
 public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
@@ -52,26 +51,30 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
     }
 
     /**
-     * Attempt to apply a new config.  If any error occurs, any modification to the config that
-     * has already been applied will be rolled back.  If successful, the new config will become
-     * the active config.
+     * Attempt to apply a new config. If any error occurs, any modification to the config that has
+     * already been applied will be rolled back. If successful, the new config will become the
+     * active config.
      */
     @Override
-    public synchronized ConfigProposalResult propose(String configXmlText) throws RollbackException {
+    public synchronized ConfigProposalResult propose(String configXmlText)
+            throws RollbackException {
         LOG.trace("Received new configuration XML");
         LOG.trace(configXmlText);
         CfgAion newCfg = new CfgAion();
         try {
-            XMLStreamReader xmlStream = XMLInputFactory.newInstance()
-                    .createXMLStreamReader(CharSource.wrap(configXmlText).openStream());
+            XMLStreamReader xmlStream =
+                    XMLInputFactory.newInstance()
+                            .createXMLStreamReader(CharSource.wrap(configXmlText).openStream());
             newCfg.fromXML(xmlStream);
         } catch (XMLStreamException | IOException | NumberFormatException ex) {
-            LOG.error("Error constructing Cfg from given XML.  Rejecting Cfg proposal.  Exception was: {}", ex);
+            LOG.error(
+                    "Error constructing Cfg from given XML.  Rejecting Cfg proposal.  Exception was: {}",
+                    ex);
             return new ConfigProposalResult(false, ex);
         }
 
         ConfigProposalResult result = applyNewConfig(newCfg);
-        if(result.isSuccess()) {
+        if (result.isSuccess()) {
             // At kernel start-up time, values from CfgAion.inst() are read and copied
             // to other places.  Right now we don't do anything to find/update those
             // values (assume the IDynamicConfigApplier subclasses will all do the
@@ -82,31 +85,36 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
         return result;
     }
 
-    @VisibleForTesting ConfigProposalResult applyNewConfig(Cfg newCfg) throws RollbackException {
+    @VisibleForTesting
+    ConfigProposalResult applyNewConfig(Cfg newCfg) throws RollbackException {
         // build up an undo stack as we apply each config change so we can rollback if error
         final Deque<InFlightConfigChangeResult> undoSteps = new ArrayDeque<>();
 
-        for(String key : configKeyRegistry.getBoundKeys()) {
+        for (String key : configKeyRegistry.getBoundKeys()) {
             Function<Cfg, ?> getter = configKeyRegistry.getGetter(key);
-            if(getter == null) {
-                throw new IllegalStateException(String.format(
-                        "DynamicConfigKeyRegistry configuration error.  There is no getter for the bound key '%s'",
-                        key));
+            if (getter == null) {
+                throw new IllegalStateException(
+                        String.format(
+                                "DynamicConfigKeyRegistry configuration error.  There is no getter for the bound key '%s'",
+                                key));
             }
             Object newVal = getter.apply(newCfg);
             Object oldVal = getter.apply(activeCfg);
-            if(Objects.equals(newVal, oldVal)) {
+            if (Objects.equals(newVal, oldVal)) {
                 continue;
             }
 
             Optional<IDynamicConfigApplier> maybeApplier = configKeyRegistry.getApplier(key);
-            if(! maybeApplier.isPresent()) {
-                throw new IllegalArgumentException(String.format(
-                        "The key '%s' does not support in-flight configuration change", key));
-            } else if(maybeApplier == null) {
-                throw new IllegalStateException(String.format(
-                        "DynamicConfigKeyRegistry configuration error.  There is no applier for the bound key '%s'",
-                        key));
+            if (!maybeApplier.isPresent()) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "The key '%s' does not support in-flight configuration change",
+                                key));
+            } else if (maybeApplier == null) {
+                throw new IllegalStateException(
+                        String.format(
+                                "DynamicConfigKeyRegistry configuration error.  There is no applier for the bound key '%s'",
+                                key));
             }
             IDynamicConfigApplier applier = maybeApplier.get();
 
@@ -118,16 +126,21 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
                 // if applier.apply worked partially then threw, kernel might be in some broken
                 // state now; might as well try to fix ourselves as much as possible with rollback
                 // though.
-                LOG.error(String.format(
-                        "Error applying change to config key '%s'.  Will attempt rollback.", key), ex);
+                LOG.error(
+                        String.format(
+                                "Error applying change to config key '%s'.  Will attempt rollback.",
+                                key),
+                        ex);
                 rollback(undoSteps, newCfg);
                 return new ConfigProposalResult(false, ex);
             }
 
             LOG.trace("Applier {} returned '{}' for key '{}'", applier, result, key);
-            if(!result.isSuccess()) {
-                LOG.error(String.format(
-                        "Could not apply change to config key '%s'.  Will attempt rollback.", key));
+            if (!result.isSuccess()) {
+                LOG.error(
+                        String.format(
+                                "Could not apply change to config key '%s'.  Will attempt rollback.",
+                                key));
                 rollback(undoSteps, newCfg);
                 return new ConfigProposalResult(false);
             }
@@ -138,29 +151,28 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
     }
 
     private void rollback(Deque<InFlightConfigChangeResult> steps, Cfg newCfg)
-    throws RollbackException {
+            throws RollbackException {
         LOG.info("Trying to rollback.  Undo steps are: {}", steps.toString());
 
         List<InFlightConfigChangeException> exceptions = new LinkedList<>();
-        while(!steps.isEmpty()) {
+        while (!steps.isEmpty()) {
             InFlightConfigChangeResult result = steps.pop();
             try {
                 LOG.trace("About to call undo for application result {}", result);
                 result.getApplier().undo(activeCfg, newCfg);
             } catch (InFlightConfigChangeException ex) {
                 exceptions.add(ex);
-                LOG.error(String.format("Rollback error while trying to undo %s", result.toString()));
+                LOG.error(
+                        String.format("Rollback error while trying to undo %s", result.toString()));
             }
         }
-        if(!exceptions.isEmpty()) {
+        if (!exceptions.isEmpty()) {
             throw new RollbackException("Rollback had errors", exceptions);
         }
     }
 
-    /**
-     * @return a JMX URL that client can use to connect to JMX server.
-     */
+    /** @return a JMX URL that client can use to connect to JMX server. */
     public static String createJmxUrl(int port) {
-            return String.format("service:jmx:rmi:///jndi/rmi://127.0.0.1:%d/jmxrmi", port);
+        return String.format("service:jmx:rmi:///jndi/rmi://127.0.0.1:%d/jmxrmi", port);
     }
 }

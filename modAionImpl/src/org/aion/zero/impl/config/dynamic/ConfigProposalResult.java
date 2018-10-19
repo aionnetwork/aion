@@ -25,9 +25,6 @@ public class ConfigProposalResult implements Serializable {
 
     @Override
     public String toString() {
-        return "ConfigProposalResult{" +
-                "success=" + success +
-                ", errorCause=" + errorCause +
-                '}';
+        return "ConfigProposalResult{" + "success=" + success + ", errorCause=" + errorCause + '}';
     }
 }

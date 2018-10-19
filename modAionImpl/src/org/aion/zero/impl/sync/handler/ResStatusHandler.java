@@ -35,18 +35,19 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import java.math.BigInteger;
 import org.aion.base.util.ByteUtil;
-import org.aion.p2p.*;
-import org.slf4j.Logger;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Handler;
+import org.aion.p2p.INode;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.Ver;
+import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResStatus;
-import org.aion.zero.impl.sync.Act;
+import org.slf4j.Logger;
 
-import java.math.BigInteger;
-
-/**
- * @author chris
- */
+/** @author chris */
 public final class ResStatusHandler extends Handler {
 
     private final Logger log;
@@ -64,12 +65,12 @@ public final class ResStatusHandler extends Handler {
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if (_msgBytes == null || _msgBytes.length == 0)
-            return;
+        if (_msgBytes == null || _msgBytes.length == 0) return;
         ResStatus rs = ResStatus.decode(_msgBytes);
 
         if (rs == null) {
-            this.log.error("<res-status decode-error from {} len: {}>", _displayId, _msgBytes.length);
+            this.log.error(
+                    "<res-status decode-error from {} len: {}>", _displayId, _msgBytes.length);
             if (this.log.isTraceEnabled()) {
                 this.log.trace("res-status decode-error dump: {}", ByteUtil.toHexString(_msgBytes));
             }
@@ -78,15 +79,21 @@ public final class ResStatusHandler extends Handler {
         INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
         if (node != null && rs != null) {
             if (log.isDebugEnabled()) {
-                this.log.debug("<res-status node={} best-blk={}>", _displayId, rs.getBestBlockNumber());
+                this.log.debug(
+                        "<res-status node={} best-blk={}>", _displayId, rs.getBestBlockNumber());
             }
             long remoteBestBlockNumber = rs.getBestBlockNumber();
             byte[] remoteBestBlockHash = rs.getBestHash();
             byte[] remoteTdBytes = rs.getTotalDifficulty();
-            if(remoteTdBytes != null && remoteBestBlockHash != null){
+            if (remoteTdBytes != null && remoteBestBlockHash != null) {
                 BigInteger remoteTotalDifficulty = new BigInteger(1, remoteTdBytes);
-                node.updateStatus(remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
-                syncMgr.updateNetworkStatus(_displayId, remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
+                node.updateStatus(
+                        remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
+                syncMgr.updateNetworkStatus(
+                        _displayId,
+                        remoteBestBlockNumber,
+                        remoteBestBlockHash,
+                        remoteTotalDifficulty);
             }
         }
     }

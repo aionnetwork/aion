@@ -45,10 +45,7 @@ import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
-/**
- * @author jay
- * handler for new block broadcasted from network
- */
+/** @author jay handler for new block broadcasted from network */
 public final class BroadcastNewBlockHandler extends Handler {
 
     private final Logger log;
@@ -57,8 +54,8 @@ public final class BroadcastNewBlockHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-
-    public BroadcastNewBlockHandler(final Logger _log, final BlockPropagationHandler propHandler, final IP2pMgr _p2pMgr) {
+    public BroadcastNewBlockHandler(
+            final Logger _log, final BlockPropagationHandler propHandler, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_BLOCK);
         this.log = _log;
         this.propHandler = propHandler;
@@ -67,12 +64,12 @@ public final class BroadcastNewBlockHandler extends Handler {
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if (_msgBytes == null)
-            return;
+        if (_msgBytes == null) return;
         byte[] rawdata = BroadcastNewBlock.decode(_msgBytes);
         if (rawdata == null) {
             p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-            log.error("<new-block-handler decode-error, from {} len: {}>",
+            log.error(
+                    "<new-block-handler decode-error, from {} len: {}>",
                     _displayId,
                     _msgBytes.length);
             if (log.isTraceEnabled()) {
@@ -83,12 +80,20 @@ public final class BroadcastNewBlockHandler extends Handler {
 
         AionBlock block = new AionBlock(rawdata);
 
-        BlockPropagationHandler.PropStatus result = this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
+        BlockPropagationHandler.PropStatus result =
+                this.propHandler.processIncomingBlock(_nodeIdHashcode, _displayId, block);
 
         if (this.log.isDebugEnabled()) {
             String hash = block.getShortHash();
             hash = hash != null ? hash : "null";
-            this.log.debug("<block-prop node=" + _displayId + " block-hash=" + hash + " status=" + result.name() + ">");
+            this.log.debug(
+                    "<block-prop node="
+                            + _displayId
+                            + " block-hash="
+                            + hash
+                            + " status="
+                            + result.name()
+                            + ">");
         }
     }
 }

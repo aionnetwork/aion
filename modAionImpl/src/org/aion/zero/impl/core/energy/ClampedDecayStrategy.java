@@ -8,22 +8,23 @@ public class ClampedDecayStrategy extends DecayStrategy {
 
     private long clampLowerBound;
 
-    public ClampedDecayStrategy(long energyLowerBound,
-                                long energyDivisorLimit,
-                                long clampUpperBound,
-                                long clampLowerBound) {
+    public ClampedDecayStrategy(
+            long energyLowerBound,
+            long energyDivisorLimit,
+            long clampUpperBound,
+            long clampLowerBound) {
         super(energyLowerBound, energyDivisorLimit);
 
-        assert(clampLowerBound >= 0);
-        assert(clampUpperBound >= clampLowerBound);
+        assert (clampLowerBound >= 0);
+        assert (clampUpperBound >= clampLowerBound);
 
         this.clampUpperBound = clampUpperBound;
         this.clampLowerBound = clampLowerBound;
     }
 
     /**
-     * Same behaviour as the decay strategy, but adds clamps to ensure that
-     * energy is eventually consistent within a desired range
+     * Same behaviour as the decay strategy, but adds clamps to ensure that energy is eventually
+     * consistent within a desired range
      */
     @Override
     protected long getEnergyLimitInternal(A0BlockHeader header) {

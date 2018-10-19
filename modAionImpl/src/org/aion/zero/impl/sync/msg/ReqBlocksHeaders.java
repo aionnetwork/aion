@@ -41,15 +41,11 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 
-/**
- * @author chris
- */
+/** @author chris */
 public final class ReqBlocksHeaders extends Msg {
 
-    /**
-     * fromBlock(long), take(int)
-     */
-    private final static int len = 8 + 4;
+    /** fromBlock(long), take(int) */
+    private static final int len = 8 + 4;
 
     private final long fromBlock;
 
@@ -70,8 +66,7 @@ public final class ReqBlocksHeaders extends Msg {
     }
 
     public static ReqBlocksHeaders decode(final byte[] _msgBytes) {
-        if (_msgBytes == null || _msgBytes.length != len)
-            return null;
+        if (_msgBytes == null || _msgBytes.length != len) return null;
         else {
             ByteBuffer bb = ByteBuffer.wrap(_msgBytes);
             long _fromBlock = bb.getLong();
@@ -87,5 +82,4 @@ public final class ReqBlocksHeaders extends Msg {
         bb.putInt(this.take);
         return bb.array();
     }
-
 }

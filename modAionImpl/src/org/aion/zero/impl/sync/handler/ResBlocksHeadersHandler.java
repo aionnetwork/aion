@@ -35,6 +35,7 @@
 
 package org.aion.zero.impl.sync.handler;
 
+import java.util.List;
 import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -46,14 +47,7 @@ import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.zero.types.A0BlockHeader;
 import org.slf4j.Logger;
 
-import java.util.List;
-
-/**
- *
- * @author chris
- * handler for block headers response from network
- *
- */
+/** @author chris handler for block headers response from network */
 public final class ResBlocksHeadersHandler extends Handler {
 
     private final Logger log;
@@ -62,7 +56,8 @@ public final class ResBlocksHeadersHandler extends Handler {
 
     private final IP2pMgr p2pMgr;
 
-    public ResBlocksHeadersHandler(final Logger _log, final SyncMgr _syncMgr, final IP2pMgr _p2pMgr) {
+    public ResBlocksHeadersHandler(
+            final Logger _log, final SyncMgr _syncMgr, final IP2pMgr _p2pMgr) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_BLOCKS_HEADERS);
         this.syncMgr = _syncMgr;
         this.log = _log;
@@ -71,34 +66,33 @@ public final class ResBlocksHeadersHandler extends Handler {
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if(_msgBytes == null || _msgBytes.length == 0)
-            return;
+        if (_msgBytes == null || _msgBytes.length == 0) return;
         ResBlocksHeaders resHeaders = ResBlocksHeaders.decode(_msgBytes);
-        if(resHeaders != null) {
+        if (resHeaders != null) {
             List<A0BlockHeader> headers = resHeaders.getHeaders();
-            if(headers != null && headers.size() > 0){
+            if (headers != null && headers.size() > 0) {
                 if (log.isDebugEnabled()) {
-                    this.log.debug("<res-headers from-number={} size={} node={}>", headers.get(0).getNumber(), headers.size(),
+                    this.log.debug(
+                            "<res-headers from-number={} size={} node={}>",
+                            headers.get(0).getNumber(),
+                            headers.size(),
                             _displayId);
                 }
                 this.syncMgr.validateAndAddHeaders(_nodeIdHashcode, _displayId, headers);
             } else {
                 p2pMgr.errCheck(_nodeIdHashcode, _displayId);
-                this.log.error(
-                    "<res-headers empty-headers node={} >",
-                    _displayId
-                );
+                this.log.error("<res-headers empty-headers node={} >", _displayId);
             }
         } else {
-            //p2pMgr.errCheck(_nodeIdHashcode, _displayId);
+            // p2pMgr.errCheck(_nodeIdHashcode, _displayId);
             this.log.error(
                     "<res-headers decode-error msg-bytes={} node={}>",
                     _msgBytes.length,
-                    _displayId
-            );
+                    _displayId);
 
             if (this.log.isTraceEnabled()) {
-                this.log.trace("res-headers decode-error dump: {}", ByteUtil.toHexString(_msgBytes));
+                this.log.trace(
+                        "res-headers decode-error dump: {}", ByteUtil.toHexString(_msgBytes));
             }
         }
     }

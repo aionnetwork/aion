@@ -1,5 +1,12 @@
 package org.aion.zero.impl.blockchain;
 
+import static org.junit.Assert.assertTrue;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteUtil;
@@ -8,14 +15,6 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.assertTrue;
 
 public class PendingTxCacheTest {
     private static List<ECKey> key;
@@ -39,11 +38,18 @@ public class PendingTxCacheTest {
 
         List<AionTransaction> txn = new ArrayList<>();
 
-        for (int i=startNonce ; i < startNonce+num ; i++) {
+        for (int i = startNonce; i < startNonce + num; i++) {
 
-            AionTransaction tx = new AionTransaction(BigInteger.valueOf(i).toByteArray(), Address.wrap(key.get(keyIndex).getAddress()),
-                    Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
-                    ByteUtil.hexStringToBytes("1"), ByteUtil.hexStringToBytes("1"), 10000L, 1L);
+            AionTransaction tx =
+                    new AionTransaction(
+                            BigInteger.valueOf(i).toByteArray(),
+                            Address.wrap(key.get(keyIndex).getAddress()),
+                            Address.wrap(
+                                    "0000000000000000000000000000000000000000000000000000000000000001"),
+                            ByteUtil.hexStringToBytes("1"),
+                            ByteUtil.hexStringToBytes("1"),
+                            10000L,
+                            1L);
 
             tx.sign(key.get(keyIndex));
             txn.add(tx);
@@ -52,22 +58,28 @@ public class PendingTxCacheTest {
         return txn;
     }
 
-    private List<AionTransaction> getMockBigTransaction(int startNonce, int num, int keyIndex, int size) {
+    private List<AionTransaction> getMockBigTransaction(
+            int startNonce, int num, int keyIndex, int size) {
 
         List<AionTransaction> txn = new ArrayList<>();
 
         String data = "";
-        for (int i=0 ; i< size ; i++) {
+        for (int i = 0; i < size; i++) {
             data += "1";
         }
 
-        for (int i=startNonce ; i < startNonce+num ; i++) {
+        for (int i = startNonce; i < startNonce + num; i++) {
 
-            AionTransaction tx = new AionTransaction(BigInteger.valueOf(i).toByteArray(), Address.wrap(key.get(keyIndex).getAddress()),
-                    Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
-                    ByteUtil.hexStringToBytes("1"),
-                    ByteUtil.hexStringToBytes(data),
-                    10000L, 1L);
+            AionTransaction tx =
+                    new AionTransaction(
+                            BigInteger.valueOf(i).toByteArray(),
+                            Address.wrap(key.get(keyIndex).getAddress()),
+                            Address.wrap(
+                                    "0000000000000000000000000000000000000000000000000000000000000001"),
+                            ByteUtil.hexStringToBytes("1"),
+                            ByteUtil.hexStringToBytes(data),
+                            10000L,
+                            1L);
 
             tx.sign(key.get(keyIndex));
             txn.add(tx);
@@ -109,7 +121,7 @@ public class PendingTxCacheTest {
         PendingTxCache cache = new PendingTxCache(1000);
 
         List<AionTransaction> txn = new ArrayList<>();
-        for (int i=0 ; i<key.size() ; i++) {
+        for (int i = 0; i < key.size(); i++) {
             txn.add(getMockTransaction(0, 1, i).get(0));
         }
 
@@ -128,12 +140,13 @@ public class PendingTxCacheTest {
         txn.addAll(getMockTransaction(5, 10, 0));
 
         for (ITransaction tx : txn) {
-            cache.addCacheTx((AionTransaction)tx);
+            cache.addCacheTx((AionTransaction) tx);
         }
 
         assertTrue(cache.cacheTxSize() == 15);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 15);
     }
 
@@ -146,7 +159,7 @@ public class PendingTxCacheTest {
 
         List<AionTransaction> newCache;
         for (ITransaction tx : txn) {
-            cache.addCacheTx((AionTransaction)tx);
+            cache.addCacheTx((AionTransaction) tx);
         }
 
         assertTrue(cache.cacheTxSize() == 10);
@@ -157,7 +170,8 @@ public class PendingTxCacheTest {
         newCache = cache.flush(map);
         assertTrue(newCache.size() == 1);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 8);
     }
 
@@ -169,7 +183,7 @@ public class PendingTxCacheTest {
         List<AionTransaction> txn = getMockTransaction(0, 10, 0);
 
         for (ITransaction tx : txn) {
-            cache.addCacheTx((AionTransaction)tx);
+            cache.addCacheTx((AionTransaction) tx);
         }
 
         assertTrue(cache.cacheTxSize() == 10);
@@ -178,7 +192,8 @@ public class PendingTxCacheTest {
         map.put(Address.wrap(key.get(1).getAddress()), BigInteger.TWO);
         cache.flush(map);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 10);
     }
 
@@ -193,7 +208,7 @@ public class PendingTxCacheTest {
 
         int txSize = 0;
         for (ITransaction tx : txn) {
-            cache.addCacheTx((AionTransaction)tx);
+            cache.addCacheTx((AionTransaction) tx);
             txSize += tx.getEncoded().length;
         }
 
@@ -203,9 +218,10 @@ public class PendingTxCacheTest {
         map.put(Address.wrap(key.get(0).getAddress()), BigInteger.TWO);
         cache.flush(map);
 
-        assertTrue(cache.cacheSize() == (txSize - (singleTxSize<<1)));
+        assertTrue(cache.cacheSize() == (txSize - (singleTxSize << 1)));
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 8);
     }
 
@@ -221,7 +237,7 @@ public class PendingTxCacheTest {
 
         int txSize = 0;
         for (ITransaction tx : txn) {
-            cache.addCacheTx((AionTransaction)tx);
+            cache.addCacheTx((AionTransaction) tx);
             txSize += tx.getEncoded().length;
         }
 
@@ -232,9 +248,10 @@ public class PendingTxCacheTest {
         map.put(Address.wrap(key.get(1).getAddress()), BigInteger.TWO);
         cache.flush(map);
 
-        assertTrue(cache.cacheSize() == (txSize - (singleTxSize<<2)));
+        assertTrue(cache.cacheSize() == (txSize - (singleTxSize << 2)));
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 8);
 
         cacheMap = cache.geCacheTx(Address.wrap(key.get(1).getAddress()));
@@ -244,33 +261,32 @@ public class PendingTxCacheTest {
     @Test
     public void flushTest5() {
 
-        PendingTxCache cache = new PendingTxCache(256* 100_000);
+        PendingTxCache cache = new PendingTxCache(256 * 100_000);
         int input = 10000;
 
         List<AionTransaction> txn = getMockTransaction(0, input, 0);
         txn.addAll(getMockTransaction(0, input, 1));
 
-
         for (ITransaction tx : txn) {
-            cache.addCacheTx((AionTransaction)tx);
+            cache.addCacheTx((AionTransaction) tx);
         }
 
         assertTrue(cache.cacheTxSize() == 20000);
 
         Map<Address, BigInteger> map = new HashMap<>();
-        map.put(Address.wrap(key.get(0).getAddress()), BigInteger.valueOf(input+1));
-        map.put(Address.wrap(key.get(1).getAddress()), BigInteger.valueOf(input+1));
+        map.put(Address.wrap(key.get(0).getAddress()), BigInteger.valueOf(input + 1));
+        map.put(Address.wrap(key.get(1).getAddress()), BigInteger.valueOf(input + 1));
         cache.flush(map);
 
         assertTrue(cache.cacheSize() == 0);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 0);
 
         cacheMap = cache.geCacheTx(Address.wrap(key.get(1).getAddress()));
         assertTrue(cacheMap.size() == 0);
     }
-
 
     @Test
     public void maxPendingSizeTest1() {
@@ -279,10 +295,11 @@ public class PendingTxCacheTest {
         List<AionTransaction> txn = getMockTransaction(0, 680, 0);
 
         for (ITransaction tx : txn) {
-            cache.addCacheTx((AionTransaction)tx);
+            cache.addCacheTx((AionTransaction) tx);
         }
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 659);
     }
 
@@ -293,7 +310,7 @@ public class PendingTxCacheTest {
         List<AionTransaction> txn = getMockTransaction(0, 659, 0);
 
         for (ITransaction tx : txn) {
-            cache.addCacheTx((AionTransaction)tx);
+            cache.addCacheTx((AionTransaction) tx);
         }
 
         assertTrue(cache.cacheTxSize() == 659);
@@ -302,10 +319,10 @@ public class PendingTxCacheTest {
         cache.addCacheTx(tx);
         assertTrue(cache.cacheTxSize() == 659);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 659);
     }
-
 
     @Test
     public void maxPendingSizeTest3() {
@@ -323,7 +340,8 @@ public class PendingTxCacheTest {
         cache.addCacheTx(tx);
         assertTrue(cache.cacheTxSize() == 658);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 658);
     }
 
@@ -343,7 +361,8 @@ public class PendingTxCacheTest {
         cache.addCacheTx(tx);
         assertTrue(cache.cacheTxSize() == 652);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 652);
     }
 
@@ -360,7 +379,8 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 659);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cache.cacheTxSize() == 659);
 
         AionTransaction tx = getMockBigTransaction(100, 1, 0, 2000).get(0);
@@ -382,7 +402,8 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 659);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 659);
 
         AionTransaction tx = getMockBigTransaction(100, 1, 0, 199_500).get(0);
@@ -403,7 +424,8 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 659);
 
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
         assertTrue(cacheMap.size() == 659);
 
         AionTransaction tx = getMockBigTransaction(100, 1, 0, 199_500).get(0);
@@ -441,10 +463,9 @@ public class PendingTxCacheTest {
             cache.addCacheTx(tx);
         }
         t2 = System.currentTimeMillis() - t1;
-        System.out.println("add another 80K txs took " + t2 + " ms cacheSize: " + cache.cacheSize());
-        assertTrue(cache.cacheTxSize() == (input<<1));
-
-
+        System.out.println(
+                "add another 80K txs took " + t2 + " ms cacheSize: " + cache.cacheSize());
+        assertTrue(cache.cacheTxSize() == (input << 1));
 
         System.out.println("flush starting");
         Map<Address, BigInteger> flushMap = new HashMap<>();
@@ -456,11 +477,11 @@ public class PendingTxCacheTest {
         t2 = System.currentTimeMillis() - t1;
         System.out.println("flush took " + t2 + " ms");
 
-
-        Map<BigInteger,AionTransaction> cacheMap = cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
-        assertTrue(cacheMap.size() == input-remove);
+        Map<BigInteger, AionTransaction> cacheMap =
+                cache.geCacheTx(Address.wrap(key.get(0).getAddress()));
+        assertTrue(cacheMap.size() == input - remove);
 
         cacheMap = cache.geCacheTx(Address.wrap(key.get(1).getAddress()));
-        assertTrue(cacheMap.size() == input-remove);
+        assertTrue(cacheMap.size() == input - remove);
     }
 }
