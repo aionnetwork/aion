@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.precompiled;
 
 import static org.junit.Assert.assertEquals;
