@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.types;
 
 import static java.util.Collections.emptyList;
