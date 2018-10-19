@@ -1,44 +1,41 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
+ * <p>Contributors: Aion foundation.
  *
- ******************************************************************************/
-
+ * <p>****************************************************************************
+ */
 package org.aion.evtmgr.impl.abs;
 
+import static junit.framework.TestCase.assertEquals;
+
+import java.util.List;
+import java.util.Properties;
 import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.handler.TxHandler;
 import org.aion.evtmgr.impl.mgr.EventMgrA0;
 import org.junit.Test;
-import java.util.List;
-import java.util.Properties;
-
-import static junit.framework.TestCase.assertEquals;
 
 public class AbstractEventMgrTest {
     private Properties properties = new Properties();
     private EventMgrA0 evtManager = new EventMgrA0(properties);
 
     @Test
-    public void testStart(){
+    public void testStart() {
         evtManager.start();
     }
 
@@ -49,7 +46,7 @@ public class AbstractEventMgrTest {
     }
 
     @Test
-    public void testGetHandler(){
+    public void testGetHandler() {
         IHandler res = evtManager.getHandler(1);
         IHandler expectedHandler = new TxHandler();
         assertEquals(expectedHandler.getType(), res.getType());
@@ -64,7 +61,7 @@ public class AbstractEventMgrTest {
     }
 
     @Test
-    public void testGetHandlerList(){
+    public void testGetHandlerList() {
         List<IHandler> res = evtManager.getHandlerList();
         assertEquals(4, res.size());
     }

@@ -1,14 +1,13 @@
 package org.aion.evtmgr.impl.es;
 
-import org.aion.evtmgr.IEvent;
-import org.aion.evtmgr.impl.evt.EventDummy;
-import org.slf4j.Logger;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.aion.evtmgr.IEvent;
+import org.aion.evtmgr.impl.evt.EventDummy;
+import org.slf4j.Logger;
 
 public class EventExecuteService {
 
@@ -18,8 +17,9 @@ public class EventExecuteService {
     private String thName;
     private Set<Integer> filter;
 
-    public EventExecuteService(final int qSize, final String threadName, final int threadPriority, final Logger log ) {
-        if (threadName == null || log == null ) {
+    public EventExecuteService(
+            final int qSize, final String threadName, final int threadPriority, final Logger log) {
+        if (threadName == null || log == null) {
             throw new NullPointerException();
         }
 
@@ -35,11 +35,14 @@ public class EventExecuteService {
 
         callbackEvt = new LinkedBlockingQueue(qSize);
 
-        es = Executors.newFixedThreadPool(1, arg0 -> {
-            Thread thread = new Thread(arg0, threadName);
-            thread.setPriority(threadPriority);
-            return thread;
-        });
+        es =
+                Executors.newFixedThreadPool(
+                        1,
+                        arg0 -> {
+                            Thread thread = new Thread(arg0, threadName);
+                            thread.setPriority(threadPriority);
+                            return thread;
+                        });
     }
 
     public void start(Runnable r) {
@@ -90,7 +93,6 @@ public class EventExecuteService {
         }
     }
 
-
     public void shutdown() {
         callbackEvt.clear();
         callbackEvt.add(new EventDummy());
@@ -99,6 +101,6 @@ public class EventExecuteService {
 
     public void setFilter(Set<Integer> filter) {
         this.filter = filter;
-        this.filter.add(0);//Poison Pill
+        this.filter.add(0); // Poison Pill
     }
 }

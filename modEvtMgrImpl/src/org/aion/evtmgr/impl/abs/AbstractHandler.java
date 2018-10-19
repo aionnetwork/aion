@@ -1,27 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
-
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.evtmgr.impl.abs;
 
 import java.util.HashSet;
@@ -38,10 +35,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-/**
- * @author jay
- *
- */
+/** @author jay */
 public abstract class AbstractHandler {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
@@ -53,35 +47,42 @@ public abstract class AbstractHandler {
     private boolean interrupted = false;
     private int handlerType;
 
-    protected Thread dispatcher = new Thread(() -> {
-        try {
-            while (!interrupt.get()) {
-                IEvent e = queue.take();
-                if (e.getEventType() != EventDummy.getTypeStatic() && events.contains(e)) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("dispatcher e[{}]", e.getEventType());
-                    }
+    protected Thread dispatcher =
+            new Thread(
+                    () -> {
+                        try {
+                            while (!interrupt.get()) {
+                                IEvent e = queue.take();
+                                if (e.getEventType() != EventDummy.getTypeStatic()
+                                        && events.contains(e)) {
+                                    if (LOG.isTraceEnabled()) {
+                                        LOG.trace("dispatcher e[{}]", e.getEventType());
+                                    }
 
-                    try {
-                        dispatch(e);
-                    } catch (Throwable ex) {
-                        LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}, {}", e.getEventType(), e.getCallbackType(), ex.toString());
-                    }
-                }
-            }
+                                    try {
+                                        dispatch(e);
+                                    } catch (Throwable ex) {
+                                        LOG.error(
+                                                "Failed to dispatch event: eventType = {}, callbackType = {}, {}",
+                                                e.getEventType(),
+                                                e.getCallbackType(),
+                                                ex.toString());
+                                    }
+                                }
+                            }
 
-            if (LOG.isInfoEnabled()) {
-                LOG.info("dispatcher interrupted!");
-            }
+                            if (LOG.isInfoEnabled()) {
+                                LOG.info("dispatcher interrupted!");
+                            }
 
-            queue.clear();
-            interrupted = true;
-        } catch (InterruptedException e) {
-            LOG.error("Handler interrupt exception {}", e.toString());
-        } catch (Error e) {
-            LOG.error("Handler interrupt error {}", e.toString());
-        }
-    });
+                            queue.clear();
+                            interrupted = true;
+                        } catch (InterruptedException e) {
+                            LOG.error("Handler interrupt exception {}", e.toString());
+                        } catch (Error e) {
+                            LOG.error("Handler interrupt error {}", e.toString());
+                        }
+                    });
 
     public AbstractHandler(int value) {
         handlerType = value;
@@ -135,12 +136,14 @@ public abstract class AbstractHandler {
         }
     }
 
-
     private <E extends IEvent> void dispatch(E event) {
         if (this.typeEqual(event.getEventType())) {
 
             if (LOG.isTraceEnabled()) {
-                LOG.trace("CB size:[{}] cbType:[{}]", this.eventCallback.size(), event.getCallbackType());
+                LOG.trace(
+                        "CB size:[{}] cbType:[{}]",
+                        this.eventCallback.size(),
+                        event.getCallbackType());
             }
 
             for (IEventCallback cb : this.eventCallback) {
@@ -163,7 +166,6 @@ public abstract class AbstractHandler {
             this.dispatcher.start();
         }
     }
-
 
     public void onEvent(IEvent _evt) {
         try {

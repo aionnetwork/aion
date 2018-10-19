@@ -1,40 +1,33 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
-
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.evtmgr.impl.evt;
 
 import java.util.List;
-
 import org.aion.evtmgr.IEvent;
 
-/**
- * @author jay
- *
- */
+/** @author jay */
 public class EventDummy implements IEvent {
 
-    private final static int type = TYPE.DUMMY.getValue();
+    private static final int type = TYPE.DUMMY.getValue();
 
     @Override
     public int getEventType() {
@@ -47,13 +40,11 @@ public class EventDummy implements IEvent {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.aion.evt.common.IEvent#setFuncArgs(java.util.List)
      */
     @Override
-    public void setFuncArgs(List<Object> _objs) {
-
-    }
+    public void setFuncArgs(List<Object> _objs) {}
 
     @Override
     public List<Object> getFuncArgs() {
@@ -64,5 +55,4 @@ public class EventDummy implements IEvent {
     public int getCallbackType() {
         return 0;
     }
-
 }
