@@ -41,53 +41,51 @@ public class HandlerTest {
         }
 
         @Override
-        public void receive(int _id, String _displayId, byte[] _msg) {
-        }
+        public void receive(int _id, String _displayId, byte[] _msg) {}
     }
-
 
     @Test
     public void testConstructor() {
-        TestHandler mockHandler = new TestHandler((short)1, (byte)1, (byte)1);
+        TestHandler mockHandler = new TestHandler((short) 1, (byte) 1, (byte) 1);
         assertNotNull(mockHandler);
         Header hdr = mockHandler.getHeader();
         assertNotNull(hdr);
-        assertEquals(hdr.getVer(), (short)1);
-        assertEquals(hdr.getCtrl(), (byte)1);
-        assertEquals(hdr.getAction(), (byte)1);
+        assertEquals(hdr.getVer(), (short) 1);
+        assertEquals(hdr.getCtrl(), (byte) 1);
+        assertEquals(hdr.getAction(), (byte) 1);
     }
 
     @Test
     public void testConstructor_corner() {
-        TestHandler mockHandler = new TestHandler(Short.MAX_VALUE, (byte)255, (byte)255);
+        TestHandler mockHandler = new TestHandler(Short.MAX_VALUE, (byte) 255, (byte) 255);
         assertNotNull(mockHandler);
         Header hdr = mockHandler.getHeader();
         assertNotNull(hdr);
         assertEquals(hdr.getVer(), Short.MAX_VALUE);
-        assertEquals(hdr.getCtrl(), (byte)255);
-        assertEquals(hdr.getAction(), (byte)255);
+        assertEquals(hdr.getCtrl(), (byte) 255);
+        assertEquals(hdr.getAction(), (byte) 255);
     }
 
     @Test
     public void testConstructor_corner2() {
-        TestHandler mockHandler = new TestHandler(Short.MIN_VALUE, (byte)0, (byte)0);
+        TestHandler mockHandler = new TestHandler(Short.MIN_VALUE, (byte) 0, (byte) 0);
         assertNotNull(mockHandler);
         Header hdr = mockHandler.getHeader();
         assertNotNull(hdr);
         assertEquals(hdr.getVer(), Short.MIN_VALUE);
-        assertEquals(hdr.getCtrl(), (byte)0);
-        assertEquals(hdr.getAction(), (byte)0);
+        assertEquals(hdr.getCtrl(), (byte) 0);
+        assertEquals(hdr.getAction(), (byte) 0);
     }
 
     @Test
     public void testShutdown() {
-        TestHandler mockHandler = new TestHandler((short)0, (byte)0, (byte)0);
+        TestHandler mockHandler = new TestHandler((short) 0, (byte) 0, (byte) 0);
         assertNotNull(mockHandler);
         Header hdr = mockHandler.getHeader();
         assertNotNull(hdr);
-        assertEquals(hdr.getVer(), (short)0);
-        assertEquals(hdr.getCtrl(), (byte)0);
-        assertEquals(hdr.getAction(), (byte)0);
+        assertEquals(hdr.getVer(), (short) 0);
+        assertEquals(hdr.getCtrl(), (byte) 0);
+        assertEquals(hdr.getAction(), (byte) 0);
 
         mockHandler.shutDown();
     }
