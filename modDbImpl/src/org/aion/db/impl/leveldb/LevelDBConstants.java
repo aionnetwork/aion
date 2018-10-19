@@ -1,9 +1,6 @@
 package org.aion.db.impl.leveldb;
 
-/**
- * Constants for LevelDB implementation, used as fallback
- * when nothing else matches
- */
+/** Constants for LevelDB implementation, used as fallback when nothing else matches */
 public class LevelDBConstants {
 
     public static int MAX_OPEN_FILES = 1024;

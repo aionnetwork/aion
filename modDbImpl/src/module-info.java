@@ -7,7 +7,7 @@ module aion.db.impl {
     requires h2.mvstore;
     requires com.google.common;
 
-	exports org.aion.db.impl;
-	exports org.aion.db.impl.leveldb;
-	exports org.aion.db.impl.rocksdb;
+    exports org.aion.db.impl;
+    exports org.aion.db.impl.leveldb;
+    exports org.aion.db.impl.rocksdb;
 }

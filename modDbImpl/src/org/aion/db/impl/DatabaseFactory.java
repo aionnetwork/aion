@@ -1,33 +1,31 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ * <p>The aion network project leverages useful source code from other open source projects. We
+ * greatly appreciate the effort that was invested in these projects and we thank the individual
+ * contributors for their work. For provenance information and contributors please see
+ * <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- ******************************************************************************/
+ * <p>Contributors to the aion source files in decreasing order of code volume: Aion foundation.
+ * ****************************************************************************
+ */
 package org.aion.db.impl;
 
+import java.util.Properties;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
@@ -43,8 +41,6 @@ import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
-
-import java.util.Properties;
 
 /**
  * Returns an instance of {@link IByteArrayKeyValueDatabase} based on the given properties.
@@ -138,20 +134,17 @@ public abstract class DatabaseFactory {
         }
     }
 
-    /**
-     * @return A database implementation with a caching layer.
-     */
+    /** @return A database implementation with a caching layer. */
     private static IByteArrayKeyValueDatabase connectWithCache(Properties info) {
         boolean enableAutoCommit = getBoolean(info, Props.ENABLE_AUTO_COMMIT);
-        return new DatabaseWithCache(connectBasic(info),
-                                     enableAutoCommit,
-                                     info.getProperty(Props.MAX_HEAP_CACHE_SIZE),
-                                     getBoolean(info, Props.ENABLE_HEAP_CACHE_STATS));
+        return new DatabaseWithCache(
+                connectBasic(info),
+                enableAutoCommit,
+                info.getProperty(Props.MAX_HEAP_CACHE_SIZE),
+                getBoolean(info, Props.ENABLE_HEAP_CACHE_STATS));
     }
 
-    /**
-     * @return A database implementation for each of the vendors in {@link DBVendor}.
-     */
+    /** @return A database implementation for each of the vendors in {@link DBVendor}. */
     private static AbstractDB connectBasic(Properties info) {
         DBVendor dbType = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
 
@@ -166,7 +159,8 @@ public abstract class DatabaseFactory {
         String dbPath = info.getProperty(Props.DB_PATH);
 
         if (dbType == DBVendor.PERSISTENTMOCKDB) {
-            LOG.warn("WARNING: Active vendor is set to PersistentMockDB, data will be saved only at close!");
+            LOG.warn(
+                    "WARNING: Active vendor is set to PersistentMockDB, data will be saved only at close!");
             return new PersistentMockDB(dbName, dbPath);
         }
 
@@ -187,30 +181,41 @@ public abstract class DatabaseFactory {
 
         // select database implementation
         switch (dbType) {
-            case LEVELDB: {
-                return new LevelDB(dbName,
-                                   dbPath,
-                                   enableDbCache,
-                                   enableDbCompression,
-                                   getInt(info, Props.MAX_FD_ALLOC, LevelDBConstants.MAX_OPEN_FILES),
-                                   getInt(info, Props.BLOCK_SIZE, LevelDBConstants.BLOCK_SIZE),
-                                   getInt(info, Props.WRITE_BUFFER_SIZE, LevelDBConstants.WRITE_BUFFER_SIZE),
-                                   getInt(info, Props.DB_CACHE_SIZE, LevelDBConstants.CACHE_SIZE));
-            }
-            case ROCKSDB: {
-                return new RocksDBWrapper(dbName,
-                                          dbPath,
-                                          enableDbCache,
-                                          enableDbCompression,
-                                          getInt(info, Props.MAX_FD_ALLOC, RocksDBConstants.MAX_OPEN_FILES),
-                                          getInt(info, Props.BLOCK_SIZE, RocksDBConstants.BLOCK_SIZE),
-                                          getInt(info, Props.WRITE_BUFFER_SIZE, RocksDBConstants.WRITE_BUFFER_SIZE),
-                                          getInt(info, Props.READ_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE),
-                                          getInt(info, Props.DB_CACHE_SIZE, RocksDBConstants.CACHE_SIZE));
-            }
-            case H2: {
-                return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
-            }
+            case LEVELDB:
+                {
+                    return new LevelDB(
+                            dbName,
+                            dbPath,
+                            enableDbCache,
+                            enableDbCompression,
+                            getInt(info, Props.MAX_FD_ALLOC, LevelDBConstants.MAX_OPEN_FILES),
+                            getInt(info, Props.BLOCK_SIZE, LevelDBConstants.BLOCK_SIZE),
+                            getInt(
+                                    info,
+                                    Props.WRITE_BUFFER_SIZE,
+                                    LevelDBConstants.WRITE_BUFFER_SIZE),
+                            getInt(info, Props.DB_CACHE_SIZE, LevelDBConstants.CACHE_SIZE));
+                }
+            case ROCKSDB:
+                {
+                    return new RocksDBWrapper(
+                            dbName,
+                            dbPath,
+                            enableDbCache,
+                            enableDbCompression,
+                            getInt(info, Props.MAX_FD_ALLOC, RocksDBConstants.MAX_OPEN_FILES),
+                            getInt(info, Props.BLOCK_SIZE, RocksDBConstants.BLOCK_SIZE),
+                            getInt(
+                                    info,
+                                    Props.WRITE_BUFFER_SIZE,
+                                    RocksDBConstants.WRITE_BUFFER_SIZE),
+                            getInt(info, Props.READ_BUFFER_SIZE, RocksDBConstants.READ_BUFFER_SIZE),
+                            getInt(info, Props.DB_CACHE_SIZE, RocksDBConstants.CACHE_SIZE));
+                }
+            case H2:
+                {
+                    return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
+                }
             default:
                 break;
         }
@@ -220,14 +225,16 @@ public abstract class DatabaseFactory {
     }
 
     /**
-     * @return A database implementation based on a driver implementing the {@link IDriver} interface.
+     * @return A database implementation based on a driver implementing the {@link IDriver}
+     *     interface.
      */
-    public static IByteArrayKeyValueDatabase connect(String driverName,
-                                                     Properties info) {
+    public static IByteArrayKeyValueDatabase connect(String driverName, Properties info) {
         try {
             // see if the given name is a valid driver
-            IDriver driver = ((Class<? extends IDriver>) Class.forName(driverName)).getDeclaredConstructor()
-                    .newInstance();
+            IDriver driver =
+                    ((Class<? extends IDriver>) Class.forName(driverName))
+                            .getDeclaredConstructor()
+                            .newInstance();
             // return a connection
             return driver.connect(info);
         } catch (Exception e) {
@@ -238,9 +245,7 @@ public abstract class DatabaseFactory {
         return null;
     }
 
-    /**
-     * @return A mock database.
-     */
+    /** @return A mock database. */
     public static IByteArrayKeyValueDatabase connect(String _dbName) {
         return new MockDB(_dbName);
     }
@@ -249,9 +254,7 @@ public abstract class DatabaseFactory {
         return Boolean.parseBoolean(info.getProperty(prop));
     }
 
-    private static int getInt(Properties info,
-                              String prop,
-                              int defaultValue) {
+    private static int getInt(Properties info, String prop, int defaultValue) {
         return Integer.parseInt(info.getProperty(prop, String.valueOf(defaultValue)));
     }
 }

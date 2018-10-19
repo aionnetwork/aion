@@ -1,9 +1,12 @@
 package org.aion.db.impl.mockdb;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
-
-import java.util.*;
 
 public class MockDB extends AbstractDB {
 
@@ -18,7 +21,8 @@ public class MockDB extends AbstractDB {
         return this.getClass().getSimpleName() + ":<name=" + name + ">";
     }
 
-    // IDatabase functionality -----------------------------------------------------------------------------------------
+    // IDatabase functionality
+    // -----------------------------------------------------------------------------------------
 
     @Override
     public boolean open() {
@@ -68,7 +72,8 @@ public class MockDB extends AbstractDB {
         return -1L;
     }
 
-    // IKeyValueStore functionality ------------------------------------------------------------------------------------
+    // IKeyValueStore functionality
+    // ------------------------------------------------------------------------------------
 
     @Override
     public boolean isEmpty() {
@@ -122,15 +127,17 @@ public class MockDB extends AbstractDB {
 
         try {
             // simply do a put, because setting a kv pair to null is same as delete
-            inputMap.forEach((key, value) -> {
-                if (value == null) {
-                    kv.remove(ByteArrayWrapper.wrap(key));
-                } else {
-                    kv.put(ByteArrayWrapper.wrap(key), value);
-                }
-            });
+            inputMap.forEach(
+                    (key, value) -> {
+                        if (value == null) {
+                            kv.remove(ByteArrayWrapper.wrap(key));
+                        } else {
+                            kv.put(ByteArrayWrapper.wrap(key), value);
+                        }
+                    });
         } catch (Exception e) {
-            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+            LOG.error(
+                    "Unable to execute batch put/update operation on " + this.toString() + ".", e);
         }
     }
 
@@ -164,7 +171,8 @@ public class MockDB extends AbstractDB {
         kv.clear();
     }
 
-    // AbstractDB functionality ----------------------------------------------------------------------------------------
+    // AbstractDB functionality
+    // ----------------------------------------------------------------------------------------
 
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
         boolean success = false;
@@ -173,13 +181,14 @@ public class MockDB extends AbstractDB {
             check();
 
             // simply do a put, because setting a kv pair to null is same as delete
-            cache.forEach((key, value) -> {
-                if (value == null) {
-                    kv.remove(key);
-                } else {
-                    kv.put(key, value);
-                }
-            });
+            cache.forEach(
+                    (key, value) -> {
+                        if (value == null) {
+                            kv.remove(key);
+                        } else {
+                            kv.put(key, value);
+                        }
+                    });
 
             success = true;
         } catch (Exception e) {
