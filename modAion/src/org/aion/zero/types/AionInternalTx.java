@@ -1,28 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
+ * <p>Contributors: Aion foundation.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
-
+ * <p>****************************************************************************
+ */
 package org.aion.zero.types;
 
 import static org.aion.base.util.ByteUtil.toHexString;
@@ -32,7 +28,6 @@ import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
@@ -40,11 +35,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 
-/**
- * aion internal transaction class.
- *
- */
-
+/** aion internal transaction class. */
 public class AionInternalTx extends AionTransaction {
 
     private byte[] parentHash;
@@ -57,8 +48,16 @@ public class AionInternalTx extends AionTransaction {
         super(rawData);
     }
 
-    public AionInternalTx(byte[] parentHash, int deep, int index, byte[] nonce, Address sendAddress,
-            Address receiveAddress, byte[] value, byte[] data, String note) {
+    public AionInternalTx(
+            byte[] parentHash,
+            int deep,
+            int index,
+            byte[] nonce,
+            Address sendAddress,
+            Address receiveAddress,
+            byte[] value,
+            byte[] data,
+            String note) {
 
         // @TODO: pass null to nrg and nrgprice for base class ( Transaction )
         // will be safe?
@@ -132,11 +131,18 @@ public class AionInternalTx extends AionTransaction {
             byte[] nonce = getNonce();
             boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
 
-            this.rlpEncoded = RLP.encodeList(RLP.encodeElement(isEmptyNonce ? null : nonce),
-                    RLP.encodeElement(this.parentHash), RLP.encodeElement(getFrom().toBytes()),
-                    RLP.encodeElement(to), RLP.encodeElement(getValue()), RLP.encodeElement(getData()),
-                    RLP.encodeString(this.note), encodeInt(this.deep), encodeInt(this.index),
-                    encodeInt(this.rejected ? 1 : 0));
+            this.rlpEncoded =
+                    RLP.encodeList(
+                            RLP.encodeElement(isEmptyNonce ? null : nonce),
+                            RLP.encodeElement(this.parentHash),
+                            RLP.encodeElement(getFrom().toBytes()),
+                            RLP.encodeElement(to),
+                            RLP.encodeElement(getValue()),
+                            RLP.encodeElement(getData()),
+                            RLP.encodeString(this.note),
+                            encodeInt(this.deep),
+                            encodeInt(this.index),
+                            encodeInt(this.rejected ? 1 : 0));
         }
 
         return rlpEncoded;
@@ -185,10 +191,29 @@ public class AionInternalTx extends AionTransaction {
     @Override
     public String toString() {
         String to = (getTo() == null) ? "" : getTo().toString();
-        return "TransactionData [" + "  parentHash=" + toHexString(getParentHash()) + ", hash="
-            + toHexString(getHash()) + ", nonce=" + toHexString(getNonce()) + ", fromAddress="
-            + getFrom().toString() + ", toAddress=" + to + ", value=" + toHexString(getValue())
-            + ", data=" + toHexString(getData()) + ", note=" + getNote() + ", deep=" + getDeep()
-            + ", index=" + getIndex() + ", rejected=" + isRejected() + "]";
+        return "TransactionData ["
+                + "  parentHash="
+                + toHexString(getParentHash())
+                + ", hash="
+                + toHexString(getHash())
+                + ", nonce="
+                + toHexString(getNonce())
+                + ", fromAddress="
+                + getFrom().toString()
+                + ", toAddress="
+                + to
+                + ", value="
+                + toHexString(getValue())
+                + ", data="
+                + toHexString(getData())
+                + ", note="
+                + getNote()
+                + ", deep="
+                + getDeep()
+                + ", index="
+                + getIndex()
+                + ", rejected="
+                + isRejected()
+                + "]";
     }
 }

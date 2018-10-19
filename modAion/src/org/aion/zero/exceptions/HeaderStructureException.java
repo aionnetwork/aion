@@ -1,16 +1,16 @@
 package org.aion.zero.exceptions;
 
 /**
- * <p>Denotes an exception occuring because a field in the header structure
- * was ruled to be invalid. This can range from an invalid length in
- * the header's structure to a missing field when constructing the header.</p>
+ * Denotes an exception occuring because a field in the header structure was ruled to be invalid.
+ * This can range from an invalid length in the header's structure to a missing field when
+ * constructing the header.
  *
- * <p>This exception does not cover violating <b>logical</b> rules, for example
- * an incorrectly added transaction, or a incorrect difficulty calculation</p>
+ * <p>This exception does not cover violating <b>logical</b> rules, for example an incorrectly added
+ * transaction, or a incorrect difficulty calculation
  *
- * @implNote extends {@link Exception} so that callers are forced to deal with
- * the case of an invalid header, if the position is unacceptable then simply
- * wrap the exception in a {@link RuntimeException}
+ * @implNote extends {@link Exception} so that callers are forced to deal with the case of an
+ *     invalid header, if the position is unacceptable then simply wrap the exception in a {@link
+ *     RuntimeException}
  */
 public class HeaderStructureException extends Exception {
 

@@ -22,6 +22,16 @@
  */
 package org.aion.zero.db;
 
+import static org.aion.base.util.ByteArrayWrapper.wrap;
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.crypto.HashUtil.h256;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
@@ -37,13 +47,6 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 
-import java.util.*;
-
-import static org.aion.base.util.ByteArrayWrapper.wrap;
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.aion.crypto.HashUtil.h256;
-
 public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> {
 
     private IByteArrayKeyValueStore dataSource;
@@ -57,14 +60,14 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
     public boolean externalStorage;
     private IByteArrayKeyValueStore externalStorageDataSource;
 
-    public AionContractDetailsImpl() {
-    }
+    public AionContractDetailsImpl() {}
 
     public AionContractDetailsImpl(int prune, int memStorageLimit) {
         super(prune, memStorageLimit);
     }
 
-    private AionContractDetailsImpl(Address address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
+    private AionContractDetailsImpl(
+            Address address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
         this.address = address;
         this.storageTrie = storageTrie;
         setCodes(codes);
@@ -95,9 +98,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
             storageTrie.delete(key.getData());
         } else {
             boolean isDouble = value.getData().length == DoubleDataWord.BYTES;
-            byte[] data = (isDouble) ?
-                RLP.encodeElement(value.getData()) :
-                RLP.encodeElement(value.getNoLeadZeroesData());
+            byte[] data =
+                    (isDouble)
+                            ? RLP.encodeElement(value.getData())
+                            : RLP.encodeElement(value.getNoLeadZeroesData());
 
             storageTrie.update(key.getData(), data);
         }
@@ -196,8 +200,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
 
             byte[] rlpAddress = RLP.encodeElement(address.toBytes());
             byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
-            byte[] rlpStorageRoot = RLP.encodeElement(externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
-            byte[] rlpStorage = RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
+            byte[] rlpStorageRoot =
+                    RLP.encodeElement(
+                            externalStorage ? storageTrie.getRootHash() : EMPTY_BYTE_ARRAY);
+            byte[] rlpStorage =
+                    RLP.encodeElement(externalStorage ? EMPTY_BYTE_ARRAY : storageTrie.serialize());
             byte[][] codes = new byte[getCodes().size()][];
             int i = 0;
             for (byte[] bytes : this.getCodes().values()) {
@@ -205,7 +212,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
             }
             byte[] rlpCode = RLP.encodeList(codes);
 
-            this.rlpEncoded = RLP.encodeList(rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
+            this.rlpEncoded =
+                    RLP.encodeList(
+                            rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
         }
 
         return rlpEncoded;
@@ -239,7 +248,8 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
 
     /**
      * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in storageValues.
+     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
+     * storageValues.
      *
      * @param storageKeys The keys.
      * @param storageValues The values.
@@ -284,9 +294,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         this.rlpEncoded = null;
     }
 
-    /**
-     * Syncs the storage trie.
-     */
+    /** Syncs the storage trie. */
     @Override
     public void syncStorage() {
         if (externalStorage) {
@@ -310,8 +318,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      */
     private IByteArrayKeyValueStore getExternalStorageDataSource() {
         if (externalStorageDataSource == null) {
-            externalStorageDataSource = new XorDataSource(dataSource,
-                    h256(("details-storage/" + address.toString()).getBytes()));
+            externalStorageDataSource =
+                    new XorDataSource(
+                            dataSource, h256(("details-storage/" + address.toString()).getBytes()));
         }
         return externalStorageDataSource;
     }
@@ -339,19 +348,20 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
 
         IByteArrayKeyValueStore keyValueDataSource = this.storageTrie.getCache().getDb();
 
-        SecureTrie snapStorage = wrap(hash).equals(wrap(EMPTY_TRIE_HASH))
-                ? new SecureTrie(keyValueDataSource, "".getBytes())
-                : new SecureTrie(keyValueDataSource, hash);
+        SecureTrie snapStorage =
+                wrap(hash).equals(wrap(EMPTY_TRIE_HASH))
+                        ? new SecureTrie(keyValueDataSource, "".getBytes())
+                        : new SecureTrie(keyValueDataSource, hash);
         snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
 
         snapStorage.setCache(this.storageTrie.getCache());
 
-        AionContractDetailsImpl details = new AionContractDetailsImpl(this.address, snapStorage, getCodes());
+        AionContractDetailsImpl details =
+                new AionContractDetailsImpl(this.address, snapStorage, getCodes());
         details.externalStorage = this.externalStorage;
         details.externalStorageDataSource = this.externalStorageDataSource;
         details.dataSource = dataSource;
 
         return details;
     }
-
 }
