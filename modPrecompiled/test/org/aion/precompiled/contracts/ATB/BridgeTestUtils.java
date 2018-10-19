@@ -5,7 +5,6 @@ import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.ExecutionContext;
-import org.aion.vm.TransactionResult;
 
 public class BridgeTestUtils {
     static ExecutionContext dummyContext() {
@@ -24,14 +23,15 @@ public class BridgeTestUtils {
         final int callDepth = 1;
         final int flag = 0;
         final int kind = 0;
-        final Address blockCoinbase = new Address(AddressSpecs.computeA0Address(
-                HashUtil.h256("coinbase".getBytes())));
+        final Address blockCoinbase =
+                new Address(AddressSpecs.computeA0Address(HashUtil.h256("coinbase".getBytes())));
         long blockNumber = 0;
         long blockTimestamp = 0;
         long blockNrgLimit = 0;
         DataWord blockDifficulty = DataWord.ZERO;
 
-        return new ExecutionContext(transactionHash,
+        return new ExecutionContext(
+                transactionHash,
                 address,
                 origin,
                 caller,

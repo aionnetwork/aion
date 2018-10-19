@@ -1,8 +1,18 @@
 package org.aion.precompiled.contracts.ATB;
 
+import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseAddressFromCall;
+import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseAddressList;
+import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseBundleRequest;
+import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.parseDwordFromCall;
+import static org.aion.precompiled.contracts.ATB.BridgeUtilities.booleanToResultBytes;
+import static org.aion.precompiled.contracts.ATB.BridgeUtilities.getSignature;
+import static org.aion.precompiled.contracts.ATB.BridgeUtilities.intToResultBytes;
+import static org.aion.precompiled.contracts.ATB.BridgeUtilities.orDefaultDword;
+
+import java.math.BigInteger;
+import javax.annotation.Nonnull;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
-import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -11,12 +21,6 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.ExecutionResult;
 import org.aion.zero.types.AionInternalTx;
-
-import javax.annotation.Nonnull;
-import java.math.BigInteger;
-
-import static org.aion.precompiled.contracts.ATB.BridgeDeserializer.*;
-import static org.aion.precompiled.contracts.ATB.BridgeUtilities.*;
 
 public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferable {
 
@@ -34,15 +38,18 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     // some useful defaults
     // TODO: add passing returns (need more though on gas consumption)
 
-    public TokenBridgeContract(@Nonnull final ExecutionContext context,
-                               @Nonnull final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
-                               @Nonnull final Address ownerAddress,
-                               @Nonnull final Address contractAddress) {
+    public TokenBridgeContract(
+            @Nonnull final ExecutionContext context,
+            @Nonnull final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
+            @Nonnull final Address ownerAddress,
+            @Nonnull final Address contractAddress) {
         super(track);
         this.context = context;
         this.track = track;
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
-        this.controller = new BridgeController(this.connector, this.context.helper(), contractAddress, ownerAddress);
+        this.controller =
+                new BridgeController(
+                        this.connector, this.context.helper(), contractAddress, ownerAddress);
         this.controller.setTransferable(this);
 
         this.contractAddress = contractAddress;
@@ -62,8 +69,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
     @Override
     public ExecutionResult execute(@Nonnull final byte[] input, final long nrgLimit) {
-        if (nrgLimit < ENERGY_CONSUME)
-            return THROW;
+        if (nrgLimit < ENERGY_CONSUME) return THROW;
 
         // as a preset, try to initialize before execution
         // this should be placed before the 0 into return, rationale is that we want to
@@ -77,112 +83,106 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         }
 
         byte[] signature = getSignature(input);
-        if (signature == null)
-            return THROW;
+        if (signature == null) return THROW;
 
         BridgeFuncSig sig = BridgeFuncSig.getSignatureEnum(signature);
-        if (sig == null)
-            return THROW;
+        if (sig == null) return THROW;
 
-        switch(sig) {
-            case SIG_CHANGE_OWNER: {
-                if (!isFromAddress(this.connector.getOwner()))
-                    return fail();
+        switch (sig) {
+            case SIG_CHANGE_OWNER:
+                {
+                    if (!isFromAddress(this.connector.getOwner())) return fail();
 
-                byte[] address = parseAddressFromCall(input);
-                if (address == null)
-                    return fail();
+                    byte[] address = parseAddressFromCall(input);
+                    if (address == null) return fail();
 
-                ErrCode code = this.controller.setNewOwner(this.context.sender().toBytes(), address);
+                    ErrCode code =
+                            this.controller.setNewOwner(this.context.sender().toBytes(), address);
 
-                if (code != ErrCode.NO_ERROR)
-                    return fail();
-                return success();
-            }
-            case SIG_ACCEPT_OWNERSHIP: {
-                ErrCode code = this.controller.acceptOwnership(this.context.sender().toBytes());
-                if (code !=  ErrCode.NO_ERROR)
-                    return fail();
-                return success();
-            }
-            case SIG_RING_INITIALIZE: {
-                if (!isFromAddress(this.connector.getOwner()))
-                    return fail();
+                    if (code != ErrCode.NO_ERROR) return fail();
+                    return success();
+                }
+            case SIG_ACCEPT_OWNERSHIP:
+                {
+                    ErrCode code = this.controller.acceptOwnership(this.context.sender().toBytes());
+                    if (code != ErrCode.NO_ERROR) return fail();
+                    return success();
+                }
+            case SIG_RING_INITIALIZE:
+                {
+                    if (!isFromAddress(this.connector.getOwner())) return fail();
 
-                byte[][] addressList = parseAddressList(input);
+                    byte[][] addressList = parseAddressList(input);
 
-                if (addressList == null)
-                    return fail();
+                    if (addressList == null) return fail();
 
-                ErrCode code = this.controller.ringInitialize(this.context.sender().toBytes(), addressList);
-                if (code != ErrCode.NO_ERROR)
-                    return fail();
-                return success();
-            }
-            case SIG_RING_ADD_MEMBER: {
-                if (!isFromAddress(this.connector.getOwner()))
-                    return fail();
+                    ErrCode code =
+                            this.controller.ringInitialize(
+                                    this.context.sender().toBytes(), addressList);
+                    if (code != ErrCode.NO_ERROR) return fail();
+                    return success();
+                }
+            case SIG_RING_ADD_MEMBER:
+                {
+                    if (!isFromAddress(this.connector.getOwner())) return fail();
 
-                byte[] address = parseAddressFromCall(input);
-                if (address == null)
-                    return fail();
+                    byte[] address = parseAddressFromCall(input);
+                    if (address == null) return fail();
 
-                ErrCode code = this.controller.ringAddMember(this.context.sender().toBytes(), address);
-                if (code != ErrCode.NO_ERROR)
-                    return fail();
-                return success();
-            }
-            case SIG_RING_REMOVE_MEMBER: {
-                if (!isFromAddress(this.connector.getOwner()))
-                    return fail();
+                    ErrCode code =
+                            this.controller.ringAddMember(this.context.sender().toBytes(), address);
+                    if (code != ErrCode.NO_ERROR) return fail();
+                    return success();
+                }
+            case SIG_RING_REMOVE_MEMBER:
+                {
+                    if (!isFromAddress(this.connector.getOwner())) return fail();
 
-                byte[] address = parseAddressFromCall(input);
+                    byte[] address = parseAddressFromCall(input);
 
-                if (address == null)
-                    return fail();
+                    if (address == null) return fail();
 
-                ErrCode code = this.controller.ringRemoveMember(this.context.sender().toBytes(), address);
-                if (code != ErrCode.NO_ERROR)
-                    return fail();
-                return success();
-            }
-            case SIG_SET_RELAYER: {
-                if (!isFromAddress(this.connector.getOwner()))
-                    return fail();
+                    ErrCode code =
+                            this.controller.ringRemoveMember(
+                                    this.context.sender().toBytes(), address);
+                    if (code != ErrCode.NO_ERROR) return fail();
+                    return success();
+                }
+            case SIG_SET_RELAYER:
+                {
+                    if (!isFromAddress(this.connector.getOwner())) return fail();
 
-                byte[] address = parseAddressFromCall(input);
-                if (address == null)
-                    return fail();
-                ErrCode code = this.controller.setRelayer(this.context.sender().toBytes(), address);
+                    byte[] address = parseAddressFromCall(input);
+                    if (address == null) return fail();
+                    ErrCode code =
+                            this.controller.setRelayer(this.context.sender().toBytes(), address);
 
-                if (code != ErrCode.NO_ERROR)
-                    return fail();
-                return success();
-            }
-            case SIG_SUBMIT_BUNDLE: {
-                if (!isFromAddress(this.connector.getRelayer()))
-                    return fail();
+                    if (code != ErrCode.NO_ERROR) return fail();
+                    return success();
+                }
+            case SIG_SUBMIT_BUNDLE:
+                {
+                    if (!isFromAddress(this.connector.getRelayer())) return fail();
 
-                BundleRequestCall bundleRequests = parseBundleRequest(input);
+                    BundleRequestCall bundleRequests = parseBundleRequest(input);
 
-                if (bundleRequests == null)
-                    return fail();
+                    if (bundleRequests == null) return fail();
 
-                // ATB-4, as part of the changes we now
-                // pass in the transactionHash of the call
-                // into the contract, this will be logged so that
-                // we can refer to it at a later time.
-                BridgeController.ProcessedResults results = this.controller.processBundles(
-                        this.context.sender().toBytes(),
-                        this.context.transactionHash(),
-                        bundleRequests.blockHash,
-                        bundleRequests.bundles,
-                        bundleRequests.signatures);
+                    // ATB-4, as part of the changes we now
+                    // pass in the transactionHash of the call
+                    // into the contract, this will be logged so that
+                    // we can refer to it at a later time.
+                    BridgeController.ProcessedResults results =
+                            this.controller.processBundles(
+                                    this.context.sender().toBytes(),
+                                    this.context.transactionHash(),
+                                    bundleRequests.blockHash,
+                                    bundleRequests.bundles,
+                                    bundleRequests.signatures);
 
-                if (results.controllerResult != ErrCode.NO_ERROR)
-                    return fail();
-                return success();
-            }
+                    if (results.controllerResult != ErrCode.NO_ERROR) return fail();
+                    return success();
+                }
             case PURE_OWNER:
                 return success(orDefaultDword(this.connector.getOwner()));
             case PURE_NEW_OWNER:
@@ -193,16 +193,15 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                 return success(intToResultBytes(this.connector.getMinThresh()));
             case PURE_MEMBER_COUNT:
                 return success(intToResultBytes(this.connector.getMemberCount()));
-            case PURE_RING_MAP: {
-                byte[] address2 = parseAddressFromCall(input);
-                if (address2 == null)
-                    return fail();
-                return success(booleanToResultBytes(this.connector.getActiveMember(address2)));
-            }
+            case PURE_RING_MAP:
+                {
+                    byte[] address2 = parseAddressFromCall(input);
+                    if (address2 == null) return fail();
+                    return success(booleanToResultBytes(this.connector.getActiveMember(address2)));
+                }
             case PURE_ACTION_MAP:
                 byte[] bundleHash = parseDwordFromCall(input);
-                if (bundleHash == null)
-                    return fail();
+                if (bundleHash == null) return fail();
                 return success(orDefaultDword(this.connector.getBundle(bundleHash)));
             case PURE_RELAYER:
                 // ATB-5 Add in relayer getter
@@ -215,6 +214,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
     private static final ExecutionResult THROW =
             new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
+
     private ExecutionResult fail() {
         this.context.helper().rejectInternalTransactions();
         return THROW;
@@ -232,30 +232,24 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, energyRemaining, response);
     }
 
-
     private boolean isFromAddress(byte[] address) {
-        if (address == null)
-            return false;
+        if (address == null) return false;
         return this.context.sender().equals(Address.wrap(address));
     }
 
     /**
-     * Performs a transfer of value from one account to another, using a method that
-     * mimics to the best of it's ability the {@code CALL} opcode. There are some
-     * assumptions that become important for any caller to know:
+     * Performs a transfer of value from one account to another, using a method that mimics to the
+     * best of it's ability the {@code CALL} opcode. There are some assumptions that become
+     * important for any caller to know:
      *
-     * @implNote this method will check that the recipient account has no code. This
-     * means that we <b>cannot</b> do a transfer to any contract account.
-     *
-     * @implNote assumes that the {@code fromValue} derived from the track will never
-     * be null.
-     *
+     * @implNote this method will check that the recipient account has no code. This means that we
+     *     <b>cannot</b> do a transfer to any contract account.
+     * @implNote assumes that the {@code fromValue} derived from the track will never be null.
      * @param to recipient address
      * @param value to be sent (in base units)
      * @return {@code true} if value was performed, {@code false} otherwise
      */
-    public ExecutionResult transfer(@Nonnull final byte[] to,
-                                    @Nonnull final BigInteger value) {
+    public ExecutionResult transfer(@Nonnull final byte[] to, @Nonnull final BigInteger value) {
         // some initial checks, treat as failure
         if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
             return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
@@ -283,14 +277,23 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     /**
      * Creates a new internal transaction.
      *
-     * NOTE: copied from {@link org.aion.fastvm.Callback}
+     * <p>NOTE: copied from {@link org.aion.fastvm.Callback}
      */
-    private AionInternalTx newInternalTx(Address from, Address to, BigInteger nonce, DataWord value, byte[] data,
-                                                String note) {
+    private AionInternalTx newInternalTx(
+            Address from, Address to, BigInteger nonce, DataWord value, byte[] data, String note) {
         byte[] parentHash = context.transactionHash();
         int depth = context.depth();
         int index = context.helper().getInternalTransactions().size();
 
-        return new AionInternalTx(parentHash, depth, index, new DataWord(nonce).getData(), from, to, value.getData(), data, note);
+        return new AionInternalTx(
+                parentHash,
+                depth,
+                index,
+                new DataWord(nonce).getData(),
+                from,
+                to,
+                value.getData(),
+                data,
+                note);
     }
 }

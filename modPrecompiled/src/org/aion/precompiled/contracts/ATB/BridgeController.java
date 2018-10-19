@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
-
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ISignature;
@@ -21,9 +20,8 @@ import org.aion.vm.ExecutionHelper;
 import org.aion.vm.ExecutionResult;
 
 /**
- * Contains the functional components of the Aion Token Bridge, this class is removed
- * from concerns regarding communicate with outside world (external) and communicating
- * with the database.
+ * Contains the functional components of the Aion Token Bridge, this class is removed from concerns
+ * regarding communicate with outside world (external) and communicating with the database.
  */
 public class BridgeController {
 
@@ -33,10 +31,11 @@ public class BridgeController {
     private final Address ownerAddress;
     private Transferable transferable;
 
-    public BridgeController(@Nonnull final BridgeStorageConnector storageConnector,
-                            @Nonnull final ExecutionHelper helper,
-                            @Nonnull final Address contractAddress,
-                            @Nonnull final Address ownerAddress) {
+    public BridgeController(
+            @Nonnull final BridgeStorageConnector storageConnector,
+            @Nonnull final ExecutionHelper helper,
+            @Nonnull final Address contractAddress,
+            @Nonnull final Address ownerAddress) {
         this.connector = storageConnector;
         this.result = helper;
         this.contractAddress = contractAddress;
@@ -47,12 +46,9 @@ public class BridgeController {
         this.transferable = transferable;
     }
 
-    /**
-     * Loads in the stored state from the underlying repository
-     */
+    /** Loads in the stored state from the underlying repository */
     public void initialize() {
-        if (this.connector.getInitialized())
-            return;
+        if (this.connector.getInitialized()) return;
         // otherwise initialize
         this.connector.setOwner(ownerAddress.toBytes());
         this.connector.setInitialized(true);
@@ -86,17 +82,14 @@ public class BridgeController {
     }
 
     // logic
-    public ErrCode setNewOwner(@Nonnull final byte[] caller,
-                               @Nonnull final byte[] newOwner) {
-        if (!isOwner(caller))
-            return ErrCode.NOT_OWNER;
+    public ErrCode setNewOwner(@Nonnull final byte[] caller, @Nonnull final byte[] newOwner) {
+        if (!isOwner(caller)) return ErrCode.NOT_OWNER;
         this.connector.setNewOwner(newOwner);
         return ErrCode.NO_ERROR;
     }
 
     public ErrCode acceptOwnership(@Nonnull final byte[] caller) {
-        if (!isNewOwner(caller))
-            return ErrCode.NOT_NEW_OWNER;
+        if (!isNewOwner(caller)) return ErrCode.NOT_NEW_OWNER;
         this.connector.setOwner(caller);
         this.connector.setNewOwner(ByteUtil.EMPTY_WORD);
 
@@ -113,10 +106,8 @@ public class BridgeController {
         return relayer != null && Arrays.equals(caller, this.connector.getRelayer());
     }
 
-    public ErrCode setRelayer(@Nonnull final byte[] caller,
-                              @Nonnull final byte[] newOwner) {
-        if (!isOwner(caller))
-            return ErrCode.NOT_OWNER;
+    public ErrCode setRelayer(@Nonnull final byte[] caller, @Nonnull final byte[] newOwner) {
+        if (!isOwner(caller)) return ErrCode.NOT_OWNER;
         this.connector.setRelayer(newOwner);
         return ErrCode.NO_ERROR;
     }
@@ -137,13 +128,10 @@ public class BridgeController {
         return this.connector.getActiveMember(address);
     }
 
-    public ErrCode ringInitialize(@Nonnull final byte[] caller,
-                                  @Nonnull final byte[][] members) {
-        if (!isOwner(caller))
-            return ErrCode.NOT_OWNER;
+    public ErrCode ringInitialize(@Nonnull final byte[] caller, @Nonnull final byte[][] members) {
+        if (!isOwner(caller)) return ErrCode.NOT_OWNER;
 
-        if (isRingLocked())
-            return ErrCode.RING_LOCKED;
+        if (isRingLocked()) return ErrCode.RING_LOCKED;
 
         int thresh = thresholdRatio(members.length);
 
@@ -157,16 +145,12 @@ public class BridgeController {
         return ErrCode.NO_ERROR;
     }
 
-    public ErrCode ringAddMember(@Nonnull final byte[] caller,
-                                 @Nonnull final byte[] address) {
-        if (!isOwner(caller))
-            return ErrCode.NOT_OWNER;
+    public ErrCode ringAddMember(@Nonnull final byte[] caller, @Nonnull final byte[] address) {
+        if (!isOwner(caller)) return ErrCode.NOT_OWNER;
 
-        if (!isRingLocked())
-            return ErrCode.RING_NOT_LOCKED;
+        if (!isRingLocked()) return ErrCode.RING_NOT_LOCKED;
 
-        if (isRingMember(address))
-            return ErrCode.RING_MEMBER_EXISTS;
+        if (isRingMember(address)) return ErrCode.RING_MEMBER_EXISTS;
 
         int memberCount = this.connector.getMemberCount() + 1;
         int thresh = thresholdRatio(memberCount);
@@ -179,16 +163,12 @@ public class BridgeController {
         return ErrCode.NO_ERROR;
     }
 
-    public ErrCode ringRemoveMember(@Nonnull final byte[] caller,
-                                    @Nonnull final byte[] address) {
-        if (!isOwner(caller))
-            return ErrCode.NOT_OWNER;
+    public ErrCode ringRemoveMember(@Nonnull final byte[] caller, @Nonnull final byte[] address) {
+        if (!isOwner(caller)) return ErrCode.NOT_OWNER;
 
-        if (!isRingLocked())
-            return ErrCode.RING_NOT_LOCKED;
+        if (!isRingLocked()) return ErrCode.RING_NOT_LOCKED;
 
-        if (!isRingMember(address))
-            return ErrCode.RING_MEMBER_NOT_EXISTS;
+        if (!isRingMember(address)) return ErrCode.RING_MEMBER_NOT_EXISTS;
 
         int memberCount = this.connector.getMemberCount() - 1;
         int thresh = thresholdRatio(memberCount);
@@ -215,36 +195,30 @@ public class BridgeController {
     }
 
     /**
-     * Assume bundleHash is not from external source, but rather
-     * calculated on our side (on the I/O layer), when {@link BridgeTransfer} list
-     * was being created.
+     * Assume bundleHash is not from external source, but rather calculated on our side (on the I/O
+     * layer), when {@link BridgeTransfer} list was being created.
      *
-     * @param caller,          address of the calling account. Used to check whether
-     *                         the address calling is the relay or not.
-     * @param sourceBlockHash, hash of a block on the source blockchain, each
-     *                         block may contain 1 to N bundles. Used as part
-     *                         of the bundleHash to tie a bundle to a block.
-     * @param transfers,       {@link BridgeTransfer}
-     * @param signatures,      a list of signatures from signatories that have signed
-     *                         the bundles.
+     * @param caller, address of the calling account. Used to check whether the address calling is
+     *     the relay or not.
+     * @param sourceBlockHash, hash of a block on the source blockchain, each block may contain 1 to
+     *     N bundles. Used as part of the bundleHash to tie a bundle to a block.
+     * @param transfers, {@link BridgeTransfer}
+     * @param signatures, a list of signatures from signatories that have signed the bundles.
      * @return {@code ErrCode} indicating whether operation was successful
      * @implNote assume the inputs are properly formatted
-     * @implNote will check whether any bundles are {@code 0} value transfers.
-     * In such a case, it indicates that the bridge has faulted, so we should
-     * immediately fail all transfers.
-     * @implNote {@link BridgeDeserializer} implicitly places a max size for each
-     * list to 512.
+     * @implNote will check whether any bundles are {@code 0} value transfers. In such a case, it
+     *     indicates that the bridge has faulted, so we should immediately fail all transfers.
+     * @implNote {@link BridgeDeserializer} implicitly places a max size for each list to 512.
      */
-    public ProcessedResults processBundles(@Nonnull final byte[] caller,
-                                           @Nonnull final byte[] transactionHash,
-                                           @Nonnull final byte[] sourceBlockHash,
-                                           @Nonnull final BridgeTransfer[] transfers,
-                                           @Nonnull final byte[][] signatures) {
-        if (!isRingLocked())
-            return processError(ErrCode.RING_NOT_LOCKED);
+    public ProcessedResults processBundles(
+            @Nonnull final byte[] caller,
+            @Nonnull final byte[] transactionHash,
+            @Nonnull final byte[] sourceBlockHash,
+            @Nonnull final BridgeTransfer[] transfers,
+            @Nonnull final byte[][] signatures) {
+        if (!isRingLocked()) return processError(ErrCode.RING_NOT_LOCKED);
 
-        if (!isRelayer(caller))
-            return processError(ErrCode.NOT_RELAYER);
+        if (!isRelayer(caller)) return processError(ErrCode.NOT_RELAYER);
 
         if (!isWithinSignatureBounds(signatures.length))
             return processError(ErrCode.INVALID_SIGNATURE_BOUNDS);
@@ -270,14 +244,14 @@ public class BridgeController {
         int signed = 0;
         for (byte[] sigBytes : signatures) {
             ISignature sig = SignatureFac.fromBytes(sigBytes);
-            if (SignatureFac.verify(hash, sig) && this.connector.getActiveMember(sig.getAddress())) {
+            if (SignatureFac.verify(hash, sig)
+                    && this.connector.getActiveMember(sig.getAddress())) {
                 signed++;
             }
         }
 
         int minThresh = this.connector.getMinThresh();
-        if (signed < minThresh)
-            return processError(ErrCode.NOT_ENOUGH_SIGNATURES);
+        if (signed < minThresh) return processError(ErrCode.NOT_ENOUGH_SIGNATURES);
 
         // otherwise, we're clear to proceed with transfers
         List<ExecutionResult> results = new ArrayList<>();
@@ -300,14 +274,16 @@ public class BridgeController {
              * interface documentation.
              */
             ExecutionResult result;
-            if ((result = transferable.transfer(b.getRecipient(), b.getTransferValue())).getResultCode()
+            if ((result = transferable.transfer(b.getRecipient(), b.getTransferValue()))
+                            .getResultCode()
                     == ExecutionResult.ResultCode.FAILURE)
                 // no need to return list of transactions, since they're all being dropped
                 return processError(ErrCode.INVALID_TRANSFER);
 
             // otherwise if transfer was successful
             if (result.getResultCode() == ExecutionResult.ResultCode.SUCCESS)
-                if (!emitDistributed(b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue()))
+                if (!emitDistributed(
+                        b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue()))
                     return processError(ErrCode.INVALID_TRANSFER);
             results.add(result);
         }
@@ -336,35 +312,34 @@ public class BridgeController {
     }
 
     // events
-    private boolean emitDistributed(@Nonnull final byte[] sourceTransactionHash,
-                                 @Nonnull final byte[] recipient,
-                                 @Nonnull final BigInteger value) {
+    private boolean emitDistributed(
+            @Nonnull final byte[] sourceTransactionHash,
+            @Nonnull final byte[] recipient,
+            @Nonnull final BigInteger value) {
         byte[] paddedValue = PrecompiledUtilities.pad(value.toByteArray(), 32);
-        if (paddedValue == null)
-            return false;
+        if (paddedValue == null) return false;
 
-        List<byte[]> topics = Arrays.asList(
-                BridgeEventSig.DISTRIBUTED.getHashed(),
-                sourceTransactionHash,
-                recipient,
-                paddedValue);
+        List<byte[]> topics =
+                Arrays.asList(
+                        BridgeEventSig.DISTRIBUTED.getHashed(),
+                        sourceTransactionHash,
+                        recipient,
+                        paddedValue);
         addLog(topics);
         return true;
     }
 
-    private void emitProcessedBundle(@Nonnull final byte[] sourceBlockHash,
-                                     @Nonnull final byte[] bundleHash) {
-        List<byte[]> topics = Arrays.asList(
-                BridgeEventSig.PROCESSED_BUNDLE.getHashed(),
-                sourceBlockHash,
-                bundleHash);
+    private void emitProcessedBundle(
+            @Nonnull final byte[] sourceBlockHash, @Nonnull final byte[] bundleHash) {
+        List<byte[]> topics =
+                Arrays.asList(
+                        BridgeEventSig.PROCESSED_BUNDLE.getHashed(), sourceBlockHash, bundleHash);
         addLog(topics);
     }
 
     private void emitSuccessfulTransactionHash(@Nonnull final byte[] aionTransactionHash) {
-        List<byte[]> topics = Arrays.asList(
-                BridgeEventSig.SUCCESSFUL_TXHASH.getHashed(),
-                aionTransactionHash);
+        List<byte[]> topics =
+                Arrays.asList(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed(), aionTransactionHash);
         addLog(topics);
     }
 

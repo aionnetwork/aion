@@ -17,31 +17,25 @@ import org.aion.precompiled.PrecompiledUtilities;
 /**
  * Storage layout mapping as the following:
  *
- * ------------------------------------------------------------
- * owner            DWORD   0x0     current owner of the contract
- * newOwner         DWORD   0x1     proposed new owner of the contract
+ * <p>------------------------------------------------------------ owner DWORD 0x0 current owner of
+ * the contract newOwner DWORD 0x1 proposed new owner of the contract
  *
- * memberCount      WORD    0x2     the total amount of members
- * minThresh        WORD    0x3     the minimum amount of votes required
- * ringLocked       WORD    0x4     if the ring is locked or not
+ * <p>memberCount WORD 0x2 the total amount of members minThresh WORD 0x3 the minimum amount of
+ * votes required ringLocked WORD 0x4 if the ring is locked or not
  *
- * There are two mapping fields:
- * memberMap        map[WORD] => boolean    {@code TRUE} if member is active
- * bundleMap        map[WORD] => boolean    {@code TRUE} if bundle has been processed
+ * <p>There are two mapping fields: memberMap map[WORD] => boolean {@code TRUE} if member is active
+ * bundleMap map[WORD] => boolean {@code TRUE} if bundle has been processed
  *
- * Maps are prepended with respective offsets, their keys are derived
- * as the following:
+ * <p>Maps are prepended with respective offsets, their keys are derived as the following:
  *
- * {@code h256(concat(MAP_OFFSET, key))}
+ * <p>{@code h256(concat(MAP_OFFSET, key))}
  *
- * Handles all loading/unloading, disguises itself like a simple POJO
- * from the outside.
+ * <p>Handles all loading/unloading, disguises itself like a simple POJO from the outside.
  *
- * Impl Detail Notes (Contracts):
+ * <p>Impl Detail Notes (Contracts):
  *
- * [C1] The storage does not distinguish between empty byte array (16 bytes 0) and nulls.
- * Any time it detects that the response is a 16-byte 0, a null is returned instead.
- *
+ * <p>[C1] The storage does not distinguish between empty byte array (16 bytes 0) and nulls. Any
+ * time it detects that the response is a 16-byte 0, a null is returned instead.
  */
 public class BridgeStorageConnector {
 
@@ -106,7 +100,6 @@ public class BridgeStorageConnector {
         this.setDWORD(S_OFFSET.NEW_OWNER.offset, address);
     }
 
-
     public byte[] getNewOwner() {
         return this.getDWORD(S_OFFSET.NEW_OWNER.offset);
     }
@@ -127,8 +120,7 @@ public class BridgeStorageConnector {
 
     public int getMemberCount() {
         byte[] countWord = this.getWORD(S_OFFSET.MEMBER_COUNT.offset);
-        if (countWord == null)
-            return 0;
+        if (countWord == null) return 0;
         return new BigInteger(1, countWord).intValueExact();
     }
 
@@ -140,8 +132,7 @@ public class BridgeStorageConnector {
     public int getMinThresh() {
         // C1 covered by getWORD
         byte[] threshWord = this.getWORD(S_OFFSET.MIN_THRESH.offset);
-        if (threshWord == null)
-            return 0;
+        if (threshWord == null) return 0;
         return new BigInteger(1, threshWord).intValueExact();
     }
 
@@ -154,18 +145,15 @@ public class BridgeStorageConnector {
     public boolean getRingLocked() {
         // C1 covered by getWORD
         byte[] lockedWord = this.getWORD(S_OFFSET.RING_LOCKED.offset);
-        if (lockedWord == null)
-            return false;
+        if (lockedWord == null) return false;
         // this may be redundant
         return (lockedWord[15] & 0x01) == 1;
     }
 
     // TODO: this can be optimized
-    public void setActiveMember(@Nonnull final byte[] key,
-                                final boolean value) {
+    public void setActiveMember(@Nonnull final byte[] key, final boolean value) {
         assert key.length == 32;
-        byte[] h = ByteUtil.chop(
-                HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
+        byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
         DataWord hWord = new DataWord(h);
         DataWord b = value ? new DataWord(1) : new DataWord(0);
         this.setWORD(hWord, b);
@@ -182,20 +170,14 @@ public class BridgeStorageConnector {
     }
 
     /**
-     * @implNote ATB-4 changes, we have a new requirement in the contract
-     * to store the value (transactionHash) of when the bundle was set
-     * into the block.
-     *
-     * Therefore, where previously we were checking whether the bundle
-     * was valid based on a {@code true/false} assumption, we now check
-     * whether the bundle is valid based on whether the returned address
-     * equates to a zero word.
-     *
-     * Documentation on the change can be found as part of v0.0.4
-     * changes.
+     * @implNote ATB-4 changes, we have a new requirement in the contract to store the value
+     *     (transactionHash) of when the bundle was set into the block.
+     *     <p>Therefore, where previously we were checking whether the bundle was valid based on a
+     *     {@code true/false} assumption, we now check whether the bundle is valid based on whether
+     *     the returned address equates to a zero word.
+     *     <p>Documentation on the change can be found as part of v0.0.4 changes.
      */
-    public void setBundle(@Nonnull final byte[] key,
-                          @Nonnull final byte[] value) {
+    public void setBundle(@Nonnull final byte[] key, @Nonnull final byte[] value) {
         assert key.length == 32;
         assert value.length == 32;
 
@@ -205,23 +187,20 @@ public class BridgeStorageConnector {
     }
 
     /**
-     * @implNote changed as part of ATB-4, see {@link #setBundle(byte[], byte[])}
-     * above for more information.
-     *
-     * @implNote note here that we return an EMPTY_WORD, this is checked in
-     * the controller layer and equates to a false.
-     *
+     * @implNote changed as part of ATB-4, see {@link #setBundle(byte[], byte[])} above for more
+     *     information.
+     * @implNote note here that we return an EMPTY_WORD, this is checked in the controller layer and
+     *     equates to a false.
      * @param key bundleHash
-     * @return {@code EMPTY_WORD (32)} if no blockHash is found, {@code transactionHash}
-     *         of the input transaction otherwise.
+     * @return {@code EMPTY_WORD (32)} if no blockHash is found, {@code transactionHash} of the
+     *     input transaction otherwise.
      */
     public byte[] getBundle(@Nonnull final byte[] key) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
         DataWord hWord = new DataWord(h);
         byte[] bundleDoubleWord = this.getDWORD(hWord);
-        if (bundleDoubleWord == null)
-            return ByteUtil.EMPTY_WORD;
+        if (bundleDoubleWord == null) return ByteUtil.EMPTY_WORD;
 
         // paranoid, this should typically never happen
         if (bundleDoubleWord.length < 32)
@@ -235,29 +214,24 @@ public class BridgeStorageConnector {
     private byte[] getWORD(@Nonnull final DataWord key) {
         IDataWord word = this.track.getStorageValue(contractAddress, key);
         // C1
-        if (word == null || Arrays.equals(word.getData(), ByteUtil.EMPTY_HALFWORD))
-            return null;
+        if (word == null || Arrays.equals(word.getData(), ByteUtil.EMPTY_HALFWORD)) return null;
         return word.getData();
     }
 
-    private void setWORD(@Nonnull final DataWord key,
-                         @Nonnull final DataWord word) {
+    private void setWORD(@Nonnull final DataWord key, @Nonnull final DataWord word) {
         this.track.addStorageRow(contractAddress, key, word);
     }
 
-    private void setDWORD(@Nonnull final DataWord key,
-                          @Nonnull final byte[] dword) {
+    private void setDWORD(@Nonnull final DataWord key, @Nonnull final byte[] dword) {
         assert dword.length > 16;
         this.track.addStorageRow(contractAddress, key, new DoubleDataWord(dword));
     }
 
     private byte[] getDWORD(@Nonnull final DataWord key) {
         IDataWord word = this.track.getStorageValue(contractAddress, key);
-        if (word == null)
-            return null;
+        if (word == null) return null;
 
-        if (word.isZero())
-            return null;
+        if (word.isZero()) return null;
         return word.getData();
     }
 }

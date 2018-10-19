@@ -1,16 +1,14 @@
 package org.aion.precompiled.encoding;
 
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.crypto.HashUtil;
-import org.aion.precompiled.PrecompiledUtilities;
-
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.ThreadSafe;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.ThreadSafe;
+import org.aion.base.util.ByteUtil;
+import org.aion.crypto.HashUtil;
+import org.aion.precompiled.PrecompiledUtilities;
 
 @ThreadSafe
 public class AbiEncoder {
@@ -20,11 +18,11 @@ public class AbiEncoder {
 
     private static final int STATIC_OFFSET_LEN = 16;
 
-    public AbiEncoder(@Nonnull final byte[] signature, @Nonnull BaseTypeFVM ...params) {
+    public AbiEncoder(@Nonnull final byte[] signature, @Nonnull BaseTypeFVM... params) {
         this(ByteUtil.toHexString(signature), params);
     }
 
-    public AbiEncoder(@Nonnull String signature, @Nonnull BaseTypeFVM ...params) {
+    public AbiEncoder(@Nonnull String signature, @Nonnull BaseTypeFVM... params) {
         this.params = new ArrayList<>(Arrays.asList(params));
         this.signature = signature;
     }
@@ -71,8 +69,7 @@ public class AbiEncoder {
     }
 
     public String encode() {
-        if (buffer == null)
-            createBuffer();
+        if (buffer == null) createBuffer();
         return "0x" + buffer.toString();
     }
 

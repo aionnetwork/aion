@@ -1,5 +1,8 @@
 package org.aion.precompiled.contracts.ATB;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
+
 import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -8,23 +11,22 @@ import org.aion.precompiled.DummyRepo;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
-
 public class BridgeControllerRingTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private static final Address CONTRACT_ADDR = new Address(HashUtil.h256("contractAddress".getBytes()));
+    private static final Address CONTRACT_ADDR =
+            new Address(HashUtil.h256("contractAddress".getBytes()));
     private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
 
-    private static final ECKey members[] = new ECKey[] {
-            ECKeyFac.inst().create(),
-            ECKeyFac.inst().create(),
-            ECKeyFac.inst().create(),
-            ECKeyFac.inst().create(),
-            ECKeyFac.inst().create()
-    };
+    private static final ECKey members[] =
+            new ECKey[] {
+                ECKeyFac.inst().create(),
+                ECKeyFac.inst().create(),
+                ECKeyFac.inst().create(),
+                ECKeyFac.inst().create(),
+                ECKeyFac.inst().create()
+            };
 
     private static byte[][] getMemberAddress(ECKey[] members) {
         byte[][] memberList = new byte[members.length][];
@@ -38,8 +40,8 @@ public class BridgeControllerRingTest {
     public void beforeEach() {
         DummyRepo repo = new DummyRepo();
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
-        this.controller = new BridgeController(
-                connector, dummyContext().helper(), CONTRACT_ADDR, OWNER_ADDR);
+        this.controller =
+                new BridgeController(connector, dummyContext().helper(), CONTRACT_ADDR, OWNER_ADDR);
         this.controller.initialize();
 
         byte[][] memberList = new byte[members.length][];
@@ -59,14 +61,13 @@ public class BridgeControllerRingTest {
 
     @Test
     public void testRingReinitialization() {
-        ErrCode code = this.controller.ringInitialize(
-                OWNER_ADDR.toBytes(),
-                getMemberAddress(members));
+        ErrCode code =
+                this.controller.ringInitialize(OWNER_ADDR.toBytes(), getMemberAddress(members));
         assertThat(code).isEqualTo(ErrCode.RING_LOCKED);
     }
 
-
     private static final byte[] memberAddress = HashUtil.h256("memberAddress".getBytes());
+
     @Test
     public void testRingAddMember() {
         ErrCode code = this.controller.ringAddMember(OWNER_ADDR.toBytes(), memberAddress);

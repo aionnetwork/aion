@@ -20,9 +20,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * A class testing the linked list data structure inside the public-facing TRS contract.
- */
+/** A class testing the linked list data structure inside the public-facing TRS contract. */
 public class TRSlinkedListTest extends TRShelpers {
 
     @Before
@@ -46,8 +44,7 @@ public class TRSlinkedListTest extends TRShelpers {
     @Test
     public void testLinkedListNoDepositors() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         TRSuseContract trs = newTRSuseContract(acct);
         assertNull(getLinkedListHead(trs, contract));
     }
@@ -56,8 +53,7 @@ public class TRSlinkedListTest extends TRShelpers {
     public void testLinkedListOneDepositor() {
         // First test using deposit.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         TRSuseContract trs = newTRSuseContract(acct);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
@@ -66,8 +62,7 @@ public class TRSlinkedListTest extends TRShelpers {
         repo.incrementNonce(acct);
 
         // Now test using depositFor.
-        contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         input = getDepositForInput(contract, acct, BigInteger.ONE);
         trs = newTRSuseContract(acct);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
@@ -79,8 +74,7 @@ public class TRSlinkedListTest extends TRShelpers {
         // First test using deposit.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
 
         TRSuseContract trs = newTRSuseContract(acct);
@@ -98,8 +92,7 @@ public class TRSlinkedListTest extends TRShelpers {
         // Test using depositFor.
         repo.incrementNonce(acct);
         repo.incrementNonce(acct2);
-        contract = createTRScontract(acct, false, false, 1,
-            BigInteger.ZERO, 0);
+        contract = createTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
         input = getDepositForInput(contract, acct, BigInteger.ONE);
 
         trs = newTRSuseContract(acct);
@@ -125,8 +118,7 @@ public class TRSlinkedListTest extends TRShelpers {
         acct2 = getNewExistentAccount(DEFAULT_BALANCE);
         acct3 = getNewExistentAccount(DEFAULT_BALANCE);
         acct4 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct1, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
 
         newTRSuseContract(acct1).execute(input, COST);
@@ -144,8 +136,7 @@ public class TRSlinkedListTest extends TRShelpers {
         acct2 = getNewExistentAccount(DEFAULT_BALANCE);
         acct3 = getNewExistentAccount(DEFAULT_BALANCE);
         acct4 = getNewExistentAccount(DEFAULT_BALANCE);
-        contract = createTRScontract(acct1, false, false, 1,
-            BigInteger.ZERO, 0);
+        contract = createTRScontract(acct1, false, false, 1, BigInteger.ZERO, 0);
 
         input = getDepositForInput(contract, acct1, BigInteger.ONE);
         newTRSuseContract(acct1).execute(input, COST);
@@ -169,8 +160,7 @@ public class TRSlinkedListTest extends TRShelpers {
     public void testRemoveHeadOfListWithHeadOnly() {
         // Test using deposit.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
 
@@ -178,8 +168,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
         // Test using depositFor
         acct = getNewExistentAccount(DEFAULT_BALANCE);
-        contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
         trs = newTRSuseContract(acct);
 
@@ -191,21 +180,20 @@ public class TRSlinkedListTest extends TRShelpers {
         // Test using deposit.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
-        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+        assertEquals(
+                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
 
         checkRemoveHeadOfListWithHeadAndNextOnly(trs, contract, acct, acct2);
 
         // Test using depositFor.
         acct = getNewExistentAccount(DEFAULT_BALANCE.multiply(BigInteger.valueOf(2)));
         acct2 = getNewExistentAccount(BigInteger.ZERO);
-        contract = createTRScontract(acct, false, false, 1,
-            BigInteger.ZERO, 0);
+        contract = createTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
 
         trs = newTRSuseContract(acct);
         input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
@@ -221,15 +209,16 @@ public class TRSlinkedListTest extends TRShelpers {
         // Test using deposit.
         int listSize = 10;
         Address owner = getNewExistentAccount(BigInteger.ONE);
-        Address contract = getContractMultipleDepositors(listSize, owner, false,
-            true, 1, BigInteger.ZERO, 0);
+        Address contract =
+                getContractMultipleDepositors(listSize, owner, false, true, 1, BigInteger.ZERO, 0);
 
         checkRemoveHeadOfLargerList(contract, owner, listSize);
 
         // Test using depositFor.
         owner = getNewExistentAccount(DEFAULT_BALANCE.multiply(BigInteger.valueOf(listSize)));
-        contract = getContractMultipleDepositorsUsingDepositFor(listSize, owner, false,
-            1, BigInteger.ZERO, 0);
+        contract =
+                getContractMultipleDepositorsUsingDepositFor(
+                        listSize, owner, false, 1, BigInteger.ZERO, 0);
 
         checkRemoveHeadOfLargerList(contract, owner, listSize);
     }
@@ -239,21 +228,20 @@ public class TRSlinkedListTest extends TRShelpers {
         // Test using deposit.
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
-        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+        assertEquals(
+                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
 
         checkRemoveTailOfSizeTwoList(trs, contract, acct, acct2);
 
         // Test using depositFor.
         acct = getNewExistentAccount(DEFAULT_BALANCE.multiply(BigInteger.TWO));
         acct2 = getNewExistentAccount(BigInteger.ZERO);
-        contract = createTRScontract(acct, false, false, 1,
-            BigInteger.ZERO, 0);
+        contract = createTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
 
         trs = newTRSuseContract(acct);
         input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
@@ -269,15 +257,16 @@ public class TRSlinkedListTest extends TRShelpers {
         // Test using deposit.
         int listSize = 10;
         Address owner = getNewExistentAccount(BigInteger.ONE);
-        Address contract = getContractMultipleDepositors(listSize, owner, false,
-            true, 1, BigInteger.ZERO, 0);
+        Address contract =
+                getContractMultipleDepositors(listSize, owner, false, true, 1, BigInteger.ZERO, 0);
 
         checkRemoveTailOfLargerList(contract, owner, listSize);
 
         // Test using depositFor.
         owner = getNewExistentAccount(DEFAULT_BALANCE.multiply(BigInteger.valueOf(listSize)));
-        contract = getContractMultipleDepositorsUsingDepositFor(listSize, owner, false,
-            1, BigInteger.ZERO, 0);
+        contract =
+                getContractMultipleDepositorsUsingDepositFor(
+                        listSize, owner, false, 1, BigInteger.ZERO, 0);
 
         checkRemoveTailOfLargerList(contract, owner, listSize);
     }
@@ -288,14 +277,15 @@ public class TRSlinkedListTest extends TRShelpers {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
         Address acct3 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
-        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
-        assertEquals(ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
+        assertEquals(
+                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+        assertEquals(
+                ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
 
         checkRemoveInteriorOfSizeThreeList(trs, contract, acct, acct2, acct3);
 
@@ -303,8 +293,7 @@ public class TRSlinkedListTest extends TRShelpers {
         acct = getNewExistentAccount(DEFAULT_BALANCE.multiply(BigInteger.valueOf(3)));
         acct2 = getNewExistentAccount(BigInteger.ZERO);
         acct3 = getNewExistentAccount(BigInteger.ZERO);
-        contract = createTRScontract(acct, false, false, 1,
-            BigInteger.ZERO, 0);
+        contract = createTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
 
         trs = newTRSuseContract(acct);
         input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
@@ -322,15 +311,16 @@ public class TRSlinkedListTest extends TRShelpers {
         // Test using deposit.
         int listSize = 10;
         Address owner = getNewExistentAccount(BigInteger.ONE);
-        Address contract = getContractMultipleDepositors(listSize, owner, false,
-            true, 1, BigInteger.ZERO, 0);
+        Address contract =
+                getContractMultipleDepositors(listSize, owner, false, true, 1, BigInteger.ZERO, 0);
 
         checkRemoveInteriorOfLargerList(contract, owner, listSize);
 
         // Test using depositFor.
         owner = getNewExistentAccount(DEFAULT_BALANCE.multiply(BigInteger.valueOf(listSize)));
-        contract = getContractMultipleDepositorsUsingDepositFor(listSize, owner, false,
-            1, BigInteger.ZERO, 0);
+        contract =
+                getContractMultipleDepositorsUsingDepositFor(
+                        listSize, owner, false, 1, BigInteger.ZERO, 0);
 
         checkRemoveInteriorOfLargerList(contract, owner, listSize);
     }
@@ -340,22 +330,24 @@ public class TRSlinkedListTest extends TRShelpers {
         // Test using deposit.
         int listSize = 10;
         Address owner = getNewExistentAccount(BigInteger.ONE);
-        Address contract = getContractMultipleDepositors(listSize, owner, false,
-            true, 1, BigInteger.ZERO, 0);
+        Address contract =
+                getContractMultipleDepositors(listSize, owner, false, true, 1, BigInteger.ZERO, 0);
 
         checkMultipleListRemovals(contract, owner, listSize);
 
         // Test using depositFor.
         owner = getNewExistentAccount(DEFAULT_BALANCE.multiply(BigInteger.valueOf(listSize)));
-        contract = getContractMultipleDepositorsUsingDepositFor(listSize, owner, false,
-            1, BigInteger.ZERO, 0);
+        contract =
+                getContractMultipleDepositorsUsingDepositFor(
+                        listSize, owner, false, 1, BigInteger.ZERO, 0);
 
         checkMultipleListRemovals(contract, owner, listSize);
     }
 
     // <---------------------------------------HELPERS BELOW--------------------------------------->
 
-    private void checkLinkedListOneDepositor(AbstractTRS trs, Address contract, Address acct, byte[] input) {
+    private void checkLinkedListOneDepositor(
+            AbstractTRS trs, Address contract, Address acct, byte[] input) {
         assertEquals(acct, getLinkedListHead(trs, contract));
         assertNull(getLinkedListNext(trs, contract, acct));
         assertNull(getLinkedListPrev(trs, contract, acct));
@@ -369,8 +361,8 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     // We expect a list with acct2 as head as such: null <- acct2 <-> acct -> null
-    private void checkLinkedListTwoDepositors(AbstractTRS trs, Address contract, Address acct,
-        Address acct2) {
+    private void checkLinkedListTwoDepositors(
+            AbstractTRS trs, Address contract, Address acct, Address acct2) {
 
         assertEquals(acct2, getLinkedListHead(trs, contract));
         assertEquals(acct, getLinkedListNext(trs, contract, acct2));
@@ -380,8 +372,8 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     // Expect a list with acct3 as head as such: null <- acct3 <-> acct2 <-> acct4 <-> acct1 -> null
-    private void checkLinkedListMultipleDepositors(Address contract, Address acct1, Address acct2,
-        Address acct3, Address acct4) {
+    private void checkLinkedListMultipleDepositors(
+            Address contract, Address acct1, Address acct2, Address acct3, Address acct4) {
 
         TRSuseContract trs = newTRSuseContract(acct1);
         assertEquals(acct3, getLinkedListHead(trs, contract));
@@ -395,8 +387,8 @@ public class TRSlinkedListTest extends TRShelpers {
         assertNull(getLinkedListNext(trs, contract, acct1));
     }
 
-    private void checkRemoveHeadOfListWithHeadOnly(AbstractTRS trs, Address contract, Address acct,
-        byte[] input) {
+    private void checkRemoveHeadOfListWithHeadOnly(
+            AbstractTRS trs, Address contract, Address acct, byte[] input) {
 
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
@@ -412,8 +404,8 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     // Expects acct2 as head with:  null <- acct2 <-> acct -> null
-    private void checkRemoveHeadOfListWithHeadAndNextOnly(AbstractTRS trs, Address contract,
-        Address acct, Address acct2) {
+    private void checkRemoveHeadOfListWithHeadAndNextOnly(
+            AbstractTRS trs, Address contract, Address acct, Address acct2) {
 
         assertEquals(acct2, getLinkedListHead(trs, contract));
         assertEquals(acct, getLinkedListNext(trs, contract, acct2));
@@ -461,8 +453,8 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     // Expects acct2 as head with:  null <- acct2 <-> acct -> null
-    private void checkRemoveTailOfSizeTwoList(AbstractTRS trs, Address contract, Address acct,
-        Address acct2) {
+    private void checkRemoveTailOfSizeTwoList(
+            AbstractTRS trs, Address contract, Address acct, Address acct2) {
 
         assertEquals(acct2, getLinkedListHead(trs, contract));
         assertEquals(acct, getLinkedListNext(trs, contract, acct2));
@@ -481,7 +473,8 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     private void checkRemoveTailOfLargerList(Address contract, Address owner, int listSize) {
-        // We have a linked list with 10 depositors. First find the tail. Ensure each address is unique too.
+        // We have a linked list with 10 depositors. First find the tail. Ensure each address is
+        // unique too.
         TRSuseContract trs = newTRSuseContract(owner);
         Address next = getLinkedListHead(trs, contract);
         Address head = new Address(next.toBytes());
@@ -516,8 +509,8 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     // Expects acct3 as head with: null <- acct3 <-> acct2 <-> acct -> null
-    private void checkRemoveInteriorOfSizeThreeList(AbstractTRS trs, Address contract, Address acct,
-        Address acct2, Address acct3) {
+    private void checkRemoveInteriorOfSizeThreeList(
+            AbstractTRS trs, Address contract, Address acct, Address acct2, Address acct3) {
 
         assertEquals(acct3, getLinkedListHead(trs, contract));
         assertEquals(acct2, getLinkedListNext(trs, contract, acct3));
@@ -540,7 +533,8 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     private void checkRemoveInteriorOfLargerList(Address contract, Address owner, int listSize) {
-        // We have a linked list with 10 depositors. Grab the 5th in line. Ensure each address is unique too.
+        // We have a linked list with 10 depositors. Grab the 5th in line. Ensure each address is
+        // unique too.
         TRSuseContract trs = newTRSuseContract(owner);
         Address next = getLinkedListHead(trs, contract);
         Address head = new Address(next.toBytes());
@@ -623,5 +617,4 @@ public class TRSlinkedListTest extends TRShelpers {
             }
         }
     }
-
 }

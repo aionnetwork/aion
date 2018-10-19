@@ -1,14 +1,13 @@
 package org.aion.precompiled.encoding;
 
-import org.aion.precompiled.PrecompiledUtilities;
-
-import javax.annotation.Nonnull;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nonnull;
+import org.aion.precompiled.PrecompiledUtilities;
 
 public class ListFVM extends BaseTypeFVM {
 
@@ -18,7 +17,7 @@ public class ListFVM extends BaseTypeFVM {
         this.params = new ArrayList<>();
     }
 
-    public ListFVM(@Nonnull final BaseTypeFVM ...params) {
+    public ListFVM(@Nonnull final BaseTypeFVM... params) {
         this.params = new ArrayList<>(Arrays.asList(params));
     }
 

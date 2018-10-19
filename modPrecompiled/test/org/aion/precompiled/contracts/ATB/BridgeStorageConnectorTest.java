@@ -1,5 +1,7 @@
 package org.aion.precompiled.contracts.ATB;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
@@ -7,8 +9,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.precompiled.DummyRepo;
 import org.junit.Before;
 import org.junit.Test;
-
-import static com.google.common.truth.Truth.*;
 
 public class BridgeStorageConnectorTest {
     private BridgeStorageConnector connector;
