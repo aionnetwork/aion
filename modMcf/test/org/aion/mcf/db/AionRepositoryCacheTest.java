@@ -53,30 +53,30 @@ public class AionRepositoryCacheTest {
     @Before
     public void setup() {
         IRepositoryConfig repoConfig =
-            new IRepositoryConfig() {
-                @Override
-                public String getDbPath() {
-                    return "";
-                }
+                new IRepositoryConfig() {
+                    @Override
+                    public String getDbPath() {
+                        return "";
+                    }
 
-                @Override
-                public IPruneConfig getPruneConfig() {
-                    return new CfgPrune(false);
-                }
+                    @Override
+                    public IPruneConfig getPruneConfig() {
+                        return new CfgPrune(false);
+                    }
 
-                @Override
-                public IContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-                }
+                    @Override
+                    public IContractDetails contractDetailsImpl() {
+                        return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                    }
 
-                @Override
-                public Properties getDatabaseConfig(String db_name) {
-                    Properties props = new Properties();
-                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                    return props;
-                }
-            };
+                    @Override
+                    public Properties getDatabaseConfig(String db_name) {
+                        Properties props = new Properties();
+                        props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                        props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                        return props;
+                    }
+                };
         cache = new AionRepositoryCache(AionRepositoryImpl.createForTesting(repoConfig));
     }
 
@@ -87,7 +87,9 @@ public class AionRepositoryCacheTest {
 
     @Test
     public void testGetStorageValueNoSuchAddress() {
-        assertNull(cache.getStorageValue(getNewAddress(), new DataWord(RandomUtils.nextBytes(DataWord.BYTES))));
+        assertNull(
+                cache.getStorageValue(
+                        getNewAddress(), new DataWord(RandomUtils.nextBytes(DataWord.BYTES))));
     }
 
     @Test
@@ -200,11 +202,9 @@ public class AionRepositoryCacheTest {
         }
     }
 
-    //<-----------------------------------------HELPERS-------------------------------------------->
+    // <-----------------------------------------HELPERS-------------------------------------------->
 
-    /**
-     * Returns a new random address.
-     */
+    /** Returns a new random address. */
     private Address getNewAddress() {
         return new Address(RandomUtils.nextBytes(Address.ADDRESS_LEN));
     }
@@ -221,7 +221,8 @@ public class AionRepositoryCacheTest {
      * Checks that cache's storage, given by cache.getStorage(), contains all key-value pairs in
      * keys and values, where it is assumed every n'th pair was deleted.
      */
-    private void checkStorage(Address address, List<IDataWord> keys, List<IDataWord> values, int n) {
+    private void checkStorage(
+            Address address, List<IDataWord> keys, List<IDataWord> values, int n) {
         Map<IDataWord, IDataWord> storage = cache.getStorage(address, keys);
         int count = 1;
         for (IDataWord key : keys) {
@@ -248,9 +249,7 @@ public class AionRepositoryCacheTest {
         }
     }
 
-    /**
-     * Puts all of the key-value pairs in keys and values into cache under address.
-     */
+    /** Puts all of the key-value pairs in keys and values into cache under address. */
     private void massAddToCache(Address address, List<IDataWord> keys, List<IDataWord> values) {
         int size = keys.size();
         assertEquals(size, values.size());
@@ -259,9 +258,7 @@ public class AionRepositoryCacheTest {
         }
     }
 
-    /**
-     * Returns a list of numKeys keys, every other one is single and then double.
-     */
+    /** Returns a list of numKeys keys, every other one is single and then double. */
     private List<IDataWord> getKeysInBulk(int numKeys) {
         List<IDataWord> keys = new ArrayList<>(numKeys);
         boolean isSingleKey = true;
@@ -272,9 +269,7 @@ public class AionRepositoryCacheTest {
         return keys;
     }
 
-    /**
-     * Returns a list of numValues values, every other one is single and then double.
-     */
+    /** Returns a list of numValues values, every other one is single and then double. */
     private List<IDataWord> getValuesInBulk(int numValues) {
         List<IDataWord> values = new ArrayList<>(numValues);
         boolean isSingleValue = true;
@@ -285,13 +280,10 @@ public class AionRepositoryCacheTest {
         return values;
     }
 
-    /**
-     * Returns a random DataWord if isSingleWord is true, otherwise a random DoubleDataWord.
-     */
+    /** Returns a random DataWord if isSingleWord is true, otherwise a random DoubleDataWord. */
     private IDataWord getRandomWord(boolean isSingleWord) {
-        return  (isSingleWord) ?
-            new DataWord(RandomUtils.nextBytes(DataWord.BYTES)) :
-            new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
+        return (isSingleWord)
+                ? new DataWord(RandomUtils.nextBytes(DataWord.BYTES))
+                : new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
     }
-
 }

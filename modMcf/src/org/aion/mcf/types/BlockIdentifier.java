@@ -1,51 +1,41 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
+ * <p>Contributors: Aion foundation.
  *
- * Contributors:
- *     Aion foundation.
-
- ******************************************************************************/
+ * <p>****************************************************************************
+ */
 package org.aion.mcf.types;
 
 import static org.aion.base.util.ByteUtil.byteArrayToLong;
 
 import java.math.BigInteger;
-
 import org.aion.base.type.IBlockIdentifier;
 import org.aion.base.util.Hex;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 
-/**
- * Block identifier holds block hash and number <br>
- */
+/** Block identifier holds block hash and number <br> */
 public class BlockIdentifier implements IBlockIdentifier {
 
-    /**
-     * Block hash
-     */
+    /** Block hash */
     private byte[] hash;
 
-    /**
-     * Block number
-     */
+    /** Block number */
     private long number;
 
     public BlockIdentifier(RLPList rlp) {

@@ -9,7 +9,7 @@ public class TxNrgRule {
     private static final long TX_NRG_MIN = Constants.NRG_TRANSACTION - 1;
 
     public static boolean isValidNrgContractCreate(long nrg) {
-        return (nrg > CONTRACT_CREATE_TX_NRG_MIN) && (nrg < CONTRACT_CREATE_TX_NRG_MAX) ;
+        return (nrg > CONTRACT_CREATE_TX_NRG_MIN) && (nrg < CONTRACT_CREATE_TX_NRG_MAX);
     }
 
     public static boolean isValidNrgTx(long nrg) {

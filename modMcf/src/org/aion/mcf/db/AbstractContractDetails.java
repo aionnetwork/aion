@@ -1,43 +1,37 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
+ * <p>Contributors: Aion foundation.
  *
- * Contributors:
- *     Aion foundation.
- *
- ******************************************************************************/
+ * <p>****************************************************************************
+ */
 package org.aion.mcf.db;
-
-import org.aion.base.db.IContractDetails;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 
-/**
- * Abstract contract details.
- */
+import java.util.HashMap;
+import java.util.Map;
+import org.aion.base.db.IContractDetails;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.Hex;
+
+/** Abstract contract details. */
 public abstract class AbstractContractDetails<DW> implements IContractDetails<DW> {
 
     private boolean dirty = false;
@@ -119,7 +113,12 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
 
     @Override
     public String toString() {
-        String ret = "  Code: " + (codes.size() < 2 ? Hex.toHexString(getCode()) : codes.size() + " versions") + "\n";
+        String ret =
+                "  Code: "
+                        + (codes.size() < 2
+                                ? Hex.toHexString(getCode())
+                                : codes.size() + " versions")
+                        + "\n";
         ret += "  Storage: " + getStorageHash();
         return ret;
     }

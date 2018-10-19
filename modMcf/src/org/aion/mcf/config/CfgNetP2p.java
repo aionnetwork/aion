@@ -1,38 +1,34 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
+ * <p>Contributors: Aion foundation.
  *
- * Contributors:
- *     Aion foundation.
- *
- ******************************************************************************/
+ * <p>****************************************************************************
+ */
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
 public final class CfgNetP2p {
 
@@ -71,43 +67,43 @@ public final class CfgNetP2p {
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                String elelmentName = sr.getLocalName().toLowerCase();
-                switch (elelmentName) {
-                case "ip":
-                    this.ip = Cfg.readValue(sr);
+                case XMLStreamReader.START_ELEMENT:
+                    String elelmentName = sr.getLocalName().toLowerCase();
+                    switch (elelmentName) {
+                        case "ip":
+                            this.ip = Cfg.readValue(sr);
+                            break;
+                        case "port":
+                            this.port = Integer.parseInt(Cfg.readValue(sr));
+                            break;
+                        case "discover":
+                            this.discover = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "cluster-node-mode":
+                            this.clusterNodeMode = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "bootlist-sync-only":
+                            this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "sync-only-mode":
+                            this.syncOnlyMode = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "max-temp-nodes":
+                            this.maxTempNodes = Integer.parseInt(Cfg.readValue(sr));
+                            break;
+                        case "max-active-nodes":
+                            this.maxActiveNodes = Integer.parseInt(Cfg.readValue(sr));
+                            break;
+                        case "err-tolerance":
+                            this.errorTolerance = Integer.parseInt(Cfg.readValue(sr));
+                            break;
+                        default:
+                            // Cfg.skipElement(sr);
+                            break;
+                    }
                     break;
-                case "port":
-                    this.port = Integer.parseInt(Cfg.readValue(sr));
-                    break;
-                case "discover":
-                    this.discover = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "cluster-node-mode":
-                    this.clusterNodeMode = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "bootlist-sync-only":
-                    this.bootlistSyncOnly = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "sync-only-mode":
-                    this.syncOnlyMode = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "max-temp-nodes":
-                    this.maxTempNodes = Integer.parseInt(Cfg.readValue(sr));
-                    break;
-                case "max-active-nodes":
-                    this.maxActiveNodes = Integer.parseInt(Cfg.readValue(sr));
-                    break;
-                case "err-tolerance":
-                    this.errorTolerance = Integer.parseInt(Cfg.readValue(sr));
-                    break;
-                default:
-                    // Cfg.skipElement(sr);
-                    break;
-                }
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
             }
         }
     }
@@ -180,7 +176,9 @@ public final class CfgNetP2p {
         return this.discover;
     }
 
-    public boolean getBootlistSyncOnly() { return bootlistSyncOnly; }
+    public boolean getBootlistSyncOnly() {
+        return bootlistSyncOnly;
+    }
 
     public int getMaxTempNodes() {
         return maxTempNodes;
@@ -194,7 +192,9 @@ public final class CfgNetP2p {
         return errorTolerance;
     }
 
-    public boolean inClusterNodeMode() { return clusterNodeMode; }
+    public boolean inClusterNodeMode() {
+        return clusterNodeMode;
+    }
 
     public boolean inSyncOnlyMode() {
         return syncOnlyMode;
@@ -205,19 +205,28 @@ public final class CfgNetP2p {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgNetP2p cfgNetP2p = (CfgNetP2p) o;
-        return port == cfgNetP2p.port &&
-                discover == cfgNetP2p.discover &&
-                clusterNodeMode == cfgNetP2p.clusterNodeMode &&
-                bootlistSyncOnly == cfgNetP2p.bootlistSyncOnly &&
-                syncOnlyMode == cfgNetP2p.syncOnlyMode &&
-                maxTempNodes == cfgNetP2p.maxTempNodes &&
-                maxActiveNodes == cfgNetP2p.maxActiveNodes &&
-                errorTolerance == cfgNetP2p.errorTolerance &&
-                Objects.equal(ip, cfgNetP2p.ip);
+        return port == cfgNetP2p.port
+                && discover == cfgNetP2p.discover
+                && clusterNodeMode == cfgNetP2p.clusterNodeMode
+                && bootlistSyncOnly == cfgNetP2p.bootlistSyncOnly
+                && syncOnlyMode == cfgNetP2p.syncOnlyMode
+                && maxTempNodes == cfgNetP2p.maxTempNodes
+                && maxActiveNodes == cfgNetP2p.maxActiveNodes
+                && errorTolerance == cfgNetP2p.errorTolerance
+                && Objects.equal(ip, cfgNetP2p.ip);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(ip, port, discover, clusterNodeMode, bootlistSyncOnly, syncOnlyMode, maxTempNodes, maxActiveNodes, errorTolerance);
+        return Objects.hashCode(
+                ip,
+                port,
+                discover,
+                clusterNodeMode,
+                bootlistSyncOnly,
+                syncOnlyMode,
+                maxTempNodes,
+                maxActiveNodes,
+                errorTolerance);
     }
 }

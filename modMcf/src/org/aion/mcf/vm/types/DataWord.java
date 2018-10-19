@@ -35,8 +35,8 @@ import org.aion.base.vm.IDataWord;
  */
 public class DataWord implements Comparable<DataWord>, IDataWord {
 
-    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(128)
-        .subtract(BigInteger.ONE);
+    public static final BigInteger MAX_VALUE =
+            BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);
 
     public static final DataWord ZERO = new DataWord(0);
     public static final DataWord ONE = new DataWord(1);
@@ -97,11 +97,9 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
         return ByteUtil.stripLeadingZeroes(data);
     }
 
-
     public BigInteger value() {
         return new BigInteger(1, data);
     }
-
 
     public int intValue() {
         int v = 0;
@@ -135,7 +133,6 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
         int result = data[0] & 0x80;
         return result == 0x80;
     }
-
 
     @Override
     public DataWord copy() {
@@ -172,5 +169,4 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     public String toString() {
         return Hex.toHexString(data);
     }
-
 }

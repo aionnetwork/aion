@@ -1,5 +1,10 @@
 package org.aion.valid;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.when;
+
+import java.util.LinkedList;
+import java.util.List;
 import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.mcf.valid.BlockNumberRule;
@@ -8,12 +13,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.when;
-
 /**
  * Unit tests for {@link BlockNumberRule}.
  *
@@ -21,10 +20,8 @@ import static org.mockito.Mockito.when;
  */
 public class BlockNumberRuleTest {
 
-    @Mock
-    IBlockHeader mockChildBH;
-    @Mock
-    IBlockHeader mockParentBH;
+    @Mock IBlockHeader mockChildBH;
+    @Mock IBlockHeader mockParentBH;
 
     @Before
     public void setUp() {
@@ -32,8 +29,8 @@ public class BlockNumberRuleTest {
     }
 
     /**
-     * Checks if the {@link BlockNumberRule#validate} returns {@code true} when
-     * the block number is <b>smaller by 1</b> than the parent block number.
+     * Checks if the {@link BlockNumberRule#validate} returns {@code true} when the block number is
+     * <b>smaller by 1</b> than the parent block number.
      */
     @Test
     public void testValidateWithParent() {
@@ -50,8 +47,8 @@ public class BlockNumberRuleTest {
     }
 
     /**
-     * Checks if the {@link BlockNumberRule#validate} returns {@code false} when
-     * the block number is <b>larger</b> than the parent block number.
+     * Checks if the {@link BlockNumberRule#validate} returns {@code false} when the block number is
+     * <b>larger</b> than the parent block number.
      */
     @Test
     public void testValidateWithSmallerParentNumber() {
@@ -68,9 +65,8 @@ public class BlockNumberRuleTest {
     }
 
     /**
-     * Checks if the {@link BlockNumberRule#validate} returns {@code false} when
-     * the block number is <b>smaller by more than 1</b> than the parent block
-     * number.
+     * Checks if the {@link BlockNumberRule#validate} returns {@code false} when the block number is
+     * <b>smaller by more than 1</b> than the parent block number.
      */
     @Test
     public void testValidateWithLargerParentNumber() {

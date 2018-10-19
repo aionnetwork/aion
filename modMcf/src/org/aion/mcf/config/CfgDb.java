@@ -24,6 +24,7 @@ package org.aion.mcf.config;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
 
+import com.google.common.base.Objects;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -34,8 +35,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-
-import com.google.common.base.Objects;
 import org.aion.base.util.Utils;
 import org.aion.db.impl.DBVendor;
 
@@ -369,8 +368,9 @@ public class CfgDb {
 
                 // checks if any of the settings require persistence
                 if (!isPersistent) {
-                    DBVendor vendor = DBVendor
-                        .fromString(entry.getValue().asProperties().getProperty(Props.DB_TYPE));
+                    DBVendor vendor =
+                            DBVendor.fromString(
+                                    entry.getValue().asProperties().getProperty(Props.DB_TYPE));
                     isPersistent = vendor.getPersistence();
                 }
             }
@@ -413,7 +413,7 @@ public class CfgDb {
             }
         }
     }
-  
+
     public void setDatabasePath(String value) {
         path = value;
     }
@@ -423,18 +423,26 @@ public class CfgDb {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgDb cfgDb = (CfgDb) o;
-        return compression == cfgDb.compression &&
-                check_integrity == cfgDb.check_integrity &&
-                expert == cfgDb.expert &&
-                Objects.equal(path, cfgDb.path) &&
-                Objects.equal(vendor, cfgDb.vendor) &&
-                Objects.equal(prune, cfgDb.prune) &&
-                prune_option == cfgDb.prune_option &&
-                Objects.equal(specificConfig, cfgDb.specificConfig);
+        return compression == cfgDb.compression
+                && check_integrity == cfgDb.check_integrity
+                && expert == cfgDb.expert
+                && Objects.equal(path, cfgDb.path)
+                && Objects.equal(vendor, cfgDb.vendor)
+                && Objects.equal(prune, cfgDb.prune)
+                && prune_option == cfgDb.prune_option
+                && Objects.equal(specificConfig, cfgDb.specificConfig);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(path, vendor, compression, check_integrity, prune, prune_option, expert, specificConfig);
+        return Objects.hashCode(
+                path,
+                vendor,
+                compression,
+                check_integrity,
+                prune,
+                prune_option,
+                expert,
+                specificConfig);
     }
 }

@@ -1,23 +1,22 @@
-/*******************************************************************************
+/**
+ * *****************************************************************************
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ * <p>Copyright (c) 2017, 2018 Aion foundation.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ * <p>This program is free software: you can redistribute it and/or modify it under the terms of the
+ * GNU General Public License as published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ * <p>This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ * <p>You should have received a copy of the GNU General Public License along with this program. If
+ * not, see <https://www.gnu.org/licenses/>
  *
- * Contributors:
- *     Aion foundation.
- *******************************************************************************/
+ * <p>Contributors: Aion foundation.
+ * *****************************************************************************
+ */
 package org.aion.mcf.db;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -50,20 +49,16 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
-    /**
-     * the repository being tracked
-     */
+    /** the repository being tracked */
     protected IRepository<AccountState, IDataWord, BSB> repository;
 
-    /**
-     * local accounts cache
-     */
+    /** local accounts cache */
     protected Map<Address, AccountState> cachedAccounts;
+
     protected ReadWriteLock lockAccounts = new ReentrantReadWriteLock();
-    /**
-     * local contract details cache
-     */
+    /** local contract details cache */
     protected Map<Address, IContractDetails<IDataWord>> cachedDetails;
+
     protected ReadWriteLock lockDetails = new ReentrantReadWriteLock();
 
     @Override
@@ -88,9 +83,9 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     /**
      * Retrieves the current state of the account associated with the given address.
      *
-     * @param address
-     *         the address of the account of interest
-     * @return a {@link AccountState} object representing the account state as is stored in the database or cache
+     * @param address the address of the account of interest
+     * @return a {@link AccountState} object representing the account state as is stored in the
+     *     database or cache
      * @implNote If there is no account associated with the given address, it will create it.
      */
     @Override
@@ -162,7 +157,6 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
             } catch (Exception e) {
                 // there was nothing to unlock
             }
-
         }
     }
 
@@ -186,10 +180,13 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     /**
-     * @implNote The loaded objects are fresh copies of the locally cached account state and contract details.
+     * @implNote The loaded objects are fresh copies of the locally cached account state and
+     *     contract details.
      */
     @Override
-    public void loadAccountState(Address address, Map<Address, AccountState> accounts,
+    public void loadAccountState(
+            Address address,
+            Map<Address, AccountState> accounts,
             Map<Address, IContractDetails<IDataWord>> details) {
         fullyReadLock();
 
@@ -213,10 +210,11 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     /**
-     * Loads the state of the account into <b>this object' caches</b>.
-     * Requires write locks on both {@link #lockAccounts} and {@link #lockDetails}.
+     * Loads the state of the account into <b>this object' caches</b>. Requires write locks on both
+     * {@link #lockAccounts} and {@link #lockDetails}.
      *
-     * @implNote If the calling method has acquired a weaker lock, the lock must be released before calling this method.
+     * @implNote If the calling method has acquired a weaker lock, the lock must be released before
+     *     calling this method.
      * @apiNote If the account was never stored this call will create it.
      */
     private void loadAccountState(Address address) {
@@ -263,14 +261,18 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     public BigInteger getNonce(Address address) {
         AccountState accountState = getAccountState(address);
         // account state can never be null, but may be empty or deleted
-        return (accountState.isEmpty() || accountState.isDeleted()) ? BigInteger.ZERO : accountState.getNonce();
+        return (accountState.isEmpty() || accountState.isDeleted())
+                ? BigInteger.ZERO
+                : accountState.getNonce();
     }
 
     @Override
     public BigInteger getBalance(Address address) {
         AccountState accountState = getAccountState(address);
         // account state can never be null, but may be empty or deleted
-        return (accountState.isEmpty() || accountState.isDeleted()) ? BigInteger.ZERO : accountState.getBalance();
+        return (accountState.isEmpty() || accountState.isDeleted())
+                ? BigInteger.ZERO
+                : accountState.getBalance();
     }
 
     @Override
@@ -290,7 +292,8 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
         fullyWriteLock();
         try {
             // save the code
-            // TODO: why not create contract here directly? also need to check that there is no preexisting code!
+            // TODO: why not create contract here directly? also need to check that there is no
+            // preexisting code!
             IContractDetails<IDataWord> contractDetails = getContractDetails(address);
             contractDetails.setCode(code);
             // TODO: ensure that setDirty is done by the class itself
@@ -328,7 +331,9 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     @Override
     public IDataWord getStorageValue(Address address, IDataWord key) {
         IDataWord value = getContractDetails(address).get(key);
-        if (value == null) { return null; }
+        if (value == null) {
+            return null;
+        }
         return (value.isZero()) ? null : value;
     }
 
@@ -364,33 +369,25 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
         return repository.getBlockStore();
     }
 
-    /**
-     * Lock to prevent writing on both accounts and details.
-     */
+    /** Lock to prevent writing on both accounts and details. */
     protected void fullyWriteLock() {
         lockAccounts.writeLock().lock();
         lockDetails.writeLock().lock();
     }
 
-    /**
-     * Unlock to allow writing on both accounts and details.
-     */
+    /** Unlock to allow writing on both accounts and details. */
     protected void fullyWriteUnlock() {
         lockDetails.writeLock().unlock();
         lockAccounts.writeLock().unlock();
     }
 
-    /**
-     * Lock for reading both accounts and details.
-     */
+    /** Lock for reading both accounts and details. */
     protected void fullyReadLock() {
         lockAccounts.readLock().lock();
         lockDetails.readLock().lock();
     }
 
-    /**
-     * Unlock reading for both accounts and details.
-     */
+    /** Unlock reading for both accounts and details. */
     protected void fullyReadUnlock() {
         lockDetails.readLock().unlock();
         lockAccounts.readLock().unlock();

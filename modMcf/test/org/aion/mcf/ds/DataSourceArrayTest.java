@@ -1,28 +1,32 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- *
- * Contributors:
- *     Aion foundation.
- ******************************************************************************/
+ * <p>Contributors: Aion foundation.
+ * ****************************************************************************
+ */
 package org.aion.mcf.ds;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -33,14 +37,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.zero.impl.db.AionBlockStore.BLOCK_INFO_SERIALIZER;
 
 /**
  * Tests for {@link DataSourceArray}.
@@ -79,9 +75,7 @@ public class DataSourceArrayTest {
         db.close();
     }
 
-    /**
-     * @return input values for {@link #testWithInt(int)}
-     */
+    /** @return input values for {@link #testWithInt(int)} */
     @SuppressWarnings("unused")
     private Object intValues() {
 
@@ -101,8 +95,7 @@ public class DataSourceArrayTest {
      * Checks correct {@link DataSourceArray#set(long, Object)}, {@link DataSourceArray#size()},
      * {@link DataSourceArray#get(long)} and {@link DataSourceArray#remove(long)}
      *
-     * @param value
-     *         int values from {@link #intValues()}
+     * @param value int values from {@link #intValues()}
      */
     @Test
     @Parameters(method = "intValues")
@@ -121,9 +114,7 @@ public class DataSourceArrayTest {
         assertThat(testIndex.size()).isEqualTo((long) value);
     }
 
-    /**
-     * @return input values for {@link #testWithLong(long)}
-     */
+    /** @return input values for {@link #testWithLong(long)} */
     @SuppressWarnings("unused")
     private Object longValues() {
 
@@ -148,8 +139,7 @@ public class DataSourceArrayTest {
      * Checks correct {@link DataSourceArray#set(long, Object)}, {@link DataSourceArray#size()},
      * {@link DataSourceArray#get(long)} and {@link DataSourceArray#remove(long)}
      *
-     * @param value
-     *         long values from {@link #longValues()}
+     * @param value long values from {@link #longValues()}
      */
     @Test
     @Parameters(method = "longValues")
@@ -168,9 +158,7 @@ public class DataSourceArrayTest {
         assertThat(testIndex.size()).isEqualTo(value);
     }
 
-    /**
-     * @return input values for {@link #testSetWithNegativeValues(long)}
-     */
+    /** @return input values for {@link #testSetWithNegativeValues(long)} */
     @SuppressWarnings("unused")
     private Object negativeAndLargeValues() {
 
@@ -210,9 +198,7 @@ public class DataSourceArrayTest {
         assertThat(currentSize).isEqualTo(0L);
     }
 
-    /**
-     * @return input values for {@link #testSetWithIncreasingValues(long, long, long)}
-     */
+    /** @return input values for {@link #testSetWithIncreasingValues(long, long, long)} */
     @SuppressWarnings("unused")
     private Object increasingSets() {
 
@@ -221,18 +207,19 @@ public class DataSourceArrayTest {
         long intMax = (long) Integer.MAX_VALUE;
 
         // small (int) values
-        parameters.add(new Object[] { -10L, -1L, 0L });
-        parameters.add(new Object[] { -1L, 0L, 1L });
-        parameters.add(new Object[] { 0L, 1L, 2L });
-        parameters.add(new Object[] { 0L, 10L, 100L });
+        parameters.add(new Object[] {-10L, -1L, 0L});
+        parameters.add(new Object[] {-1L, 0L, 1L});
+        parameters.add(new Object[] {0L, 1L, 2L});
+        parameters.add(new Object[] {0L, 10L, 100L});
 
         // small to large transition
-        parameters.add(new Object[] { intMax - 1L, intMax, intMax + 1L });
-        parameters.add(new Object[] { (long) random.nextInt(Integer.MAX_VALUE), intMax, 2 * intMax });
+        parameters.add(new Object[] {intMax - 1L, intMax, intMax + 1L});
+        parameters.add(new Object[] {(long) random.nextInt(Integer.MAX_VALUE), intMax, 2 * intMax});
 
         // large (long) values
-        parameters.add(new Object[] { Long.MAX_VALUE / 6, Long.MAX_VALUE / 4, Long.MAX_VALUE / 2 });
-        parameters.add(new Object[] { Long.MAX_VALUE - 3L, Long.MAX_VALUE - 2L, Long.MAX_VALUE - 1L });
+        parameters.add(new Object[] {Long.MAX_VALUE / 6, Long.MAX_VALUE / 4, Long.MAX_VALUE / 2});
+        parameters.add(
+                new Object[] {Long.MAX_VALUE - 3L, Long.MAX_VALUE - 2L, Long.MAX_VALUE - 1L});
 
         return parameters.toArray();
     }
@@ -262,8 +249,8 @@ public class DataSourceArrayTest {
     }
 
     /**
-     * @return input values for {@link #testSetWithDecreasingValues(long, long)} and
-     *         {@link #testGetWithIndexOutOfBoundsException(long, long)}
+     * @return input values for {@link #testSetWithDecreasingValues(long, long)} and {@link
+     *     #testGetWithIndexOutOfBoundsException(long, long)}
      */
     @SuppressWarnings("unused")
     private Object decreasingSets() {
@@ -273,24 +260,24 @@ public class DataSourceArrayTest {
         long intMax = (long) Integer.MAX_VALUE;
 
         // small (int) values
-        parameters.add(new Object[] { 0L, -1L });
-        parameters.add(new Object[] { 1L, 0L });
-        parameters.add(new Object[] { 2L, 1L });
-        parameters.add(new Object[] { 100L, 10L });
-        parameters.add(new Object[] { intMax - 2L, intMax - 3L });
+        parameters.add(new Object[] {0L, -1L});
+        parameters.add(new Object[] {1L, 0L});
+        parameters.add(new Object[] {2L, 1L});
+        parameters.add(new Object[] {100L, 10L});
+        parameters.add(new Object[] {intMax - 2L, intMax - 3L});
 
         // values around transition point
-        parameters.add(new Object[] { intMax + 1L, intMax });
-        parameters.add(new Object[] { intMax, intMax - 1L });
-        parameters.add(new Object[] { intMax - 1L, intMax - 2L });
-        parameters.add(new Object[] { intMax, (long) random.nextInt(Integer.MAX_VALUE) });
-        parameters.add(new Object[] { 2 * intMax, intMax });
+        parameters.add(new Object[] {intMax + 1L, intMax});
+        parameters.add(new Object[] {intMax, intMax - 1L});
+        parameters.add(new Object[] {intMax - 1L, intMax - 2L});
+        parameters.add(new Object[] {intMax, (long) random.nextInt(Integer.MAX_VALUE)});
+        parameters.add(new Object[] {2 * intMax, intMax});
 
         // large (long) values
-        parameters.add(new Object[] { Long.MAX_VALUE / 2, Long.MAX_VALUE / 4 });
-        parameters.add(new Object[] { Long.MAX_VALUE / 4, Long.MAX_VALUE / 6 });
-        parameters.add(new Object[] { Long.MAX_VALUE - 1L, Long.MAX_VALUE - 2L });
-        parameters.add(new Object[] { Long.MAX_VALUE - 2L, Long.MAX_VALUE - 3L });
+        parameters.add(new Object[] {Long.MAX_VALUE / 2, Long.MAX_VALUE / 4});
+        parameters.add(new Object[] {Long.MAX_VALUE / 4, Long.MAX_VALUE / 6});
+        parameters.add(new Object[] {Long.MAX_VALUE - 1L, Long.MAX_VALUE - 2L});
+        parameters.add(new Object[] {Long.MAX_VALUE - 2L, Long.MAX_VALUE - 3L});
 
         return parameters.toArray();
     }

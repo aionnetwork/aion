@@ -1,41 +1,34 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
+ * <p>Contributors: Aion foundation.
  *
- * Contributors:
- *     Aion foundation.
-
- ******************************************************************************/
-
+ * <p>****************************************************************************
+ */
 package org.aion.mcf.types;
 
 import static org.aion.base.util.TimeUtils.secondsToMillis;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-
 import org.aion.base.type.IBlock;
 import org.aion.rlp.RLP;
 
-/**
- * AbstractBlockWrapper
- */
+/** AbstractBlockWrapper */
 public abstract class AbstractBlockWrapper<BLK extends IBlock<?, ?>> {
 
     protected static final long SOLID_BLOCK_DURATION_THRESHOLD = secondsToMillis(60);
@@ -60,7 +53,7 @@ public abstract class AbstractBlockWrapper<BLK extends IBlock<?, ?>> {
         parse(bytes);
     }
 
-    abstract protected void parse(byte[] bytes);
+    protected abstract void parse(byte[] bytes);
 
     public BLK getBlock() {
         return block;
@@ -150,7 +143,8 @@ public abstract class AbstractBlockWrapper<BLK extends IBlock<?, ?>> {
         byte[] receivedAtBytes = RLP.encodeBigInteger(BigInteger.valueOf(receivedAt));
         byte[] newBlockBytes = RLP.encodeByte((byte) (newBlock ? 1 : 0));
         byte[] nodeIdBytes = RLP.encodeElement(nodeId);
-        return RLP.encodeList(blockBytes, importFailedBytes, receivedAtBytes, newBlockBytes, nodeIdBytes);
+        return RLP.encodeList(
+                blockBytes, importFailedBytes, receivedAtBytes, newBlockBytes, nodeIdBytes);
     }
 
     @Override

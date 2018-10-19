@@ -126,7 +126,7 @@ public abstract class AbstractRepository<
      * Initializes all necessary databases and caches.
      *
      * @throws InvalidFilePathException when called with a persistent database vendor for which the
-     * data store cannot be created or opened.
+     *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
     protected void initializeDatabasesAndCaches() throws InvalidFilePathException {
@@ -178,8 +178,10 @@ public abstract class AbstractRepository<
         try {
             databaseGroup = new ArrayList<>();
 
-            checkIntegrity = Boolean.valueOf(
-                    cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.CHECK_INTEGRITY));
+            checkIntegrity =
+                    Boolean.valueOf(
+                            cfg.getDatabaseConfig(Names.DEFAULT)
+                                    .getProperty(Props.CHECK_INTEGRITY));
 
             // getting state specific properties
             sharedProps = cfg.getDatabaseConfig(STATE_DB);
@@ -316,10 +318,10 @@ public abstract class AbstractRepository<
 
     private InvalidFilePathException newException(String dbName, Properties props) {
         return new InvalidFilePathException(
-            "The «"
-                + dbName
-                + "» database from the repository could not be initialized with the given parameters: "
-                + props);
+                "The «"
+                        + dbName
+                        + "» database from the repository could not be initialized with the given parameters: "
+                        + props);
     }
 
     @Override

@@ -22,10 +22,6 @@
  */
 package org.aion.mcf.config;
 
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -35,10 +31,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
-/**
- * @author chris lin, ali sharif
- */
+/** @author chris lin, ali sharif */
 public final class CfgApiRpc {
 
     CfgApiRpc() {
@@ -48,7 +46,8 @@ public final class CfgApiRpc {
         this.corsEnabled = false;
         this.corsOrigin = "*";
         this.filtersEnabled = true;
-        // using a strings here for the following 2 properties instead of referencing the associated enum value
+        // using a strings here for the following 2 properties instead of referencing the associated
+        // enum value
         // since don't want to add dependency to modApiServer just for this
         this.vendor = "undertow";
         this.enabled = new ArrayList<>(Arrays.asList("web3", "eth", "personal", "stratum", "ops"));
@@ -100,44 +99,48 @@ public final class CfgApiRpc {
                             try {
                                 corsEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.rpc.cors-enabled; using preset: " + corsEnabled);
-                                //e.printStackTrace();
+                                System.out.println(
+                                        "failed to read config node: aion.api.rpc.cors-enabled; using preset: "
+                                                + corsEnabled);
+                                // e.printStackTrace();
                             }
                             break;
                         case "cors-origin":
                             try {
                                 corsOrigin = Cfg.readValue(sr).trim();
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.rpc.cors-origin; using preset: " + corsOrigin);
-                                //e.printStackTrace();
+                                System.out.println(
+                                        "failed to read config node: aion.api.rpc.cors-origin; using preset: "
+                                                + corsOrigin);
+                                // e.printStackTrace();
                             }
                             break;
                         case "apis-enabled":
                             String cs = Cfg.readValue(sr).trim();
-                            this.enabled = new ArrayList<>(
-                                    Stream.of(cs.split(","))
-                                    .map(String::trim)
-                                    .filter(s -> !s.isEmpty())
-                                    .collect(Collectors.toList())
-                            );
+                            this.enabled =
+                                    new ArrayList<>(
+                                            Stream.of(cs.split(","))
+                                                    .map(String::trim)
+                                                    .filter(s -> !s.isEmpty())
+                                                    .collect(Collectors.toList()));
                             break;
                         case "api-methods-enabled":
                             String enabledMethods = Cfg.readValue(sr).trim();
-                            this.enabledMethods = new ArrayList<>(
-                                Stream.of(enabledMethods.split(","))
-                                    .map(String::trim)
-                                    .filter(s -> !s.isEmpty())
-                                    .collect(Collectors.toList())
-                            );
+                            this.enabledMethods =
+                                    new ArrayList<>(
+                                            Stream.of(enabledMethods.split(","))
+                                                    .map(String::trim)
+                                                    .filter(s -> !s.isEmpty())
+                                                    .collect(Collectors.toList()));
                             break;
                         case "api-methods-disabled":
                             String disabledMethods = Cfg.readValue(sr).trim();
-                            this.disabledMethods = new ArrayList<>(
-                                Stream.of(disabledMethods.split(","))
-                                    .map(String::trim)
-                                    .filter(s -> !s.isEmpty())
-                                    .collect(Collectors.toList())
-                            );
+                            this.disabledMethods =
+                                    new ArrayList<>(
+                                            Stream.of(disabledMethods.split(","))
+                                                    .map(String::trim)
+                                                    .filter(s -> !s.isEmpty())
+                                                    .collect(Collectors.toList()));
                             break;
                         case "vendor":
                             try {
@@ -146,63 +149,76 @@ public final class CfgApiRpc {
                                 e.printStackTrace();
                             }
                             break;
-                        case "worker-threads": {
-                            try {
-                                int t = Integer.parseInt(Cfg.readValue(sr));
-                                // filter out negative counts
-                                if (t > 0) this.workerThreads = t;
-                                // otherwise, accept default set in constructor
-                            } catch (Exception e) {
-                                System.out.println("Illegal value for aion.api.rpc.worker-threads; will select reasonable defaults.");
-                                e.printStackTrace();
-                            }
+                        case "worker-threads":
+                            {
+                                try {
+                                    int t = Integer.parseInt(Cfg.readValue(sr));
+                                    // filter out negative counts
+                                    if (t > 0) this.workerThreads = t;
+                                    // otherwise, accept default set in constructor
+                                } catch (Exception e) {
+                                    System.out.println(
+                                            "Illegal value for aion.api.rpc.worker-threads; will select reasonable defaults.");
+                                    e.printStackTrace();
+                                }
 
-                            break;
-                        }
-                        case "io-threads": {
-                            try {
-                                int t = Integer.parseInt(Cfg.readValue(sr));
-                                // filter out negative counts
-                                if (t > 0) this.ioThreads = t;
-                                // otherwise, accept default set in constructor
-                            } catch (Exception e) {
-                                System.out.println("Illegal value for aion.api.rpc.io-threads; will select reasonable defaults.");
-                                e.printStackTrace();
+                                break;
                             }
+                        case "io-threads":
+                            {
+                                try {
+                                    int t = Integer.parseInt(Cfg.readValue(sr));
+                                    // filter out negative counts
+                                    if (t > 0) this.ioThreads = t;
+                                    // otherwise, accept default set in constructor
+                                } catch (Exception e) {
+                                    System.out.println(
+                                            "Illegal value for aion.api.rpc.io-threads; will select reasonable defaults.");
+                                    e.printStackTrace();
+                                }
 
-                            break;
-                        }
-                        case "request-queue-size": {
-                            try {
-                                int t = Integer.parseInt(Cfg.readValue(sr));
-                                // filter out negative counts
-                                if (t > 0) this.requestQueueSize = t;
-                                // otherwise, accept default set in constructor
-                            } catch (Exception e) {
-                                System.out.println("Illegal value for aion.api.rpc.request-queue-size; will select reasonable defaults.");
-                                e.printStackTrace();
+                                break;
                             }
+                        case "request-queue-size":
+                            {
+                                try {
+                                    int t = Integer.parseInt(Cfg.readValue(sr));
+                                    // filter out negative counts
+                                    if (t > 0) this.requestQueueSize = t;
+                                    // otherwise, accept default set in constructor
+                                } catch (Exception e) {
+                                    System.out.println(
+                                            "Illegal value for aion.api.rpc.request-queue-size; will select reasonable defaults.");
+                                    e.printStackTrace();
+                                }
 
-                            break;
-                        }
-                        case "stuck-thread-detector-enabled": {
-                            try {
-                                stuckThreadDetectorEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
-                            } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.rpc.stuckThreadDetectorEnabled; using preset: " + stuckThreadDetectorEnabled);
-                                e.printStackTrace();
+                                break;
                             }
-                            break;
-                        }
-                        case "filters-enabled": {
-                            try {
-                                filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
-                            } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + filtersEnabled);
-                                e.printStackTrace();
+                        case "stuck-thread-detector-enabled":
+                            {
+                                try {
+                                    stuckThreadDetectorEnabled =
+                                            Boolean.parseBoolean(Cfg.readValue(sr));
+                                } catch (Exception e) {
+                                    System.out.println(
+                                            "failed to read config node: aion.api.rpc.stuckThreadDetectorEnabled; using preset: "
+                                                    + stuckThreadDetectorEnabled);
+                                    e.printStackTrace();
+                                }
+                                break;
                             }
-                            break;
-                        }
+                        case "filters-enabled":
+                            {
+                                try {
+                                    filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                                } catch (Exception e) {
+                                    System.out.println(
+                                            "failed to read config node: aion.api.rpc.filters-enabled; using preset: "
+                                                    + filtersEnabled);
+                                    e.printStackTrace();
+                                }
+                                break;
+                            }
                         case "ssl":
                             this.ssl.fromXML(sr);
                             break;
@@ -231,7 +247,8 @@ public final class CfgApiRpc {
             xmlWriter = output.createXMLStreamWriter(strWriter);
 
             xmlWriter.writeCharacters("\r\n\t\t");
-            xmlWriter.writeComment("rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs");
+            xmlWriter.writeComment(
+                    "rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs");
 
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("rpc");
@@ -246,7 +263,8 @@ public final class CfgApiRpc {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("comma-separated list, APIs available: web3,net,debug,personal,eth,stratum");
+            xmlWriter.writeComment(
+                    "comma-separated list, APIs available: web3,net,debug,personal,eth,stratum");
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("apis-enabled");
             xmlWriter.writeCharacters(String.join(",", this.getEnabled()));
@@ -281,24 +299,69 @@ public final class CfgApiRpc {
         }
     }
 
-    public boolean isActive() { return this.active; }
-    public String getIp() { return this.ip; }
-    public int getPort() { return this.port; }
-    public boolean isCorsEnabled() { return corsEnabled; }
-    public String getCorsOrigin() { return corsOrigin; }
-    public List<String> getEnabled() { return enabled; }
-    public List<String> getEnabledMethods() { return enabledMethods; }
-    public List<String> getDisabledMethods() { return disabledMethods; }
-    public boolean isFiltersEnabled() { return filtersEnabled; }
-    public CfgSsl getSsl() { return this.ssl; }
-    public String getVendor() { return vendor; }
-    public Integer getWorkerThreads() { return workerThreads; }
-    public Integer getIoThreads() { return ioThreads; }
-    public Integer getRequestQueueSize() { return requestQueueSize; }
-    public boolean isStuckThreadDetectorEnabled() { return stuckThreadDetectorEnabled; }
+    public boolean isActive() {
+        return this.active;
+    }
+
+    public String getIp() {
+        return this.ip;
+    }
+
+    public int getPort() {
+        return this.port;
+    }
+
+    public boolean isCorsEnabled() {
+        return corsEnabled;
+    }
+
+    public String getCorsOrigin() {
+        return corsOrigin;
+    }
+
+    public List<String> getEnabled() {
+        return enabled;
+    }
+
+    public List<String> getEnabledMethods() {
+        return enabledMethods;
+    }
+
+    public List<String> getDisabledMethods() {
+        return disabledMethods;
+    }
+
+    public boolean isFiltersEnabled() {
+        return filtersEnabled;
+    }
+
+    public CfgSsl getSsl() {
+        return this.ssl;
+    }
+
+    public String getVendor() {
+        return vendor;
+    }
+
+    public Integer getWorkerThreads() {
+        return workerThreads;
+    }
+
+    public Integer getIoThreads() {
+        return ioThreads;
+    }
+
+    public Integer getRequestQueueSize() {
+        return requestQueueSize;
+    }
+
+    public boolean isStuckThreadDetectorEnabled() {
+        return stuckThreadDetectorEnabled;
+    }
 
     /**
-     * @implNote this should theoretically work, but should be tested for correctness by any future consumer
+     * @implNote this should theoretically work, but should be tested for correctness by any future
+     *     consumer
      */
     @Override
     public boolean equals(Object o) {
@@ -306,46 +369,46 @@ public final class CfgApiRpc {
         if (o == null || getClass() != o.getClass()) return false;
         CfgApiRpc cfg = (CfgApiRpc) o;
 
-        return active == cfg.active &&
-                Objects.equals(ip, cfg.ip) &&
-                port == cfg.port &&
-                Objects.equals(enabled, cfg.enabled) &&
-                Objects.equals(enabledMethods, cfg.enabledMethods) &&
-                Objects.equals(disabledMethods, cfg.disabledMethods) &&
-                corsEnabled == cfg.corsEnabled &&
-                Objects.equals(corsOrigin, cfg.corsOrigin) &&
-                filtersEnabled == cfg.filtersEnabled &&
-                Objects.equals(ssl, cfg.ssl) &&
-                Objects.equals(vendor, cfg.vendor) &&
-                Objects.equals(workerThreads, cfg.workerThreads) &&
-                Objects.equals(ioThreads, cfg.ioThreads) &&
-                Objects.equals(requestQueueSize, cfg.requestQueueSize) &&
-                stuckThreadDetectorEnabled == cfg.stuckThreadDetectorEnabled;
+        return active == cfg.active
+                && Objects.equals(ip, cfg.ip)
+                && port == cfg.port
+                && Objects.equals(enabled, cfg.enabled)
+                && Objects.equals(enabledMethods, cfg.enabledMethods)
+                && Objects.equals(disabledMethods, cfg.disabledMethods)
+                && corsEnabled == cfg.corsEnabled
+                && Objects.equals(corsOrigin, cfg.corsOrigin)
+                && filtersEnabled == cfg.filtersEnabled
+                && Objects.equals(ssl, cfg.ssl)
+                && Objects.equals(vendor, cfg.vendor)
+                && Objects.equals(workerThreads, cfg.workerThreads)
+                && Objects.equals(ioThreads, cfg.ioThreads)
+                && Objects.equals(requestQueueSize, cfg.requestQueueSize)
+                && stuckThreadDetectorEnabled == cfg.stuckThreadDetectorEnabled;
     }
 
     /**
-     * @implNote this should theoretically work, but should be tested for correctness by any future consumer
-     *
+     * @implNote this should theoretically work, but should be tested for correctness by any future
+     *     consumer
      * @implNote computationally slowest implementation O(n). there are faster ways of doing this if
-     * this function call ends up on a critical path (probably not)
+     *     this function call ends up on a critical path (probably not)
      */
     @Override
     public int hashCode() {
         return java.util.Objects.hash(
-            active,
-            ip,
-            port,
-            enabled,
-            enabledMethods,
-            disabledMethods,
-            corsEnabled,
-            corsOrigin,
-            filtersEnabled,
-            ssl,
-            vendor,
-            workerThreads,
-            ioThreads,
-            requestQueueSize,
-            stuckThreadDetectorEnabled);
+                active,
+                ip,
+                port,
+                enabled,
+                enabledMethods,
+                disabledMethods,
+                corsEnabled,
+                corsOrigin,
+                filtersEnabled,
+                ssl,
+                vendor,
+                workerThreads,
+                ioThreads,
+                requestQueueSize,
+                stuckThreadDetectorEnabled);
     }
 }

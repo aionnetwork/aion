@@ -1,5 +1,10 @@
 package org.aion.valid;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.when;
+
+import java.util.LinkedList;
+import java.util.List;
 import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.mcf.valid.TimeStampRule;
@@ -8,12 +13,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.when;
-
 /**
  * Unit tests for {@link TimeStampRule}.
  *
@@ -21,10 +20,8 @@ import static org.mockito.Mockito.when;
  */
 public class TimeStampRuleTest {
 
-    @Mock
-    IBlockHeader mockHeader;
-    @Mock
-    IBlockHeader mockDependency;
+    @Mock IBlockHeader mockHeader;
+    @Mock IBlockHeader mockDependency;
 
     @Before
     public void setUp() throws Exception {
@@ -32,9 +29,8 @@ public class TimeStampRuleTest {
     }
 
     /**
-     * Checks if the {@link TimeStampRule#validate} returns {@code true} when
-     * the block time stamp is <b>greater</b> than the dependency block time
-     * stamp.
+     * Checks if the {@link TimeStampRule#validate} returns {@code true} when the block time stamp
+     * is <b>greater</b> than the dependency block time stamp.
      */
     @Test
     public void testValidateWithGreaterTimestamp() {
@@ -51,8 +47,8 @@ public class TimeStampRuleTest {
     }
 
     /**
-     * Checks if the {@link TimeStampRule#validate} returns {@code false} when
-     * the block time stamp is <b>equal</b> to the dependency block time stamp.
+     * Checks if the {@link TimeStampRule#validate} returns {@code false} when the block time stamp
+     * is <b>equal</b> to the dependency block time stamp.
      */
     @Test
     public void testValidateWithEqualTimestamp() {
@@ -69,9 +65,8 @@ public class TimeStampRuleTest {
     }
 
     /**
-     * Checks if the {@link TimeStampRule#validate} returns {@code false} when
-     * the block time stamp is <b>smaller</b> than the dependency block time
-     * stamp.
+     * Checks if the {@link TimeStampRule#validate} returns {@code false} when the block time stamp
+     * is <b>smaller</b> than the dependency block time stamp.
      */
     @Test
     public void testValidateWithSmallerTimestamp() {

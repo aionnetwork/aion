@@ -1,26 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
+ * <p>Contributors: Aion foundation.
  *
- ******************************************************************************/
+ * <p>****************************************************************************
+ */
 package org.aion.mcf.blockchain;
 
 import java.util.ArrayList;
@@ -30,15 +28,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.aion.base.type.IBlock;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.types.AbstractBlockHeaderWrapper;
 
-/**
- * Abstract SyncQueue Class
- */
-public abstract class AbstractSyncQueue<BLK extends IBlock<?, ?>, BHW extends AbstractBlockHeaderWrapper<?>>
+/** Abstract SyncQueue Class */
+public abstract class AbstractSyncQueue<
+                BLK extends IBlock<?, ?>, BHW extends AbstractBlockHeaderWrapper<?>>
         implements ISyncQueue<BLK, BHW> {
 
     protected static int MAX_CHAIN_LEN = 192;
@@ -57,7 +53,13 @@ public abstract class AbstractSyncQueue<BLK extends IBlock<?, ?>, BHW extends Ab
 
         @Override
         public String toString() {
-            return "HeadersRequest{" + "start=" + getStart() + ", count=" + getCount() + ", reverse=" + isReverse()
+            return "HeadersRequest{"
+                    + "start="
+                    + getStart()
+                    + ", count="
+                    + getCount()
+                    + ", reverse="
+                    + isReverse()
                     + '}';
         }
 
@@ -105,7 +107,8 @@ public abstract class AbstractSyncQueue<BLK extends IBlock<?, ?>, BHW extends Ab
         Map<ByteArrayWrapper, HeaderElement<BLK, BHW>> childGenHeaders = headers.get(bn + 1);
         if (childGenHeaders != null) {
             for (HeaderElement<?, ?> child : childGenHeaders.values()) {
-                if (Arrays.equals(child.header.getHeader().getParentHash(), self.header.getHash())) {
+                if (Arrays.equals(
+                        child.header.getHeader().getParentHash(), self.header.getHash())) {
                     ret.add((AbstractSyncQueue<BLK, BHW>.HeaderElement<BLK, BHW>) child);
                 }
             }
@@ -148,11 +151,7 @@ public abstract class AbstractSyncQueue<BLK extends IBlock<?, ?>, BHW extends Ab
                 HeaderElement<BLK, BHW> parent = getParent(element);
                 if (element.block != null && (i == minNum || (parent != null && parent.exported))) {
                     // if (!element.exported) {
-                    /**
-                     * What is the purpose of exportNewBlock()?
-                     *
-                     * @TODO: Yao
-                     */
+                    /** What is the purpose of exportNewBlock()? @TODO: Yao */
                     // exportNewBlock(element.block);
                     ret.add(element.block);
                     element.exported = true;
@@ -190,15 +189,16 @@ public abstract class AbstractSyncQueue<BLK extends IBlock<?, ?>, BHW extends Ab
 
     protected List<HeaderElement<BLK, BHW>> getLongestChain(HeaderElement<?, ?> parent) {
 
-        Map<ByteArrayWrapper, HeaderElement<BLK, BHW>> gen = headers.get(parent.header.getNumber() + 1);
+        Map<ByteArrayWrapper, HeaderElement<BLK, BHW>> gen =
+                headers.get(parent.header.getNumber() + 1);
 
-        List<HeaderElement<BLK, BHW>> longest = null;// = new ArrayList<>();
+        List<HeaderElement<BLK, BHW>> longest = null; // = new ArrayList<>();
         long lSize = 0;
         if (gen != null) {
             for (HeaderElement<BLK, BHW> header : gen.values()) {
                 if (getParent(header) == parent) {
                     List<HeaderElement<BLK, BHW>> childLongest = getLongestChain(header);
-                    if (childLongest.size() > lSize) {// longest.size()) {
+                    if (childLongest.size() > lSize) { // longest.size()) {
                         lSize = childLongest.size();
                         longest = childLongest;
                     }
@@ -221,7 +221,8 @@ public abstract class AbstractSyncQueue<BLK extends IBlock<?, ?>, BHW extends Ab
     protected void trimChain() {
         List<HeaderElement<BLK, BHW>> longestChain = getLongestChain();
         if (longestChain.size() > MAX_CHAIN_LEN) {
-            long newTrimNum = getLongestChain().get(longestChain.size() - MAX_CHAIN_LEN).header.getNumber();
+            long newTrimNum =
+                    getLongestChain().get(longestChain.size() - MAX_CHAIN_LEN).header.getNumber();
             for (int i = 0; darkZoneNum < newTrimNum; darkZoneNum++, i++) {
                 ByteArrayWrapper wHash = new ByteArrayWrapper(longestChain.get(i).header.getHash());
                 putGenHeaders(darkZoneNum, Collections.singletonMap(wHash, longestChain.get(i)));
@@ -230,7 +231,8 @@ public abstract class AbstractSyncQueue<BLK extends IBlock<?, ?>, BHW extends Ab
         }
     }
 
-    protected void putGenHeaders(long num, Map<ByteArrayWrapper, HeaderElement<BLK, BHW>> genHeaders) {
+    protected void putGenHeaders(
+            long num, Map<ByteArrayWrapper, HeaderElement<BLK, BHW>> genHeaders) {
         minNum = Math.min(minNum, num);
         maxNum = Math.max(maxNum, num);
         headers.put(num, genHeaders);
@@ -285,5 +287,4 @@ public abstract class AbstractSyncQueue<BLK extends IBlock<?, ?>, BHW extends Ab
 
         return true;
     }
-
 }

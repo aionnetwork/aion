@@ -32,9 +32,7 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 
-/**
- * A log is emitted by the LOGX vm instruction. It's composed of address, topics and data.
- */
+/** A log is emitted by the LOGX vm instruction. It's composed of address, topics and data. */
 public class Log {
 
     private Address addr;
@@ -50,7 +48,7 @@ public class Log {
         RLPItem data = (RLPItem) logInfo.get(2);
 
         this.addr = address.getRLPData() != null ? Address.wrap(address.getRLPData()) : null;
-        this.data = data.getRLPData() != null ? data.getRLPData() : new byte[]{};
+        this.data = data.getRLPData() != null ? data.getRLPData() : new byte[] {};
 
         for (RLPElement topic1 : topics) {
             byte[] topic = topic1.getRLPData();
@@ -61,7 +59,7 @@ public class Log {
     public Log(Address address, List<byte[]> topics, byte[] data) {
         this.addr = address;
         this.topics = (topics != null) ? topics : new ArrayList<>();
-        this.data = (data != null) ? data : new byte[]{};
+        this.data = (data != null) ? data : new byte[] {};
     }
 
     public Address getAddress() {
@@ -120,9 +118,13 @@ public class Log {
         }
         topicsStr.append("]");
 
-        return "LogInfo{" + "address=0x" + this.addr.toString() + ", topics=" + topicsStr
-            + ", data="
-            + Hex.toHexString(data) + '}';
+        return "LogInfo{"
+                + "address=0x"
+                + this.addr.toString()
+                + ", topics="
+                + topicsStr
+                + ", data="
+                + Hex.toHexString(data)
+                + '}';
     }
-
 }

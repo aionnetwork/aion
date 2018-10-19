@@ -27,7 +27,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -61,7 +60,7 @@ public class FileDateTimeComparatorTest {
         return nameList;
     }
 
-    private File generateFile(int timeOffset, String timeZoneSymbol){
+    private File generateFile(int timeOffset, String timeZoneSymbol) {
         long time = System.currentTimeMillis();
         TimeZone tz = TimeZone.getTimeZone("UTC");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
@@ -146,7 +145,7 @@ public class FileDateTimeComparatorTest {
         File garbageFile1 = new File("blargh");
         File garbageFile2 = new File("UTC--cats--blah");
         File garbageFile3 = null;
-        File garbageFile4 = generateFile(2000, "EST"); //include diff time zone
+        File garbageFile4 = generateFile(2000, "EST"); // include diff time zone
         File garbageFile5 = generateFile(2000, "PST");
 
         l.add(3, garbageFile5);
@@ -171,13 +170,13 @@ public class FileDateTimeComparatorTest {
                 String a = l.get(i).getName();
                 String b = expectedFileNames.get(i);
                 assertThat(a, is(equalTo(b)));
-                //System.out.println("Expected: " + b + "     Generated: " + a);
+                // System.out.println("Expected: " + b + "     Generated: " + a);
             }
         }
     }
 
     @Test
-    public void testInvalidNameInputLength(){
+    public void testInvalidNameInputLength() {
         File invalidLength = new File("part1--part2");
         File validLength = new File("part1--part2--part3");
 
@@ -192,9 +191,9 @@ public class FileDateTimeComparatorTest {
     }
 
     @Test
-    public void testInvalidNameDifferentTimeZone(){
+    public void testInvalidNameDifferentTimeZone() {
         File invalidTZ = generateFile(0, "EST");
-        File validTZ= generateFile(4000, "UTC");
+        File validTZ = generateFile(4000, "UTC");
 
         // both valid
         assertEquals(0, COMPARE.compare(invalidTZ, invalidTZ));
@@ -209,20 +208,20 @@ public class FileDateTimeComparatorTest {
     @Test
     public void testInvalidNameTimeFormat() {
         File invalidFormat = new File("UTC--invalid format--blah");
-        File validFormat = generateFile(0,"UTC");
+        File validFormat = generateFile(0, "UTC");
 
         // try both files with invalid time format
-        assertEquals(0, COMPARE.compare(invalidFormat,invalidFormat));
+        assertEquals(0, COMPARE.compare(invalidFormat, invalidFormat));
 
         // try file1 with invalid time format
-        assertEquals(1, COMPARE.compare(invalidFormat,validFormat));
+        assertEquals(1, COMPARE.compare(invalidFormat, validFormat));
 
         // try file2 with invalid time format
-        assertEquals(-1, COMPARE.compare(validFormat,invalidFormat));
+        assertEquals(-1, COMPARE.compare(validFormat, invalidFormat));
     }
 
     @Test
-    public void testNullInput(){
+    public void testNullInput() {
         File testFile = new File("test");
 
         // both are null
@@ -236,15 +235,15 @@ public class FileDateTimeComparatorTest {
     }
 
     @Test
-    public void testExactlySameFileName(){
+    public void testExactlySameFileName() {
         File file = generateFile(0, "UTC");
 
         // check
-        assertEquals(0, COMPARE.compare(file,file));
+        assertEquals(0, COMPARE.compare(file, file));
     }
 
     @Test
-    public void testComparator2(){
+    public void testComparator2() {
         // create some files
         File valid1 = generateFile(0, "UTC");
         File valid2 = generateFile(-4000, "UTC");
@@ -277,26 +276,28 @@ public class FileDateTimeComparatorTest {
         generatedFiles.add(valid1);
         generatedFiles.add(invalid2);
 
-
         // sort
         generatedFiles.sort(COMPARE);
 
         // check that the sort is correct
         System.out.println(
-                "generatedFiles size: " + generatedFiles.size() + " expectedFileName size: " + expectedFileNames.size());
+                "generatedFiles size: "
+                        + generatedFiles.size()
+                        + " expectedFileName size: "
+                        + expectedFileNames.size());
 
         for (int i = 0; i < generatedFiles.size(); i++) {
             if (generatedFiles.get(i) != null) { // avoid null pointer exception
                 String a = generatedFiles.get(i).getName();
                 String b = expectedFileNames.get(i);
                 assertThat(a, is(equalTo(b)));
-               // System.out.println("Expected: " + b + "     Generated: " + a);
+                // System.out.println("Expected: " + b + "     Generated: " + a);
             }
         }
     }
 
     @Test
-    public void testInvalidTimestamp(){
+    public void testInvalidTimestamp() {
         // test that invalid timestamps are handled
 
         // create valid file name
@@ -326,14 +327,17 @@ public class FileDateTimeComparatorTest {
 
         // check that the sort is correct
         System.out.println(
-                "generatedFiles size: " + generatedFiles.size() + " expectedFileName size: " + expectedFileNames.size());
+                "generatedFiles size: "
+                        + generatedFiles.size()
+                        + " expectedFileName size: "
+                        + expectedFileNames.size());
 
         for (int i = 0; i < generatedFiles.size(); i++) {
             if (generatedFiles.get(i) != null) { // avoid null pointer exception
                 String a = generatedFiles.get(i).getName();
                 String b = expectedFileNames.get(i);
                 assertThat(a, is(equalTo(b)));
-                //System.out.println("Expected: " + b + "     Generated: " + a);
+                // System.out.println("Expected: " + b + "     Generated: " + a);
             }
         }
     }

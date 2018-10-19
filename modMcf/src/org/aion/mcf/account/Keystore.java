@@ -27,7 +27,6 @@
  *     Bitcoinj team.
  */
 
-
 package org.aion.mcf.account;
 
 import java.io.File;
@@ -357,5 +356,7 @@ public class Keystore {
         PATH = Paths.get(KEYSTORE_PATH);
     }
 
-    public static String getKeystorePath() { return KEYSTORE_PATH; }
+    public static String getKeystorePath() {
+        return KEYSTORE_PATH;
+    }
 }
