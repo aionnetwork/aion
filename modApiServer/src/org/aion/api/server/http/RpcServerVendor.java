@@ -11,8 +11,7 @@ public enum RpcServerVendor {
         if (_vendor == null) return Optional.empty();
 
         for (RpcServerVendor vendor : values())
-            if (vendor.name().equalsIgnoreCase(_vendor))
-                return Optional.of(vendor);
+            if (vendor.name().equalsIgnoreCase(_vendor)) return Optional.of(vendor);
 
         return Optional.empty();
     }

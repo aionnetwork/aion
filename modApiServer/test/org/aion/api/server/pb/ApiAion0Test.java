@@ -23,8 +23,20 @@
 
 package org.aion.api.server.pb;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import com.google.protobuf.ByteString;
 import io.undertow.util.FileUtils;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
 import org.aion.api.server.ApiUtil;
 import org.aion.base.type.Address;
 import org.aion.base.util.TypeConverter;
@@ -43,15 +55,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
-
-import static org.junit.Assert.*;
 
 public class ApiAion0Test {
 
@@ -97,24 +100,29 @@ public class ApiAion0Test {
     }
 
     private byte[] sendRequest(int s, int f) {
-        byte[] request = ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
-                .put((byte) s)
-                .put((byte) f)
-                .put((byte) 1)
-                .put(hash)
-                .put(msg).array();
+        byte[] request =
+                ByteBuffer.allocate(msg.length + REQ_HEADER_NOHASH_LEN + hash.length)
+                        .put(api.getApiVersion())
+                        .put((byte) s)
+                        .put((byte) f)
+                        .put((byte) 1)
+                        .put(hash)
+                        .put(msg)
+                        .array();
 
         return api.process(request, socketId);
     }
 
     private byte[] sendRequest(int s, int f, byte[] reqBody) {
-        byte[] request = ByteBuffer.allocate(reqBody.length + REQ_HEADER_NOHASH_LEN + hash.length).put(api.getApiVersion())
-                .put((byte) s)
-                .put((byte) f)
-                .put((byte) 1)
-                .put(hash)
-                .put(reqBody)
-                .array();
+        byte[] request =
+                ByteBuffer.allocate(reqBody.length + REQ_HEADER_NOHASH_LEN + hash.length)
+                        .put(api.getApiVersion())
+                        .put((byte) s)
+                        .put((byte) f)
+                        .put((byte) 1)
+                        .put(hash)
+                        .put(reqBody)
+                        .array();
 
         return api.process(request, socketId);
     }
@@ -134,23 +142,19 @@ public class ApiAion0Test {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
 
-        if (folder == null)
-            return;
+        if (folder == null) return;
 
         File[] AllFilesInDirectory = folder.listFiles();
 
         // check for invalid or wrong path - should not happen
-        if (AllFilesInDirectory == null)
-            return;
+        if (AllFilesInDirectory == null) return;
 
         for (File file : AllFilesInDirectory) {
-            if (file.lastModified() >= testStartTime)
-                file.delete();
+            if (file.lastModified() >= testStartTime) file.delete();
         }
         folder = new File(DATABASE_PATH);
 
-        if (folder == null)
-            return;
+        if (folder == null) return;
 
         try {
             FileUtils.deleteRecursive(folder.toPath());
@@ -161,8 +165,11 @@ public class ApiAion0Test {
 
     @Test
     public void testHeartBeatMsg() {
-        byte[] msg = ByteBuffer.allocate(api.getApiHeaderLen()).put(api.getApiVersion())
-                .put((byte) Message.Servs.s_hb_VALUE).array();
+        byte[] msg =
+                ByteBuffer.allocate(api.getApiHeaderLen())
+                        .put(api.getApiVersion())
+                        .put((byte) Message.Servs.s_hb_VALUE)
+                        .array();
         assertTrue(ApiAion0.heartBeatMsg(msg));
         assertFalse(ApiAion0.heartBeatMsg(null));
 
@@ -193,8 +200,8 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_minerAddress ma = Message.rsp_minerAddress.parseFrom(stripHeader(rsp));
-        assertEquals(ByteString.copyFrom(
-                TypeConverter.StringHexToByteArray(api.getCoinbase())),
+        assertEquals(
+                ByteString.copyFrom(TypeConverter.StringHexToByteArray(api.getCoinbase())),
                 ma.getMinerAddr());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_minerAddress_VALUE);
@@ -210,15 +217,21 @@ public class ApiAion0Test {
 
         byte[] val = {50, 30};
 
-        Message.req_contractDeploy reqBody = Message.req_contractDeploy.newBuilder()
-                .setFrom(ByteString.copyFrom(addr.toBytes()))
-                .setNrgLimit(100000)
-                .setNrgPrice(5000)
-                .setData(ByteString.copyFrom(msg))
-                .setValue(ByteString.copyFrom(val))
-                .build();
+        Message.req_contractDeploy reqBody =
+                Message.req_contractDeploy
+                        .newBuilder()
+                        .setFrom(ByteString.copyFrom(addr.toBytes()))
+                        .setNrgLimit(100000)
+                        .setNrgPrice(5000)
+                        .setData(ByteString.copyFrom(msg))
+                        .setValue(ByteString.copyFrom(val))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_contractDeploy_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_contractDeploy_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_tx_Recved_VALUE, rsp[1]);
 
@@ -226,7 +239,11 @@ public class ApiAion0Test {
         assertNotNull(rslt.getContractAddress());
         assertNotNull(rslt.getTxHash());
 
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_contractDeploy_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Message.Funcs.f_contractDeploy_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -240,10 +257,11 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_accounts accts = Message.rsp_accounts.parseFrom(stripHeader(rsp));
-        assertEquals(api.getAccounts().size(),
-                accts.getAccoutCount());
+        assertEquals(api.getAccounts().size(), accts.getAccoutCount());
 
-        assertEquals(ByteString.copyFrom(TypeConverter.StringHexToByteArray((String) api.getAccounts().get(0))),
+        assertEquals(
+                ByteString.copyFrom(
+                        TypeConverter.StringHexToByteArray((String) api.getAccounts().get(0))),
                 accts.getAccout(0));
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_accounts_VALUE);
@@ -258,8 +276,7 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_blockNumber rslt = Message.rsp_blockNumber.parseFrom(stripHeader(rsp));
-        assertEquals(api.getBestBlock().getNumber(),
-                rslt.getBlocknumber());
+        assertEquals(api.getBestBlock().getNumber(), rslt.getBlocknumber());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_blockNumber_VALUE);
 
@@ -271,17 +288,27 @@ public class ApiAion0Test {
         Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        Message.req_unlockAccount reqBody = Message.req_unlockAccount.newBuilder()
-                .setAccount(ByteString.copyFrom(addr.toBytes()))
-                .setDuration(500)
-                .setPassword("testPwd")
-                .build();
+        Message.req_unlockAccount reqBody =
+                Message.req_unlockAccount
+                        .newBuilder()
+                        .setAccount(ByteString.copyFrom(addr.toBytes()))
+                        .setDuration(500)
+                        .setPassword("testPwd")
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_wallet_VALUE, Message.Funcs.f_unlockAccount_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_wallet_VALUE,
+                        Message.Funcs.f_unlockAccount_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_unlockAccount_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Message.Funcs.f_unlockAccount_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -292,19 +319,28 @@ public class ApiAion0Test {
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        Message.req_getBalance reqBody = Message.req_getBalance.newBuilder()
-                .setAddress(ByteString.copyFrom(addr.toBytes()))
-                .build();
+        Message.req_getBalance reqBody =
+                Message.req_getBalance
+                        .newBuilder()
+                        .setAddress(ByteString.copyFrom(addr.toBytes()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getBalance_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getBalance_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_getBalance rslt = Message.rsp_getBalance.parseFrom(stripHeader(rsp));
-        assertEquals(ByteString.copyFrom(api.getBalance(addr).toByteArray()),
-                rslt.getBalance());
+        assertEquals(ByteString.copyFrom(api.getBalance(addr).toByteArray()), rslt.getBalance());
 
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBalance_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Message.Funcs.f_getBalance_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -315,19 +351,28 @@ public class ApiAion0Test {
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        Message.req_getNonce reqBody = Message.req_getNonce.newBuilder()
-                .setAddress(ByteString.copyFrom(addr.toBytes()))
-                .build();
+        Message.req_getNonce reqBody =
+                Message.req_getNonce
+                        .newBuilder()
+                        .setAddress(ByteString.copyFrom(addr.toBytes()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getNonce_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getNonce_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_getNonce rslt = Message.rsp_getNonce.parseFrom(stripHeader(rsp));
-        assertEquals(ByteString.copyFrom(api.getBalance(addr).toByteArray()),
-                rslt.getNonce());
+        assertEquals(ByteString.copyFrom(api.getBalance(addr).toByteArray()), rslt.getNonce());
 
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getNonce_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Message.Funcs.f_getNonce_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -349,41 +394,59 @@ public class ApiAion0Test {
     @Test
     public void testProcessCompilePass() throws Exception {
         // Taken from FastVM CompilerTest.java
-        String contract = "pragma solidity ^0.4.0;\n" + //
-                "\n" + //
-                "contract SimpleStorage {\n" + //
-                "    uint storedData;\n" + //
-                "\n" + //
-                "    function set(uint x) {\n" + //
-                "        storedData = x;\n" + //
-                "    }\n" + //
-                "\n" + //
-                "    function get() constant returns (uint) {\n" + //
-                "        return storedData;\n" + //
-                "    }\n" + //
-                "}";
+        String contract =
+                "pragma solidity ^0.4.0;\n"
+                        + //
+                        "\n"
+                        + //
+                        "contract SimpleStorage {\n"
+                        + //
+                        "    uint storedData;\n"
+                        + //
+                        "\n"
+                        + //
+                        "    function set(uint x) {\n"
+                        + //
+                        "        storedData = x;\n"
+                        + //
+                        "    }\n"
+                        + //
+                        "\n"
+                        + //
+                        "    function get() constant returns (uint) {\n"
+                        + //
+                        "        return storedData;\n"
+                        + //
+                        "    }\n"
+                        + //
+                        "}";
 
-        Message.req_compileSolidity reqBody = Message.req_compileSolidity.newBuilder()
-                .setSource(contract)
-                .build();
+        Message.req_compileSolidity reqBody =
+                Message.req_compileSolidity.newBuilder().setSource(contract).build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_compile_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_compile_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_compile rslt = Message.rsp_compile.parseFrom(stripHeader(rsp));
         assertEquals(1, rslt.getConstractsCount());
         assertNotNull(rslt.getConstractsMap().get("SimpleStorage"));
-
     }
 
     @Test
     public void testProcessCompileFail() {
-        Message.req_compileSolidity reqBody = Message.req_compileSolidity.newBuilder()
-                .setSource("This should fail")
-                .build();
+        Message.req_compileSolidity reqBody =
+                Message.req_compileSolidity.newBuilder().setSource("This should fail").build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_compile_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_compile_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_fail_compile_contract_VALUE, rsp[1]);
 
@@ -398,17 +461,23 @@ public class ApiAion0Test {
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        Message.req_sendTransaction reqBody = Message.req_sendTransaction.newBuilder()
-                .setFrom(ByteString.copyFrom(addr.toBytes()))
-                .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
-                .setNrg(100000)
-                .setNrgPrice(1)
-                .setNonce(ByteString.copyFrom("1".getBytes()))
-                .setValue(ByteString.copyFrom("1234".getBytes()))
-                .setData(ByteString.copyFrom(msg))
-                .build();
+        Message.req_sendTransaction reqBody =
+                Message.req_sendTransaction
+                        .newBuilder()
+                        .setFrom(ByteString.copyFrom(addr.toBytes()))
+                        .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                        .setNrg(100000)
+                        .setNrgPrice(1)
+                        .setNonce(ByteString.copyFrom("1".getBytes()))
+                        .setValue(ByteString.copyFrom("1234".getBytes()))
+                        .setData(ByteString.copyFrom(msg))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_sendTransaction_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_sendTransaction_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_tx_Recved_VALUE, rsp[1]);
 
@@ -426,11 +495,17 @@ public class ApiAion0Test {
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        Message.req_getCode reqBody = Message.req_getCode.newBuilder()
-                .setAddress(ByteString.copyFrom(addr.toBytes()))
-                .build();
+        Message.req_getCode reqBody =
+                Message.req_getCode
+                        .newBuilder()
+                        .setAddress(ByteString.copyFrom(addr.toBytes()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_getCode_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_getCode_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -450,25 +525,40 @@ public class ApiAion0Test {
 
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+        AionBlock blk =
+                impl.getAionHub()
+                        .getBlockchain()
+                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().add(blk);
 
-        Message.req_getTransactionReceipt reqBody = Message.req_getTransactionReceipt.newBuilder()
-                .setTxHash(ByteString.copyFrom(tx.getHash()))
-                .build();
+        Message.req_getTransactionReceipt reqBody =
+                Message.req_getTransactionReceipt
+                        .newBuilder()
+                        .setTxHash(ByteString.copyFrom(tx.getHash()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_getTransactionReceipt_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_getTransactionReceipt_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_getTransactionReceipt rslt = Message.rsp_getTransactionReceipt.parseFrom(stripHeader(rsp));
+        Message.rsp_getTransactionReceipt rslt =
+                Message.rsp_getTransactionReceipt.parseFrom(stripHeader(rsp));
         assertEquals(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()), rslt.getTo());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionReceipt_VALUE);
@@ -482,14 +572,20 @@ public class ApiAion0Test {
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        Message.req_call reqBody = Message.req_call.newBuilder()
-                .setData(ByteString.copyFrom(msg))
-                .setFrom(ByteString.copyFrom(addr.toBytes()))
-                .setValue(ByteString.copyFrom("1234".getBytes()))
-                .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
-                .build();
+        Message.req_call reqBody =
+                Message.req_call
+                        .newBuilder()
+                        .setData(ByteString.copyFrom(msg))
+                        .setFrom(ByteString.copyFrom(addr.toBytes()))
+                        .setValue(ByteString.copyFrom("1234".getBytes()))
+                        .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_call_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_call_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -503,11 +599,17 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessGetBlockByNumber() throws Exception {
-        Message.req_getBlockByNumber reqBody = Message.req_getBlockByNumber.newBuilder()
-                .setBlockNumber(api.getBestBlock().getNumber())
-                .build();
+        Message.req_getBlockByNumber reqBody =
+                Message.req_getBlockByNumber
+                        .newBuilder()
+                        .setBlockNumber(api.getBestBlock().getNumber())
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getBlockByNumber_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getBlockByNumber_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -522,11 +624,17 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessGetBlockByHash() throws Exception {
-        Message.req_getBlockByHash reqBody = Message.req_getBlockByHash.newBuilder()
-                .setBlockHash(ByteString.copyFrom(api.getBestBlock().getHash()))
-                .build();
+        Message.req_getBlockByHash reqBody =
+                Message.req_getBlockByHash
+                        .newBuilder()
+                        .setBlockHash(ByteString.copyFrom(api.getBestBlock().getHash()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getBlockByHash_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getBlockByHash_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -547,22 +655,36 @@ public class ApiAion0Test {
 
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+        AionBlock blk =
+                impl.getAionHub()
+                        .getBlockchain()
+                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().add(blk);
 
-        Message.req_getTransactionByBlockHashAndIndex reqBody = Message.req_getTransactionByBlockHashAndIndex.newBuilder()
-                .setBlockHash(ByteString.copyFrom(blk.getHash()))
-                .setTxIndex(0)
-                .build();
+        Message.req_getTransactionByBlockHashAndIndex reqBody =
+                Message.req_getTransactionByBlockHashAndIndex
+                        .newBuilder()
+                        .setBlockHash(ByteString.copyFrom(blk.getHash()))
+                        .setTxIndex(0)
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getTransactionByBlockHashAndIndex_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getTransactionByBlockHashAndIndex_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -571,7 +693,10 @@ public class ApiAion0Test {
         assertEquals(ByteString.copyFrom(tx.getData()), rslt.getData());
         assertEquals(tx.getNrgPrice(), rslt.getNrgPrice());
 
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionByBlockHashAndIndex_VALUE);
+        rsp =
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Message.Funcs.f_getTransactionByBlockHashAndIndex_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -584,22 +709,36 @@ public class ApiAion0Test {
 
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+        AionBlock blk =
+                impl.getAionHub()
+                        .getBlockchain()
+                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().add(blk);
 
-        Message.req_getTransactionByBlockNumberAndIndex reqBody = Message.req_getTransactionByBlockNumberAndIndex.newBuilder()
-                .setBlockNumber(blk.getNumber())
-                .setTxIndex(0)
-                .build();
+        Message.req_getTransactionByBlockNumberAndIndex reqBody =
+                Message.req_getTransactionByBlockNumberAndIndex
+                        .newBuilder()
+                        .setBlockNumber(blk.getNumber())
+                        .setTxIndex(0)
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getTransactionByBlockNumberAndIndex_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getTransactionByBlockNumberAndIndex_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -608,7 +747,10 @@ public class ApiAion0Test {
         assertEquals(ByteString.copyFrom(tx.getData()), rslt.getData());
         assertEquals(tx.getNrgPrice(), rslt.getNrgPrice());
 
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionByBlockNumberAndIndex_VALUE);
+        rsp =
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Message.Funcs.f_getTransactionByBlockNumberAndIndex_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -621,28 +763,46 @@ public class ApiAion0Test {
 
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+        AionBlock blk =
+                impl.getAionHub()
+                        .getBlockchain()
+                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().add(blk);
 
-        Message.req_getBlockTransactionCountByNumber reqBody = Message.req_getBlockTransactionCountByNumber.newBuilder()
-                .setBlockNumber(blk.getNumber())
-                .build();
+        Message.req_getBlockTransactionCountByNumber reqBody =
+                Message.req_getBlockTransactionCountByNumber
+                        .newBuilder()
+                        .setBlockNumber(blk.getNumber())
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getBlockTransactionCountByNumber_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getBlockTransactionCountByNumber_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_getBlockTransactionCount rslt = Message.rsp_getBlockTransactionCount.parseFrom(stripHeader(rsp));
+        Message.rsp_getBlockTransactionCount rslt =
+                Message.rsp_getBlockTransactionCount.parseFrom(stripHeader(rsp));
         assertEquals(1, rslt.getTxCount());
 
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockTransactionCountByNumber_VALUE);
+        rsp =
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Message.Funcs.f_getBlockTransactionCountByNumber_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -655,28 +815,46 @@ public class ApiAion0Test {
 
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+        AionBlock blk =
+                impl.getAionHub()
+                        .getBlockchain()
+                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().add(blk);
 
-        Message.req_getTransactionCountByHash reqBody = Message.req_getTransactionCountByHash.newBuilder()
-                .setTxHash(ByteString.copyFrom(blk.getHash()))
-                .build();
+        Message.req_getTransactionCountByHash reqBody =
+                Message.req_getTransactionCountByHash
+                        .newBuilder()
+                        .setTxHash(ByteString.copyFrom(blk.getHash()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getBlockTransactionCountByHash_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getBlockTransactionCountByHash_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_getBlockTransactionCount rslt = Message.rsp_getBlockTransactionCount.parseFrom(stripHeader(rsp));
+        Message.rsp_getBlockTransactionCount rslt =
+                Message.rsp_getBlockTransactionCount.parseFrom(stripHeader(rsp));
         assertEquals(1, rslt.getTxCount());
 
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getBlockTransactionCountByHash_VALUE);
+        rsp =
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Message.Funcs.f_getBlockTransactionCountByHash_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -689,21 +867,35 @@ public class ApiAion0Test {
 
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+        AionBlock blk =
+                impl.getAionHub()
+                        .getBlockchain()
+                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().add(blk);
 
-        Message.req_getTransactionByHash reqBody = Message.req_getTransactionByHash.newBuilder()
-                .setTxHash(ByteString.copyFrom(tx.getHash()))
-                .build();
+        Message.req_getTransactionByHash reqBody =
+                Message.req_getTransactionByHash
+                        .newBuilder()
+                        .setTxHash(ByteString.copyFrom(tx.getHash()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getTransactionByHash_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getTransactionByHash_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -722,33 +914,49 @@ public class ApiAion0Test {
     public void testProcessGetTxCount() throws Exception {
         setup();
 
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+        AionBlock blk =
+                impl.getAionHub()
+                        .getBlockchain()
+                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().add(blk);
         blk = api.getBlockByHash(blk.getHash());
 
-        Message.req_getTransactionCount reqBody = Message.req_getTransactionCount.newBuilder()
-                .setBlocknumber(blk.getNumber())
-                .setAddress(ByteString.copyFrom(blk.getTransactionsList().get(0).getFrom().toBytes()))
-                .build();
+        Message.req_getTransactionCount reqBody =
+                Message.req_getTransactionCount
+                        .newBuilder()
+                        .setBlocknumber(blk.getNumber())
+                        .setAddress(
+                                ByteString.copyFrom(
+                                        blk.getTransactionsList().get(0).getFrom().toBytes()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_chain_VALUE, Message.Funcs.f_getTransactionCount_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_chain_VALUE,
+                        Message.Funcs.f_getTransactionCount_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_getTransactionCount rslt = Message.rsp_getTransactionCount.parseFrom(stripHeader(rsp));
+        Message.rsp_getTransactionCount rslt =
+                Message.rsp_getTransactionCount.parseFrom(stripHeader(rsp));
         assertEquals(1, rslt.getTxCount());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getTransactionCount_VALUE);
@@ -763,7 +971,9 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_getActiveNodes rslt = Message.rsp_getActiveNodes.parseFrom(stripHeader(rsp));
-        assertEquals(AionImpl.inst().getAionHub().getP2pMgr().getActiveNodes().size(), rslt.getNodeCount());
+        assertEquals(
+                AionImpl.inst().getAionHub().getP2pMgr().getActiveNodes().size(),
+                rslt.getNodeCount());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getActiveNodes_VALUE);
 
@@ -823,8 +1033,11 @@ public class ApiAion0Test {
 
         Message.rsp_syncInfo rslt = Message.rsp_syncInfo.parseFrom(stripHeader(rsp));
         assertNotEquals(impl.isSyncComplete(), rslt.getSyncing());
-        assertEquals((long) impl.getLocalBestBlockNumber().orElse(0L), (long) rslt.getChainBestBlock());
-        assertEquals((long) impl.getNetworkBestBlockNumber().orElse(0L), (long) rslt.getNetworkBestBlock());
+        assertEquals(
+                (long) impl.getLocalBestBlockNumber().orElse(0L), (long) rslt.getChainBestBlock());
+        assertEquals(
+                (long) impl.getNetworkBestBlockNumber().orElse(0L),
+                (long) rslt.getNetworkBestBlock());
         assertEquals(24, rslt.getMaxImportBlocks());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_syncInfo_VALUE);
@@ -834,34 +1047,49 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessAccountCreateAndLock() throws Exception {
-        Message.req_accountCreate reqBody = Message.req_accountCreate.newBuilder()
-                .addPassword("passwd0")
-                .addPassword("passwd1")
-                .addPassword("passwd2")
-                .setPrivateKey(true)
-                .build();
+        Message.req_accountCreate reqBody =
+                Message.req_accountCreate
+                        .newBuilder()
+                        .addPassword("passwd0")
+                        .addPassword("passwd1")
+                        .addPassword("passwd2")
+                        .setPrivateKey(true)
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_account_VALUE, Message.Funcs.f_accountCreate_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_account_VALUE,
+                        Message.Funcs.f_accountCreate_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_accountCreate rslt = Message.rsp_accountCreate.parseFrom(stripHeader(rsp));
         assertEquals(3, rslt.getAddressCount());
         ByteString addr = rslt.getAddress(0);
-        assertTrue(api.unlockAccount(Address.wrap(rslt.getAddress(0).toByteArray()), "passwd0", 500));
-        assertTrue(api.unlockAccount(Address.wrap(rslt.getAddress(1).toByteArray()), "passwd1", 500));
-        assertTrue(api.unlockAccount(Address.wrap(rslt.getAddress(2).toByteArray()), "passwd2", 500));
+        assertTrue(
+                api.unlockAccount(Address.wrap(rslt.getAddress(0).toByteArray()), "passwd0", 500));
+        assertTrue(
+                api.unlockAccount(Address.wrap(rslt.getAddress(1).toByteArray()), "passwd1", 500));
+        assertTrue(
+                api.unlockAccount(Address.wrap(rslt.getAddress(2).toByteArray()), "passwd2", 500));
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_accountCreate_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
 
-        Message.req_accountlock reqBody2 = Message.req_accountlock.newBuilder()
-                .setAccount(addr)
-                .setPassword("passwd0")
-                .build();
+        Message.req_accountlock reqBody2 =
+                Message.req_accountlock
+                        .newBuilder()
+                        .setAccount(addr)
+                        .setPassword("passwd0")
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_wallet_VALUE, Message.Funcs.f_accountLock_VALUE, reqBody2.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_wallet_VALUE,
+                        Message.Funcs.f_accountLock_VALUE,
+                        reqBody2.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
         assertEquals(0x01, rsp[3]);
@@ -900,24 +1128,36 @@ public class ApiAion0Test {
     public void testProcessEstimateNrg() throws Exception {
         byte[] val = {50, 30};
 
-        Message.req_estimateNrg reqBody = Message.req_estimateNrg.newBuilder()
-                .setFrom(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
-                .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
-                .setNrg(1000)
-                .setNrgPrice(5000)
-                .setData(ByteString.copyFrom(msg))
-                .setValue(ByteString.copyFrom(val))
-                .build();
+        Message.req_estimateNrg reqBody =
+                Message.req_estimateNrg
+                        .newBuilder()
+                        .setFrom(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                        .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                        .setNrg(1000)
+                        .setNrgPrice(5000)
+                        .setData(ByteString.copyFrom(msg))
+                        .setValue(ByteString.copyFrom(val))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_estimateNrg_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_estimateNrg_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         Message.rsp_estimateNrg rslt = Message.rsp_estimateNrg.parseFrom(stripHeader(rsp));
 
-        AionTransaction tx = new AionTransaction(AionRepositoryImpl.inst().getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), val,
-                msg, 1000, 5000);
+        AionTransaction tx =
+                new AionTransaction(
+                        AionRepositoryImpl.inst().getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        val,
+                        msg,
+                        1000,
+                        5000);
         tx.sign(new ECKeyEd25519());
 
         assertEquals(AionImpl.inst().estimateTxNrg(tx, api.getBestBlock()), rslt.getNrg());
@@ -935,22 +1175,28 @@ public class ApiAion0Test {
         Address addr2 = new Address(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
 
-        Message.t_Key tkey1 = Message.t_Key.newBuilder()
-                .setAddress(ByteString.copyFrom(addr1.toBytes()))
-                .setPassword("testPwd1")
-                .build();
+        Message.t_Key tkey1 =
+                Message.t_Key
+                        .newBuilder()
+                        .setAddress(ByteString.copyFrom(addr1.toBytes()))
+                        .setPassword("testPwd1")
+                        .build();
 
-        Message.t_Key tkey2 = Message.t_Key.newBuilder()
-                .setAddress(ByteString.copyFrom(addr2.toBytes()))
-                .setPassword("testPwd2")
-                .build();
+        Message.t_Key tkey2 =
+                Message.t_Key
+                        .newBuilder()
+                        .setAddress(ByteString.copyFrom(addr2.toBytes()))
+                        .setPassword("testPwd2")
+                        .build();
 
-        Message.req_exportAccounts reqBody = Message.req_exportAccounts.newBuilder()
-                .addKeyFile(tkey1)
-                .addKeyFile(tkey2)
-                .build();
+        Message.req_exportAccounts reqBody =
+                Message.req_exportAccounts.newBuilder().addKeyFile(tkey1).addKeyFile(tkey2).build();
 
-        rsp = sendRequest(Message.Servs.s_account_VALUE, Message.Funcs.f_exportAccounts_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_account_VALUE,
+                        Message.Funcs.f_exportAccounts_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -964,22 +1210,32 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessImportAccounts() throws Exception {
-        Message.t_PrivateKey tpkey1 = Message.t_PrivateKey.newBuilder()
-                .setPassword("testPwd1")
-                .setPrivateKey("pkey1")
-                .build();
+        Message.t_PrivateKey tpkey1 =
+                Message.t_PrivateKey
+                        .newBuilder()
+                        .setPassword("testPwd1")
+                        .setPrivateKey("pkey1")
+                        .build();
 
-        Message.t_PrivateKey tpkey2 = Message.t_PrivateKey.newBuilder()
-                .setPassword("testPwd2")
-                .setPrivateKey("pkey2")
-                .build();
+        Message.t_PrivateKey tpkey2 =
+                Message.t_PrivateKey
+                        .newBuilder()
+                        .setPassword("testPwd2")
+                        .setPrivateKey("pkey2")
+                        .build();
 
-        Message.req_importAccounts reqBody = Message.req_importAccounts.newBuilder()
-                .addPrivateKey(0, tpkey1)
-                .addPrivateKey(1, tpkey2)
-                .build();
+        Message.req_importAccounts reqBody =
+                Message.req_importAccounts
+                        .newBuilder()
+                        .addPrivateKey(0, tpkey1)
+                        .addPrivateKey(1, tpkey2)
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_account_VALUE, Message.Funcs.f_importAccounts_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_account_VALUE,
+                        Message.Funcs.f_importAccounts_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -999,21 +1255,35 @@ public class ApiAion0Test {
 
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+        AionBlock blk =
+                impl.getAionHub()
+                        .getBlockchain()
+                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
         impl.getAionHub().getBlockchain().add(blk);
 
-        Message.req_rawTransaction reqBody = Message.req_rawTransaction.newBuilder()
-                .setEncodedTx(ByteString.copyFrom(tx.getEncoded()))
-                .build();
+        Message.req_rawTransaction reqBody =
+                Message.req_rawTransaction
+                        .newBuilder()
+                        .setEncodedTx(ByteString.copyFrom(tx.getEncoded()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_rawTransaction_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_rawTransaction_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_tx_Recved_VALUE, rsp[1]);
 
@@ -1033,17 +1303,21 @@ public class ApiAion0Test {
         Address addr2 = new Address(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
 
-        Message.t_FilterCt fil1 = Message.t_FilterCt.newBuilder()
-                .addAddresses(ByteString.copyFrom(addr1.toBytes()))
-                .addAddresses(ByteString.copyFrom(addr2.toBytes()))
-                .build();
+        Message.t_FilterCt fil1 =
+                Message.t_FilterCt
+                        .newBuilder()
+                        .addAddresses(ByteString.copyFrom(addr1.toBytes()))
+                        .addAddresses(ByteString.copyFrom(addr2.toBytes()))
+                        .build();
 
-        Message.req_eventRegister reqBody = Message.req_eventRegister.newBuilder()
-                .addEvents("event1")
-                .setFilter(fil1)
-                .build();
+        Message.req_eventRegister reqBody =
+                Message.req_eventRegister.newBuilder().addEvents("event1").setFilter(fil1).build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_eventRegister_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_eventRegister_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -1057,11 +1331,14 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessEventDeregister() throws Exception {
-        Message.req_eventDeregister reqBody = Message.req_eventDeregister.newBuilder()
-                .addEvents("event1")
-                .build();
+        Message.req_eventDeregister reqBody =
+                Message.req_eventDeregister.newBuilder().addEvents("event1").build();
 
-        rsp = sendRequest(Message.Servs.s_tx_VALUE, Message.Funcs.f_eventDeregister_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_tx_VALUE,
+                        Message.Funcs.f_eventDeregister_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
@@ -1075,15 +1352,22 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessBlockDetails() throws Exception {
-        Message.req_getBlockDetailsByNumber reqBody = Message.req_getBlockDetailsByNumber.newBuilder()
-                .addBlkNumbers(api.getBestBlock().getNumber())
-                .build();
+        Message.req_getBlockDetailsByNumber reqBody =
+                Message.req_getBlockDetailsByNumber
+                        .newBuilder()
+                        .addBlkNumbers(api.getBestBlock().getNumber())
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_admin_VALUE, Message.Funcs.f_getBlockDetailsByNumber_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_admin_VALUE,
+                        Message.Funcs.f_getBlockDetailsByNumber_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_getBlockDetailsByNumber rslt = Message.rsp_getBlockDetailsByNumber.parseFrom(stripHeader(rsp));
+        Message.rsp_getBlockDetailsByNumber rslt =
+                Message.rsp_getBlockDetailsByNumber.parseFrom(stripHeader(rsp));
         assertEquals(1, rslt.getBlkDetailsCount());
         Message.t_BlockDetail blkdtl = rslt.getBlkDetails(0);
         assertEquals(api.getBestBlock().getNumber(), blkdtl.getBlockNumber());
@@ -1098,16 +1382,23 @@ public class ApiAion0Test {
     public void testProcessBlockSqlRange() throws Exception {
         long bestBlkNum = api.getBestBlock().getNumber();
 
-        Message.req_getBlockSqlByRange reqBody = Message.req_getBlockSqlByRange.newBuilder()
-                .setBlkNumberStart(bestBlkNum)
-                .setBlkNumberEnd(bestBlkNum + 20)
-                .build();
+        Message.req_getBlockSqlByRange reqBody =
+                Message.req_getBlockSqlByRange
+                        .newBuilder()
+                        .setBlkNumberStart(bestBlkNum)
+                        .setBlkNumberEnd(bestBlkNum + 20)
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_admin_VALUE, Message.Funcs.f_getBlockSqlByRange_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_admin_VALUE,
+                        Message.Funcs.f_getBlockSqlByRange_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_getBlockSqlByRange rslt = Message.rsp_getBlockSqlByRange.parseFrom(stripHeader(rsp));
+        Message.rsp_getBlockSqlByRange rslt =
+                Message.rsp_getBlockSqlByRange.parseFrom(stripHeader(rsp));
         assertEquals(1, rslt.getBlkSqlCount());
         Message.t_BlockSql blksql = rslt.getBlkSql(0);
         assertEquals(api.getBestBlock().getNumber(), blksql.getBlockNumber());
@@ -1121,16 +1412,23 @@ public class ApiAion0Test {
     public void testProcessBlockDetailsRange() throws Exception {
         long bestBlkNum = api.getBestBlock().getNumber();
 
-        Message.req_getBlockDetailsByRange reqBody = Message.req_getBlockDetailsByRange.newBuilder()
-                .setBlkNumberStart(bestBlkNum)
-                .setBlkNumberEnd(bestBlkNum + 20)
-                .build();
+        Message.req_getBlockDetailsByRange reqBody =
+                Message.req_getBlockDetailsByRange
+                        .newBuilder()
+                        .setBlkNumberStart(bestBlkNum)
+                        .setBlkNumberEnd(bestBlkNum + 20)
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_admin_VALUE, Message.Funcs.f_getBlockDetailsByRange_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_admin_VALUE,
+                        Message.Funcs.f_getBlockDetailsByRange_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_getBlockDetailsByRange rslt = Message.rsp_getBlockDetailsByRange.parseFrom(stripHeader(rsp));
+        Message.rsp_getBlockDetailsByRange rslt =
+                Message.rsp_getBlockDetailsByRange.parseFrom(stripHeader(rsp));
         assertEquals(1, rslt.getBlkDetailsCount());
         Message.t_BlockDetail blksql = rslt.getBlkDetails(0);
         assertEquals(api.getBestBlock().getNumber(), blksql.getBlockNumber());
@@ -1142,20 +1440,23 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessBlockDetailsLatest() throws Exception {
-        Message.req_getBlockDetailsByLatest reqBody = Message.req_getBlockDetailsByLatest.newBuilder()
-                .setCount(20)
-                .build();
+        Message.req_getBlockDetailsByLatest reqBody =
+                Message.req_getBlockDetailsByLatest.newBuilder().setCount(20).build();
 
-        rsp = sendRequest(Message.Servs.s_admin_VALUE, Message.Funcs.f_getBlockDetailsByLatest_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_admin_VALUE,
+                        Message.Funcs.f_getBlockDetailsByLatest_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_getBlockDetailsByLatest rslt = Message.rsp_getBlockDetailsByLatest.parseFrom(stripHeader(rsp));
+        Message.rsp_getBlockDetailsByLatest rslt =
+                Message.rsp_getBlockDetailsByLatest.parseFrom(stripHeader(rsp));
 
         int expectedCount = 20, bestBlkNum = (int) api.getBestBlock().getNumber();
 
-        if (bestBlkNum < 19)
-            expectedCount = bestBlkNum + 1;
+        if (bestBlkNum < 19) expectedCount = bestBlkNum + 1;
 
         assertEquals(expectedCount, rslt.getBlkDetailsCount());
 
@@ -1169,20 +1470,23 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessBlocksLatest() throws Exception {
-        Message.req_getBlocksByLatest reqBody = Message.req_getBlocksByLatest.newBuilder()
-                .setCount(20)
-                .build();
+        Message.req_getBlocksByLatest reqBody =
+                Message.req_getBlocksByLatest.newBuilder().setCount(20).build();
 
-        rsp = sendRequest(Message.Servs.s_admin_VALUE, Message.Funcs.f_getBlocksByLatest_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_admin_VALUE,
+                        Message.Funcs.f_getBlocksByLatest_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
         int expectedCount = 20, bestBlkNum = (int) api.getBestBlock().getNumber();
 
-        if (bestBlkNum < 19)
-            expectedCount = bestBlkNum + 1;
+        if (bestBlkNum < 19) expectedCount = bestBlkNum + 1;
 
-        Message.rsp_getBlocksByLatest rslt = Message.rsp_getBlocksByLatest.parseFrom(stripHeader(rsp));
+        Message.rsp_getBlocksByLatest rslt =
+                Message.rsp_getBlocksByLatest.parseFrom(stripHeader(rsp));
         assertEquals(expectedCount, rslt.getBlksCount());
         Message.t_Block blksql = rslt.getBlks(expectedCount - 1);
         assertEquals(bestBlkNum, blksql.getBlockNumber());
@@ -1197,22 +1501,32 @@ public class ApiAion0Test {
         Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        Message.req_getAccountDetailsByAddressList reqBody = Message.req_getAccountDetailsByAddressList.newBuilder()
-                .addAddresses(ByteString.copyFrom(addr.toBytes()))
-                .addAddresses(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
-                .build();
+        Message.req_getAccountDetailsByAddressList reqBody =
+                Message.req_getAccountDetailsByAddressList
+                        .newBuilder()
+                        .addAddresses(ByteString.copyFrom(addr.toBytes()))
+                        .addAddresses(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
+                        .build();
 
-        rsp = sendRequest(Message.Servs.s_admin_VALUE, Message.Funcs.f_getAccountDetailsByAddressList_VALUE, reqBody.toByteArray());
+        rsp =
+                sendRequest(
+                        Message.Servs.s_admin_VALUE,
+                        Message.Funcs.f_getAccountDetailsByAddressList_VALUE,
+                        reqBody.toByteArray());
 
         assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
 
-        Message.rsp_getAccountDetailsByAddressList rslt = Message.rsp_getAccountDetailsByAddressList.parseFrom(stripHeader(rsp));
+        Message.rsp_getAccountDetailsByAddressList rslt =
+                Message.rsp_getAccountDetailsByAddressList.parseFrom(stripHeader(rsp));
         assertEquals(2, rslt.getAccountsCount());
         Message.t_AccountDetail acctDtl = rslt.getAccounts(0);
         assertEquals(ByteString.copyFrom(addr.toBytes()), acctDtl.getAddress());
         assertEquals(ByteString.copyFrom(api.getBalance(addr).toByteArray()), acctDtl.getBalance());
 
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_getAccountDetailsByAddressList_VALUE);
+        rsp =
+                sendRequest(
+                        Message.Servs.s_hb_VALUE,
+                        Message.Funcs.f_getAccountDetailsByAddressList_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }

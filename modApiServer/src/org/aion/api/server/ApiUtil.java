@@ -1,35 +1,32 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
-
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.api.server;
 
 import java.nio.ByteBuffer;
 
 public class ApiUtil {
-    public final static int HASH_LEN = 8;
-    public final static int HEADER_LEN = 4;
-    public final static int RETHEADER_LEN = 3;
+    public static final int HASH_LEN = 8;
+    public static final int HEADER_LEN = 4;
+    public static final int RETHEADER_LEN = 3;
 
     public static byte[] toReturnHeader(int vers, int retCode, byte[] hash) {
 
@@ -37,10 +34,13 @@ public class ApiUtil {
             return null;
         }
 
-        return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN).put((byte) vers).put((byte) retCode).put((byte) 1)
-                .put(hash, 0, hash.length).array();
+        return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN)
+                .put((byte) vers)
+                .put((byte) retCode)
+                .put((byte) 1)
+                .put(hash, 0, hash.length)
+                .array();
     }
-
 
     public static byte[] toReturnHeader(int vers, int retCode, byte[] hash, byte[] error) {
 
@@ -49,32 +49,61 @@ public class ApiUtil {
         }
 
         if (error.length == 0) {
-            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1).put((byte) vers).put((byte) retCode).put((byte) 1)
-                    .put(hash, 0, hash.length).put((byte)0).array();
+            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1)
+                    .put((byte) vers)
+                    .put((byte) retCode)
+                    .put((byte) 1)
+                    .put(hash, 0, hash.length)
+                    .put((byte) 0)
+                    .array();
         } else {
-            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1 + error.length ).put((byte) vers).put((byte) retCode).put((byte) 1)
-                    .put(hash, 0, hash.length).put((byte) error.length).put(error, 0 , error.length).array();
+            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1 + error.length)
+                    .put((byte) vers)
+                    .put((byte) retCode)
+                    .put((byte) 1)
+                    .put(hash, 0, hash.length)
+                    .put((byte) error.length)
+                    .put(error, 0, error.length)
+                    .array();
         }
     }
 
-    public static byte[] toReturnHeader(int vers, int retCode, byte[] hash, byte[] error, byte[] result) {
+    public static byte[] toReturnHeader(
+            int vers, int retCode, byte[] hash, byte[] error, byte[] result) {
 
         if (hash == null || result == null || hash.length != HASH_LEN) {
             return null;
         }
 
         if (error.length == 0) {
-            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1 + result.length).put((byte) vers).put((byte) retCode)
-                    .put((byte) 1).put(hash, 0, hash.length).put((byte) 0).put(result, 0, result.length).array();
+            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1 + result.length)
+                    .put((byte) vers)
+                    .put((byte) retCode)
+                    .put((byte) 1)
+                    .put(hash, 0, hash.length)
+                    .put((byte) 0)
+                    .put(result, 0, result.length)
+                    .array();
         } else {
-            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1 + error.length + result.length).put((byte) vers).put((byte) retCode)
-                    .put((byte) 1).put(hash, 0, hash.length).put((byte) error.length).put(error, 0, error.length).put(result, 0, result.length).array();
+            return ByteBuffer.allocate(HASH_LEN + RETHEADER_LEN + 1 + error.length + result.length)
+                    .put((byte) vers)
+                    .put((byte) retCode)
+                    .put((byte) 1)
+                    .put(hash, 0, hash.length)
+                    .put((byte) error.length)
+                    .put(error, 0, error.length)
+                    .put(result, 0, result.length)
+                    .array();
         }
     }
 
     public static byte[] toReturnHeader(int vers, int retCode) {
 
-        return ByteBuffer.allocate(RETHEADER_LEN).put((byte) vers).put((byte) retCode).put((byte) 0).array();
+        return ByteBuffer.allocate(RETHEADER_LEN)
+                .put((byte) vers)
+                .put((byte) retCode)
+                .put((byte) 0)
+                .array();
     }
 
     public static byte[] combineRetMsg(byte[] header, byte[] body) {
@@ -82,7 +111,9 @@ public class ApiUtil {
             return null;
         }
 
-        return ByteBuffer.allocate(header.length + body.length).put(header, 0, header.length).put(body, 0, body.length)
+        return ByteBuffer.allocate(header.length + body.length)
+                .put(header, 0, header.length)
+                .put(body, 0, body.length)
                 .array();
     }
 
@@ -91,7 +122,10 @@ public class ApiUtil {
             return null;
         }
 
-        return ByteBuffer.allocate(header.length + 1).put(header, 0, header.length).put(body).array();
+        return ByteBuffer.allocate(header.length + 1)
+                .put(header, 0, header.length)
+                .put(body)
+                .array();
     }
 
     public static byte[] getApiMsgHash(byte[] request) {
@@ -103,7 +137,11 @@ public class ApiUtil {
     }
 
     public static byte[] toReturnEvtHeader(byte vers, byte[] ecb) {
-        return ByteBuffer.allocate(RETHEADER_LEN + ecb.length).put(vers).put((byte) 106).put((byte) 0)
-                .put(ecb, 0, ecb.length).array();
+        return ByteBuffer.allocate(RETHEADER_LEN + ecb.length)
+                .put(vers)
+                .put((byte) 106)
+                .put((byte) 0)
+                .put(ecb, 0, ecb.length)
+                .array();
     }
 }

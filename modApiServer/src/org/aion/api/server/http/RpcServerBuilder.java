@@ -5,11 +5,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This builder is opinionated;
- * 1. It assumes that false is a reasonable default for sslEnabled and corsEnabled.
- * 2. It assumes empty array for enabledEndpoints is a reasonable default
- * 3. It assumes "*" is a reasonable default for corsOrigin
- * 4. Any "unset" objects get initialized to null
+ * This builder is opinionated; 1. It assumes that false is a reasonable default for sslEnabled and
+ * corsEnabled. 2. It assumes empty array for enabledEndpoints is a reasonable default 3. It assumes
+ * "*" is a reasonable default for corsOrigin 4. Any "unset" objects get initialized to null
  */
 public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
 

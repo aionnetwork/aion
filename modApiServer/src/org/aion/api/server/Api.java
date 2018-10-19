@@ -1,31 +1,35 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.api.server;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.aion.mcf.account.AccountManager;
-import org.aion.mcf.account.Keystore;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import org.aion.api.server.types.CompiContrInfo;
 import org.aion.api.server.types.CompiledContr;
 import org.aion.base.type.Address;
@@ -33,17 +37,14 @@ import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.account.AccountManager;
+import org.aion.mcf.account.Keystore;
+import org.aion.mcf.types.AbstractBlock;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
-import org.aion.mcf.types.AbstractBlock;
 import org.slf4j.Logger;
-
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.*;
-import java.util.Map.Entry;
 
 public abstract class Api<B extends AbstractBlock<?, ?>> {
 
@@ -61,7 +62,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     // Only for testing purposes
     @VisibleForTesting
     Api(AionPendingStateImpl ps) {
-            pendingState = ps;
+        pendingState = ps;
     }
 
     public abstract String getCoinbase();
@@ -77,11 +78,13 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     // }
     // --Commented out by Inspection STOP (02/02/18 6:56 PM)
 
-    public boolean unlockAccount(final String _address, final String _password, final int _duration) {
+    public boolean unlockAccount(
+            final String _address, final String _password, final int _duration) {
         return this.ACCOUNT_MANAGER.unlockAccount(Address.wrap(_address), _password, _duration);
     }
 
-    public boolean unlockAccount(final Address _address, final String _password, final int _duration) {
+    public boolean unlockAccount(
+            final Address _address, final String _password, final int _duration) {
         return this.ACCOUNT_MANAGER.unlockAccount(_address, _password, _duration);
     }
 
@@ -118,24 +121,24 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     public Map<String, CompiledContr> contract_compileSolidity(final String _contract) {
         try {
             Map<String, CompiledContr> compiledContracts = new HashMap<String, CompiledContr>();
-            Compiler.Result res = solc.compile(_contract.getBytes(), Compiler.Options.ABI, Compiler.Options.BIN);
+            Compiler.Result res =
+                    solc.compile(_contract.getBytes(), Compiler.Options.ABI, Compiler.Options.BIN);
             if (res.isFailed()) {
                 LOG.info("contract compile error: [{}]", res.errors);
 
                 /**
-                 * Enhance performance by separating the log threads and kernel
-                 * TODO: Implement a queue for strings
-                 * TODO: Put every LOG message onto the queue
-                 * TODO: Use a thread service to process these message
+                 * Enhance performance by separating the log threads and kernel TODO: Implement a
+                 * queue for strings TODO: Put every LOG message onto the queue TODO: Use a thread
+                 * service to process these message
                  */
-
                 CompiledContr ret = new CompiledContr();
                 ret.error = res.errors;
                 compiledContracts.put("compile-error", ret);
                 return compiledContracts;
             }
             CompilationResult result = CompilationResult.parse(res.output);
-            Iterator<Entry<String, CompilationResult.Contract>> entries = result.contracts.entrySet().iterator();
+            Iterator<Entry<String, CompilationResult.Contract>> entries =
+                    result.contracts.entrySet().iterator();
             while (entries.hasNext()) {
                 CompiledContr ret = new CompiledContr();
                 Entry<String, CompilationResult.Contract> entry = entries.next();

@@ -6,23 +6,23 @@ import io.undertow.util.Headers;
 import io.undertow.util.HttpString;
 import io.undertow.util.Methods;
 import io.undertow.util.StatusCodes;
-import org.aion.api.server.rpc.RpcProcessor;
-
 import java.util.Map;
+import org.aion.api.server.rpc.RpcProcessor;
 
 class AionUndertowRpcHandler implements HttpHandler {
     private final boolean corsEnabled;
     private final Map<HttpString, String> corsHeaders;
     private final RpcProcessor rpcProcessor;
 
-    public AionUndertowRpcHandler(boolean corsEnabled, Map<HttpString, String> corsHeaders, RpcProcessor rpcProcessor) {
+    public AionUndertowRpcHandler(
+            boolean corsEnabled, Map<HttpString, String> corsHeaders, RpcProcessor rpcProcessor) {
         this.corsEnabled = corsEnabled;
         this.corsHeaders = corsHeaders;
         this.rpcProcessor = rpcProcessor;
     }
 
     private void addCorsHeaders(HttpServerExchange exchange) {
-        for (Map.Entry<HttpString, String> header: corsHeaders.entrySet()) {
+        for (Map.Entry<HttpString, String> header : corsHeaders.entrySet()) {
             exchange.getResponseHeaders().put(header.getKey(), header.getValue());
         }
     }
@@ -50,10 +50,14 @@ class AionUndertowRpcHandler implements HttpHandler {
         }
 
         /** respond to rpc call; {@link io.Undertow.BlockingReceiverImpl#receiveFullString} */
-        exchange.getRequestReceiver().receiveFullString((_exchange, body) -> {
-            if (corsEnabled) addCorsHeaders(_exchange);
-            _exchange.getResponseHeaders().put(Headers.CONTENT_TYPE, "application/json");
-            _exchange.getResponseSender().send(rpcProcessor.process(body));
-        });
+        exchange.getRequestReceiver()
+                .receiveFullString(
+                        (_exchange, body) -> {
+                            if (corsEnabled) addCorsHeaders(_exchange);
+                            _exchange
+                                    .getResponseHeaders()
+                                    .put(Headers.CONTENT_TYPE, "application/json");
+                            _exchange.getResponseSender().send(rpcProcessor.process(body));
+                        });
     }
 }

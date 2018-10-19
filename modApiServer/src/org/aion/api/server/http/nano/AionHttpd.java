@@ -1,13 +1,12 @@
 package org.aion.api.server.http.nano;
 
 import fi.iki.elonen.NanoHTTPD;
+import java.util.HashMap;
+import java.util.Map;
 import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class AionHttpd extends NanoHTTPD {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
@@ -16,7 +15,12 @@ public class AionHttpd extends NanoHTTPD {
     private boolean corsEnabled;
     private Map<String, String> corsHeaders;
 
-    public AionHttpd(String hostname, int port, RpcProcessor rpcProcessor, boolean corsEnabled, Map<String, String> corsHeaders) {
+    public AionHttpd(
+            String hostname,
+            int port,
+            RpcProcessor rpcProcessor,
+            boolean corsEnabled,
+            Map<String, String> corsHeaders) {
         super(hostname, port);
 
         this.rpcProcessor = rpcProcessor;
@@ -35,9 +39,7 @@ public class AionHttpd extends NanoHTTPD {
         String requestBody = body.getOrDefault("postData", null);
 
         return NanoHTTPD.newFixedLengthResponse(
-                Response.Status.OK,
-                "application/json",
-                rpcProcessor.process(requestBody));
+                Response.Status.OK, "application/json", rpcProcessor.process(requestBody));
     }
 
     @Override
@@ -51,7 +53,7 @@ public class AionHttpd extends NanoHTTPD {
         }
 
         if (corsEnabled) {
-            for(Map.Entry<String, String> header: corsHeaders.entrySet()){
+            for (Map.Entry<String, String> header : corsHeaders.entrySet()) {
                 r.addHeader(header.getKey(), header.getValue());
             }
         }
@@ -64,5 +66,4 @@ public class AionHttpd extends NanoHTTPD {
         super.stop();
         rpcProcessor.shutdown();
     }
-
 }

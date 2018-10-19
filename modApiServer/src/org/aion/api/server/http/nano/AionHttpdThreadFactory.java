@@ -3,9 +3,7 @@ package org.aion.api.server.http.nano;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * @author chris lin
- */
+/** @author chris lin */
 public class AionHttpdThreadFactory implements ThreadFactory {
     private final AtomicInteger tnum = new AtomicInteger(1);
 

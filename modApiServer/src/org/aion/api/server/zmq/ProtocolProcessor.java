@@ -116,7 +116,8 @@ public class ProtocolProcessor implements Runnable {
                     feSock.setCurveSecretKey(curveSecKey);
                     LOG.info("Secure connection enabled!");
                 } else {
-                    LOG.info("Can't find the keyfile for setup the connection. Secure connection disabled!");
+                    LOG.info(
+                            "Can't find the keyfile for setup the connection. Secure connection disabled!");
                 }
             } else {
                 LOG.info("Secure connection disabled!");
@@ -194,7 +195,7 @@ public class ProtocolProcessor implements Runnable {
                 } catch (IOException e) {
                     LOG.error("Get zmqCurveSeckey exception! {}", e.toString());
                 }
-            } else if (nextLoad.contentEquals(f.getName())){
+            } else if (nextLoad.contentEquals(f.getName())) {
                 try {
                     if (nextLoad.contains("zmqCurveSeckey")) {
                         curveSecKey = Files.readAllBytes(f.toPath());
@@ -227,24 +228,28 @@ public class ProtocolProcessor implements Runnable {
                     for (Object obj : objs) {
                         al.add(((EvtContract) obj).getMsgEventCt());
                         if (LOG.isTraceEnabled()) {
-                            LOG.trace("ProtocolProcessor.eventRun fltr event[{}]",
-                                ((EvtContract) obj).toJSON());
+                            LOG.trace(
+                                    "ProtocolProcessor.eventRun fltr event[{}]",
+                                    ((EvtContract) obj).toJSON());
                         }
                     }
 
                     if (!al.isEmpty()) {
-                        Message.rsp_EventCtCallback ecb = Message.rsp_EventCtCallback.newBuilder()
-                            .addAllEc(al).build();
+                        Message.rsp_EventCtCallback ecb =
+                                Message.rsp_EventCtCallback.newBuilder().addAllEc(al).build();
                         byte[] rsp = ((HdlrZmq) this.handler).toRspEvtMsg(ecb.toByteArray());
 
                         try {
-                            byte[] socketId = ByteBuffer.allocate(5)
-                                .put(ByteUtil.longToBytes(i), 3, 5).array();
+                            byte[] socketId =
+                                    ByteBuffer.allocate(5)
+                                            .put(ByteUtil.longToBytes(i), 3, 5)
+                                            .array();
                             sock.send(socketId, ZMQ.SNDMORE);
                             sock.send(rsp, ZMQ.DONTWAIT);
                         } catch (Exception e) {
-                            LOG.error("ProtocolProcessor.callbackRun sock.send exception: " + e
-                                .getMessage());
+                            LOG.error(
+                                    "ProtocolProcessor.callbackRun sock.send exception: "
+                                            + e.getMessage());
                         }
                     }
                 }
@@ -287,18 +292,24 @@ public class ProtocolProcessor implements Runnable {
                 continue;
             }
 
-            byte[] rsp = tps.toTxReturnCode() != 105
-                ? ((HdlrZmq) this.handler)
-                .toRspMsg(tps.getMsgHash(), tps.toTxReturnCode(), tps.getError())
-                : ((HdlrZmq) this.handler)
-                    .toRspMsg(tps.getMsgHash(), tps.toTxReturnCode(), tps.getError(),
-                        tps.getTxResult());
+            byte[] rsp =
+                    tps.toTxReturnCode() != 105
+                            ? ((HdlrZmq) this.handler)
+                                    .toRspMsg(
+                                            tps.getMsgHash(), tps.toTxReturnCode(), tps.getError())
+                            : ((HdlrZmq) this.handler)
+                                    .toRspMsg(
+                                            tps.getMsgHash(),
+                                            tps.toTxReturnCode(),
+                                            tps.getError(),
+                                            tps.getTxResult());
             if (LOG.isTraceEnabled()) {
                 LOG.trace(
-                    "callbackRun send. socketID: [{}], msgHash: [{}], txReturnCode: [{}]/n rspMsg: [{}]",
-                    Hex.toHexString(tps.getSocketId()), Hex.toHexString(tps.getMsgHash()),
-                    tps.toTxReturnCode(),
-                    Hex.toHexString(rsp));
+                        "callbackRun send. socketID: [{}], msgHash: [{}], txReturnCode: [{}]/n rspMsg: [{}]",
+                        Hex.toHexString(tps.getSocketId()),
+                        Hex.toHexString(tps.getMsgHash()),
+                        tps.toTxReturnCode(),
+                        Hex.toHexString(rsp));
             }
             try {
                 sock.send(tps.getSocketId(), ZMQ.SNDMORE);
@@ -306,7 +317,7 @@ public class ProtocolProcessor implements Runnable {
             } catch (Exception e) {
                 if (LOG.isErrorEnabled()) {
                     LOG.error(
-                        "ProtocolProcessor.callbackRun sock.send exception: " + e.getMessage());
+                            "ProtocolProcessor.callbackRun sock.send exception: " + e.getMessage());
                 }
             }
         }
@@ -325,20 +336,23 @@ public class ProtocolProcessor implements Runnable {
             try {
                 byte[] socketId = sock.recv(0);
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("ProtocolProcessor.workerRun socketID: [{}]",
-                        Hex.toHexString(socketId));
+                    LOG.trace(
+                            "ProtocolProcessor.workerRun socketID: [{}]",
+                            Hex.toHexString(socketId));
                 }
                 if (socketId != null && socketId.length == SOCKETID_LEN) {
                     byte[] req = sock.recv(0);
                     if (req != null) {
                         if (LOG.isTraceEnabled()) {
-                            LOG.trace("ProtocolProcessor.workerRun reqMsg: [{}]",
-                                Hex.toHexString(req));
+                            LOG.trace(
+                                    "ProtocolProcessor.workerRun reqMsg: [{}]",
+                                    Hex.toHexString(req));
                         }
                         byte[] rsp = ((HdlrZmq) this.handler).process(req, socketId);
                         if (LOG.isTraceEnabled()) {
-                            LOG.trace("ProtocolProcessor.workerRun rspMsg: [{}]",
-                                Hex.toHexString(rsp));
+                            LOG.trace(
+                                    "ProtocolProcessor.workerRun rspMsg: [{}]",
+                                    Hex.toHexString(rsp));
                         }
 
                         try {
@@ -346,8 +360,9 @@ public class ProtocolProcessor implements Runnable {
                             sock.send(rsp, ZMQ.DONTWAIT);
                         } catch (Exception e) {
                             if (LOG.isErrorEnabled()) {
-                                LOG.error("ProtocolProcessor.workerRun sock.send exception: " + e
-                                    .getMessage());
+                                LOG.error(
+                                        "ProtocolProcessor.workerRun sock.send exception: "
+                                                + e.getMessage());
                             }
                         }
                     }
@@ -381,8 +396,9 @@ public class ProtocolProcessor implements Runnable {
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("ProtocolProcessor.hbRun reqMsg: [{}]", Hex.toHexString(req));
                         }
-                        byte[] rsp = ApiUtil
-                            .toReturnHeader(JAVAAPI_VAR, Message.Retcode.r_heartbeatReturn_VALUE);
+                        byte[] rsp =
+                                ApiUtil.toReturnHeader(
+                                        JAVAAPI_VAR, Message.Retcode.r_heartbeatReturn_VALUE);
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("ProtocolProcessor.hbRun rspMsg: [{}]", Hex.toHexString(rsp));
                         }
@@ -392,8 +408,9 @@ public class ProtocolProcessor implements Runnable {
                             sock.send(rsp, ZMQ.DONTWAIT);
                         } catch (Exception e) {
                             if (LOG.isErrorEnabled()) {
-                                LOG.error("ProtocolProcessor.hbRun sock.send exception: " + e
-                                    .getMessage());
+                                LOG.error(
+                                        "ProtocolProcessor.hbRun sock.send exception: "
+                                                + e.getMessage());
                             }
                         }
                     }

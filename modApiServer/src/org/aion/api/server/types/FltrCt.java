@@ -1,38 +1,31 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
-
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.api.server.types;
-
-import org.aion.base.type.Address;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import org.aion.base.type.Address;
 
-/**
- * @author chris
- */
+/** @author chris */
 // NOTE: only used by java api
 public class FltrCt extends Fltr {
 
@@ -48,7 +41,13 @@ public class FltrCt extends Fltr {
 
     private long expireTime;
 
-    public FltrCt(byte[] contractAddress, String toBlock, String fromBlock, List<String> topics, List<byte[]> addrs, long time) {
+    public FltrCt(
+            byte[] contractAddress,
+            String toBlock,
+            String fromBlock,
+            List<String> topics,
+            List<byte[]> addrs,
+            long time) {
         super(Type.EVENT);
         this.contractAddress = contractAddress;
         this.toBlock = toBlock;
@@ -70,9 +69,7 @@ public class FltrCt extends Fltr {
         return this.contractAddress;
     }
 
-    /**
-     * verify if current log filter is for specific contract address
-     */
+    /** verify if current log filter is for specific contract address */
     public boolean isFor(Address contractAddress, String topic) {
         // topic = "0x" + topic;
         if (!Arrays.equals(this.contractAddress, contractAddress.toBytes())) {
@@ -104,5 +101,4 @@ public class FltrCt extends Fltr {
     public void setExpireTime(long expireTime) {
         this.expireTime = expireTime;
     }
-
 }

@@ -1,11 +1,13 @@
 package org.aion.api.server.rpc;
 
-import org.aion.zero.impl.blockchain.AionImpl;
-import org.junit.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.aion.zero.impl.blockchain.AionImpl;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class RpcMethodsTest {
     @BeforeClass

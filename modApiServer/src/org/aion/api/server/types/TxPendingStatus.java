@@ -1,27 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
-
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.api.server.types;
 
 import org.aion.base.util.ByteArrayWrapper;
@@ -34,18 +31,19 @@ public class TxPendingStatus {
     ByteArrayWrapper msgHash;
     ByteArrayWrapper txResult;
     String error;
-    private final static int txRetCodeOffset = 102;
+    private static final int txRetCodeOffset = 102;
 
     /*  */
-    /**
-     * @see IListenerBase DROPPED(0) NEW_PENDING(1) PENDING(2) INCLUDED(3)
-     * 
-     */
-
+    /** @see IListenerBase DROPPED(0) NEW_PENDING(1) PENDING(2) INCLUDED(3) */
     int state;
 
-    public TxPendingStatus(ByteArrayWrapper txHash, ByteArrayWrapper id, ByteArrayWrapper msgHash, int v,
-            ByteArrayWrapper txRes, String error) {
+    public TxPendingStatus(
+            ByteArrayWrapper txHash,
+            ByteArrayWrapper id,
+            ByteArrayWrapper msgHash,
+            int v,
+            ByteArrayWrapper txRes,
+            String error) {
         // TODO Auto-generated constructor stub
         this.txhash = txHash;
         this.socketId = id;
@@ -75,7 +73,9 @@ public class TxPendingStatus {
         return this.txResult.getData();
     }
 
-    public String getError() { return this.error; }
+    public String getError() {
+        return this.error;
+    }
 
     public int toTxReturnCode() {
         return this.state + txRetCodeOffset;

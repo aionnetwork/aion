@@ -1,42 +1,34 @@
-/*******************************************************************************
- * Copyright (c) 2017-2018 Aion foundation.
+/**
+ * ***************************************************************************** Copyright (c)
+ * 2017-2018 Aion foundation.
  *
- *     This file is part of the aion network project.
+ * <p>This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
+ * <p>The aion network project is free software: you can redistribute it and/or modify it under the
+ * terms of the GNU General Public License as published by the Free Software Foundation, either
+ * version 3 of the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
+ * <p>The aion network project is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU General Public License for more details.
  *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
+ * <p>You should have received a copy of the GNU General Public License along with the aion network
+ * project source files. If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors:
- *     Aion foundation.
- *     
- ******************************************************************************/
-
+ * <p>Contributors: Aion foundation.
+ *
+ * <p>****************************************************************************
+ */
 package org.aion.api.server.types;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * 
- * @author chris use at eth_newFilter & eth_getLogs
- */
-
+/** @author chris use at eth_newFilter & eth_getLogs */
 public class ArgFltr {
 
     public String fromBlock = "latest";
@@ -55,7 +47,7 @@ public class ArgFltr {
 
     // implements validation of JSONObject received from user to create new filter (web3)
     // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_newfilter
-    public static ArgFltr fromJSON(final JSONObject json){
+    public static ArgFltr fromJSON(final JSONObject json) {
         try {
             String fromBlock = json.optString("fromBlock", "latest");
             String toBlock = json.optString("toBlock", "latest");
@@ -114,7 +106,7 @@ public class ArgFltr {
             }
 
             return new ArgFltr(fromBlock, toBlock, address, topics);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             return null;
         }
     }
@@ -125,12 +117,10 @@ public class ArgFltr {
         byte[] input = ByteUtil.hexStringToBytes(data);
         byte[] topic = new byte[32];
 
-        if (input.length == 32)
-            topic = input;
+        if (input.length == 32) topic = input;
         else if (input.length <= 32)
             System.arraycopy(input, 0, topic, 32 - input.length, input.length);
-        else
-            throw new RuntimeException("Data word can't be null or exceed 32 bytes: " + data);
+        else throw new RuntimeException("Data word can't be null or exceed 32 bytes: " + data);
 
         return topic;
     }
@@ -138,11 +128,17 @@ public class ArgFltr {
     // TODO: better toString()
     @Override
     public String toString() {
-        return "FilterRequest{" +
-                "fromBlock='" + fromBlock + '\'' +
-                ", toBlock='" + toBlock + '\'' +
-                ", address=" + address +
-                ", topics=" + topics +
-                '}';
+        return "FilterRequest{"
+                + "fromBlock='"
+                + fromBlock
+                + '\''
+                + ", toBlock='"
+                + toBlock
+                + '\''
+                + ", address="
+                + address
+                + ", topics="
+                + topics
+                + '}';
     }
 }

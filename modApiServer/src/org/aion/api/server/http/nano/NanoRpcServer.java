@@ -23,13 +23,6 @@
 package org.aion.api.server.http.nano;
 
 import fi.iki.elonen.NanoHTTPD;
-import org.aion.api.server.http.RpcServer;
-import org.aion.api.server.http.RpcServerBuilder;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.slf4j.Logger;
-
-import javax.net.ssl.KeyManagerFactory;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.util.Map;
@@ -37,6 +30,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import javax.net.ssl.KeyManagerFactory;
+import org.aion.api.server.http.RpcServer;
+import org.aion.api.server.http.RpcServerBuilder;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.slf4j.Logger;
 
 public class NanoRpcServer extends RpcServer {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
@@ -44,13 +43,13 @@ public class NanoRpcServer extends RpcServer {
     private AionHttpd server;
     private ExecutorService workers;
 
-    private final Map<String, String> CORS_HEADERS = Map.of(
-            "Access-Control-Allow-Origin", corsOrigin,
-            "Access-Control-Allow-Headers", "origin,accept,content-type",
-            "Access-Control-Allow-Credentials", "true",
-            "Access-Control-Allow-Methods", "POST,OPTIONS",
-            "Access-Control-Max-Age", "86400"
-    );
+    private final Map<String, String> CORS_HEADERS =
+            Map.of(
+                    "Access-Control-Allow-Origin", corsOrigin,
+                    "Access-Control-Allow-Headers", "origin,accept,content-type",
+                    "Access-Control-Allow-Credentials", "true",
+                    "Access-Control-Allow-Methods", "POST,OPTIONS",
+                    "Access-Control-Max-Age", "86400");
 
     public static class Builder extends RpcServerBuilder<Builder> {
         @Override
@@ -59,7 +58,9 @@ public class NanoRpcServer extends RpcServer {
         }
 
         @Override
-        protected Builder self() { return this; }
+        protected Builder self() {
+            return this;
+        }
     }
 
     private NanoRpcServer(Builder builder) {
@@ -68,20 +69,21 @@ public class NanoRpcServer extends RpcServer {
 
     private void makeSecure() throws Exception {
         if (server == null)
-            throw new IllegalStateException("Server not instantiated; valid instance required to enable ssl.");
+            throw new IllegalStateException(
+                    "Server not instantiated; valid instance required to enable ssl.");
 
         try {
             KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
             keystore.load(new FileInputStream(sslCertCanonicalPath), sslCertPass);
 
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            KeyManagerFactory keyManagerFactory =
+                    KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             keyManagerFactory.init(keystore, sslCertPass);
 
             server.makeSecure(NanoHTTPD.makeSSLSocketFactory(keystore, keyManagerFactory), null);
 
             // if the keystore object got loaded, go ahead and clear out the password
-            for (char c : sslCertPass)
-                c = '\0'; // NUL
+            for (char c : sslCertPass) c = '\0'; // NUL
 
         } catch (Exception e) {
             LOG.error("<rpc-server - unable to use keystore; path invalid or password incorrect");
@@ -99,30 +101,44 @@ public class NanoRpcServer extends RpcServer {
              * rationale: if the user want's to restrict the worker pool size, they can manually override it
              */
             int tCount;
-            if (getWorkerPoolSize().isPresent())
-                tCount = getWorkerPoolSize().get();
-            else
-                tCount = Math.max(Runtime.getRuntime().availableProcessors(), 2) * 8;
+            if (getWorkerPoolSize().isPresent()) tCount = getWorkerPoolSize().get();
+            else tCount = Math.max(Runtime.getRuntime().availableProcessors(), 2) * 8;
 
-            // For unbounded queues, LinkedBlockingQueue is ideal, due to it's linked-list based impl.
-            workers = new ThreadPoolExecutor(tCount, tCount, 10, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>(), new AionHttpdThreadFactory());
+            // For unbounded queues, LinkedBlockingQueue is ideal, due to it's linked-list based
+            // impl.
+            workers =
+                    new ThreadPoolExecutor(
+                            tCount,
+                            tCount,
+                            10,
+                            TimeUnit.SECONDS,
+                            new LinkedBlockingQueue<>(),
+                            new AionHttpdThreadFactory());
 
             server = new AionHttpd(hostName, port, rpcProcessor, corsEnabled, CORS_HEADERS);
             server.setAsyncRunner(new BoundRunner(workers));
-            
-            if (this.sslEnabled)
-                makeSecure();
+
+            if (this.sslEnabled) makeSecure();
 
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
 
-            LOG.info("<rpc-server - (NANO) started on {}://{}:{}>", sslEnabled ? "https" : "http", hostName, port);
+            LOG.info(
+                    "<rpc-server - (NANO) started on {}://{}:{}>",
+                    sslEnabled ? "https" : "http",
+                    hostName,
+                    port);
 
             LOG.debug("------------------------------------");
             LOG.debug("NANO RPC Server Started with Options");
             LOG.debug("------------------------------------");
-            LOG.debug("SSL: {}", sslEnabled ? "Enabled; Certificate = "+sslCertCanonicalPath : "Not Enabled");
-            LOG.debug("CORS: {}", corsEnabled ? "Enabled; Allowed Origins = \""+corsOrigin+"\"" : "Not Enabled");
+            LOG.debug(
+                    "SSL: {}",
+                    sslEnabled ? "Enabled; Certificate = " + sslCertCanonicalPath : "Not Enabled");
+            LOG.debug(
+                    "CORS: {}",
+                    corsEnabled
+                            ? "Enabled; Allowed Origins = \"" + corsOrigin + "\""
+                            : "Not Enabled");
             LOG.debug("Worker Thread Count: {}", tCount);
             LOG.debug("I/O Thread Count: Not Applicable");
             LOG.debug("Request Queue Size: Unbounded");
@@ -140,7 +156,8 @@ public class NanoRpcServer extends RpcServer {
         server.stop();
 
         // graceful(ish) shutdown of thread pool
-        // NOTE: ok to call workers.*() from some shutdown thread since sun's implementation of ExecutorService is threadsafe
+        // NOTE: ok to call workers.*() from some shutdown thread since sun's implementation of
+        // ExecutorService is threadsafe
         workers.shutdownNow();
     }
 }

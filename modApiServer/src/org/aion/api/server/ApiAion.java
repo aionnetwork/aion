@@ -119,7 +119,6 @@ public abstract class ApiAion extends Api {
     public final class EpApi implements Runnable {
         boolean go = true;
 
-
         @Override
         public void run() {
             while (go) {
@@ -461,11 +460,20 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        Address fromAddr = (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
-        AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), fromAddr, params.getTo(),
-                params.getValue().toByteArray(), params.getData(), params.getNrg(), params.getNrgPrice());
+        Address fromAddr =
+                (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
+        AionTransaction tx =
+                new AionTransaction(
+                        params.getNonce().toByteArray(),
+                        fromAddr,
+                        params.getTo(),
+                        params.getValue().toByteArray(),
+                        params.getData(),
+                        params.getNrg(),
+                        params.getNrgPrice());
 
-        AionTxReceipt receipt = this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
+        AionTxReceipt receipt =
+                this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
         return receipt.getEnergyUsed();
     }
 
@@ -612,27 +620,26 @@ public abstract class ApiAion extends Api {
         try {
             synchronized (pendingState) {
                 byte[] nonce =
-                    (!_params.getNonce().equals(BigInteger.ZERO))
-                        ? _params.getNonce().toByteArray()
-                        : pendingState
-                            .bestPendingStateNonce(Address.wrap(key.getAddress()))
-                            .toByteArray();
+                        (!_params.getNonce().equals(BigInteger.ZERO))
+                                ? _params.getNonce().toByteArray()
+                                : pendingState
+                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                        .toByteArray();
 
                 AionTransaction tx =
-                    new AionTransaction(
-                        nonce,
-                        _params.getTo(),
-                        _params.getValue().toByteArray(),
-                        _params.getData(),
-                        _params.getNrg(),
-                        _params.getNrgPrice());
+                        new AionTransaction(
+                                nonce,
+                                _params.getTo(),
+                                _params.getValue().toByteArray(),
+                                _params.getData(),
+                                _params.getNrg(),
+                                _params.getNrgPrice());
                 tx.sign(key);
 
                 return tx;
             }
         } catch (Exception ex) {
-            if(LOG.isDebugEnabled())
-                LOG.debug("Failed to sign the transaction");
+            if (LOG.isDebugEnabled()) LOG.debug("Failed to sign the transaction");
             return null;
         }
     }
@@ -738,7 +745,7 @@ public abstract class ApiAion extends Api {
             return;
         }
 
-        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
+        IAionBlockchain bc = (IAionBlockchain) _ac.getBlockchain();
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
 
@@ -750,10 +757,8 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getRecommendedNrgPrice() {
-        if (NRG_ORACLE != null)
-            return NRG_ORACLE.getNrgPrice();
-        else
-            return CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        if (NRG_ORACLE != null) return NRG_ORACLE.getNrgPrice();
+        else return CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
     }
 
     // leak the oracle instance. NrgOracle is threadsafe, so safe to do this, but bad design

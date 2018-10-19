@@ -9,6 +9,11 @@ public class StuckThreadDetectorConfiguration {
         this.timeoutSeconds = timeoutSeconds;
     }
 
-    public boolean isEnabled() { return enabled; }
-    public int getTimeoutSeconds() { return timeoutSeconds; }
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public int getTimeoutSeconds() {
+        return timeoutSeconds;
+    }
 }
