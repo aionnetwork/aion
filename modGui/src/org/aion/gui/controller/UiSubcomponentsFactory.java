@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -23,6 +23,8 @@
 package org.aion.gui.controller;
 
 import com.google.common.annotations.VisibleForTesting;
+import java.util.HashMap;
+import java.util.Map;
 import javafx.fxml.JavaFXBuilderFactory;
 import javafx.util.Builder;
 import javafx.util.BuilderFactory;
@@ -34,15 +36,11 @@ import org.aion.wallet.ui.components.account.AccountCellFactory;
 import org.aion.wallet.ui.components.partials.AddAccountDialog;
 import org.slf4j.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
-
-/**
- * {@link BuilderFactory} that builds sub-components used in controller layer.
- */
+/** {@link BuilderFactory} that builds sub-components used in controller layer. */
 public class UiSubcomponentsFactory implements BuilderFactory {
     /** maps a class to a method that constructs an instance of it */
     private final Map<Class, Builder<?>> builderChooser;
+
     private final BuilderFactory fallback;
 
     private AccountManager accountManager;
@@ -53,10 +51,17 @@ public class UiSubcomponentsFactory implements BuilderFactory {
     @VisibleForTesting
     UiSubcomponentsFactory(BuilderFactory fallback) {
         this.fallback = fallback;
-        this.builderChooser = new HashMap<>() {{
-            put(AccountCellFactory.class, () -> new AccountCellFactory(accountManager, consoleManager));
-            put(AddAccountDialog.class, () -> new AddAccountDialog(accountManager, consoleManager));
-        }};
+        this.builderChooser =
+                new HashMap<>() {
+                    {
+                        put(
+                                AccountCellFactory.class,
+                                () -> new AccountCellFactory(accountManager, consoleManager));
+                        put(
+                                AddAccountDialog.class,
+                                () -> new AddAccountDialog(accountManager, consoleManager));
+                    }
+                };
     }
 
     public UiSubcomponentsFactory() {
@@ -66,7 +71,7 @@ public class UiSubcomponentsFactory implements BuilderFactory {
     @Override
     public Builder<?> getBuilder(Class<?> clazz) {
         Builder<?> builder = builderChooser.get(clazz);
-        if(null != builder) {
+        if (null != builder) {
             return builder;
         } else {
             return fallback.getBuilder(clazz);

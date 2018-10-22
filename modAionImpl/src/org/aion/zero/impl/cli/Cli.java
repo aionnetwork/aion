@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl.cli;
 
 import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;

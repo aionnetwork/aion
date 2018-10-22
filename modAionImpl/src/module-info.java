@@ -1,6 +1,7 @@
 module aion.zero.impl {
     uses org.aion.evtmgr.EventMgrModule;
     uses org.aion.txpool.TxPoolModule;
+
     requires aion.base;
     requires aion.mcf;
     requires aion.log;
@@ -32,7 +33,9 @@ module aion.zero.impl {
     exports org.aion.zero.impl.types;
     exports org.aion.zero.impl.config;
     exports org.aion.zero.impl.cli;
+
     opens org.aion.zero.impl.cli;
+
     exports org.aion.zero.impl.db;
     exports org.aion.zero.impl.sync;
     exports org.aion.zero.impl.config.dynamic;

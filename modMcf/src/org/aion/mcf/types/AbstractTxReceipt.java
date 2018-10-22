@@ -33,8 +33,8 @@ import org.aion.base.util.Bytesable;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.Log;
 
-public abstract class AbstractTxReceipt<TX extends ITransaction> implements Bytesable<Object>,
-    ITxReceipt<TX, Log> {
+public abstract class AbstractTxReceipt<TX extends ITransaction>
+        implements Bytesable<Object>, ITxReceipt<TX, Log> {
 
     protected TX transaction;
 
@@ -114,9 +114,8 @@ public abstract class AbstractTxReceipt<TX extends ITransaction> implements Byte
     public TX getTransaction() {
         if (transaction == null) {
             throw new NullPointerException(
-                "Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
+                    "Transaction is not initialized. Use TransactionInfo and BlockStore to setup Transaction instance");
         }
         return transaction;
     }
-
 }

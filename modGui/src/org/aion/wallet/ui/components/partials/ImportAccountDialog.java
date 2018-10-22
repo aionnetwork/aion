@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,6 +22,11 @@
  */
 package org.aion.wallet.ui.components.partials;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.util.ResourceBundle;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -56,50 +61,32 @@ import org.aion.wallet.dto.AccountDTO;
 import org.aion.wallet.exception.ValidationException;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.util.ResourceBundle;
-
 public class ImportAccountDialog implements Initializable {
     private final AccountManager accountManager;
     private final ConsoleManager consoleManager;
 
-    @FXML
-    public TextField privateKeyInput;
-    @FXML
-    private PasswordField privateKeyPassword;
-    @FXML
-    private TextField keystoreTextView;
-    @FXML
-    private PasswordField keystorePassword;
-    @FXML
-    private RadioButton privateKeyRadioButton;
-    @FXML
-    private RadioButton keystoreRadioButton;
-    @FXML
-    private ToggleGroup accountTypeToggleGroup;
-    @FXML
-    private VBox importKeystoreView;
-    @FXML
-    private VBox importPrivateKeyView;
-    @FXML
-    private CheckBox rememberAccount;
-    @FXML
-    private Label validationError;
+    @FXML public TextField privateKeyInput;
+    @FXML private PasswordField privateKeyPassword;
+    @FXML private TextField keystoreTextView;
+    @FXML private PasswordField keystorePassword;
+    @FXML private RadioButton privateKeyRadioButton;
+    @FXML private RadioButton keystoreRadioButton;
+    @FXML private ToggleGroup accountTypeToggleGroup;
+    @FXML private VBox importKeystoreView;
+    @FXML private VBox importPrivateKeyView;
+    @FXML private CheckBox rememberAccount;
+    @FXML private Label validationError;
 
     private byte[] keystoreFile;
 
-    private static final Logger LOG = org.aion.log.AionLoggerFactory
-            .getLogger(org.aion.log.LogEnum.GUI.name());
+    private static final Logger LOG =
+            org.aion.log.AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
     private static final String PK_RADIO_BUTTON_ID = "PK_RB";
 
     private static final String KEYSTORE_RADIO_BUTTON_ID = "KEYSTORE_RB";
 
-    public ImportAccountDialog(AccountManager accountManager,
-                               ConsoleManager consoleManager) {
+    public ImportAccountDialog(AccountManager accountManager, ConsoleManager consoleManager) {
         this.accountManager = accountManager;
         this.consoleManager = consoleManager;
     }
@@ -140,7 +127,10 @@ public class ImportAccountDialog implements Initializable {
                 consoleManager.addLog("Keystore imported", ConsoleManager.LogType.ACCOUNT);
                 return dto;
             } catch (final ValidationException e) {
-                consoleManager.addLog("Keystore could not be imported", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager.addLog(
+                        "Keystore could not be imported",
+                        ConsoleManager.LogType.ACCOUNT,
+                        ConsoleManager.LogLevel.WARNING);
                 LOG.error(e.getMessage(), e);
                 displayError(e.getMessage());
                 return null;
@@ -154,8 +144,12 @@ public class ImportAccountDialog implements Initializable {
     private AccountDTO getAccountFromPrivateKey(final boolean shouldKeep) {
         String password = privateKeyPassword.getText();
         String privateKey = privateKeyInput.getText();
-        if (password != null && !password.isEmpty() && privateKey != null && !privateKey.isEmpty()) {
-            byte[] raw = Hex.decode(privateKey.startsWith("0x") ? privateKey.substring(2) : privateKey);
+        if (password != null
+                && !password.isEmpty()
+                && privateKey != null
+                && !privateKey.isEmpty()) {
+            byte[] raw =
+                    Hex.decode(privateKey.startsWith("0x") ? privateKey.substring(2) : privateKey);
             if (raw == null) {
                 final String errorMessage = "Invalid private key: " + privateKey;
                 LOG.error(errorMessage);
@@ -167,7 +161,10 @@ public class ImportAccountDialog implements Initializable {
                 consoleManager.addLog("Private key imported", ConsoleManager.LogType.ACCOUNT);
                 return dto;
             } catch (ValidationException e) {
-                consoleManager.addLog("Private key could not be imported", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+                consoleManager.addLog(
+                        "Private key could not be imported",
+                        ConsoleManager.LogType.ACCOUNT,
+                        ConsoleManager.LogLevel.WARNING);
                 LOG.error(e.getMessage(), e);
                 displayError(e.getMessage());
                 return null;
@@ -187,15 +184,24 @@ public class ImportAccountDialog implements Initializable {
         StackPane pane = new StackPane();
         Pane importAccountDialog;
         try {
-            FXMLLoader loader = new FXMLLoader((getClass().getResource("ImportAccountDialog.fxml")));
-            loader.setControllerFactory(new ControllerFactory().withAccountManager(accountManager).withConsoleManager(consoleManager) /* TODO a specialization only has what we need */);
+            FXMLLoader loader =
+                    new FXMLLoader((getClass().getResource("ImportAccountDialog.fxml")));
+            loader.setControllerFactory(
+                    new ControllerFactory()
+                            .withAccountManager(accountManager)
+                            .withConsoleManager(
+                                    consoleManager) /* TODO a specialization only has what we need */);
             importAccountDialog = loader.load();
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
             return;
         }
         pane.getChildren().add(importAccountDialog);
-        Scene secondScene = new Scene(pane, importAccountDialog.getPrefWidth(), importAccountDialog.getPrefHeight());
+        Scene secondScene =
+                new Scene(
+                        pane,
+                        importAccountDialog.getPrefWidth(),
+                        importAccountDialog.getPrefHeight());
         secondScene.setFill(Color.TRANSPARENT);
 
         Stage popup = new Stage();
@@ -203,8 +209,14 @@ public class ImportAccountDialog implements Initializable {
         popup.setScene(secondScene);
 
         Node eventSource = (Node) mouseEvent.getSource();
-        popup.setX(eventSource.getScene().getWindow().getX() + eventSource.getScene().getWidth() / 2 - importAccountDialog.getPrefWidth() / 2);
-        popup.setY(eventSource.getScene().getWindow().getY() + eventSource.getScene().getHeight() / 2 - importAccountDialog.getPrefHeight() / 2);
+        popup.setX(
+                eventSource.getScene().getWindow().getX()
+                        + eventSource.getScene().getWidth() / 2
+                        - importAccountDialog.getPrefWidth() / 2);
+        popup.setY(
+                eventSource.getScene().getWindow().getY()
+                        + eventSource.getScene().getHeight() / 2
+                        - importAccountDialog.getPrefHeight() / 2);
         popup.initModality(Modality.APPLICATION_MODAL);
         popup.initStyle(StageStyle.TRANSPARENT);
 
@@ -233,7 +245,8 @@ public class ImportAccountDialog implements Initializable {
         validationError.setVisible(false);
     }
 
-    private void radioButtonChanged(ObservableValue<? extends Toggle> ov, Toggle oldToggle, Toggle newToggle) {
+    private void radioButtonChanged(
+            ObservableValue<? extends Toggle> ov, Toggle oldToggle, Toggle newToggle) {
         if (accountTypeToggleGroup.getSelectedToggle() != null) {
             switch ((String) accountTypeToggleGroup.getSelectedToggle().getUserData()) {
                 case PK_RADIO_BUTTON_ID:

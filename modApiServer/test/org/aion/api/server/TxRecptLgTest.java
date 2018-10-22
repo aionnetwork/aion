@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.api.server.types.TxRecptLg;
+import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -43,9 +44,6 @@ import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.Test;
-import org.aion.base.type.Address;
-
-
 
 public class TxRecptLgTest {
 
@@ -64,45 +62,51 @@ public class TxRecptLgTest {
     @Test
     public void TestTxRecptLg() throws InterruptedException, IOException {
 
-        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts()
-                .build();
+        StandaloneBlockchain.Bundle bundle =
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts()
+                        .build();
         StandaloneBlockchain bc = bundle.bc;
         ECKey deployerAccount = bundle.privateKeys.get(0);
 
-        //======================
+        // ======================
         // DEPLOY contract A & B
-        //======================
-        Compiler.Result r = Compiler.getInstance().compile(
-                readContract("contract/contract.sol"), Compiler.Options.ABI, Compiler.Options.BIN);
+        // ======================
+        Compiler.Result r =
+                Compiler.getInstance()
+                        .compile(
+                                readContract("contract/contract.sol"),
+                                Compiler.Options.ABI,
+                                Compiler.Options.BIN);
         CompilationResult cr = CompilationResult.parse(r.output);
         String contractA = cr.contracts.get("A").bin;
         String contractB = cr.contracts.get("B").bin;
 
         BigInteger nonce = BigInteger.ZERO;
-        AionTransaction tx1 = new AionTransaction(
-                nonce.toByteArray(),
-                null,
-                new byte[0],
-                ByteUtil.hexStringToBytes(contractA),
-                1_000_000L,
-                1L
-        );
+        AionTransaction tx1 =
+                new AionTransaction(
+                        nonce.toByteArray(),
+                        null,
+                        new byte[0],
+                        ByteUtil.hexStringToBytes(contractA),
+                        1_000_000L,
+                        1L);
         tx1.sign(deployerAccount);
 
         nonce = nonce.add(BigInteger.ONE);
-        AionTransaction tx2 = new AionTransaction(
-                nonce.toByteArray(),
-                null,
-                new byte[0],
-                ByteUtil.hexStringToBytes(contractB),
-                1_000_000L,
-                1L
-        );
+        AionTransaction tx2 =
+                new AionTransaction(
+                        nonce.toByteArray(),
+                        null,
+                        new byte[0],
+                        ByteUtil.hexStringToBytes(contractB),
+                        1_000_000L,
+                        1L);
         tx2.sign(deployerAccount);
 
-        BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
+        BlockContext context =
+                bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1, tx2), false);
         ImportResult result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 
@@ -112,23 +116,20 @@ public class TxRecptLgTest {
         System.out.println("contract B address = " + addressB);
         Thread.sleep(1000);
 
-        //======================
+        // ======================
         // CALL function A.AA
-        //======================
+        // ======================
         nonce = nonce.add(BigInteger.ONE);
         byte[] functionAA = new byte[4];
-        System.arraycopy(
-                HashUtil.keccak256("AA(address)".getBytes()),
-                0, functionAA, 0, 4
-        );
-        AionTransaction tx3 = new AionTransaction(
-                nonce.toByteArray(),
-                addressA,
-                new byte[0],
-                ByteUtil.merge(functionAA, addressB.toBytes()),
-                1_000_000L,
-                1L
-        );
+        System.arraycopy(HashUtil.keccak256("AA(address)".getBytes()), 0, functionAA, 0, 4);
+        AionTransaction tx3 =
+                new AionTransaction(
+                        nonce.toByteArray(),
+                        addressA,
+                        new byte[0],
+                        ByteUtil.merge(functionAA, addressB.toBytes()),
+                        1_000_000L,
+                        1L);
         tx3.sign(deployerAccount);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx3), false);
@@ -140,13 +141,20 @@ public class TxRecptLgTest {
         System.out.println(receipt);
         assertEquals(4, receipt.getLogInfoList().size());
 
-        //======================
+        // ======================
         //  Test
-        //======================
+        // ======================
         TxRecptLg[] logs = new TxRecptLg[receipt.getLogInfoList().size()];
         for (int i = 0; i < logs.length; i++) {
             Log logInfo = receipt.getLogInfoList().get(i);
-            logs[i] = new TxRecptLg(logInfo, context.block, info.getIndex(), receipt.getTransaction(), i, true);
+            logs[i] =
+                    new TxRecptLg(
+                            logInfo,
+                            context.block,
+                            info.getIndex(),
+                            receipt.getTransaction(),
+                            i,
+                            true);
         }
         String ctAddrA = "0x" + addressA.toString();
         String ctAddrB = "0x" + addressB.toString();

@@ -1,23 +1,25 @@
-/* ******************************************************************************
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ *     This file is part of the aion network project.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- *******************************************************************************/
+ */
 package org.aion.mcf.db;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
@@ -126,7 +128,7 @@ public abstract class AbstractRepository<
      * Initializes all necessary databases and caches.
      *
      * @throws InvalidFilePathException when called with a persistent database vendor for which the
-     * data store cannot be created or opened.
+     *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
     protected void initializeDatabasesAndCaches() throws InvalidFilePathException {
@@ -178,8 +180,10 @@ public abstract class AbstractRepository<
         try {
             databaseGroup = new ArrayList<>();
 
-            checkIntegrity = Boolean.valueOf(
-                    cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.CHECK_INTEGRITY));
+            checkIntegrity =
+                    Boolean.valueOf(
+                            cfg.getDatabaseConfig(Names.DEFAULT)
+                                    .getProperty(Props.CHECK_INTEGRITY));
 
             // getting state specific properties
             sharedProps = cfg.getDatabaseConfig(STATE_DB);
@@ -316,10 +320,10 @@ public abstract class AbstractRepository<
 
     private InvalidFilePathException newException(String dbName, Properties props) {
         return new InvalidFilePathException(
-            "The «"
-                + dbName
-                + "» database from the repository could not be initialized with the given parameters: "
-                + props);
+                "The «"
+                        + dbName
+                        + "» database from the repository could not be initialized with the given parameters: "
+                        + props);
     }
 
     @Override

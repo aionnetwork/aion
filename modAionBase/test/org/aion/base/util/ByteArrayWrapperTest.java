@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,27 +31,25 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.base.util;
 
+import static org.aion.base.util.ByteUtil.hexStringToBytes;
+import static org.junit.Assert.assertEquals;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.aion.base.util.ByteUtil.hexStringToBytes;
-import static org.junit.Assert.assertEquals;
-
 @RunWith(JUnitParamsRunner.class)
 public class ByteArrayWrapperTest {
 
-    /**
-     * @return input values for {@link #testWrap(String)}
-     */
+    /** @return input values for {@link #testWrap(String)} */
     @SuppressWarnings("unused")
     private Object hexValues() {
 
@@ -67,10 +65,7 @@ public class ByteArrayWrapperTest {
         return parameters.toArray();
     }
 
-    /**
-     * 1. Wrap the input data
-     * 2. Assert to see if equal
-     */
+    /** 1. Wrap the input data 2. Assert to see if equal */
     @Test
     @Parameters(method = "hexValues")
     public void testWrap(String inputString) {
@@ -86,9 +81,7 @@ public class ByteArrayWrapperTest {
         } catch (NullPointerException e) {
             System.out.println("Invalid");
         }
-
     }
-
 
     @Test
     public void testCollision() {
@@ -120,5 +113,4 @@ public class ByteArrayWrapperTest {
         assertEquals(0, cnt1);
         assertEquals(0, cnt2);
     }
-
 }

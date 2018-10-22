@@ -39,9 +39,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.aion.p2p.IPeerMetric;
 import org.junit.Test;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class NodeTest {
 
     private String validId = UUID.randomUUID().toString();
@@ -49,13 +47,13 @@ public class NodeTest {
     private String invalidId = UUID.randomUUID().toString().substring(0, 34);
 
     private String validIp =
-        ThreadLocalRandom.current().nextInt(0, 256)
-            + "."
-            + ThreadLocalRandom.current().nextInt(0, 256)
-            + "."
-            + ThreadLocalRandom.current().nextInt(0, 256)
-            + "."
-            + ThreadLocalRandom.current().nextInt(0, 256);
+            ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256)
+                    + "."
+                    + ThreadLocalRandom.current().nextInt(0, 256);
 
     private int validPort = 12345;
 
@@ -163,7 +161,6 @@ public class NodeTest {
 
         validNode.setPort(12345);
         assertEquals(12345, validNode.getPort());
-
     }
 
     @Test
@@ -187,7 +184,7 @@ public class NodeTest {
         Node validNode = new Node(validIp, validPort);
         long curr_time = System.currentTimeMillis();
 
-        //Sleep for few secs
+        // Sleep for few secs
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
@@ -196,7 +193,6 @@ public class NodeTest {
         validNode.refreshTimestamp();
 
         assertTrue((curr_time < validNode.getTimestamp()));
-
     }
 
     @Test

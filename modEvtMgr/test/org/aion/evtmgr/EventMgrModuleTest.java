@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,28 +19,26 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.evtmgr;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Properties;
 import org.aion.evtmgr.impl.mgr.EventMgrA0;
 import org.junit.Test;
-import java.util.Properties;
-
-import static org.junit.Assert.assertEquals;
 
 public class EventMgrModuleTest {
 
     @Test
-    public void orderedCoverageTest() throws Throwable{
+    public void orderedCoverageTest() throws Throwable {
         EventMgrModule singletonEventMgrModule;
         Properties prop = new Properties();
 
         // try initialize with null input
         try {
             singletonEventMgrModule = EventMgrModule.getSingleton(null);
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e.toString());
         }
 

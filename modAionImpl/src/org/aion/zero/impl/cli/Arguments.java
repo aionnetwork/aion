@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl.cli;
 
 import java.util.ArrayList;

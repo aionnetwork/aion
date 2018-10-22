@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,19 +19,13 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.evtmgr.impl.abs;
 
 import java.util.List;
-
 import org.aion.evtmgr.IEvent;
 
-/**
- * @author jay
- *
- */
+/** @author jay */
 public abstract class AbstractEvent implements IEvent {
 
     private List<Object> funcArgs;
@@ -50,9 +44,10 @@ public abstract class AbstractEvent implements IEvent {
 
     @Override
     public boolean equals(Object o) {
-        try{
-            return this.getEventType() == ((IEvent) o).getEventType() && this.getCallbackType() == ((IEvent) o).getCallbackType();
-        }catch (ClassCastException e){
+        try {
+            return this.getEventType() == ((IEvent) o).getEventType()
+                    && this.getCallbackType() == ((IEvent) o).getCallbackType();
+        } catch (ClassCastException e) {
             return false;
         }
     }

@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -24,6 +24,9 @@ package org.aion.gui.controller;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
+import java.net.URL;
+import java.util.EnumSet;
+import java.util.ResourceBundle;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -37,21 +40,14 @@ import org.aion.gui.events.EventBusRegistry;
 import org.aion.wallet.dto.AccountDTO;
 import org.aion.wallet.events.AccountEvent;
 
-import java.net.URL;
-import java.util.EnumSet;
-import java.util.ResourceBundle;
+public class ReceiveController implements Initializable {
+    @FXML public ImageView qrCode;
 
-public class ReceiveController implements Initializable{
-    @FXML
-    public ImageView qrCode;
-
-    @FXML
-    private TextArea accountAddress;
+    @FXML private TextArea accountAddress;
 
     private Tooltip copiedTooltip;
 
     private AccountDTO account;
-
 
     @Override
     public void initialize(final URL location, final ResourceBundle resources) {
@@ -68,7 +64,8 @@ public class ReceiveController implements Initializable{
 
     @Subscribe
     private void handleAccountChanged(final AccountEvent event) {
-        if (EnumSet.of(AccountEvent.Type.CHANGED, AccountEvent.Type.ADDED).contains(event.getType())) {
+        if (EnumSet.of(AccountEvent.Type.CHANGED, AccountEvent.Type.ADDED)
+                .contains(event.getType())) {
             account = event.getPayload();
             accountAddress.setText(account.getPublicAddress());
 
@@ -84,7 +81,7 @@ public class ReceiveController implements Initializable{
     }
 
     @VisibleForTesting
-    void setAccount(AccountDTO account)  {
+    void setAccount(AccountDTO account) {
         this.account = account;
     }
 
@@ -98,5 +95,4 @@ public class ReceiveController implements Initializable{
             copiedTooltip.show(accountAddress.getScene().getWindow());
         }
     }
-
 }

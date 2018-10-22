@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl.config;
 
 import java.util.Arrays;

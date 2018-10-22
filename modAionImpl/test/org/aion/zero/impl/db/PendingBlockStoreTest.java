@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;

@@ -1,4 +1,4 @@
-///*******************************************************************************
+/// *******************************************************************************
 // * Copyright (c) 2017-2018 Aion foundation.
 // *
 // *     This file is part of the aion network project.
@@ -32,25 +32,25 @@
 // *     Zcash project team.
 // *     Bitcoinj team.
 // ******************************************************************************/
-//package org.aion.zero.impl.valid;
+// package org.aion.zero.impl.valid;
 //
-//import org.aion.base.util.ByteArrayWrapper;
-//import org.aion.equihash.EquiUtils;
-//import org.aion.equihash.EquiValidator;
-//import org.aion.equihash.Equihash;
-//import org.aion.equihash.OptimizedEquiValidator;
-//import org.aion.zero.impl.valid.EquihashSolutionRule;
-//import org.aion.zero.types.A0BlockHeader;
-//import org.junit.Before;
-//import org.junit.Test;
-//import org.mockito.MockitoAnnotations;
+// import org.aion.base.util.ByteArrayWrapper;
+// import org.aion.equihash.EquiUtils;
+// import org.aion.equihash.EquiValidator;
+// import org.aion.equihash.Equihash;
+// import org.aion.equihash.OptimizedEquiValidator;
+// import org.aion.zero.impl.valid.EquihashSolutionRule;
+// import org.aion.zero.types.A0BlockHeader;
+// import org.junit.Before;
+// import org.junit.Test;
+// import org.mockito.MockitoAnnotations;
 //
-//import java.math.BigInteger;
+// import java.math.BigInteger;
 //
-//import static com.google.common.truth.Truth.assertThat;
-//import static org.junit.Assert.assertThat;
+// import static com.google.common.truth.Truth.assertThat;
+// import static org.junit.Assert.assertThat;
 //
-//public class EquihashSolutionRuleTest {
+// public class EquihashSolutionRuleTest {
 //    @Before
 //    public void before() {
 //        MockitoAnnotations.initMocks(this);
@@ -69,7 +69,8 @@
 //        byte[] unpaddedNonceBytes = givenNonce.toByteArray();
 //        byte[] nonceBytes = new byte[32];
 //
-//        System.arraycopy(unpaddedNonceBytes, 0, nonceBytes, 32 - unpaddedNonceBytes.length, unpaddedNonceBytes.length);
+//        System.arraycopy(unpaddedNonceBytes, 0, nonceBytes, 32 - unpaddedNonceBytes.length,
+// unpaddedNonceBytes.length);
 //        System.out.println(new ByteArrayWrapper(nonceBytes));
 //
 //        A0BlockHeader header = new A0BlockHeader.Builder().build();
@@ -79,7 +80,8 @@
 //        Equihash equihash = new Equihash(n, k);
 //        int[][] solutions = equihash.getSolutionsForNonce(headerBytes, header.getNonce());
 //
-//        byte[] compressedSolution = (new EquiUtils()).getMinimalFromIndices(solutions[0], n/(k+1));
+//        byte[] compressedSolution = (new EquiUtils()).getMinimalFromIndices(solutions[0],
+// n/(k+1));
 //        header.setSolution(compressedSolution);
 //
 ////        EquihashSolutionRule rule = new EquihashSolutionRule(new OptimizedEquiValidator(n, k));
@@ -87,4 +89,4 @@
 ////        assertThat(result).isTrue();
 ////        assertThat(rule.getErrors()).isEmpty();
 //    }
-//}
+// }

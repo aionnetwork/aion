@@ -31,7 +31,7 @@ import org.aion.vm.IPrecompiledContract;
 /**
  * A pre-compiled contract that is capable of modifying state.
  *
- * StatefulPrecompiledContract objects should be instance-based with an immutable reference to a
+ * <p>StatefulPrecompiledContract objects should be instance-based with an immutable reference to a
  * particular state, this is what distinguishes them from ordinary pre-compiled contracts.
  */
 public abstract class StatefulPrecompiledContract implements IPrecompiledContract {
@@ -45,9 +45,11 @@ public abstract class StatefulPrecompiledContract implements IPrecompiledContrac
      * @param track
      */
     public StatefulPrecompiledContract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
+            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
-        if (track == null) { throw new IllegalArgumentException("Null track."); }
+        if (track == null) {
+            throw new IllegalArgumentException("Null track.");
+        }
         this.track = track;
     }
 
@@ -60,5 +62,4 @@ public abstract class StatefulPrecompiledContract implements IPrecompiledContrac
     protected boolean isValidTxNrg(long nrgLimit) {
         return (nrgLimit > TX_NRG_MIN) && (nrgLimit < TX_NRG_MAX);
     }
-
 }

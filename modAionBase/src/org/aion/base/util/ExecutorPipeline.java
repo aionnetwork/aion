@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,8 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.base.util;
 
 import java.util.HashMap;
@@ -46,13 +47,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Queues execution tasks into a single pipeline where some tasks can be
- * executed in parallel but preserve 'messages' order so the next task process
- * messages on a single thread in the same order they were added to the previous
- * executor
+ * Queues execution tasks into a single pipeline where some tasks can be executed in parallel but
+ * preserve 'messages' order so the next task process messages on a single thread in the same order
+ * they were added to the previous executor
  *
- * Created by Anton Nashatyrev on 23.02.2016.
- * 
+ * <p>Created by Anton Nashatyrev on 23.02.2016.
+ *
  * @param <In>
  * @param <Out>
  */
@@ -71,31 +71,52 @@ public class ExecutorPipeline<In, Out> {
     private ReentrantLock lock = new ReentrantLock();
     private String threadPoolName;
 
-    private final static AtomicInteger pipeNumber = new AtomicInteger(1);
+    private static final AtomicInteger pipeNumber = new AtomicInteger(1);
     private AtomicInteger threadNumber = new AtomicInteger(1);
 
-    public ExecutorPipeline(int threads, int queueSize, boolean preserveOrder, Functional.Function<In, Out> processor,
+    public ExecutorPipeline(
+            int threads,
+            int queueSize,
+            boolean preserveOrder,
+            Functional.Function<In, Out> processor,
             Functional.Consumer<Throwable> exceptionHandler) {
         queue = new LimitedQueue<>(queueSize);
-        exec = new ThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, queue,
-                (Runnable r) -> new Thread(r, threadPoolName + "-" + threadNumber.getAndIncrement()));
+        exec =
+                new ThreadPoolExecutor(
+                        threads,
+                        threads,
+                        0L,
+                        TimeUnit.MILLISECONDS,
+                        queue,
+                        (Runnable r) ->
+                                new Thread(
+                                        r, threadPoolName + "-" + threadNumber.getAndIncrement()));
         this.preserveOrder = preserveOrder;
         this.processor = processor;
         this.exceptionHandler = exceptionHandler;
         this.threadPoolName = "pipe-" + pipeNumber.getAndIncrement();
     }
 
-    public ExecutorPipeline<Out, Void> add(int threads, int queueSize, final Functional.Consumer<Out> consumer) {
-        return add(threads, queueSize, false, (Out out) -> {
-            consumer.accept(out);
-            return null;
-        });
+    public ExecutorPipeline<Out, Void> add(
+            int threads, int queueSize, final Functional.Consumer<Out> consumer) {
+        return add(
+                threads,
+                queueSize,
+                false,
+                (Out out) -> {
+                    consumer.accept(out);
+                    return null;
+                });
     }
 
-    public <NextOut> ExecutorPipeline<Out, NextOut> add(int threads, int queueSize, boolean preserveOrder,
+    public <NextOut> ExecutorPipeline<Out, NextOut> add(
+            int threads,
+            int queueSize,
+            boolean preserveOrder,
             Functional.Function<Out, NextOut> processor) {
-        ExecutorPipeline<Out, NextOut> ret = new ExecutorPipeline<>(threads, queueSize, preserveOrder, processor,
-                exceptionHandler);
+        ExecutorPipeline<Out, NextOut> ret =
+                new ExecutorPipeline<>(
+                        threads, queueSize, preserveOrder, processor, exceptionHandler);
         next = ret;
         return ret;
     }
@@ -129,13 +150,14 @@ public class ExecutorPipeline<In, Out> {
 
     public void push(final In in) {
         final long order = orderCounter.getAndIncrement();
-        exec.execute(() -> {
-            try {
-                pushNext(order, processor.apply(in));
-            } catch (Throwable e) {
-                exceptionHandler.accept(e);
-            }
-        });
+        exec.execute(
+                () -> {
+                    try {
+                        pushNext(order, processor.apply(in));
+                    } catch (Throwable e) {
+                        exceptionHandler.accept(e);
+                    }
+                });
     }
 
     public void pushAll(final List<In> list) {

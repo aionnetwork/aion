@@ -299,7 +299,7 @@ public class IContractDetailsTest {
         }
     }
 
-    //<------------------------------------------HELPERS------------------------------------------->
+    // <------------------------------------------HELPERS------------------------------------------->
 
     /**
      * Tests calling get() on a DataWord key that is not in cache -- first on a zero-byte key and
@@ -316,31 +316,28 @@ public class IContractDetailsTest {
      */
     private void doGetNoSuchDoubleKeyTest(IContractDetails<IDataWord> cache) {
         checkGetNonExistentPairing(cache, DoubleDataWord.ZERO);
-        checkGetNonExistentPairing(cache, new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)));
+        checkGetNonExistentPairing(
+                cache, new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)));
     }
 
-    /**
-     * Tests putting value into cache with a zero-byte DataWord key.
-     */
+    /** Tests putting value into cache with a zero-byte DataWord key. */
     private void doPutSingleZeroKeyTest(IContractDetails<IDataWord> cache, IDataWord value) {
         cache.put(DataWord.ZERO, value);
         assertEquals(value, cache.get(DataWord.ZERO));
     }
 
-    /**
-     * Tests putting value into cache with a zero-byte DoubleDataWord key.
-     */
+    /** Tests putting value into cache with a zero-byte DoubleDataWord key. */
     private void doPutDoubleZeroKeyTest(IContractDetails<IDataWord> cache, IDataWord value) {
         cache.put(DoubleDataWord.ZERO, value);
         assertEquals(value, cache.get(DoubleDataWord.ZERO));
     }
 
     /**
-     * Tests putting key and value into cache and then putting a zero-byte IDataWord into cache
-     * with key and then calling get() on that key.
+     * Tests putting key and value into cache and then putting a zero-byte IDataWord into cache with
+     * key and then calling get() on that key.
      */
-    private void doPutKeyValueThenOverwriteValueWithZero(IContractDetails<IDataWord> cache,
-        IDataWord key, IDataWord value) {
+    private void doPutKeyValueThenOverwriteValueWithZero(
+            IContractDetails<IDataWord> cache, IDataWord key, IDataWord value) {
 
         // Test DataWord.
         cache.put(key, value);
@@ -359,8 +356,11 @@ public class IContractDetailsTest {
      * Checks that cache contains all key-value pairs in keys and values, where it is assumed every
      * n'th pair was deleted.
      */
-    private void checkAllPairs(IContractDetails<IDataWord> cache, List<IDataWord> keys,
-        List<IDataWord> values, int n) {
+    private void checkAllPairs(
+            IContractDetails<IDataWord> cache,
+            List<IDataWord> keys,
+            List<IDataWord> values,
+            int n) {
 
         int size = keys.size();
         assertEquals(size, values.size());
@@ -379,8 +379,11 @@ public class IContractDetailsTest {
      * Checks that cache's storage, given by cache.getStorage(), contains all key-value pairs in
      * keys and values, where it is assumed every n'th pair was deleted.
      */
-    private void checkStorage(IContractDetails<IDataWord> cache, List<IDataWord> keys,
-        List<IDataWord> values, int n) {
+    private void checkStorage(
+            IContractDetails<IDataWord> cache,
+            List<IDataWord> keys,
+            List<IDataWord> values,
+            int n) {
 
         Map<IDataWord, IDataWord> storage = cache.getStorage(keys);
         int count = 1;
@@ -389,7 +392,8 @@ public class IContractDetailsTest {
                 try {
                     assertNull(storage.get(key));
                 } catch (AssertionError e) {
-                    System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
+                    System.err.println(
+                            "\nAssertion failed on key: " + Hex.toHexString(key.getData()));
                     e.printStackTrace();
                 }
             } else {
@@ -403,7 +407,8 @@ public class IContractDetailsTest {
      * Iterates over every key in keys -- which are assumed to exist in cache -- and then deletes
      * any key-value pair in cache for every n'th key in keys.
      */
-    private void deleteEveryNthEntry(IContractDetails<IDataWord> cache, List<IDataWord> keys, int n) {
+    private void deleteEveryNthEntry(
+            IContractDetails<IDataWord> cache, List<IDataWord> keys, int n) {
         int count = 1;
         for (IDataWord key : keys) {
             if (count % n == 0) {
@@ -413,11 +418,9 @@ public class IContractDetailsTest {
         }
     }
 
-    /**
-     * Puts all of the key-value pairs in keys and values into cache.
-     */
-    private void massPutIntoCache(IContractDetails<IDataWord> cache, List<IDataWord> keys,
-        List<IDataWord> values) {
+    /** Puts all of the key-value pairs in keys and values into cache. */
+    private void massPutIntoCache(
+            IContractDetails<IDataWord> cache, List<IDataWord> keys, List<IDataWord> values) {
 
         int size = keys.size();
         assertEquals(size, values.size());
@@ -426,9 +429,7 @@ public class IContractDetailsTest {
         }
     }
 
-    /**
-     * Returns a list of numKeys keys, every other one is single and then double.
-     */
+    /** Returns a list of numKeys keys, every other one is single and then double. */
     private List<IDataWord> getKeysInBulk(int numKeys) {
         List<IDataWord> keys = new ArrayList<>(numKeys);
         boolean isSingleKey = true;
@@ -439,9 +440,7 @@ public class IContractDetailsTest {
         return keys;
     }
 
-    /**
-     * Returns a list of numValues values, every other one is single and then double.
-     */
+    /** Returns a list of numValues values, every other one is single and then double. */
     private List<IDataWord> getValuesInBulk(int numValues) {
         List<IDataWord> values = new ArrayList<>(numValues);
         boolean isSingleValue = true;
@@ -452,13 +451,11 @@ public class IContractDetailsTest {
         return values;
     }
 
-    /**
-     * Returns a random DataWord if isSingleWord is true, otherwise a random DoubleDataWord.
-     */
+    /** Returns a random DataWord if isSingleWord is true, otherwise a random DoubleDataWord. */
     private IDataWord getRandomWord(boolean isSingleWord) {
-        return  (isSingleWord) ?
-            new DataWord(RandomUtils.nextBytes(DataWord.BYTES)) :
-            new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
+        return (isSingleWord)
+                ? new DataWord(RandomUtils.nextBytes(DataWord.BYTES))
+                : new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
     }
 
     /**
@@ -473,11 +470,9 @@ public class IContractDetailsTest {
         checkGetNonExistentPairing(cache, key);
     }
 
-    /**
-     * Checks cache returns the expected values given its storage is storage.
-     */
-    private void checkKeyValueMapping(IContractDetails<IDataWord> cache,
-        Map<IDataWord, IDataWord> storage) {
+    /** Checks cache returns the expected values given its storage is storage. */
+    private void checkKeyValueMapping(
+            IContractDetails<IDataWord> cache, Map<IDataWord, IDataWord> storage) {
 
         for (IDataWord key : storage.keySet()) {
             IDataWord value = storage.get(key);
@@ -510,8 +505,8 @@ public class IContractDetailsTest {
     }
 
     /**
-     * Assumption: key has no valid value mapping in cache.
-     * This method calls cache.get(key) and checks its result.
+     * Assumption: key has no valid value mapping in cache. This method calls cache.get(key) and
+     * checks its result.
      */
     private void checkGetNonExistentPairing(IContractDetails<IDataWord> cache, IDataWord key) {
         try {
@@ -527,5 +522,4 @@ public class IContractDetailsTest {
             e.printStackTrace();
         }
     }
-
 }

@@ -23,7 +23,13 @@
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryCache;
@@ -31,7 +37,6 @@ import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -384,21 +389,14 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     }
 
     /**
-     * @apiNote users should beware that this will cause a disconnect
-     * in the blockchain, one should not expect to use any block that
-     * is below {@code blockNumber}
-     *
-     * @apiNote as a consequence of the creation behaviour do not attempt
-     * to conduct VM bytecode that queries the history of the chain.
-     *
-     * This should <i>always</i> be used first, do not attempt to use
-     * this function after a blockchain has already been altered in
-     * some state.
-     *
-     * @implNote creates a new block that does not reference any parent
-     * and adds it into the blockchain (note that this will cause a
-     * disconnect in the blockchain)
-     *
+     * @apiNote users should beware that this will cause a disconnect in the blockchain, one should
+     *     not expect to use any block that is below {@code blockNumber}
+     * @apiNote as a consequence of the creation behaviour do not attempt to conduct VM bytecode
+     *     that queries the history of the chain.
+     *     <p>This should <i>always</i> be used first, do not attempt to use this function after a
+     *     blockchain has already been altered in some state.
+     * @implNote creates a new block that does not reference any parent and adds it into the
+     *     blockchain (note that this will cause a disconnect in the blockchain)
      * @param blockNumber to be set in the blockchain
      */
     public synchronized void setBlockNumber(long blockNumber) {
@@ -415,15 +413,16 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             AionBlock grandParentBlock = null;
             if (this.getBlockStore().getBlocksByNumber((int) blockNumber - 1).size() == 0) {
                 // create a grandparent block if none exists
-                A0BlockHeader header = new A0BlockHeader.Builder()
-                        .withStateRoot(this.getBestBlock().getStateRoot())
-                        .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                        .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                        .withNumber((int) blockNumber - 1)
-                        .withEnergyLimit(this.genesis.getNrgLimit())
-                        .withDifficulty(this.genesis.getDifficulty())
-                        .withTimestamp(0)
-                        .build();
+                A0BlockHeader header =
+                        new A0BlockHeader.Builder()
+                                .withStateRoot(this.getBestBlock().getStateRoot())
+                                .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                                .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                                .withNumber((int) blockNumber - 1)
+                                .withEnergyLimit(this.genesis.getNrgLimit())
+                                .withDifficulty(this.genesis.getDifficulty())
+                                .withTimestamp(0)
+                                .build();
 
                 AionBlock block = new AionBlock(header, Collections.emptyList());
                 this.setBestBlock(block);
@@ -431,21 +430,25 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 grandParentBlock = block;
             } else {
                 // grab the grandparent block from the database if it exists
-                grandParentBlock = this.getBlockStore()
-                        .getBlocksByNumber((int) blockNumber - 1).get(0).getKey();
+                grandParentBlock =
+                        this.getBlockStore()
+                                .getBlocksByNumber((int) blockNumber - 1)
+                                .get(0)
+                                .getKey();
             }
 
             A0BlockHeader bestHeader = this.getBestBlock().getHeader();
-            A0BlockHeader header = new A0BlockHeader.Builder()
-                    .withParentHash(grandParentBlock.getHash())
-                    .withStateRoot(this.getBestBlock().getStateRoot())
-                    .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                    .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
-                    .withDifficulty(this.getBestBlock().getDifficulty())
-                    .withEnergyLimit(this.getBestBlock().getNrgLimit())
-                    .withTimestamp(1)
-                    .withNumber(blockNumber)
-                    .build();
+            A0BlockHeader header =
+                    new A0BlockHeader.Builder()
+                            .withParentHash(grandParentBlock.getHash())
+                            .withStateRoot(this.getBestBlock().getStateRoot())
+                            .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                            .withReceiptTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                            .withDifficulty(this.getBestBlock().getDifficulty())
+                            .withEnergyLimit(this.getBestBlock().getNrgLimit())
+                            .withTimestamp(1)
+                            .withNumber(blockNumber)
+                            .build();
             AionBlock block = new AionBlock(header, Collections.emptyList());
             this.setBestBlock(block);
             this.getBlockStore().saveBlock(block, this.genesis.getCumulativeDifficulty(), true);

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,13 +31,13 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.zero.impl.blockchain;
 
-import org.aion.base.util.ByteUtil;
-import org.aion.equihash.EquiUtils;
-import org.aion.equihash.Equihash;
-import org.aion.mcf.valid.BlockHeaderValidator;
+import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.when;
+
+import java.math.BigInteger;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Before;
@@ -48,72 +48,70 @@ import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.base.util.ByteUtil.toLEByteArray;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
-
-
 public class ChainConfigurationTest {
 
     private static final Logger log = LoggerFactory.getLogger(ChainConfigurationTest.class);
 
-    @Mock
-    A0BlockHeader header;
+    @Mock A0BlockHeader header;
 
     @Before
     public void before() {
         MockitoAnnotations.initMocks(this);
     }
 
-    @Ignore //To be re-enabled later
+    @Ignore // To be re-enabled later
     @Test
     public void testValidation() throws HeaderStructureException {
         int n = 210;
         int k = 9;
-        byte[] nonce = {1,0,0,0,0,0,0,
-                        0,0,0,0,0,0,0,
-                        0,0,0,0,0,0,0,
-                        0,0,0,0,0,0,0};
+        byte[] nonce = {
+            1, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0
+        };
         // setup mock
-//        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
-//        builder.withDifficulty(BigInteger.valueOf(1).toByteArray());
-//        builder.withNonce(nonce);
-//        builder.withTimestamp(12345678910L);
-//        A0BlockHeader header = builder.build();
-//
-//        // Static header bytes (portion of header which does not change per equihash iteration)
-//        byte [] staticHeaderBytes = header.getStaticHash();
-//
-//        // Dynamic header bytes
-//        long timestamp = header.getTimestamp();
-//
-//        // Dynamic header bytes (portion of header which changes each iteration0
-//        byte[] dynamicHeaderBytes = ByteUtil.longToBytes(timestamp);
-//
-//        BigInteger target = header.getPowBoundaryBI();
-//
-//        //Merge H(static) and dynamic portions into a single byte array
-//        byte[] inputBytes = new byte[staticHeaderBytes.length + dynamicHeaderBytes.length];
-//        System.arraycopy(staticHeaderBytes, 0, inputBytes, 0 , staticHeaderBytes.length);
-//        System.arraycopy(dynamicHeaderBytes, 0, inputBytes, staticHeaderBytes.length, dynamicHeaderBytes.length);
-//
-//        Equihash equihash = new Equihash(n, k);
-//
-//        int[][] solutions;
-//
-//        // Generate 3 solutions
-//        solutions = equihash.getSolutionsForNonce(inputBytes, header.getNonce());
-//
-//        // compress solution
-//        byte[] compressedSolution = EquiUtils.getMinimalFromIndices(solutions[0], n/(k+1));
-//        header.setSolution(compressedSolution);
-//
-//        ChainConfiguration chainConfig = new ChainConfiguration();
-//        BlockHeaderValidator<A0BlockHeader> blockHeaderValidator = chainConfig.createBlockHeaderValidator();
-//        blockHeaderValidator.validate(header, log);
+        //        A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
+        //        builder.withDifficulty(BigInteger.valueOf(1).toByteArray());
+        //        builder.withNonce(nonce);
+        //        builder.withTimestamp(12345678910L);
+        //        A0BlockHeader header = builder.build();
+        //
+        //        // Static header bytes (portion of header which does not change per equihash
+        // iteration)
+        //        byte [] staticHeaderBytes = header.getStaticHash();
+        //
+        //        // Dynamic header bytes
+        //        long timestamp = header.getTimestamp();
+        //
+        //        // Dynamic header bytes (portion of header which changes each iteration0
+        //        byte[] dynamicHeaderBytes = ByteUtil.longToBytes(timestamp);
+        //
+        //        BigInteger target = header.getPowBoundaryBI();
+        //
+        //        //Merge H(static) and dynamic portions into a single byte array
+        //        byte[] inputBytes = new byte[staticHeaderBytes.length +
+        // dynamicHeaderBytes.length];
+        //        System.arraycopy(staticHeaderBytes, 0, inputBytes, 0 , staticHeaderBytes.length);
+        //        System.arraycopy(dynamicHeaderBytes, 0, inputBytes, staticHeaderBytes.length,
+        // dynamicHeaderBytes.length);
+        //
+        //        Equihash equihash = new Equihash(n, k);
+        //
+        //        int[][] solutions;
+        //
+        //        // Generate 3 solutions
+        //        solutions = equihash.getSolutionsForNonce(inputBytes, header.getNonce());
+        //
+        //        // compress solution
+        //        byte[] compressedSolution = EquiUtils.getMinimalFromIndices(solutions[0],
+        // n/(k+1));
+        //        header.setSolution(compressedSolution);
+        //
+        //        ChainConfiguration chainConfig = new ChainConfiguration();
+        //        BlockHeaderValidator<A0BlockHeader> blockHeaderValidator =
+        // chainConfig.createBlockHeaderValidator();
+        //        blockHeaderValidator.validate(header, log);
     }
 
     // assuming 100000 block ramp
@@ -122,11 +120,12 @@ public class ChainConfigurationTest {
         long upperBound = 259200L;
 
         ChainConfiguration config = new ChainConfiguration();
-        BigInteger increment = config.getConstants()
-                .getBlockReward()
-                .subtract(config.getConstants().getRampUpStartValue())
-                .divide(BigInteger.valueOf(upperBound))
-                .add(config.getConstants().getRampUpStartValue());
+        BigInteger increment =
+                config.getConstants()
+                        .getBlockReward()
+                        .subtract(config.getConstants().getRampUpStartValue())
+                        .divide(BigInteger.valueOf(upperBound))
+                        .add(config.getConstants().getRampUpStartValue());
 
         // UPPER BOUND
         when(header.getNumber()).thenReturn(upperBound);

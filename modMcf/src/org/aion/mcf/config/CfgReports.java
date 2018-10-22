@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,18 +19,17 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
 /**
  * Printing reports for debugging purposes.
@@ -183,17 +182,24 @@ public class CfgReports {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgReports that = (CfgReports) o;
-        return print == that.print &&
-                enable == that.enable &&
-                dump_interval == that.dump_interval &&
-                block_frequency == that.block_frequency &&
-                enable_heap_dumps == that.enable_heap_dumps &&
-                heap_dump_interval == that.heap_dump_interval &&
-                Objects.equal(path, that.path);
+        return print == that.print
+                && enable == that.enable
+                && dump_interval == that.dump_interval
+                && block_frequency == that.block_frequency
+                && enable_heap_dumps == that.enable_heap_dumps
+                && heap_dump_interval == that.heap_dump_interval
+                && Objects.equal(path, that.path);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(print, enable, path, dump_interval, block_frequency, enable_heap_dumps, heap_dump_interval);
+        return Objects.hashCode(
+                print,
+                enable,
+                path,
+                dump_interval,
+                block_frequency,
+                enable_heap_dumps,
+                heap_dump_interval);
     }
 }

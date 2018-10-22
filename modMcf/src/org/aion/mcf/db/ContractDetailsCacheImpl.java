@@ -22,17 +22,17 @@
  */
 package org.aion.mcf.db;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
 
-import java.util.*;
-
-/**
- * Contract details cache implementation.
- */
+/** Contract details cache implementation. */
 public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord> {
 
     private Map<IDataWord, IDataWord> storage = new HashMap<>();
@@ -111,17 +111,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
         return origContract.getStorageHash();
     }
 
-    /**
-     * This method is not supported.
-     */
+    /** This method is not supported. */
     @Override
     public void decode(byte[] rlpCode) {
         throw new RuntimeException("Not supported by this implementation.");
     }
 
-    /**
-     * This method is not supported.
-     */
+    /** This method is not supported. */
     @Override
     public byte[] getEncoded() {
         throw new RuntimeException("Not supported by this implementation.");
@@ -155,7 +151,8 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
     /**
      * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in storageValues.
+     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
+     * storageValues.
      *
      * @param storageKeys The keys.
      * @param storageValues The values.
@@ -170,7 +167,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
             put(key, value);
         }
-
     }
 
     /**
@@ -207,9 +203,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
         }
     }
 
-    /**
-     * Syncs the storage trie.
-     */
+    /** Syncs the storage trie. */
     @Override
     public void syncStorage() {
         if (origContract != null) {
@@ -240,17 +234,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
         origContract.setDirty(this.isDirty() || origContract.isDirty());
     }
 
-    /**
-     * This method is not supported.
-     */
+    /** This method is not supported. */
     @Override
     public IContractDetails<IDataWord> getSnapshotTo(byte[] hash) {
         throw new UnsupportedOperationException("No snapshot option during cache state");
     }
 
-    /**
-     * This method is not supported.
-     */
+    /** This method is not supported. */
     @Override
     public void setDataSource(IByteArrayKeyValueStore dataSource) {
         throw new UnsupportedOperationException("Can't set datasource in cache implementation.");

@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,13 +31,17 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.db.impl;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;

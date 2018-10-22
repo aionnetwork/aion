@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,20 +31,19 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.db.impl.h2;
-
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
-import org.junit.Test;
-
-import java.io.File;
-import java.util.Properties;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+
+import java.io.File;
+import java.util.Properties;
+import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
+import org.junit.Test;
 
 public class H2MVMapDriverTest {
 
@@ -95,12 +94,3 @@ public class H2MVMapDriverTest {
         new H2MVMap(null, null, false, false);
     }
 }
-
-
-
-
-
-
-
-
-

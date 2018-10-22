@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.db.impl;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -90,90 +90,212 @@ public class DriverBaseTest {
 
     @Parameters(name = "{0}")
     public static Iterable<Object[]> data() throws NoSuchMethodException, SecurityException {
-        return Arrays.asList(new Object[][] {
-                // H2MVMap wo. db cache wo. compression
-                { "H2MVMap", new boolean[] { false, false, false },
+        return Arrays.asList(
+                new Object[][] {
+                    // H2MVMap wo. db cache wo. compression
+                    {
+                        "H2MVMap",
+                        new boolean[] {false, false, false},
                         // { isLocked, isHeapCacheEnabled, isAutocommitEnabled }
-                        H2MVMap.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // H2MVMap w. db cache wo. compression
-                { "H2MVMap+dbCache", new boolean[] { false, false, false },
-                        H2MVMap.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, false } },
-                // H2MVMap wo. db cache w. compression
-                { "H2MVMap+compression", new boolean[] { false, false, false },
-                        H2MVMap.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, true } },
-                // H2MVMap w. db cache w. compression
-                { "H2MVMap+dbCache+compression", new boolean[] { false, false, false },
-                        H2MVMap.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, true } },
-                // LevelDB wo. db cache wo. compression
-                { "LevelDB", new boolean[] { false, false, false },
-                        LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // LevelDB w. db cache wo. compression
-                { "LevelDB+dbCache", new boolean[] { false, false, false },
-                        LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, false } },
-                // LevelDB wo. db cache w. compression
-                { "LevelDB+compression", new boolean[] { false, false, false },
-                        LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, true } },
-                // LevelDB w. db cache w. compression
-                { "LevelDB+dbCache+compression", new boolean[] { false, false, false },
-                        LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, true } },
-                // MockDB
-                { "MockDB", new boolean[] { false, false, false }, MockDB.class.getDeclaredConstructor(String.class),
-                        new Object[] { dbNamePrefix } },
-                // PersistentMockDB
-                { "PersistentMockDB", new boolean[] { false, false, false }, PersistentMockDB.class.getDeclaredConstructor(String.class, String.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath} },
-                // H2MVMap
-                { "H2MVMap+lock", new boolean[] { true, false, false },
-                        H2MVMap.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // LevelDB wo. db cache wo. compression
-                { "LevelDB+lock", new boolean[] { true, false, false },
-                        LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // MockDB
-                { "MockDB+lock", new boolean[] { true, false, false },
-                        MockDB.class.getDeclaredConstructor(String.class), new Object[] { dbNamePrefix } },
-                // H2MVMap
-                { "H2MVMap+heapCache", new boolean[] { false, true, false },
-                        H2MVMap.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // LevelDB wo. db cache wo. compression
-                { "LevelDB+heapCache", new boolean[] { false, true, false },
-                        LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // MockDB
-                { "MockDB+heapCache", new boolean[] { false, true, false },
-                        MockDB.class.getDeclaredConstructor(String.class), new Object[] { dbNamePrefix } },
-                // H2MVMap
-                { "H2MVMap+heapCache+lock", new boolean[] { true, true, false },
-                        H2MVMap.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // LevelDB wo. db cache wo. compression
-                { "LevelDB+heapCache+lock", new boolean[] { true, true, false },
-                        LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // MockDB
-                { "MockDB+heapCache+lock", new boolean[] { true, true, false },
-                        MockDB.class.getDeclaredConstructor(String.class), new Object[] { dbNamePrefix } },
-                // H2MVMap
-                { "H2MVMap+heapCache+autocommit", new boolean[] { false, true, true },
-                        H2MVMap.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // LevelDB wo. db cache wo. compression
-                { "LevelDB+heapCache+autocommit", new boolean[] { false, true, true },
-                        LevelDB.class.getDeclaredConstructor(String.class, String.class, boolean.class, boolean.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false } },
-                // MockDB
-                { "MockDB+heapCache+autocommit", new boolean[] { false, true, true },
-                        MockDB.class.getDeclaredConstructor(String.class), new Object[] { dbNamePrefix } } });
+                        H2MVMap.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // H2MVMap w. db cache wo. compression
+                    {
+                        "H2MVMap+dbCache",
+                        new boolean[] {false, false, false},
+                        H2MVMap.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, false
+                        }
+                    },
+                    // H2MVMap wo. db cache w. compression
+                    {
+                        "H2MVMap+compression",
+                        new boolean[] {false, false, false},
+                        H2MVMap.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, true
+                        }
+                    },
+                    // H2MVMap w. db cache w. compression
+                    {
+                        "H2MVMap+dbCache+compression",
+                        new boolean[] {false, false, false},
+                        H2MVMap.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, true
+                        }
+                    },
+                    // LevelDB wo. db cache wo. compression
+                    {
+                        "LevelDB",
+                        new boolean[] {false, false, false},
+                        LevelDB.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // LevelDB w. db cache wo. compression
+                    {
+                        "LevelDB+dbCache",
+                        new boolean[] {false, false, false},
+                        LevelDB.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, false
+                        }
+                    },
+                    // LevelDB wo. db cache w. compression
+                    {
+                        "LevelDB+compression",
+                        new boolean[] {false, false, false},
+                        LevelDB.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, true
+                        }
+                    },
+                    // LevelDB w. db cache w. compression
+                    {
+                        "LevelDB+dbCache+compression",
+                        new boolean[] {false, false, false},
+                        LevelDB.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, true, true
+                        }
+                    },
+                    // MockDB
+                    {
+                        "MockDB",
+                        new boolean[] {false, false, false},
+                        MockDB.class.getDeclaredConstructor(String.class),
+                        new Object[] {dbNamePrefix}
+                    },
+                    // PersistentMockDB
+                    {
+                        "PersistentMockDB",
+                        new boolean[] {false, false, false},
+                        PersistentMockDB.class.getDeclaredConstructor(String.class, String.class),
+                        new Object[] {dbNamePrefix + DatabaseTestUtils.getNext(), dbPath}
+                    },
+                    // H2MVMap
+                    {
+                        "H2MVMap+lock",
+                        new boolean[] {true, false, false},
+                        H2MVMap.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // LevelDB wo. db cache wo. compression
+                    {
+                        "LevelDB+lock",
+                        new boolean[] {true, false, false},
+                        LevelDB.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // MockDB
+                    {
+                        "MockDB+lock",
+                        new boolean[] {true, false, false},
+                        MockDB.class.getDeclaredConstructor(String.class),
+                        new Object[] {dbNamePrefix}
+                    },
+                    // H2MVMap
+                    {
+                        "H2MVMap+heapCache",
+                        new boolean[] {false, true, false},
+                        H2MVMap.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // LevelDB wo. db cache wo. compression
+                    {
+                        "LevelDB+heapCache",
+                        new boolean[] {false, true, false},
+                        LevelDB.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // MockDB
+                    {
+                        "MockDB+heapCache",
+                        new boolean[] {false, true, false},
+                        MockDB.class.getDeclaredConstructor(String.class),
+                        new Object[] {dbNamePrefix}
+                    },
+                    // H2MVMap
+                    {
+                        "H2MVMap+heapCache+lock",
+                        new boolean[] {true, true, false},
+                        H2MVMap.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // LevelDB wo. db cache wo. compression
+                    {
+                        "LevelDB+heapCache+lock",
+                        new boolean[] {true, true, false},
+                        LevelDB.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // MockDB
+                    {
+                        "MockDB+heapCache+lock",
+                        new boolean[] {true, true, false},
+                        MockDB.class.getDeclaredConstructor(String.class),
+                        new Object[] {dbNamePrefix}
+                    },
+                    // H2MVMap
+                    {
+                        "H2MVMap+heapCache+autocommit",
+                        new boolean[] {false, true, true},
+                        H2MVMap.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // LevelDB wo. db cache wo. compression
+                    {
+                        "LevelDB+heapCache+autocommit",
+                        new boolean[] {false, true, true},
+                        LevelDB.class.getDeclaredConstructor(
+                                String.class, String.class, boolean.class, boolean.class),
+                        new Object[] {
+                            dbNamePrefix + DatabaseTestUtils.getNext(), dbPath, false, false
+                        }
+                    },
+                    // MockDB
+                    {
+                        "MockDB+heapCache+autocommit",
+                        new boolean[] {false, true, true},
+                        MockDB.class.getDeclaredConstructor(String.class),
+                        new Object[] {dbNamePrefix}
+                    }
+                });
     }
 
     private IByteArrayKeyValueDatabase db;
@@ -191,12 +313,14 @@ public class DriverBaseTest {
     private static final byte[] k3 = "key3".getBytes();
     private static final byte[] v3 = "value3".getBytes();
 
-    /**
-     * Every test invocation instantiates a new IByteArrayKeyValueDB
-     */
-    public DriverBaseTest(String testName, boolean[] props, Constructor<IByteArrayKeyValueDatabase> constructor,
+    /** Every test invocation instantiates a new IByteArrayKeyValueDB */
+    public DriverBaseTest(
+            String testName,
+            boolean[] props,
+            Constructor<IByteArrayKeyValueDatabase> constructor,
             Object[] args)
-            throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+            throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+                    InvocationTargetException {
 
         // logging to see errors
         Map<String, String> cfg = new HashMap<>();
@@ -295,7 +419,8 @@ public class DriverBaseTest {
 
     @Test
     public void testOpenSecondInstance()
-            throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+            throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+                    InvocationTargetException {
         if (db.isPersistent() && !(db instanceof PersistentMockDB)) {
             // another connection to same DB should fail on open for all persistent KVDBs
             IByteArrayKeyValueDatabase otherDatabase = this.constructor.newInstance(this.args);
@@ -310,13 +435,16 @@ public class DriverBaseTest {
     @Test
     public void testPersistence() throws InterruptedException {
         if (db.isPersistent()) {
-            // adding data ---------------------------------------------------------------------------------------------
+            // adding data
+            // ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
             db.put(k1, v1);
             assertThat(db.isLocked()).isFalse();
 
             // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) { db.commit(); }
+            if (!db.isAutoCommitEnabled()) {
+                db.commit();
+            }
 
             db.close();
             Thread.sleep(100);
@@ -330,12 +458,15 @@ public class DriverBaseTest {
             assertThat(db.keys().size()).isEqualTo(1);
             assertThat(db.isLocked()).isFalse();
 
-            // deleting data -------------------------------------------------------------------------------------------
+            // deleting data
+            // -------------------------------------------------------------------------------------------
             db.delete(k1);
             assertThat(db.isLocked()).isFalse();
 
             // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) { db.commit(); }
+            if (!db.isAutoCommitEnabled()) {
+                db.commit();
+            }
 
             db.close();
             Thread.sleep(100);
@@ -354,7 +485,8 @@ public class DriverBaseTest {
     @Test
     public void testBatchPersistence() throws InterruptedException {
         if (db.isPersistent()) {
-            // adding data ---------------------------------------------------------------------------------------------
+            // adding data
+            // ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
             assertThat(db.get(k2).isPresent()).isFalse();
             assertThat(db.get(k3).isPresent()).isFalse();
@@ -368,7 +500,9 @@ public class DriverBaseTest {
             assertThat(db.isLocked()).isFalse();
 
             // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) { db.commit(); }
+            if (!db.isAutoCommitEnabled()) {
+                db.commit();
+            }
 
             db.close();
             Thread.sleep(100);
@@ -384,7 +518,8 @@ public class DriverBaseTest {
             assertThat(db.keys().size()).isEqualTo(3);
             assertThat(db.isLocked()).isFalse();
 
-            // updating data -------------------------------------------------------------------------------------------
+            // updating data
+            // -------------------------------------------------------------------------------------------
             map.clear();
             map.put(k1, v2);
             map.put(k2, v3);
@@ -394,7 +529,9 @@ public class DriverBaseTest {
             assertThat(db.isLocked()).isFalse();
 
             // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) { db.commit(); }
+            if (!db.isAutoCommitEnabled()) {
+                db.commit();
+            }
 
             db.close();
             Thread.sleep(100);
@@ -410,13 +547,16 @@ public class DriverBaseTest {
             assertThat(db.keys().size()).isEqualTo(2);
             assertThat(db.isLocked()).isFalse();
 
-            // deleting data -------------------------------------------------------------------------------------------
+            // deleting data
+            // -------------------------------------------------------------------------------------------
             db.deleteBatch(map.keySet());
 
             assertThat(db.isLocked()).isFalse();
 
             // commit, close & reopen
-            if (!db.isAutoCommitEnabled()) { db.commit(); }
+            if (!db.isAutoCommitEnabled()) {
+                db.commit();
+            }
 
             db.close();
             Thread.sleep(100);
@@ -556,7 +696,6 @@ public class DriverBaseTest {
         // ensure unlocked
         assertThat(db.isLocked()).isFalse();
     }
-
 
     @Test
     public void testDrop() {
@@ -716,13 +855,12 @@ public class DriverBaseTest {
         assertThat(db.isLocked()).isFalse();
     }
 
-    /**
-     * Checks that data does not persist without explicit commits.
-     */
+    /** Checks that data does not persist without explicit commits. */
     @Test
     public void testAutoCommitDisabled() throws InterruptedException {
         if (db.isPersistent() && !db.isAutoCommitEnabled()) {
-            // adding data ---------------------------------------------------------------------------------------------
+            // adding data
+            // ---------------------------------------------------------------------------------------------
             assertThat(db.get(k1).isPresent()).isFalse();
             db.put(k1, v1);
             assertThat(db.isLocked()).isFalse();
@@ -739,7 +877,8 @@ public class DriverBaseTest {
             assertThat(db.keys().size()).isEqualTo(0);
             assertThat(db.isLocked()).isFalse();
 
-            // deleting data -------------------------------------------------------------------------------------------
+            // deleting data
+            // -------------------------------------------------------------------------------------------
             db.put(k1, v1);
             db.commit();
             assertThat(db.isLocked()).isFalse();
@@ -759,7 +898,8 @@ public class DriverBaseTest {
             assertThat(db.keys().size()).isEqualTo(1);
             assertThat(db.isLocked()).isFalse();
 
-            // batch update --------------------------------------------------------------------------------------------
+            // batch update
+            // --------------------------------------------------------------------------------------------
             Map<byte[], byte[]> map = new HashMap<>();
             map.put(k1, null);
             map.put(k2, v2);
@@ -789,7 +929,8 @@ public class DriverBaseTest {
             assertThat(db.keys().size()).isEqualTo(2);
             assertThat(db.isLocked()).isFalse();
 
-            // batch delete --------------------------------------------------------------------------------------------
+            // batch delete
+            // --------------------------------------------------------------------------------------------
             db.deleteBatch(map.keySet());
             assertThat(db.isLocked()).isFalse();
 
@@ -808,5 +949,4 @@ public class DriverBaseTest {
             assertThat(db.isLocked()).isFalse();
         }
     }
-
 }

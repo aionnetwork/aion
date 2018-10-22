@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -25,7 +25,14 @@
  *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
- *******************************************************************************/
+ *     <ether.camp> team through the ethereumJ library.
+ *     Ether.Camp Inc. (US) team through Ethereum Harmony.
+ *     John Tromp through the Equihash solver.
+ *     Samuel Neves through the BLAKE2 implementation.
+ *     Zcash project team.
+ *     Bitcoinj team.
+ */
+
 package org.aion.mcf.trie;
 
 import static java.util.Arrays.copyOfRange;
@@ -33,19 +40,35 @@ import static org.aion.base.util.ByteArrayWrapper.wrap;
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.base.util.ByteUtil.matchingNibbleLength;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.aion.rlp.CompactEncoder.*;
+import static org.aion.rlp.CompactEncoder.binToNibbles;
+import static org.aion.rlp.CompactEncoder.hasTerminator;
+import static org.aion.rlp.CompactEncoder.packNibbles;
+import static org.aion.rlp.CompactEncoder.unpackToNibbles;
 import static org.aion.rlp.RLP.calcElementPrefixSize;
 import static org.spongycastle.util.Arrays.concatenate;
 
-import java.io.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.trie.scan.*;
+import org.aion.mcf.trie.scan.CollectFullSetOfNodes;
+import org.aion.mcf.trie.scan.CountNodes;
+import org.aion.mcf.trie.scan.ExtractToDatabase;
+import org.aion.mcf.trie.scan.ScanAction;
+import org.aion.mcf.trie.scan.TraceAllNodes;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;

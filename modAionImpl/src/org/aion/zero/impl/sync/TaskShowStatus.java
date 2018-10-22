@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl.sync;
 
 import java.io.IOException;
@@ -169,13 +170,7 @@ final class TaskShowStatus implements Runnable {
             sb.append(
                     String.format(
                             "%9s %16s %17s %8s %16s %2s %16s\n",
-                            "id",
-                            "# best block",
-                            "state",
-                            "mode",
-                            "base",
-                            "rp",
-                            "last request"));
+                            "id", "# best block", "state", "mode", "base", "rp", "last request"));
             sb.append(
                     "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 

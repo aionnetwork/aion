@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.equihash;
 
 import org.aion.base.type.ISolution;

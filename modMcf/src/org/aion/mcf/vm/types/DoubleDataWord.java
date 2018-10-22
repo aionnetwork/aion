@@ -36,7 +36,8 @@ import org.aion.base.vm.IDataWord;
  * often have need of 32-byte storage keys.
  */
 public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
-    public static final BigInteger MAX_VALUE = BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE);
+    public static final BigInteger MAX_VALUE =
+            BigInteger.valueOf(2).pow(256).subtract(BigInteger.ONE);
 
     public static final DoubleDataWord ZERO = new DoubleDataWord(0);
     public static final DoubleDataWord ONE = new DoubleDataWord(1);
@@ -44,16 +45,12 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
 
     private byte[] data;
 
-    /**
-     * Constructs a new DoubleDataWord of 32 zero bytes.
-     */
+    /** Constructs a new DoubleDataWord of 32 zero bytes. */
     public DoubleDataWord() {
         this.data = new byte[BYTES];
     }
 
-    /**
-     * Constructs a new DoubleDataWord whose numeric representation is equal to num.
-     */
+    /** Constructs a new DoubleDataWord whose numeric representation is equal to num. */
     public DoubleDataWord(int num) {
         ByteBuffer bb = ByteBuffer.allocate(BYTES);
         bb.position(BYTES - Integer.BYTES);
@@ -61,9 +58,7 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
         data = bb.array();
     }
 
-    /**
-     * Constructs a new DoubleDataWord whose numeric representation is equal to num.
-     */
+    /** Constructs a new DoubleDataWord whose numeric representation is equal to num. */
     public DoubleDataWord(long num) {
         ByteBuffer bb = ByteBuffer.allocate(BYTES);
         bb.position(BYTES - Long.BYTES);
@@ -85,27 +80,21 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
             System.arraycopy(data, 0, this.data, BYTES - data.length, data.length);
         } else {
             throw new RuntimeException(
-                "DoubleDataWord can't exceed 32 bytes: " + Hex.toHexString(data));
+                    "DoubleDataWord can't exceed 32 bytes: " + Hex.toHexString(data));
         }
     }
 
-    /**
-     * Constructs a new DoubleDataWord whose numeric representation is equal to num.
-     */
+    /** Constructs a new DoubleDataWord whose numeric representation is equal to num. */
     public DoubleDataWord(BigInteger num) {
         this(num.toByteArray());
     }
 
-    /**
-     * Constructs a new DoubleDataWord whose underlying byte array matches the hex string data.
-     */
+    /** Constructs a new DoubleDataWord whose underlying byte array matches the hex string data. */
     public DoubleDataWord(String data) {
         this(Hex.decode(data));
     }
 
-    /**
-     * Constructs a new DoubleDataWord from wrapper.
-     */
+    /** Constructs a new DoubleDataWord from wrapper. */
     public DoubleDataWord(ByteArrayWrapper wrapper) {
         this(wrapper.getData());
     }
@@ -124,9 +113,7 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
         return new BigInteger(1, data);
     }
 
-    /**
-     * Returns an integer representation of this DoubleDataWord.
-     */
+    /** Returns an integer representation of this DoubleDataWord. */
     public int intValue() {
         int v = 0;
         for (int i = (BYTES - Integer.BYTES); i < BYTES; i++) {
@@ -135,9 +122,7 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
         return v;
     }
 
-    /**
-     * Returns a long representation of this DoubleDataWord.
-     */
+    /** Returns a long representation of this DoubleDataWord. */
     public long longValue() {
         long v = 0;
         for (int i = (BYTES - Long.BYTES); i < BYTES; i++) {
@@ -197,5 +182,4 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
     public String toString() {
         return Hex.toHexString(data);
     }
-
 }

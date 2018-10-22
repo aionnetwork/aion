@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,14 +19,11 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.txpool;
 
-import org.aion.base.type.ITransaction;
-
 import java.util.Properties;
+import org.aion.base.type.ITransaction;
 
 public final class TxPoolModule {
     private static TxPoolModule singleton = null;
@@ -38,8 +35,13 @@ public final class TxPoolModule {
     private TxPoolModule(Properties config) throws Throwable {
         String moduleName = (String) config.get(MODULENAME);
         if (moduleName != null) {
-            TXPOOL = (ITxPool<ITransaction>) getClass().getClassLoader().loadClass(moduleName)
-                    .getDeclaredConstructor(Properties.class).newInstance(config);
+            TXPOOL =
+                    (ITxPool<ITransaction>)
+                            getClass()
+                                    .getClassLoader()
+                                    .loadClass(moduleName)
+                                    .getDeclaredConstructor(Properties.class)
+                                    .newInstance(config);
         } else {
             throw new Exception("No module name input!");
         }

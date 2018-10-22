@@ -22,6 +22,9 @@
  */
 package org.aion.vm;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
@@ -39,11 +42,6 @@ import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
-
-
 /**
  * Transaction executor is the middle man between kernel and VM. It executes transactions and yields
  * transaction receipts.
@@ -51,7 +49,8 @@ import java.util.List;
  * @author yulong
  */
 public class TransactionExecutor extends AbstractExecutor {
-    // provider is essential to execute, but it is only set manually with a setter, not good practice
+    // provider is essential to execute, but it is only set manually with a setter, not good
+    // practice
     private ExecutionContext ctx;
     private AionTransaction tx;
     private IAionBlock block;
@@ -62,11 +61,16 @@ public class TransactionExecutor extends AbstractExecutor {
      * <br>
      * IMPORTANT: be sure to accumulate nrg used in a block outside the transaction executor
      *
-     * @param tx    transaction to be executed
+     * @param tx transaction to be executed
      * @param block a temporary block used to garner relevant environmental variables
      */
-    public TransactionExecutor(AionTransaction tx, IAionBlock block, IRepository repo,
-        boolean isLocalCall, long blockRemainingNrg, Logger logger) {
+    public TransactionExecutor(
+            AionTransaction tx,
+            IAionBlock block,
+            IRepository repo,
+            boolean isLocalCall,
+            long blockRemainingNrg,
+            Logger logger) {
 
         super(repo, isLocalCall, blockRemainingNrg, logger);
 
@@ -92,7 +96,9 @@ public class TransactionExecutor extends AbstractExecutor {
         long nrgLimit = tx.nrgLimit() - tx.transactionCost(block.getNumber());
         DataWord callValue = new DataWord(ArrayUtils.nullToEmpty(tx.getValue()));
         byte[] callData =
-                tx.isContractCreation() ? ByteUtil.EMPTY_BYTE_ARRAY : ArrayUtils.nullToEmpty(tx.getData());
+                tx.isContractCreation()
+                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        : ArrayUtils.nullToEmpty(tx.getData());
 
         /*
          * execution info
@@ -119,28 +125,44 @@ public class TransactionExecutor extends AbstractExecutor {
         /*
          * execution and context and results
          */
-        ctx = new ExecutionContext(txHash, address, origin, caller, nrgPrice, nrgLimit, callValue,
-                callData, depth,
-                kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit, blockDifficulty);
+        ctx =
+                new ExecutionContext(
+                        txHash,
+                        address,
+                        origin,
+                        caller,
+                        nrgPrice,
+                        nrgLimit,
+                        callValue,
+                        callData,
+                        depth,
+                        kind,
+                        flags,
+                        blockCoinbase,
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockDifficulty);
 
         exeResult = new ExecutionResult(ResultCode.SUCCESS, nrgLimit);
-
     }
 
-    /**
-     * Creates a transaction executor (use block nrg limit).
-     */
-    public TransactionExecutor(AionTransaction tx, IAionBlock block,
-        IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo, boolean isLocalCall,
-        Logger logger) {
+    /** Creates a transaction executor (use block nrg limit). */
+    public TransactionExecutor(
+            AionTransaction tx,
+            IAionBlock block,
+            IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo,
+            boolean isLocalCall,
+            Logger logger) {
         this(tx, block, repo, isLocalCall, block.getNrgLimit(), logger);
     }
 
-    /**
-     * Create a transaction executor (non constant call, use block nrg limit).
-     */
-    public TransactionExecutor(AionTransaction tx, IAionBlock block,
-                               IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo, Logger logger) {
+    /** Create a transaction executor (non constant call, use block nrg limit). */
+    public TransactionExecutor(
+            AionTransaction tx,
+            IAionBlock block,
+            IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo,
+            Logger logger) {
         this(tx, block, repo, false, block.getNrgLimit(), logger);
     }
 
@@ -148,16 +170,12 @@ public class TransactionExecutor extends AbstractExecutor {
         this.provider = provider;
     }
 
-    /**
-     * Execute the transaction
-     */
+    /** Execute the transaction */
     public AionTxExecSummary execute() {
         return (AionTxExecSummary) execute(tx, ctx.nrgLimit());
     }
 
-    /**
-     * Prepares contract call.
-     */
+    /** Prepares contract call. */
     protected void call() {
         IPrecompiledContract pc = this.provider.getPrecompiledContract(this.ctx, this.repoTrack);
         if (pc != null) {
@@ -177,9 +195,7 @@ public class TransactionExecutor extends AbstractExecutor {
         repoTrack.addBalance(tx.getTo(), txValue);
     }
 
-    /**
-     * Prepares contract create.
-     */
+    /** Prepares contract create. */
     protected void create() {
         Address contractAddress = tx.getContractAddress();
 
@@ -207,19 +223,18 @@ public class TransactionExecutor extends AbstractExecutor {
         repoTrack.addBalance(contractAddress, txValue);
     }
 
-    /**
-     * Finalize state changes and returns summary.
-     */
+    /** Finalize state changes and returns summary. */
     protected AionTxExecSummary finish() {
 
         ExecutionHelper rootHelper = new ExecutionHelper();
         rootHelper.merge(ctx.helper(), exeResult.getCode() == ResultCode.SUCCESS.toInt());
 
-        AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(getReceipt(rootHelper.getLogs())) //
-                .logs(rootHelper.getLogs()) //
-                .deletedAccounts(rootHelper.getDeleteAccounts()) //
-                .internalTransactions(rootHelper.getInternalTransactions()) //
-                .result(exeResult.getOutput());
+        AionTxExecSummary.Builder builder =
+                AionTxExecSummary.builderFor(getReceipt(rootHelper.getLogs())) //
+                        .logs(rootHelper.getLogs()) //
+                        .deletedAccounts(rootHelper.getDeleteAccounts()) //
+                        .internalTransactions(rootHelper.getInternalTransactions()) //
+                        .result(exeResult.getOutput());
 
         switch (((ExecutionResult) exeResult).getResultCode()) {
             case SUCCESS:
@@ -252,27 +267,26 @@ public class TransactionExecutor extends AbstractExecutor {
         return summary;
     }
 
-    /**
-     * Returns the transaction receipt.
-     */
+    /** Returns the transaction receipt. */
     protected AionTxReceipt getReceipt(List<Log> logs) {
-//        AionTxReceipt receipt = new AionTxReceipt();
-//        receipt.setTransaction(tx);
-//        receipt.setLogs(txResult.getLogs());
-//        receipt.setNrgUsed(getNrgUsed(tx.nrgLimit()));
-//        receipt.setExecutionResult(exeResult.getOutput());
-//        receipt
-//            .setError(exeResult.getCode() == ResultCode.SUCCESS ? "" : exeResult.getCode().name());
-//
-//        return receipt;
+        //        AionTxReceipt receipt = new AionTxReceipt();
+        //        receipt.setTransaction(tx);
+        //        receipt.setLogs(txResult.getLogs());
+        //        receipt.setNrgUsed(getNrgUsed(tx.nrgLimit()));
+        //        receipt.setExecutionResult(exeResult.getOutput());
+        //        receipt
+        //            .setError(exeResult.getCode() == ResultCode.SUCCESS ? "" :
+        // exeResult.getCode().name());
+        //
+        //        return receipt;
         return (AionTxReceipt) buildReceipt(new AionTxReceipt(), tx, logs);
-
     }
 
     public ExecutionContext getContext() {
         return ctx;
     }
 
-    public IExecutionResult getResult() { return exeResult; }
-
+    public IExecutionResult getResult() {
+        return exeResult;
+    }
 }

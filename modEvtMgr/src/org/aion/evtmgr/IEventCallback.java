@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,15 +19,10 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.evtmgr;
 
-/**
- * @author jay
- *
- */
+/** @author jay */
 public interface IEventCallback {
     void onEvent(IEvent e);
 }

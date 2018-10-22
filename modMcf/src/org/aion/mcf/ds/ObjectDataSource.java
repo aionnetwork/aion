@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,18 +17,15 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.ds;
-
-import org.aion.base.db.Flushable;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 
 import java.io.Closeable;
 import java.util.Optional;
+import org.aion.base.db.Flushable;
+import org.aion.base.db.IByteArrayKeyValueDatabase;
 
 /**
  * Object Datasource.
@@ -63,9 +60,7 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
         src.put(key, bytes);
     }
 
-    /**
-     * @apiNote A null value is interpreted as a delete of the key.
-     */
+    /** @apiNote A null value is interpreted as a delete of the key. */
     public void putToBatch(byte[] key, V value) {
         byte[] bytes = value == null ? null : serializer.serialize(value);
         src.putToBatch(key, bytes);

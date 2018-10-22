@@ -22,24 +22,29 @@
  */
 package org.aion.mcf.account;
 
-import org.aion.base.type.Address;
-import org.aion.crypto.ECKey;
-import org.aion.crypto.ECKeyFac;
-import org.junit.*;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import static com.google.common.truth.Truth.assertThat;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.junit.Assert.*;
+import org.aion.base.type.Address;
+import org.aion.crypto.ECKey;
+import org.aion.crypto.ECKeyFac;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 public class AccountManagerTest {
     private static AccountManager accountManager = AccountManager.inst();
-    private Address notRegistered = Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
+    private Address notRegistered =
+            Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
     private final int DEFAULT_TEST_TIMEOUT = 10;
 
     private static ECKey k1;
@@ -65,7 +70,7 @@ public class AccountManagerTest {
     }
 
     @BeforeClass
-    public static void setupClass(){
+    public static void setupClass() {
         k1 = ECKeyFac.inst().create();
         k2 = ECKeyFac.inst().create();
         k3 = ECKeyFac.inst().create();
@@ -77,102 +82,122 @@ public class AccountManagerTest {
     }
 
     @AfterClass
-    public static void cleanClass(){
+    public static void cleanClass() {
         // remove the files created
         cleanFiles();
     }
 
     @After
-    public void cleanManager(){
+    public void cleanManager() {
         // empty the map in account manager for each test
         cleanAccountManager();
     }
 
     @Test
-    public void testUnlockAccount(){
+    public void testUnlockAccount() {
         // unlock 2 accounts
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
         long timeOutTotal1 = Instant.now().getEpochSecond() + DEFAULT_TEST_TIMEOUT;
-        assertTrue(accountManager.unlockAccount(Address.wrap(k2.getAddress()), p2, DEFAULT_TEST_TIMEOUT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k2.getAddress()), p2, DEFAULT_TEST_TIMEOUT));
         long timeOutTotal2 = Instant.now().getEpochSecond() + DEFAULT_TEST_TIMEOUT;
 
         // check account manager
         List<Account> list = accountManager.getAccounts();
 
-        int returnedTimeout1 = (int)list.get(0).getTimeout();
-        int returnedTimeout2 = (int)list.get(1).getTimeout();
+        int returnedTimeout1 = (int) list.get(0).getTimeout();
+        int returnedTimeout2 = (int) list.get(1).getTimeout();
         byte[] returnedAddress1 = list.get(0).getKey().getAddress();
         byte[] returnedAddress2 = list.get(1).getKey().getAddress();
 
         // since the returned list is not ordered, have to check for all possible orders
-        assertTrue(Arrays.equals(returnedAddress1, k1.getAddress())
-                || Arrays.equals(returnedAddress1, k2.getAddress()));
-        assertTrue(Arrays.equals(returnedAddress2, k1.getAddress())
-                || Arrays.equals(returnedAddress2, k2.getAddress()));
+        assertTrue(
+                Arrays.equals(returnedAddress1, k1.getAddress())
+                        || Arrays.equals(returnedAddress1, k2.getAddress()));
+        assertTrue(
+                Arrays.equals(returnedAddress2, k1.getAddress())
+                        || Arrays.equals(returnedAddress2, k2.getAddress()));
 
-        // same with the timeout, since there could be a slight(1s) difference between each unlock as well
+        // same with the timeout, since there could be a slight(1s) difference between each unlock
+        // as well
         assertTrue(returnedTimeout1 == timeOutTotal1 || returnedTimeout1 == timeOutTotal2);
         assertTrue(returnedTimeout2 == timeOutTotal1 || returnedTimeout2 == timeOutTotal2);
     }
 
     @Test
-    public void testUnlockAccountUpdateTimeout(){
+    public void testUnlockAccountUpdateTimeout() {
         // update the timeout from 1s to 2s
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
         assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 20));
 
         // check that the timeout is updated
-        assertThat(accountManager.getAccounts().get(0).getTimeout()).isEqualTo(Instant.now().getEpochSecond() + 20);
+        assertThat(accountManager.getAccounts().get(0).getTimeout())
+                .isEqualTo(Instant.now().getEpochSecond() + 20);
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
     }
 
     @Test
-    public void testUnlockAccountWithNotRegisteredKey(){
-        assertFalse(accountManager.unlockAccount(notRegistered, "no password", DEFAULT_TEST_TIMEOUT));
+    public void testUnlockAccountWithNotRegisteredKey() {
+        assertFalse(
+                accountManager.unlockAccount(notRegistered, "no password", DEFAULT_TEST_TIMEOUT));
 
         // check that no account has been put into the manager
         assertThat(accountManager.getAccounts().size()).isEqualTo(0);
     }
 
     @Test
-    public void testUnlockAccountWithWrongPassword(){
-        assertFalse(accountManager.unlockAccount(Address.wrap(k1.getAddress()), "not p1", DEFAULT_TEST_TIMEOUT));
+    public void testUnlockAccountWithWrongPassword() {
+        assertFalse(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), "not p1", DEFAULT_TEST_TIMEOUT));
 
         // check that no account has been put into the manager
         assertThat(accountManager.getAccounts().size()).isEqualTo(0);
     }
 
     @Test
-    public void testUnlockAccountTimeoutGreaterThanMax(){
+    public void testUnlockAccountTimeoutGreaterThanMax() {
         // unlock account with timeout greater than max
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_MAX + 10));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_MAX + 10));
 
         // check that the recoded timeout is no bigger than max
         assertThat(accountManager.getAccounts().get(0).getTimeout())
                 .isEqualTo(Instant.now().getEpochSecond() + AccountManager.UNLOCK_MAX);
 
         // now update the timeout back to a small value so it can be cleared easily during @After
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
     }
 
     @Test
-    public void testUnlockAccountWithNegativeTimeout(){
+    public void testUnlockAccountWithNegativeTimeout() {
         // try to unlock account with a negative integer as the timeout
         assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, -1));
-        int expectedTimeout = (int)Instant.now().getEpochSecond() + AccountManager.UNLOCK_DEFAULT;
+        int expectedTimeout = (int) Instant.now().getEpochSecond() + AccountManager.UNLOCK_DEFAULT;
 
         // check that the account is created and added to the manager
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
-        assertThat(accountManager.getAccounts().get(0).getKey().toString()).isEqualTo(k1.toString());
+        assertThat(accountManager.getAccounts().get(0).getKey().toString())
+                .isEqualTo(k1.toString());
 
         // however the timeout is changed to the default timeout in account manager
         assertThat(accountManager.getAccounts().get(0).getTimeout()).isEqualTo(expectedTimeout);
     }
 
     @Test
-    public void testLockAccount(){
+    public void testLockAccount() {
         // first unlock an account
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
 
         // now try to lock it, the timeout will change
         assertTrue(accountManager.lockAccount(Address.wrap(k1.getAddress()), p1));
@@ -185,9 +210,11 @@ public class AccountManagerTest {
     }
 
     @Test
-    public void testLockAccountNotInManager(){
+    public void testLockAccountNotInManager() {
         // first unlock an account
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
 
         // try to lock a different account
         assertTrue(accountManager.lockAccount(Address.wrap(k2.getAddress()), p2));
@@ -197,7 +224,7 @@ public class AccountManagerTest {
     }
 
     @Test
-    public void testLockAccountWithNotRegisteredKey(){
+    public void testLockAccountWithNotRegisteredKey() {
         assertFalse(accountManager.lockAccount(notRegistered, "no password"));
 
         // check that no account has been put into the manager
@@ -205,9 +232,11 @@ public class AccountManagerTest {
     }
 
     @Test
-    public void testLockAccountWithWrongPassword(){
+    public void testLockAccountWithWrongPassword() {
         // first unlock an account
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT + 1));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT + 1));
 
         // check if its there
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
@@ -217,9 +246,11 @@ public class AccountManagerTest {
     }
 
     @Test
-    public void testGetKeyReturned(){
+    public void testGetKeyReturned() {
         // first unlock an account
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
 
         // retrieve the key
         ECKey ret = accountManager.getKey(Address.wrap(k1.getAddress()));
@@ -229,9 +260,11 @@ public class AccountManagerTest {
     }
 
     @Test
-    public void testGetKeyRemoved(){
+    public void testGetKeyRemoved() {
         // first unlock an account
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
 
         // lock the account
         assertTrue(accountManager.lockAccount(Address.wrap(k1.getAddress()), p1));
@@ -244,7 +277,7 @@ public class AccountManagerTest {
     }
 
     @Test
-    public void testGetKeyNotInMap(){
+    public void testGetKeyNotInMap() {
         // check that there are currently no accounts in the manager
         assertThat(accountManager.getAccounts().size()).isEqualTo(0);
 
@@ -253,9 +286,11 @@ public class AccountManagerTest {
     }
 
     @Test
-    public void testUnlockAndLockMultipleTimes(){
+    public void testUnlockAndLockMultipleTimes() {
         // first an account
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
 
         // lock k1 and check that timeout is changed
@@ -266,13 +301,15 @@ public class AccountManagerTest {
         assertThat(accountsList.get(0).getTimeout()).isLessThan(Instant.now().getEpochSecond());
 
         // now unlock account with k1 again and check that timeout is changed
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
+        assertTrue(
+                accountManager.unlockAccount(
+                        Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
-        assertThat(accountsList.get(0).getTimeout()).isEqualTo(Instant.now().getEpochSecond() + AccountManager.UNLOCK_DEFAULT);
-
+        assertThat(accountsList.get(0).getTimeout())
+                .isEqualTo(Instant.now().getEpochSecond() + AccountManager.UNLOCK_DEFAULT);
     }
 
-    private static void cleanAccountManager(){
+    private static void cleanAccountManager() {
         // lock all the accounts, which modifies the timeout
         accountManager.lockAccount(Address.wrap(k1.getAddress()), p1);
         accountManager.lockAccount(Address.wrap(k2.getAddress()), p2);
@@ -287,7 +324,7 @@ public class AccountManagerTest {
         assertThat(accountManager.getAccounts().size()).isEqualTo(0);
     }
 
-    private static void cleanFiles(){
+    private static void cleanFiles() {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
         File[] AllFilesInDirectory = folder.listFiles();
@@ -295,27 +332,27 @@ public class AccountManagerTest {
         List<String> filesToBeDeleted = new ArrayList<>();
 
         // check for invalid or wrong path - should not happen
-        if(AllFilesInDirectory == null)
-            return;
+        if (AllFilesInDirectory == null) return;
 
-        for(File file: AllFilesInDirectory){
+        for (File file : AllFilesInDirectory) {
             allFileNames.add(file.getName());
         }
 
-        // get a list of the files needed to be deleted, check the ending of file names with corresponding addresses
-        for(String name: allFileNames){
+        // get a list of the files needed to be deleted, check the ending of file names with
+        // corresponding addresses
+        for (String name : allFileNames) {
             String ending = "";
             if (name.length() > 64) {
-               ending = name.substring(name.length()-64);
+                ending = name.substring(name.length() - 64);
             }
 
-            if(ending.equals(address1) || ending.equals(address2) || ending.equals(address3)) {
-                filesToBeDeleted.add(KEYSTORE_PATH + "/"+ name);
+            if (ending.equals(address1) || ending.equals(address2) || ending.equals(address3)) {
+                filesToBeDeleted.add(KEYSTORE_PATH + "/" + name);
             }
         }
 
         // iterate and delete those files
-        for (String name: filesToBeDeleted){
+        for (String name : filesToBeDeleted) {
             File file = new File(name);
             file.delete();
         }

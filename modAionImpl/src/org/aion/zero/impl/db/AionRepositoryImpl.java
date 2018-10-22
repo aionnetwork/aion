@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,14 +19,14 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
+
 package org.aion.zero.impl.db;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.zero.impl.AionHub.INIT_ERROR_EXIT_CODE;
 
-import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;

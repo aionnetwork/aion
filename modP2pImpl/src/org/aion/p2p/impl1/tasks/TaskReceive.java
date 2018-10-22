@@ -36,9 +36,10 @@ public class TaskReceive implements Runnable {
     private final BlockingQueue<MsgIn> receiveMsgQue;
     private final Map<Integer, List<Handler>> handlers;
 
-    public TaskReceive(final AtomicBoolean _start,
-        final BlockingQueue<MsgIn> _receiveMsgQue,
-        final Map<Integer, List<Handler>> _handlers) {
+    public TaskReceive(
+            final AtomicBoolean _start,
+            final BlockingQueue<MsgIn> _receiveMsgQue,
+            final Map<Integer, List<Handler>> _handlers) {
         this.start = _start;
         this.receiveMsgQue = _receiveMsgQue;
         this.handlers = _handlers;

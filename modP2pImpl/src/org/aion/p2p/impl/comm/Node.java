@@ -33,31 +33,32 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IPeerMetric;
 
 /**
- * @author Chris p2p://{node-id}@{ip}:{port}
- * node-id could be any non-empty string update to 36 bytes
+ * @author Chris p2p://{node-id}@{ip}:{port} node-id could be any non-empty string update to 36
+ *     bytes
  */
 public final class Node implements INode {
 
     private static final String REGEX_PROTOCOL = "^p2p://"; // Protocol eg. p2p://
-    private static final String REGEX_NODE_ID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"; // Node-Id
+    private static final String REGEX_NODE_ID =
+            "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"; // Node-Id
     // eg.
     // 3e2cab6a-09dd-4771-b28d-6aa674009796
-    private static final String REGEX_IPV4 = "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])"; // Ip
+    private static final String REGEX_IPV4 =
+            "(([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\.){3}([01]?\\d\\d?|2[0-4]\\d|25[0-5])"; // Ip
     // eg.
     // 127.0.0.1
     private static final String REGEX_PORT = "[0-9]{1,5}$"; // Port eg. 30303
-    private static final Pattern PATTERN_P2P = Pattern
-        .compile(REGEX_PROTOCOL + REGEX_NODE_ID + "@" + REGEX_IPV4 + ":" + REGEX_PORT);
+    private static final Pattern PATTERN_P2P =
+            Pattern.compile(REGEX_PROTOCOL + REGEX_NODE_ID + "@" + REGEX_IPV4 + ":" + REGEX_PORT);
     private static final int SIZE_BYTES_IPV4 = 8;
     private IPeerMetric peerMetric = new PeerMetric();
     private boolean fromBootList;
     private byte[] id; // 36 bytes
     private int idHash;
     private int peerhash;
-    /**
-     * for display only
-     */
+    /** for display only */
     private String idShort;
+
     private byte[] ip;
     private String ipStr;
     private int port;
@@ -73,9 +74,7 @@ public final class Node implements INode {
      */
     private String connection = "";
 
-    /**
-     * constructor for initial stage of connections from network
-     */
+    /** constructor for initial stage of connections from network */
     Node(String _ipStr, int port) {
         if (port > 65535 || port < 1) {
             throw new IllegalArgumentException();
@@ -91,9 +90,7 @@ public final class Node implements INode {
         this.peerhash = 0;
     }
 
-    /**
-     * constructor for initial stage of boot nodes from config
-     */
+    /** constructor for initial stage of boot nodes from config */
     public Node(boolean fromBootList, final byte[] _id, final byte[] _ip, final int _port) {
         this.fromBootList = fromBootList;
         this.id = _id;
@@ -101,9 +98,11 @@ public final class Node implements INode {
             this.idHash = Arrays.hashCode(_id);
             this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
 
-            ByteBuffer buffer = ByteBuffer.allocate(_id.length + _ip.length + Integer.BYTES)
-                .put(_id)
-                .put(_ip).putInt(_port);
+            ByteBuffer buffer =
+                    ByteBuffer.allocate(_id.length + _ip.length + Integer.BYTES)
+                            .put(_id)
+                            .put(_ip)
+                            .putInt(_port);
 
             this.peerhash = Arrays.hashCode(buffer.array());
         }
@@ -184,17 +183,13 @@ public final class Node implements INode {
         this.fromBootList = _ifBoot;
     }
 
-    /**
-     * this method used to keep current node stage on either pending list or active list
-     */
+    /** this method used to keep current node stage on either pending list or active list */
     @Override
     public void refreshTimestamp() {
         this.timestamp = System.currentTimeMillis();
     }
 
-    /**
-     * @return boolean
-     */
+    /** @return boolean */
     @Override
     public boolean getIfFromBootList() {
         return this.fromBootList;
@@ -215,9 +210,7 @@ public final class Node implements INode {
         return this.port;
     }
 
-    /**
-     * @param _port int
-     */
+    /** @param _port int */
     @Override
     public void setPort(final int _port) {
         this.port = _port;
@@ -228,9 +221,7 @@ public final class Node implements INode {
         return peerhash;
     }
 
-    /**
-     * @return long
-     */
+    /** @return long */
     public long getTimestamp() {
         return this.timestamp;
     }
@@ -244,17 +235,13 @@ public final class Node implements INode {
         this.binaryVersion = _revision;
     }
 
-    /**
-     * @return SocketChannel
-     */
+    /** @return SocketChannel */
     @Override
     public SocketChannel getChannel() {
         return this.channel;
     }
 
-    /**
-     * @param _channel SocketChannel
-     */
+    /** @param _channel SocketChannel */
     @Override
     public void setChannel(final SocketChannel _channel) {
         this.channel = _channel;
@@ -265,9 +252,7 @@ public final class Node implements INode {
         return this.id;
     }
 
-    /**
-     * @param _id byte[]
-     */
+    /** @param _id byte[] */
     @Override
     public void setId(final byte[] _id) {
         this.id = _id;
@@ -282,17 +267,13 @@ public final class Node implements INode {
         return this.idHash;
     }
 
-    /**
-     * @return String
-     */
+    /** @return String */
     @Override
     public String getConnection() {
         return this.connection;
     }
 
-    /**
-     * @param _connection String
-     */
+    /** @param _connection String */
     @Override
     public void setConnection(String _connection) {
         this.connection = _connection;
@@ -319,8 +300,8 @@ public final class Node implements INode {
     }
 
     @Override
-    public void updateStatus(long _bestBlockNumber, final byte[] _bestBlockHash,
-        BigInteger _totalDifficulty) {
+    public void updateStatus(
+            long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty) {
         this.bestBlockNumber = _bestBlockNumber;
         this.bestBlockHash = _bestBlockHash;
         this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
@@ -328,17 +309,41 @@ public final class Node implements INode {
 
     @Override
     public String toString() {
-        return "bootList:" + fromBootList + "\n"
-            + "idHash:" + idHash + "\n"
-            + "id:" + (id == null ? "null" : new String(id)) + "\n"
-            + "idShort:" + idShort + "\n"
-            + "peerhash:" + peerhash + "\n"
-            + "ipStr:" + ipStr + "\n"
-            + "port:" + port + "\n"
-            + "timestamp:" + timestamp + "\n"
-            + "bestBlockNumber:" + bestBlockNumber + "\n"
-            + "totalDifficulty:" + totalDifficulty.toString() + "\n"
-            + "bestBlockHash:" + (bestBlockHash == null ? "null" : ByteUtil.toHexString(bestBlockHash)) + "\n"
-            + "binaryVersion:" + binaryVersion + "\n\n";
+        return "bootList:"
+                + fromBootList
+                + "\n"
+                + "idHash:"
+                + idHash
+                + "\n"
+                + "id:"
+                + (id == null ? "null" : new String(id))
+                + "\n"
+                + "idShort:"
+                + idShort
+                + "\n"
+                + "peerhash:"
+                + peerhash
+                + "\n"
+                + "ipStr:"
+                + ipStr
+                + "\n"
+                + "port:"
+                + port
+                + "\n"
+                + "timestamp:"
+                + timestamp
+                + "\n"
+                + "bestBlockNumber:"
+                + bestBlockNumber
+                + "\n"
+                + "totalDifficulty:"
+                + totalDifficulty.toString()
+                + "\n"
+                + "bestBlockHash:"
+                + (bestBlockHash == null ? "null" : ByteUtil.toHexString(bestBlockHash))
+                + "\n"
+                + "binaryVersion:"
+                + binaryVersion
+                + "\n\n";
     }
 }

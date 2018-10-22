@@ -1,23 +1,24 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
- *      This file is part of the aion network project.
  *
- *      The aion network project is free software: you can redistribute it
- *      and/or modify it under the terms of the GNU General Public License
- *      as published by the Free Software Foundation, either version 3 of
- *      the License, or any later version.
+ *     This file is part of the aion network project.
  *
- *      The aion network project is distributed in the hope that it will
- *      be useful, but WITHOUT ANY WARRANTY; without even the implied
- *      warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *      See the GNU General Public License for more details.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *      You should have received a copy of the GNU General Public License
- *      along with the aion network project source files.
- *      If not, see <https://www.gnu.org/licenses/>.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- *  Contributors:
- *      Aion foundation.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
  */
 
 package org.aion.p2p.impl1.tasks;
@@ -51,8 +52,7 @@ public class ChannelBufferTest {
     private ChannelBuffer cb;
     private Random r;
 
-    @Mock
-    private Header header;
+    @Mock private Header header;
 
     private Header expectHeader;
 
@@ -72,12 +72,13 @@ public class ChannelBufferTest {
         ByteBuffer buffer = ByteBuffer.allocate(r.nextInt(LEN << 1));
         int len = buffer.remaining() - LEN;
         expectHeader = Header.decode(genHeader(len < 0 ? 0 : len));
-        //expectHeader.setLen(r.nextInt(P2pConstant.MAX_BODY_SIZE));
+        // expectHeader.setLen(r.nextInt(P2pConstant.MAX_BODY_SIZE));
 
         buffer.put(expectHeader.encode(), 0, len < 0 ? buffer.remaining() : LEN);
         byte[] rByte = new byte[expectHeader.getLen()];
         r.nextBytes(rByte);
-        buffer.put(rByte, 0, buffer.remaining() >= rByte.length ? rByte.length : buffer.remaining()).flip();
+        buffer.put(rByte, 0, buffer.remaining() >= rByte.length ? rByte.length : buffer.remaining())
+                .flip();
 
         return buffer;
     }
@@ -117,7 +118,7 @@ public class ChannelBufferTest {
 
     @Test
     public void testReadHead() {
-        for (int i=0 ; i<100 ; i++) {
+        for (int i = 0; i < 100; i++) {
             cb.refreshHeader();
             ByteBuffer bb = genBuffer();
             cb.readHead(bb);
@@ -148,7 +149,7 @@ public class ChannelBufferTest {
 
     @Test
     public void testReadBody() {
-        for (int i=0 ; i<100 ; i++) {
+        for (int i = 0; i < 100; i++) {
             cb.refreshHeader();
             cb.refreshBody();
             ByteBuffer bb = genBuffer();

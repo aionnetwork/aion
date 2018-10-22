@@ -1,17 +1,34 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.mcf.config;
 
-import javax.xml.stream.XMLOutputFactory;
 import com.google.common.base.Objects;
-
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
 /**
- * Configuration for modGui.  Represents the </code><code>gui</code> section of Aion kernel config.
+ * Configuration for modGui. Represents the </code><code>gui</code> section of Aion kernel config.
  */
 public class CfgGui {
     private CfgGuiLauncher cfgGuiLauncher;
@@ -45,38 +62,38 @@ public class CfgGui {
 
     public String toXML() {
         // Hidden for now
-        
+
         return "";
-//        final XMLOutputFactory output = XMLOutputFactory.newInstance();
-//        output.setProperty("escapeCharacters", false);
-//        XMLStreamWriter xmlWriter;
-//        String xml;
-//        try {
-//            Writer strWriter = new StringWriter();
-//            xmlWriter = output.createXMLStreamWriter(strWriter);
-//
-//            // start element gui
-//            xmlWriter.writeCharacters("\r\n\t");
-//            xmlWriter.writeStartElement("gui");
-//
-//            // sub-element launcher
-//            xmlWriter.writeCharacters("\r\n\t");
-//            xmlWriter.writeCharacters(getCfgGuiLauncher().toXML());
-//
-//            // close element gui
-//            xmlWriter.writeCharacters("\r\n\t");
-//            xmlWriter.writeEndElement();
-//
-//            xml = strWriter.toString();
-//            strWriter.flush();
-//            strWriter.close();
-//            xmlWriter.flush();
-//            xmlWriter.close();
-//            return xml;
-//        } catch (IOException | XMLStreamException e) {
-//            e.printStackTrace();
-//            return "";
-//        }
+        //        final XMLOutputFactory output = XMLOutputFactory.newInstance();
+        //        output.setProperty("escapeCharacters", false);
+        //        XMLStreamWriter xmlWriter;
+        //        String xml;
+        //        try {
+        //            Writer strWriter = new StringWriter();
+        //            xmlWriter = output.createXMLStreamWriter(strWriter);
+        //
+        //            // start element gui
+        //            xmlWriter.writeCharacters("\r\n\t");
+        //            xmlWriter.writeStartElement("gui");
+        //
+        //            // sub-element launcher
+        //            xmlWriter.writeCharacters("\r\n\t");
+        //            xmlWriter.writeCharacters(getCfgGuiLauncher().toXML());
+        //
+        //            // close element gui
+        //            xmlWriter.writeCharacters("\r\n\t");
+        //            xmlWriter.writeEndElement();
+        //
+        //            xml = strWriter.toString();
+        //            strWriter.flush();
+        //            strWriter.close();
+        //            xmlWriter.flush();
+        //            xmlWriter.close();
+        //            return xml;
+        //        } catch (IOException | XMLStreamException e) {
+        //            e.printStackTrace();
+        //            return "";
+        //        }
     }
 
     public CfgGuiLauncher getCfgGuiLauncher() {

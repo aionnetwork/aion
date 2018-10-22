@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,25 +17,19 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
-
+ */
 package org.aion.mcf.types;
 
 import static org.aion.base.util.TimeUtils.secondsToMillis;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-
 import org.aion.base.type.IBlock;
 import org.aion.rlp.RLP;
 
-/**
- * AbstractBlockWrapper
- */
+/** AbstractBlockWrapper */
 public abstract class AbstractBlockWrapper<BLK extends IBlock<?, ?>> {
 
     protected static final long SOLID_BLOCK_DURATION_THRESHOLD = secondsToMillis(60);
@@ -60,7 +54,7 @@ public abstract class AbstractBlockWrapper<BLK extends IBlock<?, ?>> {
         parse(bytes);
     }
 
-    abstract protected void parse(byte[] bytes);
+    protected abstract void parse(byte[] bytes);
 
     public BLK getBlock() {
         return block;
@@ -150,7 +144,8 @@ public abstract class AbstractBlockWrapper<BLK extends IBlock<?, ?>> {
         byte[] receivedAtBytes = RLP.encodeBigInteger(BigInteger.valueOf(receivedAt));
         byte[] newBlockBytes = RLP.encodeByte((byte) (newBlock ? 1 : 0));
         byte[] nodeIdBytes = RLP.encodeElement(nodeId);
-        return RLP.encodeList(blockBytes, importFailedBytes, receivedAtBytes, newBlockBytes, nodeIdBytes);
+        return RLP.encodeList(
+                blockBytes, importFailedBytes, receivedAtBytes, newBlockBytes, nodeIdBytes);
     }
 
     @Override

@@ -31,9 +31,7 @@ import org.aion.base.type.IExecutionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 
-/**
- * An abstract class representing the result of either a transaction or contract execution.
- */
+/** An abstract class representing the result of either a transaction or contract execution. */
 public abstract class AbstractExecutionResult implements IExecutionResult {
     ResultCode code;
     long nrgLeft;
@@ -135,7 +133,9 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      *
      * @return the result code.
      */
-    public ResultCode getResultCode() { return code; }
+    public ResultCode getResultCode() {
+        return code;
+    }
 
     /**
      * Returns the AbstractExecutionResult's remaining energy.
@@ -181,7 +181,7 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
      * @param code The integer representation of the new code to be set.
      * @param nrgLeft The new remaining energy.
      * @throws IllegalArgumentException if code does not correspond to a ResultCode or nrgLeft is
-     * negative.
+     *     negative.
      */
     public void setCodeAndNrgLeft(int code, long nrgLeft) {
         setCode(code);
@@ -207,5 +207,4 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
         String out = (output == null) ? "" : Hex.toHexString(output);
         return "[code = " + code + ", nrgLeft = " + nrgLeft + ", output = " + out + "]";
     }
-
 }

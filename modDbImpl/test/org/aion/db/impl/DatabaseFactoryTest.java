@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,9 +31,15 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.db.impl;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.aion.db.impl.DatabaseFactory.Props;
+import static org.junit.Assert.assertNull;
+
+import java.io.File;
+import java.util.Properties;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
@@ -47,13 +53,6 @@ import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import org.junit.Test;
-
-import java.io.File;
-import java.util.Properties;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.aion.db.impl.DatabaseFactory.Props;
-import static org.junit.Assert.assertNull;
 
 public class DatabaseFactoryTest {
 
@@ -85,7 +84,8 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
         props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
         props.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        props.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(
+                Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
         props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
 
         db = DatabaseFactory.connect(props);
@@ -96,7 +96,8 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.ROCKSDB.toValue());
         props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(RocksDBConstants.MAX_OPEN_FILES));
         props.setProperty(Props.BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE));
-        props.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(
+                Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
 
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
@@ -133,21 +134,25 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
         props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
         props.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        props.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(
+                Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
         props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(SpecialLockedDatabase.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(SpecialLockedDatabase.class.getSimpleName());
         assertThat(db.toString()).contains(LevelDB.class.getSimpleName());
 
         // ROCKSDB
         props.setProperty(Props.DB_TYPE, DBVendor.ROCKSDB.toValue());
         props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(RocksDBConstants.MAX_OPEN_FILES));
         props.setProperty(Props.BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE));
-        props.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(
+                Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(SpecialLockedDatabase.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(SpecialLockedDatabase.class.getSimpleName());
         assertThat(db.toString()).contains(RocksDBWrapper.class.getSimpleName());
 
         // H2
@@ -185,7 +190,8 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(DatabaseWithCache.class.getSimpleName());
         assertThat(db.toString()).contains(MockDB.class.getSimpleName());
         assertThat(db.toString()).contains(autoCmtCheck);
         assertThat(db.toString()).contains(sizeCheck);
@@ -195,11 +201,13 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
         props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
         props.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        props.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(
+                Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
         props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(DatabaseWithCache.class.getSimpleName());
         assertThat(db.toString()).contains(LevelDB.class.getSimpleName());
         assertThat(db.toString()).contains(autoCmtCheck);
         assertThat(db.toString()).contains(sizeCheck);
@@ -209,10 +217,12 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.ROCKSDB.toValue());
         props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(RocksDBConstants.MAX_OPEN_FILES));
         props.setProperty(Props.BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE));
-        props.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(
+                Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(DatabaseWithCache.class.getSimpleName());
         assertThat(db.toString()).contains(RocksDBWrapper.class.getSimpleName());
         assertThat(db.toString()).contains(autoCmtCheck);
         assertThat(db.toString()).contains(sizeCheck);
@@ -222,7 +232,8 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.H2.toValue());
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(DatabaseWithCache.class.getSimpleName());
         assertThat(db.toString()).contains(H2MVMap.class.getSimpleName());
         assertThat(db.toString()).contains(autoCmtCheck);
         assertThat(db.toString()).contains(sizeCheck);
@@ -248,7 +259,8 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(DatabaseWithCache.class.getSimpleName());
         assertThat(db.toString()).contains(MockDB.class.getSimpleName());
         assertThat(db.toString()).contains(autoCmtCheck);
         assertThat(db.toString()).contains(sizeCheck);
@@ -258,11 +270,13 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.LEVELDB.toValue());
         props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
         props.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        props.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(
+                Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
         props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(DatabaseWithCache.class.getSimpleName());
         assertThat(db.toString()).contains(LevelDB.class.getSimpleName());
         assertThat(db.toString()).contains(autoCmtCheck);
         assertThat(db.toString()).contains(sizeCheck);
@@ -272,10 +286,12 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.ROCKSDB.toValue());
         props.setProperty(Props.MAX_FD_ALLOC, String.valueOf(RocksDBConstants.MAX_OPEN_FILES));
         props.setProperty(Props.BLOCK_SIZE, String.valueOf(RocksDBConstants.BLOCK_SIZE));
-        props.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
+        props.setProperty(
+                Props.WRITE_BUFFER_SIZE, String.valueOf(RocksDBConstants.WRITE_BUFFER_SIZE));
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(DatabaseWithCache.class.getSimpleName());
         assertThat(db.toString()).contains(RocksDBWrapper.class.getSimpleName());
         assertThat(db.toString()).contains(autoCmtCheck);
         assertThat(db.toString()).contains(sizeCheck);
@@ -285,7 +301,8 @@ public class DatabaseFactoryTest {
         props.setProperty(Props.DB_TYPE, DBVendor.H2.toValue());
         db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
-        assertThat(db.getClass().getSimpleName()).isEqualTo(DatabaseWithCache.class.getSimpleName());
+        assertThat(db.getClass().getSimpleName())
+                .isEqualTo(DatabaseWithCache.class.getSimpleName());
         assertThat(db.toString()).contains(H2MVMap.class.getSimpleName());
         assertThat(db.toString()).contains(autoCmtCheck);
         assertThat(db.toString()).contains(sizeCheck);

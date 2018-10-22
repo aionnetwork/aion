@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,23 +19,25 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.txpool.common;
 
+import java.math.BigInteger;
+import java.util.AbstractMap;
+import java.util.Collections;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.base.util.ByteArrayWrapper;
 
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 public class AccountState {
-    private final SortedMap<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>> txMap = Collections
-            .synchronizedSortedMap(new TreeMap<>());
+    private final SortedMap<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>>
+            txMap = Collections.synchronizedSortedMap(new TreeMap<>());
     private final AtomicBoolean dirty = new AtomicBoolean(false);
 
-    public void updateMap(Map<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>> map) {
+    public void updateMap(
+            Map<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>> map) {
         if (map != null && !map.isEmpty()) {
             txMap.putAll(map);
             setDirty();

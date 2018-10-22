@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,12 +31,17 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.mcf.db;
 
 import static org.aion.base.util.ByteArrayWrapper.wrap;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryConfig;

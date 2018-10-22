@@ -20,9 +20,12 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.equihash;
 
-import static org.aion.base.util.ByteUtil.*;
+import static org.aion.base.util.ByteUtil.bytesToInts;
+import static org.aion.base.util.ByteUtil.intToBytesLE;
+import static org.aion.base.util.ByteUtil.merge;
 
 import java.util.Arrays;
 import org.aion.crypto.hash.Blake2b;

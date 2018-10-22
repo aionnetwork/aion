@@ -1,28 +1,28 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
- *      This file is part of the aion network project.
  *
- *      The aion network project is free software: you can redistribute it
- *      and/or modify it under the terms of the GNU General Public License
- *      as published by the Free Software Foundation, either version 3 of
- *      the License, or any later version.
+ *     This file is part of the aion network project.
  *
- *      The aion network project is distributed in the hope that it will
- *      be useful, but WITHOUT ANY WARRANTY; without even the implied
- *      warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *      See the GNU General Public License for more details.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *      You should have received a copy of the GNU General Public License
- *      along with the aion network project source files.
- *      If not, see <https://www.gnu.org/licenses/>.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- *  Contributors:
- *      Aion foundation.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
  */
 
 package org.aion.p2p.impl1.tasks;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -63,59 +63,41 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-
 public class TaskInboundTest {
 
-    @Mock
-    private INodeMgr nodeMgr;
+    @Mock private INodeMgr nodeMgr;
 
-    @Mock
-    private IP2pMgr p2pMgr;
+    @Mock private IP2pMgr p2pMgr;
 
-    @Mock
-    private BlockingQueue<MsgOut> msgOutQue;
+    @Mock private BlockingQueue<MsgOut> msgOutQue;
 
-    @Mock
-    private BlockingQueue<MsgIn> msgInQue;
+    @Mock private BlockingQueue<MsgIn> msgInQue;
 
-    @Mock
-    private ResHandshake1 rhs1;
+    @Mock private ResHandshake1 rhs1;
 
-    @Mock
-    private INode node;
+    @Mock private INode node;
 
-    @Mock
-    private ChannelBuffer cb;
+    @Mock private ChannelBuffer cb;
 
-    @Mock
-    private Header hdr;
+    @Mock private Header hdr;
 
-    @Mock
-    private ServerSocketChannel ssc;
+    @Mock private ServerSocketChannel ssc;
 
-    @Mock
-    private SocketChannel sc;
+    @Mock private SocketChannel sc;
 
-    @Mock
-    private Socket s;
+    @Mock private Socket s;
 
-    @Mock
-    private InetAddress ia;
+    @Mock private InetAddress ia;
 
-    @Mock
-    private SelectionKey sk;
+    @Mock private SelectionKey sk;
 
-    @Mock
-    private SelectionKey sk2;
+    @Mock private SelectionKey sk2;
 
-    @Mock
-    private SelectionKey sk3;
+    @Mock private SelectionKey sk3;
 
-    @Mock
-    private Map<Integer, List<Handler>> hldrMap;
+    @Mock private Map<Integer, List<Handler>> hldrMap;
 
-    @Mock
-    private MockSelector selector;
+    @Mock private MockSelector selector;
 
     private Random r = new Random();
 
@@ -162,9 +144,7 @@ public class TaskInboundTest {
         }
 
         @Override
-        public void close() {
-
-        }
+        public void close() {}
     }
 
     @Before
@@ -178,7 +158,9 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(selector.selectNow()).thenReturn(0);
@@ -188,7 +170,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(50);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -196,7 +178,9 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         doThrow(ClosedSelectorException.class).when(selector).selectNow();
@@ -207,7 +191,7 @@ public class TaskInboundTest {
         Thread.sleep(50);
 
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -215,8 +199,9 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testRunClosedSelectorException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
-            rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(selector.selectNow()).thenReturn(1);
@@ -227,7 +212,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(50);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -235,8 +220,9 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testRun2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
-            rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk.isValid()).thenReturn(false);
@@ -266,7 +252,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -274,8 +260,9 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testAccept() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
-            rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk2.isValid()).thenReturn(true);
@@ -300,7 +287,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -308,8 +295,9 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testAccept2() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
-            rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk2.isValid()).thenReturn(true);
@@ -335,7 +323,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -343,8 +331,9 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testAccept3() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
-            rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk.isValid()).thenReturn(true);
@@ -364,7 +353,6 @@ public class TaskInboundTest {
 
         when(sc.register(any(), anyInt())).thenReturn(sk);
 
-
         when(selector.selectNow()).thenReturn(1);
 
         Set<SelectionKey> ss = new LinkedHashSet<>();
@@ -376,7 +364,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -384,8 +372,9 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testReadBuffer() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
-            rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         // settings for readBuffer
@@ -408,7 +397,7 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -416,16 +405,17 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testReadBuffer2() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
-            rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         // settings for readBuffer
         when(sk.channel()).thenReturn(sc);
         when(sc.read(any(ByteBuffer.class))).thenReturn(1).thenReturn(0);
 
-        //settings for calBuffer
-        //when(cb.buffRemain).thenReturn(1);
+        // settings for calBuffer
+        // when(cb.buffRemain).thenReturn(1);
 
         // settings for run
         when(sk.isValid()).thenReturn(true);
@@ -443,9 +433,8 @@ public class TaskInboundTest {
         assertTrue(t.isAlive());
         Thread.sleep(100);
 
-
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }
@@ -453,8 +442,9 @@ public class TaskInboundTest {
     @Test(timeout = 10_000)
     public void testReadBuffer3() throws InterruptedException, IOException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskInbound ti = new TaskInbound(p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue,
-            rhs1, msgInQue);
+        TaskInbound ti =
+                new TaskInbound(
+                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         // settings for readBuffer
@@ -463,17 +453,17 @@ public class TaskInboundTest {
         int remain = r.nextInt(10000);
         when(sc.read(any(ByteBuffer.class))).thenReturn(read).thenReturn(0);
 
-        //settings for calBuffer
+        // settings for calBuffer
         when(cb.getBuffRemain()).thenReturn(remain);
         when(cb.getRemainBuffer()).thenReturn(new byte[remain]);
 
-        //settings for readMsg
+        // settings for readMsg
         when(cb.isHeaderNotCompleted()).thenReturn(true);
         when(cb.isBodyNotCompleted()).thenReturn(true);
 
-        //settings for readBody
+        // settings for readBody
         when(cb.getHeader()).thenReturn(hdr);
-        //when(hdr.getLen()).thenReturn(Header.LEN);
+        // when(hdr.getLen()).thenReturn(Header.LEN);
 
         // settings for run
         when(sk.isValid()).thenReturn(true);
@@ -492,7 +482,7 @@ public class TaskInboundTest {
         Thread.sleep(300);
 
         atb.set(false);
-        while(!t.getState().toString().contains("TERMINATED")) {
+        while (!t.getState().toString().contains("TERMINATED")) {
             Thread.sleep(10);
         }
     }

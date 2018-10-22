@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,16 +19,13 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl.query;
 
+import java.util.Optional;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
-
-import java.util.Optional;
 
 public interface StateQueryInterface {
     Optional<AccountState> getAccountState(Address address, long blockNumber);

@@ -17,6 +17,12 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *
  * Contributors to the aion source files in decreasing order of code volume:
  *     Aion foundation.
  *     <ether.camp> team through the ethereumJ library.
@@ -26,7 +32,6 @@
  *     Zcash project team.
  *     Bitcoinj team.
  */
-
 
 package org.aion.mcf.account;
 
@@ -357,5 +362,7 @@ public class Keystore {
         PATH = Paths.get(KEYSTORE_PATH);
     }
 
-    public static String getKeystorePath() { return KEYSTORE_PATH; }
+    public static String getKeystorePath() {
+        return KEYSTORE_PATH;
+    }
 }
