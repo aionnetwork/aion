@@ -96,6 +96,10 @@ public class ApiTxResponse {
         }
     }
 
+    public boolean isFail() {
+        return rsp.isFail();
+    }
+
     // Should only be called if tx was successfully sent
     public byte[] getTxHash() {
         return txHash;
