@@ -1,4 +1,4 @@
-/*
+/* ******************************************************************************
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,8 @@
  *
  * Contributors:
  *     Aion foundation.
- */
+ *
+ ******************************************************************************/
 
 package org.aion.api.server.pb;
 
@@ -46,6 +47,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import org.aion.api.server.ApiAion;
+import org.aion.api.server.ApiTxResponse;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
 import org.aion.api.server.pb.Message.Retcode;
@@ -433,7 +435,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     Message.req_contractDeploy req;
                     byte[] data = parseMsgReq(request, msgHash);
-                    ContractCreateResult result;
+                    ApiTxResponse result;
                     try {
                         req = Message.req_contractDeploy.parseFrom(data);
                         // TODO: the client api should send server binary code directly
@@ -460,45 +462,42 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         result = this.createContract(params);
 
-                        if (result != null) {
+                        if (!result.isFail()) {
                             getMsgIdMapping()
                                     .put(
-                                            ByteArrayWrapper.wrap(result.transId),
+                                            ByteArrayWrapper.wrap(result.getTxHash()),
                                             new AbstractMap.SimpleEntry<>(
                                                     ByteArrayWrapper.wrap(msgHash),
                                                     ByteArrayWrapper.wrap(socketId)));
                             if (LOG.isDebugEnabled()) {
                                 LOG.debug(
                                         "ApiAion0.process.ContractDeploy - msgIdMapping.put: [{}] ",
-                                        ByteArrayWrapper.wrap(result.transId).toString());
+                                        ByteArrayWrapper.wrap(result.getTxHash()).toString());
                             }
+
+                            Message.rsp_contractDeploy rsp =
+                                    Message.rsp_contractDeploy
+                                            .newBuilder()
+                                            .setContractAddress(
+                                                    ByteString.copyFrom(
+                                                            result.getContractAddress().toBytes()))
+                                            .setTxHash(ByteString.copyFrom(result.getTxHash()))
+                                            .build();
+
+                            byte[] retHeader =
+                                    ApiUtil.toReturnHeader(
+                                            getApiVersion(), Retcode.r_tx_Recved_VALUE, msgHash);
+                            return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
+                        } else {
+                            return processTxFail(result, msgHash);
                         }
+
                     } catch (Exception e) {
                         LOG.error(
                                 "ApiAion0.process.ContractDeploy exception [{}] ", e.getMessage());
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE, msgHash);
                     }
-
-                    Message.rsp_contractDeploy rsp =
-                            Message.rsp_contractDeploy
-                                    .newBuilder()
-                                    .setContractAddress(
-                                            ByteString.copyFrom(
-                                                    result != null
-                                                            ? result.address.toBytes()
-                                                            : EMPTY_BYTE_ARRAY))
-                                    .setTxHash(
-                                            ByteString.copyFrom(
-                                                    result != null
-                                                            ? result.transId
-                                                            : EMPTY_BYTE_ARRAY))
-                                    .build();
-
-                    byte[] retHeader =
-                            ApiUtil.toReturnHeader(
-                                    getApiVersion(), Retcode.r_tx_Recved_VALUE, msgHash);
-                    return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                 }
 
                 // Authenication Module
@@ -734,7 +733,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     byte[] data = parseMsgReq(request, msgHash);
                     Message.req_sendTransaction req;
-                    byte[] result;
+                    ApiTxResponse result;
                     try {
                         req = Message.req_sendTransaction.parseFrom(data);
 
@@ -756,33 +755,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE, msgHash);
                     }
 
-                    if (result == null) {
-                        return ApiUtil.toReturnHeader(
-                                getApiVersion(), Retcode.r_fail_sendTx_null_rep_VALUE, msgHash);
-                    }
-
-                    getMsgIdMapping()
-                            .put(
-                                    ByteArrayWrapper.wrap(result),
-                                    new AbstractMap.SimpleEntry<>(
-                                            ByteArrayWrapper.wrap(msgHash),
-                                            ByteArrayWrapper.wrap(socketId)));
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(
-                                "ApiAion0.process.sendTransaction - msgIdMapping.put: [{}]",
-                                ByteArrayWrapper.wrap(result).toString());
-                    }
-
-                    Message.rsp_sendTransaction rsp =
-                            Message.rsp_sendTransaction
-                                    .newBuilder()
-                                    .setTxHash(ByteString.copyFrom(result))
-                                    .build();
-
-                    byte[] retHeader =
-                            ApiUtil.toReturnHeader(
-                                    getApiVersion(), Retcode.r_tx_Recved_VALUE, msgHash);
-                    return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
+                    return processSendTxRsp(result, msgHash, socketId);
                 }
             case Message.Funcs.f_getCode_VALUE:
                 {
@@ -1650,7 +1623,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     byte[] data = parseMsgReq(request, msgHash);
                     Message.req_rawTransaction req;
-                    byte[] result;
+                    ApiTxResponse result;
                     try {
                         req = Message.req_rawTransaction.parseFrom(data);
                         byte[] encodedTx = req.getEncodedTx().toByteArray();
@@ -1669,33 +1642,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE, msgHash);
                     }
 
-                    if (result == null) {
-                        return ApiUtil.toReturnHeader(
-                                getApiVersion(), Retcode.r_fail_sendTx_null_rep_VALUE, msgHash);
-                    }
-
-                    getMsgIdMapping()
-                            .put(
-                                    ByteArrayWrapper.wrap(result),
-                                    new AbstractMap.SimpleEntry<>(
-                                            ByteArrayWrapper.wrap(msgHash),
-                                            ByteArrayWrapper.wrap(socketId)));
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug(
-                                "ApiAion0.process.rawTransaction - msgIdMapping.put: [{}]",
-                                ByteArrayWrapper.wrap(result).toString());
-                    }
-
-                    Message.rsp_sendTransaction rsp =
-                            Message.rsp_sendTransaction
-                                    .newBuilder()
-                                    .setTxHash(ByteString.copyFrom(result))
-                                    .build();
-
-                    byte[] retHeader =
-                            ApiUtil.toReturnHeader(
-                                    getApiVersion(), Retcode.r_tx_Recved_VALUE, msgHash);
-                    return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
+                    return processSendTxRsp(result, msgHash, socketId);
                 }
             case Message.Funcs.f_eventRegister_VALUE:
                 {
@@ -1773,11 +1720,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         List<String> evtList = new ArrayList<>(req.getEventsList());
 
-                        byte[] conrtactAddr;
+                        byte[] contractAddr;
                         if (req.getContractAddr() == null) {
-                            conrtactAddr = null;
+                            contractAddr = null;
                         } else {
-                            conrtactAddr = req.getContractAddr().toByteArray();
+                            contractAddr = req.getContractAddr().toByteArray();
                         }
 
                         if (evtList.isEmpty()) {
@@ -1791,7 +1738,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         boolean changed = false;
                         if (Optional.ofNullable(preFc).isPresent()
-                                && Arrays.equals(preFc.getContractAddr(), conrtactAddr)) {
+                                && Arrays.equals(preFc.getContractAddr(), contractAddr)) {
                             evtList.forEach(ev -> preFc.getTopics().remove(ev));
 
                             installedFilters.put(lv, preFc);
@@ -2978,6 +2925,71 @@ public class ApiAion0 extends ApiAion implements IApiAion {
         return blkNum.parallelStream()
                 .map(this::getBlockWithTotalDifficulty)
                 .collect(Collectors.toList());
+    }
+
+    private byte[] processSendTxRsp(ApiTxResponse result, byte[] msgHash, byte[] socketId) {
+        if (result.isFail()) {
+            return processTxFail(result, msgHash);
+        }
+
+        getMsgIdMapping()
+                .put(
+                        ByteArrayWrapper.wrap(result.getTxHash()),
+                        new AbstractMap.SimpleEntry<>(
+                                ByteArrayWrapper.wrap(msgHash), ByteArrayWrapper.wrap(socketId)));
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(
+                    "ApiAion0.process.sendTransaction - msgIdMapping.put: [{}]",
+                    ByteArrayWrapper.wrap(result.getTxHash()).toString());
+        }
+
+        Message.rsp_sendTransaction rsp =
+                Message.rsp_sendTransaction
+                        .newBuilder()
+                        .setTxHash(ByteString.copyFrom(result.getTxHash()))
+                        .build();
+        byte[] retHeader =
+                ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_tx_Recved_VALUE, msgHash);
+        return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
+    }
+
+    private byte[] processTxFail(ApiTxResponse result, byte[] msgHash) {
+        if (!result.isFail()) {
+            return null;
+        }
+        switch (result.getType()) {
+            case INVALID_TX:
+            case INVALID_TX_NRG_PRICE:
+            case REPAYTX_LOWPRICE:
+                return ApiUtil.toReturnHeader(
+                        getApiVersion(),
+                        Retcode.r_fail_function_arguments_VALUE,
+                        msgHash,
+                        result.getMessage().getBytes());
+
+            case INVALID_FROM:
+            case INVALID_ACCOUNT:
+                return ApiUtil.toReturnHeader(
+                        getApiVersion(),
+                        Retcode.r_fail_invalid_addr_VALUE,
+                        msgHash,
+                        result.getMessage().getBytes());
+            case DROPPED:
+                return ApiUtil.toReturnHeader(
+                        getApiVersion(),
+                        Retcode.r_fail_unknown_VALUE,
+                        msgHash,
+                        result.getMessage().getBytes());
+            case REPAYTX_POOL_EXCEPTION:
+            case EXCEPTION:
+                return ApiUtil.toReturnHeader(
+                        getApiVersion(),
+                        Retcode.r_fail_function_exception_VALUE,
+                        msgHash,
+                        result.getMessage().getBytes());
+            default:
+                return null;
+        }
     }
 
     public byte getApiVersion() {
