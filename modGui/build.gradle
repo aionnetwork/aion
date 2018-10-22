@@ -26,7 +26,14 @@ dependencies {
     compile files('../lib/libnsc.jar')
     compile 'com.google.guava:guava:25.1-jre'
     compile 'org.slf4j:slf4j-api:1.7.25'
-    
+
+
+    compile files(String.valueOf(System.getenv("JAVAFX_PATH")) + "/lib/javafx.base.jar")
+    compile files(String.valueOf(System.getenv("JAVAFX_PATH")) + "/lib/javafx.controls.jar")
+    compile files(String.valueOf(System.getenv("JAVAFX_PATH")) + "/lib/javafx.fxml.jar")
+    compile files(String.valueOf(System.getenv("JAVAFX_PATH")) + "/lib/javafx.graphics.jar")
+    compile files(String.valueOf(System.getenv("JAVAFX_PATH")) + "/lib/javafx.swing.jar")
+
     compile group: 'org.fxmisc.richtext', name: 'richtextfx', version: '0.9.1'
     compile group: 'io.github.novacrypto', name: 'BIP39', version: '0.1.9'
     compile group: 'io.github.novacrypto', name: 'SHA256', version: '0.0.1'
