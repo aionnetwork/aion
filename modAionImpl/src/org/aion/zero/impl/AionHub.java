@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
@@ -111,7 +112,6 @@ public class AionHub {
      * holder pattern
      */
     private static class Holder {
-
         static final AionHub INSTANCE = new AionHub();
     }
 
