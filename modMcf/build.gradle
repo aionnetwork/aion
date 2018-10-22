@@ -3,6 +3,9 @@ ext.moduleName = 'aion.mcf'
 test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
+targetCompatibility = 10
+sourceCompatibility = 10
+
 dependencies {
     compile project(':modAionBase')
     compile project(':modLogger')
@@ -22,7 +25,7 @@ dependencies {
     testCompile 'org.hamcrest:hamcrest-all:1.3'
     testCompile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     testCompile group: 'commons-codec', name: 'commons-codec', version: '1.10'
-    testCompile "org.mockito:mockito-core:2.21.0"
+    testCompile "org.mockito:mockito-core:2.23.0"
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
 }
 

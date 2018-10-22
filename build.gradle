@@ -2,7 +2,7 @@ plugins {
     id "de.undercouch.download" version "3.4.3"
 }
 
-ant.echo('Java version: ' + JavaVersion.current()); 
+ant.echo('Java version: ' + JavaVersion.current());
 
 def dirBuildFile =  "./build/main"
 def dirBuildNative = "./build/main/native"
@@ -27,6 +27,9 @@ allprojects {
         }
     }
 }
+
+targetCompatibility = 10
+sourceCompatibility = 10
 
 // used only for 3rd_build
 ant.importBuild('build.xml') { antTargetName -> 'ant-' + antTargetName }
