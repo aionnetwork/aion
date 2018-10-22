@@ -52,7 +52,6 @@ public class AionTxExecSummaryTest {
 
     private Address defaultAddress =
             Address.wrap("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
-    private byte[] defaultHash = HashUtil.EMPTY_DATA_HASH;
 
     @Test
     public void testRLPEncoding() {

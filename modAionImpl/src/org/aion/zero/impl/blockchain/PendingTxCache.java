@@ -307,7 +307,7 @@ public class PendingTxCache {
         return acc;
     }
 
-    Map<BigInteger, AionTransaction> geCacheTx(Address from) {
+    Map<BigInteger, AionTransaction> getCacheTx(Address from) {
         if (from == null) {
             throw new NullPointerException();
         }

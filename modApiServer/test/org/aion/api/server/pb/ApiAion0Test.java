@@ -210,45 +210,6 @@ public class ApiAion0Test {
     }
 
     @Test
-    public void testProcessContractDeploy() throws Exception {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-
-        byte[] val = {50, 30};
-
-        Message.req_contractDeploy reqBody =
-                Message.req_contractDeploy
-                        .newBuilder()
-                        .setFrom(ByteString.copyFrom(addr.toBytes()))
-                        .setNrgLimit(100000)
-                        .setNrgPrice(5000)
-                        .setData(ByteString.copyFrom(msg))
-                        .setValue(ByteString.copyFrom(val))
-                        .build();
-
-        rsp =
-                sendRequest(
-                        Message.Servs.s_tx_VALUE,
-                        Message.Funcs.f_contractDeploy_VALUE,
-                        reqBody.toByteArray());
-
-        assertEquals(Message.Retcode.r_tx_Recved_VALUE, rsp[1]);
-
-        Message.rsp_contractDeploy rslt = Message.rsp_contractDeploy.parseFrom(stripHeader(rsp));
-        assertNotNull(rslt.getContractAddress());
-        assertNotNull(rslt.getTxHash());
-
-        rsp =
-                sendRequest(
-                        Message.Servs.s_hb_VALUE,
-                        Message.Funcs.f_contractDeploy_VALUE,
-                        reqBody.toByteArray());
-
-        assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-    }
-
-    @Test
     public void testProcessAccountsValue() throws Exception {
         Address addr = new Address(Keystore.create("testPwd"));
 
@@ -451,40 +412,6 @@ public class ApiAion0Test {
         assertEquals(Message.Retcode.r_fail_compile_contract_VALUE, rsp[1]);
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_compile_VALUE);
-
-        assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-    }
-
-    @Test
-    public void testProcessSendTransaction() throws Exception {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-
-        Message.req_sendTransaction reqBody =
-                Message.req_sendTransaction
-                        .newBuilder()
-                        .setFrom(ByteString.copyFrom(addr.toBytes()))
-                        .setTo(ByteString.copyFrom(Address.ZERO_ADDRESS().toBytes()))
-                        .setNrg(100000)
-                        .setNrgPrice(1)
-                        .setNonce(ByteString.copyFrom("1".getBytes()))
-                        .setValue(ByteString.copyFrom("1234".getBytes()))
-                        .setData(ByteString.copyFrom(msg))
-                        .build();
-
-        rsp =
-                sendRequest(
-                        Message.Servs.s_tx_VALUE,
-                        Message.Funcs.f_sendTransaction_VALUE,
-                        reqBody.toByteArray());
-
-        assertEquals(Message.Retcode.r_tx_Recved_VALUE, rsp[1]);
-
-        Message.rsp_sendTransaction rslt = Message.rsp_sendTransaction.parseFrom(stripHeader(rsp));
-        assertNotNull(rslt.getTxHash());
-
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_sendTransaction_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
@@ -1243,54 +1170,6 @@ public class ApiAion0Test {
         assertEquals(0, rslt.getInvalidKeyCount());
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_importAccounts_VALUE);
-
-        assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-    }
-
-    @Test
-    @Ignore
-    public void testProcessRawTransactions() throws Exception {
-        AionImpl impl = AionImpl.inst();
-        AionRepositoryImpl repo = AionRepositoryImpl.inst();
-
-        AionBlock parentBlk = impl.getBlockchain().getBestBlock();
-
-        AionTransaction tx =
-                new AionTransaction(
-                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                        Address.ZERO_ADDRESS(),
-                        Address.ZERO_ADDRESS(),
-                        BigInteger.ONE.toByteArray(),
-                        msg,
-                        100000,
-                        100000);
-        tx.sign(new ECKeyEd25519());
-
-        AionBlock blk =
-                impl.getAionHub()
-                        .getBlockchain()
-                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
-
-        impl.getAionHub().getBlockchain().add(blk);
-
-        Message.req_rawTransaction reqBody =
-                Message.req_rawTransaction
-                        .newBuilder()
-                        .setEncodedTx(ByteString.copyFrom(tx.getEncoded()))
-                        .build();
-
-        rsp =
-                sendRequest(
-                        Message.Servs.s_tx_VALUE,
-                        Message.Funcs.f_rawTransaction_VALUE,
-                        reqBody.toByteArray());
-
-        assertEquals(Message.Retcode.r_tx_Recved_VALUE, rsp[1]);
-
-        Message.rsp_sendTransaction rslt = Message.rsp_sendTransaction.parseFrom(stripHeader(rsp));
-        assertNotNull(rslt.getTxHash());
-
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_rawTransaction_VALUE);
 
         assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
     }
