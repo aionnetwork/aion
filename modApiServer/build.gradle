@@ -5,6 +5,9 @@ build.dependsOn.remove("check")
 
 test.dependsOn copyNativeLibsForModuleTests
 
+targetCompatibility = 10
+sourceCompatibility = 10
+
 sourceSets {
     test {
         resources {

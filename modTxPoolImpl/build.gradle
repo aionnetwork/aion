@@ -2,6 +2,9 @@ ext.moduleName = 'aion.txpool.impl'
 test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
+targetCompatibility = 10
+sourceCompatibility = 10
+
 dependencies {
     compile project(':modAionBase')
     compile project(':modTxPool')

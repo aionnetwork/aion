@@ -1,5 +1,8 @@
 ext.moduleName = 'aion.base'
 
+targetCompatibility = 10
+sourceCompatibility = 10
+
 dependencies {
     compile 'com.google.guava:guava:25.1-jre'
     testCompile 'junit:junit:4.12'

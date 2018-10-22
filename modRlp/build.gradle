@@ -1,5 +1,8 @@
 ext.moduleName = 'aion.rlp'
 
+targetCompatibility = 10
+sourceCompatibility = 10
+
 dependencies {
     compile project(':modAionBase')
     compile files('../lib/libnsc.jar')
