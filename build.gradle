@@ -19,6 +19,9 @@ allprojects {
     apply plugin: 'java'
     apply plugin: 'idea'
 
+    targetCompatibility = 10
+    sourceCompatibility = 10
+
     repositories {
         jcenter()
 
@@ -27,9 +30,6 @@ allprojects {
         }
     }
 }
-
-targetCompatibility = 10
-sourceCompatibility = 10
 
 // used only for 3rd_build
 ant.importBuild('build.xml') { antTargetName -> 'ant-' + antTargetName }
