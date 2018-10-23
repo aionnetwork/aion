@@ -6,7 +6,8 @@ CONFIG_PATH="${PACK_PATH}/config"
 DOCS_PATH="${PACK_PATH}/docs"
 API_PATH="${PACK_PATH}/clientAPI"
 SCRIPT_PATH="${PACK_PATH}/script"
-JDK_VER="jdk-11.0.1"
+JDK_VER="11.0.1"
+JDK_TYPE="openjdk"
 JAVAFX_PATH="${PACK_PATH}/javafx"
 JAVAFX_VER="javafx-jmods-11"
 
@@ -16,9 +17,9 @@ fi
 
 # download jre11 if can't find the jdk env
 if [ ! -d "$JDK_PATH" ]; then
-  wget -c --header "Cookie: oraclelicense=accept-securebackup-cookie" http://download.oracle.com/otn-pub/java/jdk/11.0.1+13/90cf5d8f270a4347a95050320eef3fb7/jdk-11.0.1_linux-x64_bin.tar.gz
-  tar -xf "${JDK_VER}_linux-x64_bin.tar.gz" -C $PACK_PATH
-  mv "${PACK_PATH}/${JDK_VER}" $JDK_PATH
+  wget -c  https://download.java.net/java/GA/jdk11/13/GPL/${JDK_TYPE}-${JDK_VER}_linux-x64_bin.tar.gz
+  tar -xf "${JDK_TYPE}-${JDK_VER}_linux-x64_bin.tar.gz" -C $PACK_PATH
+  mv "${PACK_PATH}/jdk-${JDK_VER}" $JDK_PATH
 fi
 
 # download javafx if can't find the javafx env
