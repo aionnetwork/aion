@@ -20,7 +20,6 @@
  * Contributors:
  *     Aion foundation.
  */
-
 package org.aion.zero.impl.sync;
 
 import static org.aion.p2p.P2pConstant.COEFFICIENT_NORMAL_PEERS;
@@ -42,6 +41,8 @@ import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.aion.base.util.ByteArrayWrapper;
@@ -98,6 +99,9 @@ final class TaskImportBlocks implements Runnable {
         this.state = new PeerState(NORMAL, 0L);
     }
 
+    ExecutorService executors =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
@@ -150,6 +154,7 @@ final class TaskImportBlocks implements Runnable {
                             + Thread.currentThread().getName()
                             + "] performing block imports was shutdown.");
         }
+        executors.shutdown();
     }
 
     /**
@@ -226,24 +231,22 @@ final class TaskImportBlocks implements Runnable {
             AionBlock b = batch.get(batch.size() - 1);
             Mode mode = givenState.getMode();
 
-            // last block exists when in FORWARD mode
-            if ((mode == FORWARD && isAlreadyStored(chain.getBlockStore(), b))
-                    // late returns on main chain requests
-                    // where the blocks are behind the local chain and can be discarded
-                    || (mode != FORWARD && b.getNumber() < getBestBlockNumber())) {
-
+            // last block already exists
+            // implies the full batch was already imported (but not filtered by the queue)
+            if (isAlreadyStored(chain.getBlockStore(), b)) {
                 // keeping track of the last block check
                 importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
 
                 // skipping the batch
-                batch.clear();
                 if (log.isDebugEnabled()) {
                     log.debug(
-                            "Skip batch for node = {} in mode = {} with base = {}.",
+                            "Skip {} blocks from node = {} in mode = {} with base = {}.",
+                            batch.size(),
                             displayId,
                             givenState.getMode(),
                             givenState.getBase());
                 }
+                batch.clear();
 
                 // updating the state
                 if (mode == FORWARD) {
@@ -287,13 +290,12 @@ final class TaskImportBlocks implements Runnable {
 
                 // if any block results in NO_PARENT, all subsequent blocks will too
                 if (importResult == ImportResult.NO_PARENT) {
-                    int stored = chain.storePendingBlockRange(batch);
+                    executors.submit(new TaskStorePendingBlocks(chain, batch, displayId, log));
 
                     if (log.isDebugEnabled()) {
                         log.debug(
                                 "Stopped importing batch due to NO_PARENT result. "
-                                        + "Stored {} out of {} blocks starting at hash = {}, number = {} from node = {}.",
-                                stored,
+                                        + "Batch of {} blocks starting at hash = {}, number = {} from node = {} delegated to storage.",
                                 batch.size(),
                                 b.getShortHash(),
                                 b.getNumber(),
@@ -313,10 +315,22 @@ final class TaskImportBlocks implements Runnable {
 
                     switch (mode) {
                         case FORWARD:
-                        case NORMAL:
                             {
                                 // switch to backward mode
                                 state.setMode(BACKWARD);
+                                state.setBase(b.getNumber());
+                                break;
+                            }
+                        case NORMAL:
+                            {
+                                // requiring a minimum number of normal states
+                                if (countStates(getBestBlockNumber(), NORMAL, peerStates.values())
+                                        > MIN_NORMAL_PEERS) {
+                                    // switch to backward mode
+                                    state.setMode(BACKWARD);
+                                    state.setBase(b.getNumber());
+                                }
+                                break;
                             }
                         case BACKWARD:
                             {
@@ -326,18 +340,7 @@ final class TaskImportBlocks implements Runnable {
                             }
                         case LIGHTNING:
                             {
-                                if (stored < batch.size()) {
-                                    state =
-                                            attemptLightningJump(
-                                                    getBestBlockNumber(),
-                                                    state,
-                                                    peerStates.values(),
-                                                    baseList,
-                                                    chain);
-
-                                } else {
-                                    state.setBase(b.getNumber() + batch.size());
-                                }
+                                state.setBase(b.getNumber() + batch.size());
                                 break;
                             }
                         case THUNDER:
@@ -700,7 +703,8 @@ final class TaskImportBlocks implements Runnable {
             }
 
             // remove imported data from storage
-            chain.dropImported(level, importedQueues, levelFromDisk);
+            executors.submit(
+                    new TaskDropImportedBlocks(chain, level, importedQueues, levelFromDisk, log));
 
             // increment level
             level++;
