@@ -36,8 +36,10 @@ public class ConsoleTail {
     private LocalDateTime lastStatusTime;
     private String message;
 
-    private static final DateTimeFormatter FORMATTER =
+    private static final DateTimeFormatter FORMATTER_DATETIME =
             DateTimeFormatter.ofPattern("dd-MM-YY hh:mm a");
+    private static final DateTimeFormatter FORMATTER_TIME =
+        DateTimeFormatter.ofPattern("hh:mm a");
 
     public ConsoleTail() {
         this(Executors.newSingleThreadScheduledExecutor());
@@ -70,9 +72,10 @@ public class ConsoleTail {
     String makeTimeIntervalString(LocalDateTime now) {
         long daysDiff = lastStatusTime.until(now, ChronoUnit.DAYS);
         if (daysDiff > 0) {
-            return lastStatusTime.format(FORMATTER);
+            return lastStatusTime.format(FORMATTER_DATETIME);
         } else if (lastStatusTime.until(now, ChronoUnit.HOURS) > 0) {
-            return "today " + lastStatusTime.toLocalTime().format(FORMATTER);
+            return "today " + lastStatusTime.toLocalTime().format(FORMATTER_TIME);
+            //return lastStatusTime.until()
         } else if (lastStatusTime.until(now, ChronoUnit.MINUTES) > 0) {
             return lastStatusTime.until(now, ChronoUnit.MINUTES) + " minutes ago";
         } else {
