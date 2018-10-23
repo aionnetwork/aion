@@ -75,7 +75,6 @@ public class ConsoleTail {
             return lastStatusTime.format(FORMATTER_DATETIME);
         } else if (lastStatusTime.until(now, ChronoUnit.HOURS) > 0) {
             return "today " + lastStatusTime.toLocalTime().format(FORMATTER_TIME);
-            //return lastStatusTime.until()
         } else if (lastStatusTime.until(now, ChronoUnit.MINUTES) > 0) {
             return lastStatusTime.until(now, ChronoUnit.MINUTES) + " minutes ago";
         } else {
