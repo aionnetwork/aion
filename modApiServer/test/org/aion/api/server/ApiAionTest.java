@@ -53,6 +53,7 @@ import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.blockchain.TxResponse;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -374,11 +375,43 @@ public class ApiAionTest {
     public void testCreateContract() {
         byte[] msg = "test message".getBytes();
 
+        // null params returns INVALID_TX
+
+        ArgTxCall txcall = null;
+
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_TX);
+
+        // null from and empty from return INVALID_FROM
+
+        txcall =
+                new ArgTxCall(
+                        null,
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        BigInteger.ONE,
+                        BigInteger.ONE,
+                        100000,
+                        100000);
+
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_FROM);
+
+        txcall =
+                new ArgTxCall(
+                        Address.EMPTY_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        BigInteger.ONE,
+                        BigInteger.ONE,
+                        100000,
+                        100000);
+
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_FROM);
+
+        // locked account should throw INVALID_ACCOUNT
+
         Address addr = new Address(Keystore.create("testPwd"));
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-
-        ArgTxCall txcall =
+        txcall =
                 new ArgTxCall(
                         addr,
                         Address.ZERO_ADDRESS(),
@@ -388,33 +421,7 @@ public class ApiAionTest {
                         100000,
                         100000);
 
-        assertNotNull(api.createContract(txcall).transId);
-        assertNotNull(api.createContract(txcall).address);
-
-        txcall =
-                new ArgTxCall(
-                        null,
-                        Address.ZERO_ADDRESS(),
-                        msg,
-                        repo.getNonce(addr),
-                        BigInteger.ONE,
-                        100000,
-                        100000);
-
-        assertNull(api.createContract(txcall));
-
-        txcall =
-                new ArgTxCall(
-                        Address.ZERO_ADDRESS(),
-                        Address.ZERO_ADDRESS(),
-                        msg,
-                        repo.getNonce(addr),
-                        BigInteger.ONE,
-                        100000,
-                        100000);
-
-        assertNull(api.createContract(txcall));
-        tearDown();
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_ACCOUNT);
     }
 
     @Test
@@ -432,52 +439,48 @@ public class ApiAionTest {
 
     @Test
     public void testSendTransaction() {
+
         byte[] msg = "test message".getBytes();
 
-        Address addr = new Address(Keystore.create("testPwd"));
+        // null params returns INVALID_TX
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        ArgTxCall txcall = null;
 
-        ArgTxCall txcall =
-                new ArgTxCall(
-                        addr,
-                        Address.ZERO_ADDRESS(),
-                        msg,
-                        repo.getNonce(addr),
-                        BigInteger.ONE,
-                        100000,
-                        100000);
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_TX);
 
-        assertNotNull(api.sendTransaction(txcall));
-
-        AionTransaction tx =
-                new AionTransaction(
-                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                        addr,
-                        Address.ZERO_ADDRESS(),
-                        BigInteger.ONE.toByteArray(),
-                        msg,
-                        100000,
-                        100000);
-        tx.sign(new ECKeyEd25519());
-
-        assertNotNull(api.sendTransaction(tx.getEncoded()));
+        // null from and empty from return INVALID_FROM
 
         txcall =
                 new ArgTxCall(
                         null,
                         Address.ZERO_ADDRESS(),
                         msg,
-                        repo.getNonce(addr),
+                        BigInteger.ONE,
                         BigInteger.ONE,
                         100000,
                         100000);
 
-        assertNull(api.sendTransaction(txcall));
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_FROM);
 
         txcall =
                 new ArgTxCall(
                         Address.EMPTY_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        BigInteger.ONE,
+                        BigInteger.ONE,
+                        100000,
+                        100000);
+
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_FROM);
+
+        // locked account should throw INVALID_ACCOUNT
+
+        Address addr = new Address(Keystore.create("testPwd"));
+
+        txcall =
+                new ArgTxCall(
+                        addr,
                         Address.ZERO_ADDRESS(),
                         msg,
                         repo.getNonce(addr),
@@ -485,8 +488,7 @@ public class ApiAionTest {
                         100000,
                         100000);
 
-        assertNull(api.sendTransaction(txcall));
-        tearDown();
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_ACCOUNT);
     }
 
     @Test
@@ -624,5 +626,31 @@ public class ApiAionTest {
         JSONObject result = (JSONObject) rpcMsg.getResult();
         assertNull(result);
         assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
+    }
+
+    @Test
+    public void testEthSendTransactionAccountNotUnlocked() {
+        Address addr = new Address(Keystore.create("testPwd"));
+
+        Address toAddr = new Address(Keystore.create("testPwd"));
+
+        JSONObject tx = new JSONObject();
+        tx.put("from", addr.toString());
+        tx.put("gasPrice", "20000000000");
+        tx.put("gas", "21000");
+        tx.put("to", toAddr.toString());
+        tx.put("value", "500000");
+        tx.put("data", "");
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(tx);
+        jsonArray.put(addr);
+
+        RpcMsg rpcMsg = web3Api.eth_sendTransaction(jsonArray);
+        assertNotNull(rpcMsg);
+
+        JSONObject result = (JSONObject) rpcMsg.getResult();
+        assertNull(result);
+        assertEquals(RpcError.NOT_ALLOWED, rpcMsg.getError());
     }
 }
