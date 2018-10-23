@@ -1,8 +1,5 @@
 ext.moduleName = 'aion.log'
 
-targetCompatibility = 10
-sourceCompatibility = 10
-
 dependencies {
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'ch.qos.logback:logback-core:1.2.3'

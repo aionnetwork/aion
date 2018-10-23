@@ -4,9 +4,6 @@ configurations {
     testClassesOut
 }
 
-targetCompatibility = 10
-sourceCompatibility = 10
-
 dependencies {
     compile project(':modAionBase')
     compile project(':modLogger')

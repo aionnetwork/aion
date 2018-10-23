@@ -1,8 +1,5 @@
 ext.moduleName = 'aion.p2p.impl'
 
-targetCompatibility = 10
-sourceCompatibility = 10
-
 sourceSets { 
     test { 
         resources {

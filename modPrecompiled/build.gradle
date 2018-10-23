@@ -2,9 +2,6 @@ ext.moduleName = 'aion.precompiled'
 test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
-targetCompatibility = 10
-sourceCompatibility = 10
-
 dependencies {
     compile project(':modAionBase')
     compile project(':modMcf')

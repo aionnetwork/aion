@@ -2,9 +2,6 @@ ext.moduleName = 'aion.zero'
 
 test.dependsOn copyNativeLibsForModuleTests
 
-targetCompatibility = 10
-sourceCompatibility = 10
-
 dependencies {
     compile project(':modAionBase')
     compile project(':modRlp')

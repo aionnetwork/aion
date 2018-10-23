@@ -1,8 +1,5 @@
 ext.moduleName = 'aion.evtmgr.impl'
 
-targetCompatibility = 10
-sourceCompatibility = 10
-
 dependencies {
     compile project(':modEvtMgr')
     compile project(':modLogger')

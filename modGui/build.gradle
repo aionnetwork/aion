@@ -2,9 +2,6 @@ ext.moduleName = 'aion.gui'
 test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
-targetCompatibility = 10
-sourceCompatibility = 10
-
 sourceSets {
     main {
         resources {
