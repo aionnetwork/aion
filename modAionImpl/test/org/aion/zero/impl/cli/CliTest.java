@@ -1098,13 +1098,12 @@ public class CliTest {
         assertTrue(skippedTasks.contains("--info"));
         assertTrue(skippedTasks.contains("-s create"));
 
-        args = new String[] {"--network", "--datadir", "--help"};
+        args = new String[] {"--network", "--help"};
         parser.parse(args);
         breakingTaskPriority = cli.getBreakingTaskPriority(options);
         assertEquals(0, breakingTaskPriority);
         skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
         assertTrue(skippedTasks.contains("--network"));
-        assertTrue(skippedTasks.contains("--datadir"));
     }
 
     // Methods below taken from FileUtils class
