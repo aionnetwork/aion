@@ -798,6 +798,9 @@ public class PendingBlockStore implements Flushable, Closeable {
             if (!this.indexSource.isAutoCommitEnabled()) {
                 this.indexSource.commit();
             }
+        } catch (Exception e) {
+            LOG.error("Unable to flush due to: ", e);
+            return;
         } finally {
             databaseLock.writeLock().unlock();
         }
