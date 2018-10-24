@@ -36,9 +36,7 @@ import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -728,62 +726,78 @@ public class Cli {
 
     private void checkArguments(Arguments options) {
         // Find priority of breaking task
-        int breakingTaskPriority = -1;
-        if (options.isHelp()) {
-            breakingTaskPriority = 0;
-        }
-        if (options.isVersion() || options.isVersionTag()) {
-            breakingTaskPriority = 1;
-        }
-        if (options.getConfig() != null) {
-            breakingTaskPriority = 2;
-        }
-        if (options.isInfo()) {
-            breakingTaskPriority = 3;
-        }
-        if (options.isCreateAccount()) {
-            breakingTaskPriority = 4;
-        }
-        if (options.isListAccounts()) {
-            breakingTaskPriority = 5;
-        }
-        if (options.getExportAccount() != null) {
-            breakingTaskPriority = 6;
-        }
-        if (options.getImportAccount() != null) {
-            breakingTaskPriority = 7;
-        }
-        if (options.getSsl() != null) {
-            breakingTaskPriority = 8;
-        }
-        if (options.isRebuildBlockInfo()) {
-            breakingTaskPriority = 9;
-        }
-        if (options.getRevertToBlock() != null) {
-            breakingTaskPriority = 10;
-        }
-        if (options.getPruneStateOption() != null) {
-            breakingTaskPriority = 11;
-        }
-        if (options.getDumpStateSizeCount() != null) {
-            breakingTaskPriority = 12;
-        }
-        if (options.getDumpStateCount() != null) {
-            breakingTaskPriority = 13;
-        }
-        if (options.getDumpBlocksCount() != null) {
-            breakingTaskPriority = 14;
-        }
-        if (options.isDbCompact()) {
-            breakingTaskPriority = 15;
-        }
+        int breakingTaskPriority = getBreakingTaskPriority(options);
         // Ensure that there is at least one breaking task
         if (breakingTaskPriority == -1) {
             // No breaking tasks; everything will be executed
             return;
         }
         // Get list of tasks that won't be executed
-        ArrayList<String> skippedTasks = new ArrayList<>();
+        Set<String> skippedTasks = getSkippedTasks(options, breakingTaskPriority);
+        // Check that there are skipped tasks
+        if (skippedTasks.isEmpty()) {
+            return;
+        }
+        String errorMessage = String.format(
+            "Given arguments require incompatible tasks. Skipped arguments: %s.",
+            String.join(", ", skippedTasks));
+        System.out.println(errorMessage);
+    }
+
+    private int getBreakingTaskPriority(Arguments options) {
+        if (options.isHelp()) {
+            return 0;
+        }
+        if (options.isVersion() || options.isVersionTag()) {
+            return 1;
+        }
+        if (options.getConfig() != null) {
+            return 2;
+        }
+        if (options.isInfo()) {
+            return 3;
+        }
+        if (options.isCreateAccount()) {
+            return 4;
+        }
+        if (options.isListAccounts()) {
+            return 5;
+        }
+        if (options.getExportAccount() != null) {
+            return 6;
+        }
+        if (options.getImportAccount() != null) {
+            return 7;
+        }
+        if (options.getSsl() != null) {
+            return 8;
+        }
+        if (options.isRebuildBlockInfo()) {
+            return 9;
+        }
+        if (options.getRevertToBlock() != null) {
+            return 10;
+        }
+        if (options.getPruneStateOption() != null) {
+            return 11;
+        }
+        if (options.getDumpStateSizeCount() != null) {
+            return 12;
+        }
+        if (options.getDumpStateCount() != null) {
+            return 13;
+        }
+        if (options.getDumpBlocksCount() != null) {
+            return 14;
+        }
+        if (options.isDbCompact()) {
+            return 15;
+        }
+        return -1;
+    }
+
+    private Set<String> getSkippedTasks(Arguments options, int breakingTaskPriority) {
+        Set<String> skippedTasks = new HashSet<String>();
         if (breakingTaskPriority < 1 && options.isVersion()) {
             skippedTasks.add("-v");
         }
@@ -838,13 +852,7 @@ public class Cli {
         if (breakingTaskPriority < 15 && options.isDbCompact()) {
             skippedTasks.add("--db-compact");
         }
-        // Check that there are skipped tasks
-        if (skippedTasks.isEmpty()) {
-            return;
-        }
-        String errorMessage = String.format("Given arguments require incompatible tasks. Skipped arguments: %s",
-            String.join(", ", skippedTasks));
-        System.out.println(errorMessage);
+        return skippedTasks;
     }
 
     /**
