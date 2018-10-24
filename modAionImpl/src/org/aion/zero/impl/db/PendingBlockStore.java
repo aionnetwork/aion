@@ -347,7 +347,7 @@ public class PendingBlockStore implements Flushable, Closeable {
                 return false;
             }
         } catch (Exception e) {
-            LOG.error("Unable to store status block due to ", e);
+            LOG.error("Unable to store status block due to: ", e);
             return false;
         } finally {
             databaseLock.writeLock().unlock();
@@ -422,7 +422,7 @@ public class PendingBlockStore implements Flushable, Closeable {
             // the number of blocks added
             return stored;
         } catch (Exception e) {
-            LOG.error("Unable to store range of blocks due to ", e);
+            LOG.error("Unable to store range of blocks due to: ", e);
             return 0;
         } finally {
             databaseLock.writeLock().unlock();
@@ -583,7 +583,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
             return blocks;
         } catch (Exception e) {
-            LOG.error("Unable to retrieve stored level due to ", e);
+            LOG.error("Unable to retrieve stored blocks due to: ", e);
             return Collections.emptyMap();
         } finally {
             databaseLock.readLock().unlock();
@@ -682,7 +682,7 @@ public class PendingBlockStore implements Flushable, Closeable {
             queueSource.flushBatch();
             levelSource.flushBatch();
         } catch (Exception e) {
-            LOG.error("Unable to delete used blocks due to ", e);
+            LOG.error("Unable to delete used blocks due to: ", e);
             return;
         } finally {
             databaseLock.writeLock().unlock();
@@ -782,7 +782,7 @@ public class PendingBlockStore implements Flushable, Closeable {
             // return new base
             return base;
         } catch (Exception e) {
-            LOG.error("Unable to generate next LIGHTNING request base due to ", e);
+            LOG.error("Unable to generate next LIGHTNING request base due to: ", e);
             return current;
         } finally {
             internalLock.unlock();
@@ -824,6 +824,11 @@ public class PendingBlockStore implements Flushable, Closeable {
                 indexSource.close();
             } catch (Exception e) {
                 LOG.error("Not able to close the pending blocks index database:", e);
+            }
+
+            if (status != null) {
+                status.clear();
+                status = null;
             }
         } finally {
             databaseLock.writeLock().unlock();
