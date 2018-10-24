@@ -28,6 +28,7 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
@@ -57,6 +58,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import picocli.CommandLine;
 
 /** CliTest for new version with use of different networks. */
 @RunWith(JUnitParamsRunner.class)
@@ -1062,6 +1064,46 @@ public class CliTest {
         assertThat(mockCli.call(new String[] {option, fakePKey}, cfg)).isEqualTo(ERROR);
 
         assertThat(mockCli.call(new String[] {option, "hello"}, cfg)).isEqualTo(ERROR);
+    }
+
+    @Test
+    public void testCheckArguments() {
+        Arguments options = new Arguments();
+        CommandLine parser = new CommandLine(options);
+
+        String[] args;
+        int breakingTaskPriority;
+        Set<String> skippedTasks;
+
+        args = new String[] {"--info"};
+        parser.parse(args);
+        breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(3, breakingTaskPriority);
+        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertTrue(skippedTasks.isEmpty());
+
+        args = new String[] {"--account list", "--account create"};
+        parser.parse(args);
+        breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(4, breakingTaskPriority);
+        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertTrue(skippedTasks.contains("--account list"));
+
+        args = new String[] {"--info", "--config", "-s create"};
+        parser.parse(args);
+        breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(2, breakingTaskPriority);
+        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertTrue(skippedTasks.contains("--info"));
+        assertTrue(skippedTasks.contains("-s create"));
+
+        args = new String[] {"--network", "--datadir", "--help"};
+        parser.parse(args);
+        breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(0, breakingTaskPriority);
+        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertTrue(skippedTasks.contains("--network"));
+        assertTrue(skippedTasks.contains("--datadir"));
     }
 
     // Methods below taken from FileUtils class
