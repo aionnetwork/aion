@@ -101,6 +101,8 @@ public class Cli {
             return ERROR;
         }
 
+        checkArguments();
+
         try {
             // 1. the first set of options don't mix with -d and -n
 
@@ -722,6 +724,127 @@ public class Cli {
             return readPasswordFromReader(prompt, reader);
         }
         return new String(console.readPassword(prompt));
+    }
+
+    private void checkArguments(Arguments options) {
+        // Find priority of breaking task
+        int breakingTaskPriority = -1;
+        if (options.isHelp()) {
+            breakingTaskPriority = 0;
+        }
+        if (options.isVersion() || options.isVersionTag()) {
+            breakingTaskPriority = 1;
+        }
+        if (options.getConfig() != null) {
+            breakingTaskPriority = 2;
+        }
+        if (options.isInfo()) {
+            breakingTaskPriority = 3;
+        }
+        if (options.isCreateAccount()) {
+            breakingTaskPriority = 4;
+        }
+        if (options.isListAccounts()) {
+            breakingTaskPriority = 5;
+        }
+        if (options.getExportAccount() != null) {
+            breakingTaskPriority = 6;
+        }
+        if (options.getImportAccount() != null) {
+            breakingTaskPriority = 7;
+        }
+        if (options.getSsl() != null) {
+            breakingTaskPriority = 8;
+        }
+        if (options.isRebuildBlockInfo()) {
+            breakingTaskPriority = 9;
+        }
+        if (options.getRevertToBlock() != null) {
+            breakingTaskPriority = 10;
+        }
+        if (options.getPruneStateOption() != null) {
+            breakingTaskPriority = 11;
+        }
+        if (options.getDumpStateSizeCount() != null) {
+            breakingTaskPriority = 12;
+        }
+        if (options.getDumpStateCount() != null) {
+            breakingTaskPriority = 13;
+        }
+        if (options.getDumpBlocksCount() != null) {
+            breakingTaskPriority = 14;
+        }
+        if (options.isDbCompact()) {
+            breakingTaskPriority = 15;
+        }
+        // Ensure that there is at least one breaking task
+        if (breakingTaskPriority == -1) {
+            // No breaking tasks; everything will be executed
+            return;
+        }
+        // Get list of tasks that won't be executed
+        ArrayList<String> skippedTasks = new ArrayList<>();
+        if (breakingTaskPriority < 1 && options.isVersion()) {
+            skippedTasks.add('-v');
+        }
+        if (breakingTaskPriority < 1 && options.isVersionTag()) {
+            skippedTasks.add('--version');
+        }
+        if (breakingTaskPriority < 2 && options.getNetwork() != null) {
+            skippedTasks.add('--network');
+        }
+        if (breakingTaskPriority < 2 && options.getDirectory() != null) {
+            skippedTasks.add('--datadir');
+        }
+        if (breakingTaskPriority < 2 && options.getConfig() != null) {
+            skippedTasks.add('--config');
+        }
+        if (breakingTaskPriority < 3 && options.isInfo()) {
+            skippedTasks.add('--info');
+        }
+        if (breakingTaskPriority < 4 && options.isCreateAccount()) {
+            skippedTasks.add('--account create');
+        }
+        if (breakingTaskPriority < 5 && options.isListAccounts()) {
+            skippedTasks.add('--account list');
+        }
+        if (breakingTaskPriority < 6 && options.getExportAccount() != null) {
+            skippedTasks.add('--account export');
+        }
+        if (breakingTaskPriority < 7 && options.getImportAccount() != null) {
+            skippedTasks.add('--account import');
+        }
+        if (breakingTaskPriority < 8 && options.getSsl() != null) {
+            skippedTasks.add('-s create');
+        }
+        if (breakingTaskPriority < 9 && options.isRebuildBlockInfo()) {
+            skippedTasks.add('--prune-blocks');
+        }
+        if (breakingTaskPriority < 10 && options.getRevertToBlock() != null) {
+            skippedTasks.add('--revert');
+        }
+        if (breakingTaskPriority < 11 && options.getPruneStateOption() != null) {
+            skippedTasks.add('--state');
+        }
+        if (breakingTaskPriority < 12 && options.getDumpStateSizeCount() != null) {
+            skippedTasks.add('--dump-state-size');
+        }
+        if (breakingTaskPriority < 13 && options.getDumpStateCount() != null) {
+            skippedTasks.add('--dump-state');
+        }
+        if (breakingTaskPriority < 14 && options.getDumpBlocksCount() != null) {
+            skippedTasks.add('--dump-blocks');
+        }
+        if (breakingTaskPriority < 15 && options.isDbCompact()) {
+            skippedTasks.add('--db-compact');
+        }
+        // Check that there are skipped tasks
+        if (skippedTasks.isEmpty()) {
+            return;
+        }
+        String errorMessage = String.format("Given arguments require incompatible tasks. Skipped arguments: %s",
+            String.join(", ", skippedTasks));
+        System.out.println(errorMessage);
     }
 
     /**
