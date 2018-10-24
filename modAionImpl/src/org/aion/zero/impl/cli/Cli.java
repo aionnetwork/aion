@@ -744,7 +744,7 @@ public class Cli {
         System.out.println(errorMessage);
     }
 
-    private int getBreakingTaskPriority(Arguments options) {
+    int getBreakingTaskPriority(Arguments options) {
         if (options.isHelp()) {
             return 0;
         }
@@ -796,7 +796,7 @@ public class Cli {
         return -1;
     }
 
-    private Set<String> getSkippedTasks(Arguments options, int breakingTaskPriority) {
+    Set<String> getSkippedTasks(Arguments options, int breakingTaskPriority) {
         Set<String> skippedTasks = new HashSet<String>();
         if (breakingTaskPriority < 1 && options.isVersion()) {
             skippedTasks.add("-v");
