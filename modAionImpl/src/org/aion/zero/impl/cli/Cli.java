@@ -101,7 +101,7 @@ public class Cli {
             return ERROR;
         }
 
-        checkArguments();
+        checkArguments(options);
 
         try {
             // 1. the first set of options don't mix with -d and -n
@@ -785,58 +785,58 @@ public class Cli {
         // Get list of tasks that won't be executed
         ArrayList<String> skippedTasks = new ArrayList<>();
         if (breakingTaskPriority < 1 && options.isVersion()) {
-            skippedTasks.add('-v');
+            skippedTasks.add("-v");
         }
         if (breakingTaskPriority < 1 && options.isVersionTag()) {
-            skippedTasks.add('--version');
+            skippedTasks.add("--version");
         }
         if (breakingTaskPriority < 2 && options.getNetwork() != null) {
-            skippedTasks.add('--network');
+            skippedTasks.add("--network");
         }
         if (breakingTaskPriority < 2 && options.getDirectory() != null) {
-            skippedTasks.add('--datadir');
+            skippedTasks.add("--datadir");
         }
         if (breakingTaskPriority < 2 && options.getConfig() != null) {
-            skippedTasks.add('--config');
+            skippedTasks.add("--config");
         }
         if (breakingTaskPriority < 3 && options.isInfo()) {
-            skippedTasks.add('--info');
+            skippedTasks.add("--info");
         }
         if (breakingTaskPriority < 4 && options.isCreateAccount()) {
-            skippedTasks.add('--account create');
+            skippedTasks.add("--account create");
         }
         if (breakingTaskPriority < 5 && options.isListAccounts()) {
-            skippedTasks.add('--account list');
+            skippedTasks.add("--account list");
         }
         if (breakingTaskPriority < 6 && options.getExportAccount() != null) {
-            skippedTasks.add('--account export');
+            skippedTasks.add("--account export");
         }
         if (breakingTaskPriority < 7 && options.getImportAccount() != null) {
-            skippedTasks.add('--account import');
+            skippedTasks.add("--account import");
         }
         if (breakingTaskPriority < 8 && options.getSsl() != null) {
-            skippedTasks.add('-s create');
+            skippedTasks.add("-s create");
         }
         if (breakingTaskPriority < 9 && options.isRebuildBlockInfo()) {
-            skippedTasks.add('--prune-blocks');
+            skippedTasks.add("--prune-blocks");
         }
         if (breakingTaskPriority < 10 && options.getRevertToBlock() != null) {
-            skippedTasks.add('--revert');
+            skippedTasks.add("--revert");
         }
         if (breakingTaskPriority < 11 && options.getPruneStateOption() != null) {
-            skippedTasks.add('--state');
+            skippedTasks.add("--state");
         }
         if (breakingTaskPriority < 12 && options.getDumpStateSizeCount() != null) {
-            skippedTasks.add('--dump-state-size');
+            skippedTasks.add("--dump-state-size");
         }
         if (breakingTaskPriority < 13 && options.getDumpStateCount() != null) {
-            skippedTasks.add('--dump-state');
+            skippedTasks.add("--dump-state");
         }
         if (breakingTaskPriority < 14 && options.getDumpBlocksCount() != null) {
-            skippedTasks.add('--dump-blocks');
+            skippedTasks.add("--dump-blocks");
         }
         if (breakingTaskPriority < 15 && options.isDbCompact()) {
-            skippedTasks.add('--db-compact');
+            skippedTasks.add("--db-compact");
         }
         // Check that there are skipped tasks
         if (skippedTasks.isEmpty()) {
