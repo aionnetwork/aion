@@ -1088,15 +1088,58 @@ public class CliTest {
         breakingTaskPriority = cli.getBreakingTaskPriority(options);
         assertEquals(4, breakingTaskPriority);
         skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertEquals(1, skippedTasks.size());
         assertTrue(skippedTasks.contains("--account list"));
 
-        args = new String[] {"--info", "--config", "-s create"};
+        args = new String[] {"--info", "--config", "mainnet", "-s create"};
         parser.parse(args);
         breakingTaskPriority = cli.getBreakingTaskPriority(options);
         assertEquals(2, breakingTaskPriority);
         skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertEquals(2, skippedTasks.size());
         assertTrue(skippedTasks.contains("--info"));
         assertTrue(skippedTasks.contains("-s create"));
+
+        args = new String[] {"--help", "--network", "mainnet", "--datadir", dataDirectory};
+        parser.parse(args);
+        breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(0, breakingTaskPriority);
+        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertEquals(2, skippedTasks.size());
+        assertTrue(skippedTasks.contains("--network"));
+        assertTrue(skippedTasks.contains("--datadir"));
+
+        args = new String[] {"--version", "-v"};
+        parser.parse(args);
+        breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(1, breakingTaskPriority);
+        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertTrue(skippedTasks.isEmpty());
+
+        args = new String[] {"--dump-blocks", "10", "--dump-state", "10", "--dump-state-size", "10"};
+        parser.parse(args);
+        breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(12, breakingTaskPriority);
+        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertEquals(2, skippedTasks.size());
+        assertTrue(skippedTasks.contains("--dump-blocks"));
+        assertTrue(skippedTasks.contains("--dump-state"));
+
+        args = new String[] {"ac", "ae", "account"};
+        parser.parse(args);
+        breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(4, breakingTaskPriority);
+        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertEquals(1, skippedTasks.size());
+        assertTrue(skippedTasks.contains("--account export"));
+
+        args = new String[] {"--prune-blocks", "--state", "FULL"};
+        parser.parse(args);
+        breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(9, breakingTaskPriority);
+        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertEquals(1, skippedTasks.size());
+        assertTrue(skippedTasks.contains("--state"));
     }
 
     // Methods below taken from FileUtils class
