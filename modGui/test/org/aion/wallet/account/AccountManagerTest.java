@@ -132,7 +132,7 @@ public class AccountManagerTest {
                         new Answer() {
                             @Override
                             public Object answer(InvocationOnMock invocationOnMock)
-                                    throws Throwable {
+                                    throws Exception {
                                 ((MnemonicGenerator.Target) invocationOnMock.getArguments()[1])
                                         .append(mnemonic);
                                 return null;

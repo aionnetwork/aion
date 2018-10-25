@@ -56,7 +56,7 @@ public class HeaderStructureException extends Exception {
         this.offset = offset;
     }
 
-    public HeaderStructureException(String field, int offset, Throwable cause) {
+    public HeaderStructureException(String field, int offset, Exception cause) {
         super(String.format("HeaderStructure field: %s/%d violated", field, offset), cause);
 
         this.field = field;

@@ -86,7 +86,7 @@ public class UnixProcessTerminatorTest {
                         new Answer() {
                             @Override
                             public Object answer(InvocationOnMock invocationOnMock)
-                                    throws Throwable {
+                                    throws Exception {
                                 when(unixCommandRunner.callPs(pid))
                                         .thenReturn(Collections.singletonList("anyText"))
                                         .thenReturn(Collections.emptyList());

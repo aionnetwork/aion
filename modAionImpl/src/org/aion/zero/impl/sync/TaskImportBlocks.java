@@ -274,7 +274,7 @@ final class TaskImportBlocks implements Runnable {
                         last = b.getNumber() + 1;
                     }
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 log.error("<import-block throw> {}", e.toString());
                 if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
                     log.error("Shutdown due to lack of disk space.");
@@ -689,7 +689,7 @@ final class TaskImportBlocks implements Runnable {
                             // stop importing this queue
                             break;
                         }
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         log.error("<import-block throw> {}", e.toString());
                         if (e.getMessage() != null
                                 && e.getMessage().contains("No space left on device")) {

@@ -60,9 +60,9 @@ public class ExecutorPipeline<In, Out> {
 
     private BlockingQueue<Runnable> queue;
     private final ThreadPoolExecutor exec;
-    private boolean preserveOrder = false;
+    private boolean preserveOrder;
     private final Functional.Function<In, Out> processor;
-    private final Functional.Consumer<Throwable> exceptionHandler;
+    private final Functional.Consumer<Exception> exceptionHandler;
     private ExecutorPipeline<Out, ?> next;
 
     private AtomicLong orderCounter = new AtomicLong();
@@ -79,7 +79,7 @@ public class ExecutorPipeline<In, Out> {
             int queueSize,
             boolean preserveOrder,
             Functional.Function<In, Out> processor,
-            Functional.Consumer<Throwable> exceptionHandler) {
+            Functional.Consumer<Exception> exceptionHandler) {
         queue = new LimitedQueue<>(queueSize);
         exec =
                 new ThreadPoolExecutor(
@@ -154,7 +154,7 @@ public class ExecutorPipeline<In, Out> {
                 () -> {
                     try {
                         pushNext(order, processor.apply(in));
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         exceptionHandler.accept(e);
                     }
                 });

@@ -149,7 +149,7 @@ public class ConfigManipulatorTest {
     //    @Test
     //    public void testApplyNewConfigWhenProxyReturnsError() throws Exception {
     //        String xml = "<anyGoodXml/>";
-    //        Throwable proxyError = new ArrayIndexOutOfBoundsException();
+    //        Exception proxyError = new ArrayIndexOutOfBoundsException();
     //        ConfigProposalResult configProposalResult = new ConfigProposalResult(false,
     // proxyError);
     //        InFlightConfigReceiverMBean proxy = mock(InFlightConfigReceiver.class);

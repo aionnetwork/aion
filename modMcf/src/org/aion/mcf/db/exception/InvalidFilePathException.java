@@ -35,11 +35,11 @@ public class InvalidFilePathException extends Exception {
         super(message);
     }
 
-    public InvalidFilePathException(String message, Throwable cause) {
+    public InvalidFilePathException(String message, Exception cause) {
         super(message, cause);
     }
 
-    public InvalidFilePathException(Throwable cause) {
+    public InvalidFilePathException(Exception cause) {
         super(cause);
     }
 }

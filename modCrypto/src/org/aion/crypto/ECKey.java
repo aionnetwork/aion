@@ -54,11 +54,11 @@ public interface ECKey {
             super(msg);
         }
 
-        public MissingPrivateKeyException(Throwable cause) {
+        public MissingPrivateKeyException(Exception cause) {
             super(cause);
         }
 
-        public MissingPrivateKeyException(String msg, Throwable cause) {
+        public MissingPrivateKeyException(String msg, Exception cause) {
             super(msg, cause);
         }
     }

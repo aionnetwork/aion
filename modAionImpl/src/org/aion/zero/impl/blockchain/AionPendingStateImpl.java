@@ -199,7 +199,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                     }
                     AionImpl.inst().broadcastTransactions(txs);
                 }
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER_TX.error("processTxBuffer throw {}", e.toString());
             }
 
@@ -326,7 +326,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 txPoolModule = TxPoolModule.getSingleton(prop);
                 //noinspection unchecked
                 this.txPool = (ITxPool<AionTransaction>) txPoolModule.getTxPool();
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER_TX.error("TxPoolModule getTxPool fail!", e);
             }
 
@@ -1217,7 +1217,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         for (byte[] b : pendingCacheTxBytes) {
             try {
                 pendingTx.add(new AionTransaction(b));
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER_TX.error("loadingPendingCacheTx error {}", e.toString());
             }
         }
@@ -1257,7 +1257,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         for (byte[] b : pendingPoolTxBytes) {
             try {
                 pendingTx.add(new AionTransaction(b));
-            } catch (Throwable e) {
+            } catch (Exception e) {
                 LOGGER_TX.error("loadingCachePendingTx error {}", e.toString());
             }
         }

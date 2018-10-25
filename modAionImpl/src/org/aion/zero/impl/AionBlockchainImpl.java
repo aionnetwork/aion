@@ -471,8 +471,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         AionBlockSummary summary = null;
         try {
             summary = add(block);
-        } catch (Throwable th) {
-            LOG.error("Unexpected error: ", th);
+        } catch (Exception e) {
+            LOG.error("Unexpected error: ", e);
         } finally {
             this.fork = false;
         }

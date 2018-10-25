@@ -95,7 +95,7 @@ public final class BroadcastTxHandler extends Handler {
                 List<AionTransaction> txs = new ArrayList<>();
                 try {
                     txQueue.drainTo(txs);
-                } catch (Throwable e) {
+                } catch (Exception e) {
                     log.error("BufferTask throw{}", e.toString());
                 }
                 if (!txs.isEmpty()) {
@@ -145,7 +145,7 @@ public final class BroadcastTxHandler extends Handler {
                 }
             }
 
-        } catch (Throwable e) {
+        } catch (Exception e) {
             log.error("BroadcastTxHandler throw {}", e.toString());
         }
     }

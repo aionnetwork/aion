@@ -28,7 +28,7 @@ public class ValidationException extends Exception {
         super(message);
     }
 
-    public ValidationException(Throwable cause) {
+    public ValidationException(Exception cause) {
         super(cause);
     }
 

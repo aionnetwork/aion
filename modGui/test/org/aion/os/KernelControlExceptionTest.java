@@ -34,7 +34,7 @@ public class KernelControlExceptionTest {
     public void test() {
         assertThat(new KernelControlException("someMessage").getMessage(), is("someMessage"));
 
-        Throwable someThrowable = new EmptyStackException();
+        Exception someThrowable = new EmptyStackException();
         assertThat(
                 new KernelControlException("someMessage", someThrowable).getCause(),
                 is(someThrowable));

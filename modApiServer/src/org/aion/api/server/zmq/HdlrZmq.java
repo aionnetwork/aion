@@ -80,7 +80,7 @@ public class HdlrZmq implements IHdlr {
                 return;
             }
 
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // TODO Auto-generated catch block
             LOGGER.error("zmq takeTxWait failed! " + e.getMessage());
         }

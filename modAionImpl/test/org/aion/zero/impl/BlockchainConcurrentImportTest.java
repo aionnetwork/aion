@@ -488,7 +488,7 @@ public class BlockchainConcurrentImportTest {
             final int maxTimeoutSeconds)
             throws InterruptedException {
         final int numThreads = runnables.size();
-        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<>());
         final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
         try {
             final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
@@ -501,7 +501,7 @@ public class BlockchainConcurrentImportTest {
                             try {
                                 afterInitBlocker.await();
                                 submittedTestRunnable.run();
-                            } catch (final Throwable e) {
+                            } catch (final Exception e) {
                                 exceptions.add(e);
                             } finally {
                                 allDone.countDown();
@@ -521,7 +521,7 @@ public class BlockchainConcurrentImportTest {
             threadPool.shutdownNow();
         }
         if (!exceptions.isEmpty()) {
-            for (Throwable e : exceptions) {
+            for (Exception e : exceptions) {
                 e.printStackTrace();
             }
         }

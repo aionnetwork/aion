@@ -26,9 +26,9 @@ package org.aion.gui.model;
 public class ApplyConfigResult {
     private final boolean succeeded;
     private final String displayableError;
-    private final Throwable cause;
+    private final Exception cause;
 
-    public ApplyConfigResult(boolean succeeded, String displayableError, Throwable cause) {
+    public ApplyConfigResult(boolean succeeded, String displayableError, Exception cause) {
         this.succeeded = succeeded;
         this.displayableError = displayableError;
         this.cause = cause;
@@ -42,7 +42,7 @@ public class ApplyConfigResult {
         return displayableError;
     }
 
-    public Throwable getCause() {
+    public Exception getCause() {
         return cause;
     }
 }

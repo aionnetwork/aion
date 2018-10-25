@@ -31,7 +31,7 @@ import org.junit.Test;
 public class EventMgrModuleTest {
 
     @Test
-    public void orderedCoverageTest() throws Throwable {
+    public void orderedCoverageTest() throws Exception {
         EventMgrModule singletonEventMgrModule;
         Properties prop = new Properties();
 

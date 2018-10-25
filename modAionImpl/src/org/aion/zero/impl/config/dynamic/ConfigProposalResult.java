@@ -27,13 +27,13 @@ import java.io.Serializable;
 
 public class ConfigProposalResult implements Serializable {
     private final boolean success;
-    private final Throwable errorCause;
+    private final Exception errorCause;
 
     public ConfigProposalResult(boolean success) {
         this(success, null);
     }
 
-    public ConfigProposalResult(boolean success, Throwable errorCause) {
+    public ConfigProposalResult(boolean success, Exception errorCause) {
         this.success = success;
         this.errorCause = errorCause;
     }
@@ -42,7 +42,7 @@ public class ConfigProposalResult implements Serializable {
         return success;
     }
 
-    public Throwable getErrorCause() {
+    public Exception getErrorCause() {
         return errorCause;
     }
 
