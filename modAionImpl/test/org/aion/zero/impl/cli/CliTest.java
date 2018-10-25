@@ -44,6 +44,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import junitparams.JUnitParamsRunner;
@@ -1067,79 +1068,70 @@ public class CliTest {
         assertThat(mockCli.call(new String[] {option, "hello"}, cfg)).isEqualTo(ERROR);
     }
 
-    @Test
-    public void testCheckArguments() {
-        Arguments options = new Arguments();
-        CommandLine parser = new CommandLine(options);
+    /** Parameters for testing {@link #testCheckArguments(String[], int, Set<String>)}. */
+    @SuppressWarnings("unused")
+    private Object parametersForArgumentCheck() {
+        List<Object> parameters = new ArrayList<>();
 
-        String[] args;
-        int breakingTaskPriority;
+        String[] input;
         Set<String> skippedTasks;
 
-        args = new String[] {"--info"};
-        parser.parse(args);
-        breakingTaskPriority = cli.getBreakingTaskPriority(options);
-        assertEquals(3, breakingTaskPriority);
-        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
-        assertTrue(skippedTasks.isEmpty());
+        input = new String[] {"--info"};
+        skippedTasks = new HashSet<String>();
+        parameters.add(new Object[] {input, 3, skippedTasks});
 
-        args = new String[] {"--account list", "--account create"};
-        parser.parse(args);
-        breakingTaskPriority = cli.getBreakingTaskPriority(options);
-        assertEquals(4, breakingTaskPriority);
-        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
-        assertEquals(1, skippedTasks.size());
-        assertTrue(skippedTasks.contains("--account list"));
+        input = new String[] {"--account list", "--account create"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--account list");
+        parameters.add(new Object[] {input, 4, skippedTasks});
 
-        args = new String[] {"--info", "--config", "mainnet", "-s create"};
-        parser.parse(args);
-        breakingTaskPriority = cli.getBreakingTaskPriority(options);
-        assertEquals(2, breakingTaskPriority);
-        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
-        assertEquals(2, skippedTasks.size());
-        assertTrue(skippedTasks.contains("--info"));
-        assertTrue(skippedTasks.contains("-s create"));
+        input = new String[] {"--info", "--config", "mainnet", "-s create"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--info");
+        skippedTasks.add("-s create");
+        parameters.add(new Object[] {input, 2, skippedTasks});
 
-        args = new String[] {"--help", "--network", "mainnet", "--datadir", dataDirectory};
-        parser.parse(args);
-        breakingTaskPriority = cli.getBreakingTaskPriority(options);
-        assertEquals(0, breakingTaskPriority);
-        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
-        assertEquals(2, skippedTasks.size());
-        assertTrue(skippedTasks.contains("--network"));
-        assertTrue(skippedTasks.contains("--datadir"));
+        input = new String[] {"--help", "--network", "mainnet", "--datadir", dataDirectory};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--network");
+        skippedTasks.add("--datadir");
+        parameters.add(new Object[] {input, 0, skippedTasks});
 
-        args = new String[] {"--version", "-v"};
-        parser.parse(args);
-        breakingTaskPriority = cli.getBreakingTaskPriority(options);
-        assertEquals(1, breakingTaskPriority);
-        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
-        assertTrue(skippedTasks.isEmpty());
+        input = new String[] {"--version", "-v"};
+        skippedTasks = new HashSet<String>();
+        parameters.add(new Object[] {input, 1, skippedTasks});
 
-        args = new String[] {"--dump-blocks", "10", "--dump-state", "10", "--dump-state-size", "10"};
-        parser.parse(args);
-        breakingTaskPriority = cli.getBreakingTaskPriority(options);
-        assertEquals(12, breakingTaskPriority);
-        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
-        assertEquals(2, skippedTasks.size());
-        assertTrue(skippedTasks.contains("--dump-blocks"));
-        assertTrue(skippedTasks.contains("--dump-state"));
+        input = new String[] {"--dump-blocks", "5", "--dump-state", "5", "--dump-state-size", "5"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--dump-blocks");
+        skippedTasks.add("--dump-state");
+        parameters.add(new Object[] {input, 12, skippedTasks});
 
-        args = new String[] {"ac", "ae", "account"};
-        parser.parse(args);
-        breakingTaskPriority = cli.getBreakingTaskPriority(options);
-        assertEquals(4, breakingTaskPriority);
-        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
-        assertEquals(1, skippedTasks.size());
-        assertTrue(skippedTasks.contains("--account export"));
+        input = new String[] {"ac", "ae", "account"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--account export");
+        parameters.add(new Object[] {input, 4, skippedTasks});
 
-        args = new String[] {"--prune-blocks", "--state", "FULL"};
-        parser.parse(args);
-        breakingTaskPriority = cli.getBreakingTaskPriority(options);
-        assertEquals(9, breakingTaskPriority);
-        skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
-        assertEquals(1, skippedTasks.size());
-        assertTrue(skippedTasks.contains("--state"));
+        input = new String[] {"--prune-blocks", "--state", "FULL"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--state");
+        parameters.add(new Object[] {input, 9, skippedTasks});
+
+        return parameters.toArray();
+    }
+
+    @Test
+    @Parameters(method = "parametersForArgumentCheck")
+    public void testCheckArguments(
+        String[] input, int expectedPriority, Set<String> expectedTasks) {
+        Arguments options = new Arguments();
+        CommandLine parser = new CommandLine(options);
+        parser.parse(input);
+
+        int breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(expectedPriority, breakingTaskPriority);
+        Set<String> skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertEquals(expectedTasks, skippedTasks);
     }
 
     // Methods below taken from FileUtils class
