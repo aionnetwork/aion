@@ -25,21 +25,16 @@ package org.aion.precompiled.contracts;
 import static org.aion.crypto.HashUtil.blake128;
 import static org.aion.crypto.HashUtil.blake256;
 
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.vm.IDataWord;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
+import org.aion.vm.IPrecompiledContract;
 
-public class Blake2bHash extends StatefulPrecompiledContract {
+public class Blake2bHashContract implements IPrecompiledContract {
     private static final long COST = 100L;
     private static final String INPUT_LENGTH_ERROR_MESSAGE = "input too short";
     private static final String OPERATION_ERROR_MESSAGE = "invalid operation";
 
-    public Blake2bHash(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
-        super(track);
+    public Blake2bHashContract() {
     }
 
     /**

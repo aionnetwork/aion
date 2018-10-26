@@ -29,6 +29,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
+import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
@@ -69,7 +70,7 @@ public class ContractFactory implements IContractFactory {
 
         switch (context.address().toString()) {
             case TOTAL_CURRENCY:
-                // return new TotalCurrencyContract(track, context.sender(), Address.wrap(OWNER));
+                //return new TotalCurrencyContract(track, context.sender(), Address.wrap(OWNER));
                 return null;
             case TOKEN_BRIDGE:
                 TokenBridgeContract contract =
