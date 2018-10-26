@@ -60,15 +60,13 @@ public class EDVerifyContractTest {
     private int kind = ExecutionContext.CREATE;
     private int flags = 0;
 
-    private TransactionResult txResult;
-
     @Before
     public void setup() {
         nrgPrice = DataWord.ONE;
         nrgLimit = 20000;
         callValue = DataWord.ZERO;
         callData = new byte[0];
-        txResult = new TransactionResult();
+        TransactionResult txResult = new TransactionResult();
     }
 
     @Test
@@ -97,8 +95,9 @@ public class EDVerifyContractTest {
             nrgLimit, callValue,
             callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
             blockDifficulty);
-        IPrecompiledContract contract = ContractFactory.getPrecompiledContract(ctx, null);
+        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
+        assert contract != null;
         IExecutionResult result = contract.execute(input, 21000L);
         assertThat(result.getOutput()[0]).isEqualTo(1);
     }
@@ -130,7 +129,7 @@ public class EDVerifyContractTest {
             nrgLimit, callValue,
             callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
             blockDifficulty);
-        IPrecompiledContract contract = ContractFactory.getPrecompiledContract(ctx, null);
+        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         IExecutionResult result = contract.execute(input, 10000L);
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.OUT_OF_NRG.toInt());
