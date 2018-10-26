@@ -65,3 +65,5 @@ tmp/
 
 # gradle
 .gradle/**
+
+**/out/

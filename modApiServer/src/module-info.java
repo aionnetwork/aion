@@ -10,6 +10,9 @@ module aion.apiserver {
     requires aion.evtmgr;
     requires aion.evtmgr.impl;
     requires aion.fastvm;
+    requires com.google.common;
+    requires commons.collections4;
+    requires libJson;
 
     exports org.aion.api.server.pb;
     exports org.aion.api.server.zmq;
