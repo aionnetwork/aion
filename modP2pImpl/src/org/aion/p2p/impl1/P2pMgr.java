@@ -280,7 +280,10 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public void shutdown() {
         start.set(false);
-        scheduledWorkers.shutdownNow();
+
+        if (scheduledWorkers != null) {
+            scheduledWorkers.shutdownNow();
+        }
 
         for (List<Handler> hdrs : handlers.values()) {
             hdrs.forEach(Handler::shutDown);
