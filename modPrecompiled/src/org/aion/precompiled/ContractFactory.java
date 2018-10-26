@@ -51,7 +51,7 @@ public class ContractFactory implements IContractFactory {
     private static final String ED_VERIFY =
         "0000000000000000000000000000000000000000000000000000000000000010";
 
-    private ContractFactory() {
+    public ContractFactory() {
     }
 
     /**
@@ -103,6 +103,8 @@ public class ContractFactory implements IContractFactory {
             case TOTAL_CURRENCY:
                 return true;
             case TOKEN_BRIDGE:
+                return true;
+            case ED_VERIFY:
                 return true;
             default:
                 return false;
