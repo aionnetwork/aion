@@ -234,6 +234,27 @@ public class PendingBlockStoreTest {
     }
 
     @Test
+    public void testAddStatusBlock_wException() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        AionBlock block = TestResources.consecutiveBlocks(1).get(0);
+
+        // closing the pending block store to cause exception
+        pb.close();
+
+        assertThat(pb.addStatusBlock(block)).isFalse();
+    }
+
+    @Test
     public void testAddBlockRange() {
         Properties props = new Properties();
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
@@ -314,6 +335,28 @@ public class PendingBlockStoreTest {
     }
 
     @Test
+    public void testAddBlockRange_wException() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        List<AionBlock> blocks = TestResources.consecutiveBlocks(4);
+        assertThat(blocks.size()).isEqualTo(4);
+
+        // closing the pending block store to cause exception
+        pb.close();
+
+        assertThat(pb.addBlockRange(blocks)).isEqualTo(0);
+    }
+
+    @Test
     public void testLoadBlockRange() {
         Properties props = new Properties();
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
@@ -382,6 +425,25 @@ public class PendingBlockStoreTest {
     }
 
     @Test
+    public void testLoadBlockRange_wException() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        // closing the pending block store to cause exception
+        pb.close();
+
+        assertThat(pb.loadBlockRange(100)).isEmpty();
+    }
+
+    @Test
     public void testDropPendingQueues() {
         Properties props = new Properties();
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
@@ -421,6 +483,45 @@ public class PendingBlockStoreTest {
         assertThat(pb.getLevelSize()).isEqualTo(0);
         assertThat(pb.getQueueSize()).isEqualTo(0);
         assertThat(pb.getStatusSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void testDropPendingQueues_wException() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        // add first queue
+        List<AionBlock> blocks = TestResources.consecutiveBlocks(6);
+        AionBlock first = blocks.get(0);
+        pb.addBlockRange(blocks);
+
+        // add second queue
+        AionBlock altBlock = new AionBlock(first.getEncoded());
+        altBlock.setExtraData("random".getBytes());
+        List<AionBlock> sideChain = new ArrayList<>();
+        sideChain.add(altBlock);
+        pb.addBlockRange(sideChain);
+
+        // check storage updates
+        assertThat(pb.getIndexSize()).isEqualTo(7);
+        assertThat(pb.getLevelSize()).isEqualTo(1);
+        assertThat(pb.getQueueSize()).isEqualTo(2);
+        assertThat(pb.getStatusSize()).isEqualTo(0);
+
+        // closing the pending block store to cause exception
+        pb.close();
+
+        // test drop functionality
+        Map<ByteArrayWrapper, List<AionBlock>> actual = pb.loadBlockRange(first.getNumber());
+        pb.dropPendingQueues(first.getNumber(), actual.keySet(), actual);
     }
 
     @Test
@@ -511,6 +612,35 @@ public class PendingBlockStoreTest {
         assertThat(pb.getLevelSize()).isEqualTo(2);
         assertThat(pb.getQueueSize()).isEqualTo(2);
         assertThat(pb.getStatusSize()).isEqualTo(0);
+    }
+
+    @Test
+    public void testNextBase_wException() {
+        Properties props = new Properties();
+        props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+
+        PendingBlockStore pb = null;
+        try {
+            pb = new PendingBlockStore(props);
+        } catch (InvalidFilePathException e) {
+            e.printStackTrace();
+        }
+        assertThat(pb.isOpen()).isTrue();
+
+        AionBlock block = TestResources.consecutiveBlocks(1).get(0);
+
+        // setup: add status
+        assertThat(pb.addStatusBlock(block)).isTrue();
+        assertThat(pb.getStatusSize()).isEqualTo(1);
+
+        long current = block.getNumber() + 1; // above last status
+        long knownBest = 0; // not important for this test
+        long expected = current;
+
+        // closing the pending block store to cause exception
+        pb.close();
+
+        assertThat(pb.nextBase(current, knownBest)).isEqualTo(expected);
     }
 
     @Test

@@ -113,12 +113,6 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
 
     public abstract BigInteger getBalance(final String _address) throws Exception;
 
-    public class ContractCreateResult {
-
-        public Address address;
-        public byte[] transId;
-    }
-
     public Map<String, CompiledContr> contract_compileSolidity(final String _contract) {
         try {
             Map<String, CompiledContr> compiledContracts = new HashMap<String, CompiledContr>();

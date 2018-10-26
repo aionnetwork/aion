@@ -30,9 +30,9 @@ import org.aion.base.type.ITransaction;
 
 public interface IPendingState<TX extends ITransaction> {
 
-    List<TX> addPendingTransactions(List<TX> transactions);
+    List<TxResponse> addPendingTransactions(List<TX> transactions);
 
-    List<TX> addPendingTransaction(TX tx);
+    TxResponse addPendingTransaction(TX tx);
 
     IRepositoryCache<?, ?, ?> getRepository();
 
