@@ -33,21 +33,26 @@ import org.aion.vm.ExecutionContext;
 import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
 
-/** A factory class that produces pre-compiled contract instances. */
+/**
+ * A factory class that produces pre-compiled contract instances.
+ */
 public class ContractFactory implements IContractFactory {
+
     private static final String OWNER =
-            "0000000000000000000000000000000000000000000000000000000000000000";
+        "0000000000000000000000000000000000000000000000000000000000000000";
     private static final String TOTAL_CURRENCY =
-            "0000000000000000000000000000000000000000000000000000000000000100";
+        "0000000000000000000000000000000000000000000000000000000000000100";
 
     private static final String TOKEN_BRIDGE =
-            "0000000000000000000000000000000000000000000000000000000000000200";
+        "0000000000000000000000000000000000000000000000000000000000000200";
     private static final String TOKEN_BRIDGE_INITIAL_OWNER =
-            "a008d7b29e8d1f4bfab428adce89dc219c4714b2c6bf3fd1131b688f9ad804aa";
+        "a008d7b29e8d1f4bfab428adce89dc219c4714b2c6bf3fd1131b688f9ad804aa";
 
-    private static final String ED_VERIFY = "0000000000000000000000000000000000000000000000000000000000000010";
+    private static final String ED_VERIFY =
+        "0000000000000000000000000000000000000000000000000000000000000010";
 
-    private ContractFactory(){}
+    private ContractFactory() {
+    }
 
     /**
      * Returns a new pre-compiled contract such that the address of the new contract is address.
@@ -59,8 +64,8 @@ public class ContractFactory implements IContractFactory {
      */
     @Override
     public IPrecompiledContract getPrecompiledContract(
-            ExecutionContext context,
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
+        ExecutionContext context,
+        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
         switch (context.address().toString()) {
             case TOTAL_CURRENCY:
@@ -68,19 +73,22 @@ public class ContractFactory implements IContractFactory {
                 return null;
             case TOKEN_BRIDGE:
                 TokenBridgeContract contract =
-                        new TokenBridgeContract(
-                                context,
-                                track,
-                                Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER),
-                                Address.wrap(TOKEN_BRIDGE));
+                    new TokenBridgeContract(
+                        context,
+                        track,
+                        Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER),
+                        Address.wrap(TOKEN_BRIDGE));
 
                 if (!context.origin().equals(Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER))
-                        && !contract.isInitialized()) return null;
+                    && !contract.isInitialized()) {
+                    return null;
+                }
 
                 return contract;
             case ED_VERIFY:
                 return new EDVerifyContract();
-            default: return null;
+            default:
+                return null;
         }
     }
 
@@ -115,6 +123,8 @@ public class ContractFactory implements IContractFactory {
      *
      * @return the contract address
      */
-    public static Address getEdVerifyContractAddress() { return Address.wrap(ED_VERIFY); }
+    public static Address getEdVerifyContractAddress() {
+        return Address.wrap(ED_VERIFY);
+    }
 
 }
