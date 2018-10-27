@@ -80,6 +80,26 @@ public class Cli {
         }
     }
 
+    enum TaskPriority {
+        NONE,
+        HELP,
+        VERSION,
+        CONFIG,
+        INFO,
+        CREATE_ACCOUNT,
+        LIST_ACCOUNTS,
+        EXPORT_ACCOUNT,
+        IMPORT_ACCOUNT,
+        SSL,
+        PRUNE_BLOCKS,
+        REVERT,
+        PRUNE_STATE,
+        DUMP_STATE_SIZE,
+        DUMP_STATE,
+        DUMP_BLOCKS,
+        DB_COMPACT
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public ReturnType call(final String[] args, Cfg cfg) {
         try {
@@ -726,9 +746,9 @@ public class Cli {
 
     private void checkArguments(Arguments options) {
         // Find priority of breaking task
-        int breakingTaskPriority = getBreakingTaskPriority(options);
+        TaskPriority breakingTaskPriority = getBreakingTaskPriority(options);
         // Ensure that there is at least one breaking task
-        if (breakingTaskPriority == -1) {
+        if (breakingTaskPriority == TaskPriority.NONE) {
             // No breaking tasks; everything will be executed
             return;
         }
@@ -744,112 +764,130 @@ public class Cli {
         System.out.println(errorMessage);
     }
 
-    int getBreakingTaskPriority(Arguments options) {
+    TaskPriority getBreakingTaskPriority(Arguments options) {
         if (options.isHelp()) {
-            return 0;
+            return TaskPriority.HELP;
         }
         if (options.isVersion() || options.isVersionTag()) {
-            return 1;
+            return TaskPriority.VERSION;
         }
         if (options.getConfig() != null) {
-            return 2;
+            return TaskPriority.CONFIG;
         }
         if (options.isInfo()) {
-            return 3;
+            return TaskPriority.INFO;
         }
         if (options.isCreateAccount()) {
-            return 4;
+            return TaskPriority.CREATE_ACCOUNT;
         }
         if (options.isListAccounts()) {
-            return 5;
+            return TaskPriority.LIST_ACCOUNTS;
         }
         if (options.getExportAccount() != null) {
-            return 6;
+            return TaskPriority.EXPORT_ACCOUNT;
         }
         if (options.getImportAccount() != null) {
-            return 7;
+            return TaskPriority.IMPORT_ACCOUNT;
         }
         if (options.getSsl() != null) {
-            return 8;
+            return TaskPriority.SSL;
         }
         if (options.isRebuildBlockInfo()) {
-            return 9;
+            return TaskPriority.PRUNE_BLOCKS;
         }
         if (options.getRevertToBlock() != null) {
-            return 10;
+            return TaskPriority.REVERT;
         }
         if (options.getPruneStateOption() != null) {
-            return 11;
+            return TaskPriority.PRUNE_STATE;
         }
         if (options.getDumpStateSizeCount() != null) {
-            return 12;
+            return TaskPriority.DUMP_STATE_SIZE;
         }
         if (options.getDumpStateCount() != null) {
-            return 13;
+            return TaskPriority.DUMP_STATE;
         }
         if (options.getDumpBlocksCount() != null) {
-            return 14;
+            return TaskPriority.DUMP_BLOCKS;
         }
         if (options.isDbCompact()) {
-            return 15;
+            return TaskPriority.DB_COMPACT;
         }
-        return -1;
+        return TaskPriority.NONE;
     }
 
-    Set<String> getSkippedTasks(Arguments options, int breakingTaskPriority) {
+    Set<String> getSkippedTasks(Arguments options, TaskPriority breakingTaskPriority) {
         Set<String> skippedTasks = new HashSet<String>();
-        if (breakingTaskPriority < 1 && options.isVersion()) {
+        if (breakingTaskPriority.compareTo(TaskPriority.VERSION) < 0
+            && options.isVersion()) {
             skippedTasks.add("-v");
         }
-        if (breakingTaskPriority < 1 && options.isVersionTag()) {
+        if (breakingTaskPriority.compareTo(TaskPriority.VERSION) < 0
+            && options.isVersionTag()) {
             skippedTasks.add("--version");
         }
-        if (breakingTaskPriority < 2 && options.getNetwork() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.CONFIG) < 0
+            && options.getNetwork() != null) {
             skippedTasks.add("--network");
         }
-        if (breakingTaskPriority < 2 && options.getDirectory() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.CONFIG) < 0
+            && options.getDirectory() != null) {
             skippedTasks.add("--datadir");
         }
-        if (breakingTaskPriority < 2 && options.getConfig() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.CONFIG) < 0
+            && options.getConfig() != null) {
             skippedTasks.add("--config");
         }
-        if (breakingTaskPriority < 3 && options.isInfo()) {
+        if (breakingTaskPriority.compareTo(TaskPriority.INFO) < 0
+            && options.isInfo()) {
             skippedTasks.add("--info");
         }
-        if (breakingTaskPriority < 4 && options.isCreateAccount()) {
+        if (breakingTaskPriority.compareTo(TaskPriority.CREATE_ACCOUNT) < 0
+            && options.isCreateAccount()) {
             skippedTasks.add("--account create");
         }
-        if (breakingTaskPriority < 5 && options.isListAccounts()) {
+        if (breakingTaskPriority.compareTo(TaskPriority.LIST_ACCOUNTS) < 0
+            && options.isListAccounts()) {
             skippedTasks.add("--account list");
         }
-        if (breakingTaskPriority < 6 && options.getExportAccount() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.EXPORT_ACCOUNT) < 0
+            && options.getExportAccount() != null) {
             skippedTasks.add("--account export");
         }
-        if (breakingTaskPriority < 7 && options.getImportAccount() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.IMPORT_ACCOUNT) < 0
+            && options.getImportAccount() != null) {
             skippedTasks.add("--account import");
         }
-        if (breakingTaskPriority < 8 && options.getSsl() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.SSL) < 0
+            && options.getSsl() != null) {
             skippedTasks.add("-s create");
         }
-        if (breakingTaskPriority < 9 && options.isRebuildBlockInfo()) {
+        if (breakingTaskPriority.compareTo(TaskPriority.PRUNE_BLOCKS) < 0
+            && options.isRebuildBlockInfo()) {
             skippedTasks.add("--prune-blocks");
         }
-        if (breakingTaskPriority < 10 && options.getRevertToBlock() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.REVERT) < 0
+            && options.getRevertToBlock() != null) {
             skippedTasks.add("--revert");
         }
-        if (breakingTaskPriority < 11 && options.getPruneStateOption() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.PRUNE_STATE) < 0
+            && options.getPruneStateOption() != null) {
             skippedTasks.add("--state");
         }
-        if (breakingTaskPriority < 12 && options.getDumpStateSizeCount() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE_SIZE) < 0
+            && options.getDumpStateSizeCount() != null) {
             skippedTasks.add("--dump-state-size");
         }
-        if (breakingTaskPriority < 13 && options.getDumpStateCount() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE) < 0
+            && options.getDumpStateCount() != null) {
             skippedTasks.add("--dump-state");
         }
-        if (breakingTaskPriority < 14 && options.getDumpBlocksCount() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_BLOCKS) < 0
+            && options.getDumpBlocksCount() != null) {
             skippedTasks.add("--dump-blocks");
         }
-        if (breakingTaskPriority < 15 && options.isDbCompact()) {
+        if (breakingTaskPriority.compareTo(TaskPriority.DB_COMPACT) < 0
+            && options.isDbCompact()) {
             skippedTasks.add("--db-compact");
         }
         return skippedTasks;
