@@ -818,25 +818,24 @@ public class Cli {
 
     Set<String> getSkippedTasks(Arguments options, TaskPriority breakingTaskPriority) {
         Set<String> skippedTasks = new HashSet<String>();
-        if (breakingTaskPriority.compareTo(TaskPriority.VERSION) < 0
-            && options.isVersion()) {
-            skippedTasks.add("-v");
+        if (breakingTaskPriority.compareTo(TaskPriority.VERSION) < 0) {
+            if (options.isVersion()) {
+                skippedTasks.add("-v");
+            }
+            if (options.isVersionTag()) {
+                skippedTasks.add("--version");
+            }
         }
-        if (breakingTaskPriority.compareTo(TaskPriority.VERSION) < 0
-            && options.isVersionTag()) {
-            skippedTasks.add("--version");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.CONFIG) < 0
-            && options.getNetwork() != null) {
-            skippedTasks.add("--network");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.CONFIG) < 0
-            && options.getDirectory() != null) {
-            skippedTasks.add("--datadir");
-        }
-        if (breakingTaskPriority.compareTo(TaskPriority.CONFIG) < 0
-            && options.getConfig() != null) {
-            skippedTasks.add("--config");
+        if (breakingTaskPriority.compareTo(TaskPriority.CONFIG) < 0) {
+            if (options.getNetwork() != null) {
+                skippedTasks.add("--network");
+            }
+            if (options.getDirectory() != null) {
+                skippedTasks.add("--datadir");
+            }
+            if (options.getConfig() != null) {
+                skippedTasks.add("--config");
+            }
         }
         if (breakingTaskPriority.compareTo(TaskPriority.INFO) < 0
             && options.isInfo()) {
