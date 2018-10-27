@@ -119,6 +119,7 @@ public class Cli {
             return ERROR;
         }
 
+        // make sure that there is no conflicting arguments; otherwise send warning
         checkArguments(options);
 
         try {
