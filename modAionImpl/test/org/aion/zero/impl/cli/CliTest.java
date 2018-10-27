@@ -1117,6 +1117,66 @@ public class CliTest {
         skippedTasks.add("--state");
         parameters.add(new Object[] {input, 9, skippedTasks});
 
+        input = new String[] {"-h", "-v"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("-v");
+        parameters.add(new Object[] {input, 0, skippedTasks});
+
+        input = new String[] {"-h", "--version"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--version");
+        parameters.add(new Object[] {input, 0, skippedTasks});
+
+        input = new String[] {"-h", "-c"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--config");
+        parameters.add(new Object[] {input, 0, skippedTasks});
+
+        input = new String[] {"-i", "ac"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--account create");
+        parameters.add(new Object[] {input, 3, skippedTasks});
+
+        input = new String[] {"-c", "ai"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--account import");
+        parameters.add(new Object[] {input, 2, skippedTasks});
+
+        input = new String[] {"-s create", "-r", "100", "pb"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--revert");
+        skippedTasks.add("--prune-blocks");
+        parameters.add(new Object[] {input, 8, skippedTasks});
+
+        input = new String[] {"-r", "100", "--state", "FULL", "--dump-state-size", "--db-compact"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--state");
+        skippedTasks.add("--dump-state-size");
+        skippedTasks.add("--db-compact");
+        parameters.add(new Object[] {input, 10, skippedTasks});
+
+        input = new String[] {"--state", "FULL", "--db-compact", "--dump-state-size", "--dump-state"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--db-compact");
+        skippedTasks.add("--dump-state-size");
+        skippedTasks.add("--dump-state");
+        parameters.add(new Object[] {input, 11, skippedTasks});
+
+        input = new String[] {"--dump-state-size", "--dump-state"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--dump-state");
+        parameters.add(new Object[] {input, 12, skippedTasks});
+
+        input = new String[] {"--dump-state", "--dump-blocks"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--dump-blocks");
+        parameters.add(new Object[] {input, 13, skippedTasks});
+
+        input = new String[] {"--dump-blocks", "--db-compact"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--db-compact");
+        parameters.add(new Object[] {input, 14, skippedTasks});
+
         return parameters.toArray();
     }
 
