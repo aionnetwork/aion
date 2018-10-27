@@ -1137,7 +1137,9 @@ public class CliTest {
         skippedTasks.add("--account create");
         parameters.add(new Object[] {input, 3, skippedTasks});
 
-        input = new String[] {"-c", "ai"};
+        ECKey key = ECKeyFac.inst().create();
+        String pKey = Hex.toHexString(key.getPrivKeyBytes());
+        input = new String[] {"-c", "ai", pKey};
         skippedTasks = new HashSet<String>();
         skippedTasks.add("--account import");
         parameters.add(new Object[] {input, 2, skippedTasks});
