@@ -34,11 +34,11 @@ public class DBSetExistsException extends Exception {
         super(message);
     }
 
-    public DBSetExistsException(String message, Exception cause) {
+    public DBSetExistsException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public DBSetExistsException(Exception cause) {
+    public DBSetExistsException(Throwable cause) {
         super(cause);
     }
 }

@@ -33,7 +33,7 @@ public class ApplyConfigResultTest {
     public void testCtorAndGetters() {
         boolean success = true;
         String displayableError = "helloWorld";
-        Exception cause = new IndexOutOfBoundsException();
+        Throwable cause = new IndexOutOfBoundsException();
         ApplyConfigResult unit = new ApplyConfigResult(success, displayableError, cause);
         assertThat(unit.isSucceeded(), is(success));
         assertThat(unit.getDisplayableError(), is(displayableError));

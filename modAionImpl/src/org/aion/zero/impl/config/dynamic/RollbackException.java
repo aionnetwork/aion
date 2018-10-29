@@ -27,9 +27,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class RollbackException extends Exception {
-    private final List<Exception> reasons;
+    private final List<Throwable> reasons;
 
-    public RollbackException(String message, List<? extends Exception> throwables) {
+    public RollbackException(String message, List<? extends Throwable> throwables) {
         super(message);
         reasons = new LinkedList<>(throwables);
     }

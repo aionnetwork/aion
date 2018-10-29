@@ -28,7 +28,7 @@ public class KernelControlException extends Exception {
         super(message);
     }
 
-    public KernelControlException(String message, Exception cause) {
+    public KernelControlException(String message, Throwable cause) {
         super(message, cause);
     }
 }
