@@ -33,11 +33,11 @@ import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.precompiled.contracts.Blake2bHashContract;
-import org.aion.precompiled.contracts.KeccakHash;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class Blake2bHashTest {
@@ -55,8 +55,7 @@ public class Blake2bHashTest {
 
     @Test
     public void testBlake256() {
-        byte[] input = Blake2bHashContract.setupInput(0, byteArray1);
-        ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        ExecutionResult res = blake2bHasher.execute(byteArray1, INPUT_NRG);
         byte[] output = res.getOutput();
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -72,6 +71,7 @@ public class Blake2bHashTest {
     }
 
     @Test
+    @Ignore
     public void testBlake128() {
         byte[] input = Blake2bHashContract.setupInput(1, byteArray1);
         ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
@@ -92,8 +92,7 @@ public class Blake2bHashTest {
 
     @Test
     public void invalidInputLength() {
-        byte[] input = Blake2bHashContract.setupInput(0, shortByteArray);
-        ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        ExecutionResult res = blake2bHasher.execute(shortByteArray, INPUT_NRG);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
     }
 
@@ -105,6 +104,7 @@ public class Blake2bHashTest {
     }
 
     @Test
+    @Ignore
     public void testInvalidOperation() {
         byte[] input = Blake2bHashContract.setupInput(3, byteArray1);
         ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
