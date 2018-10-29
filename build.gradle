@@ -223,14 +223,15 @@ build {
     dependsOn("collectDependentJars")
 }
 
-task prePack(type:Exec)  { 
+task prePack(type:Exec)  {
+    dependsOn ':aion_api:cleanPack' 
     dependsOn ':aion_api:build'
     commandLine 'sh', 'script/prepack.sh' 
 }
 task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
 
 /** Replaces `ant pack_build` */
-task pack(type: Tar) { 
+task pack(type: Tar) {
     dependsOn build
     dependsOn prePack
     dependsOn collectDependentJars 
@@ -290,6 +291,7 @@ task packDevDocker(type: Exec) {
 
 clean { 
     dependsOn "ant-3rd_clean"
+    dependsOn ':aion_api:clean' 
     delete dirPack
     delete file('report')
 }

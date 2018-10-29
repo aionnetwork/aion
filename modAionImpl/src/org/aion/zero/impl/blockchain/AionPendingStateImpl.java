@@ -275,9 +275,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     private static AionPendingStateImpl initializeAionPendingState(
-            CfgAion _cfgAion, AionRepositoryImpl _repository, AionBlockchainImpl _blockchain) {
+            CfgAion _cfgAion, AionRepositoryImpl _repository, AionBlockchainImpl _blockchain, boolean test) {
         AionPendingStateImpl ps = new AionPendingStateImpl(_cfgAion, _repository);
-        ps.init(_blockchain);
+        ps.init(_blockchain, test);
         return ps;
     }
 
@@ -285,7 +285,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         static final AionPendingStateImpl INSTANCE =
                 initializeAionPendingState(
-                        CfgAion.inst(), AionRepositoryImpl.inst(), AionBlockchainImpl.inst());
+                        CfgAion.inst(), AionRepositoryImpl.inst(), AionBlockchainImpl.inst(), false);
     }
 
     public static AionPendingStateImpl inst() {
@@ -294,7 +294,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     public static AionPendingStateImpl createForTesting(
             CfgAion _cfgAion, AionBlockchainImpl _blockchain, AionRepositoryImpl _repository) {
-        return initializeAionPendingState(_cfgAion, _repository, _blockchain);
+        return initializeAionPendingState(_cfgAion, _repository, _blockchain, true);
     }
 
     private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
@@ -335,7 +335,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
     }
 
-    public void init(final AionBlockchainImpl blockchain) {
+    public void init(final AionBlockchainImpl blockchain, boolean test) {
         if (!this.isSeed) {
             this.blockchain = blockchain;
             this.best = new AtomicReference<>();
@@ -380,7 +380,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                 this.txBuffer = Collections.synchronizedList(new ArrayList<>());
             }
 
-            ees.start(new EpPS());
+            if (!test) {
+                ees.start(new EpPS());
+            }
         }
     }
 
