@@ -18,7 +18,8 @@
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
- *     Centrys
+ *     Centrys.
+ *     Aion foundation.
  */
 
 package org.aion.precompiled.contracts;
@@ -31,7 +32,7 @@ import org.aion.vm.IPrecompiledContract;
 public class EDVerifyContract implements IPrecompiledContract {
 
     // set to a default cost for now, this will need to be adjusted
-    private final static long COST = 21000L;
+    private final static long COST = 3700L;
 
     @Override
     public IExecutionResult execute(byte[] input, long nrgLimit) {
@@ -60,7 +61,7 @@ public class EDVerifyContract implements IPrecompiledContract {
             byte[] result = new byte[1];
             result[0] = verify ? (byte) 1 : (byte) 0;
             return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, nrgLimit - COST, result);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             return new ExecutionResult(ExecutionResult.ResultCode.INTERNAL_ERROR, 0);
         }
     }
