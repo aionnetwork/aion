@@ -38,7 +38,7 @@ public class ResTxReceiptHandler extends Handler {
 
     @Override
     public void receive(int id, String displayId, byte[] msg) {
-        LOGGER.info("<<< ResTxReceiptHandler >>> receive start");
+        LOGGER.info("<<< ResTxReceiptHandler receive-start >>> from: " + displayId);
         final ResTxReceipts resTxReceipts;
         try {
             resTxReceipts = new ResTxReceipts(msg);
@@ -57,7 +57,12 @@ public class ResTxReceiptHandler extends Handler {
             AionTransaction tx = txs.get(atr.getIndex());
             atr.setTransaction(tx);
         }
-        persist(resTxReceipts.getTxInfo());
+        if(!resTxReceipts.getTxInfo().isEmpty()) {
+            persist(resTxReceipts.getTxInfo());
+        } else {
+            LOGGER.info("<<< ResTxReceiptHandler::receiver >>> called with empty tx receipts so no-op");
+        }
+
     }
 
     protected void persist(List<AionTxInfo> txInfo) {

@@ -184,6 +184,7 @@ public class AionHub {
                 cfg.getSync().getCompactFrequency(),
                 cfg.getNet().getP2p().getMaxActiveNodes());
                 cfg.getSync().getCompactFrequency()
+                cfg.getSync().isRequestReceipts(),
                 receiptsRetrievalVerifier);
 
         ChainConfiguration chainConfig = new ChainConfiguration();

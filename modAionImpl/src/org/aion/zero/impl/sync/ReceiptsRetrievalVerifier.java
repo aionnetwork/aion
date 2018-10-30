@@ -40,14 +40,6 @@ public class ReceiptsRetrievalVerifier {
             outstandingRequests.put(ByteUtil.toHexString(tx.getHash()), b);
         }
 
-        long b0 = blocks.get(0).getNumber();
-        long bn = blocks.get(blocks.size()-1).getNumber();
-        String logMsg = String.format(
-                "<<<ReceiptsRetrievalVerifier>>> requested receipts for for blocks (%d, %d) from peer %s ",
-                b0, bn, originNodeDisplayId
-        );
-        LOG.info(logMsg);
-
         ReqTxReceipts request = new ReqTxReceipts(blocks
                 .stream()
                 .flatMap(b -> b.getTransactionsList()
@@ -55,6 +47,15 @@ public class ReceiptsRetrievalVerifier {
                 )
                 .collect(Collectors.toList())
         );
+
+        long b0 = blocks.get(0).getNumber();
+        long bn = blocks.get(blocks.size()-1).getNumber();
+        String logMsg = String.format(
+                "<<<ReceiptsRetrievalVerifier>>> requesting receipts for for blocks (%d, %d) from peer %s.  reqSize = " + request.getTxHashes().size(),
+                b0, bn, originNodeDisplayId
+        );
+        LOG.info(logMsg);
+
         p2p.send(originNodeHashId, originNodeDisplayId, request);
     }
 

@@ -43,19 +43,19 @@ public class ReqTxReceiptHandler extends Handler {
 
     @Override
     public void receive(int id, String displayId, byte[] msg) {
-        LOGGER.info("<<< ReqTxReceiptHandler >>> receive start");
         final ReqTxReceipts reqTxReceipts;
         try {
             reqTxReceipts = new ReqTxReceipts(msg);
         } catch (NullPointerException | IllegalArgumentException ex) {
             LOGGER.error(
-                    "<req-tx-receipts decode-error, unable to decode bodies from {}, len: {}, reason: {}>",
+                    "<<< ReqTxReceiptHandler receive >>> req-tx-receipts decode-error, unable to decode bodies from {}, len: {}, reason: {}",
                     displayId, msg.length, ex.getMessage());
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("req-tx-receipts dump: {}", ByteUtil.toHexString(msg));
             }
             return;
         }
+        LOGGER.info("<<< ReqTxReceiptHandler receive >>> receive start, request size " + reqTxReceipts.getTxHashes().size());
 
         List<AionTxInfo> receipts = new LinkedList<>();
         for(byte[] txHash : reqTxReceipts.getTxHashes()) {
