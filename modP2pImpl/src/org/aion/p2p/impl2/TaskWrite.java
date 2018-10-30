@@ -76,7 +76,7 @@ public class TaskWrite implements Runnable {
             // send outbound event to ioLoop for I/O
             this.ioLoop.write(buf, this.sc);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("<p2p-taskWrite-throw>" + e.toString());
         }
     }
 }
