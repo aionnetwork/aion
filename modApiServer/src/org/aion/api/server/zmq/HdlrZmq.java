@@ -62,7 +62,7 @@ public class HdlrZmq implements IHdlr {
         try {
             return this.api.process(request, socketId);
         } catch (Exception e) {
-            LOGGER.error("zmq incoming msg process failed! " + e.getMessage());
+            LOGGER.error("zmq incoming msg process failed! " + e);
             return ApiUtil.toReturnHeader(
                     this.api.getApiVersion(),
                     Message.Retcode.r_fail_zmqHandler_exception_VALUE,

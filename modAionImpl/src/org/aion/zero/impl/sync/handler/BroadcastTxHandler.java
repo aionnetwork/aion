@@ -96,7 +96,7 @@ public final class BroadcastTxHandler extends Handler {
                 try {
                     txQueue.drainTo(txs);
                 } catch (Exception e) {
-                    log.error("BufferTask throw{}", e.toString());
+                    log.error("BufferTask throw{}", e);
                 }
                 if (!txs.isEmpty()) {
                     if (log.isTraceEnabled()) {
@@ -146,7 +146,7 @@ public final class BroadcastTxHandler extends Handler {
             }
 
         } catch (Exception e) {
-            log.error("BroadcastTxHandler throw {}", e.toString());
+            log.error("BroadcastTxHandler throw {}", e);
         }
     }
 

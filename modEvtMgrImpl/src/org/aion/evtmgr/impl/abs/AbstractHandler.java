@@ -67,7 +67,7 @@ public abstract class AbstractHandler {
                                                 "Failed to dispatch event: eventType = {}, callbackType = {}, {}",
                                                 e.getEventType(),
                                                 e.getCallbackType(),
-                                                ex.toString());
+                                                ex);
                                     }
                                 }
                             }
@@ -79,9 +79,9 @@ public abstract class AbstractHandler {
                             queue.clear();
                             interrupted = true;
                         } catch (InterruptedException e) {
-                            LOG.error("Handler interrupt exception {}", e.toString());
+                            LOG.error("Handler interrupt exception {}", e);
                         } catch (Error e) {
-                            LOG.error("Handler interrupt error {}", e.toString());
+                            LOG.error("Handler interrupt error {}", e);
                         }
                     });
 
@@ -93,7 +93,7 @@ public abstract class AbstractHandler {
         try {
             return this.events.add(_evt);
         } catch (Exception e) {
-            LOG.error("addEvent exception {}", e.toString());
+            LOG.error("addEvent exception {}", e);
             return false;
         }
     }
@@ -102,7 +102,7 @@ public abstract class AbstractHandler {
         try {
             return this.events.remove(_evt);
         } catch (Exception e) {
-            LOG.error("removeEvent exception {}", e.toString());
+            LOG.error("removeEvent exception {}", e);
             return false;
         }
     }
@@ -113,7 +113,7 @@ public abstract class AbstractHandler {
         try {
             this.queue.add(new EventDummy());
         } catch (Exception e) {
-            LOG.error("stop exception {}", e.toString());
+            LOG.error("stop exception {}", e);
         }
 
         if (LOG.isInfoEnabled()) {
@@ -172,7 +172,7 @@ public abstract class AbstractHandler {
         try {
             this.queue.add(_evt);
         } catch (Exception e) {
-            LOG.error("onEvent exception! {}", e.toString());
+            LOG.error("onEvent exception! {}", e);
         }
     }
 

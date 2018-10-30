@@ -275,7 +275,7 @@ final class TaskImportBlocks implements Runnable {
                     }
                 }
             } catch (Exception e) {
-                log.error("<import-block throw> {}", e.toString());
+                log.error("<import-block throw> {}", e);
                 if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
                     log.error("Shutdown due to lack of disk space.");
                     System.exit(0);
@@ -690,7 +690,7 @@ final class TaskImportBlocks implements Runnable {
                             break;
                         }
                     } catch (Exception e) {
-                        log.error("<import-block throw> {}", e.toString());
+                        log.error("<import-block throw> {}", e);
                         if (e.getMessage() != null
                                 && e.getMessage().contains("No space left on device")) {
                             log.error("Shutdown due to lack of disk space.");

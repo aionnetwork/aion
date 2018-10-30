@@ -249,7 +249,7 @@ public class AionHub {
         try {
             this.eventMgr = EventMgrModule.getSingleton(prop).getEventMgr();
         } catch (Exception e) {
-            genLOG.error("Can not load the Event Manager Module", e.getMessage());
+            genLOG.error("Can not load the Event Manager Module", e);
         }
 
         if (eventMgr == null) {
