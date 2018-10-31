@@ -329,9 +329,9 @@ public class Cli {
                 try {
                     RecoveryUtils.pruneOrRecoverState(pruning_type);
                     return EXIT;
-                } catch (Throwable t) {
+                } catch (Exception e) {
                     System.out.println("Reorganizing the state storage FAILED due to:");
-                    t.printStackTrace();
+                    e.printStackTrace();
                     return ERROR;
                 }
             }
@@ -430,7 +430,7 @@ public class Cli {
 
             // if no return happened earlier, run the kernel
             return RUN;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // TODO: should be moved to individual procedures
             System.out.println("");
             e.printStackTrace();

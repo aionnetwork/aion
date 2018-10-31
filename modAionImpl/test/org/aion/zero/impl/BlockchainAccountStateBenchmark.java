@@ -243,8 +243,8 @@ public class BlockchainAccountStateBenchmark {
 
             for (int i = 0; i < 100; i++)
                 createContractBundle(bc, senderKey, bc.getBestBlock(), contractAddress);
-        } catch (Throwable t) {
-            t.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             bundle.bc.getRepository().close();
             Thread.sleep(1000L);

@@ -30,7 +30,7 @@ public final class EventMgrModule {
 
     private static IEventMgr EVTMGR;
 
-    private EventMgrModule(Properties config) throws Throwable {
+    private EventMgrModule(Properties config) throws Exception {
         String moduleName = (String) config.get(MODULENAME);
         if (moduleName != null) {
             EVTMGR =
@@ -48,7 +48,7 @@ public final class EventMgrModule {
         }
     }
 
-    public static EventMgrModule getSingleton(Properties config) throws Throwable {
+    public static EventMgrModule getSingleton(Properties config) throws Exception {
         if (config == null) {
             throw new Exception("empty config!");
         }
@@ -60,7 +60,7 @@ public final class EventMgrModule {
         return EventMgrModule.singleton;
     }
 
-    public IEventMgr getEventMgr() throws Throwable {
+    public IEventMgr getEventMgr() throws Exception {
         if (EventMgrModule.singleton == null) {
             throw new Exception("Module does not initialzed!");
         }

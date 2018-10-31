@@ -2440,7 +2440,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     @Override
-    public TxWaitingMappingUpdate takeTxWait() throws Throwable {
+    public TxWaitingMappingUpdate takeTxWait() throws Exception {
         return txWait.take();
     }
 

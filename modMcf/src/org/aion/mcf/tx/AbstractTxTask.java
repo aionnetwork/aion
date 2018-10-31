@@ -60,7 +60,7 @@ public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMg
     /** Class fails silently */
     @SuppressWarnings("unchecked")
     @Override
-    public List<TX> call() throws Exception {
+    public List<TX> call() {
 
         try {
             Map<Integer, INode> activeNodes = this.p2pMgr.getActiveNodes();
@@ -71,9 +71,9 @@ public abstract class AbstractTxTask<TX extends ITransaction, P2P extends IP2pMg
             }
 
             return tx;
-        } catch (Throwable th) {
+        } catch (Exception e) {
             // Todo : Log
-            System.out.println(th.getMessage());
+            e.printStackTrace();
         }
 
         return null;
