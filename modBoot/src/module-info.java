@@ -13,6 +13,7 @@ module aion.boot {
     requires  aion.fastvm;
     requires aion.base;
     requires libnzmq;
+    requires aion.zero;
 
     exports org.aion;
 }
