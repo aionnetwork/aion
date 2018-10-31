@@ -11,9 +11,8 @@ def dirWorkspace = "./"
 def dirPack = "./pack"
 def dirLibFile = "lib"
 def dirModFile ="./mod"
-def javaHome = System.getProperty('java.home')
-
-def vmVersion = "0.3.1"
+def javaHome = "$System.env.JAVA_HOME"
+def vmVersion = "0.3.2"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
 allprojects { 
@@ -60,7 +59,7 @@ task compileNative(type:Exec) {
         "-shared", 
         "-I${javaHome}/include", 
         "-I${javaHome}/include/linux", 
-        "-I${dirBuildNative}", 
+        "-I${dirBuildNative}",
         "-I${dirNative}/linux/sodium", 
         "-mtune=generic", 
         "-m64", 
@@ -196,7 +195,11 @@ task downloadFastVmGit(type:Download) {
     dest buildDir
 }
 
-task downloadSolidityGit(type:Download) { 
+task downloadSolidityGit(type:Download) {
+    doFirst {
+        assert file("./solidity_v${vmVersion}.tar.gz").exists()
+    }
+ 
     overwrite false // TODO This seems to work only when this task is directly invoked
     onlyIfModified true
     src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
@@ -213,8 +216,8 @@ task getVmDependencies {
     } else {
         // 'overwrite' property of Download task doesn't seem to work when
         // there's multiple files in the task, so splitting them into two
-        dependsOn downloadFastVmGit
-        dependsOn downloadSolidityGit
+        //dependsOn downloadFastVmGit
+        //dependsOn downloadSolidityGit
     }
 }
 
