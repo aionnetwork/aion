@@ -23,12 +23,14 @@
 package org.aion.precompiled;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryConfig;
+import org.aion.base.util.ByteUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
@@ -45,6 +47,7 @@ public class Blake2bHashTest {
     private static final long INPUT_NRG = 1000;
 
     private byte[] byteArray1 = "a0010101010101010101010101".getBytes();
+    private byte[] byteArray2 = "1".getBytes();
     private byte[] shortByteArray = "".getBytes();
     private Blake2bHashContract blake2bHasher;
 
@@ -60,14 +63,20 @@ public class Blake2bHashTest {
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
+        String blake2bStr1 = "aa6648de0988479263cf3730a48ef744d238b96a5954aa77d647ae965d3f7715";
+        assertTrue(blake2bStr1.equals(ByteUtil.toHexString(output)));
+    }
 
-        System.out.println("The blake256 hash for '" + new String(byteArray1,
-            StandardCharsets.UTF_8) + "' is:");
-        System.out.print("      ");
-        for (byte b : output) {
-            System.out.print(b + " ");
-        }
-        System.out.println();
+    @Test
+    public void testBlake256_2() {
+        ExecutionResult res = blake2bHasher.execute(byteArray2, INPUT_NRG);
+        byte[] output = res.getOutput();
+
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(32, output.length);
+
+        String blake2bStr2 = "92cdf578c47085a5992256f0dcf97d0b19f1f1c9de4d5fe30c3ace6191b6e5db";
+        assertTrue(blake2bStr2.equals(ByteUtil.toHexString(output)));
     }
 
     @Test
