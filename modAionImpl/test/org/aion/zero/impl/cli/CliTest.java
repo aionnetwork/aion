@@ -28,6 +28,7 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
@@ -43,7 +44,9 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.base.util.Hex;
@@ -52,11 +55,13 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.zero.impl.cli.Cli.ReturnType;
+import org.aion.zero.impl.cli.Cli.TaskPriority;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import picocli.CommandLine;
 
 /** CliTest for new version with use of different networks. */
 @RunWith(JUnitParamsRunner.class)
@@ -1062,6 +1067,134 @@ public class CliTest {
         assertThat(mockCli.call(new String[] {option, fakePKey}, cfg)).isEqualTo(ERROR);
 
         assertThat(mockCli.call(new String[] {option, "hello"}, cfg)).isEqualTo(ERROR);
+    }
+
+    /** Parameters for testing {@link #testCheckArguments(String[], TaskPriority, Set<String>)}. */
+    @SuppressWarnings("unused")
+    private Object parametersForArgumentCheck() {
+        List<Object> parameters = new ArrayList<>();
+
+        String[] input;
+        Set<String> skippedTasks;
+
+        input = new String[] {"--info"};
+        skippedTasks = new HashSet<String>();
+        parameters.add(new Object[] {input, TaskPriority.INFO, skippedTasks});
+
+        input = new String[] {"--account list", "--account create"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--account list");
+        parameters.add(new Object[] {input, TaskPriority.CREATE_ACCOUNT, skippedTasks});
+
+        input = new String[] {"--info", "--config", "mainnet", "-s create"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--info");
+        skippedTasks.add("-s create");
+        parameters.add(new Object[] {input, TaskPriority.CONFIG, skippedTasks});
+
+        input = new String[] {"--help", "--network", "mainnet", "--datadir", dataDirectory};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--network");
+        skippedTasks.add("--datadir");
+        parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
+
+        input = new String[] {"--version", "-v"};
+        skippedTasks = new HashSet<String>();
+        parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
+
+        input = new String[] {"--dump-blocks", "5", "--dump-state", "5", "--dump-state-size", "5"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--dump-blocks");
+        skippedTasks.add("--dump-state");
+        parameters.add(new Object[] {input, TaskPriority.DUMP_STATE_SIZE, skippedTasks});
+
+        input = new String[] {"ac", "ae", "account"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--account export");
+        parameters.add(new Object[] {input, TaskPriority.CREATE_ACCOUNT, skippedTasks});
+
+        input = new String[] {"--prune-blocks", "--state", "FULL"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--state");
+        parameters.add(new Object[] {input, TaskPriority.PRUNE_BLOCKS, skippedTasks});
+
+        input = new String[] {"-h", "-v"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("-v");
+        parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
+
+        input = new String[] {"-h", "--version"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--version");
+        parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
+
+        input = new String[] {"-h", "-c"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--config");
+        parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
+
+        input = new String[] {"-i", "ac"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--account create");
+        parameters.add(new Object[] {input, TaskPriority.INFO, skippedTasks});
+
+        ECKey key = ECKeyFac.inst().create();
+        String pKey = Hex.toHexString(key.getPrivKeyBytes());
+        input = new String[] {"-c", "ai", pKey};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--account import");
+        parameters.add(new Object[] {input, TaskPriority.CONFIG, skippedTasks});
+
+        input = new String[] {"-s create", "-r", "100", "pb"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--revert");
+        skippedTasks.add("--prune-blocks");
+        parameters.add(new Object[] {input, TaskPriority.SSL, skippedTasks});
+
+        input = new String[] {"-r", "100", "--state", "FULL", "--dump-state-size", "--db-compact"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--state");
+        skippedTasks.add("--dump-state-size");
+        skippedTasks.add("--db-compact");
+        parameters.add(new Object[] {input, TaskPriority.REVERT, skippedTasks});
+
+        input = new String[] {"--state", "FULL", "--db-compact", "--dump-state-size", "--dump-state"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--db-compact");
+        skippedTasks.add("--dump-state-size");
+        skippedTasks.add("--dump-state");
+        parameters.add(new Object[] {input, TaskPriority.PRUNE_STATE, skippedTasks});
+
+        input = new String[] {"--dump-state-size", "--dump-state"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--dump-state");
+        parameters.add(new Object[] {input, TaskPriority.DUMP_STATE_SIZE, skippedTasks});
+
+        input = new String[] {"--dump-state", "--dump-blocks"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--dump-blocks");
+        parameters.add(new Object[] {input, TaskPriority.DUMP_STATE, skippedTasks});
+
+        input = new String[] {"--dump-blocks", "--db-compact"};
+        skippedTasks = new HashSet<String>();
+        skippedTasks.add("--db-compact");
+        parameters.add(new Object[] {input, TaskPriority.DUMP_BLOCKS, skippedTasks});
+
+        return parameters.toArray();
+    }
+
+    @Test
+    @Parameters(method = "parametersForArgumentCheck")
+    public void testCheckArguments(
+        String[] input, TaskPriority expectedPriority, Set<String> expectedTasks) {
+        Arguments options = new Arguments();
+        CommandLine parser = new CommandLine(options);
+        parser.parse(input);
+
+        TaskPriority breakingTaskPriority = cli.getBreakingTaskPriority(options);
+        assertEquals(expectedPriority, breakingTaskPriority);
+        Set<String> skippedTasks = cli.getSkippedTasks(options, breakingTaskPriority);
+        assertEquals(expectedTasks, skippedTasks);
     }
 
     // Methods below taken from FileUtils class
