@@ -28,8 +28,9 @@ import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
+import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
-import org.aion.precompiled.contracts.TotalCurrencyContract;
+import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
@@ -39,20 +40,29 @@ import org.aion.vm.IPrecompiledContract;
  */
 public class ContractFactory implements IContractFactory {
 
-    private static final String OWNER =
+    private static final String ADDR_OWNER =
         "0000000000000000000000000000000000000000000000000000000000000000";
-    private static final String TOTAL_CURRENCY =
+    private static final String ADDR_TOTAL_CURRENCY =
         "0000000000000000000000000000000000000000000000000000000000000100";
 
-    private static final String TOKEN_BRIDGE =
+    private static final String ADDR_TOKEN_BRIDGE =
         "0000000000000000000000000000000000000000000000000000000000000200";
-    private static final String TOKEN_BRIDGE_INITIAL_OWNER =
+    private static final String ADDR_TOKEN_BRIDGE_INITIAL_OWNER =
         "a008d7b29e8d1f4bfab428adce89dc219c4714b2c6bf3fd1131b688f9ad804aa";
 
-    private static final String ED_VERIFY =
+    private static final String ADDR_ED_VERIFY =
         "0000000000000000000000000000000000000000000000000000000000000010";
+    private static final String ADDR_BLAKE2B_HASH =
+        "0000000000000000000000000000000000000000000000000000000000000012";
+    private static final String ADDR_TX_HASH =
+        "0000000000000000000000000000000000000000000000000000000000000014";
+
+    private static IPrecompiledContract PC_ED_VERIFY;
+    private static IPrecompiledContract PC_BLAKE2B_HASH;
 
     public ContractFactory() {
+        PC_ED_VERIFY = new EDVerifyContract();
+        PC_BLAKE2B_HASH = new Blake2bHashContract();
     }
 
     /**
@@ -69,25 +79,29 @@ public class ContractFactory implements IContractFactory {
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
         switch (context.address().toString()) {
-            case TOTAL_CURRENCY:
-                //return new TotalCurrencyContract(track, context.sender(), Address.wrap(OWNER));
+            case ADDR_TOTAL_CURRENCY:
+                //return new TotalCurrencyContract(track, context.sender(), Address.wrap(ADDR_OWNER));
                 return null;
-            case TOKEN_BRIDGE:
+            case ADDR_TOKEN_BRIDGE:
                 TokenBridgeContract contract =
                     new TokenBridgeContract(
                         context,
                         track,
-                        Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER),
-                        Address.wrap(TOKEN_BRIDGE));
+                        Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
+                        Address.wrap(ADDR_TOKEN_BRIDGE));
 
-                if (!context.origin().equals(Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER))
+                if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
                     && !contract.isInitialized()) {
                     return null;
                 }
 
                 return contract;
-            case ED_VERIFY:
-                return new EDVerifyContract();
+            case ADDR_ED_VERIFY:
+                return PC_ED_VERIFY;
+            case ADDR_BLAKE2B_HASH:
+                return PC_BLAKE2B_HASH;
+            case ADDR_TX_HASH:
+                return new TXHashContract(context);
             default:
                 return null;
         }
@@ -101,11 +115,12 @@ public class ContractFactory implements IContractFactory {
      */
     public static boolean isPrecompiledContract(Address address) {
         switch (address.toString()) {
-            case TOTAL_CURRENCY:
-                return true;
-            case TOKEN_BRIDGE:
-                return true;
-            case ED_VERIFY:
+            case ADDR_TOTAL_CURRENCY:
+                return false;
+            case ADDR_TOKEN_BRIDGE:
+            case ADDR_ED_VERIFY:
+            case ADDR_BLAKE2B_HASH:
+            case ADDR_TX_HASH:
                 return true;
             default:
                 return false;
@@ -118,7 +133,7 @@ public class ContractFactory implements IContractFactory {
      * @return the contract address.
      */
     public static Address getTotalCurrencyContractAddress() {
-        return Address.wrap(TOTAL_CURRENCY);
+        return Address.wrap(ADDR_TOTAL_CURRENCY);
     }
 
     /**
@@ -127,7 +142,16 @@ public class ContractFactory implements IContractFactory {
      * @return the contract address
      */
     public static Address getEdVerifyContractAddress() {
-        return Address.wrap(ED_VERIFY);
+        return Address.wrap(ADDR_ED_VERIFY);
+    }
+
+    /**
+     * Returns the address of the TxHash contract.
+     *
+     * @return the contract address
+     */
+    public static Address getTxHashContractAddress() {
+        return Address.wrap(ADDR_TX_HASH);
     }
 
 }
