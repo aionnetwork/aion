@@ -25,6 +25,6 @@ public class TXHashContract implements IPrecompiledContract {
             return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
         }
 
-        return new ExecutionResult(ResultCode.SUCCESS, nrgLeft, context.transactionHash());
+        return new ExecutionResult(ResultCode.SUCCESS, nrgLeft, context.getOriginalTxHash());
     }
 }
