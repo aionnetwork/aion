@@ -106,9 +106,27 @@ public class Blake2bHashTest {
     }
 
     @Test
+    public void invalidInputLength2() {
+        byte[] BigByteArray = new byte[1024*1024 + 1];
+        ExecutionResult res = blake2bHasher.execute(BigByteArray, INPUT_NRG);
+        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+    }
+
+    @Test
     public void insufficientNRG() {
         byte[] input = Blake2bHashContract.setupInput(0, byteArray1);
         ExecutionResult res = blake2bHasher.execute(input, 30);
+        assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
+    }
+
+    @Test
+    public void insufficientNRG2() {
+        byte[] BigByteArray = new byte[1024*1024];
+        long nrg = (long) (Math.ceil(1024*1024/4)*6 + 30);
+        ExecutionResult res = blake2bHasher.execute(BigByteArray, nrg);
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+
+        res = blake2bHasher.execute(BigByteArray, nrg - 1);
         assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
     }
 
