@@ -66,7 +66,7 @@ public class ColdWallet {
     }
 
     static Config processInput(String[] args) {
-        System.out.println("ColdWallet [v0.0.2] offline transaction creation utility");
+        System.out.println("ColdWallet [v0.0.3] offline transaction creation utility");
         // setup
         Config config = new Config();
         Scanner sc = new Scanner(System.in);
