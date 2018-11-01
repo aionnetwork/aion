@@ -42,14 +42,14 @@ public class Blake2bHashContract implements IPrecompiledContract {
     /**
      * Returns the hash of given input
      *
-     * <p>input is defined as: [1b operator] 0 for blake256, 1 for blake128 [nb input byte array]
-     *
      * <p>the returned hash is in ExecutionResult.getOutput
+     *
+     * <p>the maximum data hash is 1M bytes
      */
     public ExecutionResult execute(byte[] input, long nrg) {
 
         // check length
-        if (input == null || input.length == 0) {
+        if (input == null || input.length == 0 || input.length > 1_048_576L) {
             return new ExecutionResult(
                 ResultCode.INTERNAL_ERROR, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
