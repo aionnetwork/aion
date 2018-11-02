@@ -58,7 +58,7 @@ public class NodeMgr implements INodeMgr {
     private final ReentrantLock putLock = new ReentrantLock();
     private final Condition notEmpty = takeLock.newCondition();
     private final Map<Integer, INode> tempNodes =
-            Collections.synchronizedMap(new LinkedHashMap<>());
+        Collections.synchronizedMap(new LinkedHashMap<>());
     private final Map<Integer, INode> outboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> activeNodes = new ConcurrentHashMap<>();
@@ -80,37 +80,39 @@ public class NodeMgr implements INodeMgr {
         return new String(hexChars);
     }
 
-    /** @param selfShortId String */
+    /**
+     * @param selfShortId String
+     */
     @Override
     public String dumpNodeInfo(String selfShortId, boolean completeInfo) {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");
         sb.append(
-                String.format(
-                        "======================================================================== p2p-status-%6s =========================================================================\n",
-                        selfShortId));
+            String.format(
+                "======================================================================== p2p-status-%6s =========================================================================\n",
+                selfShortId));
         sb.append(
-                String.format(
-                        "temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                                         s - seed node, td - total difficulty, # - block number, bv - binary version\n",
-                        tempNodesSize(),
-                        inboundNodes.size(),
-                        outboundNodes.size(),
-                        activeNodes.size()));
+            String.format(
+                "temp[%3d] inbound[%3d] outbound[%3d] active[%3d]                                         s - seed node, td - total difficulty, # - block number, bv - binary version\n",
+                tempNodesSize(),
+                inboundNodes.size(),
+                outboundNodes.size(),
+                activeNodes.size()));
 
         sb.append(appendColumnFormat());
         List<INode> sorted = new ArrayList<>(activeNodes.values());
         if (sorted.size() > 0) {
             sorted.sort(
-                    (n1, n2) -> {
-                        int tdCompare = n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
-                        if (tdCompare == 0) {
-                            Long n2Bn = n2.getBestBlockNumber();
-                            Long n1Bn = n1.getBestBlockNumber();
-                            return n2Bn.compareTo(n1Bn);
-                        } else {
-                            return tdCompare;
-                        }
-                    });
+                (n1, n2) -> {
+                    int tdCompare = n2.getTotalDifficulty().compareTo(n1.getTotalDifficulty());
+                    if (tdCompare == 0) {
+                        Long n2Bn = n2.getBestBlockNumber();
+                        Long n1Bn = n1.getBestBlockNumber();
+                        return n2Bn.compareTo(n1Bn);
+                    } else {
+                        return tdCompare;
+                    }
+                });
 
             for (INode n : sorted) {
                 try {
@@ -119,7 +121,7 @@ public class NodeMgr implements INodeMgr {
                     }
                     sb.append(appendNodeInfo(n));
                 } catch (Exception ex) {
-                    p2pLOG.error("NodeMgr dumpNodeInfo exception.", ex);
+                    p2pLOG.error("<NodeMgr dumpNodeInfo exception>", ex);
                 }
             }
         }
@@ -128,33 +130,35 @@ public class NodeMgr implements INodeMgr {
 
     private static String appendColumnFormat() {
         return "\n          s"
-                + "               td"
-                + "          #"
-                + "                                                             hash"
-                + "              ip"
-                + "  port"
-                + "     conn"
-                + "              bv"
-                + "           ci\n"
-                + "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
+            + "               td"
+            + "          #"
+            + "                                                             hash"
+            + "              ip"
+            + "  port"
+            + "     conn"
+            + "              bv"
+            + "           ci\n"
+            + "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n";
     }
 
     private String appendNodeInfo(INode n) {
         return String.format(
-                "id:%6s %c %16s %10d %64s %15s %5d %8s %15s %12s\n",
-                n.getIdShort(),
-                n.getIfFromBootList() ? 'y' : ' ',
-                n.getTotalDifficulty().toString(10),
-                n.getBestBlockNumber(),
-                n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
-                n.getIpStr(),
-                n.getPort(),
-                n.getConnection(),
-                n.getBinaryVersion(),
-                n.getChannel().hashCode());
+            "id:%6s %c %16s %10d %64s %15s %5d %8s %15s %12s\n",
+            n.getIdShort(),
+            n.getIfFromBootList() ? 'y' : ' ',
+            n.getTotalDifficulty().toString(10),
+            n.getBestBlockNumber(),
+            n.getBestBlockHash() == null ? "" : bytesToHex(n.getBestBlockHash()),
+            n.getIpStr(),
+            n.getPort(),
+            n.getConnection(),
+            n.getBinaryVersion(),
+            n.getChannel().hashCode());
     }
 
-    /** @param _ip String */
+    /**
+     * @param _ip String
+     */
     @Override
     public void seedIpAdd(String _ip) {
         this.seedIps.add(_ip);
@@ -165,7 +169,9 @@ public class NodeMgr implements INodeMgr {
         return this.seedIps.contains(_ip);
     }
 
-    /** @param _n Node */
+    /**
+     * @param _n Node
+     */
     @Override
     public void addTempNode(final INode _n) {
         final ReentrantLock putLock = this.putLock;
@@ -173,13 +179,13 @@ public class NodeMgr implements INodeMgr {
             putLock.lockInterruptibly();
 
             if (tempNodes.size() < maxTempNodes
-                    && !tempNodes.containsKey(_n.getPeerId())
-                    && (notActiveNode(_n.getIdHash()) || _n.getIfFromBootList())) {
+                && !tempNodes.containsKey(_n.getPeerId())
+                && (notActiveNode(_n.getIdHash()) || _n.getIfFromBootList())) {
                 tempNodes.putIfAbsent(_n.getPeerId(), _n);
                 signalNotEmpty();
             }
         } catch (InterruptedException e) {
-            p2pLOG.error("addTempNode exception!", e);
+            p2pLOG.error("<addTempNode exception>", e);
         } finally {
             putLock.unlock();
         }
@@ -188,7 +194,7 @@ public class NodeMgr implements INodeMgr {
     @Override
     public void addInboundNode(final INode _n) {
         if (p2pLOG.isTraceEnabled()) {
-            p2pLOG.trace("addInboundNode {}", _n.toString());
+            p2pLOG.trace("<addInboundNode {}>", _n.toString());
         }
         inboundNodes.put(_n.getChannel().hashCode(), _n);
     }
@@ -196,7 +202,7 @@ public class NodeMgr implements INodeMgr {
     @Override
     public void addOutboundNode(final INode _n) {
         if (p2pLOG.isTraceEnabled()) {
-            p2pLOG.trace("addOutboundNode {}", _n.toString());
+            p2pLOG.trace("<addOutboundNode {}>", _n.toString());
         }
         outboundNodes.put(_n.getIdHash(), _n);
     }
@@ -217,7 +223,7 @@ public class NodeMgr implements INodeMgr {
                 notEmpty.signal();
             }
         } catch (InterruptedException e) {
-            p2pLOG.error("tempNodesTake IllegalStateException.", e);
+            p2pLOG.error("<tempNodesTake IllegalStateException>", e);
         } finally {
             takeLock.unlock();
         }
@@ -293,15 +299,15 @@ public class NodeMgr implements INodeMgr {
             while (it.hasNext()) {
                 Map.Entry<Integer, INode> entry = it.next();
                 if (System.currentTimeMillis() - entry.getValue().getTimestamp()
-                        > TIMEOUT_OUTBOUND_NODES) {
+                    > TIMEOUT_OUTBOUND_NODES) {
                     p2pMgr.closeSocket(
-                            entry.getValue().getChannel(),
-                            "outbound-timeout ip=" + entry.getValue().getIpStr());
+                        entry.getValue().getChannel(),
+                        "outbound-timeout ip=" + entry.getValue().getIpStr());
                     it.remove();
                 }
             }
         } catch (IllegalStateException e) {
-            p2pLOG.error("timeoutOutbound IllegalStateException.", e);
+            p2pLOG.error("<timeoutOutbound IllegalStateException>", e);
         }
     }
 
@@ -312,13 +318,13 @@ public class NodeMgr implements INodeMgr {
             try {
                 return this.getActiveNode((Integer) keysArr[random.nextInt(keysArr.length)]);
             } catch (IllegalArgumentException e) {
-                p2pLOG.error("getRandom-IllegalArgumentException.", e);
+                p2pLOG.error("<getRandom-IllegalArgumentException>", e);
                 return null;
             } catch (NullPointerException e) {
-                p2pLOG.error("<getRandom-NullPointerException.", e);
+                p2pLOG.error("<getRandom-NullPointerException>", e);
                 return null;
             } catch (ClassCastException e) {
-                p2pLOG.error("<getRandom-ClassCastException.", e);
+                p2pLOG.error("<getRandom-ClassCastException>", e);
                 return null;
             }
         } else {
@@ -330,7 +336,7 @@ public class NodeMgr implements INodeMgr {
      * @param _ip String
      * @return boolean
      * @warning not thread safe helper function to check a specific ip a node associated with is is
-     *     allowed to add to active list
+     * allowed to add to active list
      */
     private boolean activeIpAllow(String _ip) {
         return true;
@@ -350,7 +356,7 @@ public class NodeMgr implements INodeMgr {
         INode node = nodes.remove(_hash);
         if (node != null) {
             if (p2pLOG.isTraceEnabled()) {
-                p2pLOG.trace("movePeerToActive: {} {}", _type, node.toString());
+                p2pLOG.trace("<movePeerToActive: {} {}>", _type, node.toString());
             }
 
             //noinspection SynchronizationOnLocalVariableOrMethodParameter
@@ -370,24 +376,24 @@ public class NodeMgr implements INodeMgr {
                 INode previous = activeNodes.putIfAbsent(node.getIdHash(), node);
                 if (previous != null) {
                     p2pMgr.closeSocket(
-                            node.getChannel(),
-                            _type + " -> active, node " + previous.getIdShort() + " exits");
+                        node.getChannel(),
+                        _type + " -> active, node " + previous.getIdShort() + " exits");
                 } else if (!activeIpAllow(node.getIpStr())) {
                     p2pMgr.closeSocket(
-                            node.getChannel(),
-                            _type + " -> active, ip " + node.getIpStr() + " exits");
+                        node.getChannel(),
+                        _type + " -> active, ip " + node.getIpStr() + " exits");
                 }
 
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug(
-                            _type + " -> active node-id={} ip={}",
-                            node.getIdShort(),
-                            node.getIpStr());
+                    p2pLOG.debug("<{} -> active node-id={} ip={}>",
+                        _type,
+                        node.getIdShort(),
+                        node.getIpStr());
                 }
             }
         } else {
             if (p2pLOG.isTraceEnabled()) {
-                p2pLOG.trace("movePeerToActive empty {} {}", _type, _hash);
+                p2pLOG.trace("<movePeerToActive empty {} {}>", _type, _hash);
             }
         }
     }
@@ -398,15 +404,15 @@ public class NodeMgr implements INodeMgr {
             while (it.hasNext()) {
                 Map.Entry<Integer, INode> entry = it.next();
                 if (System.currentTimeMillis() - entry.getValue().getTimestamp()
-                        > TIMEOUT_INBOUND_NODES) {
+                    > TIMEOUT_INBOUND_NODES) {
                     p2pMgr.closeSocket(
-                            entry.getValue().getChannel(),
-                            "inbound-timeout ip=" + entry.getValue().getIpStr());
+                        entry.getValue().getChannel(),
+                        "inbound-timeout ip=" + entry.getValue().getIpStr());
                     it.remove();
                 }
             }
         } catch (IllegalStateException e) {
-            p2pLOG.info("timeoutInbound IllegalStateException.", e);
+            p2pLOG.info("<timeoutInbound IllegalStateException>", e);
         }
     }
 
@@ -414,12 +420,12 @@ public class NodeMgr implements INodeMgr {
 
         long now = System.currentTimeMillis();
         OptionalDouble average =
-                activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
+            activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
 
         long timeout = ((long) average.orElse(4000)) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
         if (p2pLOG.isDebugEnabled()) {
-            p2pLOG.debug("average-delay={}ms", (long) average.orElse(0));
+            p2pLOG.debug("<average-delay={}ms>", (long) average.orElse(0));
         }
 
         try {
@@ -432,30 +438,30 @@ public class NodeMgr implements INodeMgr {
                     it.remove();
                 } else if (!node.getChannel().isConnected()) {
                     p2pMgr.closeSocket(
-                            node.getChannel(),
-                            "channel-already-closed node="
-                                    + node.getIdShort()
-                                    + " ip="
-                                    + node.getIpStr());
+                        node.getChannel(),
+                        "channel-already-closed node="
+                            + node.getIdShort()
+                            + " ip="
+                            + node.getIpStr());
                     it.remove();
                 }
             }
         } catch (IllegalStateException e) {
-            p2pLOG.info("timeoutActive IllegalStateException.", e);
+            p2pLOG.info("<timeoutActive IllegalStateException>", e);
         }
     }
 
     public void dropActive(int nodeIdHash, String _reason) {
 
         if (p2pLOG.isDebugEnabled()) {
-            p2pLOG.debug("dropActive idHash:{} reason:{}", nodeIdHash, _reason);
+            p2pLOG.debug("<dropActive idHash:{} reason:{}>", nodeIdHash, _reason);
         }
 
         INode node = null;
         try {
             node = activeNodes.remove(nodeIdHash);
         } catch (Exception e) {
-            p2pLOG.info("dropActive exception.", e);
+            p2pLOG.info("<dropActive exception>", e);
         }
 
         if (node == null) {
@@ -470,38 +476,38 @@ public class NodeMgr implements INodeMgr {
 
             synchronized (outboundNodes) {
                 outboundNodes.forEach(
-                        (k, n) ->
-                                p2pMgr.closeSocket(
-                                        n.getChannel(),
-                                        "p2p-shutdown outbound node="
-                                                + n.getIdShort()
-                                                + " ip="
-                                                + n.getIpStr()));
+                    (k, n) ->
+                        p2pMgr.closeSocket(
+                            n.getChannel(),
+                            "p2p-shutdown outbound node="
+                                + n.getIdShort()
+                                + " ip="
+                                + n.getIpStr()));
                 outboundNodes.clear();
             }
 
             synchronized (inboundNodes) {
                 inboundNodes.forEach(
-                        (k, n) ->
-                                p2pMgr.closeSocket(
-                                        n.getChannel(), "p2p-shutdown inbound ip=" + n.getIpStr()));
+                    (k, n) ->
+                        p2pMgr.closeSocket(
+                            n.getChannel(), "p2p-shutdown inbound ip=" + n.getIpStr()));
                 inboundNodes.clear();
             }
 
             synchronized (activeNodes) {
                 activeNodes.forEach(
-                        (k, n) ->
-                                p2pMgr.closeSocket(
-                                        n.getChannel(),
-                                        "p2p-shutdown active node="
-                                                + n.getIdShort()
-                                                + " ip="
-                                                + n.getIpStr()));
+                    (k, n) ->
+                        p2pMgr.closeSocket(
+                            n.getChannel(),
+                            "p2p-shutdown active node="
+                                + n.getIdShort()
+                                + " ip="
+                                + n.getIpStr()));
                 activeNodes.clear();
             }
 
         } catch (Exception e) {
-            p2pLOG.info("p2p-shutdown exception.", e);
+            p2pLOG.info("<p2p-shutdown exception>", e);
         }
     }
 
@@ -513,7 +519,7 @@ public class NodeMgr implements INodeMgr {
                 node.getPeerMetric().ban();
             }
         } catch (NullPointerException e) {
-            p2pLOG.info("p2p-ban null exception.", e);
+            p2pLOG.info("<p2p-ban null exception>", e);
         }
     }
 
