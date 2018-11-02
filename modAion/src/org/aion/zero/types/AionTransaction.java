@@ -286,7 +286,7 @@ public class AionTransaction extends AbstractTransaction {
         }
 
         try {
-            return Address.wrap(HashUtil.calcNewAddr(from.toBytes(), this.getNonce()));
+            return Address.wrap(HashUtil.calcNewAddr(from.toBytes(), this.getNonce(), this.getHash()));
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             return null;
