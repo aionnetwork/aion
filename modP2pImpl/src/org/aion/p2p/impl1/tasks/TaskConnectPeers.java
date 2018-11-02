@@ -158,9 +158,9 @@ public class TaskConnectPeers implements Runnable {
                 } catch (Exception e) {
                     if (p2pLOG.isDebugEnabled()) {
                         p2pLOG.debug(
-                                "connect-outbound exception -> id={} ip={}",
-                                node.getIdShort(),
-                                node.getIpStr(), e);
+                            "connect-outbound exception -> id=" +
+                                node.getIdShort() + " ip=" + node.getIpStr(), e);
+
                     }
 
                     if (p2pLOG.isTraceEnabled()) {
