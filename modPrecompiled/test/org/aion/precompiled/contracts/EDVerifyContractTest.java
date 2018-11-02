@@ -97,7 +97,7 @@ public class EDVerifyContractTest {
             blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
-        assert contract != null;
+        assertTrue(contract != null);
         IExecutionResult result = contract.execute(input, 21000L);
         assertThat(result.getOutput()[0]).isEqualTo(1);
     }
