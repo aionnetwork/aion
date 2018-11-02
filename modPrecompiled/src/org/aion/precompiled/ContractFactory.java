@@ -60,9 +60,12 @@ public class ContractFactory implements IContractFactory {
     private static IPrecompiledContract PC_ED_VERIFY;
     private static IPrecompiledContract PC_BLAKE2B_HASH;
 
-    public ContractFactory() {
+    static {
         PC_ED_VERIFY = new EDVerifyContract();
         PC_BLAKE2B_HASH = new Blake2bHashContract();
+    }
+
+    public ContractFactory() {
     }
 
     /**
@@ -115,13 +118,12 @@ public class ContractFactory implements IContractFactory {
      */
     public static boolean isPrecompiledContract(Address address) {
         switch (address.toString()) {
-            case ADDR_TOTAL_CURRENCY:
-                return false;
             case ADDR_TOKEN_BRIDGE:
             case ADDR_ED_VERIFY:
             case ADDR_BLAKE2B_HASH:
             case ADDR_TX_HASH:
                 return true;
+            case ADDR_TOTAL_CURRENCY:
             default:
                 return false;
         }
