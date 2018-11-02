@@ -176,10 +176,6 @@ task downloadFastVmGit(type:Download) {
 }
 
 task downloadSolidityGit(type:Download) {
-    doFirst {
-        assert file("./solidity_v${vmVersion}.tar.gz").exists()
-    }
- 
     overwrite false // TODO This seems to work only when this task is directly invoked
     onlyIfModified true
     src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
