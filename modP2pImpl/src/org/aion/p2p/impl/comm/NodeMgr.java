@@ -217,7 +217,7 @@ public class NodeMgr implements INodeMgr {
                 notEmpty.signal();
             }
         } catch (InterruptedException e) {
-            p2pLOG.error("tempNodesTake IllegalStateException", e);
+            p2pLOG.error("tempNodesTake IllegalStateException.", e);
         } finally {
             takeLock.unlock();
         }
@@ -301,7 +301,7 @@ public class NodeMgr implements INodeMgr {
                 }
             }
         } catch (IllegalStateException e) {
-            p2pLOG.error("timeoutOutbound IllegalStateException", e);
+            p2pLOG.error("timeoutOutbound IllegalStateException.", e);
         }
     }
 
@@ -312,13 +312,13 @@ public class NodeMgr implements INodeMgr {
             try {
                 return this.getActiveNode((Integer) keysArr[random.nextInt(keysArr.length)]);
             } catch (IllegalArgumentException e) {
-                p2pLOG.error("getRandom-IllegalArgumentException", e);
+                p2pLOG.error("getRandom-IllegalArgumentException.", e);
                 return null;
             } catch (NullPointerException e) {
-                p2pLOG.error("<getRandom-NullPointerException", e);
+                p2pLOG.error("<getRandom-NullPointerException.", e);
                 return null;
             } catch (ClassCastException e) {
-                p2pLOG.error("<getRandom-ClassCastException", e);
+                p2pLOG.error("<getRandom-ClassCastException.", e);
                 return null;
             }
         } else {
@@ -406,7 +406,7 @@ public class NodeMgr implements INodeMgr {
                 }
             }
         } catch (IllegalStateException e) {
-            p2pLOG.info("timeoutInbound IllegalStateException ", e);
+            p2pLOG.info("timeoutInbound IllegalStateException.", e);
         }
     }
 
@@ -441,7 +441,7 @@ public class NodeMgr implements INodeMgr {
                 }
             }
         } catch (IllegalStateException e) {
-            p2pLOG.info("timeoutActive IllegalStateException ", e);
+            p2pLOG.info("timeoutActive IllegalStateException.", e);
         }
     }
 
@@ -455,7 +455,7 @@ public class NodeMgr implements INodeMgr {
         try {
             node = activeNodes.remove(nodeIdHash);
         } catch (Exception e) {
-            p2pLOG.info("dropActive exception ", e);
+            p2pLOG.info("dropActive exception.", e);
         }
 
         if (node == null) {
@@ -501,7 +501,7 @@ public class NodeMgr implements INodeMgr {
             }
 
         } catch (Exception e) {
-            p2pLOG.info("p2p-shutdown exception ", e);
+            p2pLOG.info("p2p-shutdown exception.", e);
         }
     }
 
@@ -513,7 +513,7 @@ public class NodeMgr implements INodeMgr {
                 node.getPeerMetric().ban();
             }
         } catch (NullPointerException e) {
-            p2pLOG.info("p2p-ban null exception ", e);
+            p2pLOG.info("p2p-ban null exception.", e);
         }
     }
 

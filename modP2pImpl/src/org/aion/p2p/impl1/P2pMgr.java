@@ -241,9 +241,9 @@ public final class P2pMgr implements IP2pMgr {
             thrdConn.setPriority(Thread.NORM_PRIORITY);
             thrdConn.start();
         } catch (SocketException e) {
-            p2pLOG.error("tcp-server-socket-exception {}", e.getMessage());
+            p2pLOG.error("tcp-server-socket-exception.", e);
         } catch (IOException e) {
-            p2pLOG.error("tcp-server-io-exception {}", e.getMessage());
+            p2pLOG.error("tcp-server-io-exception.", e);
         }
     }
 
@@ -313,9 +313,17 @@ public final class P2pMgr implements IP2pMgr {
 
     /** @param _sc SocketChannel */
     public void closeSocket(final SocketChannel _sc, String _reason) {
+        closeSocket(_sc, _reason, null);
+    }
 
+    @Override
+    public void closeSocket(SocketChannel _sc, String _reason, Exception e) {
         if (p2pLOG.isDebugEnabled()) {
-            p2pLOG.debug("close-socket reason={}", _reason);
+            if (e != null) {
+                p2pLOG.debug("close-socket reason=" + _reason, e);
+            } else {
+                p2pLOG.debug("close-socket reason={}", _reason);
+            }
         }
 
         if (_sc != null) {
@@ -326,8 +334,8 @@ public final class P2pMgr implements IP2pMgr {
 
             try {
                 _sc.close();
-            } catch (IOException e) {
-                p2pLOG.info("close-socket-io-exception, {}", e.getMessage());
+            } catch (IOException ex) {
+                p2pLOG.info("close-socket-io-exception.", ex);
             }
         }
     }
@@ -490,7 +498,7 @@ public final class P2pMgr implements IP2pMgr {
                 output.append(line);
             }
         } catch (IOException | InterruptedException e) {
-            p2pLOG.error("get outGoingIP exception {}", e.toString());
+            p2pLOG.error("get outGoingIP exception.", e);
         }
 
         return output.toString();
