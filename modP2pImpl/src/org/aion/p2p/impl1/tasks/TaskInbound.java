@@ -130,9 +130,7 @@ public class TaskInbound implements Runnable {
                         if (key.isReadable()) {
                             cb = (ChannelBuffer) key.attachment();
                             if (cb == null) {
-                                p2pLOG.error(
-                                        "inbound exception.",
-                                        new P2pException("attachment is null"));
+                                p2pLOG.error("inbound exception: attachment is null");
                                 continue;
                             }
                             readBuffer(key, cb, readBuf);
