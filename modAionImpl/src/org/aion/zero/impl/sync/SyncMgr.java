@@ -80,6 +80,7 @@ public final class SyncMgr {
     private AionBlockchainImpl chain;
     private IP2pMgr p2pMgr;
     private IEventMgr evtMgr;
+    private SyncStats stats;
     private AtomicBoolean start = new AtomicBoolean(true);
     // private ExecutorService workers = Executors.newFixedThreadPool(5);
     private ExecutorService workers =
@@ -178,7 +179,7 @@ public final class SyncMgr {
         blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
         long selfBest = chain.getBestBlock().getNumber();
-        SyncStats stats = new SyncStats(selfBest);
+        stats = new SyncStats(selfBest);
 
         syncGb =
                 new Thread(
@@ -203,7 +204,7 @@ public final class SyncMgr {
                                 log),
                         "sync-ib");
         syncIb.start();
-        syncGs = new Thread(new TaskGetStatus(start, p2pMgr, log), "sync-gs");
+        syncGs = new Thread(new TaskGetStatus(start, p2pMgr, stats, log), "sync-gs");
         syncGs.start();
 
         if (_showStatus) {
@@ -392,6 +393,10 @@ public final class SyncMgr {
 
     public Map<Integer, PeerState> getPeerStates() {
         return new HashMap<>(this.peerStates);
+    }
+
+    public SyncStats getSyncStats() {
+        return this.stats;
     }
 
     private static final class AionSyncMgrHolder {
