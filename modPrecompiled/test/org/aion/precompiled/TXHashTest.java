@@ -41,14 +41,26 @@ public class TXHashTest {
     private IPrecompiledContract tXHashContract;
     private byte[] txHash = RandomUtils.nextBytes(32);
 
-
     @Before
     public void setUp() {
-        ExecutionContext ctx = new ExecutionContext(txHash,
-            ContractFactory.getTxHashContractAddress(), null, null, null,
-            0L, null, null, 0, 0, 0, null,
-            0L, 0L, 0L,
-            null);
+        ExecutionContext ctx =
+                new ExecutionContext(
+                        txHash,
+                        ContractFactory.getTxHashContractAddress(),
+                        null,
+                        null,
+                        null,
+                        0L,
+                        null,
+                        null,
+                        0,
+                        0,
+                        0,
+                        null,
+                        0L,
+                        0L,
+                        0L,
+                        null);
 
         tXHashContract = new ContractFactory().getPrecompiledContract(ctx, null);
     }

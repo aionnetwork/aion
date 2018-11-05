@@ -89,15 +89,16 @@ public class Blake2bHashTest {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(16, output.length);
 
-        System.out.println("The blake128 hash for '" + new String(byteArray1,
-            StandardCharsets.UTF_8) + "' is:");
+        System.out.println(
+                "The blake128 hash for '"
+                        + new String(byteArray1, StandardCharsets.UTF_8)
+                        + "' is:");
         System.out.print("      ");
         for (byte b : output) {
             System.out.print(b + " ");
         }
         System.out.println();
     }
-
 
     @Test
     public void invalidInputLength() {
@@ -107,7 +108,7 @@ public class Blake2bHashTest {
 
     @Test
     public void invalidInputLength2() {
-        byte[] BigByteArray = new byte[1024*1024 + 1];
+        byte[] BigByteArray = new byte[1024 * 1024 + 1];
         ExecutionResult res = blake2bHasher.execute(BigByteArray, INPUT_NRG);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
     }
@@ -121,8 +122,8 @@ public class Blake2bHashTest {
 
     @Test
     public void insufficientNRG2() {
-        byte[] BigByteArray = new byte[1024*1024];
-        long nrg = (long) (Math.ceil(1024*1024/4)*6 + 30);
+        byte[] BigByteArray = new byte[1024 * 1024];
+        long nrg = (long) (Math.ceil(1024 * 1024 / 4) * 6 + 30);
         ExecutionResult res = blake2bHasher.execute(BigByteArray, nrg);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
 
@@ -139,28 +140,28 @@ public class Blake2bHashTest {
     }
 
     private static IRepositoryConfig repoConfig =
-        new IRepositoryConfig() {
-            @Override
-            public String getDbPath() {
-                return "";
-            }
+            new IRepositoryConfig() {
+                @Override
+                public String getDbPath() {
+                    return "";
+                }
 
-            @Override
-            public IPruneConfig getPruneConfig() {
-                return new CfgPrune(false);
-            }
+                @Override
+                public IPruneConfig getPruneConfig() {
+                    return new CfgPrune(false);
+                }
 
-            @Override
-            public IContractDetails contractDetailsImpl() {
-                return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-            }
+                @Override
+                public IContractDetails contractDetailsImpl() {
+                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
+                }
 
-            @Override
-            public Properties getDatabaseConfig(String db_name) {
-                Properties props = new Properties();
-                props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                return props;
-            }
-        };
+                @Override
+                public Properties getDatabaseConfig(String db_name) {
+                    Properties props = new Properties();
+                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
+                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
+                    return props;
+                }
+            };
 }
