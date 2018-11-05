@@ -42,17 +42,20 @@ public class SyncStatsTest {
 
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber());
 
-        for(int totalBlocks = 1; totalBlocks <= 3; totalBlocks++) {
-                int count = 0;
-                while(count < totalBlocks) {
-                        AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                        assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                        count++;
-                }
-                stats.update(peers.get(0), totalBlocks, chain.getBestBlock().getNumber());
-                try {
-                        Thread.sleep(1000);
-                } catch(InterruptedException e) {
+        // ensures correct behaviour on empty stats
+        assertThat(stats.getAvgBlocksPerSec() == 0).isTrue();
+
+        for (int totalBlocks = 1; totalBlocks <= 3; totalBlocks++) {
+            int count = 0;
+            while (count < totalBlocks) {
+                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
+                assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
+                count++;
+            }
+            stats.update(peers.get(0), totalBlocks, chain.getBestBlock().getNumber());
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
 
                 }
         }
@@ -67,6 +70,12 @@ public class SyncStatsTest {
         generateRandomChain(chain, 1, 1, accounts, 10);
 
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber());
+
+        // ensures correct behaviour on empty stats
+        Map<String, Float> emptyReqToPeers = stats.getPercentageOfRequestsToPeers();
+        Map<String, Long> emptyTotalBlockReqByPeer = stats.getTotalBlocksByPeer();
+        assertThat(emptyReqToPeers.size() == 0).isTrue();
+        assertThat(emptyTotalBlockReqByPeer.size() == 0).isTrue();
 
         int peerNo = 0;
         int processedBlocks = 0;
@@ -118,11 +127,15 @@ public class SyncStatsTest {
 
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber());
 
+        // ensures correct behaviour on empty stats
+        Map<String, Long> emptyTotalBlocksByPeer = stats.getTotalBlockRequestsByPeer();
+        assertThat(emptyTotalBlocksByPeer.size() == 0).isTrue();
+
         int blocks = 3;
         for(String nodeId:peers) {
             int count = 0;
-            while(count < blocks) {
-                stats.updateTotalBlockRequestsByPeer(nodeId);
+            while (count < blocks) {
+                stats.updateTotalBlockRequestsByPeer(nodeId, 1);
                 count++;
             }
             blocks--;
@@ -147,16 +160,26 @@ public class SyncStatsTest {
 
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber());
 
+        // ensures correct behaviour on empty stats
+        Map<String, Double> emptyAvgResponseTimeByPeers = stats.getAverageResponseTimeByPeers();
+        // request time is logged but no response is received
+        stats.addPeerRequestTime("dummy", System.currentTimeMillis());
+        Long overallAveragePeerResponseTime = stats.getOverallAveragePeerResponseTime();
+        assertThat(emptyAvgResponseTimeByPeers.size() == 0).isTrue();
+        assertThat(overallAveragePeerResponseTime.compareTo(0L) == 0).isTrue();
+
+        stats = new SyncStats(chain.getBestBlock().getNumber());
+
         int requests = 3;
         for(String nodeId:peers) {
             int count = requests;
-            while(count > 0) {
-                stats.addPeerRequestTime(nodeId);
+            while (count > 0) {
+                stats.addPeerRequestTime(nodeId, System.currentTimeMillis());
                 try {
                     Thread.sleep(100 * count);
                 } catch(InterruptedException e) {
                 }
-                stats.addPeerResponseTime(nodeId);
+                stats.addPeerResponseTime(nodeId, System.currentTimeMillis());
                 count--;
             }
             requests--;
@@ -166,10 +189,17 @@ public class SyncStatsTest {
         assertThat(avgResponseTimeByPeers.size() == peers.size()).isTrue();
 
         Double lastAvgResponseTime = Double.MIN_VALUE;
-        for(String nodeId:avgResponseTimeByPeers.keySet()) {
+        int i = 0;
+        for (String nodeId : avgResponseTimeByPeers.keySet()) {
             // ensures asc order
-            assertThat(avgResponseTimeByPeers.get(nodeId) > lastAvgResponseTime).isTrue();
-            lastAvgResponseTime = avgResponseTimeByPeers.get(nodeId);
+            if(i == 0) {
+                // First record correspond to the overall average response time by all peers
+                assertThat(((Long)avgResponseTimeByPeers.get(nodeId).longValue())
+                    .compareTo(stats.getOverallAveragePeerResponseTime()));
+            } else {
+                assertThat(avgResponseTimeByPeers.get(nodeId) > lastAvgResponseTime).isTrue();
+                lastAvgResponseTime = avgResponseTimeByPeers.get(nodeId);
+            }
         }
     }
 }

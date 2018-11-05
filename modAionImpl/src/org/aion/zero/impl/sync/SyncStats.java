@@ -127,7 +127,7 @@ public final class SyncStats {
      * @param _totalBlocks total number of blocks received
      */
     private void updatePeerTotalBlocks(String _nodeId, int _totalBlocks) {
-        long blocks = Integer.valueOf(_totalBlocks).longValue();
+        long blocks = (long) _totalBlocks;
         if (blocksByPeer.putIfAbsent(_nodeId, blocks) != null) {
             blocksByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
         }
@@ -157,9 +157,10 @@ public final class SyncStats {
      *
      * @param _nodeId peer node display Id
      */
-    public synchronized void updateTotalBlockRequestsByPeer(String _nodeId) {
-        if (blockRequestsByPeer.putIfAbsent(_nodeId, 1L) != null) {
-            blockRequestsByPeer.computeIfPresent(_nodeId, (key, value) -> value + 1L);
+    public synchronized void updateTotalBlockRequestsByPeer(String _nodeId, int _totalBlocks) {
+        long blocks = (long) _totalBlocks;
+        if (blockRequestsByPeer.putIfAbsent(_nodeId, blocks) != null) {
+            blockRequestsByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
         }
     }
 
@@ -186,12 +187,12 @@ public final class SyncStats {
      *
      * @param _nodeId peer node display Id
      */
-    public synchronized void addPeerRequestTime(String _nodeId) {
-        LinkedList requestStartTimes =
+    public synchronized void addPeerRequestTime(String _nodeId, long _requestTime) {
+        LinkedList<Long> requestStartTimes =
                 statusRequestTimeByPeers.containsKey(_nodeId)
                         ? statusRequestTimeByPeers.get(_nodeId)
-                        : new LinkedList();
-        requestStartTimes.add(System.currentTimeMillis());
+                        : new LinkedList<>();
+        requestStartTimes.add(_requestTime);
         statusRequestTimeByPeers.put(_nodeId, requestStartTimes);
     }
 
@@ -200,12 +201,12 @@ public final class SyncStats {
      *
      * @param _nodeId peer node display Id
      */
-    public synchronized void addPeerResponseTime(String _nodeId) {
-        LinkedList requestStartTimes =
+    public synchronized void addPeerResponseTime(String _nodeId, long _requestTime) {
+        LinkedList<Long> requestStartTimes =
                 statusResponseTimeByPeers.containsKey(_nodeId)
                         ? statusResponseTimeByPeers.get(_nodeId)
-                        : new LinkedList();
-        requestStartTimes.add(System.currentTimeMillis());
+                        : new LinkedList<>();
+        requestStartTimes.add(_requestTime);
         statusResponseTimeByPeers.put(_nodeId, requestStartTimes);
     }
 
