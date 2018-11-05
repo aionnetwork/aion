@@ -29,8 +29,10 @@ public class KeccakHashTest {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
 
-        System.out.println("The keccak256 hash for '" + new String(byteArray1,
-            StandardCharsets.UTF_8) + "' is:");
+        System.out.println(
+                "The keccak256 hash for '"
+                        + new String(byteArray1, StandardCharsets.UTF_8)
+                        + "' is:");
         System.out.print("      ");
         for (byte b : output) {
             System.out.print(b + " ");

@@ -33,7 +33,7 @@ import org.aion.vm.IPrecompiledContract;
 public class EDVerifyContract implements IPrecompiledContract {
 
     // set to a default cost for now, this will need to be adjusted
-    private final static long COST = 3700L;
+    private static final long COST = 3700L;
 
     @Override
     public IExecutionResult execute(byte[] input, long nrgLimit) {

@@ -35,14 +35,12 @@ public class Blake2bHashContract implements IPrecompiledContract {
     private static final int WORD_LENGTH = 4;
     private static final String INPUT_LENGTH_ERROR_MESSAGE = "incorrect size of the input data.";
 
-    public Blake2bHashContract() {
-    }
+    public Blake2bHashContract() {}
 
     /**
      * Returns the hash of given input
      *
      * @param input data input; must be less or equal than 1 MB
-     *
      * @return the returned blake2b 256bits hash is in ExecutionResult.getOutput
      */
     public ExecutionResult execute(byte[] input, long nrg) {
@@ -50,7 +48,7 @@ public class Blake2bHashContract implements IPrecompiledContract {
         // check length
         if (input == null || input.length == 0 || input.length > 1_048_576L) {
             return new ExecutionResult(
-                ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
+                    ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
         long additionalNRG = ((long) Math.ceil(((double) input.length - 1) / WORD_LENGTH)) * 6;
