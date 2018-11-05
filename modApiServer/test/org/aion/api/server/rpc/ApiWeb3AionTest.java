@@ -54,25 +54,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ApiWeb3AionTest {
-
-    private static final String KEYSTORE_PATH;
-    private static final String DATABASE_PATH = "ApiServerTestPath";
+    private static final String BASE_PATH = System.getProperty("user.dir");
+    private static final File GENESIS = new File(BASE_PATH + "/test_resources/genesis.json");
+    private static final File CONFIG = new File(BASE_PATH + "/test_resources/config.xml");
+    private static final File KEYSTORE = new File(BASE_PATH + "/keystore");
+    private static final File DATABASE = new File(BASE_PATH + "/testDatabase");
     private long testStartTime;
-
-    static {
-        String storageDir = System.getProperty("local.storage.dir");
-        if (storageDir == null || storageDir.equalsIgnoreCase("")) {
-            storageDir = System.getProperty("user.dir");
-        }
-        KEYSTORE_PATH = storageDir + "/keystore";
-    }
-
     private ApiWeb3Aion web3Api;
     private AionImpl impl;
 
     @Before
     public void setUp() {
-        CfgAion.inst().getDb().setPath(DATABASE_PATH);
+        CfgAion.inst().setReadConfigFiles(CONFIG, GENESIS);
+        CfgAion.inst().setDatabaseDir(DATABASE);
         impl = AionImpl.inst();
         web3Api = new ApiWeb3Aion(impl);
         testStartTime = System.currentTimeMillis();
@@ -80,25 +74,16 @@ public class ApiWeb3AionTest {
 
     @After
     public void tearDown() {
-        // get a list of all the files in keystore directory
-        File folder = new File(KEYSTORE_PATH);
-
-        if (folder == null) return;
-
-        File[] AllFilesInDirectory = folder.listFiles();
-
-        // check for invalid or wrong path - should not happen
+        if (KEYSTORE == null) return;
+        File[] AllFilesInDirectory = KEYSTORE.listFiles();
         if (AllFilesInDirectory == null) return;
-
         for (File file : AllFilesInDirectory) {
             if (file.lastModified() >= testStartTime) file.delete();
         }
-        folder = new File(DATABASE_PATH);
 
-        if (folder == null) return;
-
+        if (DATABASE == null) return;
         try {
-            FileUtils.deleteRecursive(folder.toPath());
+            FileUtils.deleteRecursive(DATABASE.toPath());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -132,7 +117,6 @@ public class ApiWeb3AionTest {
     public void testEthSyncing() {
         RpcMsg rpcMsg = web3Api.eth_syncing();
         JSONObject result = (JSONObject) rpcMsg.getResult();
-        System.out.println();
         if (!impl.isSyncComplete()) {
             assertEquals(
                     (long) impl.getInitialStartingBlockNumber().orElse(0L),
@@ -636,7 +620,7 @@ public class ApiWeb3AionTest {
     }
 
     @Test
-    public void testGetBlockByHash() {
+    public void testEthGetBlockByHash() {
         AionBlock blk = impl.getBlockchain().getBestBlock();
         assertEquals(blk, web3Api.getBestBlock());
         JSONObject param = new JSONObject();
@@ -648,7 +632,7 @@ public class ApiWeb3AionTest {
     }
 
     @Test
-    public void testGetBlockByNumber() {
+    public void testEthGetBlockByNumber() {
         AionBlock blk = impl.getBlockchain().getBestBlock();
         assertEquals(blk, web3Api.getBestBlock());
 
@@ -661,7 +645,7 @@ public class ApiWeb3AionTest {
     }
 
     @Test
-    public void testGetTransactionByHashInvalidParams() {
+    public void testEthGetTransactionByHashInvalidParams() {
         JSONObject params = new JSONObject();
         RpcMsg rpcMsg = web3Api.eth_getTransactionByHash(params);
 
@@ -671,7 +655,7 @@ public class ApiWeb3AionTest {
     }
 
     @Test
-    public void testGetTransactionByHash() {
+    public void testEthGetTransactionByHash() {
         AionTransaction tx =
                 new AionTransaction(
                         AionRepositoryImpl.inst().getNonce(Address.ZERO_ADDRESS()).toByteArray(),
