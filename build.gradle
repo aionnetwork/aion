@@ -11,11 +11,13 @@ def dirWorkspace = "./"
 def dirPack = "./pack"
 def dirLibFile = "lib"
 def dirModFile ="./mod"
-def javaHome = "$System.env.JAVA_HOME"
+def javaHome = System.getProperty('java.home')
+
 def vmVersion = "0.3.1"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
 allprojects { 
+
     apply plugin: 'java'
     apply plugin: 'idea'
 
@@ -39,7 +41,8 @@ task compileNative(type:Exec) {
     dependsOn 'modCrypto:compileNative'
     dependsOn 'modAionImpl:compileJava'
 
-    doFirst { 
+
+    doFirst {
         mkdir "${dirBuildFile}"
         mkdir "${dirNative}/linux/equihash"
         mkdir "${dirBuildNative}/linux/equihash"
@@ -50,6 +53,8 @@ task compileNative(type:Exec) {
             fileset(dir: "./modAionImpl/build/native")
         }
     }
+
+
     commandLine "g++", 
         "-fPIC", 
         "-shared", 
@@ -114,9 +119,24 @@ subprojects {
         delete 'native'
     }
 
-    afterEvaluate { 
+    afterEvaluate {
+
+ant.echo('moduleName: ' + moduleName);
+
+        if (moduleName.equals("aion.gui")) { 
         // Override java plug-in behaviour to make JDK9+ module logic work
         // From: https://guides.gradle.org/building-java-9-modules/#step_2_produce_java_9_modules_for_all_subprojects
+        compileJava {
+            inputs.property("moduleName", moduleName)
+            doFirst {
+                options.compilerArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'javafx.controls'
+                ]
+                classpath = files()
+            }
+        }
+        } else {
         compileJava {
             inputs.property("moduleName", moduleName)
             doFirst {
@@ -125,6 +145,7 @@ subprojects {
                 ]
                 classpath = files()
             }
+        }
         }
 
 /*
@@ -298,7 +319,7 @@ clean {
 
 
 /** Replaces `ant ci_build` */
-task ciBuild { 
+task ciBuild {
     dependsOn build
     def ciModules = ['modAionBase', 
         'modCrypto', 
