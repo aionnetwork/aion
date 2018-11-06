@@ -152,9 +152,6 @@ public class BlockPropagationHandler {
             this.cacheMap.put(hashWrapped, true);
         }
 
-        // send
-        boolean sent = send(block, nodeId);
-
         // process
         long t1 = System.currentTimeMillis();
         ImportResult result;
@@ -189,6 +186,9 @@ public class BlockPropagationHandler {
                     result,
                     t2 - t1);
         }
+
+        // send
+        boolean sent = result.isValid() && send(block, nodeId);
 
         // notify higher td peers in order to limit the rebroadcast on delay of res status updating
         if (result.isBest()) {

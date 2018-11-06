@@ -46,4 +46,8 @@ public enum ImportResult {
     public boolean isStored() {
         return equals(EXIST) || isSuccessful();
     }
+
+    public boolean isValid() {
+        return !equals(INVALID_BLOCK) && !equals(CONSENSUS_BREAK);
+    }
 }
