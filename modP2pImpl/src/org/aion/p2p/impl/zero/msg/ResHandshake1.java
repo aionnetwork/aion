@@ -67,7 +67,7 @@ public final class ResHandshake1 extends ResHandshake {
                         binaryVersion = new String(binaryVersionBytes, "UTF-8");
                     } catch (UnsupportedEncodingException e) {
                         if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG.debug("res-handshake-decode error={}", e.getMessage());
+                            p2pLOG.debug("res-handshake-decode error.", e);
                         }
                         return null;
                     }
@@ -83,7 +83,7 @@ public final class ResHandshake1 extends ResHandshake {
                 }
             } catch (Exception e) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("res-handshake-decode error={}", e.getMessage());
+                    p2pLOG.debug("res-handshake-decode error.", e);
                 }
                 return null;
             }
@@ -102,7 +102,7 @@ public final class ResHandshake1 extends ResHandshake {
             binaryVersionBytes = this.binaryVersion.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
             if (p2pLOG.isDebugEnabled()) {
-                p2pLOG.debug("res-handshake-encode error={}", e.getMessage());
+                p2pLOG.debug("res-handshake-encode error.", e);
             }
             return null;
         }
@@ -116,7 +116,7 @@ public final class ResHandshake1 extends ResHandshake {
                 this.binaryVersion = new String(binaryVersionBytes, "UTF-8");
             } catch (UnsupportedEncodingException e) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("res-handshake-encode error={}", e.getMessage());
+                    p2pLOG.debug("res-handshake-encode error.", e);
                 }
                 return null;
             }

@@ -119,7 +119,7 @@ public class NodeMgr implements INodeMgr {
                     }
                     sb.append(appendNodeInfo(n));
                 } catch (Exception ex) {
-                    p2pLOG.error("NodeMgr dumpNodeInfo exception.", ex);
+                    p2pLOG.error("<NodeMgr dumpNodeInfo exception>", ex);
                 }
             }
         }
@@ -179,7 +179,7 @@ public class NodeMgr implements INodeMgr {
                 signalNotEmpty();
             }
         } catch (InterruptedException e) {
-            p2pLOG.error("addTempNode exception!", e);
+            p2pLOG.error("<addTempNode exception>", e);
         } finally {
             putLock.unlock();
         }
@@ -188,7 +188,7 @@ public class NodeMgr implements INodeMgr {
     @Override
     public void addInboundNode(final INode _n) {
         if (p2pLOG.isTraceEnabled()) {
-            p2pLOG.trace("addInboundNode {}", _n.toString());
+            p2pLOG.trace("<addInboundNode {}>", _n.toString());
         }
         inboundNodes.put(_n.getChannel().hashCode(), _n);
     }
@@ -196,7 +196,7 @@ public class NodeMgr implements INodeMgr {
     @Override
     public void addOutboundNode(final INode _n) {
         if (p2pLOG.isTraceEnabled()) {
-            p2pLOG.trace("addOutboundNode {}", _n.toString());
+            p2pLOG.trace("<addOutboundNode {}>", _n.toString());
         }
         outboundNodes.put(_n.getIdHash(), _n);
     }
@@ -217,7 +217,7 @@ public class NodeMgr implements INodeMgr {
                 notEmpty.signal();
             }
         } catch (InterruptedException e) {
-            p2pLOG.error("tempNodesTake IllegalStateException", e);
+            p2pLOG.error("<tempNodesTake IllegalStateException>", e);
         } finally {
             takeLock.unlock();
         }
@@ -301,7 +301,7 @@ public class NodeMgr implements INodeMgr {
                 }
             }
         } catch (IllegalStateException e) {
-            p2pLOG.error("timeoutOutbound IllegalStateException", e);
+            p2pLOG.error("<timeoutOutbound IllegalStateException>", e);
         }
     }
 
@@ -312,13 +312,13 @@ public class NodeMgr implements INodeMgr {
             try {
                 return this.getActiveNode((Integer) keysArr[random.nextInt(keysArr.length)]);
             } catch (IllegalArgumentException e) {
-                p2pLOG.error("getRandom-IllegalArgumentException", e);
+                p2pLOG.error("<getRandom-IllegalArgumentException>", e);
                 return null;
             } catch (NullPointerException e) {
-                p2pLOG.error("<getRandom-NullPointerException", e);
+                p2pLOG.error("<getRandom-NullPointerException>", e);
                 return null;
             } catch (ClassCastException e) {
-                p2pLOG.error("<getRandom-ClassCastException", e);
+                p2pLOG.error("<getRandom-ClassCastException>", e);
                 return null;
             }
         } else {
@@ -350,7 +350,7 @@ public class NodeMgr implements INodeMgr {
         INode node = nodes.remove(_hash);
         if (node != null) {
             if (p2pLOG.isTraceEnabled()) {
-                p2pLOG.trace("movePeerToActive: {} {}", _type, node.toString());
+                p2pLOG.trace("<movePeerToActive: {} {}>", _type, node.toString());
             }
 
             //noinspection SynchronizationOnLocalVariableOrMethodParameter
@@ -380,14 +380,15 @@ public class NodeMgr implements INodeMgr {
 
                 if (p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug(
-                            _type + " -> active node-id={} ip={}",
+                            "<{} -> active node-id={} ip={}>",
+                            _type,
                             node.getIdShort(),
                             node.getIpStr());
                 }
             }
         } else {
             if (p2pLOG.isTraceEnabled()) {
-                p2pLOG.trace("movePeerToActive empty {} {}", _type, _hash);
+                p2pLOG.trace("<movePeerToActive empty {} {}>", _type, _hash);
             }
         }
     }
@@ -406,7 +407,7 @@ public class NodeMgr implements INodeMgr {
                 }
             }
         } catch (IllegalStateException e) {
-            p2pLOG.info("timeoutInbound IllegalStateException ", e);
+            p2pLOG.info("<timeoutInbound IllegalStateException>", e);
         }
     }
 
@@ -419,7 +420,7 @@ public class NodeMgr implements INodeMgr {
         long timeout = ((long) average.orElse(4000)) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
         if (p2pLOG.isDebugEnabled()) {
-            p2pLOG.debug("average-delay={}ms", (long) average.orElse(0));
+            p2pLOG.debug("<average-delay={}ms>", (long) average.orElse(0));
         }
 
         try {
@@ -441,21 +442,21 @@ public class NodeMgr implements INodeMgr {
                 }
             }
         } catch (IllegalStateException e) {
-            p2pLOG.info("timeoutActive IllegalStateException ", e);
+            p2pLOG.info("<timeoutActive IllegalStateException>", e);
         }
     }
 
     public void dropActive(int nodeIdHash, String _reason) {
 
         if (p2pLOG.isDebugEnabled()) {
-            p2pLOG.debug("dropActive idHash:{} reason:{}", nodeIdHash, _reason);
+            p2pLOG.debug("<dropActive idHash:{} reason:{}>", nodeIdHash, _reason);
         }
 
         INode node = null;
         try {
             node = activeNodes.remove(nodeIdHash);
         } catch (Exception e) {
-            p2pLOG.info("dropActive exception ", e);
+            p2pLOG.info("<dropActive exception>", e);
         }
 
         if (node == null) {
@@ -501,7 +502,7 @@ public class NodeMgr implements INodeMgr {
             }
 
         } catch (Exception e) {
-            p2pLOG.info("p2p-shutdown exception ", e);
+            p2pLOG.info("<p2p-shutdown exception>", e);
         }
     }
 
@@ -513,7 +514,7 @@ public class NodeMgr implements INodeMgr {
                 node.getPeerMetric().ban();
             }
         } catch (NullPointerException e) {
-            p2pLOG.info("p2p-ban null exception ", e);
+            p2pLOG.info("<p2p-ban null exception>", e);
         }
     }
 

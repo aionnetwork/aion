@@ -23,6 +23,8 @@
 
 package org.aion.p2p.impl;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import fr.free.miniupnp.IGDdatas;
 import fr.free.miniupnp.MiniupnpcLibrary;
 import fr.free.miniupnp.UPNPDev;
@@ -38,7 +40,7 @@ public class TaskUPnPManager implements Runnable {
     private static final int UPNP_DELAY = 2000;
 
     private int port;
-    MiniupnpcLibrary miniupnpc;
+    private MiniupnpcLibrary miniupnpc;
 
     public TaskUPnPManager(int port) {
         this.port = port;
@@ -59,9 +61,11 @@ public class TaskUPnPManager implements Runnable {
                         UPNP_DELAY, null, null, 0, 0, (byte) 2, IntBuffer.allocate(1));
         if (devlist != null) {
             if (miniupnpc.UPNP_GetValidIGD(devlist, urls, data, lanaddr, 16) != 0) {
-                System.out.println(
-                        "<p2p-upnp found-possible-igd=" + urls.controlURL.getString(0) + ">");
-                System.out.println("<p2p-upnp local-lan-ip=" + new String(lanaddr.array()) + ">");
+
+                if (p2pLOG.isInfoEnabled()) {
+                    p2pLOG.info("<p2p-upnp found-possible-igd=" + urls.controlURL.getString(0) + ">" +
+                        "\n<p2p-upnp local-lan-ip=" + new String(lanaddr.array()) + ">");
+                }
 
                 getExternalIpAddress(urls, data);
                 addPortMapping(urls, data, lanaddr);
@@ -69,10 +73,14 @@ public class TaskUPnPManager implements Runnable {
 
                 miniupnpc.FreeUPNPUrls(urls);
             } else {
-                System.out.println("<p2p-upnp no-valid-upnp-internet-gateway-device-found>");
+                if (p2pLOG.isInfoEnabled()) {
+                    p2pLOG.info("<p2p-upnp no-valid-upnp-internet-gateway-device-found>");
+                }
             }
         } else {
-            System.out.println("<p2p-upnp no-igd-upnp-device-found-on-network>");
+            if (p2pLOG.isInfoEnabled()) {
+                p2pLOG.info("<p2p-upnp no-igd-upnp-device-found-on-network>");
+            }
         }
     }
 
@@ -90,7 +98,9 @@ public class TaskUPnPManager implements Runnable {
                         String.valueOf(DEFAULT_UPNP_PORT_MAPPING_LIFETIME_IN_SECONDS));
 
         if (ret != MiniupnpcLibrary.UPNPCOMMAND_SUCCESS)
-            System.out.println("<p2p-upnp add-port-mapping-failed code=" + ret + ">");
+            if (p2pLOG.isInfoEnabled()) {
+                p2pLOG.info("<p2p-upnp add-port-mapping-failed code=" + ret + ">");
+            }
     }
 
     private void getMappedPortInfo(UPNPUrls urls, IGDdatas data) {
@@ -114,19 +124,23 @@ public class TaskUPnPManager implements Runnable {
                         leaseDuration);
 
         if (ret != MiniupnpcLibrary.UPNPCOMMAND_SUCCESS) {
-            System.out.println(
-                    "<p2p-upnp get-specific-port-mapping-entry-failed code=" + ret + ">");
+
+            if (p2pLOG.isInfoEnabled()) {
+                p2pLOG.info("<p2p-upnp get-specific-port-mapping-entry-failed code=" + ret + ">");
+            }
+
             return;
         }
 
-        System.out.println(
-                "<p2p-upnp internal-ip-port="
-                        + new String(intClient.array())
-                        + ":"
-                        + new String(intPort.array())
-                        + "("
-                        + new String(desc.array())
-                        + ")>");
+        if (p2pLOG.isInfoEnabled()) {
+            p2pLOG.info("<p2p-upnp internal-ip-port="
+                + new String(intClient.array())
+                + ":"
+                + new String(intPort.array())
+                + "("
+                + new String(desc.array())
+                + ")>");
+        }
     }
 
     private void getExternalIpAddress(UPNPUrls urls, IGDdatas data) {
@@ -138,10 +152,14 @@ public class TaskUPnPManager implements Runnable {
                         externalAddress);
 
         if (ret != MiniupnpcLibrary.UPNPCOMMAND_SUCCESS) {
-            System.out.println("<p2p-upnp get-external-ip-command-failed code=" + ret + ">");
+            if (p2pLOG.isInfoEnabled()) {
+                p2pLOG.info("<p2p-upnp get-external-ip-command-failed code=" + ret + ">");
+            }
             return;
         }
 
-        System.out.println("<p2p-upnp external-ip=" + new String(externalAddress.array()) + ">");
+        if (p2pLOG.isInfoEnabled()) {
+            p2pLOG.info("<p2p-upnp external-ip=" + new String(externalAddress.array()) + ">");
+        }
     }
 }

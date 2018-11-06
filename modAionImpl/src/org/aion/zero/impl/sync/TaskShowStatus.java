@@ -131,7 +131,7 @@ final class TaskShowStatus implements Runnable {
                             status.getBytes());
                 } catch (IOException e) {
                     if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("sync-ss report exception {}", e.toString());
+                        p2pLOG.debug("sync-ss report exception.", e);
                     }
                 }
             }
@@ -140,7 +140,7 @@ final class TaskShowStatus implements Runnable {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("sync-ss shutdown {}");
+                    p2pLOG.debug("sync-ss shutdown.", e);
                 }
                 return;
             }
@@ -150,7 +150,7 @@ final class TaskShowStatus implements Runnable {
         }
     }
 
-    public String dumpPeerStateInfo(Collection<INode> filtered) {
+    private String dumpPeerStateInfo(Collection<INode> filtered) {
         List<NodeState> sorted = new ArrayList<>();
         for (INode n : filtered) {
             PeerState s = peerStates.get(n.getIdHash());
@@ -160,13 +160,12 @@ final class TaskShowStatus implements Runnable {
         }
 
         if (!sorted.isEmpty()) {
-            sorted.sort((n1, n2) -> ((Long) n2.getS().getBase()).compareTo(n1.getS().getBase()));
+            sorted.sort((n1, n2) -> Long.compare(n2.getS().getBase(), n1.getS().getBase()));
 
             StringBuilder sb = new StringBuilder();
             sb.append("\n");
             sb.append(
-                    String.format(
-                            "======================================================================== sync-status =========================================================================\n"));
+                "======================================================================== sync-status =========================================================================\n");
             sb.append(
                     String.format(
                             "%9s %16s %17s %8s %16s %2s %16s\n",

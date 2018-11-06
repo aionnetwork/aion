@@ -68,7 +68,7 @@ final class TaskGetStatus implements Runnable {
                     // we were asked to quit
                     break;
                 } else {
-                    log.error("<sync-gs exception=" + e.toString() + ">");
+                    log.error("<sync-gs exception>", e);
                 }
             }
         }

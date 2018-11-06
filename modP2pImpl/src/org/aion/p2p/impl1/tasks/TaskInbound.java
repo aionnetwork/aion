@@ -105,10 +105,10 @@ public class TaskInbound implements Runnable {
                     continue;
                 }
             } catch (IOException | ClosedSelectorException e) {
-                p2pLOG.debug("inbound-select-exception", e);
+                p2pLOG.debug("inbound-select-exception.", e);
                 continue;
             } catch (InterruptedException e) {
-                p2pLOG.error("inbound thread sleep exception ", e);
+                p2pLOG.error("inbound thread sleep exception.", e);
                 continue;
             }
 
@@ -130,9 +130,7 @@ public class TaskInbound implements Runnable {
                         if (key.isReadable()) {
                             cb = (ChannelBuffer) key.attachment();
                             if (cb == null) {
-                                p2pLOG.error(
-                                        "inbound exception={}",
-                                        new P2pException("attachment is null").getMessage());
+                                p2pLOG.error("inbound exception: attachment is null");
                                 continue;
                             }
                             readBuffer(key, cb, readBuf);
@@ -141,8 +139,7 @@ public class TaskInbound implements Runnable {
                         this.mgr.closeSocket(
                                 key != null ? (SocketChannel) key.channel() : null,
                                 (cb != null ? cb.getDisplayId() : null)
-                                        + "-read-msg-exception "
-                                        + e.toString());
+                                        + "-read-msg-exception ", e);
                         if (cb != null) {
                             cb.setClosed();
                         }
@@ -151,7 +148,7 @@ public class TaskInbound implements Runnable {
                     }
                 }
             } catch (ClosedSelectorException ex) {
-                p2pLOG.error("inbound ClosedSelectorException={}", ex.toString());
+                p2pLOG.error("inbound ClosedSelectorException.", ex);
             }
         }
 
@@ -356,7 +353,7 @@ public class TaskInbound implements Runnable {
                             handleP2pMsg(_sk, h.getAction(), bodyBytes);
                         } catch (Exception ex) {
                             if (p2pLOG.isDebugEnabled()) {
-                                p2pLOG.debug("handle-p2p-msg error={}", ex.getMessage());
+                                p2pLOG.debug("handle-p2p-msg error.", ex);
                             }
                         }
                         break;
