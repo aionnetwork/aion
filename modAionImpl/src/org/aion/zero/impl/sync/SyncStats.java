@@ -101,9 +101,8 @@ public final class SyncStats {
      */
     synchronized Map<String, Float> getPercentageOfRequestsToPeers() {
         Map<String, Float> percentageReq = new HashMap<>();
-        Long totalReq = requestsToPeers.reduceValues(2, (val1, val2) -> val1 + val2);
-        requestsToPeers.forEachEntry(
-                2,
+        Long totalReq = requestsToPeers.values().stream().mapToLong(l -> l).sum();
+        requestsToPeers.entrySet().stream().forEach(
                 entry -> {
                     percentageReq.put(
                             entry.getKey(), entry.getValue().floatValue() / totalReq.floatValue());
