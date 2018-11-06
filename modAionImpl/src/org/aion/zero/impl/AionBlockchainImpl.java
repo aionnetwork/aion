@@ -576,8 +576,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (block.getTimestamp()
                 > (currTimeSeconds
-                        + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
+                        + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Block {} invalid due to timestamp {}.",
+                        block.getShortHash(),
+                        block.getTimestamp());
+            }
             return INVALID_BLOCK;
+        }
 
         if (LOG.isDebugEnabled()) {
             LOG.debug(

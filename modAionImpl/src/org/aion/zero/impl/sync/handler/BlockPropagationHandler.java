@@ -158,13 +158,24 @@ public class BlockPropagationHandler {
 
         if (this.blockchain.skipTryToConnect(block.getNumber())) {
             result = ImportResult.NO_PARENT;
-            log.info(
-                    "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = NOT_IN_RANGE>",
-                    _displayId,
-                    block.getShortHash(),
-                    block.getNumber(),
-                    block.getTransactionsList().size(),
-                    result);
+            if (log.isInfoEnabled()) {
+                log.info(
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = NOT_IN_RANGE>",
+                        _displayId,
+                        block.getShortHash(),
+                        block.getNumber(),
+                        block.getTransactionsList().size(),
+                        result);
+            } else if (log.isDebugEnabled()) {
+                log.debug(
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = NOT_IN_RANGE>",
+                        _displayId,
+                        block.getShortHash(),
+                        block.getNumber(),
+                        block.getTransactionsList().size(),
+                        block.getTimestamp(),
+                        result);
+            }
             boolean stored = blockchain.storePendingStatusBlock(block);
             if (log.isDebugEnabled()) {
                 log.debug(
@@ -177,14 +188,26 @@ public class BlockPropagationHandler {
         } else {
             result = this.blockchain.tryToConnect(block);
             long t2 = System.currentTimeMillis();
-            log.info(
-                    "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
-                    _displayId,
-                    block.getShortHash(),
-                    block.getNumber(),
-                    block.getTransactionsList().size(),
-                    result,
-                    t2 - t1);
+            if (log.isInfoEnabled()) {
+                log.info(
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                        _displayId,
+                        block.getShortHash(),
+                        block.getNumber(),
+                        block.getTransactionsList().size(),
+                        result,
+                        t2 - t1);
+            } else if (log.isDebugEnabled()) {
+                log.info(
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms>",
+                        _displayId,
+                        block.getShortHash(),
+                        block.getNumber(),
+                        block.getTransactionsList().size(),
+                        block.getTimestamp(),
+                        result,
+                        t2 - t1);
+            }
         }
 
         // send
