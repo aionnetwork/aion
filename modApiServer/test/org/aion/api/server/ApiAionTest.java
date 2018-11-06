@@ -23,6 +23,7 @@
 
 package org.aion.api.server;
 
+import static org.aion.base.util.TypeConverter.StringHexToBigInteger;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -46,7 +47,6 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
-import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
@@ -554,19 +554,19 @@ public class ApiAionTest {
         assertEquals(tx.get("to"), outTx.get("to"));
         assertEquals(
                 tx.get("value").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("value").toString()).toString());
+                StringHexToBigInteger(outTx.get("value").toString()).toString());
         assertEquals(
                 tx.get("gasPrice").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
+                StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
         assertEquals(
                 tx.get("gasPrice").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
+                StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
         assertEquals(
                 tx.get("gas").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("gas").toString()).toString());
+                StringHexToBigInteger(outTx.get("gas").toString()).toString());
         assertEquals(
                 tx.get("gas").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("nrg").toString()).toString());
+                StringHexToBigInteger(outTx.get("nrg").toString()).toString());
         assertEquals("0x", outTx.get("input").toString());
 
         JSONArray rawTxArray = new JSONArray();
@@ -652,5 +652,19 @@ public class ApiAionTest {
         JSONObject result = (JSONObject) rpcMsg.getResult();
         assertNull(result);
         assertEquals(RpcError.NOT_ALLOWED, rpcMsg.getError());
+    }
+
+    @Test
+    public void testEthGetTransactionCountPending() {
+        JSONObject req = new JSONObject();
+        req.put("address", Address.ZERO_ADDRESS().toString());
+        req.put("block", "pending");
+
+        RpcMsg rsp = web3Api.eth_getTransactionCount(req);
+        assertNull(rsp.getError());
+
+        assertEquals(
+                impl.getPendingState().getNonce(Address.ZERO_ADDRESS()),
+                StringHexToBigInteger(rsp.getResult().toString()));
     }
 }
