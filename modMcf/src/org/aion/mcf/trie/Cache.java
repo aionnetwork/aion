@@ -72,8 +72,7 @@ public class Cache {
             return node.getValue();
         }
         if (this.dataSource != null) {
-            Optional<byte[]> data =
-                    (this.dataSource == null) ? Optional.empty() : this.dataSource.get(key);
+            Optional<byte[]> data = this.dataSource.get(key);
             if (data.isPresent()) {
                 // dbhits++;
                 Value val = fromRlpEncoded(data.get());
@@ -92,10 +91,6 @@ public class Cache {
         if (dataSource != null) {
             this.dataSource.delete(key);
         }
-    }
-
-    public synchronized void commit() {
-        commit(true);
     }
 
     public synchronized void commit(boolean flushCache) {
@@ -143,22 +138,14 @@ public class Cache {
         this.removedNodes.clear();
     }
 
-    public synchronized void undo() {
-        Iterator<Map.Entry<ByteArrayWrapper, Node>> iter = this.nodes.entrySet().iterator();
-        while (iter.hasNext()) {
-            if (iter.next().getValue().isDirty()) {
-                iter.remove();
-            }
-        }
-        this.isDirty = false;
-    }
+    // not used
+    //    public synchronized void undo() {
+    //        this.nodes.entrySet().removeIf(entry -> entry.getValue().isDirty());
+    //        this.isDirty = false;
+    //    }
 
     public synchronized boolean isDirty() {
         return isDirty;
-    }
-
-    public synchronized void setDirty(boolean isDirty) {
-        this.isDirty = isDirty;
     }
 
     public synchronized Map<ByteArrayWrapper, Node> getNodes() {
@@ -169,22 +156,24 @@ public class Cache {
         return dataSource;
     }
 
-    public String cacheDump() {
-        StringBuffer cacheDump = new StringBuffer();
-        for (ByteArrayWrapper key : nodes.keySet()) {
-            Node node = nodes.get(key);
-            if (node.getValue() != null) {
-                cacheDump
-                        .append(key.toString())
-                        .append(" : ")
-                        .append(node.getValue().toString())
-                        .append("\n");
-            }
-        }
+    // not used
+    //    public String cacheDump() {
+    //        StringBuilder cacheDump = new StringBuilder();
+    //        for (ByteArrayWrapper key : nodes.keySet()) {
+    //            Node node = nodes.get(key);
+    //            if (node.getValue() != null) {
+    //                cacheDump
+    //                        .append(key.toString())
+    //                        .append(" : ")
+    //                        .append(node.getValue().toString())
+    //                        .append("\n");
+    //            }
+    //        }
+    //
+    //        return cacheDump.toString();
+    //    }
 
-        return cacheDump.toString();
-    }
-
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public synchronized void setDB(IByteArrayKeyValueStore kvds) {
         if (this.dataSource == kvds) {
             return;

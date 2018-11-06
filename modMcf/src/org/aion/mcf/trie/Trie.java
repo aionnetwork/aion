@@ -58,9 +58,10 @@ public interface Trie {
 
     void sync(boolean flushCache);
 
-    /** Discard all the changes until now */
-    @Deprecated
-    void undo();
+    // never used
+    //    /** Discard all the changes until now */
+    //    @Deprecated
+    //    void undo();
 
     String getTrieDump();
 
