@@ -147,7 +147,12 @@ public class BlockPropagationHandler {
 
         // guarantees if multiple requests of same block appears, only one goes through
         synchronized (this.cacheMap) {
-            if (this.cacheMap.get(hashWrapped) != null) return PropStatus.DROPPED;
+            if (this.cacheMap.get(hashWrapped) != null) {
+                if (log.isTraceEnabled()) {
+                    log.trace("block {} already cached", block.getShortHash());
+                }
+                return PropStatus.DROPPED;
+            }
             // regardless if block processing is successful, place into cache
             this.cacheMap.put(hashWrapped, true);
         }
@@ -198,7 +203,7 @@ public class BlockPropagationHandler {
                         result,
                         t2 - t1);
             } else if (log.isDebugEnabled()) {
-                log.info(
+                log.debug(
                         "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms>",
                         _displayId,
                         block.getShortHash(),
@@ -247,7 +252,7 @@ public class BlockPropagationHandler {
 
         if (sent) return PropStatus.PROPAGATED;
 
-        // should never reach here, but just in case
+        // gets dropped when the result is not valid
         return PropStatus.DROPPED;
     }
 

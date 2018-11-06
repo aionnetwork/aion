@@ -48,6 +48,6 @@ public enum ImportResult {
     }
 
     public boolean isValid() {
-        return !equals(INVALID_BLOCK) && !equals(CONSENSUS_BREAK);
+        return !(equals(INVALID_BLOCK) || equals(CONSENSUS_BREAK));
     }
 }
