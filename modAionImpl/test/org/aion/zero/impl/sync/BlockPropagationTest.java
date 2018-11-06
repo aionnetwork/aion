@@ -226,9 +226,7 @@ public class BlockPropagationTest {
         public void closeSocket(SocketChannel _sc, String _reason) {}
 
         @Override
-        public void closeSocket(SocketChannel _sc, String _reason, Exception e) {
-
-        }
+        public void closeSocket(SocketChannel _sc, String _reason, Exception e) {}
 
         @Override
         public int getSelfIdHash() {
