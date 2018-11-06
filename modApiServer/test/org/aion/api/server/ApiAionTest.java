@@ -553,20 +553,15 @@ public class ApiAionTest {
 
         assertEquals(tx.get("to"), outTx.get("to"));
         assertEquals(
-                tx.get("value").toString(),
-                StringHexToBigInteger(outTx.get("value").toString()).toString());
+                tx.get("value"), StringHexToBigInteger(outTx.get("value").toString()).toString());
         assertEquals(
-                tx.get("gasPrice").toString(),
+                tx.get("gasPrice"),
                 StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
         assertEquals(
-                tx.get("gasPrice").toString(),
+                tx.get("gasPrice"),
                 StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
-        assertEquals(
-                tx.get("gas").toString(),
-                StringHexToBigInteger(outTx.get("gas").toString()).toString());
-        assertEquals(
-                tx.get("gas").toString(),
-                StringHexToBigInteger(outTx.get("nrg").toString()).toString());
+        assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("gas").toString()).toString());
+        assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("nrg").toString()).toString());
         assertEquals("0x", outTx.get("input").toString());
 
         JSONArray rawTxArray = new JSONArray();
