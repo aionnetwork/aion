@@ -16,7 +16,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'com.google.truth:truth:0.42'
     testCompile 'org.hamcrest:hamcrest-core:1.3'
-    testCompile "org.mockito:mockito-core:2.21.0"
+    testCompile "org.mockito:mockito-core:2.23.0"
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
 
     // modAionImpl's tests uses test util classes from
