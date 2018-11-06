@@ -199,7 +199,10 @@ public class AionHub {
                         cfg.getNet().getP2p().inSyncOnlyMode());
 
         registerCallback();
-        p2pMgr.run();
+
+        if (!forTest) {
+            p2pMgr.run();
+        }
 
         ((AionPendingStateImpl) this.mempool).setP2pMgr(this.p2pMgr);
 
