@@ -80,7 +80,6 @@ public final class ResBlocksBodiesHandler extends Handler {
                 log.error("<res-bodies-empty node={}>", _displayId);
             } else {
                 syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
-                syncMgr.getSyncStats().updateTotalBlockRequestsByPeer(_displayId, bodies.size());
             }
         }
     }
