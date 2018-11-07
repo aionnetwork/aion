@@ -36,9 +36,7 @@ import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -82,6 +80,26 @@ public class Cli {
         }
     }
 
+    enum TaskPriority {
+        NONE,
+        HELP,
+        VERSION,
+        CONFIG,
+        INFO,
+        CREATE_ACCOUNT,
+        LIST_ACCOUNTS,
+        EXPORT_ACCOUNT,
+        IMPORT_ACCOUNT,
+        SSL,
+        PRUNE_BLOCKS,
+        REVERT,
+        PRUNE_STATE,
+        DUMP_STATE_SIZE,
+        DUMP_STATE,
+        DUMP_BLOCKS,
+        DB_COMPACT
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public ReturnType call(final String[] args, Cfg cfg) {
         try {
@@ -100,6 +118,9 @@ public class Cli {
             printHelp();
             return ERROR;
         }
+
+        // make sure that there is no conflicting arguments; otherwise send warning
+        checkArguments(options);
 
         try {
             // 1. the first set of options don't mix with -d and -n
@@ -308,9 +329,9 @@ public class Cli {
                 try {
                     RecoveryUtils.pruneOrRecoverState(pruning_type);
                     return EXIT;
-                } catch (Throwable t) {
+                } catch (Exception e) {
                     System.out.println("Reorganizing the state storage FAILED due to:");
-                    t.printStackTrace();
+                    e.printStackTrace();
                     return ERROR;
                 }
             }
@@ -409,7 +430,7 @@ public class Cli {
 
             // if no return happened earlier, run the kernel
             return RUN;
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // TODO: should be moved to individual procedures
             System.out.println("");
             e.printStackTrace();
@@ -722,6 +743,154 @@ public class Cli {
             return readPasswordFromReader(prompt, reader);
         }
         return new String(console.readPassword(prompt));
+    }
+
+    private void checkArguments(Arguments options) {
+        // Find priority of breaking task
+        TaskPriority breakingTaskPriority = getBreakingTaskPriority(options);
+        // Ensure that there is at least one breaking task
+        if (breakingTaskPriority == TaskPriority.NONE) {
+            // No breaking tasks; everything will be executed
+            return;
+        }
+        // Get list of tasks that won't be executed
+        Set<String> skippedTasks = getSkippedTasks(options, breakingTaskPriority);
+        // Check that there are skipped tasks
+        if (skippedTasks.isEmpty()) {
+            return;
+        }
+        String errorMessage = String.format(
+            "Given arguments require incompatible tasks. Skipped arguments: %s.",
+            String.join(", ", skippedTasks));
+        System.out.println(errorMessage);
+    }
+
+    TaskPriority getBreakingTaskPriority(Arguments options) {
+        if (options.isHelp()) {
+            return TaskPriority.HELP;
+        }
+        if (options.isVersion() || options.isVersionTag()) {
+            return TaskPriority.VERSION;
+        }
+        if (options.getConfig() != null) {
+            return TaskPriority.CONFIG;
+        }
+        if (options.isInfo()) {
+            return TaskPriority.INFO;
+        }
+        if (options.isCreateAccount()) {
+            return TaskPriority.CREATE_ACCOUNT;
+        }
+        if (options.isListAccounts()) {
+            return TaskPriority.LIST_ACCOUNTS;
+        }
+        if (options.getExportAccount() != null) {
+            return TaskPriority.EXPORT_ACCOUNT;
+        }
+        if (options.getImportAccount() != null) {
+            return TaskPriority.IMPORT_ACCOUNT;
+        }
+        if (options.getSsl() != null) {
+            return TaskPriority.SSL;
+        }
+        if (options.isRebuildBlockInfo()) {
+            return TaskPriority.PRUNE_BLOCKS;
+        }
+        if (options.getRevertToBlock() != null) {
+            return TaskPriority.REVERT;
+        }
+        if (options.getPruneStateOption() != null) {
+            return TaskPriority.PRUNE_STATE;
+        }
+        if (options.getDumpStateSizeCount() != null) {
+            return TaskPriority.DUMP_STATE_SIZE;
+        }
+        if (options.getDumpStateCount() != null) {
+            return TaskPriority.DUMP_STATE;
+        }
+        if (options.getDumpBlocksCount() != null) {
+            return TaskPriority.DUMP_BLOCKS;
+        }
+        if (options.isDbCompact()) {
+            return TaskPriority.DB_COMPACT;
+        }
+        return TaskPriority.NONE;
+    }
+
+    Set<String> getSkippedTasks(Arguments options, TaskPriority breakingTaskPriority) {
+        Set<String> skippedTasks = new HashSet<String>();
+        if (breakingTaskPriority.compareTo(TaskPriority.VERSION) < 0) {
+            if (options.isVersion()) {
+                skippedTasks.add("-v");
+            }
+            if (options.isVersionTag()) {
+                skippedTasks.add("--version");
+            }
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.CONFIG) < 0) {
+            if (options.getNetwork() != null) {
+                skippedTasks.add("--network");
+            }
+            if (options.getDirectory() != null) {
+                skippedTasks.add("--datadir");
+            }
+            if (options.getConfig() != null) {
+                skippedTasks.add("--config");
+            }
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.INFO) < 0
+            && options.isInfo()) {
+            skippedTasks.add("--info");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.CREATE_ACCOUNT) < 0
+            && options.isCreateAccount()) {
+            skippedTasks.add("--account create");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.LIST_ACCOUNTS) < 0
+            && options.isListAccounts()) {
+            skippedTasks.add("--account list");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.EXPORT_ACCOUNT) < 0
+            && options.getExportAccount() != null) {
+            skippedTasks.add("--account export");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.IMPORT_ACCOUNT) < 0
+            && options.getImportAccount() != null) {
+            skippedTasks.add("--account import");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.SSL) < 0
+            && options.getSsl() != null) {
+            skippedTasks.add("-s create");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.PRUNE_BLOCKS) < 0
+            && options.isRebuildBlockInfo()) {
+            skippedTasks.add("--prune-blocks");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.REVERT) < 0
+            && options.getRevertToBlock() != null) {
+            skippedTasks.add("--revert");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.PRUNE_STATE) < 0
+            && options.getPruneStateOption() != null) {
+            skippedTasks.add("--state");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE_SIZE) < 0
+            && options.getDumpStateSizeCount() != null) {
+            skippedTasks.add("--dump-state-size");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE) < 0
+            && options.getDumpStateCount() != null) {
+            skippedTasks.add("--dump-state");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_BLOCKS) < 0
+            && options.getDumpBlocksCount() != null) {
+            skippedTasks.add("--dump-blocks");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.DB_COMPACT) < 0
+            && options.isDbCompact()) {
+            skippedTasks.add("--db-compact");
+        }
+        return skippedTasks;
     }
 
     /**

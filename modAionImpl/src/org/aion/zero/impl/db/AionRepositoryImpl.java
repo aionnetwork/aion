@@ -590,6 +590,9 @@ public class AionRepositoryImpl
             repo.worldState = repo.createStateTrie();
             repo.worldState.setRoot(root);
 
+            // gives snapshots access to the pending store
+            repo.pendingStore = this.pendingStore;
+
             return repo;
         } finally {
             rwLock.readLock().unlock();
@@ -768,9 +771,9 @@ public class AionRepositoryImpl
     public String toString() {
         return "AionRepositoryImpl{ identityHashCode="
                 + System.identityHashCode(this)
-                + ", "
-                + //
-                "databaseGroupSize="
+                + ", snapshot: "
+                + this.isSnapshot()
+                + ", databaseGroupSize="
                 + (databaseGroup == null ? 0 : databaseGroup.size())
                 + '}';
     }

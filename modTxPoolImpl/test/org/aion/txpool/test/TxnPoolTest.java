@@ -239,7 +239,7 @@ public class TxnPoolTest {
     }
 
     @Test
-    public void timeout1() throws Throwable {
+    public void timeout1() throws Exception {
         Properties config = new Properties();
         config.put("tx-timeout", "10"); // 10 sec
 
@@ -256,7 +256,7 @@ public class TxnPoolTest {
     }
 
     @Test
-    public void timeout2() throws Throwable {
+    public void timeout2() throws Exception {
         Properties config = new Properties();
         config.put("tx-timeout", "1"); // 10 sec
 
@@ -273,7 +273,7 @@ public class TxnPoolTest {
     }
 
     @Test
-    public void snapshot() throws Throwable {
+    public void snapshot() {
         Properties config = new Properties();
         config.put("tx-timeout", "10"); // 10 sec
 
@@ -287,7 +287,7 @@ public class TxnPoolTest {
     }
 
     @Test
-    public void snapshot2() throws Throwable {
+    public void snapshot2() {
         Properties config = new Properties();
         config.put("tx-timeout", "100"); // 100 sec
 

@@ -5,4 +5,4 @@
 [submodule "aion_api"]
     path = aion_api
     url = https://github.com/aionnetwork/aion_api
-    branch = java11
+    branch = master

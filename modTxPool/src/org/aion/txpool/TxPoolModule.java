@@ -32,7 +32,7 @@ public final class TxPoolModule {
     private static ITxPool<ITransaction> TXPOOL;
 
     @SuppressWarnings("unchecked")
-    private TxPoolModule(Properties config) throws Throwable {
+    private TxPoolModule(Properties config) throws Exception {
         String moduleName = (String) config.get(MODULENAME);
         if (moduleName != null) {
             TXPOOL =
@@ -47,7 +47,7 @@ public final class TxPoolModule {
         }
     }
 
-    public static TxPoolModule getSingleton(Properties config) throws Throwable {
+    public static TxPoolModule getSingleton(Properties config) throws Exception {
         if (config == null) {
             throw new Exception("empty config!");
         }
@@ -59,7 +59,7 @@ public final class TxPoolModule {
         return TxPoolModule.singleton;
     }
 
-    public ITxPool<?> getTxPool() throws Throwable {
+    public ITxPool<?> getTxPool() throws Exception {
         if (TxPoolModule.singleton == null) {
             throw new Exception("Module does not initialzed!");
         }

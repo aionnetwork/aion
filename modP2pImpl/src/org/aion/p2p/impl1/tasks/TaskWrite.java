@@ -60,7 +60,7 @@ public class TaskWrite implements Runnable {
         if (channelBuffer.isClosed()) {
             channelBuffer.refreshHeader();
             channelBuffer.refreshBody();
-            p2pMgr.dropActive(channelBuffer.getNodeIdHash(), "close-already");
+            p2pMgr. dropActive(channelBuffer.getNodeIdHash(), "close-already");
             return;
         }
 
@@ -101,16 +101,20 @@ public class TaskWrite implements Runnable {
                 }
             } catch (ClosedChannelException ex1) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("closed-channel-exception node={}", this.nodeShortId);
+                    p2pLOG.debug("closed-channel-exception node=" + this.nodeShortId, ex1);
                 }
 
                 channelBuffer.setClosed();
             } catch (IOException ex2) {
                 if (p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug(
-                            "write-msg-io-exception node={} err={}",
-                            this.nodeShortId,
-                            ex2.getMessage());
+                            "write-msg-io-exception node="
+                                    + this.nodeShortId
+                                    + " headerBytes="
+                                    + String.valueOf(headerBytes.length)
+                                    + " bodyLen="
+                                    + String.valueOf(bodyLen),
+                            ex2);
                 }
 
                 if (ex2.getMessage().equals("Broken pipe")) {
@@ -118,7 +122,7 @@ public class TaskWrite implements Runnable {
                 }
             }
         } catch (Exception e) {
-            p2pLOG.error("TaskWrite exception {}", e.getMessage());
+            p2pLOG.error("TaskWrite exception.", e);
         } finally {
             channelBuffer.lock.unlock();
         }

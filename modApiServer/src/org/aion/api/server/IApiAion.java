@@ -55,5 +55,5 @@ public interface IApiAion {
 
     void shutDown();
 
-    TxWaitingMappingUpdate takeTxWait() throws Throwable;
+    TxWaitingMappingUpdate takeTxWait() throws Exception;
 }

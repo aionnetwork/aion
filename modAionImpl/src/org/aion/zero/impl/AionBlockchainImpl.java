@@ -471,8 +471,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
         AionBlockSummary summary = null;
         try {
             summary = add(block);
-        } catch (Throwable th) {
-            LOG.error("Unexpected error: ", th);
+        } catch (Exception e) {
+            LOG.error("Unexpected error: ", e);
         } finally {
             this.fork = false;
         }
@@ -1199,22 +1199,45 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public boolean storePendingStatusBlock(AionBlock block) {
-        return repository.getPendingBlockStore().addStatusBlock(block);
+        try {
+            return repository.getPendingBlockStore().addStatusBlock(block);
+        } catch (Exception e) {
+            LOG.error("Unable to store status block in " + repository.toString() + " due to: ", e);
+            return false;
+        }
     }
 
     @Override
     public int storePendingBlockRange(List<AionBlock> blocks) {
-        return repository.getPendingBlockStore().addBlockRange(blocks);
+        try {
+            return repository.getPendingBlockStore().addBlockRange(blocks);
+        } catch (Exception e) {
+            LOG.error(
+                    "Unable to store range of blocks in " + repository.toString() + " due to: ", e);
+            return 0;
+        }
     }
 
     @Override
     public Map<ByteArrayWrapper, List<AionBlock>> loadPendingBlocksAtLevel(long level) {
-        return repository.getPendingBlockStore().loadBlockRange(level);
+        try {
+            return repository.getPendingBlockStore().loadBlockRange(level);
+        } catch (Exception e) {
+            LOG.error(
+                    "Unable to retrieve stored blocks from " + repository.toString() + " due to: ",
+                    e);
+            return Collections.emptyMap();
+        }
     }
 
     @Override
     public long nextBase(long current, long knownStatus) {
-        return repository.getPendingBlockStore().nextBase(current, knownStatus);
+        try {
+            return repository.getPendingBlockStore().nextBase(current, knownStatus);
+        } catch (Exception e) {
+            LOG.error("Unable to generate next LIGHTNING request base due to: ", e);
+            return current;
+        }
     }
 
     @Override
@@ -1222,7 +1245,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
             long level,
             List<ByteArrayWrapper> ranges,
             Map<ByteArrayWrapper, List<AionBlock>> blocks) {
-        repository.getPendingBlockStore().dropPendingQueues(level, ranges, blocks);
+        try {
+            repository.getPendingBlockStore().dropPendingQueues(level, ranges, blocks);
+        } catch (Exception e) {
+            LOG.error(
+                    "Unable to delete used blocks from " + repository.toString() + " due to: ", e);
+            return;
+        }
     }
 
     public boolean hasParentOnTheChain(AionBlock block) {

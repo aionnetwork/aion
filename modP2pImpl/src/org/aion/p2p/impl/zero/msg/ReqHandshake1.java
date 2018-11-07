@@ -109,7 +109,7 @@ public final class ReqHandshake1 extends ReqHandshake {
                 return new ReqHandshake1(nodeId, netId, ip, port, revision, versions);
             } catch (Exception e) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("req-handshake-decode error={}", e.getMessage());
+                    p2pLOG.debug("req-handshake-decode error.", e);
                 }
                 return null;
             }

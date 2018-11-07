@@ -22,6 +22,8 @@
  */
 package org.aion.p2p.impl.zero.msg;
 
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +94,9 @@ public final class ResActiveNodes extends Msg {
                 return new ResActiveNodes(activeNodes);
 
             } catch (Exception e) {
-                System.out.println("<p2p res-active-nodes error=" + e.getMessage() + ">");
+                if (p2pLOG.isDebugEnabled()) {
+                    p2pLOG.debug("rp2p res-active-nodes error.", e);
+                }
                 return null;
             }
         }

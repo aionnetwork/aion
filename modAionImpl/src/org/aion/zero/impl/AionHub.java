@@ -251,8 +251,8 @@ public class AionHub {
         prop.put(EventMgrModule.MODULENAME, "org.aion.evtmgr.impl.mgr.EventMgrA0");
         try {
             this.eventMgr = EventMgrModule.getSingleton(prop).getEventMgr();
-        } catch (Throwable e) {
-            genLOG.error("Can not load the Event Manager Module", e.getMessage());
+        } catch (Exception e) {
+            genLOG.error("Can not load the Event Manager Module", e);
         }
 
         if (eventMgr == null) {

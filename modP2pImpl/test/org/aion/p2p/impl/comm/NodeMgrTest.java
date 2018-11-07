@@ -34,6 +34,7 @@ import static org.mockito.Mockito.when;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -112,24 +113,16 @@ public class NodeMgrTest {
 
     private void addNodetoOutbound(INode node, UUID _uuid) {
         node.setChannel(channel);
-        try {
-            node.setId(_uuid.toString().getBytes("UTF-8"));
-            node.refreshTimestamp();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(_uuid.toString().getBytes(StandardCharsets.UTF_8));
+        node.refreshTimestamp();
         nMgr.addOutboundNode(node);
         assertNotNull(nMgr.getOutboundNode(node.getIdHash()));
     }
 
     private void addNodetoInbound(INode node, UUID _uuid) {
         node.setChannel(channel);
-        try {
-            node.setId(_uuid.toString().getBytes("UTF-8"));
-            node.refreshTimestamp();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(_uuid.toString().getBytes(StandardCharsets.UTF_8));
+        node.refreshTimestamp();
         nMgr.addInboundNode(node);
         assertNotNull(nMgr.getInboundNode(channel.hashCode()));
     }
@@ -239,11 +232,7 @@ public class NodeMgrTest {
 
         INode node = nMgr.allocNode(ip1, 1);
         node.setChannel(channel);
-        try {
-            node.setId(nodeId1.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(nodeId1.getBytes(StandardCharsets.UTF_8));
 
         nMgr.addInboundNode(node);
         INode iNode = nMgr.getInboundNode(channel.hashCode());
@@ -261,11 +250,7 @@ public class NodeMgrTest {
         INode node = nMgr.allocNode(ip2, 1);
 
         node.setChannel(channel);
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(nodeId2.getBytes(StandardCharsets.UTF_8));
 
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
@@ -286,11 +271,7 @@ public class NodeMgrTest {
         INode node = nMgr.allocNode(ip2, 1);
 
         node.setChannel(channel);
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(nodeId2.getBytes(StandardCharsets.UTF_8));
 
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
@@ -312,11 +293,7 @@ public class NodeMgrTest {
         INode node = nMgr.allocNode(ip2, 1);
 
         node.setChannel(channel);
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(nodeId2.getBytes(StandardCharsets.UTF_8));
 
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());

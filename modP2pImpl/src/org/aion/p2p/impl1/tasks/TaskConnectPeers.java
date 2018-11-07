@@ -77,7 +77,7 @@ public class TaskConnectPeers implements Runnable {
             try {
                 Thread.sleep(PERIOD_CONNECT_OUTBOUND);
                 if (this.nodeMgr.activeNodesSize() >= this.maxActiveNodes) {
-                    p2pLOG.warn("tcp-connect-peer pass max-active-nodes");
+                    p2pLOG.warn("tcp-connect-peer pass max-active-nodes.");
                     continue;
                 }
 
@@ -94,7 +94,7 @@ public class TaskConnectPeers implements Runnable {
                 // continue;
                 // }
             } catch (Exception e) {
-                p2pLOG.debug("tcp-Exception {}", e.toString());
+                p2pLOG.debug("tcp-Exception.", e);
                 continue;
             }
             int nodeIdHash = node.getIdHash();
@@ -158,10 +158,9 @@ public class TaskConnectPeers implements Runnable {
                 } catch (Exception e) {
                     if (p2pLOG.isDebugEnabled()) {
                         p2pLOG.debug(
-                                "connect-outbound exception -> id={} ip={} reason={}",
-                                node.getIdShort(),
-                                node.getIpStr(),
-                                e.toString());
+                            "connect-outbound exception -> id=" +
+                                node.getIdShort() + " ip=" + node.getIpStr(), e);
+
                     }
 
                     if (p2pLOG.isTraceEnabled()) {
@@ -172,7 +171,7 @@ public class TaskConnectPeers implements Runnable {
                         try {
                             channel.close();
                         } catch (IOException e1) {
-                            p2pLOG.debug("TaskConnectPeers close exception", e1.toString());
+                            p2pLOG.debug("TaskConnectPeers close exception.", e1);
                         }
                     }
                 }

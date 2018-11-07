@@ -257,7 +257,7 @@ public class ApiWeb3Aion extends ApiAion {
                                                             () -> new ChainHeadView(prev).update());
                                             cacheUpdateExecutor.execute(task);
                                             return task;
-                                        } catch (Throwable e) {
+                                        } catch (Exception e) {
                                             LOG.debug(
                                                     "<cache-updater - could not queue up task: ",
                                                     e);
@@ -314,7 +314,7 @@ public class ApiWeb3Aion extends ApiAion {
                                                                             .update());
                                             MinerStatsExecutor.execute(task);
                                             return task;
-                                        } catch (Throwable e) {
+                                        } catch (Exception e) {
                                             LOG.debug(
                                                     "<miner-stats - could not queue up task: ", e);
                                             throw (e);
@@ -2798,8 +2798,8 @@ public class ApiWeb3Aion extends ApiAion {
 
                 minerHashrate = BigDecimal.valueOf(minerHashrateShare).multiply(networkHashrate);
 
-            } catch (Throwable t) {
-                LOG.error("failed to compute miner metrics", t);
+            } catch (Exception e) {
+                LOG.error("failed to compute miner metrics", e);
             }
 
             JSONObject o = new JSONObject();
