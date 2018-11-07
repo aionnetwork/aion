@@ -157,7 +157,7 @@ final class TaskShowStatus implements Runnable {
      *
      * @return log stream with peers statistical data
      */
-    public String dumpPeerStatsInfo() {
+    private String dumpPeerStatsInfo() {
         Map<String, Float> reqToPeers = this.stats.getPercentageOfRequestsToPeers();
         Map<String, Long> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
         Map<String, Long> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
@@ -233,7 +233,6 @@ final class TaskShowStatus implements Runnable {
         return sb.toString();
     }
 
-    public String dumpPeerStateInfo(Collection<INode> filtered) {
     private String dumpPeerStateInfo(Collection<INode> filtered) {
         List<NodeState> sorted = new ArrayList<>();
         for (INode n : filtered) {

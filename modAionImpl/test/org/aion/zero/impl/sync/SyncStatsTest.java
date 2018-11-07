@@ -192,7 +192,7 @@ public class SyncStatsTest {
         int i = 0;
         for (String nodeId : avgResponseTimeByPeers.keySet()) {
             // ensures asc order
-            if(i == 0) {
+            if(i++ == 0) {
                 // First record correspond to the overall average response time by all peers
                 assertThat(((Long)avgResponseTimeByPeers.get(nodeId).longValue())
                     .compareTo(stats.getOverallAveragePeerResponseTime()));
