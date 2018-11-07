@@ -36,7 +36,6 @@ import java.util.OptionalDouble;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
@@ -54,9 +53,7 @@ public class NodeMgr implements INodeMgr {
     private final int maxTempNodes;
     private final Set<String> seedIps = new HashSet<>();
     private final IP2pMgr p2pMgr;
-    private final ReentrantLock takeLock = new ReentrantLock();
-    private final ReentrantLock putLock = new ReentrantLock();
-    private final Condition notEmpty = takeLock.newCondition();
+    private final ReentrantLock tempNodesLock = new ReentrantLock();
     private final Map<Integer, INode> tempNodes =
             Collections.synchronizedMap(new LinkedHashMap<>());
     private final Map<Integer, INode> outboundNodes = new ConcurrentHashMap<>();
@@ -168,20 +165,17 @@ public class NodeMgr implements INodeMgr {
     /** @param _n Node */
     @Override
     public void addTempNode(final INode _n) {
-        final ReentrantLock putLock = this.putLock;
+        tempNodesLock.lock();
         try {
-            putLock.lockInterruptibly();
-
             if (tempNodes.size() < maxTempNodes
                     && !tempNodes.containsKey(_n.getPeerId())
                     && (notActiveNode(_n.getIdHash()) || _n.getIfFromBootList())) {
                 tempNodes.putIfAbsent(_n.getPeerId(), _n);
-                signalNotEmpty();
             }
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             p2pLOG.error("<addTempNode exception>", e);
         } finally {
-            putLock.unlock();
+            tempNodesLock.unlock();
         }
     }
 
@@ -204,22 +198,13 @@ public class NodeMgr implements INodeMgr {
     @Override
     public INode tempNodesTake() {
         INode node = null;
-        final ReentrantLock takeLock = this.takeLock;
+        tempNodesLock.lock();
         try {
-            takeLock.lockInterruptibly();
-            while (tempNodes.isEmpty()) {
-                notEmpty.await();
-            }
-
-            Integer key = tempNodes.keySet().iterator().next();
-            node = tempNodes.remove(key);
-            if (!tempNodes.isEmpty()) {
-                notEmpty.signal();
-            }
-        } catch (InterruptedException e) {
+            node = tempNodes.remove(tempNodes.keySet().iterator().next());
+        } catch (Exception e) {
             p2pLOG.error("<tempNodesTake IllegalStateException>", e);
         } finally {
-            takeLock.unlock();
+            tempNodesLock.unlock();
         }
 
         return node;
@@ -515,16 +500,6 @@ public class NodeMgr implements INodeMgr {
             }
         } catch (NullPointerException e) {
             p2pLOG.info("<p2p-ban null exception>", e);
-        }
-    }
-
-    private void signalNotEmpty() {
-        final ReentrantLock takeLock = this.takeLock;
-        takeLock.lock();
-        try {
-            notEmpty.signal();
-        } finally {
-            takeLock.unlock();
         }
     }
 }
