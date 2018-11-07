@@ -55,6 +55,7 @@ import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
+import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -576,8 +577,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (block.getTimestamp()
                 > (currTimeSeconds
-                        + this.chainConfiguration.getConstants().getClockDriftBufferTime()))
+                        + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Block {} invalid due to timestamp {}.",
+                        Hex.toHexString(block.getHash()),
+                        block.getTimestamp());
+            }
             return INVALID_BLOCK;
+        }
 
         if (LOG.isDebugEnabled()) {
             LOG.debug(
