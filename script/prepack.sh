@@ -9,7 +9,7 @@ SCRIPT_PATH="${PACK_PATH}/script"
 JDK_VER="11.0.1"
 JDK_TYPE="openjdk"
 JAVAFX_PATH="${PACK_PATH}/javafx"
-JAVAFX_VER="javafx-jmods-11"
+JAVAFX_VER="javafx-jmods-11.0.1"
 
 if [ ! -d "$PACK_PATH" ]; then
   mkdir $PACK_PATH
