@@ -263,7 +263,7 @@ public class ApiWeb3Aion extends ApiAion {
                                                     e);
                                             throw (e);
                                         } // exception is swallowed by refresh and load. so just log
-                                          // it for our logs
+                                        // it for our logs
                                     }
                                 });
 
@@ -319,7 +319,7 @@ public class ApiWeb3Aion extends ApiAion {
                                                     "<miner-stats - could not queue up task: ", e);
                                             throw (e);
                                         } // exception is swallowed by refresh and load. so just log
-                                          // it for our logs
+                                        // it for our logs
                                     }
                                 });
 
@@ -588,6 +588,10 @@ public class ApiWeb3Aion extends ApiAion {
                     RpcError.INVALID_PARAMS,
                     "Default block parameter temporarily unsupported");
         }*/
+
+        if (bnOrId.equalsIgnoreCase("pending")) {
+            return new RpcMsg(TypeConverter.toJsonHex(pendingState.bestPendingStateNonce(address)));
+        }
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
