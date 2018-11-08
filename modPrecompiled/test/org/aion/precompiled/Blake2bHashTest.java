@@ -22,22 +22,17 @@
  */
 package org.aion.precompiled;
 
+import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Properties;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IPruneConfig;
-import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.util.ByteUtil;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.config.CfgPrune;
+import org.aion.crypto.hash.Blake2b;
 import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
-import org.aion.zero.impl.db.ContractDetailsAion;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -103,14 +98,14 @@ public class Blake2bHashTest {
     @Test
     public void invalidInputLength() {
         ExecutionResult res = blake2bHasher.execute(shortByteArray, INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
     public void invalidInputLength2() {
         byte[] BigByteArray = new byte[1024 * 1024 + 1];
         ExecutionResult res = blake2bHasher.execute(BigByteArray, INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
@@ -122,13 +117,27 @@ public class Blake2bHashTest {
 
     @Test
     public void insufficientNRG2() {
-        byte[] BigByteArray = new byte[1024 * 1024];
+        byte[] bigByteArray = new byte[1024 * 1024];
         long nrg = (long) (Math.ceil(1024 * 1024 / 4) * 6 + 30);
-        ExecutionResult res = blake2bHasher.execute(BigByteArray, nrg);
+        ExecutionResult res = blake2bHasher.execute(bigByteArray, nrg);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
 
-        res = blake2bHasher.execute(BigByteArray, nrg - 1);
+        res = blake2bHasher.execute(bigByteArray, nrg - 1);
         assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
+    }
+
+    @Test
+    public void consistencyTest(){
+        byte[] input1 = Blake2bHashContract.setupInput(1, byteArray1);
+        byte[] input1Copy = Blake2bHashContract.setupInput(1, byteArray1);
+        byte[] input2 = Blake2bHashContract.setupInput(1, byteArray2);
+
+        ExecutionResult res1 = blake2bHasher.execute(input1, INPUT_NRG);
+        ExecutionResult res1Copy = blake2bHasher.execute(input1Copy, INPUT_NRG);
+        ExecutionResult res2 = blake2bHasher.execute(input2, INPUT_NRG);
+
+        assertThat(res1.getOutput()).isEqualTo(res1Copy.getOutput());
+        assertThat(res1.getOutput()).isNotEqualTo(res2.getOutput());
     }
 
     @Test
@@ -138,30 +147,4 @@ public class Blake2bHashTest {
         ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
         assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
     }
-
-    private static IRepositoryConfig repoConfig =
-            new IRepositoryConfig() {
-                @Override
-                public String getDbPath() {
-                    return "";
-                }
-
-                @Override
-                public IPruneConfig getPruneConfig() {
-                    return new CfgPrune(false);
-                }
-
-                @Override
-                public IContractDetails contractDetailsImpl() {
-                    return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
-                }
-
-                @Override
-                public Properties getDatabaseConfig(String db_name) {
-                    Properties props = new Properties();
-                    props.setProperty(DatabaseFactory.Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-                    props.setProperty(DatabaseFactory.Props.ENABLE_HEAP_CACHE, "false");
-                    return props;
-                }
-            };
 }
