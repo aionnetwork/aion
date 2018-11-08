@@ -60,7 +60,7 @@ public class TaskWrite implements Runnable {
         if (channelBuffer.isClosed()) {
             channelBuffer.refreshHeader();
             channelBuffer.refreshBody();
-            p2pMgr. dropActive(channelBuffer.getNodeIdHash(), "close-already");
+            p2pMgr.dropActive(channelBuffer.getNodeIdHash(), "close-already");
             return;
         }
 
