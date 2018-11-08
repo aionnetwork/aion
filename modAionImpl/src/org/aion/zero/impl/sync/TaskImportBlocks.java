@@ -572,11 +572,12 @@ final class TaskImportBlocks implements Runnable {
             // a different message will be printed to indicate the storage of blocks
             if (!state.isInFastMode() || importResult != ImportResult.NO_PARENT) {
                 log.info(
-                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms>",
                         displayId,
                         b.getShortHash(),
                         b.getNumber(),
                         b.getTransactionsList().size(),
+                        b.getTimestamp(),
                         importResult,
                         t2 - t1);
             }
