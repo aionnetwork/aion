@@ -35,6 +35,10 @@ public class EDVerifyContract implements IPrecompiledContract {
     // set to a default cost for now, this will need to be adjusted
     private static final long COST = 3700L;
 
+    /**
+     * @param input 128 bytes of data input, [32-bytes message, 64-bytes signature, 32-bytes public key]
+     * @return the verification result of the given input
+     */
     @Override
     public IExecutionResult execute(byte[] input, long nrgLimit) {
 
