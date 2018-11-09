@@ -85,32 +85,12 @@ final class TaskShowStatus implements Runnable {
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+        String requestedInfo;
+
         while (this.start.get()) {
-            AionBlock selfBest = this.chain.getBestBlock();
-            String selfTd = selfBest.getCumulativeDifficulty().toString(10);
 
-            String status =
-                    "sync-status avg-import="
-                            + String.format("%.2f", this.stats.getAvgBlocksPerSec())
-                            //
-                            + " b/s" //
-                            + " td="
-                            + selfTd
-                            + "/"
-                            + networkStatus.getTargetTotalDiff().toString(10) //
-                            + " b-num="
-                            + selfBest.getNumber()
-                            + "/"
-                            + this.networkStatus.getTargetBestBlockNumber() //
-                            + " b-hash="
-                            + Hex.toHexString(this.chain.getBestBlockHash()) //
-                            + "/"
-                            + this.networkStatus.getTargetBestBlockHash()
-                            + "";
-
+            String status = getStatus();
             p2pLOG.info(status);
-
-            String requestedInfo;
 
             if (showStatistics.contains(StatsType.PEER_STATES)) {
                 requestedInfo = dumpPeerStateInfo(p2p.getActiveNodes().values());
@@ -154,12 +134,61 @@ final class TaskShowStatus implements Runnable {
                 if (start.get() && p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug("sync-ss shutdown.", e);
                 }
-                return;
+                continue;
             }
         }
+
+        // print all the gathered information before shutdown
         if (p2pLOG.isDebugEnabled()) {
+            String status = getStatus();
+            p2pLOG.debug(status);
+
+            requestedInfo = dumpPeerStateInfo(p2p.getActiveNodes().values());
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+            requestedInfo = dumpRequestsInfo();
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+            requestedInfo = dumpTopSeedsInfo();
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+            requestedInfo = dumpTopLeechesInfo();
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+            requestedInfo = dumpResponseInfo();
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+
             p2pLOG.debug("sync-ss shutdown");
         }
+    }
+
+    private String getStatus() {
+        AionBlock selfBest = this.chain.getBestBlock();
+        String selfTd = selfBest.getCumulativeDifficulty().toString(10);
+
+        return "sync-status avg-import="
+                + String.format("%.2f", this.stats.getAvgBlocksPerSec())
+                //
+                + " b/s" //
+                + " td="
+                + selfTd
+                + "/"
+                + networkStatus.getTargetTotalDiff().toString(10) //
+                + " b-num="
+                + selfBest.getNumber()
+                + "/"
+                + this.networkStatus.getTargetBestBlockNumber() //
+                + " b-hash="
+                + Hex.toHexString(this.chain.getBestBlockHash()) //
+                + "/"
+                + this.networkStatus.getTargetBestBlockHash()
+                + "";
     }
 
     /**
@@ -177,7 +206,7 @@ final class TaskShowStatus implements Runnable {
 
             sb.append("\n====== sync-requests-to-peers ======\n");
             sb.append(String.format("   %9s %20s\n", "peer", "% requests"));
-            sb.append(  "------------------------------------\n");
+            sb.append("------------------------------------\n");
 
             reqToPeers.forEach(
                     (nodeId, percReq) ->
@@ -206,7 +235,7 @@ final class TaskShowStatus implements Runnable {
 
             sb.append("\n========== sync-top-seeds ==========\n");
             sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
-            sb.append(  "------------------------------------\n");
+            sb.append("------------------------------------\n");
 
             totalBlocksByPeer.forEach(
                     (nodeId, totalBlocks) ->
@@ -231,7 +260,7 @@ final class TaskShowStatus implements Runnable {
 
             sb.append("\n========= sync-top-leeches =========\n");
             sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
-            sb.append(  "------------------------------------\n");
+            sb.append("------------------------------------\n");
 
             totalBlockReqByPeer.forEach(
                     (nodeId, totalBlocks) ->
@@ -258,7 +287,7 @@ final class TaskShowStatus implements Runnable {
 
             sb.append("\n====== sync-responses-by-peer ======\n");
             sb.append(String.format("   %9s %20s\n", "peer", "avg. response"));
-            sb.append(  "------------------------------------\n");
+            sb.append("------------------------------------\n");
 
             sb.append(String.format("   «overall» %17s ms\n", overallAvgResponse));
 
