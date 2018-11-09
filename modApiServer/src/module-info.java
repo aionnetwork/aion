@@ -10,7 +10,6 @@ module aion.apiserver {
     requires aion.evtmgr;
     requires aion.evtmgr.impl;
     requires aion.fastvm;
-    requires com.google.common;
     requires libJson;
     requires commons.collections4;
     requires nanohttpd;
@@ -18,6 +17,7 @@ module aion.apiserver {
     requires protobuf.java;
     requires commons.lang3;
     requires libnzmq;
+    requires com.github.benmanes.caffeine;
 
     exports org.aion.api.server.pb;
     exports org.aion.api.server.zmq;
