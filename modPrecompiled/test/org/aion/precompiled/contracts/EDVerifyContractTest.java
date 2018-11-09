@@ -84,6 +84,7 @@ public class EDVerifyContractTest {
         assertTrue(contract != null);
         IExecutionResult result = contract.execute(input, 21000L);
         assertThat(result.getOutput()[0]).isEqualTo(1);
+        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
     }
 
     @Test
@@ -120,13 +121,13 @@ public class EDVerifyContractTest {
     }
 
     @Test
-    @Ignore
+    //@Ignore
     public void incorrectInputTest(){
         byte[] input = setupInput();
 
-        input[32] = (byte)((int)(input[32]) -10); // modify sig
+        input[22] = (byte)((int)(input[32]) -10); // modify sig
         input[33] = (byte)((int)(input[33]) + 4); // modify sig
-        input[34] = (byte)((int)(input[33]) - 40); // modify sig
+        input[99] = (byte)((int)(input[33]) - 40); // modify sig
 
 
         ExecutionContext ctx = new ExecutionContext(txHash,

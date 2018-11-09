@@ -37,7 +37,7 @@ public class EDVerifyContract implements IPrecompiledContract {
 
     /**
      * @param input 128 bytes of data input, [32-bytes message, 64-bytes signature, 32-bytes public key]
-     * @return the verification result of the given input
+     * @return the verification result of the given input (1 pass, 0 for fail)
      */
     @Override
     public IExecutionResult execute(byte[] input, long nrgLimit) {
