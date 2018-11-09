@@ -145,7 +145,7 @@ final class TaskImportBlocks implements Runnable {
                             peerState.getBase());
                 }
 
-                stats.update(getBestBlockNumber());
+                stats.update(bw.getDisplayId(), bw.getBlocks().size(), getBestBlockNumber());
             }
         }
         if (log.isDebugEnabled()) {

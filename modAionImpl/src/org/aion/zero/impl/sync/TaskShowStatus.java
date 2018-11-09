@@ -117,6 +117,7 @@ final class TaskShowStatus implements Runnable {
 
             if (p2pLOG.isDebugEnabled()) {
                 String s = dumpPeerStateInfo(p2p.getActiveNodes().values());
+                s += dumpPeerStatsInfo();
                 if (!s.isEmpty()) {
                     p2pLOG.debug(s);
                 }
@@ -148,6 +149,88 @@ final class TaskShowStatus implements Runnable {
         if (p2pLOG.isDebugEnabled()) {
             p2pLOG.debug("sync-ss shutdown");
         }
+    }
+
+    /**
+     * Obtain log stream containing statistics about requests and blocks processed by/from peer
+     * nodes.
+     *
+     * @return log stream with peers statistical data
+     */
+    private String dumpPeerStatsInfo() {
+        Map<String, Float> reqToPeers = this.stats.getPercentageOfRequestsToPeers();
+        Map<String, Long> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
+        Map<String, Long> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
+        Map<String, Double> avgResponseTimeByPeers = this.stats.getAverageResponseTimeByPeers();
+
+        StringBuilder sb = new StringBuilder();
+
+        if (!reqToPeers.isEmpty()) {
+
+            sb.append(
+                    String.format(
+                            "=================================================================== sync-requests-to-peers ===================================================================\n"));
+
+            sb.append(String.format("%9s %10s\n", "id", "% requests"));
+
+            reqToPeers.forEach(
+                    (nodeId, percReq) -> {
+                        sb.append(
+                                String.format(
+                                        "id:%6s %10s\n",
+                                        nodeId, String.format("%.2f", percReq * 100) + " %"));
+                    });
+        }
+
+        if (!totalBlocksByPeer.isEmpty()) {
+
+            sb.append(
+                    String.format(
+                            "==================================================================== sync-blocks-by-peer =====================================================================\n"));
+
+            sb.append(String.format("%9s %18s\n", "id", "Total blocks"));
+
+            totalBlocksByPeer.forEach(
+                    (nodeId, totalBlocks) -> {
+                        sb.append(String.format("id:%6s %18s\n", nodeId, totalBlocks));
+                    });
+        }
+
+        if (!totalBlockReqByPeer.isEmpty()) {
+
+            sb.append(
+                    String.format(
+                            "================================================================= sync-block-requests-by-peer ================================================================\n"));
+
+            sb.append(String.format("%9s %18s\n", "id", "Total blocks"));
+
+            totalBlockReqByPeer.forEach(
+                    (nodeId, totalBlocks) -> {
+                        sb.append(String.format("id:%6s %18s\n", nodeId, totalBlocks));
+                    });
+        }
+
+        if (!avgResponseTimeByPeers.isEmpty()) {
+
+            Long overallAvgResponse = this.stats.getOverallAveragePeerResponseTime();
+
+            sb.append(
+                    String.format(
+                            "================================================================= sync-avg-response-by-peer ==================================================================\n"));
+
+            sb.append(String.format("%9s %13s\n", "id", "Avg. Response"));
+            sb.append(String.format("==Overall %10s ms\n", overallAvgResponse));
+
+            avgResponseTimeByPeers.forEach(
+                    (nodeId, avgResponse) -> {
+                        sb.append(
+                                String.format(
+                                        "id:%6s %10s ms\n",
+                                        nodeId, String.format("%.0f", avgResponse)));
+                    });
+        }
+
+        return sb.toString();
     }
 
     private String dumpPeerStateInfo(Collection<INode> filtered) {

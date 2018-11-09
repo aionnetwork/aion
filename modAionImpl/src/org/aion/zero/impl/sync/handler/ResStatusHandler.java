@@ -76,6 +76,7 @@ public final class ResStatusHandler extends Handler {
             }
         }
 
+        this.syncMgr.getSyncStats().addPeerResponseTime(_displayId, System.currentTimeMillis());
         INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
         if (node != null && rs != null) {
             if (log.isDebugEnabled()) {

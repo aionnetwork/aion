@@ -48,6 +48,7 @@ import org.aion.p2p.P2pConstant;
 import org.aion.p2p.Ver;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
+import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksBodies;
 import org.aion.zero.impl.sync.msg.ResBlocksBodies;
 import org.aion.zero.impl.types.AionBlock;
@@ -63,6 +64,8 @@ public final class ReqBlocksBodiesHandler extends Handler {
 
     private final IAionBlockchain blockchain;
 
+    private final SyncMgr syncMgr;
+
     private final IP2pMgr p2pMgr;
 
     private final Map<ByteArrayWrapper, byte[]> cache =
@@ -73,11 +76,13 @@ public final class ReqBlocksBodiesHandler extends Handler {
     public ReqBlocksBodiesHandler(
             final Logger _log,
             final IAionBlockchain _blockchain,
+            final SyncMgr _syncMgr,
             final IP2pMgr _p2pMgr,
             final boolean isSyncOnlyNode) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_BLOCKS_BODIES);
         this.log = _log;
         this.blockchain = _blockchain;
+        this.syncMgr = _syncMgr;
         this.p2pMgr = _p2pMgr;
         this.isSyncOnlyNode = isSyncOnlyNode;
     }
@@ -135,6 +140,7 @@ public final class ReqBlocksBodiesHandler extends Handler {
             }
 
             this.p2pMgr.send(_nodeIdHashcode, _displayId, new ResBlocksBodies(blockBodies));
+            this.syncMgr.getSyncStats().updateTotalBlockRequestsByPeer(_displayId, blockBodies.size());
 
             if (log.isDebugEnabled()) {
                 this.log.debug(
