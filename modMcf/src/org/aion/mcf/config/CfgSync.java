@@ -27,6 +27,9 @@ import com.google.common.base.Objects;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -38,13 +41,14 @@ public final class CfgSync {
     private int blocksQueueMax;
 
     private boolean showStatus;
+    private List<StatsType> showStatistics;
 
     private static int BLOCKS_QUEUE_MAX = 32;
 
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
-
         this.showStatus = false;
+        this.showStatistics = new ArrayList<>(Arrays.asList(StatsType.NONE));
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -61,6 +65,9 @@ public final class CfgSync {
                         case "show-status":
                             this.showStatus = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
+                        case "show-statistics":
+                            parseSelectedStats(showStatistics, Cfg.readValue(sr));
+                            break;
                         default:
                             Cfg.skipElement(sr);
                             break;
@@ -69,6 +76,36 @@ public final class CfgSync {
                 case XMLStreamReader.END_ELEMENT:
                     break loop;
             }
+        }
+    }
+
+    private static void parseSelectedStats(List<StatsType> showStatistics, String readValue) {
+        showStatistics.clear();
+
+        String[] selected = readValue.split(",");
+
+        for (String option : selected) {
+            try {
+                showStatistics.add(StatsType.valueOf(option.toUpperCase()));
+            } catch (Exception e) {
+                // skip option
+                continue;
+            }
+        }
+
+        // expand all to specific options
+        if (showStatistics.contains(StatsType.ALL)) {
+            showStatistics.remove(StatsType.ALL);
+            showStatistics.addAll(StatsType.getAllSpecificTypes());
+        }
+
+        if (showStatistics.contains(StatsType.NONE) && showStatistics.size() > 1) {
+            showStatistics.remove(StatsType.NONE);
+        }
+
+        // set none if empty
+        if (showStatistics.isEmpty()) {
+            showStatistics.add(StatsType.NONE);
         }
     }
 
@@ -96,6 +133,16 @@ public final class CfgSync {
             xmlWriter.writeCharacters(this.showStatus + "");
             xmlWriter.writeEndElement();
 
+            // sub-element show-status
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment(
+                    "comma separated list of options: "
+                            + Arrays.toString(StatsType.values()).toLowerCase());
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("show-statistics");
+            xmlWriter.writeCharacters(printSelectedStats().toLowerCase());
+            xmlWriter.writeEndElement();
+
             // close element sync
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeEndElement();
@@ -108,6 +155,34 @@ public final class CfgSync {
             return xml;
         } catch (IOException | XMLStreamException e) {
             return "";
+        }
+    }
+
+    /**
+     * Returns a string containing a comma separated list of the statistics to be displayed.
+     *
+     * @return a string containing a comma separated list of the statistics to be displayed
+     */
+    private String printSelectedStats() {
+        // not meaningful if other settings are also present
+        showStatistics.remove(StatsType.NONE);
+
+        if (showStatistics.isEmpty()) {
+            return StatsType.NONE.toString();
+        } else {
+            if (showStatistics.contains(StatsType.ALL)
+                    || showStatistics.containsAll(StatsType.getAllSpecificTypes())) {
+                return StatsType.ALL.toString();
+            } else if (showStatistics.size() == 1) {
+                return showStatistics.get(0).toString();
+            } else {
+                StringBuilder sb = new StringBuilder(showStatistics.remove(0).toString());
+                for (StatsType tp : showStatistics) {
+                    sb.append(",");
+                    sb.append(tp.toString());
+                }
+                return sb.toString();
+            }
         }
     }
 
