@@ -793,4 +793,13 @@ public class AionRepositoryImpl
             rwLock.writeLock().unlock();
         }
     }
+
+    public void compactState() {
+        rwLock.writeLock().lock();
+        try {
+            this.stateDatabase.compact();
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
 }

@@ -544,6 +544,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
     }
 
+    public synchronized void compactState() {
+        repository.compactState();
+    }
+
     /**
      * Processes a new block and potentially appends it to the blockchain, thereby changing the
      * state of the world. Decoupled from wrapper function {@link #tryToConnect(AionBlock)} so we
