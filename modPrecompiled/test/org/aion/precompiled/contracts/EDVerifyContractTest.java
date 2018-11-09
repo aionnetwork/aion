@@ -24,6 +24,7 @@
 package org.aion.precompiled.contracts;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.aion.base.type.Address;
@@ -37,7 +38,6 @@ import org.aion.precompiled.ContractFactory;
 import org.aion.vm.*;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -68,7 +68,6 @@ public class EDVerifyContractTest {
         nrgLimit = 20000;
         callValue = DataWord.ZERO;
         callData = new byte[0];
-        TransactionResult txResult = new TransactionResult();
     }
 
     @Test
@@ -81,10 +80,48 @@ public class EDVerifyContractTest {
             blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
-        assert contract != null;
+        assertNotNull(contract);
         IExecutionResult result = contract.execute(input, 21000L);
-        assertThat(result.getOutput()[0]).isEqualTo(1);
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
+        assertThat(result.getOutput()[0]).isEqualTo(1);
+    }
+
+    @Test
+    public void emptyInputTest(){
+        byte[] input = new byte[128];
+
+        ExecutionContext ctx = new ExecutionContext(txHash,
+                ContractFactory.getEdVerifyContractAddress(), origin, caller, nrgPrice,
+                nrgLimit, callValue,
+                callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
+                blockDifficulty);
+        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+
+        assertNotNull(contract);
+        IExecutionResult result = contract.execute(input, 21000L);
+        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
+        assertThat(result.getOutput()[0]).isEqualTo(0);
+    }
+
+    @Test
+    public void incorrectInputTest(){
+        byte[] input = setupInput();
+
+        input[22] = (byte)((int)(input[32]) -10); // modify sig
+        input[33] = (byte)((int)(input[33]) + 4); // modify sig
+        input[99] = (byte)((int)(input[33]) - 40); // modify sig
+
+        ExecutionContext ctx = new ExecutionContext(txHash,
+                ContractFactory.getEdVerifyContractAddress(), origin, caller, nrgPrice,
+                nrgLimit, callValue,
+                callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
+                blockDifficulty);
+        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+
+        assertNotNull(contract);
+        IExecutionResult result = contract.execute(input, 21000L);
+        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
+        assertThat(result.getOutput()[0]).isEqualTo(0);
     }
 
     @Test
@@ -118,54 +155,6 @@ public class EDVerifyContractTest {
         IExecutionResult result = contract.execute(input, 21000L);
 
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.FAILURE.toInt());
-    }
-
-    @Test
-    //@Ignore
-    public void incorrectInputTest(){
-        byte[] input = setupInput();
-
-        input[22] = (byte)((int)(input[32]) -10); // modify sig
-        input[33] = (byte)((int)(input[33]) + 4); // modify sig
-        input[99] = (byte)((int)(input[33]) - 40); // modify sig
-
-
-        ExecutionContext ctx = new ExecutionContext(txHash,
-                ContractFactory.getEdVerifyContractAddress(), origin, caller, nrgPrice,
-                nrgLimit, callValue,
-                callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
-                blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
-
-        IExecutionResult result = contract.execute(input, 21000L);
-
-        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.INTERNAL_ERROR.toInt());
-    }
-
-
-    @Test
-    public void verifyFailTest(){
-        ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
-        ECKey ecKey = ECKeyFac.inst().create();
-        ecKey = ecKey.fromPrivate((Hex.decode(
-                "5a90d8e67da5d1dfbf17916ae83bae04ef334f53ce8763932eba2c1116a62426fff4317ae351bda5e4fa24352904a9366d3a89e38d1ffa51498ba9acfbc65724")));
-    }
-
-    @Test
-    public void emptyInputTest(){
-        byte[] input = new byte[128];
-
-        ExecutionContext ctx = new ExecutionContext(txHash,
-                ContractFactory.getEdVerifyContractAddress(), origin, caller, nrgPrice,
-                nrgLimit, callValue,
-                callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
-                blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
-
-        assertTrue(contract != null);
-        IExecutionResult result = contract.execute(input, 21000L);
-
-        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
     }
 
     private byte[] setupInput(){
