@@ -136,7 +136,7 @@ public final class CfgSync {
             // sub-element show-status
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeComment(
-                    "comma separated list of options: "
+                    "requires show-status=true; comma separated list of options: "
                             + Arrays.toString(StatsType.values()).toLowerCase());
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("show-statistics");
@@ -192,6 +192,10 @@ public final class CfgSync {
 
     public boolean getShowStatus() {
         return this.showStatus;
+    }
+
+    public List<StatsType> getShowStatistics() {
+        return showStatistics;
     }
 
     @Override
