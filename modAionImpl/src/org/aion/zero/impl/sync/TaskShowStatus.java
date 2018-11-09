@@ -23,9 +23,6 @@
 
 package org.aion.zero.impl.sync;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,9 +52,6 @@ final class TaskShowStatus implements Runnable {
 
     private final SyncStats stats;
 
-    private final boolean printReport;
-    private final String reportFolder;
-
     private final Logger p2pLOG;
 
     private final IP2pMgr p2p;
@@ -70,8 +64,6 @@ final class TaskShowStatus implements Runnable {
             final AionBlockchainImpl _chain,
             final NetworkStatus _networkStatus,
             final SyncStats _stats,
-            final boolean _printReport,
-            final String _reportFolder,
             final IP2pMgr _p2p,
             final Map<Integer, PeerState> _peerStates,
             final Logger _log) {
@@ -80,8 +72,6 @@ final class TaskShowStatus implements Runnable {
         this.chain = _chain;
         this.networkStatus = _networkStatus;
         this.stats = _stats;
-        this.printReport = _printReport;
-        this.reportFolder = _reportFolder;
         this.p2p = _p2p;
         this.peerStates = _peerStates;
         this.p2pLOG = _log;
@@ -123,24 +113,11 @@ final class TaskShowStatus implements Runnable {
                 }
             }
 
-            // print to report file
-            if (printReport) {
-                try {
-                    Files.write(
-                            Paths.get(
-                                    reportFolder, System.currentTimeMillis() + "-sync-report.out"),
-                            status.getBytes());
-                } catch (IOException e) {
-                    if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("sync-ss report exception.", e);
-                    }
-                }
-            }
-
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
-                if (p2pLOG.isDebugEnabled()) {
+                // without requested shutdown
+                if (start.get() && p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug("sync-ss shutdown.", e);
                 }
                 return;
@@ -248,13 +225,13 @@ final class TaskShowStatus implements Runnable {
             StringBuilder sb = new StringBuilder();
             sb.append("\n");
             sb.append(
-                "======================================================================== sync-status =========================================================================\n");
+                    "==================================================================== sync-peer-states-status ====================================================================\n");
             sb.append(
                     String.format(
                             "%9s %16s %17s %8s %16s %2s %16s\n",
                             "id", "# best block", "state", "mode", "base", "rp", "last request"));
             sb.append(
-                    "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+                    "-----------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 
             for (NodeState ns : sorted) {
                 INode n = ns.getN();

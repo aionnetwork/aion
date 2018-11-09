@@ -216,8 +216,6 @@ public final class SyncMgr {
                                     chain,
                                     networkStatus,
                                     stats,
-                                    false,
-                                    "", // TODO: fully remove
                                     this.p2pMgr,
                                     this.peerStates,
                                     AionLoggerFactory.getLogger(LogEnum.P2P.name())),
