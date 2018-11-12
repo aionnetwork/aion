@@ -136,6 +136,30 @@ public class ReqHandshake1Test {
     }
 
     @Test
+    public void testUniqueId() {
+        ReqHandshake1 req1 =
+                new ReqHandshake1(
+                        validNodeId,
+                        netId,
+                        Node.ipStrToBytes(randomIp),
+                        port,
+                        randomRevision,
+                        randomVersions);
+
+        byte[] uniqueID = req1.getUniqueId();
+
+        assertEquals(uniqueID.length, 48);
+        assertArrayEquals(Arrays.copyOfRange(uniqueID, 0, 36), req1.getNodeId());
+        assertArrayEquals(Arrays.copyOfRange(uniqueID, 36, 44), req1.getIp());
+        int myPort =
+                uniqueID[44] << 24
+                        | (uniqueID[45] & 0xFF) << 16
+                        | (uniqueID[46] & 0xFF) << 8
+                        | (uniqueID[47] & 0xFF);
+        assertEquals(myPort, req1.getPort());
+    }
+
+    @Test
     public void testRepeatEncodeDecode() {
 
         // Repeated Encode and Decode Units

@@ -53,15 +53,23 @@ public final class Node implements INode {
     private static final int SIZE_BYTES_IPV4 = 8;
     private IPeerMetric peerMetric = new PeerMetric();
     private boolean fromBootList;
+    /** @implNote Whenever this value is changed, the {@link #idHash} must be updated. */
     private byte[] id; // 36 bytes
+
+    /** @implNote Must be updated when the {@link #id},{@link #ip} or {@link #port} are updated. */
     private int idHash;
-    private int peerhash;
+
     /** for display only */
     private String idShort;
 
+    /** @implNote Whenever this value is changed, the {@link #idHash} must be updated. */
     private byte[] ip;
+
     private String ipStr;
+
+    /** @implNote Whenever this value is changed, the {@link #idHash} must be updated. */
     private int port;
+
     private volatile long timestamp;
     private long bestBlockNumber;
     private byte[] bestBlockHash;
@@ -87,30 +95,41 @@ public final class Node implements INode {
         this.port = port;
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
-        this.peerhash = 0;
     }
 
     /** constructor for initial stage of boot nodes from config */
     public Node(boolean fromBootList, final byte[] _id, final byte[] _ip, final int _port) {
         this.fromBootList = fromBootList;
         this.id = _id;
-        if (_id != null && _id.length == 36) {
-            this.idHash = Arrays.hashCode(_id);
-            this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
-
-            ByteBuffer buffer =
-                    ByteBuffer.allocate(_id.length + _ip.length + Integer.BYTES)
-                            .put(_id)
-                            .put(_ip)
-                            .putInt(_port);
-
-            this.peerhash = Arrays.hashCode(buffer.array());
-        }
         this.ip = _ip;
         this.ipStr = ipBytesToStr(_ip);
         this.port = ((_port > 65535 || _port < 1) ? 0 : _port);
+        if (_id != null && _id.length == 36) {
+            this.idHash = Arrays.hashCode(getUniqueId());
+            this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
+        }
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
+    }
+
+    /**
+     * Returns an unique identifier that contains the node identifier, IP and port number.
+     *
+     * @return an unique identifier that contains the node identifier, IP and port number
+     * @implNote Used to compute the {@link #idHash}.
+     */
+    private byte[] getUniqueId() {
+        byte[] uniqueId = new byte[48];
+        if (id != null) {
+            System.arraycopy(id, 0, uniqueId, 0, id.length);
+        }
+        if (ip != null) {
+            System.arraycopy(ip, 0, uniqueId, 36, ip.length);
+        }
+        for (int i = 0; i < 4; i++) {
+            uniqueId[47 - i] = (byte) (port >>> (i * 8));
+        }
+        return uniqueId;
     }
 
     /**
@@ -213,12 +232,14 @@ public final class Node implements INode {
     /** @param _port int */
     @Override
     public void setPort(final int _port) {
-        this.port = _port;
+        this.port = ((_port > 65535 || _port < 1) ? 0 : _port);
+        // need to reset the hash
+        this.idHash = Arrays.hashCode(getUniqueId());
     }
 
     @Override
     public int getPeerId() {
-        return peerhash;
+        return Arrays.hashCode(getUniqueId());
     }
 
     /** @return long */
@@ -257,7 +278,7 @@ public final class Node implements INode {
     public void setId(final byte[] _id) {
         this.id = _id;
         if (_id != null && _id.length == 36) {
-            this.idHash = Arrays.hashCode(_id);
+            this.idHash = Arrays.hashCode(getUniqueId());
             this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
         }
     }
@@ -322,7 +343,7 @@ public final class Node implements INode {
                 + idShort
                 + "\n"
                 + "peerhash:"
-                + peerhash
+                + getPeerId()
                 + "\n"
                 + "ipStr:"
                 + ipStr

@@ -27,13 +27,13 @@ import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import static org.aion.p2p.impl1.P2pMgr.txBroadCastRoute;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -138,8 +138,8 @@ public class TaskInbound implements Runnable {
                     } catch (Exception e) {
                         this.mgr.closeSocket(
                                 key != null ? (SocketChannel) key.channel() : null,
-                                (cb != null ? cb.getDisplayId() : null)
-                                        + "-read-msg-exception ", e);
+                                (cb != null ? cb.getDisplayId() : null) + "-read-msg-exception ",
+                                e);
                         if (cb != null) {
                             cb.setClosed();
                         }
@@ -426,6 +426,7 @@ public class TaskInbound implements Runnable {
                         handleReqHandshake(
                                 rb,
                                 _sk.channel().hashCode(),
+                                reqHandshake1.getUniqueId(),
                                 reqHandshake1.getNodeId(),
                                 reqHandshake1.getNetId(),
                                 reqHandshake1.getPort(),
@@ -503,6 +504,7 @@ public class TaskInbound implements Runnable {
     private void handleReqHandshake(
             final ChannelBuffer _buffer,
             int _channelHash,
+            final byte[] _uniqueId,
             final byte[] _nodeId,
             int _netId,
             int _port,
@@ -522,7 +524,7 @@ public class TaskInbound implements Runnable {
                 p2pLOG.trace("node {}", node.toString());
             }
             if (handshakeRuleCheck(_netId)) {
-                _buffer.setNodeIdHash(Arrays.hashCode(_nodeId));
+                _buffer.setNodeIdHash(Arrays.hashCode(_uniqueId));
                 _buffer.setDisplayId(new String(Arrays.copyOfRange(_nodeId, 0, 6)));
                 node.setId(_nodeId);
                 node.setPort(_port);
@@ -530,14 +532,7 @@ public class TaskInbound implements Runnable {
                 // handshake 1
                 if (_revision != null) {
                     String binaryVersion;
-                    try {
-                        binaryVersion = new String(_revision, "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        binaryVersion = "decode-fail";
-                        if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG.debug("handleReqHandshake decode-fail");
-                        }
-                    }
+                    binaryVersion = new String(_revision, StandardCharsets.UTF_8);
                     node.setBinaryVersion(binaryVersion);
                     nodeMgr.movePeerToActive(_channelHash, "inbound");
                     this.sendMsgQue.offer(

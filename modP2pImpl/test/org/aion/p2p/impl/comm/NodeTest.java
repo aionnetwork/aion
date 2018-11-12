@@ -32,6 +32,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.UUID;
@@ -136,7 +137,15 @@ public class NodeTest {
         validNode.setId(bId);
 
         assertEquals(bId, validNode.getId());
-        assertEquals(Arrays.hashCode(bId), validNode.getIdHash());
+
+        byte[] ip = validNode.getIp();
+        ByteBuffer buffer =
+                ByteBuffer.allocate(bId.length + ip.length + Integer.BYTES)
+                        .put(bId)
+                        .put(ip)
+                        .putInt(validPort);
+
+        assertEquals(Arrays.hashCode(buffer.array()), validNode.getIdHash());
 
         String idShort = new String(Arrays.copyOfRange(id.getBytes(), 0, 6));
         assertEquals(idShort, validNode.getIdShort());
@@ -159,8 +168,17 @@ public class NodeTest {
         validNode.setBinaryVersion(revision);
         assertEquals(revision, validNode.getBinaryVersion());
 
+        // test invalid (negative) port
+        validNode.setPort(-1);
+        assertEquals(0, validNode.getPort());
+
+        // test valid port
         validNode.setPort(12345);
         assertEquals(12345, validNode.getPort());
+
+        // test invalid (large) port
+        validNode.setPort(65536);
+        assertEquals(0, validNode.getPort());
     }
 
     @Test

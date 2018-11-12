@@ -32,6 +32,7 @@ import org.aion.p2p.impl.comm.Act;
 /** @author chris */
 public class ReqHandshake extends Msg {
 
+    private byte[] uniqueId = null; // 48 bytes
     byte[] nodeId; // 36 bytes
 
     private int netId; // 4 bytes
@@ -64,6 +65,27 @@ public class ReqHandshake extends Msg {
 
     public int getPort() {
         return this.port;
+    }
+
+    /**
+     * Returns an unique identifier that contains the node identifier, IP and port number.
+     *
+     * @return an unique identifier that contains the node identifier, IP and port number
+     */
+    public byte[] getUniqueId() {
+        if (uniqueId == null) {
+            uniqueId = new byte[48];
+            if (nodeId != null) {
+                System.arraycopy(nodeId, 0, uniqueId, 0, nodeId.length);
+            }
+            if (ip != null) {
+                System.arraycopy(ip, 0, uniqueId, 36, ip.length);
+            }
+            for (int i = 0; i < 4; i++) {
+                uniqueId[47 - i] = (byte) (port >>> (i * 8));
+            }
+        }
+        return uniqueId;
     }
 
     /**
