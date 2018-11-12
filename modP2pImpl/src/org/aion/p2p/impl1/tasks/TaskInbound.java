@@ -394,6 +394,7 @@ public class TaskInbound implements Runnable {
                         handleReqHandshake(
                                 rb,
                                 _sk.channel().hashCode(),
+                                reqHandshake1.getUniqueId(),
                                 reqHandshake1.getNodeId(),
                                 reqHandshake1.getNetId(),
                                 reqHandshake1.getPort(),
@@ -471,6 +472,7 @@ public class TaskInbound implements Runnable {
     private void handleReqHandshake(
             final ChannelBuffer _buffer,
             int _channelHash,
+            final byte[] _uniqueId,
             final byte[] _nodeId,
             int _netId,
             int _port,
@@ -490,7 +492,7 @@ public class TaskInbound implements Runnable {
                 p2pLOG.trace("node {}", node.toString());
             }
             if (handshakeRuleCheck(_netId)) {
-                _buffer.setNodeIdHash(Arrays.hashCode(_nodeId));
+                _buffer.setNodeIdHash(Arrays.hashCode(_uniqueId));
                 _buffer.setDisplayId(new String(Arrays.copyOfRange(_nodeId, 0, 6)));
                 node.setId(_nodeId);
                 node.setPort(_port);
