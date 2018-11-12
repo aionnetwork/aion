@@ -138,8 +138,8 @@ public class TaskInbound implements Runnable {
                     } catch (Exception e) {
                         this.mgr.closeSocket(
                                 key != null ? (SocketChannel) key.channel() : null,
-                                (cb != null ? cb.getDisplayId() : null)
-                                        + "-read-msg-exception ", e);
+                                (cb != null ? cb.getDisplayId() : null) + "-read-msg-exception ",
+                                e);
                         if (cb != null) {
                             cb.setClosed();
                         }

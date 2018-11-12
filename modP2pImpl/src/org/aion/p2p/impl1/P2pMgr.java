@@ -176,7 +176,7 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
             tcpServer.socket().setReuseAddress(true);
-            tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort));
+            tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort), 2048);
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
             Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
