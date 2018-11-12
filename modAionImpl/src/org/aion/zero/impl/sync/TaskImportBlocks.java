@@ -583,12 +583,11 @@ final class TaskImportBlocks implements Runnable {
             }
         }
         // trigger compact when IO is slow
-        if (t2 - t1 > 100) {
+        if (t2 - t1 > 400) {
             t1 = System.currentTimeMillis();
             this.chain.compactState();
             t2 = System.currentTimeMillis();
-            log.info(
-                    "Compacting state databases due to slow IO time. Completed in {} ms.", t2 - t1);
+            log.info("Compacting state database due to slow IO time. Completed in {} ms.", t2 - t1);
         }
         return importResult;
     }
