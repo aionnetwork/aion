@@ -120,6 +120,18 @@ public class ColdWallet {
         }
 
         {
+            System.out.print("Energy: ");
+            BigInteger in = sc.nextBigInteger();
+            sc.nextLine();
+
+            if (in.signum() < 0) {
+                return null;
+            }
+
+            config.energy = in;
+        }
+
+        {
             System.out.print("Data (Hex): ");
             String in = sc.nextLine();
             if (!in.isEmpty()) {
@@ -142,7 +154,10 @@ public class ColdWallet {
             config.futureExpiry = in.toLowerCase().equals("t");
         }
 
-        config.energy = BigInteger.valueOf(100000L);
+        if (config.energy == null) {
+            config.energy = BigInteger.valueOf(100000L);
+        }
+        
         config.energyPrice = BigInteger.TEN.pow(10);
         printConfig(config);
         return config;
