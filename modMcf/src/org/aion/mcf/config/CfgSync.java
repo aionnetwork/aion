@@ -88,9 +88,8 @@ public final class CfgSync {
         for (String option : selected) {
             try {
                 showStatistics.add(StatsType.valueOf(option.toUpperCase()));
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 // skip option
-                continue;
             }
         }
 

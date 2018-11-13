@@ -136,7 +136,6 @@ final class TaskShowStatus implements Runnable {
                 if (start.get() && p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug("sync-ss shutdown.", e);
                 }
-                continue;
             }
         }
 
