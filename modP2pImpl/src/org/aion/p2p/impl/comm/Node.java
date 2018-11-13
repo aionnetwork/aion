@@ -36,7 +36,11 @@ public final class Node implements INode {
     /** @implNote Must be updated when the {@link #id},{@link #ip} or {@link #port} are updated. */
     private int idHash;
 
-    /** for display only */
+    /**
+     * For display only.
+     *
+     * @implNote Must be updated when the {@link #idHash} is updated.
+     */
     private String idShort;
 
     /** @implNote Whenever this value is changed, the {@link #idHash} must be updated. */
@@ -88,7 +92,10 @@ public final class Node implements INode {
         this.port = ((_port > 65535 || _port < 1) ? 0 : _port);
         if (_id != null && _id.length == 36) {
             this.idHash = Arrays.hashCode(getUniqueId());
-            this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
+            this.idShort =
+                    new String(Arrays.copyOfRange(_id, 0, 6))
+                            + "-"
+                            + BigInteger.valueOf(idHash).toString(60);
         }
         this.timestamp = System.currentTimeMillis();
         this.bestBlockNumber = 0L;
@@ -217,6 +224,12 @@ public final class Node implements INode {
         this.port = ((_port > 65535 || _port < 1) ? 0 : _port);
         // need to reset the hash
         this.idHash = Arrays.hashCode(getUniqueId());
+        if (id != null && id.length == 36) {
+            this.idShort =
+                    new String(Arrays.copyOfRange(id, 0, 6))
+                            + "-"
+                            + BigInteger.valueOf(idHash).toString(60);
+        }
     }
 
     @Override
@@ -261,7 +274,10 @@ public final class Node implements INode {
         this.id = _id;
         if (_id != null && _id.length == 36) {
             this.idHash = Arrays.hashCode(getUniqueId());
-            this.idShort = new String(Arrays.copyOfRange(_id, 0, 6));
+            this.idShort =
+                    new String(Arrays.copyOfRange(_id, 0, 6))
+                            + "-"
+                            + BigInteger.valueOf(idHash).toString(60);
         }
     }
 
