@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -171,7 +172,7 @@ public final class SyncMgr {
             final IEventMgr _evtMgr,
             final int _blocksQueueMax,
             final boolean _showStatus,
-            final List<StatsType> showStatistics) {
+            final Set<StatsType> showStatistics) {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;

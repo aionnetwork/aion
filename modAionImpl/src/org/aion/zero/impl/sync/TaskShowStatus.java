@@ -26,8 +26,10 @@ package org.aion.zero.impl.sync;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.base.util.Hex;
 import org.aion.mcf.config.StatsType;
@@ -59,7 +61,7 @@ final class TaskShowStatus implements Runnable {
     private final IP2pMgr p2p;
 
     private final Map<Integer, PeerState> peerStates;
-    private final List<StatsType> showStatistics;
+    private final Set<StatsType> showStatistics;
 
     TaskShowStatus(
             final AtomicBoolean _start,
@@ -69,7 +71,7 @@ final class TaskShowStatus implements Runnable {
             final SyncStats _stats,
             final IP2pMgr _p2p,
             final Map<Integer, PeerState> _peerStates,
-            final List<StatsType> showStatistics,
+            final Set<StatsType> showStatistics,
             final Logger _log) {
         this.start = _start;
         this.interval = _interval;
@@ -79,7 +81,7 @@ final class TaskShowStatus implements Runnable {
         this.p2p = _p2p;
         this.peerStates = _peerStates;
         this.p2pLOG = _log;
-        this.showStatistics = Collections.unmodifiableList(showStatistics);
+        this.showStatistics = Collections.unmodifiableSet(new HashSet<>(showStatistics));
     }
 
     @Override

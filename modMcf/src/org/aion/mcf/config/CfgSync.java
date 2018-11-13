@@ -27,9 +27,9 @@ import com.google.common.base.Objects;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -41,14 +41,15 @@ public final class CfgSync {
     private int blocksQueueMax;
 
     private boolean showStatus;
-    private List<StatsType> showStatistics;
+    private Set<StatsType> showStatistics;
 
     private static int BLOCKS_QUEUE_MAX = 32;
 
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
         this.showStatus = false;
-        this.showStatistics = new ArrayList<>(Arrays.asList(StatsType.NONE));
+        this.showStatistics = new HashSet<>();
+        this.showStatistics.add(StatsType.NONE);
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -79,7 +80,7 @@ public final class CfgSync {
         }
     }
 
-    private static void parseSelectedStats(List<StatsType> showStatistics, String readValue) {
+    private static void parseSelectedStats(Set<StatsType> showStatistics, String readValue) {
         showStatistics.clear();
 
         String[] selected = readValue.split(",");
@@ -174,9 +175,11 @@ public final class CfgSync {
                     || showStatistics.containsAll(StatsType.getAllSpecificTypes())) {
                 return StatsType.ALL.toString();
             } else if (showStatistics.size() == 1) {
-                return showStatistics.get(0).toString();
+                return showStatistics.iterator().next().toString();
             } else {
-                StringBuilder sb = new StringBuilder(showStatistics.remove(0).toString());
+                StatsType first = showStatistics.iterator().next();
+                showStatistics.remove(first);
+                StringBuilder sb = new StringBuilder(first.toString());
                 for (StatsType tp : showStatistics) {
                     sb.append(",");
                     sb.append(tp.toString());
@@ -194,7 +197,7 @@ public final class CfgSync {
         return this.showStatus;
     }
 
-    public List<StatsType> getShowStatistics() {
+    public Set<StatsType> getShowStatistics() {
         return showStatistics;
     }
 
