@@ -27,11 +27,9 @@ import static java.util.stream.Collectors.toList;
 import static org.aion.base.util.ByteUtil.hexStringToBytes;
 import static org.aion.base.util.ByteUtil.toHexString;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListenableFutureTask;
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -43,12 +41,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
@@ -142,10 +135,7 @@ public class ApiWeb3Aion extends ApiAion {
 
     private boolean isSeedMode;
 
-    private ExecutorService cacheUpdateExecutor;
     private final LoadingCache<Integer, ChainHeadView> CachedRecentEntities;
-
-    private ExecutorService MinerStatsExecutor;
     private final LoadingCache<String, MinerStatsView> MinerStats;
 
     protected void onBlock(AionBlockSummary cbs) {
@@ -238,9 +228,8 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         // ops-related endpoints
-        // https://github.com/google/guava/wiki/CachesExplained#refresh
         CachedRecentEntities =
-                CacheBuilder.newBuilder()
+                Caffeine.newBuilder()
                         .maximumSize(1)
                         .refreshAfterWrite(OPS_RECENT_ENTITY_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
                         .build(
@@ -248,37 +237,17 @@ public class ApiWeb3Aion extends ApiAion {
                                     public ChainHeadView load(Integer key) { // no checked exception
                                         return new ChainHeadView(OPS_RECENT_ENTITY_COUNT).update();
                                     }
-
-                                    public ListenableFuture<ChainHeadView> reload(
+                                    
+                                    // reload() executed asynchronously using ForkJoinPool.commonPool() 
+                                    public ChainHeadView reload(
                                             final Integer key, ChainHeadView prev) {
-                                        try {
-                                            ListenableFutureTask<ChainHeadView> task =
-                                                    ListenableFutureTask.create(
-                                                            () -> new ChainHeadView(prev).update());
-                                            cacheUpdateExecutor.execute(task);
-                                            return task;
-                                        } catch (Exception e) {
-                                            LOG.debug(
-                                                    "<cache-updater - could not queue up task: ",
-                                                    e);
-                                            throw (e);
-                                        } // exception is swallowed by refresh and load. so just log
-                                        // it for our logs
+                                        return new ChainHeadView(prev).update();
                                     }
                                 });
 
-        cacheUpdateExecutor =
-                new ThreadPoolExecutor(
-                        1,
-                        1,
-                        10,
-                        TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(1),
-                        new CacheUpdateThreadFactory());
-
         //noinspection NullableProblems
         blockCache =
-                CacheBuilder.newBuilder()
+                Caffeine.newBuilder()
                         .maximumSize(BLOCK_CACHE_SIZE)
                         .build(
                                 new CacheLoader<>() {
@@ -292,7 +261,7 @@ public class ApiWeb3Aion extends ApiAion {
                                 });
 
         MinerStats =
-                CacheBuilder.newBuilder()
+                Caffeine.newBuilder()
                         .maximumSize(1)
                         .refreshAfterWrite(STRATUM_CACHE_TIME_SECONDS, TimeUnit.SECONDS)
                         .build(
@@ -303,34 +272,19 @@ public class ApiWeb3Aion extends ApiAion {
                                                         STRATUM_RECENT_BLK_COUNT, miner.toBytes())
                                                 .update();
                                     }
-
-                                    public ListenableFuture<MinerStatsView> reload(
+                                    
+                                    // reload() executed asynchronously using ForkJoinPool.commonPool() 
+                                    public MinerStatsView reload(
                                             final String key, MinerStatsView prev) {
-                                        try {
-                                            ListenableFutureTask<MinerStatsView> task =
-                                                    ListenableFutureTask.create(
-                                                            () ->
-                                                                    new MinerStatsView(prev)
-                                                                            .update());
-                                            MinerStatsExecutor.execute(task);
-                                            return task;
-                                        } catch (Exception e) {
-                                            LOG.debug(
-                                                    "<miner-stats - could not queue up task: ", e);
-                                            throw (e);
-                                        } // exception is swallowed by refresh and load. so just log
-                                        // it for our logs
+                                        return new MinerStatsView(prev).update();
                                     }
                                 });
+    }
 
-        MinerStatsExecutor =
-                new ThreadPoolExecutor(
-                        1,
-                        1,
-                        10,
-                        TimeUnit.SECONDS,
-                        new ArrayBlockingQueue<>(1),
-                        new MinerStatsThreadFactory());
+    private void destroyCaches() {
+        CachedRecentEntities.invalidateAll();
+        MinerStats.invalidateAll();
+        blockCache.invalidateAll();
     }
 
     // --------------------------------------------------------------------
@@ -2163,18 +2117,6 @@ public class ApiWeb3Aion extends ApiAion {
         }
     }
 
-    public class CacheUpdateThreadFactory implements ThreadFactory {
-
-        private final AtomicInteger tnum = new AtomicInteger(1);
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "cache-update-" + tnum.getAndIncrement());
-            t.setPriority(Thread.MIN_PRIORITY);
-            return t;
-        }
-    }
-
     private enum CachedResponseType {
         CHAIN_HEAD
     }
@@ -2395,8 +2337,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL);
         }
 
-        // ok to getUnchecked() since the load() implementation does not throw checked exceptions
-        AionBlock block = blockCache.getUnchecked(new ByteArrayWrapper(info.getBlockHash()));
+        AionBlock block = blockCache.get(new ByteArrayWrapper(info.getBlockHash()));
 
         return new RpcMsg((new TxRecpt(block, info, 0L, true)).toJson());
     }
@@ -2429,8 +2370,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL);
         }
 
-        // ok to getUnchecked() since the load() implementation does not throw checked exceptions
-        AionBlock block = blockCache.getUnchecked(new ByteArrayWrapper(blockHash));
+        AionBlock block = blockCache.get(new ByteArrayWrapper(blockHash));
 
         AionTransaction t = block.getTransactionsList().get(info.getIndex());
         if (FastByteComparisons.compareTo(t.getHash(), transactionHash) != 0) {
@@ -2461,10 +2401,10 @@ public class ApiWeb3Aion extends ApiAion {
         // ok to getUnchecked() since the load() implementation does not throw checked exceptions
         AionBlock b;
         try {
-            b = blockCache.getUnchecked(new ByteArrayWrapper(blockHash));
-        } catch (CacheLoader.InvalidCacheLoadException e) {
+            b = blockCache.get(new ByteArrayWrapper(blockHash));
+        } catch (Exception e) {
             // Catch errors if send an incorrect tx hash
-            return new RpcMsg(null, RpcError.INVALID_REQUEST, "Invalid Request");
+            return new RpcMsg(null, RpcError.INVALID_REQUEST, "Invalid Request" + e.getMessage());
         }
 
         // cast will cause issues after the PoW refactor goes in
@@ -2892,18 +2832,6 @@ public class ApiWeb3Aion extends ApiAion {
         }
     }
 
-    public class MinerStatsThreadFactory implements ThreadFactory {
-
-        private final AtomicInteger tnum = new AtomicInteger(1);
-
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "miner-stats-" + tnum.getAndIncrement());
-            t.setPriority(Thread.MIN_PRIORITY);
-            return t;
-        }
-    }
-
     public RpcMsg stratum_getMinerStats(Object _params) {
         String _address;
         if (_params instanceof JSONArray) {
@@ -2970,6 +2898,7 @@ public class ApiWeb3Aion extends ApiAion {
     }
 
     public void shutdown() {
+        destroyCaches();
         if (isFilterEnabled) {
             shutDownES();
         }
