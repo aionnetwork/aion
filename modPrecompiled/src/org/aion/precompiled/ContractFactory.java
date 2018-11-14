@@ -82,9 +82,6 @@ public class ContractFactory implements IContractFactory {
         IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
         switch (context.address().toString()) {
-            case ADDR_TOTAL_CURRENCY:
-                //return new TotalCurrencyContract(track, context.sender(), Address.wrap(ADDR_OWNER));
-                return null;
             case ADDR_TOKEN_BRIDGE:
                 TokenBridgeContract contract =
                     new TokenBridgeContract(
@@ -105,6 +102,7 @@ public class ContractFactory implements IContractFactory {
                 return PC_BLAKE2B_HASH;
             case ADDR_TX_HASH:
                 return new TXHashContract(context);
+            case ADDR_TOTAL_CURRENCY:
             default:
                 return null;
         }

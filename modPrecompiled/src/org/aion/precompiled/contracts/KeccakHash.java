@@ -31,8 +31,7 @@ import org.aion.vm.IPrecompiledContract;
 public class KeccakHash implements IPrecompiledContract {
     private static final long DEFAULT_COST = 100L;
 
-    public KeccakHash() {
-    }
+    public KeccakHash() {}
 
     /**
      * Returns the hash of given input

@@ -23,6 +23,7 @@
  */
 
 package org.aion.precompiled.contracts;
+
 import org.aion.base.type.IExecutionResult;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ed25519.ECKeyEd25519;
@@ -32,7 +33,7 @@ import org.aion.vm.IPrecompiledContract;
 public class EDVerifyContract implements IPrecompiledContract {
 
     // set to a default cost for now, this will need to be adjusted
-    private final static long COST = 3700L;
+    private static final long COST = 3700L;
 
     @Override
     public IExecutionResult execute(byte[] input, long nrgLimit) {
@@ -47,7 +48,7 @@ public class EDVerifyContract implements IPrecompiledContract {
         System.arraycopy(input, 32, sig, 0, 64);
         System.arraycopy(input, 96, pubKey, 0, 32);
 
-        //TODO: may need to remove after end-to-end test
+        // TODO: may need to remove after end-to-end test
         try {
             System.out.println("EDVERIFY Message: " + Hex.toHexString(msg));
             System.out.println("EDVERIFY Sig: " + Hex.toHexString(sig));

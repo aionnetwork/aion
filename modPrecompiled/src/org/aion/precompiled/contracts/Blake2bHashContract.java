@@ -34,10 +34,8 @@ public class Blake2bHashContract implements IPrecompiledContract {
     private static final long COST = 30L;
     private static final int WORD_LENGTH = 4;
     private static final String INPUT_LENGTH_ERROR_MESSAGE = "input too short";
-//    private static final String OPERATION_ERROR_MESSAGE = "invalid operation";
 
-    public Blake2bHashContract() {
-    }
+    public Blake2bHashContract() {}
 
     /**
      * Returns the hash of given input
@@ -51,7 +49,7 @@ public class Blake2bHashContract implements IPrecompiledContract {
         // check length
         if (input == null || input.length == 0 || input.length > 1_048_576L) {
             return new ExecutionResult(
-                ResultCode.INTERNAL_ERROR, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
+                    ResultCode.INTERNAL_ERROR, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
         long additionalNRG = ((long) Math.ceil(((double) input.length - 1) / WORD_LENGTH)) * 6;
@@ -63,31 +61,13 @@ public class Blake2bHashContract implements IPrecompiledContract {
             return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
         }
 
-        // check operation number
-//        int operation = input[0];
-//
-//        switch (operation) {
-//            case 0:
         return blake256Hash(input, nrgLeft);
-//            case 1:
-//                return blake128Hash(input, nrgLeft);
-//            default:
-//                return new ExecutionResult(
-//                    ResultCode.INTERNAL_ERROR, nrg - COST, OPERATION_ERROR_MESSAGE.getBytes());
-//        }
     }
 
     private ExecutionResult blake256Hash(byte[] input, long nrg) {
         byte[] hash = blake256(input);
         return new ExecutionResult(ResultCode.SUCCESS, nrg, hash);
     }
-
-//    private ExecutionResult blake128Hash(byte[] input, long nrg) {
-//        byte[] byteArray = new byte[input.length - 1];
-//        System.arraycopy(input, 1, byteArray, 0, input.length - 1);
-//        byte[] hash = blake128(byteArray);
-//        return new ExecutionResult(ResultCode.SUCCESS, nrg, hash);
-//    }
 
     @VisibleForTesting
     public static byte[] setupInput(int operation, byte[] inputByteArray) {
