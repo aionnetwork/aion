@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -47,6 +48,7 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.config.StatsType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
@@ -169,7 +171,8 @@ public final class SyncMgr {
             final IP2pMgr _p2pMgr,
             final IEventMgr _evtMgr,
             final int _blocksQueueMax,
-            final boolean _showStatus) {
+            final boolean _showStatus,
+            final Set<StatsType> showStatistics) {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
@@ -216,10 +219,9 @@ public final class SyncMgr {
                                     chain,
                                     networkStatus,
                                     stats,
-                                    false,
-                                    "", // TODO: fully remove
-                                    this.p2pMgr,
-                                    this.peerStates,
+                                    p2pMgr,
+                                    peerStates,
+                                    showStatistics,
                                     AionLoggerFactory.getLogger(LogEnum.P2P.name())),
                             "sync-ss");
             syncSs.start();

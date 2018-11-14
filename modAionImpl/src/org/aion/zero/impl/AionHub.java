@@ -187,7 +187,8 @@ public class AionHub {
                 p2pMgr,
                 eventMgr,
                 cfg.getSync().getBlocksQueueMax(),
-                cfg.getSync().getShowStatus());
+                cfg.getSync().getShowStatus(),
+                cfg.getSync().getShowStatistics());
 
         ChainConfiguration chainConfig = new ChainConfiguration();
         this.propHandler =

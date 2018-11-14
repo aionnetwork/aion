@@ -27,6 +27,9 @@ import com.google.common.base.Objects;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -38,13 +41,15 @@ public final class CfgSync {
     private int blocksQueueMax;
 
     private boolean showStatus;
+    private Set<StatsType> showStatistics;
 
     private static int BLOCKS_QUEUE_MAX = 32;
 
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
-
         this.showStatus = false;
+        this.showStatistics = new HashSet<>();
+        this.showStatistics.add(StatsType.NONE);
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -61,6 +66,9 @@ public final class CfgSync {
                         case "show-status":
                             this.showStatus = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
+                        case "show-statistics":
+                            parseSelectedStats(showStatistics, Cfg.readValue(sr));
+                            break;
                         default:
                             Cfg.skipElement(sr);
                             break;
@@ -69,6 +77,35 @@ public final class CfgSync {
                 case XMLStreamReader.END_ELEMENT:
                     break loop;
             }
+        }
+    }
+
+    private static void parseSelectedStats(Set<StatsType> showStatistics, String readValue) {
+        showStatistics.clear();
+
+        String[] selected = readValue.split(",");
+
+        for (String option : selected) {
+            try {
+                showStatistics.add(StatsType.valueOf(option.toUpperCase()));
+            } catch (RuntimeException e) {
+                // skip option
+            }
+        }
+
+        // expand all to specific options
+        if (showStatistics.contains(StatsType.ALL)) {
+            showStatistics.remove(StatsType.ALL);
+            showStatistics.addAll(StatsType.getAllSpecificTypes());
+        }
+
+        if (showStatistics.contains(StatsType.NONE) && showStatistics.size() > 1) {
+            showStatistics.remove(StatsType.NONE);
+        }
+
+        // set none if empty
+        if (showStatistics.isEmpty()) {
+            showStatistics.add(StatsType.NONE);
         }
     }
 
@@ -96,6 +133,16 @@ public final class CfgSync {
             xmlWriter.writeCharacters(this.showStatus + "");
             xmlWriter.writeEndElement();
 
+            // sub-element show-status
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeComment(
+                    "requires show-status=true; comma separated list of options: "
+                            + Arrays.toString(StatsType.values()).toLowerCase());
+            xmlWriter.writeCharacters("\r\n\t\t");
+            xmlWriter.writeStartElement("show-statistics");
+            xmlWriter.writeCharacters(printSelectedStats().toLowerCase());
+            xmlWriter.writeEndElement();
+
             // close element sync
             xmlWriter.writeCharacters("\r\n\t");
             xmlWriter.writeEndElement();
@@ -111,12 +158,46 @@ public final class CfgSync {
         }
     }
 
+    /**
+     * Returns a string containing a comma separated list of the statistics to be displayed.
+     *
+     * @return a string containing a comma separated list of the statistics to be displayed
+     */
+    private String printSelectedStats() {
+        // not meaningful if other settings are also present
+        showStatistics.remove(StatsType.NONE);
+
+        if (showStatistics.isEmpty()) {
+            return StatsType.NONE.toString();
+        } else {
+            if (showStatistics.contains(StatsType.ALL)
+                    || showStatistics.containsAll(StatsType.getAllSpecificTypes())) {
+                return StatsType.ALL.toString();
+            } else if (showStatistics.size() == 1) {
+                return showStatistics.iterator().next().toString();
+            } else {
+                StatsType first = showStatistics.iterator().next();
+                showStatistics.remove(first);
+                StringBuilder sb = new StringBuilder(first.toString());
+                for (StatsType tp : showStatistics) {
+                    sb.append(",");
+                    sb.append(tp.toString());
+                }
+                return sb.toString();
+            }
+        }
+    }
+
     public int getBlocksQueueMax() {
         return this.blocksQueueMax;
     }
 
     public boolean getShowStatus() {
         return this.showStatus;
+    }
+
+    public Set<StatsType> getShowStatistics() {
+        return showStatistics;
     }
 
     @Override

@@ -23,15 +23,16 @@
 
 package org.aion.zero.impl.sync;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.base.util.Hex;
+import org.aion.mcf.config.StatsType;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
@@ -55,14 +56,12 @@ final class TaskShowStatus implements Runnable {
 
     private final SyncStats stats;
 
-    private final boolean printReport;
-    private final String reportFolder;
-
     private final Logger p2pLOG;
 
     private final IP2pMgr p2p;
 
     private final Map<Integer, PeerState> peerStates;
+    private final Set<StatsType> showStatistics;
 
     TaskShowStatus(
             final AtomicBoolean _start,
@@ -70,164 +69,235 @@ final class TaskShowStatus implements Runnable {
             final AionBlockchainImpl _chain,
             final NetworkStatus _networkStatus,
             final SyncStats _stats,
-            final boolean _printReport,
-            final String _reportFolder,
             final IP2pMgr _p2p,
             final Map<Integer, PeerState> _peerStates,
+            final Set<StatsType> showStatistics,
             final Logger _log) {
         this.start = _start;
         this.interval = _interval;
         this.chain = _chain;
         this.networkStatus = _networkStatus;
         this.stats = _stats;
-        this.printReport = _printReport;
-        this.reportFolder = _reportFolder;
         this.p2p = _p2p;
         this.peerStates = _peerStates;
         this.p2pLOG = _log;
+        this.showStatistics = Collections.unmodifiableSet(new HashSet<>(showStatistics));
     }
 
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+        String requestedInfo;
+
         while (this.start.get()) {
-            AionBlock selfBest = this.chain.getBestBlock();
-            String selfTd = selfBest.getCumulativeDifficulty().toString(10);
 
-            String status =
-                    "sync-status avg-import="
-                            + String.format("%.2f", this.stats.getAvgBlocksPerSec())
-                            //
-                            + " b/s" //
-                            + " td="
-                            + selfTd
-                            + "/"
-                            + networkStatus.getTargetTotalDiff().toString(10) //
-                            + " b-num="
-                            + selfBest.getNumber()
-                            + "/"
-                            + this.networkStatus.getTargetBestBlockNumber() //
-                            + " b-hash="
-                            + Hex.toHexString(this.chain.getBestBlockHash()) //
-                            + "/"
-                            + this.networkStatus.getTargetBestBlockHash()
-                            + "";
-
+            String status = getStatus();
             p2pLOG.info(status);
 
-            if (p2pLOG.isDebugEnabled()) {
-                String s = dumpPeerStateInfo(p2p.getActiveNodes().values());
-                s += dumpPeerStatsInfo();
-                if (!s.isEmpty()) {
-                    p2pLOG.debug(s);
+            if (showStatistics.contains(StatsType.PEER_STATES)) {
+                requestedInfo = dumpPeerStateInfo(p2p.getActiveNodes().values());
+                if (!requestedInfo.isEmpty()) {
+                    p2pLOG.info(requestedInfo);
                 }
             }
 
-            // print to report file
-            if (printReport) {
-                try {
-                    Files.write(
-                            Paths.get(
-                                    reportFolder, System.currentTimeMillis() + "-sync-report.out"),
-                            status.getBytes());
-                } catch (IOException e) {
-                    if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("sync-ss report exception.", e);
-                    }
+            if (showStatistics.contains(StatsType.REQUESTS)) {
+                requestedInfo = dumpRequestsInfo();
+                if (!requestedInfo.isEmpty()) {
+                    p2pLOG.info(requestedInfo);
+                }
+            }
+
+            if (showStatistics.contains(StatsType.SEEDS)) {
+                requestedInfo = dumpTopSeedsInfo();
+                if (!requestedInfo.isEmpty()) {
+                    p2pLOG.info(requestedInfo);
+                }
+            }
+
+            if (showStatistics.contains(StatsType.LEECHES)) {
+                requestedInfo = dumpTopLeechesInfo();
+                if (!requestedInfo.isEmpty()) {
+                    p2pLOG.info(requestedInfo);
+                }
+            }
+
+            if (showStatistics.contains(StatsType.RESPONSES)) {
+                requestedInfo = dumpResponseInfo();
+                if (!requestedInfo.isEmpty()) {
+                    p2pLOG.info(requestedInfo);
                 }
             }
 
             try {
                 Thread.sleep(interval);
             } catch (InterruptedException e) {
-                if (p2pLOG.isDebugEnabled()) {
+                // without requested shutdown
+                if (start.get() && p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug("sync-ss shutdown.", e);
                 }
-                return;
             }
         }
+
+        // print all the gathered information before shutdown
         if (p2pLOG.isDebugEnabled()) {
+            String status = getStatus();
+            p2pLOG.debug(status);
+
+            requestedInfo = dumpPeerStateInfo(p2p.getActiveNodes().values());
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+            requestedInfo = dumpRequestsInfo();
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+            requestedInfo = dumpTopSeedsInfo();
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+            requestedInfo = dumpTopLeechesInfo();
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+            requestedInfo = dumpResponseInfo();
+            if (!requestedInfo.isEmpty()) {
+                p2pLOG.debug(requestedInfo);
+            }
+
             p2pLOG.debug("sync-ss shutdown");
         }
     }
 
+    private String getStatus() {
+        AionBlock selfBest = this.chain.getBestBlock();
+        String selfTd = selfBest.getCumulativeDifficulty().toString(10);
+
+        return "sync-status avg-import="
+                + String.format("%.2f", this.stats.getAvgBlocksPerSec())
+                //
+                + " b/s" //
+                + " td="
+                + selfTd
+                + "/"
+                + networkStatus.getTargetTotalDiff().toString(10) //
+                + " b-num="
+                + selfBest.getNumber()
+                + "/"
+                + this.networkStatus.getTargetBestBlockNumber() //
+                + " b-hash="
+                + Hex.toHexString(this.chain.getBestBlockHash()) //
+                + "/"
+                + this.networkStatus.getTargetBestBlockHash()
+                + "";
+    }
+
     /**
-     * Obtain log stream containing statistics about requests and blocks processed by/from peer
-     * nodes.
+     * Returns a log stream containing statistics about the percentage of requests made to each peer
+     * with respect to the total number of requests made.
      *
-     * @return log stream with peers statistical data
+     * @return log stream with requests statistical data
      */
-    private String dumpPeerStatsInfo() {
+    private String dumpRequestsInfo() {
         Map<String, Float> reqToPeers = this.stats.getPercentageOfRequestsToPeers();
-        Map<String, Long> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
-        Map<String, Long> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
-        Map<String, Double> avgResponseTimeByPeers = this.stats.getAverageResponseTimeByPeers();
 
         StringBuilder sb = new StringBuilder();
 
         if (!reqToPeers.isEmpty()) {
 
-            sb.append(
-                    String.format(
-                            "=================================================================== sync-requests-to-peers ===================================================================\n"));
-
-            sb.append(String.format("%9s %10s\n", "id", "% requests"));
+            sb.append("\n====== sync-requests-to-peers ======\n");
+            sb.append(String.format("   %9s %20s\n", "peer", "% requests"));
+            sb.append("------------------------------------\n");
 
             reqToPeers.forEach(
-                    (nodeId, percReq) -> {
-                        sb.append(
-                                String.format(
-                                        "id:%6s %10s\n",
-                                        nodeId, String.format("%.2f", percReq * 100) + " %"));
-                    });
+                    (nodeId, percReq) ->
+                            sb.append(
+                                    String.format(
+                                            "   id:%6s %20s\n",
+                                            nodeId, String.format("%.2f", percReq * 100) + " %")));
         }
+
+        return sb.toString();
+    }
+
+    /**
+     * Returns a log stream containing a list of peers ordered by the total number of blocks
+     * received from each peer used to determine who is providing the majority of blocks, i.e. top
+     * seeds.
+     *
+     * @return log stream with peers statistical data on seeds
+     */
+    private String dumpTopSeedsInfo() {
+        Map<String, Long> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
+
+        StringBuilder sb = new StringBuilder();
 
         if (!totalBlocksByPeer.isEmpty()) {
 
-            sb.append(
-                    String.format(
-                            "==================================================================== sync-blocks-by-peer =====================================================================\n"));
-
-            sb.append(String.format("%9s %18s\n", "id", "Total blocks"));
+            sb.append("\n========== sync-top-seeds ==========\n");
+            sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
+            sb.append("------------------------------------\n");
 
             totalBlocksByPeer.forEach(
-                    (nodeId, totalBlocks) -> {
-                        sb.append(String.format("id:%6s %18s\n", nodeId, totalBlocks));
-                    });
+                    (nodeId, totalBlocks) ->
+                            sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
         }
+
+        return sb.toString();
+    }
+
+    /**
+     * Obtain log stream containing a list of peers ordered by the total number of blocks requested
+     * by each peer used to determine who is requesting the majority of blocks, i.e. top leeches.
+     *
+     * @return log stream with peers statistical data on leeches
+     */
+    private String dumpTopLeechesInfo() {
+        Map<String, Long> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
+
+        StringBuilder sb = new StringBuilder();
 
         if (!totalBlockReqByPeer.isEmpty()) {
 
-            sb.append(
-                    String.format(
-                            "================================================================= sync-block-requests-by-peer ================================================================\n"));
-
-            sb.append(String.format("%9s %18s\n", "id", "Total blocks"));
+            sb.append("\n========= sync-top-leeches =========\n");
+            sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
+            sb.append("------------------------------------\n");
 
             totalBlockReqByPeer.forEach(
-                    (nodeId, totalBlocks) -> {
-                        sb.append(String.format("id:%6s %18s\n", nodeId, totalBlocks));
-                    });
+                    (nodeId, totalBlocks) ->
+                            sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
         }
+
+        return sb.toString();
+    }
+
+    /**
+     * Obtain log stream containing statistics about the average response time between sending
+     * status requests out and that peer responding shown for each peer and averaged for all peers.
+     *
+     * @return log stream with requests statistical data
+     */
+    private String dumpResponseInfo() {
+        Map<String, Double> avgResponseTimeByPeers = this.stats.getAverageResponseTimeByPeers();
+
+        StringBuilder sb = new StringBuilder();
 
         if (!avgResponseTimeByPeers.isEmpty()) {
 
             Long overallAvgResponse = this.stats.getOverallAveragePeerResponseTime();
 
-            sb.append(
-                    String.format(
-                            "================================================================= sync-avg-response-by-peer ==================================================================\n"));
+            sb.append("\n====== sync-responses-by-peer ======\n");
+            sb.append(String.format("   %9s %20s\n", "peer", "avg. response"));
+            sb.append("------------------------------------\n");
 
-            sb.append(String.format("%9s %13s\n", "id", "Avg. Response"));
-            sb.append(String.format("==Overall %10s ms\n", overallAvgResponse));
+            sb.append(String.format("   «overall» %17s ms\n", overallAvgResponse));
 
             avgResponseTimeByPeers.forEach(
-                    (nodeId, avgResponse) -> {
-                        sb.append(
-                                String.format(
-                                        "id:%6s %10s ms\n",
-                                        nodeId, String.format("%.0f", avgResponse)));
-                    });
+                    (nodeId, avgResponse) ->
+                            sb.append(
+                                    String.format(
+                                            "   id:%6s %17s ms\n",
+                                            nodeId, String.format("%.0f", avgResponse))));
         }
 
         return sb.toString();
@@ -248,13 +318,13 @@ final class TaskShowStatus implements Runnable {
             StringBuilder sb = new StringBuilder();
             sb.append("\n");
             sb.append(
-                "======================================================================== sync-status =========================================================================\n");
+                    "====================================== sync-peer-states-status ======================================\n");
             sb.append(
                     String.format(
-                            "%9s %16s %17s %8s %16s %2s %16s\n",
-                            "id", "# best block", "state", "mode", "base", "rp", "last request"));
+                            "   %9s %16s %18s %10s %16s %4s %16s\n",
+                            "peer", "# best block", "state", "mode", "base", "rp", "last request"));
             sb.append(
-                    "--------------------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+                    "-----------------------------------------------------------------------------------------------------\n");
 
             for (NodeState ns : sorted) {
                 INode n = ns.getN();
@@ -262,7 +332,7 @@ final class TaskShowStatus implements Runnable {
 
                 sb.append(
                         String.format(
-                                "id:%6s %16d %17s %8s %16d %2d %16d\n",
+                                "   id:%6s %16d %18s %10s %16d %4d %16d\n",
                                 n.getIdShort(),
                                 n.getBestBlockNumber(),
                                 s.getState(),
