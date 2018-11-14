@@ -176,7 +176,8 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
             tcpServer.socket().setReuseAddress(true);
-            tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort), 2048);
+            tcpServer.socket().setReceiveBufferSize(128*1024);
+            tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort), 1024);
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
             Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
@@ -333,6 +334,7 @@ public final class P2pMgr implements IP2pMgr {
             SelectionKey sk = _sc.keyFor(selector);
             if (sk != null) {
                 sk.cancel();
+                sk.attach(null);
             }
 
             try {

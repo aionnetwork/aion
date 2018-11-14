@@ -60,7 +60,7 @@ public class TaskWrite implements Runnable {
         if (channelBuffer.isClosed()) {
             channelBuffer.refreshHeader();
             channelBuffer.refreshBody();
-            p2pMgr. dropActive(channelBuffer.getNodeIdHash(), "close-already");
+            p2pMgr.dropActive(channelBuffer.getNodeIdHash(), "close-already");
             return;
         }
 
@@ -92,13 +92,31 @@ public class TaskWrite implements Runnable {
             }
             buf.flip();
 
+            long t1 = System.currentTimeMillis(), t2;
+            int wrote = 0;
             try {
-                while (buf.hasRemaining()) {
-                    // @Attention:  very important sleep , otherwise when NIO write buffer full,
-                    // without sleep will hangup this thread.
-                    Thread.sleep(0, 1);
-                    sc.write(buf);
+                do {
+                    int result = sc.write(buf);
+                    wrote += result;
+
+                    if (result == 0) {
+                        // @Attention:  very important sleep , otherwise when NIO write buffer full,
+                        // without sleep will hangup this thread.
+                        Thread.sleep(0, 1);
+                    }
+
+                    t2 = System.currentTimeMillis() - t1;
+                } while (buf.hasRemaining() && (t2 < 100));
+
+                if (p2pLOG.isTraceEnabled() && (t2 > 10)) {
+                    p2pLOG.trace(
+                            "msg write: id {} size {} time {}ms length {}",
+                            nodeShortId,
+                            wrote,
+                            t2,
+                            buf.array().length);
                 }
+
             } catch (ClosedChannelException ex1) {
                 if (p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug("closed-channel-exception node=" + this.nodeShortId, ex1);
@@ -113,7 +131,10 @@ public class TaskWrite implements Runnable {
                                     + " headerBytes="
                                     + String.valueOf(headerBytes.length)
                                     + " bodyLen="
-                                    + String.valueOf(bodyLen),
+                                    + String.valueOf(bodyLen)
+                                    + " time="
+                                    + String.valueOf(System.currentTimeMillis() - t1)
+                                    + "ms",
                             ex2);
                 }
 

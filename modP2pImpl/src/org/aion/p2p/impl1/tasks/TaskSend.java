@@ -27,11 +27,7 @@ import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
@@ -40,18 +36,12 @@ import org.aion.p2p.P2pConstant;
 
 public class TaskSend implements Runnable {
 
-    private static final int TOTAL_LANE =
-            Math.min(Runtime.getRuntime().availableProcessors() << 1, 32);
-    private static final int THREAD_Q_LIMIT = 20000;
-
     private final IP2pMgr mgr;
     private final AtomicBoolean start;
     private final BlockingQueue<MsgOut> sendMsgQue;
     private final INodeMgr nodeMgr;
     private final Selector selector;
     private final int lane;
-
-    private static ThreadPoolExecutor tpe;
 
     public TaskSend(
             final IP2pMgr _mgr,
@@ -67,17 +57,6 @@ public class TaskSend implements Runnable {
         this.start = _start;
         this.nodeMgr = _nodeMgr;
         this.selector = _selector;
-
-        if (tpe == null) {
-            tpe =
-                    new ThreadPoolExecutor(
-                            TOTAL_LANE,
-                            TOTAL_LANE,
-                            0,
-                            TimeUnit.MILLISECONDS,
-                            new LinkedBlockingQueue<>(THREAD_Q_LIMIT),
-                            Executors.defaultThreadFactory());
-        }
     }
 
     @Override
@@ -119,13 +98,14 @@ public class TaskSend implements Runnable {
                     if (sk != null) {
                         Object attachment = sk.attachment();
                         if (attachment != null) {
-                            tpe.execute(
+                            TaskWrite tw =
                                     new TaskWrite(
                                             node.getIdShort(),
                                             node.getChannel(),
                                             mo.getMsg(),
                                             (ChannelBuffer) attachment,
-                                            this.mgr));
+                                            this.mgr);
+                            tw.run();
                         }
                     }
                 } else {
@@ -156,6 +136,6 @@ public class TaskSend implements Runnable {
         in ^= in >> (32 - 15);
         in ^= in >> (32 - 20);
         in ^= in >> (32 - 25);
-        return (in & 0b11111) * TOTAL_LANE / 32;
+        return (in & 0b11111);
     }
 }
