@@ -27,7 +27,11 @@ import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INode;
 import org.aion.p2p.INodeMgr;
@@ -42,6 +46,8 @@ public class TaskSend implements Runnable {
     private final INodeMgr nodeMgr;
     private final Selector selector;
     private final int lane;
+    private final ThreadPoolExecutor tpe;
+    private static final int THREAD_Q_LIMIT = 20000;
 
     public TaskSend(
             final IP2pMgr _mgr,
@@ -57,6 +63,14 @@ public class TaskSend implements Runnable {
         this.start = _start;
         this.nodeMgr = _nodeMgr;
         this.selector = _selector;
+        this.tpe =
+                new ThreadPoolExecutor(
+                        1,
+                        1,
+                        0,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(THREAD_Q_LIMIT),
+                        Executors.defaultThreadFactory());
     }
 
     @Override
@@ -98,14 +112,13 @@ public class TaskSend implements Runnable {
                     if (sk != null) {
                         Object attachment = sk.attachment();
                         if (attachment != null) {
-                            TaskWrite tw =
+                            tpe.execute(
                                     new TaskWrite(
                                             node.getIdShort(),
                                             node.getChannel(),
                                             mo.getMsg(),
                                             (ChannelBuffer) attachment,
-                                            this.mgr);
-                            tw.run();
+                                            this.mgr));
                         }
                     }
                 } else {
