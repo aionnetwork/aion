@@ -86,6 +86,8 @@ public final class P2pMgr implements IP2pMgr {
 
     public static final Logger p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
 
+    public static final int WORKER = 32;
+
     private int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
     private boolean syncSeedsOnly, upnpEnable;
     private String selfRevision, selfShortId;
@@ -199,15 +201,13 @@ public final class P2pMgr implements IP2pMgr {
                         });
             }
 
-            int pNum = Runtime.getRuntime().availableProcessors();
-
-            for (int i = 0; i < (pNum << 1); i++) {
+            for (int i = 0; i < WORKER; i++) {
                 Thread thrdOut = new Thread(getSendInstance(i), "p2p-out-" + i);
                 thrdOut.setPriority(Thread.NORM_PRIORITY);
                 thrdOut.start();
             }
 
-            for (int i = 0; i < pNum; i++) {
+            for (int i = 0; i < WORKER; i++) {
                 Thread t = new Thread(getReceiveInstance(), "p2p-worker-" + i);
                 t.setPriority(Thread.NORM_PRIORITY);
                 t.start();
@@ -445,7 +445,6 @@ public final class P2pMgr implements IP2pMgr {
                 this.selector,
                 this.start,
                 this.nodeMgr,
-                this.tcpServer,
                 this.handlers,
                 this.sendMsgQue,
                 cachedResHandshake1,

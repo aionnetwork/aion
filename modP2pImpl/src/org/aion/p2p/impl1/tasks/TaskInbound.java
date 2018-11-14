@@ -65,7 +65,6 @@ public class TaskInbound implements Runnable {
     private final INodeMgr nodeMgr;
     private final Map<Integer, List<Handler>> handlers;
     private final AtomicBoolean start;
-    private final ServerSocketChannel tcpServer;
     private final BlockingQueue<MsgOut> sendMsgQue;
     private final ResHandshake1 cachedResHandshake1;
     private final BlockingQueue<MsgIn> receiveMsgQue;
@@ -75,7 +74,6 @@ public class TaskInbound implements Runnable {
             final Selector _selector,
             final AtomicBoolean _start,
             final INodeMgr _nodeMgr,
-            final ServerSocketChannel _tcpServer,
             final Map<Integer, List<Handler>> _handlers,
             final BlockingQueue<MsgOut> _sendMsgQue,
             final ResHandshake1 _cachedResHandshake1,
@@ -85,7 +83,6 @@ public class TaskInbound implements Runnable {
         this.selector = _selector;
         this.start = _start;
         this.nodeMgr = _nodeMgr;
-        this.tcpServer = _tcpServer;
         this.handlers = _handlers;
         this.sendMsgQue = _sendMsgQue;
         this.cachedResHandshake1 = _cachedResHandshake1;
