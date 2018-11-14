@@ -49,7 +49,7 @@ public class Blake2bHashContract implements IPrecompiledContract {
         // check length
         if (input == null || input.length == 0 || input.length > 1_048_576L) {
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
+                    ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
         long additionalNRG = ((long) Math.ceil(((double) input.length - 1) / WORD_LENGTH)) * 6;

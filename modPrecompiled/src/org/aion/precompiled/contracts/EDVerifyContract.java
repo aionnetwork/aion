@@ -27,6 +27,7 @@ package org.aion.precompiled.contracts;
 import org.aion.base.type.IExecutionResult;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ed25519.ECKeyEd25519;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
 
@@ -34,6 +35,8 @@ public class EDVerifyContract implements IPrecompiledContract {
 
     // set to a default cost for now, this will need to be adjusted
     private static final long COST = 3700L;
+    private static final String INCORRECT_LENGTH = "Incorrect input length";
+
 
     /**
      * @param input 128 bytes of data input, [32-bytes message, 64-bytes signature, 32-bytes public key]
@@ -41,6 +44,13 @@ public class EDVerifyContract implements IPrecompiledContract {
      */
     @Override
     public IExecutionResult execute(byte[] input, long nrgLimit) {
+
+        // check length
+        if (input == null || input.length != 128) {
+            return new ExecutionResult(
+                ResultCode.FAILURE, nrgLimit - COST, INCORRECT_LENGTH.getBytes());
+        }
+
         if (COST > nrgLimit) {
             return new ExecutionResult(ExecutionResult.ResultCode.OUT_OF_NRG, 0);
         }
