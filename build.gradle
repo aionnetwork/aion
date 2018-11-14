@@ -282,16 +282,8 @@ task pack(type: Tar) {
         from "${dirPack}/rt"
         include '**'
     }
-    into('/aion/web3') {
-        from "${dirPack}/web3"
-        include '**'
-    }
     into('/aion/docs') {
         from "${dirPack}/docs"
-        include '**'
-    }
-    into('/aion/clientAPI') {
-        from "${dirPack}/clientAPI"
         include '**'
     }
     into('/aion/script') {
