@@ -160,7 +160,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(selector.selectNow()).thenReturn(0);
@@ -180,7 +180,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         doThrow(ClosedSelectorException.class).when(selector).selectNow();
@@ -201,7 +201,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(selector.selectNow()).thenReturn(1);
@@ -222,7 +222,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk.isValid()).thenReturn(false);
@@ -262,7 +262,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk2.isValid()).thenReturn(true);
@@ -297,7 +297,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk2.isValid()).thenReturn(true);
@@ -333,7 +333,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         when(sk.isValid()).thenReturn(true);
@@ -374,7 +374,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         // settings for readBuffer
@@ -407,7 +407,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         // settings for readBuffer
@@ -444,7 +444,7 @@ public class TaskInboundTest {
         AtomicBoolean atb = new AtomicBoolean(true);
         TaskInbound ti =
                 new TaskInbound(
-                        p2pMgr, selector, atb, nodeMgr, ssc, hldrMap, msgOutQue, rhs1, msgInQue);
+                        p2pMgr, selector, atb, nodeMgr, hldrMap, msgOutQue, rhs1, msgInQue);
         assertNotNull(ti);
 
         // settings for readBuffer
