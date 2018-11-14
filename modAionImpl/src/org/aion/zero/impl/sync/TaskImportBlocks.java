@@ -559,12 +559,13 @@ final class TaskImportBlocks implements Runnable {
         if (log.isDebugEnabled()) {
             // printing sync mode only when debug is enabled
             log.debug(
-                    "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
+                    "<import-status: node = {}, sync mode = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms>",
                     displayId,
                     (state != null ? state.getMode() : NORMAL),
                     b.getShortHash(),
                     b.getNumber(),
                     b.getTransactionsList().size(),
+                    b.getTimestamp(),
                     importResult,
                     t2 - t1);
         } else {
@@ -572,15 +573,21 @@ final class TaskImportBlocks implements Runnable {
             // a different message will be printed to indicate the storage of blocks
             if (!state.isInFastMode() || importResult != ImportResult.NO_PARENT) {
                 log.info(
-                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, block time = {}, result = {}, time elapsed = {} ms>",
+                        "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
                         displayId,
                         b.getShortHash(),
                         b.getNumber(),
                         b.getTransactionsList().size(),
-                        b.getTimestamp(),
                         importResult,
                         t2 - t1);
             }
+        }
+        // trigger compact when IO is slow
+        if (t2 - t1 > 400) {
+            t1 = System.currentTimeMillis();
+            this.chain.compactState();
+            t2 = System.currentTimeMillis();
+            log.info("Compacting state database due to slow IO time. Completed in {} ms.", t2 - t1);
         }
         return importResult;
     }
