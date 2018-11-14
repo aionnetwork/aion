@@ -36,6 +36,14 @@ if [ ! -d "$JDK_RT" ]; then
   cp $JDK_PATH/bin/jstack $JDK_RT/bin
 fi
 
+# download the web3.js if can't find the web3.js env
+AION_WEB3_TAR="aion_web3_0.0.4_2018-07-17.tar.gz"
+if [ ! -d "$WEB3JS_PATH" ]; then
+  wget -nc "https://github.com/aionnetwork/aion_web3/releases/download/0.0.4/${AION_WEB3_TAR}" -O "${PACK_PATH}/${AION_WEB3_TAR}"
+  mkdir $WEB3JS_PATH
+  tar -xf "${PACK_PATH}/${AION_WEB3_TAR}" -C $WEB3JS_PATH
+fi
+
 # copy the config files if can't find the config env
 if [ ! -d "$CONFIG_PATH" ]; then
   mkdir $CONFIG_PATH

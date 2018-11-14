@@ -282,10 +282,12 @@ task pack(type: Tar) {
         from "${dirPack}/rt"
         include '**'
     }
-    into('/aion/docs') {
-        from "${dirPack}/docs"
+
+    into('/aion/web3') {
+        from "${dirPack}/web3"
         include '**'
     }
+
     into('/aion/script') {
         from "${dirPack}/script"
         include 'generateSslCert.sh', 'nohup_wrapper.sh'
