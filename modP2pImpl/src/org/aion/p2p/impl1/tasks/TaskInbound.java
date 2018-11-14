@@ -27,13 +27,14 @@ import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 import static org.aion.p2p.impl1.P2pMgr.txBroadCastRoute;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedSelectorException;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -124,7 +125,7 @@ public class TaskInbound implements Runnable {
                         }
 
                         if (key.isAcceptable()) {
-                            accept();
+                            accept(key.channel());
                         }
 
                         if (key.isReadable()) {
@@ -155,12 +156,11 @@ public class TaskInbound implements Runnable {
         p2pLOG.info("p2p-pi shutdown");
     }
 
-    private void accept() throws Exception {
+    private void accept(SelectableChannel _channel) throws Exception {
         if (this.nodeMgr.activeNodesSize() >= this.mgr.getMaxActiveNodes()) {
             return;
         }
-
-        SocketChannel channel = this.tcpServer.accept();
+        SocketChannel channel = ((ServerSocketChannel) _channel).accept();
         if (channel != null) {
             this.mgr.configChannel(channel);
 
@@ -530,14 +530,7 @@ public class TaskInbound implements Runnable {
                 // handshake 1
                 if (_revision != null) {
                     String binaryVersion;
-                    try {
-                        binaryVersion = new String(_revision, "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        binaryVersion = "decode-fail";
-                        if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG.debug("handleReqHandshake decode-fail");
-                        }
-                    }
+                    binaryVersion = new String(_revision, StandardCharsets.UTF_8);
                     node.setBinaryVersion(binaryVersion);
                     nodeMgr.movePeerToActive(_channelHash, "inbound");
                     this.sendMsgQue.offer(
