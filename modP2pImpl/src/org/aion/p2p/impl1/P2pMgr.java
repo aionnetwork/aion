@@ -117,9 +117,11 @@ public final class P2pMgr implements IP2pMgr {
         this.selfNetId = _netId;
         this.selfRevision = _revision;
         this.selfNodeId = _nodeId.getBytes();
-        this.selfNodeIdHash = Arrays.hashCode(selfNodeId);
+        this.selfNodeIdHash = Arrays.hashCode(selfNodeId); //*  needs updating
         this.selfShortId = new String(Arrays.copyOfRange(_nodeId.getBytes(), 0, 6));
-        this.selfIp = Node.ipStrToBytes(_ip);
+        this.selfIp = Node.ipStrToBytes(_ip); //* check if real IP
+        // TODO : check if different peers exist with different IPs
+        // for the case where I cannot determine my own ip
         this.selfPort = _port;
         this.upnpEnable = _upnpEnable;
         this.maxTempNodes = _maxTempNodes;
@@ -179,6 +181,11 @@ public final class P2pMgr implements IP2pMgr {
             }
 
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
+
+            InetSocketAddress a= new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort);
+
+            System.out.println(a.getAddress());
+
 
             Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
             thrdIn.setPriority(Thread.NORM_PRIORITY);

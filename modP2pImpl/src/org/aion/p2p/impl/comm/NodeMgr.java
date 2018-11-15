@@ -150,7 +150,7 @@ public class NodeMgr implements INodeMgr {
 
         try {
             if (tempNodes.size() < maxTempNodes
-                    && !tempNodes.containsKey(_n.getPeerId())
+                    && !tempNodes.containsKey(_n.getPeerId()) // * change to allow talking with peer with same ID
                     && (notActiveNode(_n.getIdHash()) || _n.getIfFromBootList())) {
                 tempNodes.putIfAbsent(_n.getPeerId(), _n);
             }
@@ -338,7 +338,7 @@ public class NodeMgr implements INodeMgr {
                     return;
                 }
 
-                if (node.getIdHash() == p2pMgr.getSelfIdHash()) {
+                if (node.getIdHash() == p2pMgr.getSelfIdHash()) { // * check for self id needs to be updated
                     p2pMgr.closeSocket(node.getChannel(), _type + " -> active, self-connected");
                     return;
                 }
