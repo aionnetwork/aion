@@ -142,5 +142,4 @@ public class BenchmarkTest {
         //        System.out.println("Bench keccak: " + String.valueOf(System.currentTimeMillis() -
         // t1) + "ms");
     }
-
 }
