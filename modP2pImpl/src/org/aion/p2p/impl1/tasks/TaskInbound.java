@@ -122,7 +122,7 @@ public class TaskInbound implements Runnable {
                         }
 
                         if (key.isAcceptable()) {
-                            accept(key.channel());
+                            accept((ServerSocketChannel) key.channel());
                         }
 
                         if (key.isReadable()) {
@@ -153,11 +153,11 @@ public class TaskInbound implements Runnable {
         p2pLOG.info("p2p-pi shutdown");
     }
 
-    private void accept(SelectableChannel _channel) throws Exception {
+    private void accept(ServerSocketChannel _channel) throws Exception {
         if (this.nodeMgr.activeNodesSize() >= this.mgr.getMaxActiveNodes()) {
             return;
         }
-        SocketChannel channel = ((ServerSocketChannel) _channel).accept();
+        SocketChannel channel = _channel.accept();
         if (channel != null) {
             this.mgr.configChannel(channel);
 
