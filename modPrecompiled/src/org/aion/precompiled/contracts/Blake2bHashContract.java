@@ -31,28 +31,34 @@ import org.aion.vm.IPrecompiledContract;
 
 public class Blake2bHashContract implements IPrecompiledContract {
 
-    private static final long COST = 30L;
+    /*
+     * Base on benchmark the keccak256hash and blake2bhash precompiled contract
+     * blake2b is 5 times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3
+     * of the Ethereum keccak256 precompiled contract charge.
+     */
+
+    private static final long COST = 10L;
     private static final int WORD_LENGTH = 4;
-    private static final String INPUT_LENGTH_ERROR_MESSAGE = "input too short";
+    private static final int NRG_CHARGE_PER_WORD = 2;
+    private static final String INPUT_LENGTH_ERROR_MESSAGE = "incorrect size of the input data.";
 
     public Blake2bHashContract() {}
 
     /**
      * Returns the hash of given input
      *
-     * <p>the returned hash is in ExecutionResult.getOutput
-     *
-     * <p>the maximum data hash is 1M bytes
+     * @param input data input; must be less or equal than 2 MB
+     * @return the returned blake2b 256bits hash is in ExecutionResult.getOutput
      */
     public ExecutionResult execute(byte[] input, long nrg) {
 
         // check length
-        if (input == null || input.length == 0 || input.length > 1_048_576L) {
+        if (input == null || input.length == 0 || input.length > 2_097_152L) {
             return new ExecutionResult(
                     ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
-        long additionalNRG = ((long) Math.ceil(((double) input.length - 1) / WORD_LENGTH)) * 6;
+        long additionalNRG = ((long) Math.ceil(((double) input.length - 1) / WORD_LENGTH)) * NRG_CHARGE_PER_WORD;
 
         // check input nrg
         long nrgLeft = nrg - (COST + additionalNRG);

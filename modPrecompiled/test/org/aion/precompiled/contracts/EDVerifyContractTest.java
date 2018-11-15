@@ -136,7 +136,7 @@ public class EDVerifyContractTest {
             blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
-        IExecutionResult result = contract.execute(input, 3699L);
+        IExecutionResult result = contract.execute(input, 2999L);
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.OUT_OF_NRG.toInt());
     }
 

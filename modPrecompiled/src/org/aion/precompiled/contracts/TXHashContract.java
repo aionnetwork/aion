@@ -8,7 +8,7 @@ import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
 
 public class TXHashContract implements IPrecompiledContract {
-    public static final long COST = 500L;
+    public static final long COST = 20L;
 
     private final ExecutionContext context;
 

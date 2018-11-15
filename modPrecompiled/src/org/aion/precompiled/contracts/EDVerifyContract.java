@@ -34,7 +34,7 @@ import org.aion.vm.IPrecompiledContract;
 public class EDVerifyContract implements IPrecompiledContract {
 
     // set to a default cost for now, this will need to be adjusted
-    private static final long COST = 3700L;
+    private static final long COST = 3000L;
     private static final String INCORRECT_LENGTH = "Incorrect input length";
 
 

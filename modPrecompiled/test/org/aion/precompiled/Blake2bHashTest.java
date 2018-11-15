@@ -44,6 +44,8 @@ public class Blake2bHashTest {
     private byte[] byteArray1 = "a0010101010101010101010101".getBytes();
     private byte[] byteArray2 = "1".getBytes();
     private byte[] shortByteArray = "".getBytes();
+    private byte[] bigByteArray = new byte[2*1024*1024];
+    private byte[] bigByteArray2 = new byte[2*1024*1024+1];
     private Blake2bHashContract blake2bHasher;
 
     @Before
@@ -59,7 +61,7 @@ public class Blake2bHashTest {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
         String blake2bStr1 = "aa6648de0988479263cf3730a48ef744d238b96a5954aa77d647ae965d3f7715";
-        assertTrue(blake2bStr1.equals(ByteUtil.toHexString(output)));
+        assertEquals(blake2bStr1, ByteUtil.toHexString(output));
     }
 
     @Test
@@ -71,7 +73,19 @@ public class Blake2bHashTest {
         assertEquals(32, output.length);
 
         String blake2bStr2 = "92cdf578c47085a5992256f0dcf97d0b19f1f1c9de4d5fe30c3ace6191b6e5db";
-        assertTrue(blake2bStr2.equals(ByteUtil.toHexString(output)));
+        assertEquals(blake2bStr2, ByteUtil.toHexString(output));
+    }
+
+    @Test
+    public void testBlake256_3() {
+        ExecutionResult res = blake2bHasher.execute(bigByteArray, 2_000_000L);
+        byte[] output = res.getOutput();
+
+        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(32, output.length);
+
+        String blake2bStr2 = "9852d74e002f23d14ba2638b905609419bd16e50843ac147ccf4d509ed2c9dfc";
+        assertEquals(blake2bStr2, ByteUtil.toHexString(output));
     }
 
     @Test
@@ -102,22 +116,20 @@ public class Blake2bHashTest {
 
     @Test
     public void invalidInputLength2() {
-        byte[] BigByteArray = new byte[1024*1024 + 1];
-        ExecutionResult res = blake2bHasher.execute(BigByteArray, INPUT_NRG);
+        ExecutionResult res = blake2bHasher.execute(bigByteArray2, INPUT_NRG);
         assertEquals(ResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
     public void insufficientNRG() {
         byte[] input = Blake2bHashContract.setupInput(0, byteArray1);
-        ExecutionResult res = blake2bHasher.execute(input, 30);
+        ExecutionResult res = blake2bHasher.execute(input, 10);
         assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
     }
 
     @Test
     public void insufficientNRG2() {
-        byte[] bigByteArray = new byte[1024 * 1024];
-        long nrg = (long) (Math.ceil(1024 * 1024 / 4) * 6 + 30);
+        long nrg = (long) (Math.ceil((float)bigByteArray.length / 4) * 2 + 10);
         ExecutionResult res = blake2bHasher.execute(bigByteArray, nrg);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
 

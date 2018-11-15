@@ -35,27 +35,25 @@ import org.aion.vm.ExecutionContext;
 import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
 
-/**
- * A factory class that produces pre-compiled contract instances.
- */
+/** A factory class that produces pre-compiled contract instances. */
 public class ContractFactory implements IContractFactory {
 
     private static final String ADDR_OWNER =
-        "0000000000000000000000000000000000000000000000000000000000000000";
+            "0000000000000000000000000000000000000000000000000000000000000000";
     private static final String ADDR_TOTAL_CURRENCY =
-        "0000000000000000000000000000000000000000000000000000000000000100";
+            "0000000000000000000000000000000000000000000000000000000000000100";
 
     private static final String ADDR_TOKEN_BRIDGE =
-        "0000000000000000000000000000000000000000000000000000000000000200";
+            "0000000000000000000000000000000000000000000000000000000000000200";
     private static final String ADDR_TOKEN_BRIDGE_INITIAL_OWNER =
-        "a008d7b29e8d1f4bfab428adce89dc219c4714b2c6bf3fd1131b688f9ad804aa";
+            "a008d7b29e8d1f4bfab428adce89dc219c4714b2c6bf3fd1131b688f9ad804aa";
 
     private static final String ADDR_ED_VERIFY =
-        "0000000000000000000000000000000000000000000000000000000000000010";
+            "0000000000000000000000000000000000000000000000000000000000000010";
     private static final String ADDR_BLAKE2B_HASH =
-        "0000000000000000000000000000000000000000000000000000000000000011";
+            "0000000000000000000000000000000000000000000000000000000000000011";
     private static final String ADDR_TX_HASH =
-        "0000000000000000000000000000000000000000000000000000000000000012";
+            "0000000000000000000000000000000000000000000000000000000000000012";
 
     private static IPrecompiledContract PC_ED_VERIFY;
     private static IPrecompiledContract PC_BLAKE2B_HASH;
@@ -65,8 +63,7 @@ public class ContractFactory implements IContractFactory {
         PC_BLAKE2B_HASH = new Blake2bHashContract();
     }
 
-    public ContractFactory() {
-    }
+    public ContractFactory() {}
 
     /**
      * Returns a new pre-compiled contract such that the address of the new contract is address.
@@ -78,20 +75,20 @@ public class ContractFactory implements IContractFactory {
      */
     @Override
     public IPrecompiledContract getPrecompiledContract(
-        ExecutionContext context,
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
+            ExecutionContext context,
+            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
         switch (context.address().toString()) {
             case ADDR_TOKEN_BRIDGE:
                 TokenBridgeContract contract =
-                    new TokenBridgeContract(
-                        context,
-                        track,
-                        Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
-                        Address.wrap(ADDR_TOKEN_BRIDGE));
+                        new TokenBridgeContract(
+                                context,
+                                track,
+                                Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
+                                Address.wrap(ADDR_TOKEN_BRIDGE));
 
                 if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
-                    && !contract.isInitialized()) {
+                        && !contract.isInitialized()) {
                     return null;
                 }
 
@@ -154,4 +151,12 @@ public class ContractFactory implements IContractFactory {
         return Address.wrap(ADDR_TX_HASH);
     }
 
+    /**
+     * Returns the address of the blake2b hash contract.
+     *
+     * @return the contract address
+     */
+    public static Address getBlake2bHashContractAddress() {
+        return Address.wrap(ADDR_BLAKE2B_HASH);
+    }
 }
