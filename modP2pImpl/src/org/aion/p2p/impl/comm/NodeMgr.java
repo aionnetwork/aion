@@ -166,6 +166,8 @@ public class NodeMgr implements INodeMgr {
     @Override
     public void addTempNode(final INode _n) throws InterruptedException {
 
+        if (_n == null) return;
+
         tempNodesLock.lockInterruptibly();
 
         try {

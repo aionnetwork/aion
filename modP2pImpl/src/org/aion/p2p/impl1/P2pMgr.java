@@ -87,7 +87,7 @@ public final class P2pMgr implements IP2pMgr {
     public static final Logger p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
 
     public static final int WORKER = 32;
-    private final int SOCKET_RECV_BUFFER = 1024*128;
+    private final int SOCKET_RECV_BUFFER = 1024 * 128;
     private final int SOCKET_BACKLOG = 1024;
 
     private int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
@@ -185,8 +185,15 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
             tcpServer.socket().setReuseAddress(true);
+            /*
+             * Bigger RECV_BUFFER and BACKLOG can have a better socket read/write tolerance, can be a advanced p2p settings in the config file.
+             */
             tcpServer.socket().setReceiveBufferSize(SOCKET_RECV_BUFFER);
-            tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort), SOCKET_BACKLOG);
+            tcpServer
+                    .socket()
+                    .bind(
+                            new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort),
+                            SOCKET_BACKLOG);
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
             Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
