@@ -92,7 +92,7 @@ public class TaskWrite implements Runnable {
             }
             buf.flip();
 
-            long t1 = System.currentTimeMillis(), t2;
+            long t1 = System.nanoTime(), t2;
             int wrote = 0;
             try {
                 do {
@@ -105,12 +105,12 @@ public class TaskWrite implements Runnable {
                         Thread.sleep(0, 1);
                     }
 
-                    t2 = System.currentTimeMillis() - t1;
-                } while (buf.hasRemaining() && (t2 < 100));
+                    t2 = System.nanoTime() - t1;
+                } while (buf.hasRemaining() && (t2 < 100_000_000));
 
-                if (p2pLOG.isTraceEnabled() && (t2 > 10)) {
+                if (p2pLOG.isTraceEnabled() && (t2 > 10_000_000)) {
                     p2pLOG.trace(
-                            "msg write: id {} size {} time {}ms length {}",
+                            "msg write: id {} size {} time {} ms length {}",
                             nodeShortId,
                             wrote,
                             t2,
@@ -133,8 +133,8 @@ public class TaskWrite implements Runnable {
                                     + " bodyLen="
                                     + String.valueOf(bodyLen)
                                     + " time="
-                                    + String.valueOf(System.currentTimeMillis() - t1)
-                                    + "ms",
+                                    + String.valueOf(System.nanoTime()- t1)
+                                    + "ns",
                             ex2);
                 }
 

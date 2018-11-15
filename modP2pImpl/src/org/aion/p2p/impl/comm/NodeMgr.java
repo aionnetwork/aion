@@ -164,8 +164,10 @@ public class NodeMgr implements INodeMgr {
 
     /** @param _n Node */
     @Override
-    public void addTempNode(final INode _n) {
-        tempNodesLock.lock();
+    public void addTempNode(final INode _n) throws InterruptedException {
+
+        tempNodesLock.lockInterruptibly();
+
         try {
             if (tempNodes.size() < maxTempNodes
                     && !tempNodes.containsKey(_n.getPeerId())
@@ -196,13 +198,19 @@ public class NodeMgr implements INodeMgr {
     }
 
     @Override
-    public INode tempNodesTake() {
+    public INode tempNodesTake() throws InterruptedException {
         INode node = null;
-        tempNodesLock.lock();
+
+        tempNodesLock.lockInterruptibly();
+
+        if (tempNodes.isEmpty()) {
+            return null;
+        }
+
         try {
             node = tempNodes.remove(tempNodes.keySet().iterator().next());
         } catch (Exception e) {
-            p2pLOG.error("<tempNodesTake IllegalStateException>", e);
+            p2pLOG.error("<tempNodesTake Exception>", e);
         } finally {
             tempNodesLock.unlock();
         }
