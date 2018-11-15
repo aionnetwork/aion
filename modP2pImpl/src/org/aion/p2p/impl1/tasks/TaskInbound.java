@@ -411,7 +411,8 @@ public class TaskInbound implements Runnable {
      * @param _act ACT
      * @param _msgBytes byte[]
      */
-    private void handleP2pMsg(final SelectionKey _sk, byte _act, final byte[] _msgBytes) {
+    private void handleP2pMsg(final SelectionKey _sk, byte _act, final byte[] _msgBytes)
+        throws InterruptedException {
 
         ChannelBuffer rb = (ChannelBuffer) _sk.attachment();
 
