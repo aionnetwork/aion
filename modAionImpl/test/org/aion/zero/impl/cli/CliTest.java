@@ -85,6 +85,7 @@ public class CliTest {
 
     private static final String configFileName = "config.xml";
     private static final String genesisFileName = "genesis.json";
+    private static final String forkFileName = "fork.properties";
 
     private static final String dataDirectory = "datadir";
     private static final String alternativeDirectory = "random";
@@ -102,6 +103,11 @@ public class CliTest {
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
 
+    private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
+    private static final File oldFork = new File(CONFIG_PATH, forkFileName);
+    private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
+    private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
+
     /** @implNote set this to true to enable printing */
     private static final boolean verbose = false;
 
@@ -117,6 +123,7 @@ public class CliTest {
             }
             Cli.copyRecursively(config, mainnetConfig);
             Cli.copyRecursively(genesis, mainnetGenesis);
+            Cli.copyRecursively(fork, mainnetFork);
         }
 
         if (BASE_PATH.contains(module) && !testnetConfig.exists()) {
@@ -126,6 +133,7 @@ public class CliTest {
             }
             Cli.copyRecursively(config, mainnetConfig);
             Cli.copyRecursively(genesis, testnetGenesis);
+            Cli.copyRecursively(fork, testnetFork);
         }
 
         cfg.resetInternal();

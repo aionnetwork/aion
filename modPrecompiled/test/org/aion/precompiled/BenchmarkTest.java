@@ -27,6 +27,7 @@ import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,12 +49,12 @@ public class BenchmarkTest {
     @Before
     public void setup() {
         cf = new ContractFactory();
-
+        CfgAion.inst().setForkProperties();
         txHash = RandomUtils.nextBytes(32);
         origin = Address.wrap(RandomUtils.nextBytes(32));
         caller = origin;
         blockCoinbase = Address.wrap(RandomUtils.nextBytes(32));
-        blockNumber = 1;
+        blockNumber = 2000001;
         blockTimestamp = System.currentTimeMillis() / 1000;
         blockNrgLimit = 5000000;
         blockDifficulty = new DataWord(0x100000000L);
