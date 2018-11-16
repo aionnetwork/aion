@@ -25,6 +25,7 @@ package org.aion.precompiled;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
+import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
@@ -78,30 +79,60 @@ public class ContractFactory implements IContractFactory {
             ExecutionContext context,
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
-        switch (context.address().toString()) {
-            case ADDR_TOKEN_BRIDGE:
-                TokenBridgeContract contract =
-                        new TokenBridgeContract(
-                                context,
-                                track,
-                                Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
-                                Address.wrap(ADDR_TOKEN_BRIDGE));
+        CfgFork cfg = new CfgFork();
+        String forkProperty = cfg.getForkPropertyByNumber(1);
+        boolean firstFork =
+                (forkProperty != null) && (context.blockNumber() > Long.valueOf(forkProperty));
 
-                if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
-                        && !contract.isInitialized()) {
+        if (firstFork) {
+            switch (context.address().toString()) {
+                case ADDR_TOKEN_BRIDGE:
+                    TokenBridgeContract contract =
+                            new TokenBridgeContract(
+                                    context,
+                                    track,
+                                    Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
+                                    Address.wrap(ADDR_TOKEN_BRIDGE));
+
+                    if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
+                            && !contract.isInitialized()) {
+                        return null;
+                    }
+
+                    return contract;
+                case ADDR_ED_VERIFY:
+                    return PC_ED_VERIFY;
+                case ADDR_BLAKE2B_HASH:
+                    return PC_BLAKE2B_HASH;
+                case ADDR_TX_HASH:
+                    return new TXHashContract(context);
+                case ADDR_TOTAL_CURRENCY:
+                default:
                     return null;
-                }
+            }
+        } else {
+            switch (context.address().toString()) {
+                case ADDR_TOTAL_CURRENCY:
+                    // return new TotalCurrencyContract(track, context.sender(),
+                    // Address.wrap(OWNER));
+                    return null;
+                case ADDR_TOKEN_BRIDGE:
+                    TokenBridgeContract contract =
+                            new TokenBridgeContract(
+                                    context,
+                                    track,
+                                    Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
+                                    Address.wrap(ADDR_TOKEN_BRIDGE));
 
-                return contract;
-            case ADDR_ED_VERIFY:
-                return PC_ED_VERIFY;
-            case ADDR_BLAKE2B_HASH:
-                return PC_BLAKE2B_HASH;
-            case ADDR_TX_HASH:
-                return new TXHashContract(context);
-            case ADDR_TOTAL_CURRENCY:
-            default:
-                return null;
+                    if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
+                            && !contract.isInitialized()) {
+                        return null;
+                    }
+
+                    return contract;
+                default:
+                    return null;
+            }
         }
     }
 
