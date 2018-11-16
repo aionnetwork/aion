@@ -9,11 +9,15 @@
 /log/
 /rt/
 /web3/
+/zmq_keystore/
+/jars/
 
 # ide
 /.idea/
 /mod*/.idea/
 /mod*/*.iml
+ij-execution.out
+/*/out
 
 # build
 /build/
@@ -54,3 +58,6 @@ lib/libnzmq.jar
 # test folder
 test_db/
 tmp/
+
+# gradle
+.gradle/**

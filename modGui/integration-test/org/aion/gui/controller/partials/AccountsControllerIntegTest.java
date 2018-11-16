@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,6 +22,22 @@
  */
 package org.aion.gui.controller.partials;
 
+import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+import static org.testfx.api.FxAssert.verifyThat;
+
+import java.nio.charset.Charset;
+import java.util.LinkedList;
+import java.util.List;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -46,18 +62,6 @@ import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.matcher.base.NodeMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
-import java.nio.charset.Charset;
-import java.util.LinkedList;
-import java.util.List;
-
-import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.testfx.api.FxAssert.verifyThat;
-
 public class AccountsControllerIntegTest extends ApplicationTest {
     private AccountsController controller;
     private Parent accountsPaneView;
@@ -77,30 +81,42 @@ public class AccountsControllerIntegTest extends ApplicationTest {
         addAccountDialog = mock(AddAccountDialog.class);
         importAccountDialog = mock(ImportAccountDialog.class);
         unlockMasterAccountDialog = mock(UnlockMasterAccountDialog.class);
-        consoleManager  = mock(ConsoleManager.class);
+        consoleManager = mock(ConsoleManager.class);
     }
 
     @Override
     public void start(Stage stage) throws Exception {
-        cf = new ControllerFactory() {
-            {
-                // this initializer overwrites the mapping set in the normal ControllerFactory, so no need to do
-                // the .withWalletStorage, etc.
-                this.builderChooser.put(AccountsController.class, () -> new AccountsController(
-                        accountManager, walletStorage, addAccountDialog, importAccountDialog, unlockMasterAccountDialog, consoleManager));
-            }
-        };
-        FXMLLoader loader = new FXMLLoader(
-                DashboardController.class.getResource("components/partials/AccountsPane.fxml"),
-                null,
-                null,
-                cf,
-                Charset.forName(DEFAULT_CHARSET_NAME),
-                new LinkedList<>());
-        loader.setBuilderFactory(new UiSubcomponentsFactory()
-                .withAccountManager(accountManager)
-                .withConsoleManager(consoleManager)
-        );
+        cf =
+                new ControllerFactory() {
+                    {
+                        // this initializer overwrites the mapping set in the normal
+                        // ControllerFactory, so no need to do
+                        // the .withWalletStorage, etc.
+                        this.builderChooser.put(
+                                AccountsController.class,
+                                () ->
+                                        new AccountsController(
+                                                accountManager,
+                                                walletStorage,
+                                                addAccountDialog,
+                                                importAccountDialog,
+                                                unlockMasterAccountDialog,
+                                                consoleManager));
+                    }
+                };
+        FXMLLoader loader =
+                new FXMLLoader(
+                        DashboardController.class.getResource(
+                                "components/partials/AccountsPane.fxml"),
+                        null,
+                        null,
+                        cf,
+                        Charset.forName(DEFAULT_CHARSET_NAME),
+                        new LinkedList<>());
+        loader.setBuilderFactory(
+                new UiSubcomponentsFactory()
+                        .withAccountManager(accountManager)
+                        .withConsoleManager(consoleManager));
         accountsPaneView = loader.load();
         controller = loader.getController();
 
@@ -162,12 +178,10 @@ public class AccountsControllerIntegTest extends ApplicationTest {
 
         List<AccountDTO> accounts = new LinkedList<>();
         String testAddress = "some test address";
-        AccountDTO account = new AccountDTO(
-                "anyName", testAddress, "anyBalance", "anyCurrency", false, 0
-        );
-        AccountDTO otherAccount = new AccountDTO(
-                "otherName", "otherAddr", "otherBalance", "otherCurrency", false, 1
-        );
+        AccountDTO account =
+                new AccountDTO("anyName", testAddress, "anyBalance", "anyCurrency", false, 0);
+        AccountDTO otherAccount =
+                new AccountDTO("otherName", "otherAddr", "otherBalance", "otherCurrency", false, 1);
         accounts.add(account);
         accounts.add(otherAccount);
         when(accountManager.getAccounts()).thenReturn(accounts);
@@ -189,7 +203,8 @@ public class AccountsControllerIntegTest extends ApplicationTest {
         WaitForAsyncUtils.waitForFxEvents();
         verify(importAccountDialog).open(any(MouseEvent.class));
 
-        ObservableList<AccountDTO> listItems = ((ListView<AccountDTO>)lookup("#accountListView").query()).getItems();
+        ObservableList<AccountDTO> listItems =
+                ((ListView<AccountDTO>) lookup("#accountListView").query()).getItems();
         assertThat(listItems.size(), is(2));
         assertThat(listItems.get(0), is(account));
         assertThat(listItems.get(1), is(otherAccount));

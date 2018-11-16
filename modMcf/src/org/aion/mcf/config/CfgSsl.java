@@ -25,6 +25,8 @@ package org.aion.mcf.config;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Arrays;
+import java.util.Objects;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -58,8 +60,12 @@ public class CfgSsl {
                             try {
                                 this.enabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: " +
-                                    "aion.api.rpc.ssl."+ENABLED_TAG+". Using default value: " + this.enabled);
+                                System.out.println(
+                                        "failed to read config node: "
+                                                + "aion.api.rpc.ssl."
+                                                + ENABLED_TAG
+                                                + ". Using default value: "
+                                                + this.enabled);
                                 e.printStackTrace();
                             }
                             break;
@@ -67,8 +73,12 @@ public class CfgSsl {
                             try {
                                 this.cert = String.valueOf(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: " +
-                                    "aion.api.rpc.ssl"+CERTIFICATE_TAG+"; Using default value: " + this.cert);
+                                System.out.println(
+                                        "failed to read config node: "
+                                                + "aion.api.rpc.ssl"
+                                                + CERTIFICATE_TAG
+                                                + "; Using default value: "
+                                                + this.cert);
                                 e.printStackTrace();
                             }
                             break;
@@ -76,8 +86,11 @@ public class CfgSsl {
                             try {
                                 this.pass = String.valueOf(Cfg.readValue(sr)).toCharArray();
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: " +
-                                    "aion.api.rpc.ssl."+PASSWORD_TAG+".");
+                                System.out.println(
+                                        "failed to read config node: "
+                                                + "aion.api.rpc.ssl."
+                                                + PASSWORD_TAG
+                                                + ".");
                                 e.printStackTrace();
                             }
                             break;
@@ -90,7 +103,7 @@ public class CfgSsl {
                     break loop;
             }
         }
-        //sr.next();
+        // sr.next();
     }
 
     String toXML() {
@@ -105,8 +118,7 @@ public class CfgSsl {
             xmlWriter.writeStartElement("ssl");
 
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
-            xmlWriter.writeComment("toggle ssl on/off " +
-                "(if you to access json-rpc over https)");
+            xmlWriter.writeComment("toggle ssl on/off " + "(if you to access json-rpc over https)");
             xmlWriter.writeCharacters("\r\n\t\t\t\t");
             xmlWriter.writeStartElement(ENABLED_TAG);
             xmlWriter.writeCharacters(this.enabled ? "true" : "false");
@@ -133,7 +145,39 @@ public class CfgSsl {
         }
     }
 
-    public boolean getEnabled() { return this.enabled; }
-    public String getCert() { return this.cert; }
-    public char[] getPass() { return this.pass; }
+    public boolean getEnabled() {
+        return this.enabled;
+    }
+
+    public String getCert() {
+        return this.cert;
+    }
+
+    public char[] getPass() {
+        return this.pass;
+    }
+
+    /**
+     * @implNote this should theoretically work, but should be tested for correctness by any future
+     *     consumer
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CfgSsl cfgSsl = (CfgSsl) o;
+
+        return enabled == cfgSsl.enabled
+                && Objects.equals(cert, cfgSsl.cert)
+                && Arrays.equals(pass, cfgSsl.pass);
+    }
+
+    /**
+     * @implNote this should theoretically work, but should be tested for correctness by any future
+     *     consumer
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(enabled, cert, pass);
+    }
 }

@@ -1,0 +1,33 @@
+ext.moduleName = 'aion.db.impl'
+
+configurations { 
+    testClassesOut
+}
+
+dependencies {
+    compile project(':modAionBase')
+    compile project(':modLogger')
+    compile 'com.google.guava:guava:25.1-jre'
+    compile 'org.slf4j:slf4j-api:1.7.25'
+    compile group: 'org.ethereum', name: 'leveldbjni-all', version: '1.18.3'
+    compile group: 'org.rocksdb', name: 'rocksdbjni', version: '5.11.3'
+    compile group: 'com.h2database', name: 'h2-mvstore', version: '1.4.196'
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'com.google.truth:truth:0.42'
+    testCompile 'org.hamcrest:hamcrest-core:1.3'
+    testCompile "org.mockito:mockito-core:2.23.0"
+    testCompile 'pl.pragmatists:JUnitParams:1.1.1'
+
+    // modAionImpl's tests uses test util classes from
+    // this module's test sources.  Gradle Java plug-in
+    // does not make test classes available by to dependent
+    // projects by default; so this is needed to override
+    // that behaviour.
+    testClassesOut sourceSets.test.output
+}
+
+// Skip unit tests when doing build task; unit tests are all mixed up with 
+// long-running integration tests in this module,so doing this to avoid 
+// build taking too long.
+build.dependsOn.remove("check")

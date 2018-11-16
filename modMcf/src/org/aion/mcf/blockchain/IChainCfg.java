@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.mcf.blockchain;
 
 import org.aion.base.type.IBlock;
@@ -31,9 +29,7 @@ import org.aion.mcf.core.IRewardsCalculator;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 
-/**
- * Chain configuration interface.
- */
+/** Chain configuration interface. */
 public interface IChainCfg<Blk extends IBlock<?, ?>, Tx extends ITransaction> {
 
     boolean acceptTransactionSignature(Tx tx);

@@ -1,4 +1,30 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.trie;
+
+import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.junit.Assert.assertEquals;
 
 import junitparams.JUnitParamsRunner;
 import org.aion.crypto.HashUtil;
@@ -13,16 +39,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.spongycastle.util.encoders.Hex;
 
-import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.junit.Assert.assertEquals;
-
-/**
- * @author Alexandra Roatis
- */
+/** @author Alexandra Roatis */
 @RunWith(JUnitParamsRunner.class)
 public class TrieTestWithRootHashValues {
 
-    private static String LONG_STRING = "1234567890abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ";
+    private static String LONG_STRING =
+            "1234567890abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ";
     private static String ROOT_HASH_EMPTY = Hex.toHexString(EMPTY_TRIE_HASH);
 
     private static String c = "c";
@@ -53,7 +75,8 @@ public class TrieTestWithRootHashValues {
         trie.update("horse", "stallion");
         trie.update("dog", "puppy");
 
-        assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84",
+        assertEquals(
+                "5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84",
                 Hex.toHexString(trie.getRootHash()));
     }
 
@@ -69,7 +92,8 @@ public class TrieTestWithRootHashValues {
         trie.update("dog", "puppy");
         trie.update("shaman", "");
 
-        assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84",
+        assertEquals(
+                "5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84",
                 Hex.toHexString(trie.getRootHash()));
     }
 
@@ -80,7 +104,8 @@ public class TrieTestWithRootHashValues {
         trie.update("food", "bat");
         trie.update("food", "bass");
 
-        assertEquals("17beaa1648bafa633cda809c90c04af50fc8aed3cb40d16efbddee6fdf63c4c3",
+        assertEquals(
+                "17beaa1648bafa633cda809c90c04af50fc8aed3cb40d16efbddee6fdf63c4c3",
                 Hex.toHexString(trie.getRootHash()));
     }
 
@@ -91,7 +116,8 @@ public class TrieTestWithRootHashValues {
         trie.update("be", "e");
         trie.update("dog", "puppy");
         trie.update("bed", "d");
-        assertEquals("3f67c7a47520f79faa29255d2d3c084a7a6df0453116ed7232ff10277a8be68b",
+        assertEquals(
+                "3f67c7a47520f79faa29255d2d3c084a7a6df0453116ed7232ff10277a8be68b",
                 Hex.toHexString(trie.getRootHash()));
     }
 
@@ -99,15 +125,18 @@ public class TrieTestWithRootHashValues {
     public void testDogs() {
         TrieImpl trie = new TrieImpl(null);
         trie.update("doe", "reindeer");
-        assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
+        assertEquals(
+                "11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
                 Hex.toHexString(trie.getRootHash()));
 
         trie.update("dog", "puppy");
-        assertEquals("05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4",
+        assertEquals(
+                "05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4",
                 Hex.toHexString(trie.getRootHash()));
 
         trie.update("dogglesworth", "cat");
-        assertEquals("8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3",
+        assertEquals(
+                "8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3",
                 Hex.toHexString(trie.getRootHash()));
     }
 
@@ -115,24 +144,30 @@ public class TrieTestWithRootHashValues {
     public void testTrieUndo() {
         TrieImpl trie = new TrieImpl(mockDb);
         trie.update("doe", "reindeer");
-        assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
+        assertEquals(
+                "11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
                 Hex.toHexString(trie.getRootHash()));
         trie.sync();
 
         trie.update("dog", "puppy");
-        assertEquals("05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4",
+        assertEquals(
+                "05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4",
                 Hex.toHexString(trie.getRootHash()));
 
         trie.undo();
-        assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
+        assertEquals(
+                "11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
                 Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
     public void testDeleteMultipleItems1() {
-        String ROOT_HASH_BEFORE = "3a784eddf1936515f0313b073f99e3bd65c38689021d24855f62a9601ea41717";
-        String ROOT_HASH_AFTER1 = "60a2e75cfa153c4af2783bd6cb48fd6bed84c6381bc2c8f02792c046b46c0653";
-        String ROOT_HASH_AFTER2 = "a84739b4762ddf15e3acc4e6957e5ab2bbfaaef00fe9d436a7369c6f058ec90d";
+        String ROOT_HASH_BEFORE =
+                "3a784eddf1936515f0313b073f99e3bd65c38689021d24855f62a9601ea41717";
+        String ROOT_HASH_AFTER1 =
+                "60a2e75cfa153c4af2783bd6cb48fd6bed84c6381bc2c8f02792c046b46c0653";
+        String ROOT_HASH_AFTER2 =
+                "a84739b4762ddf15e3acc4e6957e5ab2bbfaaef00fe9d436a7369c6f058ec90d";
         TrieImpl trie = new TrieImpl(mockDb);
 
         trie.update(cat, dog);
@@ -162,9 +197,12 @@ public class TrieTestWithRootHashValues {
 
     @Test
     public void testDeleteMultipleItems2() {
-        String ROOT_HASH_BEFORE = "cf1ed2b6c4b6558f70ef0ecf76bfbee96af785cb5d5e7bfc37f9804ad8d0fb56";
-        String ROOT_HASH_AFTER1 = "f586af4a476ba853fca8cea1fbde27cd17d537d18f64269fe09b02aa7fe55a9e";
-        String ROOT_HASH_AFTER2 = "c59fdc16a80b11cc2f7a8b107bb0c954c0d8059e49c760ec3660eea64053ac91";
+        String ROOT_HASH_BEFORE =
+                "cf1ed2b6c4b6558f70ef0ecf76bfbee96af785cb5d5e7bfc37f9804ad8d0fb56";
+        String ROOT_HASH_AFTER1 =
+                "f586af4a476ba853fca8cea1fbde27cd17d537d18f64269fe09b02aa7fe55a9e";
+        String ROOT_HASH_AFTER2 =
+                "c59fdc16a80b11cc2f7a8b107bb0c954c0d8059e49c760ec3660eea64053ac91";
 
         TrieImpl trie = new TrieImpl(mockDb);
         trie.update(c, LONG_STRING);
@@ -188,7 +226,8 @@ public class TrieTestWithRootHashValues {
 
     @Test
     public void testDeleteLongString1() {
-        String ROOT_HASH_BEFORE = "318961a1c8f3724286e8e80d312352f01450bc4892c165cc7614e1c2e5a0012a";
+        String ROOT_HASH_BEFORE =
+                "318961a1c8f3724286e8e80d312352f01450bc4892c165cc7614e1c2e5a0012a";
         String ROOT_HASH_AFTER = "63356ecf33b083e244122fca7a9b128cc7620d438d5d62e4f8b5168f1fb0527b";
         TrieImpl trie = new TrieImpl(mockDb);
 
@@ -206,7 +245,8 @@ public class TrieTestWithRootHashValues {
 
     @Test
     public void testDeleteLongString2() {
-        String ROOT_HASH_BEFORE = "e020de34ca26f8d373ff2c0a8ac3a4cb9032bfa7a194c68330b7ac3584a1d388";
+        String ROOT_HASH_BEFORE =
+                "e020de34ca26f8d373ff2c0a8ac3a4cb9032bfa7a194c68330b7ac3584a1d388";
         String ROOT_HASH_AFTER = "334511f0c4897677b782d13a6fa1e58e18de6b24879d57ced430bad5ac831cb2";
         TrieImpl trie = new TrieImpl(mockDb);
 
@@ -224,7 +264,8 @@ public class TrieTestWithRootHashValues {
 
     @Test
     public void testDeleteLongString3() {
-        String ROOT_HASH_BEFORE = "e020de34ca26f8d373ff2c0a8ac3a4cb9032bfa7a194c68330b7ac3584a1d388";
+        String ROOT_HASH_BEFORE =
+                "e020de34ca26f8d373ff2c0a8ac3a4cb9032bfa7a194c68330b7ac3584a1d388";
         String ROOT_HASH_AFTER = "63356ecf33b083e244122fca7a9b128cc7620d438d5d62e4f8b5168f1fb0527b";
         TrieImpl trie = new TrieImpl(mockDb);
 
@@ -243,10 +284,14 @@ public class TrieTestWithRootHashValues {
     @Test
     public void storageHashCalc_1() {
 
-        byte[] key1 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000010");
-        byte[] key2 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000014");
-        byte[] key3 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000016");
-        byte[] key4 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000017");
+        byte[] key1 =
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000010");
+        byte[] key2 =
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000014");
+        byte[] key3 =
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000016");
+        byte[] key4 =
+                Hex.decode("0000000000000000000000000000000000000000000000000000000000000017");
 
         byte[] val1 = Hex.decode("947e70f9460402290a3e487dae01f610a1a8218fda");
         byte[] val2 = Hex.decode("40");
@@ -262,7 +307,8 @@ public class TrieTestWithRootHashValues {
         String hash = Hex.toHexString(storage.getRootHash());
 
         System.out.println(hash);
-        Assert.assertEquals("517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62", hash);
+        Assert.assertEquals(
+                "517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62", hash);
     }
 
     @Test
@@ -270,17 +316,20 @@ public class TrieTestWithRootHashValues {
         TrieImpl trie = new TrieImpl(mockDb);
 
         trie.update("test", "test");
-        assertEquals("85d106d4edff3b7a4889e91251d0a87d7c17a1dda648ebdba8c6060825be23b8",
+        assertEquals(
+                "85d106d4edff3b7a4889e91251d0a87d7c17a1dda648ebdba8c6060825be23b8",
                 Hex.toHexString(trie.getRootHash()));
 
         trie.update("te", "testy");
-        assertEquals("8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928",
+        assertEquals(
+                "8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928",
                 Hex.toHexString(trie.getRootHash()));
     }
 
     @Test
     public void testDeleteShortString1() {
-        String ROOT_HASH_BEFORE = "a9539c810cc2e8fa20785bdd78ec36cc1dab4b41f0d531e80a5e5fd25c3037ee";
+        String ROOT_HASH_BEFORE =
+                "a9539c810cc2e8fa20785bdd78ec36cc1dab4b41f0d531e80a5e5fd25c3037ee";
         String ROOT_HASH_AFTER = "fc5120b4a711bca1f5bb54769525b11b3fb9a8d6ac0b8bf08cbb248770521758";
         TrieImpl trie = new TrieImpl(mockDb);
 
@@ -298,7 +347,8 @@ public class TrieTestWithRootHashValues {
 
     @Test
     public void testDeleteShortString2() {
-        String ROOT_HASH_BEFORE = "a9539c810cc2e8fa20785bdd78ec36cc1dab4b41f0d531e80a5e5fd25c3037ee";
+        String ROOT_HASH_BEFORE =
+                "a9539c810cc2e8fa20785bdd78ec36cc1dab4b41f0d531e80a5e5fd25c3037ee";
         String ROOT_HASH_AFTER = "b25e1b5be78dbadf6c4e817c6d170bbb47e9916f8f6cc4607c5f3819ce98497b";
         TrieImpl trie = new TrieImpl(mockDb);
 
@@ -316,7 +366,8 @@ public class TrieTestWithRootHashValues {
 
     @Test
     public void testDeleteShortString3() {
-        String ROOT_HASH_BEFORE = "778ab82a7e8236ea2ff7bb9cfa46688e7241c1fd445bf2941416881a6ee192eb";
+        String ROOT_HASH_BEFORE =
+                "778ab82a7e8236ea2ff7bb9cfa46688e7241c1fd445bf2941416881a6ee192eb";
         String ROOT_HASH_AFTER = "05875807b8f3e735188d2479add82f96dee4db5aff00dc63f07a7e27d0deab65";
         TrieImpl trie = new TrieImpl(mockDb);
 
@@ -337,7 +388,8 @@ public class TrieTestWithRootHashValues {
         TrieImpl trie = new TrieImpl(mockDb);
         trie.update("A", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
-        assertEquals("d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab",
+        assertEquals(
+                "d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab",
                 Hex.toHexString(trie.getRootHash()));
     }
 
@@ -383,12 +435,15 @@ public class TrieTestWithRootHashValues {
 
         System.out.println("root: " + Hex.toHexString(root));
 
-        Assert.assertEquals("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d", Hex.toHexString(root));
+        Assert.assertEquals(
+                "29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d",
+                Hex.toHexString(root));
     }
 
     @Test
     public void testDeleteAll() {
-        String ROOT_HASH_BEFORE = "a84739b4762ddf15e3acc4e6957e5ab2bbfaaef00fe9d436a7369c6f058ec90d";
+        String ROOT_HASH_BEFORE =
+                "a84739b4762ddf15e3acc4e6957e5ab2bbfaaef00fe9d436a7369c6f058ec90d";
         TrieImpl trie = new TrieImpl(null);
         assertEquals(ROOT_HASH_EMPTY, Hex.toHexString(trie.getRootHash()));
 

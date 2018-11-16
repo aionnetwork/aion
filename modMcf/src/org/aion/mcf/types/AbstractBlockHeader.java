@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,21 +17,16 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-
 import org.aion.base.type.Address;
 import org.spongycastle.util.BigIntegers;
 
-/**
- * Abstract BlockHeader.
- */
+/** Abstract BlockHeader. */
 public abstract class AbstractBlockHeader {
 
     public static final int NONCE_LENGTH = 32;
@@ -103,7 +98,7 @@ public abstract class AbstractBlockHeader {
     protected byte[] solution; // The equihash solution in compressed format
 
     /*
-    * A long value containing energy consumed within this block
+     * A long value containing energy consumed within this block
      */
     protected long energyConsumed;
 
@@ -120,8 +115,7 @@ public abstract class AbstractBlockHeader {
         this.solution = solution;
     }
 
-    public AbstractBlockHeader() {
-    }
+    public AbstractBlockHeader() {}
 
     public byte[] getParentHash() {
         return parentHash;
@@ -220,7 +214,8 @@ public abstract class AbstractBlockHeader {
     }
 
     public byte[] getPowBoundary() {
-        return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
+        return BigIntegers.asUnsignedByteArray(
+                32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
     }
 
     public BigInteger getPowBoundaryBI() {

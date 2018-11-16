@@ -20,8 +20,8 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.base.type;
 
+package org.aion.base.type;
 
 import java.math.BigInteger;
 import java.util.List;

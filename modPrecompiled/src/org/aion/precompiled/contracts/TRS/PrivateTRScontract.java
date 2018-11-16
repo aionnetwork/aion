@@ -32,15 +32,15 @@ import org.aion.vm.ExecutionResult;
 
 /**
  * The PrivateTRScontract is a private version of the TRS contract that is used solely by The Aion
- * Foundation, for the foundation to lock its funds away over a number of months, ensuring
- * continued commitment to the project.
+ * Foundation, for the foundation to lock its funds away over a number of months, ensuring continued
+ * commitment to the project.
  *
- * Unlike the public-facing TRS contract, the logic for this private TRS contract is bound inside a
- * single class. This is for 2 reasons: there are fewer supported operations for the private TRS
+ * <p>Unlike the public-facing TRS contract, the logic for this private TRS contract is bound inside
+ * a single class. This is for 2 reasons: there are fewer supported operations for the private TRS
  * contract, and user-friendliness is not a concern here.
  *
- * The PrivateTRScontract may be thought of as a parent class for the public-facing TRS contract in
- * that the latter calls this contract to perform any supported operations it needs.
+ * <p>The PrivateTRScontract may be thought of as a parent class for the public-facing TRS contract
+ * in that the latter calls this contract to perform any supported operations it needs.
  */
 public final class PrivateTRScontract extends StatefulPrecompiledContract {
     private final Address caller;
@@ -53,22 +53,20 @@ public final class PrivateTRScontract extends StatefulPrecompiledContract {
      * @param caller The calling address.
      */
     public PrivateTRScontract(
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller) {
+            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller) {
 
         super(repo);
         this.caller = caller;
     }
 
     /**
-     *
      * @param input The input arguments for the contract.
      * @param nrgLimit The energy limit.
      * @return the result of calling execute on the specified input.
      */
     @Override
     public ExecutionResult execute(byte[] input, long nrgLimit) {
-        //TODO
+        // TODO
         return null;
     }
-
 }

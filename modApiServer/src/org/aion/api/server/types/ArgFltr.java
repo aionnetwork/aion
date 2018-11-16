@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,24 +19,17 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.api.server.types;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/**
- * 
- * @author chris use at eth_newFilter & eth_getLogs
- */
-
+/** @author chris use at eth_newFilter & eth_getLogs */
 public class ArgFltr {
 
     public String fromBlock = "latest";
@@ -55,7 +48,7 @@ public class ArgFltr {
 
     // implements validation of JSONObject received from user to create new filter (web3)
     // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_newfilter
-    public static ArgFltr fromJSON(final JSONObject json){
+    public static ArgFltr fromJSON(final JSONObject json) {
         try {
             String fromBlock = json.optString("fromBlock", "latest");
             String toBlock = json.optString("toBlock", "latest");
@@ -114,7 +107,7 @@ public class ArgFltr {
             }
 
             return new ArgFltr(fromBlock, toBlock, address, topics);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             return null;
         }
     }
@@ -125,12 +118,10 @@ public class ArgFltr {
         byte[] input = ByteUtil.hexStringToBytes(data);
         byte[] topic = new byte[32];
 
-        if (input.length == 32)
-            topic = input;
+        if (input.length == 32) topic = input;
         else if (input.length <= 32)
             System.arraycopy(input, 0, topic, 32 - input.length, input.length);
-        else
-            throw new RuntimeException("Data word can't be null or exceed 32 bytes: " + data);
+        else throw new RuntimeException("Data word can't be null or exceed 32 bytes: " + data);
 
         return topic;
     }
@@ -138,11 +129,17 @@ public class ArgFltr {
     // TODO: better toString()
     @Override
     public String toString() {
-        return "FilterRequest{" +
-                "fromBlock='" + fromBlock + '\'' +
-                ", toBlock='" + toBlock + '\'' +
-                ", address=" + address +
-                ", topics=" + topics +
-                '}';
+        return "FilterRequest{"
+                + "fromBlock='"
+                + fromBlock
+                + '\''
+                + ", toBlock='"
+                + toBlock
+                + '\''
+                + ", address="
+                + address
+                + ", topics="
+                + topics
+                + '}';
     }
 }

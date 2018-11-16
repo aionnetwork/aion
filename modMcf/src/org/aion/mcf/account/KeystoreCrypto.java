@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,18 +19,14 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.account;
 
 import java.io.UnsupportedEncodingException;
-
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 
-/**
- *  keystore crypto class
- */
+/** keystore crypto class */
 public class KeystoreCrypto {
     private String cipher;
     private String cipherText;
@@ -46,7 +42,13 @@ public class KeystoreCrypto {
         byte[] bytesMac = RLP.encodeString(this.mac);
         byte[] bytesCipherParams = RLP.encodeElement(this.cipherParams.toRlp());
         byte[] bytesKdfParams = RLP.encodeElement(this.kdfParams.toRlp());
-        return RLP.encodeList(bytesCipher, bytesCipherText, bytesKdf, bytesMac, bytesCipherParams, bytesKdfParams);
+        return RLP.encodeList(
+                bytesCipher,
+                bytesCipherText,
+                bytesKdf,
+                bytesMac,
+                bytesCipherParams,
+                bytesKdfParams);
     }
 
     public static KeystoreCrypto parse(byte[] bytes) throws UnsupportedEncodingException {

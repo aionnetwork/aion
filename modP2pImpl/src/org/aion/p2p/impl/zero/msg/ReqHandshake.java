@@ -29,11 +29,7 @@ import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.p2p.impl.comm.Act;
 
-/**
- *
- * @author chris
- *
- */
+/** @author chris */
 public class ReqHandshake extends Msg {
 
     byte[] nodeId; // 36 bytes
@@ -44,7 +40,7 @@ public class ReqHandshake extends Msg {
 
     private int port; // 4 bytes
 
-    public final static int LEN = 36 + 4 + 8 + 4;
+    public static final int LEN = 36 + 4 + 8 + 4;
 
     ReqHandshake(final byte[] _nodeId, int _netId, final byte[] _ip, int _port) {
         super(Ver.V0, Ctrl.NET, Act.REQ_HANDSHAKE);
@@ -72,12 +68,10 @@ public class ReqHandshake extends Msg {
 
     /**
      * @param _bytes byte[]
-     * @return ReqHandshake
-     * decode body
+     * @return ReqHandshake decode body
      */
     public static ReqHandshake decode(final byte[] _bytes) {
-        if (_bytes == null || _bytes.length != LEN)
-            return null;
+        if (_bytes == null || _bytes.length != LEN) return null;
         else {
             ByteBuffer buf = ByteBuffer.wrap(_bytes);
 
@@ -101,8 +95,7 @@ public class ReqHandshake extends Msg {
 
     @Override
     public byte[] encode() {
-        if (this.nodeId.length != 36)
-            return null;
+        if (this.nodeId.length != 36) return null;
         else {
             ByteBuffer buf = ByteBuffer.allocate(LEN);
             buf.put(this.nodeId);

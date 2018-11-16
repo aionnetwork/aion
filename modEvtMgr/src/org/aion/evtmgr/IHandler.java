@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,27 +19,26 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.evtmgr;
 
-/**
- * @author jay
- *
- */
+/** @author jay */
 public interface IHandler {
 
     enum TYPE {
-        POISONPILL(0), TX0(1), BLOCK0(2), MINER0(3), CONSENSUS(4);
+        POISONPILL(0),
+        TX0(1),
+        BLOCK0(2),
+        MINER0(3),
+        CONSENSUS(4);
 
-        final static int MAX = 8;
+        static final int MAX = 8;
 
-        final static int MIN = 0;
+        static final int MIN = 0;
 
         private int value;
 
-        private final static TYPE[] intMapType = new TYPE[MAX + 1];
+        private static final TYPE[] intMapType = new TYPE[MAX + 1];
 
         static {
             for (TYPE type : TYPE.values()) {
@@ -56,12 +55,9 @@ public interface IHandler {
         }
 
         public static TYPE GETTYPE(final int _ctrlInt) {
-            if (_ctrlInt < MIN || _ctrlInt > MAX)
-                return null;
-            else
-                return intMapType[0xff & _ctrlInt];
+            if (_ctrlInt < MIN || _ctrlInt > MAX) return null;
+            else return intMapType[0xff & _ctrlInt];
         }
-
     }
 
     int getType();

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,30 +17,24 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.valid;
 
+import java.util.List;
 import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.blockchain.valid.AbstractValidRule;
 import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
 
-import java.util.List;
-
-/**
- * A class of rules that requires memory of the previous block
- */
+/** A class of rules that requires memory of the previous block */
 public abstract class DependentBlockHeaderRule<BH extends IBlockHeader> extends AbstractValidRule
         implements IBlockHeaderValidRule<BH> {
 
     /**
-     * Validates a dependant rule, where {@code header} represents the current
-     * block, and {@code dependency} represents the {@code memory} required to validate
-     * whether the current block is correct. Most likely the {@code memory} refers
-     * to the previous block
+     * Validates a dependant rule, where {@code header} represents the current block, and {@code
+     * dependency} represents the {@code memory} required to validate whether the current block is
+     * correct. Most likely the {@code memory} refers to the previous block
      */
-    abstract public boolean validate(BH header, BH dependency, List<RuleError> errors);
+    public abstract boolean validate(BH header, BH dependency, List<RuleError> errors);
 }

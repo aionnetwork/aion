@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,22 +19,16 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.evtmgr.impl.evt;
 
 import java.util.List;
-
 import org.aion.evtmgr.IEvent;
 
-/**
- * @author jay
- *
- */
+/** @author jay */
 public class EventDummy implements IEvent {
 
-    private final static int type = TYPE.DUMMY.getValue();
+    private static final int type = TYPE.DUMMY.getValue();
 
     @Override
     public int getEventType() {
@@ -47,13 +41,11 @@ public class EventDummy implements IEvent {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.aion.evt.common.IEvent#setFuncArgs(java.util.List)
      */
     @Override
-    public void setFuncArgs(List<Object> _objs) {
-
-    }
+    public void setFuncArgs(List<Object> _objs) {}
 
     @Override
     public List<Object> getFuncArgs() {
@@ -64,5 +56,4 @@ public class EventDummy implements IEvent {
     public int getCallbackType() {
         return 0;
     }
-
 }

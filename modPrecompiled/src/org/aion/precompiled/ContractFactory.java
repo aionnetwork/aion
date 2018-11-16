@@ -31,19 +31,20 @@ import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
-import org.aion.precompiled.contracts.TotalCurrencyContract;
 
-/**
- * A factory class that produces pre-compiled contract instances.
- */
+/** A factory class that produces pre-compiled contract instances. */
 public class ContractFactory implements IContractFactory {
-    private static final String OWNER = "0000000000000000000000000000000000000000000000000000000000000000";
-    private static final String TOTAL_CURRENCY = "0000000000000000000000000000000000000000000000000000000000000100";
+    private static final String OWNER =
+            "0000000000000000000000000000000000000000000000000000000000000000";
+    private static final String TOTAL_CURRENCY =
+            "0000000000000000000000000000000000000000000000000000000000000100";
 
-    private static final String TOKEN_BRIDGE = "0000000000000000000000000000000000000000000000000000000000000200";
-    private static final String TOKEN_BRIDGE_INITIAL_OWNER = "a008d7b29e8d1f4bfab428adce89dc219c4714b2c6bf3fd1131b688f9ad804aa";
+    private static final String TOKEN_BRIDGE =
+            "0000000000000000000000000000000000000000000000000000000000000200";
+    private static final String TOKEN_BRIDGE_INITIAL_OWNER =
+            "a008d7b29e8d1f4bfab428adce89dc219c4714b2c6bf3fd1131b688f9ad804aa";
 
-    public ContractFactory(){}
+    public ContractFactory() {}
 
     /**
      * Returns a new pre-compiled contract such that the address of the new contract is address.
@@ -54,21 +55,28 @@ public class ContractFactory implements IContractFactory {
      * @return the specified pre-compiled address.
      */
     @Override
-    public IPrecompiledContract getPrecompiledContract(ExecutionContext context,
-        IRepositoryCache<AccountState, IDataWord, IBlockStoreBase <?, ?>> track) {
+    public IPrecompiledContract getPrecompiledContract(
+            ExecutionContext context,
+            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
         switch (context.address().toString()) {
             case TOTAL_CURRENCY:
-                return new TotalCurrencyContract(track, context.sender(), Address.wrap(OWNER));
+                // return new TotalCurrencyContract(track, context.sender(), Address.wrap(OWNER));
+                return null;
             case TOKEN_BRIDGE:
-                TokenBridgeContract contract = new TokenBridgeContract(context,
-                        track, Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER), Address.wrap(TOKEN_BRIDGE));
+                TokenBridgeContract contract =
+                        new TokenBridgeContract(
+                                context,
+                                track,
+                                Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER),
+                                Address.wrap(TOKEN_BRIDGE));
 
-                if (!context.origin().equals(Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER)) && !contract.isInitialized())
-                    return null;
-                
+                if (!context.origin().equals(Address.wrap(TOKEN_BRIDGE_INITIAL_OWNER))
+                        && !contract.isInitialized()) return null;
+
                 return contract;
-            default: return null;
+            default:
+                return null;
         }
     }
 
@@ -80,9 +88,12 @@ public class ContractFactory implements IContractFactory {
      */
     public static boolean isPrecompiledContract(Address address) {
         switch (address.toString()) {
-            case TOTAL_CURRENCY: return true;
-            case TOKEN_BRIDGE: return true;
-            default: return false;
+            case TOTAL_CURRENCY:
+                return true;
+            case TOKEN_BRIDGE:
+                return true;
+            default:
+                return false;
         }
     }
 
@@ -94,5 +105,4 @@ public class ContractFactory implements IContractFactory {
     public static Address getTotalCurrencyContractAddress() {
         return Address.wrap(TOTAL_CURRENCY);
     }
-
 }

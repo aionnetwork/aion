@@ -1,25 +1,47 @@
-//package org.aion.equihash.benchmark;
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+// package org.aion.equihash.benchmark;
 //
-//import org.aion.base.type.Address;
-//import org.aion.base.util.ByteUtil;
-//import org.aion.equihash.EquiUtils;
-//import org.aion.equihash.OptimizedEquiValidator;
-//import org.aion.mcf.valid.BlockHeaderValidator;
-//import org.aion.zero.impl.AionBlockchainImpl;
-//import org.aion.zero.impl.blockchain.ChainConfiguration;
-//import org.aion.zero.impl.types.AionBlock;
-//import org.aion.zero.types.A0BlockHeader;
-//import org.junit.Test;
+// import org.aion.base.type.Address;
+// import org.aion.base.util.ByteUtil;
+// import org.aion.equihash.EquiUtils;
+// import org.aion.equihash.OptimizedEquiValidator;
+// import org.aion.mcf.valid.BlockHeaderValidator;
+// import org.aion.zero.impl.AionBlockchainImpl;
+// import org.aion.zero.impl.blockchain.ChainConfiguration;
+// import org.aion.zero.impl.types.AionBlock;
+// import org.aion.zero.types.A0BlockHeader;
+// import org.junit.Test;
 //
-//import java.io.BufferedReader;
-//import java.io.File;
-//import java.io.FileReader;
-//import java.io.IOException;
-//import java.util.ArrayList;
-//import java.util.List;
-//import java.util.Scanner;
+// import java.io.BufferedReader;
+// import java.io.File;
+// import java.io.FileReader;
+// import java.io.IOException;
+// import java.util.ArrayList;
+// import java.util.List;
+// import java.util.Scanner;
 //
-//public class BatchHeaderBenchmark {
+// public class BatchHeaderBenchmark {
 //
 //
 //    @Test
@@ -58,7 +80,8 @@
 //                    byte[] receiptTrieRoot = ByteUtil.hexStringToBytes(contents[4]);
 //                    byte[] logsBloom = ByteUtil.hexStringToBytes(contents[5]);
 //                    byte[] diff = new byte[16];
-//                    System.arraycopy(ByteUtil.hexStringToBytes(contents[6]), 0, diff, 16 - ByteUtil.hexStringToBytes(contents[6]).length, ByteUtil.hexStringToBytes(contents[6]).length);
+//                    System.arraycopy(ByteUtil.hexStringToBytes(contents[6]), 0, diff, 16 -
+// ByteUtil.hexStringToBytes(contents[6]).length, ByteUtil.hexStringToBytes(contents[6]).length);
 //
 //                    long number = Long.decode(contents[7]);
 //                    long timestamp = Long.decode(contents[8]);
@@ -121,4 +144,4 @@
 //
 //    }
 //
-//}
+// }

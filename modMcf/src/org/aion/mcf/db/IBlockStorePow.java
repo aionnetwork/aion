@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,14 +17,12 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.mcf.db;
 
 import java.math.BigInteger;
-
 import org.aion.base.type.IBlock;
 import org.aion.mcf.types.AbstractBlockHeader;
 
@@ -42,5 +40,4 @@ public interface IBlockStorePow<BLK extends IBlock<?, ?>, BH extends AbstractBlo
     void saveBlock(BLK block, BigInteger cummDifficulty, boolean mainChain);
 
     BigInteger getTotalDifficulty();
-
 }

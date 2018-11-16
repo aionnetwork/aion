@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,20 +17,15 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
-
+ */
 package org.aion.mcf.evt;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-/**
- * Event Hub.
- */
+/** Event Hub. */
 public class EventHub<D extends EvtData> {
 
     List<EvtCb<D>> subs[];
@@ -47,9 +42,9 @@ public class EventHub<D extends EvtData> {
     }
 
     public void fire(int type, D data) {
-        subs[type].forEach((t) -> {
-            t.call(data);
-        });
+        subs[type].forEach(
+                (t) -> {
+                    t.call(data);
+                });
     }
-
 }

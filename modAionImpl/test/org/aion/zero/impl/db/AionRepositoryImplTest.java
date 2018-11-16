@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,8 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -39,7 +40,12 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Optional;
 import java.util.Properties;
-import org.aion.base.db.*;
+import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.IContractDetails;
+import org.aion.base.db.IPruneConfig;
+import org.aion.base.db.IRepository;
+import org.aion.base.db.IRepositoryCache;
+import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
@@ -207,7 +213,7 @@ public class AionRepositoryImplTest {
         repoTrack.addStorageRow(defaultAccount, new DataWord(key), new DataWord(value));
 
         DataWord retrievedStorageValue =
-            (DataWord) repoTrack.getStorageValue(defaultAccount, new DataWord(key));
+                (DataWord) repoTrack.getStorageValue(defaultAccount, new DataWord(key));
         assertThat(retrievedStorageValue).isEqualTo(new DataWord(value));
 
         // commit changes, then check that the root has updated
@@ -331,5 +337,65 @@ public class AionRepositoryImplTest {
 
         repository.syncToRoot(root);
         assertThat(repository.getBalance(DOG_ACC)).isEqualTo(BigInteger.ONE);
+    }
+
+    @Test
+    public void testGetSnapshotToRoot() {
+        AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
+
+        // make some changes to the repository
+        final Address account1 = Address.wrap(value1);
+        final Address account2 = Address.wrap(value2);
+        final Address account3 = Address.wrap(value3);
+        IRepositoryCache track = repository.startTracking();
+        track.addBalance(account1, BigInteger.ONE);
+        track.addBalance(account2, BigInteger.TWO);
+        track.addBalance(account3, BigInteger.TEN);
+        track.flush();
+        repository.flush();
+
+        // get snapshot to root
+        IRepository snapshot = repository.getSnapshotTo(repository.getRoot());
+
+        // check that the same values are retrieved
+        assertThat(repository.getBalance(account1)).isEqualTo(snapshot.getBalance(account1));
+        assertThat(repository.getBalance(account2)).isEqualTo(snapshot.getBalance(account2));
+        assertThat(repository.getBalance(account3)).isEqualTo(snapshot.getBalance(account3));
+
+        // make more changes to the initial repo
+        track = repository.startTracking();
+        track.addBalance(account1, BigInteger.TWO);
+        track.addBalance(account2, BigInteger.TWO);
+        track.addBalance(account3, BigInteger.TWO);
+        track.flush();
+
+        // check that the values from the repo are larger
+        assertThat(repository.getBalance(account1)).isGreaterThan(snapshot.getBalance(account1));
+        assertThat(repository.getBalance(account2)).isGreaterThan(snapshot.getBalance(account2));
+        assertThat(repository.getBalance(account3)).isGreaterThan(snapshot.getBalance(account3));
+
+        // make the same changes to the snapshot
+        track = snapshot.startTracking();
+        track.addBalance(account1, BigInteger.TWO);
+        track.addBalance(account2, BigInteger.TWO);
+        track.addBalance(account3, BigInteger.TWO);
+        track.flush();
+
+        // check that the values are again equal
+        assertThat(repository.getBalance(account1)).isEqualTo(snapshot.getBalance(account1));
+        assertThat(repository.getBalance(account2)).isEqualTo(snapshot.getBalance(account2));
+        assertThat(repository.getBalance(account3)).isEqualTo(snapshot.getBalance(account3));
+
+        // make more changes on the snapshot
+        track = snapshot.startTracking();
+        track.addBalance(account1, BigInteger.TEN);
+        track.addBalance(account2, BigInteger.TEN);
+        track.addBalance(account3, BigInteger.TEN);
+        track.flush();
+
+        // check that the values from the snapshot are larger
+        assertThat(repository.getBalance(account1)).isLessThan(snapshot.getBalance(account1));
+        assertThat(repository.getBalance(account2)).isLessThan(snapshot.getBalance(account2));
+        assertThat(repository.getBalance(account3)).isLessThan(snapshot.getBalance(account3));
     }
 }

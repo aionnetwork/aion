@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,25 +17,21 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.valid;
 
+import java.util.LinkedList;
+import java.util.List;
 import org.aion.base.type.IBlockHeader;
 import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.slf4j.Logger;
 
-import java.util.LinkedList;
-import java.util.List;
-
-/**
- * validation rules depending on parent's block header
- */
-public class ParentBlockHeaderValidator<BH extends IBlockHeader> extends AbstractBlockHeaderValidator {
+/** validation rules depending on parent's block header */
+public class ParentBlockHeaderValidator<BH extends IBlockHeader>
+        extends AbstractBlockHeaderValidator {
 
     private List<DependentBlockHeaderRule<BH>> rules;
 
@@ -48,8 +44,7 @@ public class ParentBlockHeaderValidator<BH extends IBlockHeader> extends Abstrac
 
         for (IBlockHeaderValidRule<BH> rule : rules) {
             if (!rule.validate(header, parent, errors)) {
-                if (logger != null)
-                    logErrors(logger, errors);
+                if (logger != null) logErrors(logger, errors);
                 return false;
             }
         }

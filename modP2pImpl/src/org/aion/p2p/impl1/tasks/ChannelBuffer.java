@@ -33,9 +33,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.aion.p2p.Header;
 
-/**
- * @author chris
- */
+/** @author chris */
 class ChannelBuffer {
 
     byte[] body = null;
@@ -51,8 +49,7 @@ class ChannelBuffer {
 
     private Map<Integer, RouteStatus> routes = new HashMap<>();
 
-    ChannelBuffer() {
-    }
+    ChannelBuffer() {}
 
     public String getDisplayId() {
         return displayId;
@@ -70,9 +67,7 @@ class ChannelBuffer {
         this.nodeIdHash = nodeIdHash;
     }
 
-    /**
-     * Indicates whether this channel is closed.
-     */
+    /** Indicates whether this channel is closed. */
     boolean isClosed() {
         return closed.get();
     }
@@ -108,8 +103,10 @@ class ChannelBuffer {
                 prev.count++;
             } else {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG
-                        .debug("route-cooldown={} node={} count={}", _route, this.getDisplayId(),
+                    p2pLOG.debug(
+                            "route-cooldown={} node={} count={}",
+                            _route,
+                            this.getDisplayId(),
                             prev.count);
                 }
             }
@@ -127,8 +124,7 @@ class ChannelBuffer {
     void readHead(ByteBuffer buf) {
         if (buf.array().length < bsHead.length) {
             if (p2pLOG.isDebugEnabled()) {
-                p2pLOG
-                    .debug("ChannelBuffer readHead short buffer size");
+                p2pLOG.debug("ChannelBuffer readHead short buffer size");
             }
             return;
         }
@@ -138,8 +134,7 @@ class ChannelBuffer {
             header = Header.decode(bsHead);
         } catch (IllegalArgumentException | IndexOutOfBoundsException e) {
             if (p2pLOG.isDebugEnabled()) {
-                p2pLOG
-                    .debug("ChannelBuffer readHead exception. {}", e.toString());
+                p2pLOG.debug("ChannelBuffer readHead exception.", e);
             }
         }
     }
@@ -147,16 +142,14 @@ class ChannelBuffer {
     void readBody(ByteBuffer buf) {
         if (isHeaderNotCompleted()) {
             if (p2pLOG.isDebugEnabled()) {
-                p2pLOG
-                    .debug("ChannelBuffer readBody no header.");
+                p2pLOG.debug("ChannelBuffer readBody no header.");
             }
             return;
         }
 
         if (buf.array().length < header.getLen()) {
             if (p2pLOG.isDebugEnabled()) {
-                p2pLOG
-                    .debug("ChannelBuffer readBody short buffer size.");
+                p2pLOG.debug("ChannelBuffer readBody short buffer size.");
             }
             return;
         }
@@ -173,16 +166,12 @@ class ChannelBuffer {
         body = null;
     }
 
-    /**
-     * @return boolean
-     */
+    /** @return boolean */
     boolean isHeaderNotCompleted() {
         return header == null;
     }
 
-    /**
-     * @return boolean
-     */
+    /** @return boolean */
     boolean isBodyNotCompleted() {
         return header == null || body == null || body.length != header.getLen();
     }
@@ -213,5 +202,4 @@ class ChannelBuffer {
             count = 0;
         }
     }
-
 }

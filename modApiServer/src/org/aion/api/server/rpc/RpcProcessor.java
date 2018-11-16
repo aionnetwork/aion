@@ -1,5 +1,36 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.api.server.rpc;
 
+import com.google.common.base.Stopwatch;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.apache.commons.lang3.StringUtils;
@@ -7,16 +38,26 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
-import java.util.List;
-
 public class RpcProcessor {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
-    RpcMethods apiHolder;
+    private RpcMethods apiHolder;
 
-    public RpcProcessor(List<String> enabled) {
-        this.apiHolder = new RpcMethods(enabled);
+    private ExecutorService executor;
+    private CompletionService<JSONObject> batchCallCompletionService;
+    private final int SHUTDOWN_WAIT_SECONDS = 5;
+
+    public RpcProcessor(
+            final List<String> enabledGroups,
+            final List<String> enabledMethods,
+            final List<String> disabledMethods) {
+
+        this.apiHolder = new RpcMethods(enabledGroups, enabledMethods, disabledMethods);
+        executor =
+                Executors.newFixedThreadPool(
+                        Math.min(Runtime.getRuntime().availableProcessors() * 2, 4));
+        batchCallCompletionService = new ExecutorCompletionService<>(executor);
     }
 
     public String process(String _requestBody) {
@@ -26,10 +67,8 @@ public class RpcProcessor {
             String requestBody = _requestBody.trim();
             if (!StringUtils.isEmpty(requestBody)) {
                 char firstChar = requestBody.charAt(0);
-                if (firstChar == '{')
-                    response = handleSingle(requestBody);
-                else if (firstChar == '[')
-                    response = handleBatch(requestBody);
+                if (firstChar == '{') response = handleSingle(requestBody);
+                else if (firstChar == '[') response = handleBatch(requestBody);
             }
         } catch (Exception e) {
             LOG.debug("<rpc-server - failed to process rpc request body>", e);
@@ -60,7 +99,7 @@ public class RpcProcessor {
                 method = body.getString("method");
                 Object _id = body.opt("id");
                 if (_id != null) // loosen the rpc spec to allow client to not send an id.
-                    id = _id;
+                id = _id;
                 params = body.opt("params");
             } catch (Exception e) {
                 LOG.debug("<rpc-server - invalid rpc request [0]>", e);
@@ -76,26 +115,20 @@ public class RpcProcessor {
             try {
                 if (LOG.isDebugEnabled() && params != null)
                     LOG.debug("<request mth=[{}] params={}>", method, params.toString());
-                else
-                    LOG.debug("<request mth=[{}]>", method);
+                else LOG.debug("<request mth=[{}]>", method);
 
-                /**
-                 * Note about using System.nanoTime():
-                 * It's slower (~5x) than using System.currentTimeMillis() based on emperical tests across machines
-                 * and operating systems. But since this only runs in debug mode, it's probably OK?
-                 */
+                // Delegating timing request to Guava's Stopwatch
                 boolean shouldTime = LOG.isDebugEnabled();
-                long t0 = 0L;
-                if (shouldTime) t0 = System.nanoTime();
+                Stopwatch timer = null;
+                if (shouldTime) timer = Stopwatch.createStarted();
                 RpcMsg response = rpc.call(params);
                 if (shouldTime) {
-                    long t1 = System.nanoTime();
-                    LOG.debug("<request mth=[{}] rpc-process time: {}ms>", method, (t1 - t0) / 10e6f);
+                    timer.stop();
+                    LOG.debug(
+                            "<request mth=[{}] rpc-process time: [{}]>", method, timer.toString());
                 }
 
                 return response.setId(id).toJson();
-
-
 
             } catch (Exception e) {
                 LOG.debug("<rpc-server - internal error [2]>", e);
@@ -123,22 +156,31 @@ public class RpcProcessor {
                 return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
             }
 
-            JSONArray respBodies = new JSONArray();
+            // time batch completion
+            boolean shouldTime = LOG.isDebugEnabled();
+            Stopwatch timer = null;
+            if (shouldTime) timer = Stopwatch.createStarted();
 
-            for (int i = 0, n = reqBodies.length(); i < n; i++) {
-                try {
-                    JSONObject body = reqBodies.getJSONObject(i);
-                    respBodies.put(processObject(body));
-                } catch (Exception e) {
-                    LOG.debug("<rpc-server - invalid rpc request [5]>", e);
-                    respBodies.put(new RpcMsg(null, RpcError.INVALID_REQUEST).toJson());
-                }
+            for (int i = 0; i < reqBodies.length(); i++) {
+                batchCallCompletionService.submit(new BatchCallTask(reqBodies.getJSONObject(i)));
+            }
+
+            JSONArray respBodies = new JSONArray();
+            for (int i = 0; i < reqBodies.length(); i++) {
+                respBodies.put(batchCallCompletionService.take().get());
+            }
+
+            if (shouldTime) {
+                timer.stop();
+                LOG.debug(
+                        "<batch request for [{}] entities finished in [{}]>",
+                        reqBodies.length(),
+                        timer.toString());
             }
 
             String respBody = respBodies.toString();
 
-            if (LOG.isDebugEnabled())
-                LOG.debug("<rpc-server response={}>", respBody);
+            if (LOG.isTraceEnabled()) LOG.trace("<rpc-server response={}>", respBody);
 
             return composeRpcResponse(respBody);
 
@@ -161,7 +203,32 @@ public class RpcProcessor {
         return composeRpcResponse(new RpcMsg(null, RpcError.PARSE_ERROR).toString());
     }
 
+    private class BatchCallTask implements Callable<JSONObject> {
+        private JSONObject task;
+
+        public BatchCallTask(JSONObject task) {
+            this.task = task;
+        }
+
+        @Override
+        public JSONObject call() {
+            try {
+                return processObject(task);
+            } catch (Exception e) {
+                LOG.debug("<rpc-server - processObject failed in batch request>", e);
+                return new RpcMsg(null, RpcError.INVALID_REQUEST, "INVALID_REQUEST").toJson();
+            }
+        }
+    }
+
     public void shutdown() {
         apiHolder.shutdown();
+
+        executor.shutdown();
+        try {
+            executor.awaitTermination(SHUTDOWN_WAIT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+        }
+        // don't care about interruption on termination
     }
 }

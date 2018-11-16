@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,14 +31,13 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.db.impl;
-
-import org.aion.db.impl.rocksdb.RocksDBWrapper;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.aion.db.impl.rocksdb.RocksDBWrapper;
 
 // @ThreadSafe
 public enum DBVendor {
@@ -52,7 +51,9 @@ public enum DBVendor {
     /** Using an instance of {@link org.aion.db.impl.h2.H2MVMap}. */
     H2("h2", true), //
     /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
-    MOCKDB("mockdb", false);
+    MOCKDB("mockdb", false),
+    /** Using an instance of {@link org.aion.db.impl.mockdb.PersistentMockDB}. */
+    PERSISTENTMOCKDB("persistentmockdb", false);
 
     private static final Map<String, DBVendor> stringToTypeMap = new ConcurrentHashMap<>();
 
@@ -63,7 +64,8 @@ public enum DBVendor {
     }
 
     /* map implemented using concurrent hash map */
-    private static final List<DBVendor> driverImplementations = List.of(LEVELDB, ROCKSDB, H2, MOCKDB);
+    private static final List<DBVendor> driverImplementations =
+            List.of(LEVELDB, ROCKSDB, H2, MOCKDB);
 
     private final String value;
     private final boolean persistence;
@@ -75,10 +77,14 @@ public enum DBVendor {
 
     // public interface
     public static DBVendor fromString(String s) {
-        if (s == null) { return DBVendor.UNKNOWN; }
+        if (s == null) {
+            return DBVendor.UNKNOWN;
+        }
 
         DBVendor type = stringToTypeMap.get(s);
-        if (type == null) { return DBVendor.UNKNOWN; }
+        if (type == null) {
+            return DBVendor.UNKNOWN;
+        }
 
         return type;
     }
@@ -96,9 +102,7 @@ public enum DBVendor {
         return this.persistence;
     }
 
-    /**
-     * @return {@code false} for a DBVendor with an undefined driver implementation
-     */
+    /** @return {@code false} for a DBVendor with an undefined driver implementation */
     public static boolean hasDriverImplementation(DBVendor v) {
         return driverImplementations.contains(v);
     }

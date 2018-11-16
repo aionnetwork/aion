@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.api.server.types;
 
 import org.aion.base.util.ByteUtil;
@@ -33,14 +31,14 @@ import org.aion.zero.types.AionTxReceipt;
 import org.json.JSONObject;
 
 /**
- * JSON representation of a transaction, with more information
- * TODO: one big hack atm to get this out the door. Refactor to make it more OOP
+ * JSON representation of a transaction, with more information TODO: one big hack atm to get this
+ * out the door. Refactor to make it more OOP
+ *
  * @author ali
  */
 public class Tx {
 
-    public static JSONObject InfoToJSON(AionTxInfo info, AionBlock b)
-    {
+    public static JSONObject InfoToJSON(AionTxInfo info, AionBlock b) {
         if (info == null) return null;
 
         AionTxReceipt receipt = info.getReceipt();
@@ -56,7 +54,11 @@ public class Tx {
 
         JSONObject json = new JSONObject();
 
-        json.put("contractAddress", (tx.getContractAddress() != null)? TypeConverter.toJsonHex(tx.getContractAddress().toString()):null);
+        json.put(
+                "contractAddress",
+                (tx.getContractAddress() != null)
+                        ? TypeConverter.toJsonHex(tx.getContractAddress().toString())
+                        : null);
         json.put("hash", TypeConverter.toJsonHex(tx.getHash()));
         json.put("transactionIndex", index);
         json.put("value", TypeConverter.toJsonHex(tx.getValue()));

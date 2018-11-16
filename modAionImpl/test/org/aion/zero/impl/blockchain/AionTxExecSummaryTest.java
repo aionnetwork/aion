@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,9 +31,14 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.zero.impl.blockchain;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import java.math.BigInteger;
+import java.util.Collections;
 import org.aion.base.type.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
@@ -42,38 +47,31 @@ import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.Test;
 
-import java.math.BigInteger;
-import java.util.Collections;
-
-import static com.google.common.truth.Truth.assertThat;
-
-/**
- * Test cases for AionTxExecSummary
- */
+/** Test cases for AionTxExecSummary */
 public class AionTxExecSummaryTest {
 
-    private Address defaultAddress = Address.wrap("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
-    private byte[] defaultHash = HashUtil.EMPTY_DATA_HASH;
+    private Address defaultAddress =
+            Address.wrap("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
     @Test
     public void testRLPEncoding() {
-        AionTransaction mockTx = new AionTransaction(
-                BigInteger.ONE.toByteArray(),
-                defaultAddress,
-                defaultAddress,
-                BigInteger.ONE.toByteArray(),
-                HashUtil.EMPTY_DATA_HASH,
-                1L,
-                1L
-        );
+        AionTransaction mockTx =
+                new AionTransaction(
+                        BigInteger.ONE.toByteArray(),
+                        defaultAddress,
+                        defaultAddress,
+                        BigInteger.ONE.toByteArray(),
+                        HashUtil.EMPTY_DATA_HASH,
+                        1L,
+                        1L);
 
-        AionTxReceipt txReceipt = new AionTxReceipt(HashUtil.EMPTY_TRIE_HASH, new Bloom(), Collections.EMPTY_LIST);
+        AionTxReceipt txReceipt =
+                new AionTxReceipt(HashUtil.EMPTY_TRIE_HASH, new Bloom(), Collections.EMPTY_LIST);
         txReceipt.setNrgUsed(1);
         txReceipt.setTransaction(mockTx);
 
         AionTxExecSummary.Builder builder = AionTxExecSummary.builderFor(txReceipt);
-        builder.markAsFailed()
-                .result(new byte[0]);
+        builder.markAsFailed().result(new byte[0]);
         AionTxExecSummary summary = builder.build();
         byte[] encodedSummary = summary.getEncoded();
 

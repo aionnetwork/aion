@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,16 +31,17 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.base.util;
 
 import java.math.BigInteger;
 
 public class TypeConverter {
 
-//    public static byte[] StringNumberAsBytes(String input) {
-//        return ByteUtil.bigIntegerToBytes(StringDecimalToBigInteger(input));
-//    }
+    //    public static byte[] StringNumberAsBytes(String input) {
+    //        return ByteUtil.bigIntegerToBytes(StringDecimalToBigInteger(input));
+    //    }
 
     public static BigInteger StringNumberAsBigInt(String input) {
         if (input.startsWith("0x")) {

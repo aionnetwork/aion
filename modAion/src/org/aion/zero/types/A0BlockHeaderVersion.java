@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,8 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.zero.types;
 
 import java.util.HashSet;
@@ -41,24 +42,25 @@ import java.util.Set;
 public class A0BlockHeaderVersion {
     public static byte V1 = 1;
 
-    private static Set<Byte> active = new HashSet<>(){{
-        this.add(V1);
-    }};
+    private static Set<Byte> active =
+            new HashSet<>() {
+                {
+                    this.add(V1);
+                }
+            };
 
     public static boolean isActive(byte version) {
         return active.contains(version);
     }
 
-    public static String activeVersions(){
+    public static String activeVersions() {
         String toReturn = "{";
 
         Iterator<Byte> it = active.iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             toReturn += it.next();
         }
 
         return toReturn + "}";
-
     }
-
 }

@@ -35,7 +35,10 @@
 package org.aion.rlp;
 
 import static java.util.Arrays.copyOfRange;
-import static org.aion.base.util.ByteUtil.*;
+import static org.aion.base.util.ByteUtil.byteArrayToInt;
+import static org.aion.base.util.ByteUtil.intToBytesNoLeadZeroes;
+import static org.aion.base.util.ByteUtil.isNullOrZeroArray;
+import static org.aion.base.util.ByteUtil.isSingleZero;
 import static org.aion.rlp.Utils.asUnsignedByteArray;
 import static org.aion.rlp.Utils.concatenate;
 

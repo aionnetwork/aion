@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,8 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.base.util;
 
 import java.math.BigInteger;
@@ -39,8 +40,7 @@ import java.math.BigInteger;
 public class BIUtil {
 
     /**
-     * @param value
-     *            - not null
+     * @param value - not null
      * @return true - if the param is zero
      */
     public static boolean isZero(BigInteger value) {
@@ -48,10 +48,8 @@ public class BIUtil {
     }
 
     /**
-     * @param valueA
-     *            - not null
-     * @param valueB
-     *            - not null
+     * @param valueA - not null
+     * @param valueB - not null
      * @return true - if the valueA is equal to valueB is zero
      */
     public static boolean isEqual(BigInteger valueA, BigInteger valueB) {
@@ -59,10 +57,8 @@ public class BIUtil {
     }
 
     /**
-     * @param valueA
-     *            - not null
-     * @param valueB
-     *            - not null
+     * @param valueA - not null
+     * @param valueB - not null
      * @return true - if the valueA is not equal to valueB is zero
      */
     public static boolean isNotEqual(BigInteger valueA, BigInteger valueB) {
@@ -70,10 +66,8 @@ public class BIUtil {
     }
 
     /**
-     * @param valueA
-     *            - not null
-     * @param valueB
-     *            - not null
+     * @param valueA - not null
+     * @param valueB - not null
      * @return true - if the valueA is less than valueB is zero
      */
     public static boolean isLessThan(BigInteger valueA, BigInteger valueB) {
@@ -81,10 +75,8 @@ public class BIUtil {
     }
 
     /**
-     * @param valueA
-     *            - not null
-     * @param valueB
-     *            - not null
+     * @param valueA - not null
+     * @param valueB - not null
      * @return true - if the valueA is more than valueB is zero
      */
     public static boolean isMoreThan(BigInteger valueA, BigInteger valueB) {
@@ -92,10 +84,8 @@ public class BIUtil {
     }
 
     /**
-     * @param valueA
-     *            - not null
-     * @param valueB
-     *            - not null
+     * @param valueA - not null
+     * @param valueB - not null
      * @return sum - valueA + valueB
      */
     public static BigInteger sum(BigInteger valueA, BigInteger valueB) {
@@ -103,8 +93,7 @@ public class BIUtil {
     }
 
     /**
-     * @param data
-     *            = not null
+     * @param data = not null
      * @return new positive BigInteger
      */
     public static BigInteger toBI(byte[] data) {
@@ -112,8 +101,7 @@ public class BIUtil {
     }
 
     /**
-     * @param data
-     *            = not null
+     * @param data = not null
      * @return new positive BigInteger
      */
     public static BigInteger toBI(long data) {

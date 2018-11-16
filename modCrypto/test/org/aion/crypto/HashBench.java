@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,16 +31,14 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.crypto;
-
-import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
 
-/**
- * @author jin
- */
+import org.junit.Test;
+
+/** @author jin */
 public class HashBench {
 
     @Test

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,8 +31,12 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.types;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 import org.aion.base.type.Address;
 import org.aion.crypto.ECKeyFac;
@@ -40,9 +44,6 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.zero.types.AionTransaction;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 public class AionTransactionTest {
 
@@ -107,7 +108,8 @@ public class AionTransactionTest {
         long nrg = new DataWord(1000L).longValue();
         long nrgPrice = DataWord.ONE.longValue();
 
-        AionTransaction tx = new AionTransaction(nonce, Address.wrap(to), value, data, nrg, nrgPrice);
+        AionTransaction tx =
+                new AionTransaction(nonce, Address.wrap(to), value, data, nrg, nrgPrice);
 
         long expected = 21000;
         for (byte b : data) {

@@ -1,7 +1,35 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -187,5 +215,50 @@ public class BlockchainTestUtils {
                     block.getTransactionsList().size(),
                     result.toString());
         }
+    }
+
+    /**
+     * @param chain blockchain implementation to be populated
+     * @param accounts existing accounts
+     * @param txCount maximum number of transactions per block
+     */
+    public static AionBlock generateNextBlock(
+            StandaloneBlockchain chain, List<ECKey> accounts, int txCount) {
+
+        AionBlock block, parent = chain.getBestBlock();
+        AionRepositoryImpl repo = chain.getRepository();
+        List<AionTransaction> txs = generateTransactions(txCount, accounts, repo);
+
+        long time = System.currentTimeMillis();
+        block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+        block.setExtraData(String.valueOf(time).getBytes());
+        return block;
+    }
+
+    /**
+     * @param chain blockchain implementation to be populated
+     * @param parent the parent block for the newly generated block
+     * @param accounts existing accounts
+     * @param txCount maximum number of transactions per block
+     * @implNote returns {@code null} if the parent block is not part of the chain
+     */
+    public static AionBlock generateNewBlock(
+            StandaloneBlockchain chain, AionBlock parent, List<ECKey> accounts, int txCount) {
+        if (!chain.getBlockStore().isBlockExist(parent.getHash())) return null;
+
+        AionBlock block;
+        AionRepositoryImpl repo = chain.getRepository();
+        List<AionTransaction> txs;
+
+        // generate transactions for correct root
+        byte[] originalRoot = repo.getRoot();
+        repo.syncToRoot(parent.getStateRoot());
+        txs = generateTransactions(txCount, accounts, repo);
+        repo.syncToRoot(originalRoot);
+
+        long time = System.currentTimeMillis();
+        block = chain.createNewBlockInternal(parent, txs, true, time / 10000L).block;
+        block.setExtraData(String.valueOf(time).getBytes());
+        return block;
     }
 }

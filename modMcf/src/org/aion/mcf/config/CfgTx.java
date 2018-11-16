@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,26 +19,23 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class CfgTx {
 
     public CfgTx() {
-        this.cacheMax = 256;   // by 0.1M;
+        this.cacheMax = 256; // by 0.1M;
         this.buffer = true;
         this.poolDump = false;
         this.poolBackup = false;
@@ -57,33 +54,33 @@ public class CfgTx {
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                String elementName = sr.getLocalName().toLowerCase();
-                switch (elementName) {
-                case "cachemax":
-                    this.cacheMax = Integer.parseInt(Cfg.readValue(sr));
-                    if (this.cacheMax < 128) {
-                        this.cacheMax = 128;
-                    } else if (this.cacheMax > 16384) { // 16GB
-                        this.cacheMax = 16384;
+                case XMLStreamReader.START_ELEMENT:
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "cachemax":
+                            this.cacheMax = Integer.parseInt(Cfg.readValue(sr));
+                            if (this.cacheMax < 128) {
+                                this.cacheMax = 128;
+                            } else if (this.cacheMax > 16384) { // 16GB
+                                this.cacheMax = 16384;
+                            }
+                            break;
+                        case "buffer":
+                            this.buffer = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "pooldump":
+                            this.poolDump = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        case "poolbackup":
+                            this.poolBackup = Boolean.parseBoolean(Cfg.readValue(sr));
+                            break;
+                        default:
+                            Cfg.skipElement(sr);
+                            break;
                     }
                     break;
-                case "buffer":
-                    this.buffer = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                case "pooldump":
-                    this.poolDump = Boolean.parseBoolean(Cfg.readValue(sr));
-                    break;
-                    case "poolbackup":
-                        this.poolBackup = Boolean.parseBoolean(Cfg.readValue(sr));
-                        break;
-                default:
-                    Cfg.skipElement(sr);
-                    break;
-                }
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
             }
         }
     }
@@ -138,10 +135,10 @@ public class CfgTx {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgTx cfgTx = (CfgTx) o;
-        return cacheMax == cfgTx.cacheMax &&
-                buffer == cfgTx.buffer &&
-                poolDump == cfgTx.poolDump &&
-                poolBackup == cfgTx.poolBackup;
+        return cacheMax == cfgTx.cacheMax
+                && buffer == cfgTx.buffer
+                && poolDump == cfgTx.poolDump
+                && poolBackup == cfgTx.poolBackup;
     }
 
     @Override
@@ -149,25 +146,3 @@ public class CfgTx {
         return Objects.hashCode(cacheMax, buffer, poolDump, poolBackup);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

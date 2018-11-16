@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,17 +19,14 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.txpool;
-
-import org.aion.base.type.Address;
-import org.aion.base.type.ITransaction;
 
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import org.aion.base.type.Address;
+import org.aion.base.type.ITransaction;
 
 /**
  * Aion pending state should be the only user of transaction pool.
@@ -45,7 +42,8 @@ public interface ITxPool<TX extends ITransaction> {
 
     List<TX> add(List<TX> tx);
 
-    // return TX if the TX add success, if the pool already has the same nonce tx. return the old tx.
+    // return TX if the TX add success, if the pool already has the same nonce tx. return the old
+    // tx.
     TX add(TX tx);
 
     List<TX> remove(List<TX> tx);
@@ -64,10 +62,10 @@ public interface ITxPool<TX extends ITransaction> {
 
     void updateBlkNrgLimit(long nrg);
 
-    @SuppressWarnings("SameReturnValue") String getVersion();
+    @SuppressWarnings("SameReturnValue")
+    String getVersion();
 
     List<TX> snapshotAll();
 
     TX getPoolTx(Address from, BigInteger txNonce);
-
 }

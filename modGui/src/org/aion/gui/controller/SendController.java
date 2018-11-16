@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,7 +22,14 @@
  */
 package org.aion.gui.controller;
 
+import static org.aion.gui.model.ApiReturnCodes.r_tx_Dropped_VALUE;
+
 import com.google.common.eventbus.Subscribe;
+import java.math.BigInteger;
+import java.net.URL;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -33,7 +40,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseEvent;
-import org.aion.api.impl.internal.Message;
 import org.aion.base.util.TypeConverter;
 import org.aion.gui.events.EventBusRegistry;
 import org.aion.gui.events.EventPublisher;
@@ -57,39 +63,24 @@ import org.aion.wallet.ui.components.partials.TransactionResubmissionDialog;
 import org.aion.wallet.util.AddressUtils;
 import org.slf4j.Logger;
 
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
-
 public class SendController extends AbstractController {
-    private static final Logger LOGGER = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+    private static final Logger LOGGER =
+            AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
     private static final String PENDING_MESSAGE = "Sending transaction...";
     private static final String SUCCESS_MESSAGE = "Transaction finished";
     private static final Tooltip NRG_LIMIT_TOOLTIP = new Tooltip("NRG limit");
     private static final Tooltip NRG_PRICE_TOOLTIP = new Tooltip("NRG price");
 
-    @FXML
-    private PasswordField passwordInput;
-    @FXML
-    private TextField toInput;
-    @FXML
-    private TextField nrgInput;
-    @FXML
-    private TextField nrgPriceInput;
-    @FXML
-    private TextField valueInput;
-    @FXML
-    private Label txStatusLabel;
-    @FXML
-    private TextArea accountAddress;
-    @FXML
-    private TextField accountBalance;
-    @FXML
-    private Button sendButton;
-    @FXML
-    private Label timedoutTransactionsLabel;
+    @FXML private PasswordField passwordInput;
+    @FXML private TextField toInput;
+    @FXML private TextField nrgInput;
+    @FXML private TextField nrgPriceInput;
+    @FXML private TextField valueInput;
+    @FXML private Label txStatusLabel;
+    @FXML private TextArea accountAddress;
+    @FXML private TextField accountBalance;
+    @FXML private Button sendButton;
+    @FXML private Label timedoutTransactionsLabel;
 
     private BalanceRetriever balanceRetriever;
     private AccountDTO account;
@@ -101,15 +92,16 @@ public class SendController extends AbstractController {
     private final TransactionProcessor transactionProcessor;
     private final ConsoleManager consoleManager;
 
-    public SendController(AccountManager accountManager,
-                          TransactionProcessor transactionProcessor,
-                          ConsoleManager consoleManager,
-                          BalanceRetriever balanceRetriever) {
+    public SendController(
+            AccountManager accountManager,
+            TransactionProcessor transactionProcessor,
+            ConsoleManager consoleManager,
+            BalanceRetriever balanceRetriever) {
         super();
         this.accountManager = accountManager;
         this.transactionProcessor = transactionProcessor;
-        this.transactionResubmissionDialog = new TransactionResubmissionDialog(
-                accountManager, consoleManager);
+        this.transactionResubmissionDialog =
+                new TransactionResubmissionDialog(accountManager, consoleManager);
         this.consoleManager = consoleManager;
         this.balanceRetriever = balanceRetriever;
     }
@@ -128,10 +120,10 @@ public class SendController extends AbstractController {
         nrgInput.setTooltip(NRG_LIMIT_TOOLTIP);
         nrgPriceInput.setTooltip(NRG_PRICE_TOOLTIP);
         setDefaults();
-//        if (!ConfigUtils.isEmbedded()) {
-//            passwordInput.setVisible(false);
-//            passwordInput.setManaged(false);
-//        }
+        //        if (!ConfigUtils.isEmbedded()) {
+        //            passwordInput.setVisible(false);
+        //            passwordInput.setManaged(false);
+        //        }
         // TODO don't actually have code that checks pw input right now, so don't bother showing it
         passwordInput.setVisible(false);
         passwordInput.setManaged(false);
@@ -150,7 +142,7 @@ public class SendController extends AbstractController {
                 if (account != null) {
                     sendButton.setDisable(false);
                 }
-//                 Not needed when the wallet can only connect to one node
+                //                 Not needed when the wallet can only connect to one node
                 transactionProcessor.processTransactionsOnReconnectAsync();
                 break;
             case DISCONNECTED:
@@ -173,10 +165,9 @@ public class SendController extends AbstractController {
         }
         final SendTransactionDTO dto;
         try {
-            if(transactionToResubmit != null) {
+            if (transactionToResubmit != null) {
                 dto = transactionToResubmit;
-            }
-            else {
+            } else {
                 dto = mapFormData();
             }
         } catch (ValidationException e) {
@@ -186,7 +177,8 @@ public class SendController extends AbstractController {
         }
         displayStatus(PENDING_MESSAGE, false);
 
-        final Task<TransactionResponseDTO> sendTransactionTask = getApiTask(this::sendTransaction, dto);
+        final Task<TransactionResponseDTO> sendTransactionTask =
+                getApiTask(this::sendTransaction, dto);
 
         runApiTask(
                 sendTransactionTask,
@@ -194,9 +186,13 @@ public class SendController extends AbstractController {
                     handleTransactionFinished(sendTransactionTask.getValue());
                     sendButton.setDisable(false);
                 },
-                getErrorEvent(t -> Optional.ofNullable(t.getCause()).ifPresent(cause -> displayStatus(cause.getMessage(), true)), sendTransactionTask),
-                getEmptyEvent()
-        );
+                getErrorEvent(
+                        t ->
+                                Optional.ofNullable(t.getCause())
+                                        .ifPresent(
+                                                cause -> displayStatus(cause.getMessage(), true)),
+                        sendTransactionTask),
+                getEmptyEvent());
     }
 
     public void onTimedoutTransactionsClick(final MouseEvent mouseEvent) {
@@ -209,18 +205,24 @@ public class SendController extends AbstractController {
         if (error != null) {
             final String failReason;
             final int responseStatus = response.getStatus();
-            if (Message.Retcode.r_tx_Dropped_VALUE == responseStatus) {
+            if (r_tx_Dropped_VALUE == responseStatus) {
                 failReason = String.format("dropped: %s", error);
             } else {
                 failReason = "timeout";
             }
             final String errorMessage = "Transaction " + failReason;
-            consoleManager.addLog(errorMessage, ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.WARNING);
+            consoleManager.addLog(
+                    errorMessage,
+                    ConsoleManager.LogType.TRANSACTION,
+                    ConsoleManager.LogLevel.WARNING);
             SendController.LOGGER.error("{}: {}", errorMessage, response);
             displayStatus(errorMessage, false);
         } else {
             LOGGER.info("{}: {}", SUCCESS_MESSAGE, response);
-            consoleManager.addLog("Transaction sent", ConsoleManager.LogType.TRANSACTION, ConsoleManager.LogLevel.INFO);
+            consoleManager.addLog(
+                    "Transaction sent",
+                    ConsoleManager.LogType.TRANSACTION,
+                    ConsoleManager.LogLevel.INFO);
             displayStatus(SUCCESS_MESSAGE, false);
             EventPublisher.fireTransactionFinished();
         }
@@ -256,12 +258,14 @@ public class SendController extends AbstractController {
     }
 
     private void setTimedoutTransactionsLabelText() {
-        if(account != null) {
-            final List<SendTransactionDTO> timedoutTransactions = accountManager.getTimedOutTransactions(account.getPublicAddress());
-            if(!timedoutTransactions.isEmpty()) {
+        if (account != null) {
+            final List<SendTransactionDTO> timedoutTransactions =
+                    accountManager.getTimedOutTransactions(account.getPublicAddress());
+            if (!timedoutTransactions.isEmpty()) {
                 timedoutTransactionsLabel.setVisible(true);
                 timedoutTransactionsLabel.getStyleClass().add("warning-link-style");
-                timedoutTransactionsLabel.setText("You have transactions that require your attention!");
+                timedoutTransactionsLabel.setText(
+                        "You have transactions that require your attention!");
             }
         }
     }
@@ -310,23 +314,25 @@ public class SendController extends AbstractController {
     private void setAccountBalanceText() {
         accountBalance.setText(account.getBalance() + " " + AionConstants.CCY);
         UIUtils.setWidth(accountBalance);
-
     }
 
     private void refreshAccountBalance() {
         if (account == null) {
             return;
         }
-        Task<BigInteger> getBalanceTask = getApiTask(balanceRetriever::getBalance, account.getPublicAddress());
+        Task<BigInteger> getBalanceTask =
+                getApiTask(balanceRetriever::getBalance, account.getPublicAddress());
         runApiTask(
                 getBalanceTask,
-                evt -> Platform.runLater(() -> {
-                    account.setBalance(BalanceUtils.formatBalance(getBalanceTask.getValue()));
-                    setAccountBalanceText();
-                }),
+                evt ->
+                        Platform.runLater(
+                                () -> {
+                                    account.setBalance(
+                                            BalanceUtils.formatBalance(getBalanceTask.getValue()));
+                                    setAccountBalanceText();
+                                }),
                 getErrorEvent(throwable -> throwable.printStackTrace(), getBalanceTask),
-                getEmptyEvent()
-        );
+                getEmptyEvent());
     }
 
     private SendTransactionDTO mapFormData() throws ValidationException {
@@ -352,7 +358,10 @@ public class SendController extends AbstractController {
             final BigInteger nrgPrice = TypeConverter.StringNumberAsBigInt(nrgPriceInput.getText());
             dto.setNrgPrice(nrgPrice);
             if (nrgPrice.compareTo(AionConstants.DEFAULT_NRG_PRICE) < 0) {
-                throw new ValidationException(String.format("Nrg price must be greater than %s!", AionConstants.DEFAULT_NRG_PRICE));
+                throw new ValidationException(
+                        String.format(
+                                "Nrg price must be greater than %s!",
+                                AionConstants.DEFAULT_NRG_PRICE));
             }
         } catch (NumberFormatException e) {
             throw new ValidationException("Nrg price must be a valid number!");

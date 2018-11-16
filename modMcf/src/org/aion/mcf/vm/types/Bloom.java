@@ -26,15 +26,12 @@ import java.util.Arrays;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 
-/**
- * Utility class for creating/operating bloom.
- */
+/** Utility class for creating/operating bloom. */
 public class Bloom {
 
     public byte[] data = new byte[256];
 
-    public Bloom() {
-    }
+    public Bloom() {}
 
     public Bloom(byte[] data) {
         this.data = data;
@@ -114,7 +111,6 @@ public class Bloom {
         Bloom bloom = (Bloom) o;
 
         return Arrays.equals(data, bloom.data);
-
     }
 
     @Override

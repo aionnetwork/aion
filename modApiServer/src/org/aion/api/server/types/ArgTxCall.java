@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,23 +19,20 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.api.server.types;
 
+import java.math.BigInteger;
 import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
 import org.json.JSONObject;
+import org.slf4j.Logger;
 
-import java.math.BigInteger;
-
-/**
- * @author chris
- */
-
+/** @author chris */
 public final class ArgTxCall {
 
     private final Address from;
@@ -46,10 +43,19 @@ public final class ArgTxCall {
     private final long nrg;
     private final long nrgPrice;
 
-    // @Jay
-    //TODO: create a builder class for create this class
+    protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
 
-    public ArgTxCall(final Address _from, final Address _to, final byte[] _data, final BigInteger _nonce, final BigInteger _value, final long _nrg, final long _nrgPrice) {
+    // @Jay
+    // TODO: create a builder class for create this class
+
+    public ArgTxCall(
+            final Address _from,
+            final Address _to,
+            final byte[] _data,
+            final BigInteger _nonce,
+            final BigInteger _value,
+            final long _nrg,
+            final long _nrgPrice) {
         this.from = _from;
         this.to = _to;
         this.data = _data == null ? ByteUtil.EMPTY_BYTE_ARRAY : _data;
@@ -59,7 +65,8 @@ public final class ArgTxCall {
         this.nrgPrice = _nrgPrice;
     }
 
-    public static ArgTxCall fromJSON(final JSONObject _jsonObj, NrgOracle oracle, long defaultNrgLimit){
+    public static ArgTxCall fromJSON(
+            final JSONObject _jsonObj, NrgOracle oracle, long defaultNrgLimit) {
         try {
             Address from = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
             Address to = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
@@ -67,29 +74,40 @@ public final class ArgTxCall {
 
             String nonceStr = _jsonObj.optString("nonce", "0x0");
             String valueStr = _jsonObj.optString("value", "0x0");
-            BigInteger nonce = nonceStr.indexOf("0x") >= 0 ? TypeConverter.StringHexToBigInteger(nonceStr) : TypeConverter.StringNumberAsBigInt(nonceStr);
-            BigInteger value = valueStr.indexOf("0x") >= 0 ? TypeConverter.StringHexToBigInteger(valueStr) : TypeConverter.StringNumberAsBigInt(valueStr);
+            BigInteger nonce =
+                    nonceStr.indexOf("0x") >= 0
+                            ? TypeConverter.StringHexToBigInteger(nonceStr)
+                            : TypeConverter.StringNumberAsBigInt(nonceStr);
+            BigInteger value =
+                    valueStr.indexOf("0x") >= 0
+                            ? TypeConverter.StringHexToBigInteger(valueStr)
+                            : TypeConverter.StringNumberAsBigInt(valueStr);
 
             String nrgStr = _jsonObj.optString("gas", null);
             String nrgPriceStr = _jsonObj.optString("gasPrice", null);
 
             long nrg = defaultNrgLimit;
             if (nrgStr != null)
-                nrg = nrgStr.indexOf("0x") >= 0 ? TypeConverter.StringHexToBigInteger(nrgStr).longValue() : TypeConverter.StringNumberAsBigInt(nrgStr).longValue();
-            
+                nrg =
+                        nrgStr.indexOf("0x") >= 0
+                                ? TypeConverter.StringHexToBigInteger(nrgStr).longValue()
+                                : TypeConverter.StringNumberAsBigInt(nrgStr).longValue();
+
             long nrgPrice;
             if (nrgPriceStr != null)
-                nrgPrice = nrgPriceStr.indexOf("0x") >=0 ? TypeConverter.StringHexToBigInteger(nrgPriceStr).longValue() : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
-            else
-                nrgPrice = oracle.getNrgPrice();
-
+                nrgPrice =
+                        nrgPriceStr.indexOf("0x") >= 0
+                                ? TypeConverter.StringHexToBigInteger(nrgPriceStr).longValue()
+                                : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
+            else nrgPrice = oracle.getNrgPrice();
 
             return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice);
-        } catch(Exception ex) {
+        } catch (Exception e) {
+            LOG.debug("Failed to parse transaction call object from input parameters", e);
             return null;
         }
     }
-    
+
     public Address getFrom() {
         return this.from;
     }
@@ -117,5 +135,4 @@ public final class ArgTxCall {
     public long getNrgPrice() {
         return nrgPrice;
     }
-
 }

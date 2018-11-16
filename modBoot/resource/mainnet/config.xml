@@ -3,13 +3,16 @@
 	<mode>aion</mode>
 	<id>[NODE-ID-PLACEHOLDER]</id>
 	<api>
-		<rpc active="true" ip="127.0.0.1" port="8545">
-			<!--boolean, enable/disable cross origin requests (browser enforced)-->
+		<!-- rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs -->
+		<rpc active="false" ip="127.0.0.1" port="8545">
 			<cors-enabled>false</cors-enabled>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
 			<apis-enabled>web3,eth,personal,stratum,ops</apis-enabled>
 		</rpc>
-		<java active="true" ip="127.0.0.1" port="8547"></java>
+                <java active="false" ip="127.0.0.1" port="8547">
+                        <secure-connect>true</secure-connect>
+                </java>
+
 		<nrg-recommendation>
 			<!--default NRG price used by api if oracle disabled, minimum price recommended by oracle-->
 			<default>10E9</default>
@@ -41,6 +44,8 @@
 		<blocks-queue-max>32</blocks-queue-max>
 		<!-- Display syncing status -->
 		<show-status>false</show-status>
+		<!--requires show-status=true; comma separated list of options: [all, peer_states, requests, seeds, leeches, responses, none]-->
+		<show-statistics>none</show-statistics>
 	</sync>
 	<consensus>
 		<mining>false</mining>
@@ -80,7 +85,7 @@
 		<VM>ERROR</VM>
 		<SYNC>INFO</SYNC>
 		<CONS>INFO</CONS>
-		<DB>ERROR</DB>
+		<DB>WARN</DB>
 		<API>INFO</API>
 		<P2P>INFO</P2P>
 		<GUI>INFO</GUI>

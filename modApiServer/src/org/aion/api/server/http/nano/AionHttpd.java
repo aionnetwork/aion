@@ -1,15 +1,35 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.api.server.http.nano;
 
 import fi.iki.elonen.NanoHTTPD;
+import java.util.HashMap;
+import java.util.Map;
 import org.aion.api.server.rpc.RpcProcessor;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class AionHttpd extends NanoHTTPD {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.API.name());
@@ -18,7 +38,12 @@ public class AionHttpd extends NanoHTTPD {
     private boolean corsEnabled;
     private Map<String, String> corsHeaders;
 
-    public AionHttpd(String hostname, int port, RpcProcessor rpcProcessor, boolean corsEnabled, Map<String, String> corsHeaders) {
+    public AionHttpd(
+            String hostname,
+            int port,
+            RpcProcessor rpcProcessor,
+            boolean corsEnabled,
+            Map<String, String> corsHeaders) {
         super(hostname, port);
 
         this.rpcProcessor = rpcProcessor;
@@ -37,9 +62,7 @@ public class AionHttpd extends NanoHTTPD {
         String requestBody = body.getOrDefault("postData", null);
 
         return NanoHTTPD.newFixedLengthResponse(
-                Response.Status.OK,
-                "application/json",
-                rpcProcessor.process(requestBody));
+                Response.Status.OK, "application/json", rpcProcessor.process(requestBody));
     }
 
     @Override
@@ -53,7 +76,7 @@ public class AionHttpd extends NanoHTTPD {
         }
 
         if (corsEnabled) {
-            for(Map.Entry<String, String> header: corsHeaders.entrySet()){
+            for (Map.Entry<String, String> header : corsHeaders.entrySet()) {
                 r.addHeader(header.getKey(), header.getValue());
             }
         }
@@ -66,5 +89,4 @@ public class AionHttpd extends NanoHTTPD {
         super.stop();
         rpcProcessor.shutdown();
     }
-
 }

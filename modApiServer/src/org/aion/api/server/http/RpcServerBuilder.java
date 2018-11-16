@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.api.server.http;
 
 import java.util.ArrayList;
@@ -5,10 +28,9 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This builder is opinionated;
- * 1. It assumes that false is a reasonable default for sslEnabled and corsEnabled.
- * 2. It assumes empty array for enabledEndpoints is a reasonable default
- * 3. It assumes "*" is a reasonable default for corsOrigin
+ * This builder is opinionated; 1. It assumes that false is a reasonable default for sslEnabled and
+ * corsEnabled. 2. It assumes empty array for enabledEndpoints is a reasonable default 3. It assumes
+ * "*" is a reasonable default for corsOrigin 4. Any "unset" objects get initialized to null
  */
 public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
 
@@ -22,12 +44,17 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
     String corsOrigin = "*";
 
     List<String> enabledEndpoints = new ArrayList<>();
+    List<String> enabledMethods = new ArrayList<>();
+    List<String> disabledMethods = new ArrayList<>();
 
     boolean sslEnabled = false;
     String sslCertPath;
     char[] sslCertPass;
 
-    Integer workerPoolSize;
+    Integer workerPoolSize = null;
+    Integer ioPoolSize = null;
+    Integer requestQueueSize = null;
+    boolean stuckThreadDetectorEnabled = false;
 
     public T setUrl(String hostName, int port) {
         this.hostName = Objects.requireNonNull(hostName);
@@ -57,6 +84,18 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
         return self();
     }
 
+    public T enableMethods(List<String> enabledMethods) {
+        // Empty List or null are valid input here.
+        this.enabledMethods = Objects.requireNonNullElse(enabledMethods, new ArrayList<>());
+        return self();
+    }
+
+    public T disableMethods(List<String> disabledMethods) {
+        // Empty List or null are valid input here.
+        this.disabledMethods = Objects.requireNonNullElse(disabledMethods, new ArrayList<>());
+        return self();
+    }
+
     public T enableSsl(String sslCertName, char[] sslCertPass) {
         this.sslEnabled = true;
         this.sslCertPath = Objects.requireNonNull(sslCertName);
@@ -67,7 +106,21 @@ public abstract class RpcServerBuilder<T extends RpcServerBuilder<T>> {
 
     public T setWorkerPoolSize(Integer workerPoolSize) {
         this.workerPoolSize = workerPoolSize;
+        return self();
+    }
 
+    public T setIoPoolSize(Integer x) {
+        this.ioPoolSize = x;
+        return self();
+    }
+
+    public T setRequestQueueSize(Integer x) {
+        this.requestQueueSize = x;
+        return self();
+    }
+
+    public T setStuckThreadDetectorEnabled(boolean x) {
+        this.stuckThreadDetectorEnabled = x;
         return self();
     }
 

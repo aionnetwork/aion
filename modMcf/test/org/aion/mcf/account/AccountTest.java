@@ -23,12 +23,13 @@
 
 package org.aion.mcf.account;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 public class AccountTest {
     private ECKey key;
@@ -36,14 +37,14 @@ public class AccountTest {
     private Account testAccount;
 
     @Before
-    public void setup(){
+    public void setup() {
         key = ECKeyFac.inst().create();
         timeout = 1000L;
         testAccount = new Account(key, timeout);
     }
 
     @Test
-    public void testTimeout(){
+    public void testTimeout() {
         // get time out
         assertEquals(1000L, testAccount.getTimeout());
 
@@ -54,12 +55,12 @@ public class AccountTest {
     }
 
     @Test
-    public void testKey(){
+    public void testKey() {
         assertEquals(key, testAccount.getKey());
     }
 
     @Test
-    public void testNullAttributes(){
+    public void testNullAttributes() {
         long time = 1000;
         Account tester = new Account(null, time);
 

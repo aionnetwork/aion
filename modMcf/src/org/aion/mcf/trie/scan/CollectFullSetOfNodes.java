@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,14 +31,13 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.mcf.trie.scan;
-
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.rlp.Value;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.rlp.Value;
 
 public class CollectFullSetOfNodes implements ScanAction {
     Set<ByteArrayWrapper> nodes = new HashSet<>();

@@ -20,6 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.impl;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
@@ -43,7 +44,6 @@ import org.aion.log.LogUtil;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.config.CfgNetP2p;
 import org.aion.mcf.db.IBlockStorePow;
-import org.aion.mcf.tx.ITransactionExecThread;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
@@ -64,7 +64,6 @@ import org.aion.zero.impl.sync.handler.ReqStatusHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksBodiesHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksHeadersHandler;
 import org.aion.zero.impl.sync.handler.ResStatusHandler;
-import org.aion.zero.impl.tx.AionTransactionExecThread;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
@@ -90,8 +89,6 @@ public class AionHub {
 
     // TODO: Refactor to interface later
     private AionRepositoryImpl repository;
-
-    private ITransactionExecThread<AionTransaction> txThread;
 
     private IEventMgr eventMgr;
 
@@ -122,7 +119,7 @@ public class AionHub {
         return Holder.INSTANCE;
     }
 
-    private static final int INIT_ERROR_EXIT_CODE = -1;
+    public static final int INIT_ERROR_EXIT_CODE = -1;
 
     public AionHub() {
         initializeHub(CfgAion.inst(), AionBlockchainImpl.inst(), AionRepositoryImpl.inst(), false);
@@ -149,11 +146,6 @@ public class AionHub {
                 forTest
                         ? AionPendingStateImpl.createForTesting(_cfgAion, _blockchain, _repository)
                         : AionPendingStateImpl.inst();
-
-        this.txThread =
-                forTest
-                        ? AionTransactionExecThread.createForTesting((AionPendingStateImpl) mempool)
-                        : AionTransactionExecThread.getInstance();
 
         loadBlockchain();
 
@@ -195,7 +187,8 @@ public class AionHub {
                 p2pMgr,
                 eventMgr,
                 cfg.getSync().getBlocksQueueMax(),
-                cfg.getSync().getShowStatus());
+                cfg.getSync().getShowStatus(),
+                cfg.getSync().getShowStatistics());
 
         ChainConfiguration chainConfig = new ChainConfiguration();
         this.propHandler =
@@ -207,7 +200,10 @@ public class AionHub {
                         cfg.getNet().getP2p().inSyncOnlyMode());
 
         registerCallback();
-        p2pMgr.run();
+
+        if (!forTest) {
+            p2pMgr.run();
+        }
 
         ((AionPendingStateImpl) this.mempool).setP2pMgr(this.p2pMgr);
 
@@ -235,7 +231,7 @@ public class AionHub {
         boolean inSyncOnlyMode = cfg.getNet().getP2p().inSyncOnlyMode();
         cbs.add(new ReqBlocksHeadersHandler(syncLOG, blockchain, p2pMgr, inSyncOnlyMode));
         cbs.add(new ResBlocksHeadersHandler(syncLOG, syncMgr, p2pMgr));
-        cbs.add(new ReqBlocksBodiesHandler(syncLOG, blockchain, p2pMgr, inSyncOnlyMode));
+        cbs.add(new ReqBlocksBodiesHandler(syncLOG, blockchain, syncMgr, p2pMgr, inSyncOnlyMode));
         cbs.add(new ResBlocksBodiesHandler(syncLOG, syncMgr, p2pMgr));
         cbs.add(new BroadcastTxHandler(syncLOG, mempool, p2pMgr, inSyncOnlyMode));
         cbs.add(new BroadcastNewBlockHandler(syncLOG, propHandler, p2pMgr));
@@ -256,8 +252,8 @@ public class AionHub {
         prop.put(EventMgrModule.MODULENAME, "org.aion.evtmgr.impl.mgr.EventMgrA0");
         try {
             this.eventMgr = EventMgrModule.getSingleton(prop).getEventMgr();
-        } catch (Throwable e) {
-            genLOG.error("Can not load the Event Manager Module", e.getMessage());
+        } catch (Exception e) {
+            genLOG.error("Can not load the Event Manager Module", e);
         }
 
         if (eventMgr == null) {
@@ -502,11 +498,6 @@ public class AionHub {
         if (p2pMgr != null) {
             p2pMgr.shutdown();
             genLOG.info("<shutdown-p2p-mgr>");
-        }
-
-        if (txThread != null) {
-            txThread.shutdown();
-            genLOG.info("<shutdown-tx>");
         }
 
         if (eventMgr != null) {

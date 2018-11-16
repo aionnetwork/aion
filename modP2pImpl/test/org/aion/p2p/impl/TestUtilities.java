@@ -31,6 +31,7 @@ public class TestUtilities {
 
     /**
      * Tries to return a free port thats currently not used
+     *
      * @return
      */
     public static int getFreePort() {

@@ -23,16 +23,19 @@
 
 package org.aion.p2p.impl2.selector;
 
-import org.aion.p2p.impl.comm.ChannelBuffer;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.p2p.impl.comm.ChannelBuffer;
 
 public class MainIOLoop implements Runnable {
 
@@ -52,7 +55,7 @@ public class MainIOLoop implements Runnable {
 
     private volatile boolean needsToSelectAgain = false;
 
-    //private static final Logger log = LoggerFactory.getLogger("NET");
+    // private static final Logger log = LoggerFactory.getLogger("NET");
 
     // event-bus related
 
@@ -80,19 +83,22 @@ public class MainIOLoop implements Runnable {
         }
 
         try {
-            while(!Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 select(this.wakenUp.getAndSet(false));
 
-                // see: <a href="https://github.com/netty/netty/blob/4.1/transport/src/main/java/io/netty/channel/nio/NioEventLoop.java#L411"></a>
-                if (this.wakenUp.get())
-                    this.currSelector.wakeup();
+                // see: <a
+                // href="https://github.com/netty/netty/blob/4.1/transport/src/main/java/io/netty/channel/nio/NioEventLoop.java#L411"></a>
+                if (this.wakenUp.get()) this.currSelector.wakeup();
 
                 try {
                     long startTime = System.currentTimeMillis();
                     processSelectedKeys();
                     long endTime = System.currentTimeMillis();
                     if ((endTime - startTime) > 1000) {
-                        System.out.println("warning, selector thread key proc took: " + (endTime - startTime) + "ms");
+                        System.out.println(
+                                "warning, selector thread key proc took: "
+                                        + (endTime - startTime)
+                                        + "ms");
                     }
                 } finally {
                     long startTime = System.currentTimeMillis();
@@ -100,7 +106,10 @@ public class MainIOLoop implements Runnable {
                     long endTime = System.currentTimeMillis();
 
                     if ((endTime - startTime) > 1000) {
-                        System.out.println("warning, selector thread task took: " + (endTime - startTime) + "ms");
+                        System.out.println(
+                                "warning, selector thread task took: "
+                                        + (endTime - startTime)
+                                        + "ms");
                     }
                 }
             }
@@ -109,13 +118,11 @@ public class MainIOLoop implements Runnable {
         }
     }
 
-
     // -------------------------------------------------------------- internal
 
     private void registerEventLoopThread(Thread t) {
         this.eventLoopThread = t;
     }
-
 
     private void select(boolean oldWakenUp) throws IOException {
         Selector selector = this.currSelector;
@@ -123,8 +130,10 @@ public class MainIOLoop implements Runnable {
         while (true) {
 
             // from netty docs:
-            // If a task was submitted when wakenUp value was true, the task didn't get a chance to call
-            // {@link Selector#wakeup}. So we need to check task queue again before executing select operation.
+            // If a task was submitted when wakenUp value was true, the task didn't get a chance to
+            // call
+            // {@link Selector#wakeup}. So we need to check task queue again before executing select
+            // operation.
             // If we don't, the task might be pended until select operation was timed out.
             // It might be pended until idle timeout if IdleStateHandler existed in pipeline.
             // -- end netty notes
@@ -149,13 +158,13 @@ public class MainIOLoop implements Runnable {
         }
 
         // TODO: handle spin lock (epoll error)
-        // see: <a href="https://github.com/netty/netty/blob/4.1/transport/src/main/java/io/netty/channel/nio/NioEventLoop.java#L738"></a>
+        // see: <a
+        // href="https://github.com/netty/netty/blob/4.1/transport/src/main/java/io/netty/channel/nio/NioEventLoop.java#L738"></a>
     }
 
     private void processSelectedKeys() {
         Set<SelectionKey> selectedKeys = this.currSelector.selectedKeys();
-        if (selectedKeys.isEmpty())
-            return;
+        if (selectedKeys.isEmpty()) return;
 
         Iterator<SelectionKey> it = selectedKeys.iterator();
         while (true) {
@@ -165,16 +174,13 @@ public class MainIOLoop implements Runnable {
             // remove the current key
             it.remove();
 
-            if (!it.hasNext())
-                    break;
+            if (!it.hasNext()) break;
 
             if (this.needsToSelectAgain) {
                 selectAgain();
                 Set<SelectionKey> keys = this.currSelector.selectedKeys();
-                if (keys.isEmpty())
-                    break;
-                else
-                    it = selectedKeys.iterator();
+                if (keys.isEmpty()) break;
+                else it = selectedKeys.iterator();
             }
         }
     }
@@ -206,8 +212,7 @@ public class MainIOLoop implements Runnable {
                 t.channelUnregistered(key.channel(), null);
             } else if (state == 1) {
                 // if the task cancelled the key
-                if (!key.isValid())
-                    t.channelUnregistered(key.channel(), null);
+                if (!key.isValid()) t.channelUnregistered(key.channel(), null);
             }
         }
     }
@@ -216,8 +221,7 @@ public class MainIOLoop implements Runnable {
         assert isEventLoopThread();
         List<Runnable> tasks = this.eventBus.retrieveAllEvents();
 
-        if (tasks.isEmpty())
-            return false;
+        if (tasks.isEmpty()) return false;
 
         for (Runnable task : tasks) {
             safeExecute(task);
@@ -244,8 +248,7 @@ public class MainIOLoop implements Runnable {
     }
 
     private void wakeup(boolean inEventLoop) {
-        if (!inEventLoop && this.wakenUp.compareAndSet(false, true))
-            this.currSelector.wakeup();
+        if (!inEventLoop && this.wakenUp.compareAndSet(false, true)) this.currSelector.wakeup();
     }
 
     // -------------------------------------------------------------- public
@@ -265,56 +268,52 @@ public class MainIOLoop implements Runnable {
      * @param channel a selectable channel that is active
      * @param buffer associated buffer attached with channel
      */
-    public void attachChannel(SelectableChannel channel, int interestOps, ChannelBuffer buffer, Task task) {
-        if (channel == null)
-            throw new NullPointerException();
+    public void attachChannel(
+            SelectableChannel channel, int interestOps, ChannelBuffer buffer, Task task) {
+        if (channel == null) throw new NullPointerException();
 
-        if (interestOps == 0)
-            throw new IllegalArgumentException();
+        if (interestOps == 0) throw new IllegalArgumentException();
 
         if ((interestOps & ~channel.validOps()) != 0) {
             throw new IllegalArgumentException();
         }
 
-        if (buffer == null)
-            throw new NullPointerException();
+        if (buffer == null) throw new NullPointerException();
 
-        if (task == null)
-            throw new NullPointerException();
+        if (task == null) throw new NullPointerException();
 
         // just in case the user forgets to set it
-        if (buffer.task == null)
-            buffer.task = task;
+        if (buffer.task == null) buffer.task = task;
 
         // schedule an event for the channel to be attached
-        this.eventBus.addEvent(() -> {
-            try {
-                SelectionKey key = channel.register(this.currSelector, interestOps, buffer);
-                key.attach(buffer);
-            } catch (ClosedChannelException e) {
-                buffer.task.channelUnregistered(channel, e);
-            }
-        });
+        this.eventBus.addEvent(
+                () -> {
+                    try {
+                        SelectionKey key = channel.register(this.currSelector, interestOps, buffer);
+                        key.attach(buffer);
+                    } catch (ClosedChannelException e) {
+                        buffer.task.channelUnregistered(channel, e);
+                    }
+                });
         wakeup(isEventLoopThread());
     }
 
-    /**
-     * Submit a new task (this is a write task the base class to serialize messages)
-     */
+    /** Submit a new task (this is a write task the base class to serialize messages) */
     public void write(ByteBuffer buffer, SocketChannel channel) {
-        this.eventBus.addEvent(() -> {
-            SelectionKey key = channel.keyFor(this.currSelector);
-            if (key == null) {
-                try {
-                    channel.close();
-                } catch (IOException e) {
-                    // do nothing here for now, just exit
-                }
-                return;
-            }
+        this.eventBus.addEvent(
+                () -> {
+                    SelectionKey key = channel.keyFor(this.currSelector);
+                    if (key == null) {
+                        try {
+                            channel.close();
+                        } catch (IOException e) {
+                            // do nothing here for now, just exit
+                        }
+                        return;
+                    }
 
-            ((ChannelBuffer) key.attachment()).task.acceptMessage(channel, key, buffer);
-        });
+                    ((ChannelBuffer) key.attachment()).task.acceptMessage(channel, key, buffer);
+                });
         wakeup(isEventLoopThread());
     }
 
@@ -328,18 +327,19 @@ public class MainIOLoop implements Runnable {
     }
 
     public void cancelChannel(SocketChannel channel) {
-        this.eventBus.addEvent(() -> {
-            SelectionKey key = channel.keyFor(this.currSelector);
-            if (key != null) {
-                key.cancel();
-                ((ChannelBuffer) key.attachment()).task.channelUnregistered(channel, null);
-            } else {
-                try {
-                    channel.close();
-                } catch (IOException e) {
-                    //log.error("failed to close channel", e);
-                }
-            }
-        });
+        this.eventBus.addEvent(
+                () -> {
+                    SelectionKey key = channel.keyFor(this.currSelector);
+                    if (key != null) {
+                        key.cancel();
+                        ((ChannelBuffer) key.attachment()).task.channelUnregistered(channel, null);
+                    } else {
+                        try {
+                            channel.close();
+                        } catch (IOException e) {
+                            // log.error("failed to close channel", e);
+                        }
+                    }
+                });
     }
 }

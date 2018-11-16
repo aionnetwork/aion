@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,24 +19,23 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.aion.log.AionLoggerFactory;
+import org.slf4j.Logger;
 
 public class CfgApiZmq {
+
+    public static final String ZMQ_KEY_DIR = "zmq_keystore";
 
     CfgApiZmq() {
         this.active = true;
@@ -44,13 +43,17 @@ public class CfgApiZmq {
         this.port = 8547;
         this.filtersEnabled = true;
         this.blockSummaryCacheEnabled = false;
+        this.secureConnectEnabled = false;
     }
 
     protected boolean active;
     protected String ip;
     protected int port;
-    protected boolean filtersEnabled;
-    protected boolean blockSummaryCacheEnabled;
+    private boolean filtersEnabled;
+    private boolean blockSummaryCacheEnabled;
+    private boolean secureConnectEnabled;
+
+    private static Logger LOG_GEN = AionLoggerFactory.getLogger("GEN");
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         this.active = Boolean.parseBoolean(sr.getAttributeValue(null, "active"));
@@ -69,16 +72,31 @@ public class CfgApiZmq {
                             try {
                                 filtersEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                //System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
-                                //e.printStackTrace();
+                                LOG_GEN.warn(
+                                        "failed to read config node: aion.api.zmq.filters-enabled; using preset: {}\n {}"
+                                                + this.filtersEnabled,
+                                        e);
+                                e.printStackTrace();
                             }
                             break;
                         case "block-summary-cache":
                             try {
                                 blockSummaryCacheEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                //System.out.println("failed to read config node: aion.api.rpc.filters-enabled; using preset: " + this.filtersEnabled);
-                                //e.printStackTrace();
+                                LOG_GEN.warn(
+                                        "failed to read config node: aion.api.zmq.block-summary-cache; using preset: {}\n {}",
+                                        this.blockSummaryCacheEnabled,
+                                        e);
+                            }
+                            break;
+                        case "secure-connect":
+                            try {
+                                secureConnectEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
+                            } catch (Exception e) {
+                                LOG_GEN.warn(
+                                        "failed to read config node: aion.api.zmq.secure-connect; using preset: {}\n {}"
+                                                + this.secureConnectEnabled,
+                                        e);
                             }
                             break;
                         default:
@@ -111,6 +129,12 @@ public class CfgApiZmq {
             xmlWriter.writeAttribute("ip", this.ip);
             xmlWriter.writeAttribute("port", this.port + "");
 
+            xmlWriter.writeCharacters("\r\n\t\t\t");
+            xmlWriter.writeStartElement("secure-connect");
+            xmlWriter.writeCharacters(String.valueOf(this.secureConnectEnabled));
+            xmlWriter.writeEndElement();
+
+            xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeEndElement();
             xml = strWriter.toString();
             strWriter.flush();
@@ -127,29 +151,43 @@ public class CfgApiZmq {
     public boolean getActive() {
         return this.active;
     }
+
     public String getIp() {
         return this.ip;
     }
+
     public int getPort() {
         return this.port;
     }
-    public boolean isFiltersEnabled() { return this.filtersEnabled; }
-    public boolean isBlockSummaryCacheEnabled() { return this.blockSummaryCacheEnabled; }
+
+    public boolean isFiltersEnabled() {
+        return this.filtersEnabled;
+    }
+
+    public boolean isBlockSummaryCacheEnabled() {
+        return this.blockSummaryCacheEnabled;
+    }
+
+    public boolean isSecureConnectEnabledEnabled() {
+        return this.secureConnectEnabled;
+    }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgApiZmq cfgApiZmq = (CfgApiZmq) o;
-        return active == cfgApiZmq.active &&
-                port == cfgApiZmq.port &&
-                filtersEnabled == cfgApiZmq.filtersEnabled &&
-                blockSummaryCacheEnabled == cfgApiZmq.blockSummaryCacheEnabled &&
-                Objects.equal(ip, cfgApiZmq.ip);
+        return active == cfgApiZmq.active
+                && port == cfgApiZmq.port
+                && filtersEnabled == cfgApiZmq.filtersEnabled
+                && blockSummaryCacheEnabled == cfgApiZmq.blockSummaryCacheEnabled
+                && secureConnectEnabled == cfgApiZmq.secureConnectEnabled
+                && Objects.equal(ip, cfgApiZmq.ip);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(active, ip, port, filtersEnabled, blockSummaryCacheEnabled);
+        return Objects.hashCode(
+                active, ip, port, filtersEnabled, blockSummaryCacheEnabled, secureConnectEnabled);
     }
 }

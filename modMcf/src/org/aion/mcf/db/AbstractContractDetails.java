@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,27 +17,22 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.db;
-
-import org.aion.base.db.IContractDetails;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 
-/**
- * Abstract contract details.
- */
+import java.util.HashMap;
+import java.util.Map;
+import org.aion.base.db.IContractDetails;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.Hex;
+
+/** Abstract contract details. */
 public abstract class AbstractContractDetails<DW> implements IContractDetails<DW> {
 
     private boolean dirty = false;
@@ -119,7 +114,12 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
 
     @Override
     public String toString() {
-        String ret = "  Code: " + (codes.size() < 2 ? Hex.toHexString(getCode()) : codes.size() + " versions") + "\n";
+        String ret =
+                "  Code: "
+                        + (codes.size() < 2
+                                ? Hex.toHexString(getCode())
+                                : codes.size() + " versions")
+                        + "\n";
         ret += "  Storage: " + getStorageHash();
         return ret;
     }

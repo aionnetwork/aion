@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,15 +19,17 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.account;
 
-import java.security.*;
+import java.security.GeneralSecurityException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Random;
 import java.util.UUID;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -36,16 +38,13 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.spongycastle.crypto.generators.SCrypt;
 import org.spongycastle.util.encoders.Hex;
 
-/**
- *  keystore format class
- */
+/** keystore format class */
 public class KeystoreFormat {
 
     public byte[] toKeystore(final ECKey key, String password) {
@@ -60,14 +59,16 @@ public class KeystoreFormat {
             // salt
             final byte[] salt = generateRandomBytes(32);
 
-            final byte[] derivedKey = scrypt(password.getBytes(), salt, ScryptN, ScryptR, ScryptP, ScryptDklen);
+            final byte[] derivedKey =
+                    scrypt(password.getBytes(), salt, ScryptN, ScryptR, ScryptP, ScryptDklen);
 
             // 128-bit initialisation vector for the cipher (16 bytes)
             final byte[] iv = generateRandomBytes(16);
             final byte[] privateKey = key.getPrivKeyBytes();
             final byte[] encryptKey = Arrays.copyOfRange(derivedKey, 0, 16);
             final byte[] cipherText = encryptAes(iv, encryptKey, privateKey);
-            final byte[] mac = HashUtil.h256(concat(Arrays.copyOfRange(derivedKey, 16, 32), cipherText));
+            final byte[] mac =
+                    HashUtil.h256(concat(Arrays.copyOfRange(derivedKey, 16, 32), cipherText));
 
             final KeystoreItem keystore = new KeystoreItem();
             keystore.address = Hex.toHexString(key.getAddress());
@@ -113,18 +114,22 @@ public class KeystoreFormat {
             }
 
             switch (keystore.getKeystoreCrypto().getKdf()) {
-            case "pbkdf2":
-                cipherKey = checkMacSha3(keystore, password);
-                break;
-            case "scrypt":
-                cipherKey = checkMacScrypt(keystore, password);
-                break;
-            default:
-                throw new RuntimeException("non valid algorithm " + keystore.getKeystoreCrypto().getCipher());
+                case "pbkdf2":
+                    cipherKey = checkMacSha3(keystore, password);
+                    break;
+                case "scrypt":
+                    cipherKey = checkMacScrypt(keystore, password);
+                    break;
+                default:
+                    throw new RuntimeException(
+                            "non valid algorithm " + keystore.getKeystoreCrypto().getCipher());
             }
 
-            byte[] privateKey = decryptAes(Hex.decode(keystore.getKeystoreCrypto().getCipherParams().getIv()),
-                    cipherKey, Hex.decode(keystore.getKeystoreCrypto().getCipherText()));
+            byte[] privateKey =
+                    decryptAes(
+                            Hex.decode(keystore.getKeystoreCrypto().getCipherParams().getIv()),
+                            cipherKey,
+                            Hex.decode(keystore.getKeystoreCrypto().getCipherText()));
             return ECKeyFac.inst().create().fromPrivate(privateKey);
         } catch (Exception e) {
             return null;
@@ -132,20 +137,23 @@ public class KeystoreFormat {
     }
 
     private static byte[] decryptAes(byte[] iv, byte[] keyBytes, byte[] cipherText)
-            throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
-            InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+            throws NoSuchPaddingException, NoSuchAlgorithmException,
+                    InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException,
+                    IllegalBlockSizeException {
         return processAes(iv, keyBytes, cipherText, Cipher.DECRYPT_MODE);
     }
 
     private byte[] encryptAes(byte[] iv, byte[] keyBytes, byte[] cipherText)
-            throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidAlgorithmParameterException,
-            InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+            throws NoSuchPaddingException, NoSuchAlgorithmException,
+                    InvalidAlgorithmParameterException, InvalidKeyException, BadPaddingException,
+                    IllegalBlockSizeException {
         return processAes(iv, keyBytes, cipherText, Cipher.ENCRYPT_MODE);
     }
 
     private static byte[] processAes(byte[] iv, byte[] keyBytes, byte[] cipherText, int encryptMode)
             throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-            InvalidAlgorithmParameterException, IllegalBlockSizeException, BadPaddingException {
+                    InvalidAlgorithmParameterException, IllegalBlockSizeException,
+                    BadPaddingException {
         SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
         IvParameterSpec ivSpec = new IvParameterSpec(iv);
 
@@ -177,8 +185,14 @@ public class KeystoreFormat {
     private static byte[] checkMacScrypt(KeystoreItem keystore, String password) throws Exception {
         byte[] part = new byte[16];
         KdfParams params = keystore.getKeystoreCrypto().getKdfParams();
-        byte[] h = scrypt(password.getBytes(), Hex.decode(params.getSalt()), params.getN(), params.getR(),
-                params.getP(), params.getDklen());
+        byte[] h =
+                scrypt(
+                        password.getBytes(),
+                        Hex.decode(params.getSalt()),
+                        params.getN(),
+                        params.getR(),
+                        params.getP(),
+                        params.getDklen());
         byte[] cipherText = Hex.decode(keystore.getKeystoreCrypto().getCipherText());
         System.arraycopy(h, 16, part, 0, 16);
 
@@ -212,5 +226,4 @@ public class KeystoreFormat {
         SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         return skf.generateSecret(spec).getEncoded();
     }
-
 }

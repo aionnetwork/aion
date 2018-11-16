@@ -22,16 +22,16 @@
  */
 package org.aion.mcf.config;
 
+import com.google.common.base.Objects;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-
-import com.google.common.base.Objects;
 import org.aion.log.LogEnum;
 import org.aion.log.LogLevel;
 
@@ -66,28 +66,26 @@ public class CfgLog {
             int eventType = sr.next();
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
-
-                    /* XML - Takes the input in config.xml and parse as T/F */
-                    String elementName = sr.getLocalName().toLowerCase();
-                    switch (elementName) {
-                        case "log-file":
-                            this.logFile = Boolean.parseBoolean(Cfg.readValue(sr));
-                            break;
-                        case "log-path":
-                            this.logPath = Cfg.readValue(sr);
-                            break;
-                        default:
-                            break;
+                    {
+                        /* XML - Takes the input in config.xml and parse as T/F */
+                        String elementName = sr.getLocalName().toLowerCase();
+                        switch (elementName) {
+                            case "log-file":
+                                this.logFile = Boolean.parseBoolean(Cfg.readValue(sr));
+                                break;
+                            case "log-path":
+                                this.logPath = Cfg.readValue(sr);
+                                break;
+                            default:
+                                if (LogEnum.contains(elementName))
+                                    this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
+                                break;
+                        }
+                        break;
                     }
-
-                    elementName = sr.getLocalName().toUpperCase();
-                    if (LogEnum.contains(elementName))
-                        this.modules.put(elementName, Cfg.readValue(sr).toUpperCase());
-                    break;
                 case XMLStreamReader.END_ELEMENT:
                     break loop;
                 default:
-                    // Cfg.skipElement(sr);
                     break;
             }
         }
@@ -109,7 +107,8 @@ public class CfgLog {
              * Boolean value to allow logger to be toggled ON and OFF
              */
             xmlWriter.writeCharacters("\t\t");
-            xmlWriter.writeComment("Enable/Disable logback service; if disabled, output will not be logged.");
+            xmlWriter.writeComment(
+                    "Enable/Disable logback service; if disabled, output will not be logged.");
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("log-file");
             xmlWriter.writeCharacters(this.logFile + "");
@@ -121,7 +120,8 @@ public class CfgLog {
              * String value to determine the folder path for log files
              */
             xmlWriter.writeCharacters("\t\t");
-            xmlWriter.writeComment("Sets the physical location on disk where log files will be stored.");
+            xmlWriter.writeComment(
+                    "Sets the physical location on disk where log files will be stored.");
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("log-path");
             xmlWriter.writeCharacters(this.logPath + "");
@@ -161,6 +161,11 @@ public class CfgLog {
         return this.logFile;
     }
 
+    /** Used to turn off logging in case of incorrect configuration. */
+    public void disableLogging() {
+        this.logFile = false;
+    }
+
     /** Method returns user input folder path of logger */
     public String getLogPath() {
         return logPath;
@@ -176,9 +181,9 @@ public class CfgLog {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgLog cfgLog = (CfgLog) o;
-        return logFile == cfgLog.logFile &&
-                Objects.equal(modules, cfgLog.modules) &&
-                Objects.equal(logPath, cfgLog.logPath);
+        return logFile == cfgLog.logFile
+                && Objects.equal(modules, cfgLog.modules)
+                && Objects.equal(logPath, cfgLog.logPath);
     }
 
     @Override

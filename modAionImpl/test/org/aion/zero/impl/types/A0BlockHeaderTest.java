@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,8 +31,10 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.zero.impl.types;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
@@ -40,8 +42,6 @@ import org.aion.crypto.HashUtil;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.junit.Test;
-
-import static com.google.common.truth.Truth.assertThat;
 
 public class A0BlockHeaderTest {
 

@@ -45,7 +45,7 @@ public class AionBlockLoader {
 
     private void blockWork(AionBlock block) {
         if (block.getNumber() >= blockchain.getBestBlock().getNumber()
-            || blockchain.getBlockByHash(block.getHash()) == null) {
+                || blockchain.getBlockByHash(block.getHash()) == null) {
 
             if (block.getNumber() > 0 && !isValid(block.getHeader())) {
                 throw new RuntimeException();
@@ -53,10 +53,18 @@ public class AionBlockLoader {
 
             ImportResult result = blockchain.tryToConnect(block);
             System.out.println(
-                df.format(new Date()) + " Imported block " + block.getShortDescr() + ": " + result
-                    + " (prework: " + exec1.getQueue().size() + ", work: " + exec2.getQueue().size()
-                    + ", blocks: "
-                    + exec1.getOrderMap().size() + ")");
+                    df.format(new Date())
+                            + " Imported block "
+                            + block.getShortDescr()
+                            + ": "
+                            + result
+                            + " (prework: "
+                            + exec1.getQueue().size()
+                            + ", work: "
+                            + exec2.getQueue().size()
+                            + ", blocks: "
+                            + exec1.getOrderMap().size()
+                            + ")");
 
         } else {
 
@@ -70,21 +78,30 @@ public class AionBlockLoader {
     ExecutorPipeline<AionBlock, ?> exec2;
 
     public void loadBlocks() {
-        exec1 = new ExecutorPipeline<>(8, 1000, true,
-            b -> {
-                for (AionTransaction tx : b.getTransactionsList()) {
-                    tx.getFrom();
-                }
-                return b;
-            }, throwable -> logger.error("Unhandled exception: ", throwable));
+        exec1 =
+                new ExecutorPipeline<>(
+                        8,
+                        1000,
+                        true,
+                        b -> {
+                            for (AionTransaction tx : b.getTransactionsList()) {
+                                tx.getFrom();
+                            }
+                            return b;
+                        },
+                        throwable -> logger.error("Unhandled exception: ", throwable));
 
-        exec2 = exec1.add(1, 1000, block -> {
-            try {
-                blockWork(block);
-            } catch (Exception e) {
-                logger.error("Unhandled exception: ", e);
-            }
-        });
+        exec2 =
+                exec1.add(
+                        1,
+                        1000,
+                        block -> {
+                            try {
+                                blockWork(block);
+                            } catch (Exception e) {
+                                logger.error("Unhandled exception: ", e);
+                            }
+                        });
 
         try {
             exec1.join();

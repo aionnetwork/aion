@@ -46,9 +46,7 @@ import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
 
-/**
- * Unit tests for block propagation
- */
+/** Unit tests for block propagation */
 public class BlockPropagationTest {
 
     private static class NodeMock implements INode {
@@ -88,8 +86,7 @@ public class BlockPropagationTest {
 
         @Override
         public void updateStatus(
-            long _bestBlockNumber, byte[] _bestBlockHash, BigInteger _totalDifficulty) {
-        }
+                long _bestBlockNumber, byte[] _bestBlockHash, BigInteger _totalDifficulty) {}
 
         @Override
         public byte[] getIp() {
@@ -196,12 +193,10 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void shutdown() {
-        }
+        public void shutdown() {}
 
         @Override
-        public void run() {
-        }
+        public void run() {}
 
         @Override
         public List<Short> versions() {
@@ -214,12 +209,10 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void errCheck(int nodeIdHashcode, String _displayId) {
-        }
+        public void errCheck(int nodeIdHashcode, String _displayId) {}
 
         @Override
-        public void register(List<Handler> _hs) {
-        }
+        public void register(List<Handler> _hs) {}
 
         @Override
         public INode getRandom() {
@@ -227,12 +220,13 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public void send(int _id, String _displayId, Msg _msg) {
-        }
+        public void send(int _id, String _displayId, Msg _msg) {}
 
         @Override
-        public void closeSocket(SocketChannel _sc, String _reason) {
-        }
+        public void closeSocket(SocketChannel _sc, String _reason) {}
+
+        @Override
+        public void closeSocket(SocketChannel _sc, String _reason, Exception e) {}
 
         @Override
         public int getSelfIdHash() {
@@ -260,7 +254,9 @@ public class BlockPropagationTest {
         }
 
         @Override
-        public int getMaxTempNodes() { throw new IllegalStateException("not implemented."); }
+        public int getMaxTempNodes() {
+            throw new IllegalStateException("not implemented.");
+        }
 
         @Override
         public boolean validateNode(INode _node) {
@@ -276,7 +272,6 @@ public class BlockPropagationTest {
         public String getOutGoingIP() {
             throw new IllegalStateException("not implemented.");
         }
-
     }
 
     private static List<ECKey> generateDefaultAccounts() {
@@ -287,21 +282,19 @@ public class BlockPropagationTest {
         return accs;
     }
 
-    /**
-     * Test that we don't propagate back to the sender
-     */
+    /** Test that we don't propagate back to the sender */
     @Test
     public void testBlockPropagationReceiver() {
         List<ECKey> accounts = generateDefaultAccounts();
 
         StandaloneBlockchain.Bundle bundle =
-            new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts(accounts)
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build();
 
         AionBlock block =
-            bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -311,29 +304,29 @@ public class BlockPropagationTest {
         node.put(1, senderMock);
 
         P2pMock p2pMock =
-            new P2pMock(node) {
-                @Override
-                public void send(int _nodeId, String s, Msg _msg) {
-                    throw new RuntimeException("should not have called send");
-                }
-            };
+                new P2pMock(node) {
+                    @Override
+                    public void send(int _nodeId, String s, Msg _msg) {
+                        throw new RuntimeException("should not have called send");
+                    }
+                };
 
         StandaloneBlockchain.Bundle anotherBundle =
-            new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts(accounts)
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build();
 
         BlockPropagationHandler handler =
-            new BlockPropagationHandler(
-                1024,
-                anotherBundle.bc, // NOTE: not the same blockchain that generated the block
-                p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator(),
-                false);
+                new BlockPropagationHandler(
+                        1024,
+                        anotherBundle.bc, // NOTE: not the same blockchain that generated the block
+                        p2pMock,
+                        anotherBundle.bc.getBlockHeaderValidator(),
+                        false);
 
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
+                .isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
     }
 
     // given two peers, and one sends you a new block, propagate to the other
@@ -342,13 +335,13 @@ public class BlockPropagationTest {
         List<ECKey> accounts = generateDefaultAccounts();
 
         StandaloneBlockchain.Bundle bundle =
-            new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts(accounts)
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build();
 
         AionBlock block =
-            bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -363,21 +356,21 @@ public class BlockPropagationTest {
 
         AtomicInteger times = new AtomicInteger();
         P2pMock p2pMock =
-            new P2pMock(node) {
-                @Override
-                public void send(int _nodeId, String s, Msg _msg) {
-                    if (_nodeId != receiverMock.getIdHash()) {
-                        throw new RuntimeException("should only send to receiver");
+                new P2pMock(node) {
+                    @Override
+                    public void send(int _nodeId, String s, Msg _msg) {
+                        if (_nodeId != receiverMock.getIdHash()) {
+                            throw new RuntimeException("should only send to receiver");
+                        }
+                        times.getAndIncrement();
                     }
-                    times.getAndIncrement();
-                }
-            };
+                };
 
         StandaloneBlockchain.Bundle anotherBundle =
-            new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts(accounts)
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build();
 
         assertThat(bundle.bc.genesis.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
         assertThat(block.getParentHash()).isEqualTo(bundle.bc.genesis.getHash());
@@ -387,16 +380,16 @@ public class BlockPropagationTest {
         assertThat(bestBlock.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
 
         BlockPropagationHandler handler =
-            new BlockPropagationHandler(
-                1024,
-                anotherBundle.bc, // NOTE: not the same blockchain that generated the block
-                p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator(),
-                false);
+                new BlockPropagationHandler(
+                        1024,
+                        anotherBundle.bc, // NOTE: not the same blockchain that generated the block
+                        p2pMock,
+                        anotherBundle.bc.getBlockHeaderValidator(),
+                        false);
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
+                .isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
         assertThat(times.get()).isEqualTo(1);
     }
 
@@ -405,13 +398,13 @@ public class BlockPropagationTest {
         List<ECKey> accounts = generateDefaultAccounts();
 
         StandaloneBlockchain.Bundle bundle =
-            new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts(accounts)
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build();
 
         AionBlock block =
-            bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -426,37 +419,37 @@ public class BlockPropagationTest {
 
         AtomicInteger times = new AtomicInteger();
         P2pMock p2pMock =
-            new P2pMock(node) {
-                @Override
-                public void send(int _nodeId, String s, Msg _msg) {
-                    if (_nodeId != receiverMock.getIdHash()) {
-                        throw new RuntimeException("should only send to receiver");
+                new P2pMock(node) {
+                    @Override
+                    public void send(int _nodeId, String s, Msg _msg) {
+                        if (_nodeId != receiverMock.getIdHash()) {
+                            throw new RuntimeException("should only send to receiver");
+                        }
+                        times.getAndIncrement();
                     }
-                    times.getAndIncrement();
-                }
-            };
+                };
 
         StandaloneBlockchain.Bundle anotherBundle =
-            new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts(accounts)
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build();
 
         assertThat(bundle.bc.genesis.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
 
         BlockPropagationHandler handler =
-            new BlockPropagationHandler(
-                1024,
-                anotherBundle.bc, // NOTE: not the same blockchain that generated the block
-                p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator(),
-                false);
+                new BlockPropagationHandler(
+                        1024,
+                        anotherBundle.bc, // NOTE: not the same blockchain that generated the block
+                        p2pMock,
+                        anotherBundle.bc.getBlockHeaderValidator(),
+                        false);
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
+                .isEqualTo(BlockPropagationHandler.PropStatus.PROP_CONNECTED);
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
+                .isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
         assertThat(times.get()).isEqualTo(1);
     }
 
@@ -466,13 +459,13 @@ public class BlockPropagationTest {
         List<ECKey> accounts = generateDefaultAccounts();
 
         StandaloneBlockchain.Bundle bundle =
-            new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts(accounts)
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build();
 
         AionBlock block =
-            bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
+                bundle.bc.createNewBlock(bundle.bc.getGenesis(), Collections.EMPTY_LIST, true);
         assertThat(block.getNumber()).isEqualTo(1);
 
         byte[] sender = HashUtil.h256("node1".getBytes());
@@ -483,26 +476,26 @@ public class BlockPropagationTest {
 
         AtomicInteger sendCount = new AtomicInteger();
         P2pMock p2pMock =
-            new P2pMock(node) {
-                @Override
-                public void send(int _nodeId, String s, Msg _msg) {
-                    sendCount.getAndIncrement();
-                }
-            };
+                new P2pMock(node) {
+                    @Override
+                    public void send(int _nodeId, String s, Msg _msg) {
+                        sendCount.getAndIncrement();
+                    }
+                };
 
         StandaloneBlockchain.Bundle anotherBundle =
-            new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts(accounts)
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts(accounts)
+                        .build();
 
         BlockPropagationHandler handler =
-            new BlockPropagationHandler(
-                1024,
-                anotherBundle.bc, // NOTE: not the same blockchain that generated the block
-                p2pMock,
-                anotherBundle.bc.getBlockHeaderValidator(),
-                false);
+                new BlockPropagationHandler(
+                        1024,
+                        anotherBundle.bc, // NOTE: not the same blockchain that generated the block
+                        p2pMock,
+                        anotherBundle.bc.getBlockHeaderValidator(),
+                        false);
 
         // pretend that we propagate the new block
         handler.propagateNewBlock(block); // send counter incremented
@@ -511,7 +504,7 @@ public class BlockPropagationTest {
         // so our blockchain should view this block as a new block
         // therefore if the filter fails, this block will actually be CONNECTED
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
-            .isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
+                .isEqualTo(BlockPropagationHandler.PropStatus.DROPPED);
 
         // we expect the counter to be incremented once (on propagation)
         assertThat(sendCount.get()).isEqualTo(1);

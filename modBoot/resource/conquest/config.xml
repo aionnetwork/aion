@@ -41,6 +41,8 @@
 		<blocks-queue-max>32</blocks-queue-max>
 		<!-- Display syncing status -->
 		<show-status>false</show-status>
+		<!--requires show-status=true; comma separated list of options: [all, peer_states, requests, seeds, leeches, responses, none]-->
+		<show-statistics>none</show-statistics>
 	</sync>
 	<consensus>
 		<mining>false</mining>
@@ -79,7 +81,7 @@
 		<VM>ERROR</VM>
 		<SYNC>INFO</SYNC>
 		<CONS>INFO</CONS>
-		<DB>ERROR</DB>
+		<DB>WARN</DB>
 		<API>INFO</API>
 		<P2P>INFO</P2P>
 	</log>

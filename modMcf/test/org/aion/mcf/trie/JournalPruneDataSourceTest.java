@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,21 +17,22 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
+
 package org.aion.mcf.trie;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -64,7 +65,7 @@ public class JournalPruneDataSourceTest {
     public static void setup() {
         // logging to see errors
         Map<String, String> cfg = new HashMap<>();
-        cfg.put("DB", "INFO");
+        cfg.put("DB", "WARN");
 
         AionLoggerFactory.init(cfg);
     }
@@ -1087,7 +1088,7 @@ public class JournalPruneDataSourceTest {
             final int maxTimeoutSeconds)
             throws InterruptedException {
         final int numThreads = runnables.size();
-        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<>());
         final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
         try {
             final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
@@ -1100,7 +1101,7 @@ public class JournalPruneDataSourceTest {
                             try {
                                 afterInitBlocker.await();
                                 submittedTestRunnable.run();
-                            } catch (final Throwable e) {
+                            } catch (final Exception e) {
                                 exceptions.add(e);
                             } finally {
                                 allDone.countDown();
@@ -1120,7 +1121,7 @@ public class JournalPruneDataSourceTest {
             threadPool.shutdownNow();
         }
         if (!exceptions.isEmpty()) {
-            for (Throwable e : exceptions) {
+            for (Exception e : exceptions) {
                 e.printStackTrace();
             }
         }

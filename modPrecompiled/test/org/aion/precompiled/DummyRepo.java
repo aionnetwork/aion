@@ -44,7 +44,8 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     private Map<Address, byte[]> contracts = new HashMap<>();
     private Map<Address, Map<String, byte[]>> storage = new HashMap<>();
 
-    // Made this alterable for testing since this default value is not always what real implementations
+    // Made this alterable for testing since this default value is not always what real
+    // implementations
     // do ... and don't want to break tests that rely on this value.
     public IDataWord storageErrorReturn = DoubleDataWord.ZERO;
 
@@ -177,19 +178,13 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public void flush() {
-
-    }
+    public void flush() {}
 
     @Override
-    public void rollback() {
-
-    }
+    public void rollback() {}
 
     @Override
-    public void syncToRoot(byte[] root) {
-
-    }
+    public void syncToRoot(byte[] root) {}
 
     @Override
     public boolean isClosed() {
@@ -197,9 +192,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public void close() {
-
-    }
+    public void close() {}
 
     @Override
     public boolean isValidRoot(byte[] root) {
@@ -207,8 +200,9 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public void updateBatch(Map<Address, AccountState> accountStates,
-        Map<Address, IContractDetails<IDataWord>> contractDetailes) {
+    public void updateBatch(
+            Map<Address, AccountState> accountStates,
+            Map<Address, IContractDetails<IDataWord>> contractDetailes) {
         throw new UnsupportedOperationException();
     }
 
@@ -218,8 +212,10 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public void loadAccountState(Address addr, Map<Address, AccountState> cacheAccounts,
-        Map<Address, IContractDetails<IDataWord>> cacheDetails) {
+    public void loadAccountState(
+            Address addr,
+            Map<Address, AccountState> cacheAccounts,
+            Map<Address, IContractDetails<IDataWord>> cacheDetails) {
         throw new UnsupportedOperationException();
     }
 
@@ -234,19 +230,15 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool) {
-
-    }
+    public void addTxBatch(Map<byte[], byte[]> pendingTx, boolean isPool) {}
 
     @Override
-    public void removeTxBatch(Set<byte[]> pendingTx, boolean isPool) {
-
-    }
+    public void removeTxBatch(Set<byte[]> pendingTx, boolean isPool) {}
 
     @Override
     public void compact() {
         throw new UnsupportedOperationException(
-            "The tracking cache cannot be compacted. \'Compact\' should be called on the tracked repository.");
+                "The tracking cache cannot be compacted. \'Compact\' should be called on the tracked repository.");
     }
 
     @Override
@@ -258,5 +250,4 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     public boolean isSnapshot() {
         throw new UnsupportedOperationException();
     }
-
 }
