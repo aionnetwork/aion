@@ -37,6 +37,7 @@ import org.aion.precompiled.ContractFactory;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +50,7 @@ public class EDVerifyContractTest {
     private Address caller = origin;
 
     private Address blockCoinbase = Address.wrap(RandomUtils.nextBytes(32));
-    private long blockNumber = 1;
+    private long blockNumber = 2000001;
     private long blockTimestamp = System.currentTimeMillis() / 1000;
     private long blockNrgLimit = 5000000;
     private DataWord blockDifficulty = new DataWord(0x100000000L);
@@ -69,6 +70,7 @@ public class EDVerifyContractTest {
         nrgLimit = 20000;
         callValue = DataWord.ZERO;
         callData = new byte[0];
+        CfgAion.inst().setForkProperties();
     }
 
     @Test

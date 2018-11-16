@@ -31,6 +31,7 @@ import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,10 +45,11 @@ public class TXHashTest {
 
     @Before
     public void setUp() {
+        CfgAion.inst().setForkProperties();
         ExecutionContext ctx = new ExecutionContext(txHash,
             ContractFactory.getTxHashContractAddress(), null, null, null,
             0L, null, null, 0, 0, 0, null,
-            0L, 0L, 0L,
+            2000001L, 0L, 0L,
             null);
 
         tXHashContract = new ContractFactory().getPrecompiledContract(ctx, null);

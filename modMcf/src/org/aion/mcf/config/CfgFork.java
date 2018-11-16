@@ -35,6 +35,7 @@ public class CfgFork {
     }
 
     public String getForkPropertyByNumber(final int forkNum) {
+        if (forkProperties == null) return null;
         return forkProperties.getProperty("fork" + String.valueOf(forkNum));
     }
 }
