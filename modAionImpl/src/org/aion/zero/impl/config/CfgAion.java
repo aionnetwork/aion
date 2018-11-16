@@ -30,6 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
@@ -39,6 +40,7 @@ import javax.xml.stream.XMLStreamWriter;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgApi;
 import org.aion.mcf.config.CfgDb;
+import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.config.CfgGui;
 import org.aion.mcf.config.CfgLog;
 import org.aion.mcf.config.CfgNet;
@@ -72,6 +74,7 @@ public final class CfgAion extends Cfg {
         this.tx = new CfgTx();
         this.reports = new CfgReports();
         this.gui = new CfgGui();
+        this.fork = new CfgFork();
         initializeConfiguration();
     }
 
@@ -134,6 +137,22 @@ public final class CfgAion extends Cfg {
                 System.exit(1);
             }
         }
+    }
+
+    public void setForkProperties() {
+        Properties properties = new Properties();
+        FileInputStream fis = null;
+        try {
+            fis = new FileInputStream(getBasePath() + CfgFork.FORK_PROPERTIES_PATH);
+            properties.load(fis);
+        } catch (IOException e) {
+            System.out.println(
+                    "<error on-parsing-fork-properties msg=" + e.getLocalizedMessage() + ">");
+            System.exit(1);
+        } finally {
+            closeFileInputStream(fis);
+        }
+        this.getFork().setProperties(properties);
     }
 
     public void dbFromXML() {

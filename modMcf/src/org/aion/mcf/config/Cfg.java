@@ -53,6 +53,8 @@ public abstract class Cfg {
 
     protected CfgGui gui;
 
+    protected CfgFork fork;
+
     public void setId(final String _id) {
         this.id = _id;
     }
@@ -115,6 +117,10 @@ public abstract class Cfg {
 
     public CfgGui getGui() {
         return this.gui;
+    }
+
+    public CfgFork getFork() {
+        return this.fork;
     }
 
     public String[] getNodes() {
@@ -201,6 +207,7 @@ public abstract class Cfg {
             execGenesisFile = baseGenesisFile;
             updateStoragePaths();
         }
+        setForkProperties();
     }
 
     /**
@@ -427,6 +434,8 @@ public abstract class Cfg {
     public abstract void toXML(final String[] args);
 
     public abstract void toXML(final String[] args, File file);
+
+    public abstract void setForkProperties();
 
     public abstract void setGenesis();
 
