@@ -62,15 +62,6 @@ public class EDVerifyContract implements IPrecompiledContract {
         System.arraycopy(input, 32, sig, 0, 64);
         System.arraycopy(input, 96, pubKey, 0, 32);
 
-        // TODO: may need to remove after end-to-end test
-        try {
-            System.out.println("EDVERIFY Message: " + Hex.toHexString(msg));
-            System.out.println("EDVERIFY Sig: " + Hex.toHexString(sig));
-            System.out.println("EDVERIFY PubKey: " + Hex.toHexString(pubKey));
-        } catch (Exception e) {
-            System.out.println("could not get hex string: " + e.getMessage());
-        }
-
         try {
             boolean verify = ECKeyEd25519.verify(msg, sig, pubKey);
             byte[] result = new byte[1];

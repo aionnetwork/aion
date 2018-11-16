@@ -89,26 +89,6 @@ public class Blake2bHashTest {
     }
 
     @Test
-    @Ignore
-    public void testBlake128() {
-        byte[] input = Blake2bHashContract.setupInput(1, byteArray1);
-        ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
-        byte[] output = res.getOutput();
-
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
-        assertEquals(16, output.length);
-
-        System.out.println("The blake128 hash for '" + new String(byteArray1,
-            StandardCharsets.UTF_8) + "' is:");
-        System.out.print("      ");
-        for (byte b : output) {
-            System.out.print(b + " ");
-        }
-        System.out.println();
-    }
-
-
-    @Test
     public void invalidInputLength() {
         ExecutionResult res = blake2bHasher.execute(shortByteArray, INPUT_NRG);
         assertEquals(ResultCode.FAILURE, res.getResultCode());
