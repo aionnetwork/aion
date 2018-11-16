@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,24 +31,25 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.types;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Log;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.Test;
 
 public class AionTxReceiptTest {
-    
+
     private byte[] EMPTY_BYTE_ARRAY = new byte[0];
-    
+
     @Test
     public void testSerialization() {
         AionTxReceipt receipt = new AionTxReceipt();

@@ -1,46 +1,55 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
 
 package org.aion.zero.impl.config;
 
-import java.io.*;
-
+import com.google.common.base.Objects;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import javax.xml.stream.*;
-
-import com.google.common.base.Objects;
-import org.aion.mcf.config.*;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
+import org.aion.mcf.config.Cfg;
+import org.aion.mcf.config.CfgApi;
+import org.aion.mcf.config.CfgDb;
+import org.aion.mcf.config.CfgGui;
+import org.aion.mcf.config.CfgLog;
+import org.aion.mcf.config.CfgNet;
+import org.aion.mcf.config.CfgReports;
+import org.aion.mcf.config.CfgSync;
+import org.aion.mcf.config.CfgTx;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.GenesisBlockLoader;
 
-/**
- * @author chris
- */
+/** @author chris */
 public final class CfgAion extends Cfg {
 
     protected AionGenesis genesis;
@@ -63,6 +72,7 @@ public final class CfgAion extends Cfg {
         this.tx = new CfgTx();
         this.reports = new CfgReports();
         this.gui = new CfgGui();
+        initializeConfiguration();
     }
 
     private static class CfgAionHolder {
@@ -80,7 +90,7 @@ public final class CfgAion extends Cfg {
     @Override
     public void setGenesis() {
         try {
-            this.genesis = GenesisBlockLoader.loadJSON(GENESIS_FILE_PATH);
+            this.genesis = GenesisBlockLoader.loadJSON(getInitialGenesisFile().getAbsolutePath());
         } catch (IOException | HeaderStructureException e) {
             System.out.println(String.format("Genesis load exception %s", e.getMessage()));
             System.out.println("defaulting to default AionGenesis configuration");
@@ -103,8 +113,7 @@ public final class CfgAion extends Cfg {
     }
 
     public synchronized AionGenesis getGenesis() {
-        if (this.genesis == null)
-            setGenesis();
+        if (this.genesis == null) setGenesis();
         return this.genesis;
     }
 
@@ -116,7 +125,7 @@ public final class CfgAion extends Cfg {
         return K;
     }
 
-    private void closeFileInputStream(final FileInputStream fis){
+    private void closeFileInputStream(final FileInputStream fis) {
         if (fis != null) {
             try {
                 fis.close();
@@ -128,31 +137,30 @@ public final class CfgAion extends Cfg {
     }
 
     public void dbFromXML() {
-        File cfgFile = new File(CONF_FILE_PATH);
+        File cfgFile = getInitialConfigFile();
         XMLInputFactory input = XMLInputFactory.newInstance();
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(cfgFile);
             XMLStreamReader sr = input.createXMLStreamReader(fis);
-            loop: while (sr.hasNext()) {
+            loop:
+            while (sr.hasNext()) {
                 int eventType = sr.next();
                 switch (eventType) {
-                case XMLStreamReader.START_ELEMENT:
-                    String elementName = sr.getLocalName().toLowerCase();
-                    switch (elementName) {
-                    case "db":
-                        this.db.fromXML(sr);
+                    case XMLStreamReader.START_ELEMENT:
+                        String elementName = sr.getLocalName().toLowerCase();
+                        switch (elementName) {
+                            case "db":
+                                this.db.fromXML(sr);
+                                break;
+                            default:
+                                skipElement(sr);
+                                break;
+                        }
                         break;
-                    default:
-                        skipElement(sr);
-                        break;
-                    }
-                    break;
-                case XMLStreamReader.END_ELEMENT:
-                    if (sr.getLocalName().toLowerCase().equals("aion"))
-                        break loop;
-                    else
-                        break;
+                    case XMLStreamReader.END_ELEMENT:
+                        if (sr.getLocalName().toLowerCase().equals("aion")) break loop;
+                        else break;
                 }
             }
         } catch (Exception e) {
@@ -165,61 +173,60 @@ public final class CfgAion extends Cfg {
 
     public boolean fromXML(final XMLStreamReader sr) throws XMLStreamException {
         boolean shouldWriteBackToFile = false;
-        loop: while (sr.hasNext()) {
+        loop:
+        while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
                 case XMLStreamReader.START_ELEMENT:
                     String elementName = sr.getLocalName().toLowerCase();
                     switch (elementName) {
-                    case "id":
-                        String nodeId = readValue(sr);
-                        if(NODE_ID_PLACEHOLDER.equals(nodeId)) {
-                            this.id = UUID.randomUUID().toString();
-                            shouldWriteBackToFile = true;
-                        } else {
-                            this.id = nodeId;
-                        }
-                        break;
-                    case "mode":
-                        this.mode = readValue(sr);
-                        break;
-                    case "api":
-                        this.api.fromXML(sr);
-                        break;
-                    case "net":
-                        this.net.fromXML(sr);
-                        break;
-                    case "sync":
-                        this.sync.fromXML(sr);
-                        break;
-                    case "consensus":
-                        this.consensus.fromXML(sr);
-                        break;
-                    case "db":
-                        this.db.fromXML(sr);
-                        break;
-                    case "log":
-                        this.log.fromXML(sr);
-                        break;
-                    case "tx":
-                        this.tx.fromXML(sr);
-                        break;
-                    case "reports":
-                        this.reports.fromXML(sr);
-                        break;
-                    case "gui":
-                        this.gui.fromXML(sr);
-                        break;
-                    default:
-                        skipElement(sr);
-                        break;
+                        case "id":
+                            String nodeId = readValue(sr);
+                            if (NODE_ID_PLACEHOLDER.equals(nodeId)) {
+                                this.id = UUID.randomUUID().toString();
+                                shouldWriteBackToFile = true;
+                            } else {
+                                this.id = nodeId;
+                            }
+                            break;
+                        case "mode":
+                            this.mode = readValue(sr);
+                            break;
+                        case "api":
+                            this.api.fromXML(sr);
+                            break;
+                        case "net":
+                            this.net.fromXML(sr);
+                            break;
+                        case "sync":
+                            this.sync.fromXML(sr);
+                            break;
+                        case "consensus":
+                            this.consensus.fromXML(sr);
+                            break;
+                        case "db":
+                            this.db.fromXML(sr);
+                            break;
+                        case "log":
+                            this.log.fromXML(sr);
+                            break;
+                        case "tx":
+                            this.tx.fromXML(sr);
+                            break;
+                        case "reports":
+                            this.reports.fromXML(sr);
+                            break;
+                        case "gui":
+                            this.gui.fromXML(sr);
+                            break;
+                        default:
+                            skipElement(sr);
+                            break;
                     }
                     break;
                 case XMLStreamReader.END_ELEMENT:
-                    if (sr.getLocalName().toLowerCase().equals("aion"))
-                        break loop;
-                    else
-                        break;
+                    if (sr.getLocalName().toLowerCase().equals("aion")) break loop;
+                    else break;
             }
         }
         return shouldWriteBackToFile;
@@ -227,10 +234,15 @@ public final class CfgAion extends Cfg {
 
     @Override
     public boolean fromXML() {
+        return fromXML(getInitialConfigFile());
+    }
+
+    @Override
+    public boolean fromXML(File cfgFile) {
         boolean shouldWriteBackToFile = false;
-        File cfgFile = new File(CONF_FILE_PATH);
-        if(!cfgFile.exists())
+        if (!cfgFile.exists()) {
             return false;
+        }
         XMLInputFactory input = XMLInputFactory.newInstance();
         FileInputStream fis;
         try {
@@ -242,11 +254,29 @@ public final class CfgAion extends Cfg {
             System.out.println("<error on-parsing-config-xml msg=" + e.getLocalizedMessage() + ">");
             System.exit(1);
         }
+
+        // checks for absolute path for database
+        File db = new File(this.getDb().getPath());
+        if (db.isAbsolute()) {
+            this.setDatabaseDir(db);
+        }
+
+        // checks for absolute path for log
+        File log = new File(this.getLog().getLogPath());
+        if (log.isAbsolute()) {
+            this.setLogDir(log);
+        }
+
         return shouldWriteBackToFile;
     }
 
     @Override
     public void toXML(final String[] args) {
+        toXML(args, getExecConfigFile());
+    }
+
+    @Override
+    public void toXML(final String[] args, File file) {
         if (args != null) {
             boolean override = false;
             for (String arg : args) {
@@ -267,8 +297,7 @@ public final class CfgAion extends Cfg {
                     if (subArgsArr.length > 0) {
                         List<String> _nodes = new ArrayList<>();
                         for (String subArg : subArgsArr) {
-                            if (!subArg.equals(""))
-                                _nodes.add(subArg);
+                            if (!subArg.equals("")) _nodes.add(subArg);
                         }
                         this.getNet().setNodes(_nodes.toArray(new String[0]));
                     }
@@ -294,8 +323,7 @@ public final class CfgAion extends Cfg {
                     }
                 }
             }
-            if (override)
-                System.out.println("Config Override");
+            if (override) System.out.println("Config Override");
         }
 
         XMLOutputFactory output = XMLOutputFactory.newInstance();
@@ -304,7 +332,7 @@ public final class CfgAion extends Cfg {
 
         try {
 
-            sw = output.createXMLStreamWriter(new FileWriter(CONF_FILE_PATH));
+            sw = output.createXMLStreamWriter(new FileWriter(file));
             sw.writeStartDocument("utf-8", "1.0");
             sw.writeCharacters("\r\n");
             sw.writeStartElement("aion");

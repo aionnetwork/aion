@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,33 +19,30 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.api.server.types;
-
-import org.aion.base.type.*;
-import org.aion.mcf.vm.types.Log;
-import org.aion.mcf.vm.types.Bloom;
-import org.aion.zero.impl.core.BloomFilter;
-import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.zero.types.IAionBlock;
-import org.aion.zero.impl.core.IAionBlockchain;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.aion.base.type.IBlock;
+import org.aion.base.type.IBlockSummary;
+import org.aion.base.type.ITransaction;
+import org.aion.mcf.vm.types.Bloom;
+import org.aion.mcf.vm.types.Log;
+import org.aion.zero.impl.core.BloomFilter;
+import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.zero.types.AionTxReceipt;
+import org.aion.zero.types.IAionBlock;
 
-/**
- * @author chris
- */
+/** @author chris */
 
 // NOTE: only used by web3 api
 public final class FltrLg extends Fltr {
 
-    private List<byte[][]> topics = new ArrayList<>();  //  [[addr1, addr2], null, [A, B], [C]]
+    private List<byte[][]> topics = new ArrayList<>(); //  [[addr1, addr2], null, [A, B], [C]]
     private byte[][] contractAddresses = new byte[0][];
     private Bloom[][] filterBlooms;
 
@@ -81,7 +78,15 @@ public final class FltrLg extends Fltr {
                         int logIndex = 0;
                         for (Log logInfo : receipt.getLogInfoList()) {
                             if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
-                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, receipt.getTransaction(), logIndex, true)));
+                                add(
+                                        new EvtLg(
+                                                new TxRecptLg(
+                                                        logInfo,
+                                                        blk,
+                                                        txIndex,
+                                                        receipt.getTransaction(),
+                                                        logIndex,
+                                                        true)));
                             }
                             logIndex++;
                         }
@@ -93,7 +98,8 @@ public final class FltrLg extends Fltr {
         return true;
     }
 
-    // inelegant (distributing chain singleton ref. into here), tradeoff for efficiency and ease of impl.
+    // inelegant (distributing chain singleton ref. into here), tradeoff for efficiency and ease of
+    // impl.
     // rationale: this way, we only retrieve logs from DB for transactions that the bloom
     // filter gives a positive match for;
     public boolean onBlock(IAionBlock blk, IAionBlockchain chain) {
@@ -101,7 +107,8 @@ public final class FltrLg extends Fltr {
             int txIndex = 0;
             for (ITransaction txn : blk.getTransactionsList()) {
                 if (matchesContractAddress(txn.getTo().toBytes())) {
-                    // now that we know that our filter might match with some logs in this transaction, go ahead
+                    // now that we know that our filter might match with some logs in this
+                    // transaction, go ahead
                     // and retrieve the txReceipt from the chain
                     AionTxInfo txInfo = chain.getTransactionInfo(txn.getHash());
                     AionTxReceipt receipt = txInfo.getReceipt();
@@ -109,7 +116,11 @@ public final class FltrLg extends Fltr {
                         int logIndex = 0;
                         for (Log logInfo : receipt.getLogInfoList()) {
                             if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
-                                add(new EvtLg(new TxRecptLg(logInfo, blk, txIndex, txn, logIndex, true)));
+                                add(
+                                        new EvtLg(
+                                                new TxRecptLg(
+                                                        logInfo, blk, txIndex, txn, logIndex,
+                                                        true)));
                             }
                             logIndex++;
                         }
@@ -177,7 +188,7 @@ public final class FltrLg extends Fltr {
                 boolean orMatches = false;
                 byte[] logTopic = logTopics.get(i);
                 for (byte[] orTopic : orTopics) {
-                    if (Arrays.equals(orTopic,logTopic)) {
+                    if (Arrays.equals(orTopic, logTopic)) {
                         orMatches = true;
                         break;
                     }

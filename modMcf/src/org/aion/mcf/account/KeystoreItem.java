@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,19 +19,15 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.account;
 
 import java.io.UnsupportedEncodingException;
-
 import org.aion.base.util.ByteUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 
-/**
- * keystore item class.
- */
+/** keystore item class. */
 public class KeystoreItem {
 
     public String id;

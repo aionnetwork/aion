@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,24 +19,20 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.math.BigDecimal;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
-/**
- * @author ali sharif
- */
+/** @author ali sharif */
 public final class CfgApiNrg {
     private long defaultPrice;
     private long maxPrice;
@@ -44,7 +40,8 @@ public final class CfgApiNrg {
     private boolean oracleEnabled;
 
     CfgApiNrg() {
-        // recommend setting the defaultPrice to a safe-low known nrg price accepted by most miners on the network
+        // recommend setting the defaultPrice to a safe-low known nrg price accepted by most miners
+        // on the network
         // (this value fluctuates over time, depending on network conditions)
         this.defaultPrice = 10_000_000_000L; // 10E9 AION
         this.maxPrice = 100_000_000_000L; // 100E9 AION
@@ -67,7 +64,9 @@ public final class CfgApiNrg {
         this.maxPrice = maxPrice;
     }
 
-    public boolean isOracleEnabled() { return this.oracleEnabled; }
+    public boolean isOracleEnabled() {
+        return this.oracleEnabled;
+    }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
         loop:
@@ -81,16 +80,22 @@ public final class CfgApiNrg {
                             try {
                                 oracleEnabled = Boolean.parseBoolean(Cfg.readValue(sr));
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.nrg.enable; using preset: " + this.oracleEnabled);
+                                System.out.println(
+                                        "failed to read config node: aion.api.nrg.enable; using preset: "
+                                                + this.oracleEnabled);
                                 e.printStackTrace();
                             }
                             break;
                         case "default":
                             try {
-                                // using BigDecimal here only because of [BigDecimal -> String -> BigDecimal] preservation property
+                                // using BigDecimal here only because of [BigDecimal -> String ->
+                                // BigDecimal] preservation property
                                 defaultPrice = (new BigDecimal(Cfg.readValue(sr))).longValueExact();
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.nrg.default; using preset: " + new BigDecimal(defaultPrice).toEngineeringString());
+                                System.out.println(
+                                        "failed to read config node: aion.api.nrg.default; using preset: "
+                                                + new BigDecimal(defaultPrice)
+                                                        .toEngineeringString());
                                 e.printStackTrace();
                             }
                             break;
@@ -98,7 +103,9 @@ public final class CfgApiNrg {
                             try {
                                 maxPrice = (new BigDecimal(Cfg.readValue(sr))).longValueExact();
                             } catch (Exception e) {
-                                System.out.println("failed to read config node: aion.api.nrg.maxPrice; using preset: " + new BigDecimal(maxPrice).toEngineeringString());
+                                System.out.println(
+                                        "failed to read config node: aion.api.nrg.maxPrice; using preset: "
+                                                + new BigDecimal(maxPrice).toEngineeringString());
                                 e.printStackTrace();
                             }
                             break;
@@ -132,7 +139,8 @@ public final class CfgApiNrg {
              */
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("default NRG price used by api if oracle disabled, minimum price recommended by oracle");
+            xmlWriter.writeComment(
+                    "default NRG price used by api if oracle disabled, minimum price recommended by oracle");
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("default");
             xmlWriter.writeCharacters((new BigDecimal(defaultPrice)).toString());
@@ -146,7 +154,8 @@ public final class CfgApiNrg {
             xmlWriter.writeEndElement();
 
             xmlWriter.writeCharacters("\r\n\t\t\t");
-            xmlWriter.writeComment("enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice");
+            xmlWriter.writeComment(
+                    "enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice");
             xmlWriter.writeCharacters("\r\n\t\t\t");
             xmlWriter.writeStartElement("oracle-enabled");
             xmlWriter.writeCharacters(String.valueOf(this.oracleEnabled));
@@ -172,9 +181,9 @@ public final class CfgApiNrg {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgApiNrg cfgApiNrg = (CfgApiNrg) o;
-        return defaultPrice == cfgApiNrg.defaultPrice &&
-                maxPrice == cfgApiNrg.maxPrice &&
-                oracleEnabled == cfgApiNrg.oracleEnabled;
+        return defaultPrice == cfgApiNrg.defaultPrice
+                && maxPrice == cfgApiNrg.maxPrice
+                && oracleEnabled == cfgApiNrg.oracleEnabled;
     }
 
     @Override

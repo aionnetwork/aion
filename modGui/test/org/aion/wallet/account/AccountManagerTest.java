@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,7 +22,29 @@
  */
 package org.aion.wallet.account;
 
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import io.github.novacrypto.bip39.MnemonicGenerator;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.gui.events.EventPublisher;
@@ -43,18 +65,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
-import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
-import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 public class AccountManagerTest {
     private BalanceRetriever balanceProvider;
@@ -82,18 +92,31 @@ public class AccountManagerTest {
 
     @Test
     public void testCtor() {
-        String[] accountList = new String[] {
-                "0xc0ffee1111111111111111111111111111111111111111111111111111111111",
-                "0xdecaf22222222222222222222222222222222222222222222222222222222222",
-        };
+        String[] accountList =
+                new String[] {
+                    "0xc0ffee1111111111111111111111111111111111111111111111111111111111",
+                    "0xdecaf22222222222222222222222222222222222222222222222222222222222",
+                };
         when(keystoreWrapper.list()).thenReturn(accountList);
         when(walletStorage.getAccountName(accountList[0])).thenReturn("Coffee!");
         when(walletStorage.getAccountName(accountList[1])).thenReturn("Decaf!");
 
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
         assertThat(unit.getAccounts().size(), is(2));
-        assertThat(unit.getAccounts().stream().map(acc -> acc.getPublicAddress()).collect(Collectors.toList()),
+        assertThat(
+                unit.getAccounts()
+                        .stream()
+                        .map(acc -> acc.getPublicAddress())
+                        .collect(Collectors.toList()),
                 is(Arrays.asList(accountList)));
         assertThat(unit.getAccounts().get(0).getName(), is("Coffee!"));
         assertThat(unit.getAccounts().get(1).getName(), is("Decaf!"));
@@ -105,37 +128,55 @@ public class AccountManagerTest {
         when(keystoreWrapper.list()).thenReturn(accountList);
 
         String mnemonic = "a mnemonic is also called a seed phrase";
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocationOnMock) throws Throwable {
-                ((MnemonicGenerator.Target)invocationOnMock.getArguments()[1]).append(mnemonic);
-                return null;
-            }
-        }).when(mnemonicGenerator).createMnemonic(any(byte[].class), any(MnemonicGenerator.Target.class));
+        doAnswer(
+                        new Answer() {
+                            @Override
+                            public Object answer(InvocationOnMock invocationOnMock)
+                                    throws Exception {
+                                ((MnemonicGenerator.Target) invocationOnMock.getArguments()[1])
+                                        .append(mnemonic);
+                                return null;
+                            }
+                        })
+                .when(mnemonicGenerator)
+                .createMnemonic(any(byte[].class), any(MnemonicGenerator.Target.class));
 
         int derivIndex = 0;
-        when(walletStorage.getMasterAccountDerivations()).thenReturn(derivIndex); // since we're creating a master account
+        when(walletStorage.getMasterAccountDerivations())
+                .thenReturn(derivIndex); // since we're creating a master account
 
         String name = "name";
         String password = "pass";
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
         String result = unit.createMasterAccount(password, name);
 
         // verify return value
         assertThat(result, is(mnemonic));
         // verify master ("root") key creation
-        assertThat(unit.getRoot().getEcKey().getPubKey(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPubKey()));
-        assertThat(unit.getRoot().getEcKey().getPrivKeyBytes(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPrivKeyBytes()));
+        assertThat(
+                unit.getRoot().getEcKey().getPubKey(),
+                is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPubKey()));
+        assertThat(
+                unit.getRoot().getEcKey().getPrivKeyBytes(),
+                is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPrivKeyBytes()));
         // verify creation of new accountDTO and its derived key
-        ECKey derivedKey = unit.getRoot().deriveHardened(new int[]{44, 425, 0, 0, derivIndex});
+        ECKey derivedKey = unit.getRoot().deriveHardened(new int[] {44, 425, 0, 0, derivIndex});
         assertThat(unit.getAccounts().size(), is(1));
         assertThat(unit.getAccounts().get(0).getName(), is(name));
         assertThat(unit.getAccounts().get(0).getDerivationIndex(), is(0));
-        assertThat(unit.getAccounts().get(0).getPrivateKey(),
-                is(derivedKey.getPrivKeyBytes()));
-        assertThat(unit.getAccounts().get(0).getPublicAddress(),
+        assertThat(unit.getAccounts().get(0).getPrivateKey(), is(derivedKey.getPrivKeyBytes()));
+        assertThat(
+                unit.getAccounts().get(0).getPublicAddress(),
                 is(TypeConverter.toJsonHex(derivedKey.computeAddress(derivedKey.getPubKey()))));
         // verify master account is stored
         verify(walletStorage).setMasterAccountMnemonic(mnemonic, password);
@@ -151,22 +192,34 @@ public class AccountManagerTest {
         String mnemonic = "my cool mnemonic";
         String password = "pw";
 
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
         unit.importMasterAccount(mnemonic, password);
 
         // verify master ("root") key creation
-        assertThat(unit.getRoot().getEcKey().getPubKey(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPubKey()));
-        assertThat(unit.getRoot().getEcKey().getPrivKeyBytes(), is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPrivKeyBytes()));
+        assertThat(
+                unit.getRoot().getEcKey().getPubKey(),
+                is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPubKey()));
+        assertThat(
+                unit.getRoot().getEcKey().getPrivKeyBytes(),
+                is(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic).getPrivKeyBytes()));
         // verify creation of new accountDTO and its derived key
         int derivIndex = 0;
-        ECKey derivedKey = unit.getRoot().deriveHardened(new int[]{44, 425, 0, 0, derivIndex});
+        ECKey derivedKey = unit.getRoot().deriveHardened(new int[] {44, 425, 0, 0, derivIndex});
         assertThat(unit.getAccounts().size(), is(1));
         assertThat(unit.getAccounts().get(0).getName(), is(nullValue()));
         assertThat(unit.getAccounts().get(0).getDerivationIndex(), is(0));
-        assertThat(unit.getAccounts().get(0).getPrivateKey(),
-                is(derivedKey.getPrivKeyBytes()));
-        assertThat(unit.getAccounts().get(0).getPublicAddress(),
+        assertThat(unit.getAccounts().get(0).getPrivateKey(), is(derivedKey.getPrivKeyBytes()));
+        assertThat(
+                unit.getAccounts().get(0).getPublicAddress(),
                 is(TypeConverter.toJsonHex(derivedKey.computeAddress(derivedKey.getPubKey()))));
         assertThat(unit.getAccounts().get(0).getDerivationIndex(), is(0));
         // verify master account is stored
@@ -176,31 +229,43 @@ public class AccountManagerTest {
     }
 
     @Test
-    public void testUnlockMasterAccountWhenMasterAccountDoesNotExist() throws Exception  {
+    public void testUnlockMasterAccountWhenMasterAccountDoesNotExist() throws Exception {
         String[] accountList = new String[0];
         when(keystoreWrapper.list()).thenReturn(accountList);
         when(walletStorage.hasMasterAccount()).thenReturn(false);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
         unit.unlockMasterAccount("anything");
 
         verify(keystoreWrapper).list();
         verify(walletStorage).hasMasterAccount();
-        verifyNoMoreInteractions(balanceProvider, consoleManager,
-                walletStorage, mnemonicGenerator, keystoreWrapper);
+        verifyNoMoreInteractions(
+                balanceProvider, consoleManager, walletStorage, mnemonicGenerator, keystoreWrapper);
     }
 
     @Test
     public void testUnlockMasterAccountWhenMasterAccountExists() throws Exception {
         // calculate the addresses needed for mocking the Keystore part
-        String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
-        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
-        String address1 = TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
-        ECKey derivedKey2 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 1});
-        String address2 = TypeConverter.toJsonHex(derivedKey2.computeAddress(derivedKey2.getPubKey()));
-        String[] accountList = new String[] { address1 };
+        String mnemonic =
+                "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
+        MasterKey rootMasterKey =
+                new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
+        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[] {44, 425, 0, 0, 0});
+        String address1 =
+                TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
+        ECKey derivedKey2 = rootMasterKey.deriveHardened(new int[] {44, 425, 0, 0, 1});
+        String address2 =
+                TypeConverter.toJsonHex(derivedKey2.computeAddress(derivedKey2.getPubKey()));
+        String[] accountList = new String[] {address1};
         when(keystoreWrapper.list()).thenReturn(accountList);
 
         String password = "password";
@@ -208,8 +273,16 @@ public class AccountManagerTest {
         when(walletStorage.getMasterAccountMnemonic("password")).thenReturn(mnemonic);
         when(walletStorage.getMasterAccountDerivations()).thenReturn(2);
 
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
         unit.unlockMasterAccount(password);
 
         ArgumentCaptor<Set<String>> accountsRecoveredCapture = ArgumentCaptor.forClass(Set.class);
@@ -228,11 +301,14 @@ public class AccountManagerTest {
     @Test
     public void testCreateAccount() throws Exception {
         // calculate the addresses needed for mocking the Keystore part
-        String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
-        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
-        String address1 = TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
-        String[] accountList = new String[] { address1 };
+        String mnemonic =
+                "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
+        MasterKey rootMasterKey =
+                new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
+        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[] {44, 425, 0, 0, 0});
+        String address1 =
+                TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
+        String[] accountList = new String[] {address1};
         when(keystoreWrapper.list()).thenReturn(accountList);
 
         String password = "password";
@@ -241,8 +317,16 @@ public class AccountManagerTest {
         when(walletStorage.getMasterAccountDerivations()).thenReturn(1);
 
         // need to unlock before we can create
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
         unit.unlockMasterAccount(password);
 
         int nAccountsBefore = unit.getAccounts().size();
@@ -258,20 +342,32 @@ public class AccountManagerTest {
     }
 
     @Test(expected = ValidationException.class)
-    public void testImportKeystoreWhenShouldNotKeepAccountAndAccountAlreadyExists() throws Exception {
+    public void testImportKeystoreWhenShouldNotKeepAccountAndAccountAlreadyExists()
+            throws Exception {
         // need to create the keystore bytes so we can use it as test input
-        String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
-        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
+        String mnemonic =
+                "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
+        MasterKey rootMasterKey =
+                new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
+        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[] {44, 425, 0, 0, 0});
 
         String password = "pw";
         byte[] keystoreBytes = new KeystoreFormat().toKeystore(derivedKey1, password);
 
         when(keystoreWrapper.list()).thenReturn(new String[0]);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
-        String pubAddressString = TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
+        String pubAddressString =
+                TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
 
         boolean shouldKeep = false;
         addressToAccount.put(pubAddressString, mock(AccountDTO.class));
@@ -286,18 +382,29 @@ public class AccountManagerTest {
     @Test
     public void testImportKeystoreWhenShouldNotKeepAccount() throws Exception {
         // need to create the keystore bytes so we can use it as test input
-        String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
-        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
+        String mnemonic =
+                "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
+        MasterKey rootMasterKey =
+                new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
+        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[] {44, 425, 0, 0, 0});
 
         String password = "pw";
         byte[] keystoreBytes = new KeystoreFormat().toKeystore(derivedKey1, password);
 
         when(keystoreWrapper.list()).thenReturn(new String[0]);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
-        String pubAddressString = TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
+        String pubAddressString =
+                TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
 
         boolean shouldKeep = false;
         unit.importKeystore(keystoreBytes, password, shouldKeep);
@@ -311,21 +418,35 @@ public class AccountManagerTest {
     @Test
     public void testImportKeystoreWhenShouldKeepAccount() throws Exception {
         // need to create the keystore bytes so we can use it as test input
-        String mnemonic = "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
-        MasterKey rootMasterKey = new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
-        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[]{44, 425, 0, 0, 0});
+        String mnemonic =
+                "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct";
+        MasterKey rootMasterKey =
+                new MasterKey(CryptoUtils.generateSha512HashedBip39ECKey(mnemonic));
+        ECKey derivedKey1 = rootMasterKey.deriveHardened(new int[] {44, 425, 0, 0, 0});
 
         String password = "pw";
         byte[] keystoreBytes = new KeystoreFormat().toKeystore(derivedKey1, password);
 
         when(keystoreWrapper.list()).thenReturn(new String[0]);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
-        String pubAddressString = TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
+        String pubAddressString =
+                TypeConverter.toJsonHex(derivedKey1.computeAddress(derivedKey1.getPubKey()));
         ArgumentCaptor<ECKey> keystoreCreateECKeyCapture = ArgumentCaptor.forClass(ECKey.class);
-        when(keystoreWrapper.create(eq(password), keystoreCreateECKeyCapture.capture() /* because ECKey doesn't have equals() */)
-        ).thenReturn(pubAddressString);
+        when(keystoreWrapper.create(
+                        eq(password),
+                        keystoreCreateECKeyCapture
+                                .capture() /* because ECKey doesn't have equals() */))
+                .thenReturn(pubAddressString);
 
         boolean shouldKeep = true;
         unit.importKeystore(keystoreBytes, password, shouldKeep);
@@ -340,19 +461,31 @@ public class AccountManagerTest {
     @Test
     public void testImportPrivateKey() throws Exception {
         // set up an arbitrary private key to use as test input
-        ECKey key = CryptoUtils.generateSha512HashedBip39ECKey(
-                "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct");
+        ECKey key =
+                CryptoUtils.generateSha512HashedBip39ECKey(
+                        "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct");
         byte[] privKey = key.getPrivKeyBytes();
 
         when(keystoreWrapper.list()).thenReturn(new String[0]);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
         String password = "myPassword";
         String pubAddressString = TypeConverter.toJsonHex(key.computeAddress(key.getPubKey()));
         ArgumentCaptor<ECKey> keystoreCreateECKeyCapture = ArgumentCaptor.forClass(ECKey.class);
-        when(keystoreWrapper.create(eq(password), keystoreCreateECKeyCapture.capture() /* because ECKey doesn't have equals() */)
-        ).thenReturn(pubAddressString);
+        when(keystoreWrapper.create(
+                        eq(password),
+                        keystoreCreateECKeyCapture
+                                .capture() /* because ECKey doesn't have equals() */))
+                .thenReturn(pubAddressString);
 
         boolean shouldKeep = true;
         unit.importPrivateKey(privKey, password, shouldKeep);
@@ -369,19 +502,31 @@ public class AccountManagerTest {
         // external implies the keystore content is already in addressToKeystoreContent map
 
         // first we need to import an accout so that it is in that map
-        ECKey key = CryptoUtils.generateSha512HashedBip39ECKey(
-                "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct");
+        ECKey key =
+                CryptoUtils.generateSha512HashedBip39ECKey(
+                        "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct");
         byte[] privKey = key.getPrivKeyBytes();
 
         when(keystoreWrapper.list()).thenReturn(new String[0]);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
         String password = "myPassword";
         String pubAddressString = TypeConverter.toJsonHex(key.computeAddress(key.getPubKey()));
         ArgumentCaptor<ECKey> keystoreCreateECKeyCapture = ArgumentCaptor.forClass(ECKey.class);
-        when(keystoreWrapper.create(eq(password), keystoreCreateECKeyCapture.capture() /* because ECKey doesn't have equals() */)
-        ).thenReturn(pubAddressString);
+        when(keystoreWrapper.create(
+                        eq(password),
+                        keystoreCreateECKeyCapture
+                                .capture() /* because ECKey doesn't have equals() */))
+                .thenReturn(pubAddressString);
 
         boolean shouldKeep = true;
         unit.importPrivateKey(privKey, password, shouldKeep);
@@ -399,18 +544,26 @@ public class AccountManagerTest {
     public void testUnlockAccountWhenAccountIsInternal() throws Exception {
         // internal implies the keystore content is not already in addressToKeystoreContent map
         when(keystoreWrapper.list()).thenReturn(new String[0]);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
-        String pubAddress ="some address";
-        AccountDTO account = new AccountDTO(
-                "anyName", pubAddress, "anyBalance", "anyCurrency", false, 0
-        );
+        String pubAddress = "some address";
+        AccountDTO account =
+                new AccountDTO("anyName", pubAddress, "anyBalance", "anyCurrency", false, 0);
 
         String password = "password";
-        ECKey key = CryptoUtils.generateSha512HashedBip39ECKey(
-                "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct");
-        when(keystoreWrapper.getKey("0x"+pubAddress, password)).thenReturn(key);
+        ECKey key =
+                CryptoUtils.generateSha512HashedBip39ECKey(
+                        "weasel prison stable lawn fade hunt imitate voyage front hat cattle conduct");
+        when(keystoreWrapper.getKey("0x" + pubAddress, password)).thenReturn(key);
 
         unit.unlockAccount(account, password);
         assertThat(account.isActive(), is(true));
@@ -422,13 +575,20 @@ public class AccountManagerTest {
     public void testUnlockAccountWhenPasswordWrong() throws Exception {
         // internal implies the keystore content is not already in addressToKeystoreContent map
         when(keystoreWrapper.list()).thenReturn(new String[0]);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
-        String pubAddress ="some address";
-        AccountDTO account = new AccountDTO(
-                "anyName", pubAddress, "anyBalance", "anyCurrency", false, 0
-        );
+        String pubAddress = "some address";
+        AccountDTO account =
+                new AccountDTO("anyName", pubAddress, "anyBalance", "anyCurrency", false, 0);
 
         String password = "password";
         when(keystoreWrapper.getKey(anyString(), anyString())).thenReturn(null);
@@ -443,8 +603,16 @@ public class AccountManagerTest {
         String mnemonic = "my cool mnemonic";
         String password = "pw";
 
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
         unit.importMasterAccount(mnemonic, password);
 
         AccountDTO account = unit.getAccounts().get(0);
@@ -464,8 +632,16 @@ public class AccountManagerTest {
     public void testGetOldestSafeBlock() {
         String[] accountList = new String[0];
         when(keystoreWrapper.list()).thenReturn(accountList);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
         Set<String> addresses = new LinkedHashSet<>();
         addresses.add("a1");
@@ -491,10 +667,13 @@ public class AccountManagerTest {
 
         AtomicBoolean nullFilterUsed = new AtomicBoolean(false);
 
-        BlockDTO result = unit.getOldestSafeBlock(addresses, iter -> {
-            nullFilterUsed.set(true);
-            assertThat(iter.hasNext(), is(false));
-        });
+        BlockDTO result =
+                unit.getOldestSafeBlock(
+                        addresses,
+                        iter -> {
+                            nullFilterUsed.set(true);
+                            assertThat(iter.hasNext(), is(false));
+                        });
 
         assertThat(result, is(b1));
         assertThat(nullFilterUsed.get(), is(true));
@@ -504,12 +683,19 @@ public class AccountManagerTest {
     public void testAddRemoveGetTransactions() {
         String[] accountList = new String[0];
         when(keystoreWrapper.list()).thenReturn(accountList);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
         String address = "address";
-        AccountDTO account = new AccountDTO(
-                "anyName", address, "anyBalance", "anyCurrency", false, 0
-        );
+        AccountDTO account =
+                new AccountDTO("anyName", address, "anyBalance", "anyCurrency", false, 0);
         addressToAccount.put(address, account);
 
         assertThat(unit.getTransactions(address).isEmpty(), is(true));
@@ -527,12 +713,19 @@ public class AccountManagerTest {
     public void testGetUpdateLastSafeBlock() {
         String[] accountList = new String[0];
         when(keystoreWrapper.list()).thenReturn(accountList);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
         String address = "address";
-        AccountDTO account = new AccountDTO(
-                "anyName", address, "anyBalance", "anyCurrency", false, 0
-        );
+        AccountDTO account =
+                new AccountDTO("anyName", address, "anyBalance", "anyCurrency", false, 0);
         addressToAccount.put(address, account);
 
         BlockDTO block1 = mock(BlockDTO.class);
@@ -547,33 +740,47 @@ public class AccountManagerTest {
 
     @Test
     public void testGetAddresses() {
-        String[] accountList = new String[] {
-                "0xc0ffee1111111111111111111111111111111111111111111111111111111111",
-                "0xdecaf22222222222222222222222222222222222222222222222222222222222",
-        };
+        String[] accountList =
+                new String[] {
+                    "0xc0ffee1111111111111111111111111111111111111111111111111111111111",
+                    "0xdecaf22222222222222222222222222222222222222222222222222222222222",
+                };
         when(keystoreWrapper.list()).thenReturn(accountList);
         when(walletStorage.getAccountName(accountList[0])).thenReturn("Coffee!");
         when(walletStorage.getAccountName(accountList[1])).thenReturn("Decaf!");
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
 
         assertThat(unit.getAddresses().size(), is(2));
-        assertThat(unit.getAddresses().containsAll(Arrays.asList(accountList)),
-                is(true));
+        assertThat(unit.getAddresses().containsAll(Arrays.asList(accountList)), is(true));
     }
 
     @Test
     public void testUpdateAccount() {
-        String[] accountList = new String[] {
-                "0xc0ffee1111111111111111111111111111111111111111111111111111111111"
-        };
+        String[] accountList =
+                new String[] {"0xc0ffee1111111111111111111111111111111111111111111111111111111111"};
         when(keystoreWrapper.list()).thenReturn(accountList);
         when(walletStorage.getAccountName(accountList[0])).thenReturn("old name");
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
-        AccountDTO account = new AccountDTO(
-                "new name!", accountList[0], "anyBalance", "anyCurrency", false, 0
-        );
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
+        AccountDTO account =
+                new AccountDTO("new name!", accountList[0], "anyBalance", "anyCurrency", false, 0);
         unit.updateAccount(account);
         verify(walletStorage).setAccountName(accountList[0], "new name!");
     }
@@ -582,12 +789,19 @@ public class AccountManagerTest {
     public void testGetAddRemoveTimedOutTransactions() {
         String[] accountList = new String[0];
         when(keystoreWrapper.list()).thenReturn(accountList);
-        AccountManager unit = new AccountManager(balanceProvider, currencySupplier, consoleManager,
-                walletStorage, addressToAccount, mnemonicGenerator, keystoreWrapper, eventPublisher);
+        AccountManager unit =
+                new AccountManager(
+                        balanceProvider,
+                        currencySupplier,
+                        consoleManager,
+                        walletStorage,
+                        addressToAccount,
+                        mnemonicGenerator,
+                        keystoreWrapper,
+                        eventPublisher);
         String address = "address";
-        AccountDTO account = new AccountDTO(
-                "anyName", address, "anyBalance", "anyCurrency", false, 0
-        );
+        AccountDTO account =
+                new AccountDTO("anyName", address, "anyBalance", "anyCurrency", false, 0);
         addressToAccount.put(address, account);
 
         assertThat(unit.getTimedOutTransactions(address).isEmpty(), is(true));

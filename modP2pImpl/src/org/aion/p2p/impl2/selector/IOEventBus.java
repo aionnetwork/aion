@@ -23,8 +23,6 @@
 
 package org.aion.p2p.impl2.selector;
 
-import java.nio.channels.SelectableChannel;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -37,7 +35,6 @@ public class IOEventBus {
 
     public IOEventBus() {
         this.queue = new LinkedBlockingQueue<>();
-
     }
 
     public void addEvent(Runnable run) {
@@ -47,7 +44,7 @@ public class IOEventBus {
     public List<Runnable> retrieveAllEvents() {
         List<Runnable> taskList = new LinkedList<>();
         int i = 0;
-        while(!this.queue.isEmpty() && i < MAX_PENDING_TASKS) {
+        while (!this.queue.isEmpty() && i < MAX_PENDING_TASKS) {
             taskList.add(this.queue.poll());
             i++;
         }

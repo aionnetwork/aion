@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,18 +17,16 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.mcf.ds;
-
-import org.aion.base.db.Flushable;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 
 import java.io.Closeable;
 import java.util.Optional;
+import org.aion.base.db.Flushable;
+import org.aion.base.util.ByteUtil;
+import org.aion.base.util.Hex;
 
 /**
  * DataSource Array.
@@ -81,7 +79,11 @@ public class DataSourceArray<V> implements Flushable, Closeable {
     public V get(long index) {
         if (index < 0 || index >= size()) {
             throw new IndexOutOfBoundsException(
-                    "Incorrect index value <" + index + ">. Allowed values are >= 0 and < " + size + ".");
+                    "Incorrect index value <"
+                            + index
+                            + ">. Allowed values are >= 0 and < "
+                            + size
+                            + ".");
         }
 
         V value;

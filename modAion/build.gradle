@@ -1,0 +1,26 @@
+ext.moduleName = 'aion.zero'
+
+test.dependsOn copyNativeLibsForModuleTests
+
+dependencies {
+    compile project(':modAionBase')
+    compile project(':modRlp')
+    compile project(':modCrypto')
+    compile project(':modMcf')
+    compile files('../lib/libJson.jar')
+    compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+    compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
+
+    testCompile project(':modLogger')
+    testCompile project(':modCrypto')
+    testCompile project(':modMcf')
+    testCompile project(':modRlp')
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+    testCompile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
+}
+
+// Skip unit tests when doing build task; unit tests are all mixed up with 
+// long-running integration tests in this module,so doing this to avoid 
+// build taking too long.
+//build.dependsOn.remove("check")

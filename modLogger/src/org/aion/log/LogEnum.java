@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,21 +19,28 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.log;
 
-/**
- * Logger modules available to classes in the kernel
- */
+/** Logger modules available to classes in the kernel */
 public enum LogEnum {
-    GEN, CONS, SYNC, API, VM, NET, DB, EVTMGR, TXPOOL, TX, P2P, ROOT, GUI;
+    GEN,
+    CONS,
+    SYNC,
+    API,
+    VM,
+    NET,
+    DB,
+    EVTMGR,
+    TXPOOL,
+    TX,
+    P2P,
+    ROOT,
+    GUI;
 
     public static boolean contains(String _module) {
         for (LogEnum module : values()) {
-            if (module.name().equalsIgnoreCase(_module))
-                return true;
+            if (module.name().equalsIgnoreCase(_module)) return true;
         }
 
         return false;

@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -28,14 +28,10 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 
-/**
- * @author Sergiu-Paul Falcusan
- * -cheers
- */
+/** @author Sergiu-Paul Falcusan -cheers */
 public class QRCodeUtils {
     private static final int MIN_QRCODE_WIDTH = 150;
     private static final int MIN_QRCODE_HEIGHT = 150;
@@ -44,6 +40,7 @@ public class QRCodeUtils {
 
     /**
      * Encode a string into a QR Code (Default size Width 150px and Height 150px)
+     *
      * @param content string to be converted
      * @return Returns a BufferedImage that can be used further for showing it
      */
@@ -53,12 +50,14 @@ public class QRCodeUtils {
 
     /**
      * Encode a string into a QR Code
+     *
      * @param content string to be converted
      * @param width Width of QR image
      * @param height Height of QR image
      * @return Returns a BufferedImage that can be used further for showing it
      */
-    public static BufferedImage writeQRCode(final String content, final int width, final int height) {
+    public static BufferedImage writeQRCode(
+            final String content, final int width, final int height) {
         try {
             BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
@@ -67,7 +66,8 @@ public class QRCodeUtils {
             hintMap.put(EncodeHintType.MARGIN, 0);
 
             QRCodeWriter writer = new QRCodeWriter();
-            BitMatrix bitMatrix = writer.encode(content, BarcodeFormat.QR_CODE, width, height, hintMap);
+            BitMatrix bitMatrix =
+                    writer.encode(content, BarcodeFormat.QR_CODE, width, height, hintMap);
 
             for (int i = 0; i < width; i++) {
                 for (int j = 0; j < height; j++) {

@@ -1,0 +1,45 @@
+language: android
+sudo: false
+env:
+  global:
+    - secure: "A6Wxi4weq44d3Ppc7H+sGpGBMZ4B1UTbu+Phn769tjRclEPVf0bUin13jAnKfcEk3owbHRVffOSmpqvhDu7hSkG5XutIiVGoiD5W39Iw6eeIn5S8jZ/oYEo5T9JQ2dMcKmYUGPOTznrezxwpbGkj6YBcdquSACSeqNoB8J6fR9A="
+    - secure: "aTMPEs8BADkSwSYYI209LlZelWdEOWGfomaKienoOUAWTM2MvX1F6KFPwj/C39S6X5+XzZW/U3JzuN2uvBfd6pdWkH/yA8bTHj0nn8/N9CHRKMuvjEDOGKPjfBiCAWgJt+m2GWyT3hNA+XA0A10WgIB22JIrehIZHMCzE7wIJlc="
+    - secure: "mXfFhvD6bqZGFMUt+QuDYCSMcy4Eol2dWyfUbiPjQ36boVU08qpnpUpAOo5++U2eHl2PRJpyRrspyJ8OgXoBkCB15yvegEQGi6O8xYkRqQa/Ax1ClDaXoWtYtbdz5lORIqJ9gNS4oevMOb0EBfGqGh4IUWj2g7akX65VHPo/Ies="
+    - secure: "0GM+2wBdoZJA84N0BICH6Y0ReE+STFx1D109VK70yN0bdJ5rau2FXWK6jseeFIciXRraTNyl4V5Y84yOzKK3YXxLesk8mwcFFksE6bZlkPcJ55wrEwjbWR9gsi3t6GWzZ24URD0B2SMKyPbSxPX8SD/U4t2UWsjB2TGTglRRuV8="
+after_failure:
+- cat sdkmanager.log
+- cat emulator.log
+- cat logcat.log
+- cat build/tmp/linkSodiumjniSharedLibrary/output.txt
+after_success:
+- ./after-success.sh
+matrix:
+  include:
+      - os: linux
+        services: docker
+        script:
+          - travis_retry docker build .
+      - os: linux
+        dist: trusty
+        sudo: required
+        before_script:
+          - . ./setenv.sh
+        before_install:
+          - travis_retry travis_wait 120 ./dependencies.sh
+        script:
+          - travis_wait 120 ./travis.sh
+      - os: osx
+        osx_image: xcode9.2
+        cache:
+          ccache: true
+          directories:
+            - $HOME/Library/Caches/Homebrew
+        before_script:
+          - . ./setenv.sh
+        before_install:
+          - brew install ccache
+          - travis_wait 120 ./dependencies.sh
+        script:
+          - export PATH="/usr/local/opt/ccache/libexec:$PATH"
+          - travis_wait 120 ./travis.sh
+

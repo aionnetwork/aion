@@ -1,0 +1,5 @@
+libsodium-jni:
+  image: joshjdevl/libsodium-jni:latest
+  command: tail -f /dev/null
+  volumes:
+    - ./keys:/tmp/keys

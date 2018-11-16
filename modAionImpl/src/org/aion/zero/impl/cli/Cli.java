@@ -21,17 +21,22 @@
  *     Aion foundation.
  */
 
-
 package org.aion.zero.impl.cli;
 
+import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
+import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
+import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
+import static org.aion.zero.impl.config.Network.determineNetwork;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
 import java.io.BufferedReader;
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.ProcessBuilder.Redirect;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -39,10 +44,10 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.zero.impl.Version;
+import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.RecoveryUtils;
-
-import java.io.Console;
-import java.util.UUID;
+import org.apache.commons.lang3.ArrayUtils;
+import picocli.CommandLine;
 
 /**
  * Command line interface.
@@ -51,265 +56,543 @@ import java.util.UUID;
  */
 public class Cli {
 
-    File keystoreDir = new File(
-        System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
+    // TODO-Ale: consider using initial path from cfg
+    private final String BASE_PATH = System.getProperty("user.dir");
 
-    public int call(final String[] args, final Cfg cfg) {
-        try {
-            cfg.fromXML();
-            switch (args[0].toLowerCase()) {
-                case "-h":
-                    printHelp();
-                    break;
-                case "-a":
-                    if (args.length < 2) {
-                        printHelp();
-                        return 1;
-                    }
+    private final File keystoreDir =
+            new File(System.getProperty("user.dir") + File.separator + CfgSsl.SSL_KEYSTORE_DIR);
 
-                    switch (args[1]) {
-                        case "create":
-                            if (!createAccount()) {
-                                return 1;
-                            }
-                            break;
-                        case "list":
-                            if (!listAccounts()) {
-                                return 1;
-                            }
-                            break;
-                        case "export":
-                            if (args.length < 3 || !exportPrivateKey(args[2])) {
-                                return 1;
-                            }
-                            break;
-                        case "import":
-                            if (args.length < 3 || !importPrivateKey(args[2])) {
-                                return 1;
-                            }
-                            break;
-                        default:
-                            printHelp();
-                            return 1;
-                    }
-                    break;
-                case "-c":
-                    cfg.fromXML();
-                    cfg.setId(UUID.randomUUID().toString());
-                    cfg.toXML(null);
-                    System.out.println("\nNew config generated");
-                    break;
-                case "-i":
-                    cfg.fromXML();
-                    System.out.println("\nInformation");
-                    System.out.println("--------------------------------------------");
-                    System.out.println(
-                        "current: p2p://" + cfg.getId() + "@" + cfg.getNet().getP2p().getIp() + ":"
-                            + cfg.getNet().getP2p().getPort());
-                    String[] nodes = cfg.getNet().getNodes();
-                    if (nodes != null && nodes.length > 0) {
-                        System.out.println("boot nodes list:");
-                        for (String node : nodes) {
-                            System.out.println("            " + node);
-                        }
-                    } else {
-                        System.out.println("boot nodes list: 0");
-                    }
-                    System.out.println(
-                        "p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p()
-                            .getPort());
-                    break;
-                case "-s":
-                    if ((args.length == 2 || args.length == 4) && (args[1].equals("create"))) {
-                        createKeystoreDirIfMissing();
-                        Console console = System.console();
-                        checkConsoleExists(console);
+    private final Arguments options = new Arguments();
+    private final CommandLine parser = new CommandLine(options);
 
-                        List<String> scriptArgs = new ArrayList<>();
-                        scriptArgs.add("/bin/bash");
-                        scriptArgs.add("script/generateSslCert.sh");
-                        scriptArgs.add(getCertName(console));
-                        scriptArgs.add(getCertPass(console));
-                        // add the hostname and ip optionally passed in as cli args
-                        scriptArgs.addAll(Arrays.asList(Arrays.copyOfRange(args, 2, args.length)));
-                        new ProcessBuilder(scriptArgs).inheritIO().start().waitFor();
-                    } else {
-                        System.out.println("Incorrect usage of -s create command.\n" +
-                            "Command must enter both hostname AND ip or else neither one.");
-                        return 1;
-                    }
-                    break;
-                case "-r":
-                    if (args.length < 2) {
-                        System.out.println("Starting database clean-up.");
-                        RecoveryUtils.pruneAndCorrect();
-                        System.out.println("Finished database clean-up.");
-                    } else {
-                        switch (revertTo(args[1])) {
-                            case SUCCESS:
-                                System.out.println(
-                                    "Blockchain successfully reverted to block number " + args[1]
-                                        + ".");
-                                break;
-                            case FAILURE:
-                                System.out
-                                    .println("Unable to revert to block number " + args[1] + ".");
-                                return 1;
-                            case ILLEGAL_ARGUMENT:
-                            default:
-                                return 1;
-                        }
-                    }
-                    break;
-                case "--state": {
-                    String pruning_type = "full";
-                    if (args.length >= 2) {
-                        pruning_type = args[1];
-                    }
-                    try {
-                        RecoveryUtils.pruneOrRecoverState(pruning_type);
-                    } catch (Throwable t) {
-                        System.out.println("Reorganizing the state storage FAILED due to:");
-                        t.printStackTrace();
-                        return 1;
-                    }
-                    break;
-                }
-                case "--dump-state-size":
-                    long block_count = 2L;
+    public enum ReturnType {
+        RUN(2),
+        EXIT(0),
+        ERROR(1);
+        private final int value;
 
-                    if (args.length < 2) {
-                        System.out
-                            .println("Retrieving state size for top " + block_count + " blocks.");
-                        RecoveryUtils.printStateTrieSize(block_count);
-                    } else {
-                        try {
-                            block_count = Long.parseLong(args[1]);
-                        } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1]
-                                + "> cannot be converted to a number.");
-                        }
-                        if (block_count < 1) {
-                            System.out
-                                .println("The given argument <" + args[1] + "> is not valid.");
-                            block_count = 2L;
-                        }
-
-                        System.out
-                            .println("Retrieving state size for top " + block_count + " blocks.");
-                        RecoveryUtils.printStateTrieSize(block_count);
-                    }
-                    break;
-                case "--dump-state":
-                    long level = -1L;
-
-                    if (args.length < 2) {
-                        System.out.println("Retrieving state for top main chain block...");
-                        RecoveryUtils.printStateTrieDump(level);
-                    } else {
-                        try {
-                            level = Long.parseLong(args[1]);
-                        } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1]
-                                + "> cannot be converted to a number.");
-                        }
-                        if (level == -1L) {
-                            System.out.println("Retrieving state for top main chain block...");
-                        } else {
-                            System.out.println(
-                                "Retrieving state for main chain block at level " + level + "...");
-                        }
-                        RecoveryUtils.printStateTrieDump(level);
-                    }
-                    break;
-                case "--db-compact":
-                    RecoveryUtils.dbCompact();
-                    break;
-                case "--dump-blocks":
-                    long count = 10L;
-
-                    if (args.length < 2) {
-                        System.out.println("Printing top " + count + " blocks from database.");
-                        RecoveryUtils.dumpBlocks(count);
-                    } else {
-                        try {
-                            count = Long.parseLong(args[1]);
-                        } catch (NumberFormatException e) {
-                            System.out.println("The given argument <" + args[1]
-                                + "> cannot be converted to a number.");
-                        }
-                        if (count < 1) {
-                            System.out
-                                .println("The given argument <" + args[1] + "> is not valid.");
-                            count = 10L;
-                        }
-
-                        System.out.println("Printing top " + count + " blocks from database.");
-                        RecoveryUtils.dumpBlocks(count);
-                    }
-                    break;
-                case "-v":
-                    System.out.println("\nVersion");
-                    System.out.println("--------------------------------------------");
-                    // Don't put break here!!
-                case "--version":
-                    System.out.println(Version.KERNEL_VERSION);
-                    break;
-                default:
-                    System.out.println("Unable to parse the input arguments");
-                    printHelp();
-                    return 1;
-            }
-            System.out.println("");
-        } catch (Throwable e) {
-            System.out.println("");
-            return 1;
+        ReturnType(int _value) {
+            this.value = _value;
         }
 
-        return 0;
+        public int getValue() {
+            return value;
+        }
+    }
+
+    enum TaskPriority {
+        NONE,
+        HELP,
+        VERSION,
+        CONFIG,
+        INFO,
+        CREATE_ACCOUNT,
+        LIST_ACCOUNTS,
+        EXPORT_ACCOUNT,
+        IMPORT_ACCOUNT,
+        SSL,
+        PRUNE_BLOCKS,
+        REVERT,
+        PRUNE_STATE,
+        DUMP_STATE_SIZE,
+        DUMP_STATE,
+        DUMP_BLOCKS,
+        DB_COMPACT
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public ReturnType call(final String[] args, Cfg cfg) {
+        try {
+            // the pre-process method handles arguments that are separated by space
+            // parsing populates the options object
+            parser.parse(Arguments.preProcess(args));
+        } catch (Exception e) {
+            System.out.println("Unable to parse the input arguments due to: ");
+            if (e.getMessage() != null) {
+                System.out.println(e.getMessage());
+            } else {
+                e.printStackTrace();
+            }
+
+            System.out.println();
+            printHelp();
+            return ERROR;
+        }
+
+        // make sure that there is no conflicting arguments; otherwise send warning
+        checkArguments(options);
+
+        try {
+            // 1. the first set of options don't mix with -d and -n
+
+            if (options.isHelp()) {
+                printHelp();
+                return EXIT;
+            }
+
+            if (options.isVersion() || options.isVersionTag()) {
+                if (options.isVersion()) {
+                    System.out.println("\nVersion");
+                    System.out.println("--------------------------------------------");
+                }
+                System.out.println(Version.KERNEL_VERSION);
+                return EXIT;
+            }
+
+            // 2. determine the network configuration
+
+            if (options.getNetwork() != null
+                    || (options.getConfig() != null && !options.getConfig().isEmpty())) {
+                String strNet = options.getNetwork();
+                // the network given in config overwrites the -n option
+                if (options.getConfig() != null && !options.getConfig().isEmpty()) {
+                    strNet = options.getConfig();
+                }
+                setNetwork(strNet, cfg);
+                // no return -> allow for other parameters combined with -n
+            }
+
+            // 3. determine the execution folder path; influenced by --network
+
+            if (options.getDirectory() != null) {
+                if (!setDirectory(options.getDirectory(), cfg)) {
+                    return ERROR;
+                }
+                // no return -> allow for other parameters combined with -d
+            }
+
+            // reading from correct config file
+            File configFile = cfg.getExecConfigFile();
+            if (!configFile.exists()) {
+                configFile = cfg.getInitialConfigFile();
+            } else {
+                // marks that the files were read from the execution path
+                cfg.setReadConfigFiles(configFile, cfg.getExecGenesisFile());
+            }
+
+            // true means the UUID must be set
+            boolean overwrite = cfg.fromXML(configFile);
+
+            // 4. can be influenced by the -d argument above
+
+            if (options.getConfig() != null) {
+                // network was already set above
+
+                // if the directory was set we generate a new file
+                if (options.getDirectory() != null) {
+                    configFile = cfg.getExecConfigFile();
+
+                    // ensure path exists
+                    File dir = cfg.getExecConfigDirectory();
+                    if (!dir.exists()) {
+                        if (!dir.mkdirs()) {
+                            System.out.println(
+                                    "ERROR: Unable to create directory: "
+                                            + getRelativePath(dir.getAbsolutePath()));
+                            return ERROR;
+                        }
+                    }
+                    try {
+                        configFile.createNewFile();
+                    } catch (IOException e) {
+                        System.out.println(
+                                "ERROR: Unable to create file: "
+                                        + getRelativePath(configFile.getAbsolutePath()));
+                        return ERROR;
+                    }
+                }
+
+                // save to disk
+                cfg.toXML(null, configFile);
+
+                System.out.println(
+                        "\nNew config generated at: "
+                                + getRelativePath(configFile.getAbsolutePath()));
+                return ReturnType.EXIT;
+            }
+
+            // 5. options that can be influenced by the -d and -n arguments
+
+            if (options.isInfo()) {
+                System.out.println(
+                        "Reading config file from: "
+                                + getRelativePath(configFile.getAbsolutePath()));
+                if (overwrite) {
+                    // updating the file in case the user id was not set
+                    cfg.toXML(new String[] {"--id=" + cfg.getId()}, configFile);
+                }
+                printInfo(cfg);
+                return ReturnType.EXIT;
+            }
+
+            // make directories for kernel execution
+            makeDirs(configFile, cfg);
+
+            if (overwrite) {
+                // only updating the file in case the user id was not set
+                cfg.toXML(new String[] {"--id=" + cfg.getId()}, cfg.getExecConfigFile());
+            }
+
+            // set correct keystore directory
+            Keystore.setKeystorePath(cfg.getKeystoreDir().getAbsolutePath());
+
+            if (options.isCreateAccount()) {
+                if (!createAccount()) {
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
+            if (options.isListAccounts()) {
+                if (!listAccounts()) {
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
+            if (options.getExportAccount() != null) {
+                if (!exportPrivateKey(options.getExportAccount())) {
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
+            if (options.getImportAccount() != null) {
+                if (!importPrivateKey(options.getImportAccount())) {
+                    return ERROR;
+                } else {
+                    return EXIT;
+                }
+            }
+
+            if (options.getSsl() != null) {
+                String[] parameters = options.getSsl();
+
+                if (parameters.length == 0 || parameters.length == 2) {
+                    createKeystoreDirIfMissing();
+                    Console console = System.console();
+                    checkConsoleExists(console);
+
+                    List<String> scriptArgs = new ArrayList<>();
+                    scriptArgs.add("/bin/bash");
+                    scriptArgs.add("script/generateSslCert.sh");
+                    scriptArgs.add(getCertName(console));
+                    scriptArgs.add(getCertPass(console));
+                    // add the hostname and ip optionally passed in as cli args
+                    scriptArgs.addAll(Arrays.asList(parameters));
+                    new ProcessBuilder(scriptArgs).inheritIO().start().waitFor();
+                    return EXIT;
+                } else {
+                    System.out.println(
+                            "Incorrect usage of -s create command.\n"
+                                    + "Command must enter both hostname AND ip or else neither one.");
+                    return ERROR;
+                }
+            }
+
+            if (options.isRebuildBlockInfo()) {
+                System.out.println("Starting database clean-up.");
+                RecoveryUtils.pruneAndCorrect();
+                System.out.println("Finished database clean-up.");
+                return EXIT;
+            }
+
+            if (options.getRevertToBlock() != null) {
+                String block = options.getRevertToBlock();
+                switch (revertTo(block)) {
+                    case SUCCESS:
+                        {
+                            System.out.println(
+                                    "Blockchain successfully reverted to block number "
+                                            + block
+                                            + ".");
+                            return EXIT;
+                        }
+                    case FAILURE:
+                        {
+                            System.out.println("Unable to revert to block number " + block + ".");
+                            return ERROR;
+                        }
+                    case ILLEGAL_ARGUMENT:
+                    default:
+                        {
+                            return ERROR;
+                        }
+                }
+            }
+
+            if (options.getPruneStateOption() != null) {
+                String pruning_type = options.getPruneStateOption();
+                try {
+                    RecoveryUtils.pruneOrRecoverState(pruning_type);
+                    return EXIT;
+                } catch (Exception e) {
+                    System.out.println("Reorganizing the state storage FAILED due to:");
+                    e.printStackTrace();
+                    return ERROR;
+                }
+            }
+
+            if (options.getDumpStateSizeCount() != null) {
+                long block_count = 2L;
+                String parameter = options.getDumpStateSizeCount();
+
+                if (parameter.isEmpty()) {
+                    System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                    RecoveryUtils.printStateTrieSize(block_count);
+                    return EXIT;
+                } else {
+                    try {
+                        block_count = Long.parseLong(parameter);
+                    } catch (NumberFormatException e) {
+                        System.out.println(
+                                "The given argument «"
+                                        + parameter
+                                        + "» cannot be converted to a number.");
+                        return ERROR;
+                    }
+                    if (block_count < 1) {
+                        System.out.println("The given argument «" + parameter + "» is not valid.");
+                        block_count = 2L;
+                    }
+
+                    System.out.println("Retrieving state size for top " + block_count + " blocks.");
+                    RecoveryUtils.printStateTrieSize(block_count);
+                    return EXIT;
+                }
+            }
+
+            if (options.getDumpStateCount() != null) {
+                long level = -1L;
+                String parameter = options.getDumpStateCount();
+
+                if (parameter.isEmpty()) {
+                    System.out.println("Retrieving state for top main chain block...");
+                    RecoveryUtils.printStateTrieDump(level);
+                    return EXIT;
+                } else {
+                    try {
+                        level = Long.parseLong(parameter);
+                    } catch (NumberFormatException e) {
+                        System.out.println(
+                                "The given argument «"
+                                        + parameter
+                                        + "» cannot be converted to a number.");
+                        return ERROR;
+                    }
+                    if (level == -1L) {
+                        System.out.println("Retrieving state for top main chain block...");
+                    } else {
+                        System.out.println(
+                                "Retrieving state for main chain block at level " + level + "...");
+                    }
+                    RecoveryUtils.printStateTrieDump(level);
+                    return EXIT;
+                }
+            }
+
+            if (options.getDumpBlocksCount() != null) {
+                long count = 10L;
+                String parameter = options.getDumpBlocksCount();
+
+                if (parameter.isEmpty()) {
+                    System.out.println("Printing top " + count + " blocks from database.");
+                    RecoveryUtils.dumpBlocks(count);
+                    return EXIT;
+                } else {
+                    try {
+                        count = Long.parseLong(parameter);
+                    } catch (NumberFormatException e) {
+                        System.out.println(
+                                "The given argument «"
+                                        + parameter
+                                        + "» cannot be converted to a number.");
+                        return ERROR;
+                    }
+                    if (count < 1) {
+                        System.out.println("The given argument «" + parameter + "» is not valid.");
+                        count = 10L;
+                    }
+
+                    System.out.println("Printing top " + count + " blocks from database.");
+                    RecoveryUtils.dumpBlocks(count);
+                    return EXIT;
+                }
+            }
+
+            if (options.isDbCompact()) {
+                RecoveryUtils.dbCompact();
+                return EXIT;
+            }
+
+            // if no return happened earlier, run the kernel
+            return RUN;
+        } catch (Exception e) {
+            // TODO: should be moved to individual procedures
+            System.out.println("");
+            e.printStackTrace();
+            return ERROR;
+        }
     }
 
     /**
-     * Print the CLI help info.
+     * Utility method for truncating absolute paths wrt the {@link #BASE_PATH}.
+     *
+     * @return the path without the {@link #BASE_PATH} prefix.
      */
+    private String getRelativePath(String path) {
+        // if absolute paths are given with different prefix the replacement won't work
+        return path.replaceFirst(BASE_PATH, ".");
+    }
+
+    /** Print the CLI help info. */
     private void printHelp() {
-        System.out.println("Usage: ./aion.sh [options] [arguments]");
-        System.out.println();
-        System.out.println("  -h                                            show help info");
-        System.out.println();
-        System.out.println("  -a create                                     create a new account");
-        System.out
-            .println("  -a list                                       list all existing accounts");
+        String usage = parser.getUsageMessage();
+
+        usage = usage.replaceFirst("OPTIONS]", "OPTIONS] [ARGUMENTS]");
+
+        // the command line output has some styling characters in addition to the actual string
+        // making the use of a regular expression necessary here
+        usage = usage.replaceFirst(" \\[[^ ]*<hostname> <ip>.*]", "]");
+
+        System.out.println(usage);
+    }
+
+    private void printInfo(Cfg cfg) {
+        System.out.println("\nInformation");
         System.out.println(
-            "  -a export [address]                           export private key of an account");
-        System.out.println("  -a import [private_key]                       import private key");
-        System.out.println();
+                "----------------------------------------------------------------------------");
         System.out.println(
-            "  -c                                            create config with default values");
-        System.out.println();
-        System.out.println("  -i                                            show information");
-        System.out.println();
+                "current: p2p://"
+                        + cfg.getId()
+                        + "@"
+                        + cfg.getNet().getP2p().getIp()
+                        + ":"
+                        + cfg.getNet().getP2p().getPort());
+        String[] nodes = cfg.getNet().getNodes();
+        if (nodes != null && nodes.length > 0) {
+            System.out.println("boot nodes list:");
+            for (String node : nodes) {
+                System.out.println("            " + node);
+            }
+        } else {
+            System.out.println("boot nodes list is empty");
+        }
         System.out.println(
-            "  -s create                                     create an ssl certificate for localhost");
-        System.out.println(
-            "  -s create [[hostname] [ip]]                   create an ssl certificate for a custom hostname and ip");
-        System.out.println();
-        System.out.println(
-            "  -r                                            remove blocks on side chains and correct block info");
-        System.out.println(
-            "  -r [block_number]                             revert db up to specific block number");
-        System.out.println();
-        System.out.println("  -v                                            show version");
+                "p2p: " + cfg.getNet().getP2p().getIp() + ":" + cfg.getNet().getP2p().getPort());
+    }
+
+    /**
+     * Sets the directory where the kernel will be executed.
+     *
+     * @param directory the directory to be used
+     * @param cfg the configuration file containing the information
+     * @return {@code true} when the given directory is valid, {@code false} otherwise.
+     */
+    private boolean setDirectory(String directory, Cfg cfg) {
+        // use the path ignoring the current base path
+        File file = new File(directory);
+        if (!file.isAbsolute()) {
+            // add the directory to the base path
+            file = new File(BASE_PATH, directory);
+        }
+
+        if (!file.exists()) {
+            if (!file.mkdirs()) {
+                return false;
+            }
+        }
+
+        if (file.isDirectory() && file.canWrite()) {
+            cfg.setDataDirectory(file);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private void setNetwork(String network, Cfg cfg) {
+        Network net = determineNetwork(network.toLowerCase());
+        if (net == null) {
+            // print error message and set default value
+            printInvalidNetwork();
+            net = Network.MAINNET;
+        }
+        cfg.setNetwork(net.toString());
+    }
+
+    private void printInvalidNetwork() {
+        System.out.println("\nInvalid network selected!\n");
+        System.out.println("------ Available Networks ------");
+        System.out.println(Network.valuesString());
+        System.out.println("--------------------------------\n");
+    }
+
+    /**
+     * Creates the directories for persistence of the kernel data. Copies the config and genesis
+     * files from the initial path for the execution directory.
+     *
+     * @param cfg the configuration for the runtime kernel environment
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private void makeDirs(File startConfigFile, Cfg cfg) {
+        File file = cfg.getExecDir();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+
+        // create target config directory
+        file = cfg.getExecConfigDirectory();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+
+        // copy config file
+        File initial = startConfigFile;
+        File target = cfg.getExecConfigFile();
+        if (!initial.equals(target)) {
+            copyRecursively(initial, target);
+
+            // copy genesis file
+            initial = cfg.getInitialGenesisFile();
+            target = cfg.getExecGenesisFile();
+            if (!initial.equals(target)) {
+                copyRecursively(initial, target);
+            }
+        }
+
+        // create target log directory
+        file = cfg.getLogDir();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+
+        // create target database directory
+        file = cfg.getDatabaseDir();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+
+        // create target keystore directory
+        file = cfg.getKeystoreDir();
+        if (!file.exists()) {
+            file.mkdirs();
+        }
     }
 
     /**
      * Creates a new account.
      *
-     * @return true only if the new account was successfully created, otherwise false.
+     * @return {@code true} only if the new account was successfully created, {@code false}
+     *     otherwise.
      */
     private boolean createAccount() {
-        String password = null, password2 = null;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+        String password, password2;
+        try (InputStreamReader isr = new InputStreamReader(System.in);
+                BufferedReader reader = new BufferedReader(isr)) {
             password = readPassword("Please enter a password: ", reader);
             password2 = readPassword("Please re-enter your password: ", reader);
         } catch (IOException e) {
@@ -325,6 +608,8 @@ public class Cli {
         String address = Keystore.create(password);
         if (!address.equals("0x")) {
             System.out.println("A new account has been created: " + address);
+            System.out.println(
+                    "The account was stored in: " + getRelativePath(Keystore.getKeystorePath()));
             return true;
         } else {
             System.out.println("Failed to create an account!");
@@ -332,17 +617,22 @@ public class Cli {
         }
     }
 
-    /**
-     * List all existing account.
-     *
-     * @return boolean
-     */
+    /** List all existing accounts. */
+    @SuppressWarnings("SameReturnValue")
     private boolean listAccounts() {
         String[] accounts = Keystore.list();
-        for (String account : accounts) {
-            System.out.println(account);
-        }
 
+        if (ArrayUtils.isNotEmpty(accounts)) {
+            System.out.println(
+                    "All accounts from: " + getRelativePath(Keystore.getKeystorePath()) + "\n");
+
+            for (String account : accounts) {
+                System.out.println("\t" + account);
+            }
+        } else {
+            System.out.println(
+                    "No accounts found at: " + getRelativePath(Keystore.getKeystorePath()));
+        }
         return true;
     }
 
@@ -350,16 +640,20 @@ public class Cli {
      * Dumps the private of the given account.
      *
      * @param address address of the account
-     * @return boolean
+     * @return {@code true} if the operation was successful, {@code false} otherwise.
      */
     private boolean exportPrivateKey(String address) {
+        System.out.println(
+                "Searching for account in: " + getRelativePath(Keystore.getKeystorePath()));
+
         if (!Keystore.exist(address)) {
             System.out.println("The account does not exist!");
             return false;
         }
 
-        String password = null;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+        String password;
+        try (InputStreamReader isr = new InputStreamReader(System.in);
+                BufferedReader reader = new BufferedReader(isr)) {
             password = readPassword("Please enter your password: ", reader);
         } catch (IOException e) {
             e.printStackTrace();
@@ -380,7 +674,7 @@ public class Cli {
      * Imports a private key.
      *
      * @param privateKey private key in hex string
-     * @return boolean
+     * @return {@code true} if the operation was successful, {@code false} otherwise.
      */
     private boolean importPrivateKey(String privateKey) {
         // TODO: the Hex.decode() method catches all exceptions which may cause
@@ -393,13 +687,15 @@ public class Cli {
 
         ECKey key = ECKeyFac.inst().fromPrivate(raw);
         if (key == null) {
-            System.out.println("Unable to recover private key."
-                + "Are you sure you did not import a public key?");
+            System.out.println(
+                    "Unable to recover private key."
+                            + "Are you sure you did not import a public key?");
             return false;
         }
 
-        String password = null, password2 = null;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+        String password, password2;
+        try (InputStreamReader isr = new InputStreamReader(System.in);
+                BufferedReader reader = new BufferedReader(isr)) {
             password = readPassword("Please enter a password: ", reader);
             password2 = readPassword("Please re-enter your password: ", reader);
         } catch (IOException e) {
@@ -414,17 +710,23 @@ public class Cli {
 
         String address = Keystore.create(password, key);
         if (!address.equals("0x")) {
-            System.out.println("The private key was imported, the address is: " + address);
+            System.out.println(
+                    "The private key was imported to: "
+                            + getRelativePath(Keystore.getKeystorePath())
+                            + "\nThe address is: "
+                            + address);
             return true;
         } else {
-            System.out.println("Failed to import the private key. Already exists?");
+            System.out.println(
+                    "Failed to import the private key. It may already exist in: "
+                            + getRelativePath(Keystore.getKeystorePath()));
             return false;
         }
     }
 
     /**
      * Returns a password after prompting the user to enter it. This method attempts first to read
-     * user input from a console evironment and if one is not available it instead attempts to read
+     * user input from a console environment and if one is not available it instead attempts to read
      * from reader.
      *
      * @param prompt The read-password prompt to display to the user.
@@ -441,6 +743,154 @@ public class Cli {
             return readPasswordFromReader(prompt, reader);
         }
         return new String(console.readPassword(prompt));
+    }
+
+    private void checkArguments(Arguments options) {
+        // Find priority of breaking task
+        TaskPriority breakingTaskPriority = getBreakingTaskPriority(options);
+        // Ensure that there is at least one breaking task
+        if (breakingTaskPriority == TaskPriority.NONE) {
+            // No breaking tasks; everything will be executed
+            return;
+        }
+        // Get list of tasks that won't be executed
+        Set<String> skippedTasks = getSkippedTasks(options, breakingTaskPriority);
+        // Check that there are skipped tasks
+        if (skippedTasks.isEmpty()) {
+            return;
+        }
+        String errorMessage = String.format(
+            "Given arguments require incompatible tasks. Skipped arguments: %s.",
+            String.join(", ", skippedTasks));
+        System.out.println(errorMessage);
+    }
+
+    TaskPriority getBreakingTaskPriority(Arguments options) {
+        if (options.isHelp()) {
+            return TaskPriority.HELP;
+        }
+        if (options.isVersion() || options.isVersionTag()) {
+            return TaskPriority.VERSION;
+        }
+        if (options.getConfig() != null) {
+            return TaskPriority.CONFIG;
+        }
+        if (options.isInfo()) {
+            return TaskPriority.INFO;
+        }
+        if (options.isCreateAccount()) {
+            return TaskPriority.CREATE_ACCOUNT;
+        }
+        if (options.isListAccounts()) {
+            return TaskPriority.LIST_ACCOUNTS;
+        }
+        if (options.getExportAccount() != null) {
+            return TaskPriority.EXPORT_ACCOUNT;
+        }
+        if (options.getImportAccount() != null) {
+            return TaskPriority.IMPORT_ACCOUNT;
+        }
+        if (options.getSsl() != null) {
+            return TaskPriority.SSL;
+        }
+        if (options.isRebuildBlockInfo()) {
+            return TaskPriority.PRUNE_BLOCKS;
+        }
+        if (options.getRevertToBlock() != null) {
+            return TaskPriority.REVERT;
+        }
+        if (options.getPruneStateOption() != null) {
+            return TaskPriority.PRUNE_STATE;
+        }
+        if (options.getDumpStateSizeCount() != null) {
+            return TaskPriority.DUMP_STATE_SIZE;
+        }
+        if (options.getDumpStateCount() != null) {
+            return TaskPriority.DUMP_STATE;
+        }
+        if (options.getDumpBlocksCount() != null) {
+            return TaskPriority.DUMP_BLOCKS;
+        }
+        if (options.isDbCompact()) {
+            return TaskPriority.DB_COMPACT;
+        }
+        return TaskPriority.NONE;
+    }
+
+    Set<String> getSkippedTasks(Arguments options, TaskPriority breakingTaskPriority) {
+        Set<String> skippedTasks = new HashSet<String>();
+        if (breakingTaskPriority.compareTo(TaskPriority.VERSION) < 0) {
+            if (options.isVersion()) {
+                skippedTasks.add("-v");
+            }
+            if (options.isVersionTag()) {
+                skippedTasks.add("--version");
+            }
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.CONFIG) < 0) {
+            if (options.getNetwork() != null) {
+                skippedTasks.add("--network");
+            }
+            if (options.getDirectory() != null) {
+                skippedTasks.add("--datadir");
+            }
+            if (options.getConfig() != null) {
+                skippedTasks.add("--config");
+            }
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.INFO) < 0
+            && options.isInfo()) {
+            skippedTasks.add("--info");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.CREATE_ACCOUNT) < 0
+            && options.isCreateAccount()) {
+            skippedTasks.add("--account create");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.LIST_ACCOUNTS) < 0
+            && options.isListAccounts()) {
+            skippedTasks.add("--account list");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.EXPORT_ACCOUNT) < 0
+            && options.getExportAccount() != null) {
+            skippedTasks.add("--account export");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.IMPORT_ACCOUNT) < 0
+            && options.getImportAccount() != null) {
+            skippedTasks.add("--account import");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.SSL) < 0
+            && options.getSsl() != null) {
+            skippedTasks.add("-s create");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.PRUNE_BLOCKS) < 0
+            && options.isRebuildBlockInfo()) {
+            skippedTasks.add("--prune-blocks");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.REVERT) < 0
+            && options.getRevertToBlock() != null) {
+            skippedTasks.add("--revert");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.PRUNE_STATE) < 0
+            && options.getPruneStateOption() != null) {
+            skippedTasks.add("--state");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE_SIZE) < 0
+            && options.getDumpStateSizeCount() != null) {
+            skippedTasks.add("--dump-state-size");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE) < 0
+            && options.getDumpStateCount() != null) {
+            skippedTasks.add("--dump-state");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.DUMP_BLOCKS) < 0
+            && options.getDumpBlocksCount() != null) {
+            skippedTasks.add("--dump-blocks");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.DB_COMPACT) < 0
+            && options.isDbCompact()) {
+            skippedTasks.add("--db-compact");
+        }
+        return skippedTasks;
     }
 
     /**
@@ -474,7 +924,7 @@ public class Cli {
             block = Long.parseLong(blockNumber);
         } catch (NumberFormatException e) {
             System.out.println(
-                "The given argument <" + blockNumber + "> cannot be converted to a number.");
+                    "The given argument «" + blockNumber + "» cannot be converted to a number.");
             return RecoveryUtils.Status.ILLEGAL_ARGUMENT;
         }
 
@@ -484,21 +934,20 @@ public class Cli {
     private void createKeystoreDirIfMissing() {
         if (!keystoreDir.isDirectory()) {
             if (!keystoreDir.mkdir()) {
-                System.out.println("Ssl keystore directory could not be created. " +
-                    "Please check user permissions or create directory manually.");
+                System.out.println(
+                        "Ssl keystore directory could not be created. "
+                                + "Please check user permissions or create directory manually.");
                 System.exit(1);
             }
             System.out.println();
         }
     }
 
-    /**
-     * For security reasons we only want the ssl option to run in a console environment.
-     */
+    /** For security reasons we only want the ssl option to run in a console environment. */
     private void checkConsoleExists(Console console) {
         if (console == null) {
             System.out.println(
-                "No console found. This command can only be run interactively in a console environment.");
+                    "No console found. This command can only be run interactively in a console environment.");
             System.exit(1);
         }
     }
@@ -515,17 +964,81 @@ public class Cli {
 
     private String getCertPass(Console console) {
         int minPassLen = 7;
-        String certPass = String.valueOf(console.readPassword(
-                "Enter certificate password (at least " + minPassLen + " characters):\n"));
-        if ((certPass == null) || (certPass.isEmpty())) {
+        String certPass =
+                String.valueOf(
+                        console.readPassword(
+                                "Enter certificate password (at least "
+                                        + minPassLen
+                                        + " characters):\n"));
+        if (certPass.isEmpty()) {
             System.out.println("Error: no certificate password entered.");
             System.exit(1);
         } else if (certPass.length() < minPassLen) {
             System.out.println(
-                "Error: certificate password must be at least " + minPassLen + " characters long.");
+                    "Error: certificate password must be at least "
+                            + minPassLen
+                            + " characters long.");
             System.exit(1);
         }
         return certPass;
     }
 
+    // Methods below taken from FileUtils class
+    public static boolean copyRecursively(File src, File target) {
+        if (src.isDirectory()) {
+            return copyDirectoryContents(src, target);
+        } else {
+            try {
+                Files.copy(src, target);
+                return true;
+            } catch (IOException e) {
+                return false;
+            }
+        }
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    private static boolean copyDirectoryContents(File src, File target) {
+        Preconditions.checkArgument(src.isDirectory(), "Source dir is not a directory: %s", src);
+
+        // Don't delete symbolic link directories
+        if (isSymbolicLink(src)) {
+            return false;
+        }
+
+        target.mkdirs();
+        Preconditions.checkArgument(target.isDirectory(), "Target dir is not a directory: %s", src);
+
+        boolean success = true;
+        for (File file : listFiles(src)) {
+            success = copyRecursively(file, new File(target, file.getName())) && success;
+        }
+        return success;
+    }
+
+    private static boolean isSymbolicLink(File file) {
+        try {
+            File canonicalFile = file.getCanonicalFile();
+            File absoluteFile = file.getAbsoluteFile();
+            File parentFile = file.getParentFile();
+            // a symbolic link has a different name between the canonical and absolute path
+            return !canonicalFile.getName().equals(absoluteFile.getName())
+                    ||
+                    // or the canonical parent path is not the same as the file's parent path,
+                    // provided the file has a parent path
+                    parentFile != null
+                            && !parentFile.getCanonicalPath().equals(canonicalFile.getParent());
+        } catch (IOException e) {
+            // error on the side of caution
+            return true;
+        }
+    }
+
+    private static ImmutableList<File> listFiles(File dir) {
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return ImmutableList.of();
+        }
+        return ImmutableList.copyOf(files);
+    }
 }

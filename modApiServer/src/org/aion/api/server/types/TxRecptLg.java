@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.api.server.types;
 
@@ -50,13 +49,15 @@ public class TxRecptLg {
     // true when the log was removed, due to a chain reorganization. false if its a valid log.
     public boolean removed;
 
-    public <TX extends ITransaction> TxRecptLg(Log logInfo, IBlock b, Integer txIndex, TX tx, int logIdx, boolean isMainchain) {
+    public <TX extends ITransaction> TxRecptLg(
+            Log logInfo, IBlock b, Integer txIndex, TX tx, int logIdx, boolean isMainchain) {
         this.logIndex = TypeConverter.toJsonHex(logIdx);
         this.blockNumber = b == null ? null : TypeConverter.toJsonHex(b.getNumber());
         this.blockHash = b == null ? null : TypeConverter.toJsonHex(b.getHash());
-        this.transactionIndex = (b == null || txIndex == null) ? null : TypeConverter.toJsonHex(txIndex);
+        this.transactionIndex =
+                (b == null || txIndex == null) ? null : TypeConverter.toJsonHex(txIndex);
         this.transactionHash = TypeConverter.toJsonHex(tx.getHash());
-        this.address = (tx == null || tx.getTo() == null) ? "" : TypeConverter.toJsonHex(tx.getTo().toBytes());
+        this.address = TypeConverter.toJsonHex(logInfo.getAddress().toString());
         this.data = TypeConverter.toJsonHex(logInfo.getData());
         this.removed = !isMainchain;
 

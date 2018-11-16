@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,9 +31,19 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.crypto;
 
+import static java.util.Arrays.copyOfRange;
+import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import org.aion.base.util.NativeLoader;
 import org.aion.crypto.hash.Blake2b;
 import org.aion.crypto.hash.Blake2bNative;
@@ -43,23 +53,11 @@ import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
 import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-
-import static java.util.Arrays.copyOfRange;
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
-
 /**
  * A collection of utility functions for computing hashes.
- * <p>
- * It's recommended to use {@link #h256(byte[])}, {@link #h256(byte[], byte[])}
- * and {@link #h256(byte[], int, int)} whenever possible, instead of using the
- * specific hash algorithms
- * </p>
+ *
+ * <p>It's recommended to use {@link #h256(byte[])}, {@link #h256(byte[], byte[])} and {@link
+ * #h256(byte[], int, int)} whenever possible, instead of using the specific hash algorithms
  *
  * @author jin, cleaned by yulong
  */
@@ -70,7 +68,8 @@ public class HashUtil {
     }
 
     public enum H256Type {
-        KECCAK_256, BLAKE2B_256
+        KECCAK_256,
+        BLAKE2B_256
     }
 
     protected static H256Type type = BLAKE2B_256;
@@ -110,9 +109,7 @@ public class HashUtil {
         }
     }
 
-    /**
-     * Computes the 256-bit hash of the given two inputs.
-     */
+    /** Computes the 256-bit hash of the given two inputs. */
     public static byte[] h256(byte[] in1, byte[] in2) {
 
         if (in1 == null || in2 == null) {
@@ -139,8 +136,7 @@ public class HashUtil {
      */
     public static byte[] h256(byte[] in, int start, int len) {
 
-        if (in == null || start < 0 || len <= 0)
-            return null;
+        if (in == null || start < 0 || len <= 0) return null;
 
         byte[] buf = Arrays.copyOfRange(in, start, start + len);
         switch (type) {
@@ -154,8 +150,7 @@ public class HashUtil {
     }
 
     /**
-     * Computes the SHA-256, a member of the SHA-2 cryptographic hash functions,
-     * of the given input.
+     * Computes the SHA-256, a member of the SHA-2 cryptographic hash functions, of the given input.
      *
      * @param input Data for hashing
      * @return Hash of the data
@@ -216,8 +211,8 @@ public class HashUtil {
     }
 
     /**
-     * Added in blake2b equivalent of retrieving the hash of two hashes, to be
-     * used by trie implementations
+     * Added in blake2b equivalent of retrieving the hash of two hashes, to be used by trie
+     * implementations
      *
      * @param in1
      * @param in2
@@ -229,16 +224,17 @@ public class HashUtil {
         digest.update(in2);
         return digest.digest();
     }
-    
+
     public static byte[] blake256Native(byte[] in) {
         return Blake2bNative.blake256(in);
     }
-    
+
     public static byte[] blake256Native(byte[] in1, byte[] in2) {
         return Blake2bNative.blake256(in1, in2);
     }
 
-    public static byte[][] getSolutionHash(byte[] personalization, byte[] nonce, int[] indices, byte[] header) {
+    public static byte[][] getSolutionHash(
+            byte[] personalization, byte[] nonce, int[] indices, byte[] header) {
         return Blake2bNative.getSolutionHash(personalization, nonce, indices, header);
     }
 
@@ -246,8 +242,7 @@ public class HashUtil {
      * blake2b 128-bit digest variant
      *
      * @param in a variable length input to be hashed
-     * @return {@code hash} 128-bit (16 byte) output from blake2b hashing
-     * algorithm
+     * @return {@code hash} 128-bit (16 byte) output from blake2b hashing algorithm
      */
     public static byte[] blake128(byte[] in) {
         Blake2b digest = Blake2b.Digest.newInstance(16);
@@ -274,11 +269,9 @@ public class HashUtil {
 
     /**
      * Computes the SHA3 hash of the input.
-     * <p>
-     * NOTE: This method does NOT follow the NIST SHA3-256 standard, it's only
-     * an alias of the {@link #keccak256(byte[])} function, and thus being
-     * deprecated.
-     * </p>
+     *
+     * <p>NOTE: This method does NOT follow the NIST SHA3-256 standard, it's only an alias of the
+     * {@link #keccak256(byte[])} function, and thus being deprecated.
      *
      * @param input
      * @return
@@ -289,8 +282,8 @@ public class HashUtil {
     }
 
     /**
-     * Calculates RIGTMOST160(SHA3(input)). This is used in address
-     * calculations. * @param input - data
+     * Calculates RIGTMOST160(SHA3(input)). This is used in address calculations. * @param input -
+     * data
      *
      * @return - 20 right bytes of the hash keccak of the data
      */
@@ -299,9 +292,7 @@ public class HashUtil {
         return copyOfRange(hash, 12, hash.length);
     }
 
-    /**
-     * Calculates the address as per the QA2 definitions
-     */
+    /** Calculates the address as per the QA2 definitions */
     public static byte[] calcNewAddr(byte[] addr, byte[] nonce) {
         ByteBuffer buf = ByteBuffer.allocate(32);
         buf.put(AddressSpecs.A0_IDENTIFIER);

@@ -6,22 +6,33 @@ CONFIG_PATH="${PACK_PATH}/config"
 DOCS_PATH="${PACK_PATH}/docs"
 API_PATH="${PACK_PATH}/clientAPI"
 SCRIPT_PATH="${PACK_PATH}/script"
-JDK_VER="jdk-10.0.2"
+JDK_VER="11.0.1"
+JDK_TYPE="openjdk"
+JAVAFX_PATH="${PACK_PATH}/javafx"
+JAVAFX_VER="javafx-jmods-11"
 
 if [ ! -d "$PACK_PATH" ]; then
   mkdir $PACK_PATH
 fi
 
-# download jre9 if can't find the jre env
+# download jre11 if can't find the jdk env
 if [ ! -d "$JDK_PATH" ]; then
-  wget -nc --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" "http://download.oracle.com/otn-pub/java/jdk/10.0.2+13/19aef61b38124481863b1413dce1855f/jdk-10.0.2_linux-x64_bin.tar.gz" -O "${PACK_PATH}/${JDK_VER}_linux-x64_bin.tar.gz"
-  tar -xf "${PACK_PATH}/${JDK_VER}_linux-x64_bin.tar.gz" -C $PACK_PATH
-  mv "${PACK_PATH}/${JDK_VER}" $JDK_PATH
+  wget -c  https://download.java.net/java/GA/jdk11/13/GPL/${JDK_TYPE}-${JDK_VER}_linux-x64_bin.tar.gz
+  tar -xf "${JDK_TYPE}-${JDK_VER}_linux-x64_bin.tar.gz" -C $PACK_PATH
+  mv "${PACK_PATH}/jdk-${JDK_VER}" $JDK_PATH
+fi
+
+# download javafx if can't find the javafx env
+if [ ! -d "$JAVAFX_PATH" ]; then
+  wget -c http://gluonhq.com/download/javafx-11-jmods-linux -O openjfx-11_linux-x64_bin-jmods.zip
+  unzip openjfx-11_linux-x64_bin-jmods.zip -d $PACK_PATH
+  mv "${PACK_PATH}/${JAVAFX_VER}" $JAVAFX_PATH
 fi
 
 # generate aion runtime
 if [ ! -d "$JDK_RT" ]; then
-  $JDK_PATH/bin/jlink --module-path $JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management,jdk.unsupported,javafx.graphics,javafx.controls,javafx.base,jdk.sctp,javafx.fxml,javafx.swing,java.security.sasl --output $JDK_RT
+  $JDK_PATH/bin/jlink --module-path $JAVAFX_PATH:$JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management,jdk.unsupported,javafx.graphics,javafx.controls,javafx.base,jdk.sctp,javafx.fxml,javafx.swing,java.security.sasl \
+  --output $JDK_RT --compress 2 --no-man-pages
   cp $JDK_PATH/bin/jstack $JDK_RT/bin
 fi
 
@@ -37,8 +48,7 @@ fi
 # copy the config files if can't find the config env
 if [ ! -d "$CONFIG_PATH" ]; then
   mkdir $CONFIG_PATH
-  cp ./modBoot/resource/** $CONFIG_PATH
-  mv $CONFIG_PATH/genesis.json $CONFIG_PATH/genesis.json
+  cp -r ./modBoot/resource/** $CONFIG_PATH
 fi
 
 # copy the doc files if can't find the docs env
@@ -61,4 +71,3 @@ if [ ! -d "$API_PATH" ]; then
 fi
 
 cp aion_api/pack/Java-API*-doc.zip $DOCS_PATH
-cp aion_api/lib/gson-2.7.jar ./lib

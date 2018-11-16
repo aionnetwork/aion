@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,8 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -212,7 +213,7 @@ public class AionRepositoryImplTest {
         repoTrack.addStorageRow(defaultAccount, new DataWord(key), new DataWord(value));
 
         DataWord retrievedStorageValue =
-            (DataWord) repoTrack.getStorageValue(defaultAccount, new DataWord(key));
+                (DataWord) repoTrack.getStorageValue(defaultAccount, new DataWord(key));
         assertThat(retrievedStorageValue).isEqualTo(new DataWord(value));
 
         // commit changes, then check that the root has updated

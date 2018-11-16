@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,8 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.base.util;
 
 import java.util.Arrays;
@@ -70,7 +71,8 @@ public final class FastByteComparisons {
      * @param size2
      * @return
      */
-    public static int compareTo(byte[] array1, int offset1, int size1, byte[] array2, int offset2, int size2) {
+    public static int compareTo(
+            byte[] array1, int offset1, int size1, byte[] array2, int offset2, int size2) {
         byte[] b1 = Arrays.copyOfRange(array1, offset1, offset1 + size1);
         byte[] b2 = Arrays.copyOfRange(array2, offset2, offset2 + size2);
 

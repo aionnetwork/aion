@@ -54,14 +54,12 @@ public final class PeerMetric implements IPeerMetric {
     @Override
     public boolean shouldNotConn() {
         return (metricFailedConn > P2pConstant.STOP_CONN_AFTER_FAILED_CONN
-            && ((System.currentTimeMillis() - metricFailedConnTs)
-            < P2pConstant.FAILED_CONN_RETRY_INTERVAL))
-            || !notBan();
+                        && ((System.currentTimeMillis() - metricFailedConnTs)
+                                < P2pConstant.FAILED_CONN_RETRY_INTERVAL))
+                || !notBan();
     }
 
-    /**
-     * Increments the failed connection counter.
-     */
+    /** Increments the failed connection counter. */
     @Override
     public void incFailedCount() {
         metricFailedConn++;

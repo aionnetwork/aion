@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,14 +31,14 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.base.db;
 
 /**
  * Interface for a details provider, provides instances of contract details
- * 
- * @author yao
  *
+ * @author yao
  */
 public interface DetailsProvider {
     IContractDetails getDetails();

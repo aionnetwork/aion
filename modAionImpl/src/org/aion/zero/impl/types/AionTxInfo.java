@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,13 +19,10 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.zero.impl.types;
 
 import java.math.BigInteger;
-
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
@@ -40,9 +37,7 @@ public class AionTxInfo extends AbstractTxInfo<AionTxReceipt, AionTransaction> {
         this.index = index;
     }
 
-    /**
-     * Creates a pending tx info
-     */
+    /** Creates a pending tx info */
     public AionTxInfo(AionTxReceipt receipt) {
         this.receipt = receipt;
     }

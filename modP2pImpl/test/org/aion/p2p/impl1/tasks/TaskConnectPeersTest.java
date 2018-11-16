@@ -1,23 +1,24 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
- *      This file is part of the aion network project.
  *
- *      The aion network project is free software: you can redistribute it
- *      and/or modify it under the terms of the GNU General Public License
- *      as published by the Free Software Foundation, either version 3 of
- *      the License, or any later version.
+ *     This file is part of the aion network project.
  *
- *      The aion network project is distributed in the hope that it will
- *      be useful, but WITHOUT ANY WARRANTY; without even the implied
- *      warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *      See the GNU General Public License for more details.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *      You should have received a copy of the GNU General Public License
- *      along with the aion network project source files.
- *      If not, see <https://www.gnu.org/licenses/>.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- *  Contributors:
- *      Aion foundation.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
  */
 
 package org.aion.p2p.impl1.tasks;
@@ -58,20 +59,15 @@ import org.mockito.MockitoAnnotations;
 
 public class TaskConnectPeersTest {
 
-    @Mock
-    private INodeMgr nodeMgr;
+    @Mock private INodeMgr nodeMgr;
 
-    @Mock
-    private IP2pMgr p2pMgr;
+    @Mock private IP2pMgr p2pMgr;
 
-    @Mock
-    private BlockingQueue<MsgOut> sendMsgQue;
+    @Mock private BlockingQueue<MsgOut> sendMsgQue;
 
-    @Mock
-    private ReqHandshake1 rhs;
+    @Mock private ReqHandshake1 rhs;
 
-    @Mock
-    private INode node;
+    @Mock private INode node;
 
     private ServerSocketChannel ssc;
 
@@ -112,7 +108,7 @@ public class TaskConnectPeersTest {
                 while (itor.hasNext()) {
                     SelectionKey key;
                     try {
-                        key = (SelectionKey)itor.next();
+                        key = (SelectionKey) itor.next();
                         if (key.isAcceptable()) {
                             ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
                             sc = ssc.accept();
@@ -128,7 +124,7 @@ public class TaskConnectPeersTest {
                             }
                         }
 
-                    } catch ( IOException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                     itor.remove();
@@ -141,7 +137,7 @@ public class TaskConnectPeersTest {
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
         Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.TRACE.name());
+        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
         AionLoggerFactory.init(logMap);
 
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -168,12 +164,11 @@ public class TaskConnectPeersTest {
         ssc.close();
     }
 
-
-    @Test
+    @Test(timeout = 10_000)
     public void testRun() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
-            rhs);
+        TaskConnectPeers tcp =
+                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         Thread t = new Thread(tcp);
@@ -181,15 +176,16 @@ public class TaskConnectPeersTest {
         assertTrue(t.isAlive());
         Thread.sleep(10);
         atb.set(false);
-        Thread.sleep(2000);
-        assertEquals("TERMINATED", t.getState().toString());
+        while (!t.getState().toString().equals("TERMINATED")) {
+            Thread.sleep(100);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRun1() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
-            rhs);
+        TaskConnectPeers tcp =
+                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         when(nodeMgr.activeNodesSize()).thenReturn(128);
@@ -220,15 +216,16 @@ public class TaskConnectPeersTest {
         Thread.sleep(2000);
 
         atb.set(false);
-        Thread.sleep(3000);
-        assertEquals("TERMINATED", t.getState().toString());
+        while (!t.getState().toString().equals("TERMINATED")) {
+            Thread.sleep(100);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRunException() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
-            rhs);
+        TaskConnectPeers tcp =
+                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);
@@ -257,15 +254,16 @@ public class TaskConnectPeersTest {
         Thread.sleep(2000);
 
         atb.set(false);
-        Thread.sleep(3000);
-        assertEquals("TERMINATED", t.getState().toString());
+        while (!t.getState().toString().equals("TERMINATED")) {
+            Thread.sleep(100);
+        }
     }
 
-    @Test
+    @Test(timeout = 10_000)
     public void testRunException2() throws InterruptedException {
         AtomicBoolean atb = new AtomicBoolean(true);
-        TaskConnectPeers tcp = new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue,
-            rhs);
+        TaskConnectPeers tcp =
+                new TaskConnectPeers(p2pMgr, atb, nodeMgr, 128, selector, sendMsgQue, rhs);
         assertNotNull(tcp);
 
         when(node.getIdHash()).thenReturn(1);

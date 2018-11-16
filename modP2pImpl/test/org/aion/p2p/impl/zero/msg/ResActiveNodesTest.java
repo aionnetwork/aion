@@ -70,14 +70,14 @@ public class ResActiveNodesTest {
 
         int m = ThreadLocalRandom.current().nextInt(0, 20);
         List<INode> srcNodes = new ArrayList<>();
-        for(int i = 0; i < m; i++){
+        for (int i = 0; i < m; i++) {
             srcNodes.add(randomNode());
         }
 
         ResActiveNodes res = ResActiveNodes.decode(new ResActiveNodes(srcNodes).encode());
         assertEquals(res.getNodes().size(), m);
         List<INode> tarNodes = res.getNodes();
-        for(int i = 0; i < m; i++){
+        for (int i = 0; i < m; i++) {
 
             INode srcNode = srcNodes.get(i);
             INode tarNode = tarNodes.get(i);

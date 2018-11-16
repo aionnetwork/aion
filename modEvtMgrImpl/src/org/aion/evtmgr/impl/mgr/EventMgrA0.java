@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,14 +19,11 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.evtmgr.impl.mgr;
 
 import java.util.List;
 import java.util.Properties;
-
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -36,10 +33,7 @@ import org.aion.evtmgr.impl.handler.ConsensusHandler;
 import org.aion.evtmgr.impl.handler.MinerHandler;
 import org.aion.evtmgr.impl.handler.TxHandler;
 
-/**
- * @author jay
- *
- */
+/** @author jay */
 public class EventMgrA0 extends AbstractEventMgr implements IEventMgr {
 
     public EventMgrA0(Properties config) {
@@ -65,7 +59,7 @@ public class EventMgrA0 extends AbstractEventMgr implements IEventMgr {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.aion.evt.api.IEventMgr#registerEvent(java.util.List)
      */
     @Override
@@ -73,14 +67,17 @@ public class EventMgrA0 extends AbstractEventMgr implements IEventMgr {
         synchronized (this) {
             for (IEvent e : _evt) {
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("EVTMGR.registerEvent EventType [{}] CallbackType [{}]", e.getEventType(),
+                    LOG.trace(
+                            "EVTMGR.registerEvent EventType [{}] CallbackType [{}]",
+                            e.getEventType(),
                             e.getCallbackType());
                 }
 
                 IHandler hdr = this.getHandler(e.getEventType());
                 if (hdr == null) {
                     if (LOG.isErrorEnabled()) {
-                        LOG.error("EVTMGR.registerEvent can't find the handler base on the EventType [{}]",
+                        LOG.error(
+                                "EVTMGR.registerEvent can't find the handler base on the EventType [{}]",
                                 e.getEventType());
                     }
                     return false;
@@ -94,7 +91,7 @@ public class EventMgrA0 extends AbstractEventMgr implements IEventMgr {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.aion.evt.api.IEventMgr#unregisterEvent(java.util.List)
      */
     @Override
@@ -108,7 +105,8 @@ public class EventMgrA0 extends AbstractEventMgr implements IEventMgr {
                 IHandler hdr = this.getHandler(e.getEventType());
                 if (hdr == null) {
                     if (LOG.isErrorEnabled()) {
-                        LOG.error("EVTMGR.unregisterEvent can't find the handler base on the EventType [{}]",
+                        LOG.error(
+                                "EVTMGR.unregisterEvent can't find the handler base on the EventType [{}]",
                                 e.getEventType());
                     }
                     return false;
@@ -122,7 +120,7 @@ public class EventMgrA0 extends AbstractEventMgr implements IEventMgr {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.aion.evt.api.IEventMgr#newEvents(java.util.List)
      */
     @Override
@@ -135,7 +133,10 @@ public class EventMgrA0 extends AbstractEventMgr implements IEventMgr {
                 }
             } else {
                 if (LOG.isTraceEnabled()) {
-                    LOG.trace("EVTMGR.newEvents eCBT:[{}] eEVT:[{}]", e.getCallbackType(), e.getEventType());
+                    LOG.trace(
+                            "EVTMGR.newEvents eCBT:[{}] eEVT:[{}]",
+                            e.getCallbackType(),
+                            e.getEventType());
                 }
 
                 hdr.onEvent(e);
@@ -154,7 +155,10 @@ public class EventMgrA0 extends AbstractEventMgr implements IEventMgr {
             }
         } else {
             if (LOG.isTraceEnabled()) {
-                LOG.trace("EVTMGR.newEvent eCBT:[{}] eEVT:[{}]", _evt.getCallbackType(), _evt.getEventType());
+                LOG.trace(
+                        "EVTMGR.newEvent eCBT:[{}] eEVT:[{}]",
+                        _evt.getCallbackType(),
+                        _evt.getEventType());
             }
 
             hdr.onEvent(_evt);

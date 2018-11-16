@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.precompiled.contracts.ATB;
 
 import java.math.BigInteger;
@@ -9,7 +32,7 @@ public class BridgeDeserializerTest {
      * Tries to trigger an out of bounds exception on the first occurrence of parseMeta using some
      * integer overflow.
      *
-     * No assertions -- we are testing whether or not an exception gets thrown.
+     * <p>No assertions -- we are testing whether or not an exception gets thrown.
      */
     @Test
     public void testParseAddressListIntegerOverflow1() {
@@ -23,7 +46,7 @@ public class BridgeDeserializerTest {
      * Tries to trigger an out of bounds exception on the second occurrence of parseMeta using some
      * trickier integer overflowing.
      *
-     * No assertions -- we are testing whether or not an exception gets thrown.
+     * <p>No assertions -- we are testing whether or not an exception gets thrown.
      */
     @Test
     public void testParseAddressListIntegerOverflow2() {
@@ -34,11 +57,11 @@ public class BridgeDeserializerTest {
     }
 
     /**
-     * Since the logic gives us the invariant: end <= call.length
-     * and we access i + elementLength inside a loop that loops until end-1, this test gets some
-     * numbers aligned so that end == call.length, the best place we can trigger an out of bounds.
+     * Since the logic gives us the invariant: end <= call.length and we access i + elementLength
+     * inside a loop that loops until end-1, this test gets some numbers aligned so that end ==
+     * call.length, the best place we can trigger an out of bounds.
      *
-     * No assertions -- we are testing whether or not an exception gets thrown.
+     * <p>No assertions -- we are testing whether or not an exception gets thrown.
      */
     @Test
     public void testParseAddressListIntegerOverflow3() {
@@ -50,9 +73,7 @@ public class BridgeDeserializerTest {
         BridgeDeserializer.parseAddressList(array);
     }
 
-    /**
-     * Returns byte array length numBytes of integer, truncating if need be.
-     */
+    /** Returns byte array length numBytes of integer, truncating if need be. */
     private static byte[] toBytes(int integer, int numBytes) {
         byte[] alignedBytes = new byte[numBytes];
         byte[] unalignedBytes = BigInteger.valueOf(integer).toByteArray();
@@ -60,5 +81,4 @@ public class BridgeDeserializerTest {
         System.arraycopy(unalignedBytes, 0, alignedBytes, numBytes - len, len);
         return alignedBytes;
     }
-
 }

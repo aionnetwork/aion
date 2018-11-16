@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,8 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.base.util;
 
 import java.time.Instant;
@@ -50,20 +51,19 @@ public final class TimeInstant {
         return instant.getEpochSecond();
     }
 
-
-//    public long toEpochNano() {
-//        long seconds = instant.getEpochSecond();
-//        int ns = instant.getNano();
-//
-//        if (seconds < 0 && ns > 0) {
-//            long nanos = Math.multiplyExact(seconds + 1, 1000_000_000);
-//            long adjustment = ns - 1000_000_000;
-//            return Math.addExact(nanos, adjustment);
-//        } else {
-//            long nanos = Math.multiplyExact(seconds, 1000_000_000);
-//            return Math.addExact(nanos, ns);
-//        }
-//    }
+    //    public long toEpochNano() {
+    //        long seconds = instant.getEpochSecond();
+    //        int ns = instant.getNano();
+    //
+    //        if (seconds < 0 && ns > 0) {
+    //            long nanos = Math.multiplyExact(seconds + 1, 1000_000_000);
+    //            long adjustment = ns - 1000_000_000;
+    //            return Math.addExact(nanos, adjustment);
+    //        } else {
+    //            long nanos = Math.multiplyExact(seconds, 1000_000_000);
+    //            return Math.addExact(nanos, ns);
+    //        }
+    //    }
 
     public long toEpochMicro() {
         long seconds = instant.getEpochSecond();
@@ -79,17 +79,17 @@ public final class TimeInstant {
         }
     }
 
-//    public long toEpochMilli() {
-//        long seconds = instant.getEpochSecond();
-//        int nanos = instant.getNano();
-//
-//        if (seconds < 0 && nanos > 0) {
-//            long milli = Math.multiplyExact(seconds + 1, 1000);
-//            long adjustment = nanos / 1000_000 - 1000;
-//            return Math.addExact(milli, adjustment);
-//        } else {
-//            long milli = Math.multiplyExact(seconds, 1000);
-//            return Math.addExact(milli, nanos / 1000_000);
-//        }
-//    }
+    //    public long toEpochMilli() {
+    //        long seconds = instant.getEpochSecond();
+    //        int nanos = instant.getNano();
+    //
+    //        if (seconds < 0 && nanos > 0) {
+    //            long milli = Math.multiplyExact(seconds + 1, 1000);
+    //            long adjustment = nanos / 1000_000 - 1000;
+    //            return Math.addExact(milli, adjustment);
+    //        } else {
+    //            long milli = Math.multiplyExact(seconds, 1000);
+    //            return Math.addExact(milli, nanos / 1000_000);
+    //        }
+    //    }
 }

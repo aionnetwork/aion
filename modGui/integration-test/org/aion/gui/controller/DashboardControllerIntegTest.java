@@ -1,7 +1,38 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.gui.controller;
 
-import com.google.common.eventbus.EventBus;
-import javafx.application.Platform;
+import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.testfx.api.FxAssert.verifyThat;
+
+import java.nio.charset.Charset;
+import java.util.LinkedList;
+import java.util.concurrent.TimeUnit;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -15,31 +46,20 @@ import org.aion.gui.model.GeneralKernelInfoRetriever;
 import org.aion.gui.model.KernelConnection;
 import org.aion.gui.model.KernelUpdateTimer;
 import org.aion.gui.model.dto.SyncInfoDto;
-import org.aion.gui.util.DataUpdater;
 import org.aion.os.KernelInstanceId;
 import org.aion.os.KernelLauncher;
 import org.aion.os.UnixKernelProcessHealthChecker;
 import org.aion.wallet.console.ConsoleManager;
-import org.junit.After;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.matcher.control.LabeledMatchers;
 import org.testfx.util.WaitForAsyncUtils;
 
-import java.nio.charset.Charset;
-import java.util.LinkedList;
-import java.util.concurrent.TimeUnit;
-
-import static javafx.fxml.FXMLLoader.DEFAULT_CHARSET_NAME;
-import static org.junit.Assert.fail;
-import static org.mockito.Mockito.*;
-import static org.testfx.api.FxAssert.verifyThat;
-
 /**
  * Tests integration of {@link DashboardController}; specifically, that it modifies its View
  * correctly and invokes the expected Model-layer classes.
  *
- * Test focuses on the correctness of the UI elements.  Classes from the model layer are mocked
+ * <p>Test focuses on the correctness of the UI elements. Classes from the model layer are mocked
  * and we verify that they get called, but their correctness is not verified here (those are taken
  * care of in the integration and unit tests of the model layer).
  */
@@ -67,36 +87,36 @@ public class DashboardControllerIntegTest extends ApplicationTest {
         healthChecker = mock(UnixKernelProcessHealthChecker.class);
         consoleManager = mock(ConsoleManager.class);
 
-            cf = new ControllerFactory()
-                    .withKernelConnection(kernelConnection)
-                    .withKernelLauncher(kernelLauncher)
-                    .withTimer(kernelUpdateTimer)
-                    .withSyncInfoDto(syncInfoDto)
-                    .withGeneralKernelInfoRetriever(generalKernelInfoRetriever)
-                    .withHealthChecker(healthChecker)
-                    .withConsoleManager(consoleManager)
-                    .withEventBusRegistry(ebr);
-            FXMLLoader loader = new FXMLLoader(
-                    DashboardController.class.getResource("components/Dashboard.fxml"),
-                    null,
-                    null,
-                    cf,
-                    Charset.forName(DEFAULT_CHARSET_NAME),
-                    new LinkedList<>());
-            dashboardView = loader.load();
-            controller = loader.getController();
+        cf =
+                new ControllerFactory()
+                        .withKernelConnection(kernelConnection)
+                        .withKernelLauncher(kernelLauncher)
+                        .withTimer(kernelUpdateTimer)
+                        .withSyncInfoDto(syncInfoDto)
+                        .withGeneralKernelInfoRetriever(generalKernelInfoRetriever)
+                        .withHealthChecker(healthChecker)
+                        .withConsoleManager(consoleManager)
+                        .withEventBusRegistry(ebr);
+        FXMLLoader loader =
+                new FXMLLoader(
+                        DashboardController.class.getResource("components/Dashboard.fxml"),
+                        null,
+                        null,
+                        cf,
+                        Charset.forName(DEFAULT_CHARSET_NAME),
+                        new LinkedList<>());
+        dashboardView = loader.load();
+        controller = loader.getController();
         stage.setScene(new Scene(dashboardView));
         stage.show();
         stage.toFront();
     }
 
     /**
-     * Use case:
-     *  - Start Dashboard with no kernel running.  Launch kernel button should be enabled
-     *  - Click launch kernel.  Kernel should launch and button should be disabled
-     *  - UI elements should update
-     *  - Click terminate button. Kernel should terminate; terminate button should close; UI elements
-     *    should update
+     * Use case: - Start Dashboard with no kernel running. Launch kernel button should be enabled -
+     * Click launch kernel. Kernel should launch and button should be disabled - UI elements should
+     * update - Click terminate button. Kernel should terminate; terminate button should close; UI
+     * elements should update
      */
     @Test
     public void testLaunchKernelThenTerminate() throws Exception {
@@ -186,8 +206,12 @@ public class DashboardControllerIntegTest extends ApplicationTest {
             fail("Api call took too long.");
         }
         WaitForAsyncUtils.waitForFxEvents();
-        verifyThat("#numPeersLabel", LabeledMatchers.hasText(labelInitialValue)); // should not have been updated
+        verifyThat(
+                "#numPeersLabel",
+                LabeledMatchers.hasText(labelInitialValue)); // should not have been updated
         verifyThat("#blocksLabel", LabeledMatchers.hasText("0/0 total blocks"));
-        verifyThat("#isMining", LabeledMatchers.hasText(labelInitialValue)); // should not have been updated
+        verifyThat(
+                "#isMining",
+                LabeledMatchers.hasText(labelInitialValue)); // should not have been updated
     }
 }

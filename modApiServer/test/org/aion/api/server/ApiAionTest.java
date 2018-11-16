@@ -23,6 +23,25 @@
 
 package org.aion.api.server;
 
+import static org.aion.base.util.TypeConverter.StringHexToBigInteger;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import io.undertow.util.FileUtils;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import org.aion.api.server.rpc.ApiWeb3Aion;
+import org.aion.api.server.rpc.RpcError;
+import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.base.type.Address;
@@ -34,6 +53,7 @@ import org.aion.evtmgr.impl.evt.EventDummy;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
+import org.aion.mcf.blockchain.TxResponse;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -42,17 +62,12 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
-
-import java.io.File;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.*;
 
 public class ApiAionTest {
 
@@ -80,7 +95,6 @@ public class ApiAionTest {
         private boolean allFlagsSet() {
             return (onBlockFlag && pendingRcvdFlag && pendingUpdateFlag);
         }
-
 
         private ApiAionImpl(AionImpl impl) {
             super(impl);
@@ -114,15 +128,15 @@ public class ApiAionTest {
 
             ees.add(evBlock);
 
-            //provokes exception in EpApi.run()
+            // provokes exception in EpApi.run()
             ees.add(new EventBlock(EventBlock.CALLBACK.ONBLOCK0));
             ees.add(new EventDummy());
         }
-
     }
 
     private static final String KEYSTORE_PATH;
-    private String addressString;
+    private static final String DATABASE_PATH = "ApiServerTestPath";
+    private long testStartTime;
 
     static {
         String storageDir = System.getProperty("local.storage.dir");
@@ -133,44 +147,43 @@ public class ApiAionTest {
     }
 
     private ApiAionImpl api;
-    private AionImpl impl = AionImpl.inst();
-    private AionRepositoryImpl repo = AionRepositoryImpl.inst();
+    private ApiWeb3Aion web3Api;
+    private AionImpl impl;
+    private AionRepositoryImpl repo;
 
     @Before
     public void setup() {
+        CfgAion.inst().getDb().setPath(DATABASE_PATH);
+        impl = AionImpl.inst();
         api = new ApiAionImpl(impl);
+        web3Api = new ApiWeb3Aion(impl);
+        repo = AionRepositoryImpl.inst();
+        testStartTime = System.currentTimeMillis();
     }
 
-    private void tearDown() {
+    @After
+    public void tearDown() {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
+
+        if (folder == null) return;
+
         File[] AllFilesInDirectory = folder.listFiles();
-        List<String> allFileNames = new ArrayList<>();
-        List<String> filesToBeDeleted = new ArrayList<>();
 
         // check for invalid or wrong path - should not happen
-        if (AllFilesInDirectory == null)
-            return;
+        if (AllFilesInDirectory == null) return;
 
         for (File file : AllFilesInDirectory) {
-            allFileNames.add(file.getName());
+            if (file.lastModified() >= testStartTime) file.delete();
         }
+        folder = new File(DATABASE_PATH);
 
-        // get a list of the files needed to be deleted, check the ending of file names
-        // with corresponding addresses
-        for (String name : allFileNames) {
-            String ending = name.substring(name.length() - 64);
+        if (folder == null) return;
 
-            if (ending.equals(addressString)) {
-                filesToBeDeleted.add(KEYSTORE_PATH + "/" + name);
-            }
-        }
-
-        // iterate and delete those files
-        for (String name : filesToBeDeleted) {
-            File file = new File(name);
-            if (file.delete())
-                System.out.println("Deleted file: " + name);
+        try {
+            FileUtils.deleteRecursive(folder.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -211,24 +224,27 @@ public class ApiAionTest {
         assertEquals(blk, api.getBlock(-1));
 
         // retrieval based on block hash
-        assertEquals(blk.toString(), api.getBlockByHash(blk.getHash()).toString());
+        assertTrue(api.getBlockByHash(blk.getHash()).isEqual(blk));
 
         // retrieval based on block number
-        assertEquals(blk.toString(), api.getBlock(blk.getNumber()).toString());
-
+        assertTrue(api.getBlock(blk.getNumber()).isEqual(blk));
 
         // retrieval based on block number that also gives total difficulty
-        Map.Entry rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
-        assertEquals(rslt.getKey().toString(), blk.toString());
+        Map.Entry<AionBlock, BigInteger> rslt = api.getBlockWithTotalDifficulty(blk.getNumber());
+
+        assertTrue(rslt.getKey().isEqual(blk));
 
         // check because blk might be the genesis block
-        assertEquals(rslt.getValue(),
-                ((AionBlockStore) impl.getBlockchain().getBlockStore()).getTotalDifficultyForHash(blk.getHash()));
+        assertEquals(
+                rslt.getValue(),
+                ((AionBlockStore) impl.getBlockchain().getBlockStore())
+                        .getTotalDifficultyForHash(blk.getHash()));
 
         // retrieving genesis block's difficulty
-        assertEquals(api.getBlockWithTotalDifficulty(0).getValue(), CfgAion.inst().getGenesis().getDifficultyBI());
+        assertEquals(
+                api.getBlockWithTotalDifficulty(0).getValue(),
+                CfgAion.inst().getGenesis().getDifficultyBI());
     }
-
 
     @Test
     public void testGetSync() {
@@ -236,30 +252,37 @@ public class ApiAionTest {
         assertNotNull(sync);
         assertEquals(sync.done, impl.isSyncComplete());
         if (impl.getInitialStartingBlockNumber().isPresent())
-            assertEquals((long) impl.getInitialStartingBlockNumber().get(), sync.chainStartingBlkNumber);
-        else
-            assertEquals(0L, sync.chainStartingBlkNumber);
+            assertEquals(
+                    (long) impl.getInitialStartingBlockNumber().get(), sync.chainStartingBlkNumber);
+        else assertEquals(0L, sync.chainStartingBlkNumber);
         if (impl.getNetworkBestBlockNumber().isPresent())
             assertEquals((long) impl.getNetworkBestBlockNumber().get(), sync.networkBestBlkNumber);
-        else
-            assertEquals(0L, sync.networkBestBlkNumber);
+        else assertEquals(0L, sync.networkBestBlkNumber);
         if (impl.getLocalBestBlockNumber().isPresent())
             assertEquals((long) impl.getLocalBestBlockNumber().get(), sync.chainBestBlkNumber);
-        else
-            assertEquals(0L, sync.chainBestBlkNumber);
+        else assertEquals(0L, sync.chainBestBlkNumber);
     }
 
     @Test
+    @Ignore
     public void testGetTransactions() {
         AionBlock parentBlk = impl.getBlockchain().getBestBlock();
         byte[] msg = "test message".getBytes();
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-        AionBlock blk = impl.getAionHub().getBlockchain().createNewBlock(parentBlk,
-                Collections.singletonList(tx), false);
+        AionBlock blk =
+                impl.getAionHub()
+                        .getBlockchain()
+                        .createNewBlock(parentBlk, Collections.singletonList(tx), false);
 
         assertNotNull(blk);
         assertNotEquals(blk.getTransactionsList().size(), 0);
@@ -274,12 +297,13 @@ public class ApiAionTest {
 
         blk = api.getBlockByHash(blk.getHash());
 
-        assertEquals(1, api.getTransactionCount(
-                blk.getTransactionsList().get(0).getFrom(), blk.getNumber()));
+        assertEquals(
+                1,
+                api.getTransactionCount(
+                        blk.getTransactionsList().get(0).getFrom(), blk.getNumber()));
         assertEquals(0, api.getTransactionCount(Address.EMPTY_ADDRESS(), blk.getNumber()));
 
         assertEquals(tx, api.getTransactionByHash(tx.getHash()));
-
     }
 
     @Test
@@ -287,17 +311,28 @@ public class ApiAionTest {
         byte[] msg = "test message".getBytes();
 
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString = addr.toString();
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        addr,
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
-
-        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
+        ArgTxCall txcall =
+                new ArgTxCall(
+                        addr,
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        repo.getNonce(addr),
+                        BigInteger.ONE,
+                        100000,
+                        100000);
 
         assertNotNull(api.doCall(txcall));
         tearDown();
@@ -308,20 +343,30 @@ public class ApiAionTest {
         byte[] msg = "test message".getBytes();
 
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString = addr.toString();
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
+        AionTransaction tx =
+                new AionTransaction(
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        addr,
+                        Address.ZERO_ADDRESS(),
+                        BigInteger.ONE.toByteArray(),
+                        msg,
+                        100000,
+                        100000);
         tx.sign(new ECKeyEd25519());
 
+        ArgTxCall txcall =
+                new ArgTxCall(
+                        addr,
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        repo.getNonce(addr),
+                        BigInteger.ONE,
+                        100000,
+                        100000);
 
-        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertNotEquals(0, api.estimateNrg(txcall));
         assertEquals(impl.estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
         tearDown();
     }
@@ -330,81 +375,132 @@ public class ApiAionTest {
     public void testCreateContract() {
         byte[] msg = "test message".getBytes();
 
+        // null params returns INVALID_TX
+
+        ArgTxCall txcall = null;
+
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_TX);
+
+        // null from and empty from return INVALID_FROM
+
+        txcall =
+                new ArgTxCall(
+                        null,
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        BigInteger.ONE,
+                        BigInteger.ONE,
+                        100000,
+                        100000);
+
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_FROM);
+
+        txcall =
+                new ArgTxCall(
+                        Address.EMPTY_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        BigInteger.ONE,
+                        BigInteger.ONE,
+                        100000,
+                        100000);
+
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_FROM);
+
+        // locked account should throw INVALID_ACCOUNT
+
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString = addr.toString();
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        txcall =
+                new ArgTxCall(
+                        addr,
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        repo.getNonce(addr),
+                        BigInteger.ONE,
+                        100000,
+                        100000);
 
-        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertNotNull(api.createContract(txcall).transId);
-        assertNotNull(api.createContract(txcall).address);
-
-        txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertNull(api.createContract(txcall));
-
-        txcall = new ArgTxCall(Address.ZERO_ADDRESS(), Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertNull(api.createContract(txcall));
-        tearDown();
+        assertEquals(api.createContract(txcall).getType(), TxResponse.INVALID_ACCOUNT);
     }
 
     @Test
     public void testAccountGetters() {
-        assertEquals(repo.getBalance(Address.ZERO_ADDRESS()), api.getBalance(Address.ZERO_ADDRESS()));
+        assertEquals(
+                repo.getBalance(Address.ZERO_ADDRESS()), api.getBalance(Address.ZERO_ADDRESS()));
         assertEquals(repo.getNonce(Address.ZERO_ADDRESS()), api.getNonce(Address.ZERO_ADDRESS()));
-        assertEquals(repo.getBalance(Address.ZERO_ADDRESS()), api.getBalance(Address.ZERO_ADDRESS().toString()));
-        assertEquals(repo.getNonce(Address.ZERO_ADDRESS()), api.getNonce(Address.ZERO_ADDRESS().toString()));
+        assertEquals(
+                repo.getBalance(Address.ZERO_ADDRESS()),
+                api.getBalance(Address.ZERO_ADDRESS().toString()));
+        assertEquals(
+                repo.getNonce(Address.ZERO_ADDRESS()),
+                api.getNonce(Address.ZERO_ADDRESS().toString()));
     }
 
     @Test
     public void testSendTransaction() {
+
         byte[] msg = "test message".getBytes();
 
+        // null params returns INVALID_TX
+
+        ArgTxCall txcall = null;
+
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_TX);
+
+        // null from and empty from return INVALID_FROM
+
+        txcall =
+                new ArgTxCall(
+                        null,
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        BigInteger.ONE,
+                        BigInteger.ONE,
+                        100000,
+                        100000);
+
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_FROM);
+
+        txcall =
+                new ArgTxCall(
+                        Address.EMPTY_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        BigInteger.ONE,
+                        BigInteger.ONE,
+                        100000,
+                        100000);
+
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_FROM);
+
+        // locked account should throw INVALID_ACCOUNT
+
         Address addr = new Address(Keystore.create("testPwd"));
-        addressString = addr.toString();
 
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+        txcall =
+                new ArgTxCall(
+                        addr,
+                        Address.ZERO_ADDRESS(),
+                        msg,
+                        repo.getNonce(addr),
+                        BigInteger.ONE,
+                        100000,
+                        100000);
 
-        ArgTxCall txcall = new ArgTxCall(addr, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertNotNull(api.sendTransaction(txcall));
-
-        AionTransaction tx = new AionTransaction(repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
-                addr, Address.ZERO_ADDRESS(), BigInteger.ONE.toByteArray(),
-                msg, 100000, 100000);
-        tx.sign(new ECKeyEd25519());
-
-        assertNotNull(api.sendTransaction(tx.getEncoded()));
-
-        txcall = new ArgTxCall(null, Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertNull(api.sendTransaction(txcall));
-
-        txcall = new ArgTxCall(Address.EMPTY_ADDRESS(), Address.ZERO_ADDRESS(),
-                msg, repo.getNonce(addr), BigInteger.ONE, 100000, 100000);
-
-        assertNull(api.sendTransaction(txcall));
-        tearDown();
+        assertEquals(api.sendTransaction(txcall).getType(), TxResponse.INVALID_ACCOUNT);
     }
 
     @Test
     public void testSimpleGetters() {
-        assertEquals(CfgAion.inst().getApi().getNrg().getNrgPriceDefault(),
+        assertEquals(
+                CfgAion.inst().getApi().getNrg().getNrgPriceDefault(),
                 api.getRecommendedNrgPrice());
         api.initNrgOracle(impl);
-        assertEquals(api.getNrgOracle().getNrgPrice(),
-                api.getRecommendedNrgPrice());
+        assertEquals(api.getNrgOracle().getNrgPrice(), api.getRecommendedNrgPrice());
 
         assertNotNull(api.getCoinbase());
-        assertEquals(repo.getCode(Address.ZERO_ADDRESS()),
-                api.getCode(Address.ZERO_ADDRESS()));
+        assertEquals(repo.getCode(Address.ZERO_ADDRESS()), api.getCode(Address.ZERO_ADDRESS()));
         assertEquals(impl.getBlockMiner().isMining(), api.isMining());
         assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
         assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());
@@ -418,6 +514,152 @@ public class ApiAionTest {
         double hashRate = 1000;
 
         assertTrue(api.setReportedHashrate(Double.toString(hashRate), ""));
-        assertEquals(impl.getBlockMiner().getHashrate() + hashRate, Double.parseDouble(api.getHashrate()), 0.001);
+        assertEquals(
+                impl.getBlockMiner().getHashrate() + hashRate,
+                Double.parseDouble(api.getHashrate()),
+                0.001);
+    }
+
+    @Test
+    public void testEthSignTransaction() {
+        Address addr = new Address(Keystore.create("testPwd"));
+
+        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+        Address toAddr = new Address(Keystore.create("testPwd"));
+
+        JSONObject tx = new JSONObject();
+        tx.put("from", "0x" + addr.toString());
+        tx.put("to", "0x" + toAddr.toString());
+        tx.put("gasPrice", "20000000000");
+        tx.put("gas", "21000");
+        tx.put("value", "500000");
+        tx.put("data", "");
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(tx);
+        jsonArray.put(addr);
+
+        RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
+        assertNotNull(rpcMsg);
+
+        JSONObject result = (JSONObject) rpcMsg.getResult();
+        JSONObject outTx = (JSONObject) result.get("tx");
+        String raw = (String) result.get("raw");
+
+        assertNotNull(result);
+        assertNotNull(raw);
+        assertNotNull(tx);
+
+        assertEquals(tx.get("to"), outTx.get("to"));
+        assertEquals(
+                tx.get("value"), StringHexToBigInteger(outTx.get("value").toString()).toString());
+        assertEquals(
+                tx.get("gasPrice"),
+                StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
+        assertEquals(
+                tx.get("gasPrice"),
+                StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
+        assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("gas").toString()).toString());
+        assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("nrg").toString()).toString());
+        assertEquals("0x", outTx.get("input").toString());
+
+        JSONArray rawTxArray = new JSONArray();
+        rawTxArray.put(raw);
+        assertNotNull(web3Api.eth_sendRawTransaction(rawTxArray));
+    }
+
+    @Test
+    public void testEthSignTransactionAddressParamIsNull() {
+        Address addr = new Address(Keystore.create("testPwd"));
+
+        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
+
+        Address toAddr = new Address(Keystore.create("testPwd"));
+
+        JSONObject tx = new JSONObject();
+        tx.put("from", addr.toString());
+        tx.put("gasPrice", "20000000000");
+        tx.put("gas", "21000");
+        tx.put("to", toAddr.toString());
+        tx.put("value", "500000");
+        tx.put("data", "");
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(tx);
+        // don't pass address
+
+        RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
+        assertNotNull(rpcMsg);
+
+        JSONObject result = (JSONObject) rpcMsg.getResult();
+        assertNull(result);
+        assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
+    }
+
+    @Test
+    public void testEthSignTransactionAccountNotUnlocked() {
+        Address addr = new Address(Keystore.create("testPwd"));
+
+        Address toAddr = new Address(Keystore.create("testPwd"));
+
+        JSONObject tx = new JSONObject();
+        tx.put("from", addr.toString());
+        tx.put("gasPrice", "20000000000");
+        tx.put("gas", "21000");
+        tx.put("to", toAddr.toString());
+        tx.put("value", "500000");
+        tx.put("data", "");
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(tx);
+        jsonArray.put(addr);
+
+        RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
+        assertNotNull(rpcMsg);
+
+        JSONObject result = (JSONObject) rpcMsg.getResult();
+        assertNull(result);
+        assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
+    }
+
+    @Test
+    public void testEthSendTransactionAccountNotUnlocked() {
+        Address addr = new Address(Keystore.create("testPwd"));
+
+        Address toAddr = new Address(Keystore.create("testPwd"));
+
+        JSONObject tx = new JSONObject();
+        tx.put("from", addr.toString());
+        tx.put("gasPrice", "20000000000");
+        tx.put("gas", "21000");
+        tx.put("to", toAddr.toString());
+        tx.put("value", "500000");
+        tx.put("data", "");
+
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(tx);
+        jsonArray.put(addr);
+
+        RpcMsg rpcMsg = web3Api.eth_sendTransaction(jsonArray);
+        assertNotNull(rpcMsg);
+
+        JSONObject result = (JSONObject) rpcMsg.getResult();
+        assertNull(result);
+        assertEquals(RpcError.NOT_ALLOWED, rpcMsg.getError());
+    }
+
+    @Test
+    public void testEthGetTransactionCountPending() {
+        JSONObject req = new JSONObject();
+        req.put("address", Address.ZERO_ADDRESS().toString());
+        req.put("block", "pending");
+
+        RpcMsg rsp = web3Api.eth_getTransactionCount(req);
+        assertNull(rsp.getError());
+
+        assertEquals(
+                impl.getPendingState().getNonce(Address.ZERO_ADDRESS()),
+                StringHexToBigInteger(rsp.getResult().toString()));
     }
 }

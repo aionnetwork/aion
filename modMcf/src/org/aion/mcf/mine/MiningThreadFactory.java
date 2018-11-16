@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,19 +17,15 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.mine;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- *
- */
+/** */
 public class MiningThreadFactory implements ThreadFactory {
 
     private final ThreadGroup group;
@@ -52,5 +48,4 @@ public class MiningThreadFactory implements ThreadFactory {
         }
         return t;
     }
-
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,35 +17,26 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.types;
 
 import static org.aion.base.util.ByteUtil.byteArrayToLong;
 
 import java.math.BigInteger;
-
 import org.aion.base.type.IBlockIdentifier;
 import org.aion.base.util.Hex;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 
-/**
- * Block identifier holds block hash and number <br>
- */
+/** Block identifier holds block hash and number <br> */
 public class BlockIdentifier implements IBlockIdentifier {
 
-    /**
-     * Block hash
-     */
+    /** Block hash */
     private byte[] hash;
 
-    /**
-     * Block number
-     */
+    /** Block number */
     private long number;
 
     public BlockIdentifier(RLPList rlp) {

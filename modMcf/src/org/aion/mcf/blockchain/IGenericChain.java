@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,20 +19,15 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.mcf.blockchain;
 
 import org.aion.base.type.IBlock;
-import org.aion.base.type.IBlockIdentifier;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.types.AbstractBlockHeader;
 
-/**
- * Generic Chain interface.
- */
+/** Generic Chain interface. */
 public interface IGenericChain<BLK extends IBlock, BH extends AbstractBlockHeader> {
 
     BLK getBlockByNumber(long number);
@@ -46,5 +41,4 @@ public interface IGenericChain<BLK extends IBlock, BH extends AbstractBlockHeade
     AbstractTxInfo getTransactionInfo(byte[] hash);
 
     void flush();
-
 }

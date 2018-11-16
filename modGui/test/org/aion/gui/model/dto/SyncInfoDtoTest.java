@@ -1,4 +1,32 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.gui.model.dto;
+
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.aion.api.IAionAPI;
 import org.aion.api.IChain;
@@ -10,18 +38,12 @@ import org.aion.gui.model.KernelConnectionMockSetter;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 public class SyncInfoDtoTest {
     private IAionAPI api;
     private KernelConnection kernelConnection;
     private ApiMsg msg;
     private SyncInfoDto unit;
     private IChain chain;
-
 
     @Before
     public void before() {
@@ -57,7 +79,8 @@ public class SyncInfoDtoTest {
         long chainBest = 792531;
         long networkBest = 1141;
 
-        SyncInfo syncInfo = new SyncInfo(syncing, networkBest, chainBest, 7 /*not used*/, 1 /* not used */);
+        SyncInfo syncInfo =
+                new SyncInfo(syncing, networkBest, chainBest, 7 /*not used*/, 1 /* not used */);
 
         msg.set(syncInfo, ApiMsg.cast.OTHERS);
         when(api.isConnected()).thenReturn(true);
@@ -72,7 +95,6 @@ public class SyncInfoDtoTest {
     public void testLoadFromApiInternalWhenFallBackToLatestBlock() {
         when(api.isConnected()).thenReturn(true);
         msg.set(0 /*signal for error*/, null, ApiMsg.cast.NULL);
-
 
         long blockNum = 20531;
         ApiMsg secondMsg = new ApiMsg();

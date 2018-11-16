@@ -26,9 +26,7 @@ package org.aion.p2p.impl1.tasks;
 import org.aion.p2p.Msg;
 import org.aion.p2p.impl1.P2pMgr.Dest;
 
-/**
- * An outgoing message.
- */
+/** An outgoing message. */
 public class MsgOut {
 
     private final int nodeId;

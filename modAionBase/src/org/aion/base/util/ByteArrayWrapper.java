@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,17 +31,15 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.base.util;
 
 import java.io.Serializable;
 import java.util.Arrays;
 
-import org.aion.base.util.Bytesable;
-import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.Hex;
-
-public class ByteArrayWrapper implements Comparable<ByteArrayWrapper>, Serializable, Bytesable<ByteArrayWrapper> {
+public class ByteArrayWrapper
+        implements Comparable<ByteArrayWrapper>, Serializable, Bytesable<ByteArrayWrapper> {
 
     private static final long serialVersionUID = -2937011296133778157L;
     private final byte[] data;
@@ -60,7 +58,8 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper>, Serializa
             return false;
         }
         byte[] otherData = ((ByteArrayWrapper) other).getData();
-        return FastByteComparisons.compareTo(data, 0, data.length, otherData, 0, otherData.length) == 0;
+        return FastByteComparisons.compareTo(data, 0, data.length, otherData, 0, otherData.length)
+                == 0;
     }
 
     @Override
@@ -70,7 +69,8 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper>, Serializa
 
     @Override
     public int compareTo(ByteArrayWrapper o) {
-        return FastByteComparisons.compareTo(data, 0, data.length, o.getData(), 0, o.getData().length);
+        return FastByteComparisons.compareTo(
+                data, 0, data.length, o.getData(), 0, o.getData().length);
     }
 
     public byte[] getData() {

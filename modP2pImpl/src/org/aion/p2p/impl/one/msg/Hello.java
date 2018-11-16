@@ -23,27 +23,24 @@
 
 package org.aion.p2p.impl.one.msg;
 
+import java.io.UnsupportedEncodingException;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
-import java.io.UnsupportedEncodingException;
 
 /**
- *
  * @author chris
- *
- * Test versioning
- *
+ *     <p>Test versioning
  */
 public final class Hello extends Msg {
 
     private String msg;
 
-    public Hello(String _msg){
-        super(Ver.V1, (byte)0, (byte)0);
+    public Hello(String _msg) {
+        super(Ver.V1, (byte) 0, (byte) 0);
         this.msg = _msg;
     }
 
-    public String getMsg(){
+    public String getMsg() {
         return this.msg;
     }
 
@@ -55,5 +52,4 @@ public final class Hello extends Msg {
     public byte[] encode() {
         return this.msg.getBytes();
     }
-
 }

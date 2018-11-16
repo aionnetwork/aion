@@ -34,21 +34,25 @@
  */
 package org.aion.db.impl.leveldb;
 
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.db.impl.AbstractDB;
-import org.fusesource.leveldbjni.JniDBFactory;
-import org.iq80.leveldb.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.db.impl.AbstractDB;
+import org.fusesource.leveldbjni.JniDBFactory;
+import org.iq80.leveldb.CompressionType;
+import org.iq80.leveldb.DB;
+import org.iq80.leveldb.DBException;
+import org.iq80.leveldb.DBIterator;
+import org.iq80.leveldb.Options;
+import org.iq80.leveldb.WriteBatch;
 
 /**
- * @implNote The read-write lock is used only for those operations that are not synchronized
- *         by the JNI on top of the native LevelDB, namely open and close operations.
+ * @implNote The read-write lock is used only for those operations that are not synchronized by the
+ *     JNI on top of the native LevelDB, namely open and close operations.
  */
 public class LevelDB extends AbstractDB {
 
@@ -59,14 +63,15 @@ public class LevelDB extends AbstractDB {
 
     private DB db;
 
-    public LevelDB(String name,
-                   String path,
-                   boolean enableCache,
-                   boolean enableCompression,
-                   int maxOpenFiles,
-                   int blockSize,
-                   int writeBufferSize,
-                   int cacheSize) {
+    public LevelDB(
+            String name,
+            String path,
+            boolean enableCache,
+            boolean enableCompression,
+            int maxOpenFiles,
+            int blockSize,
+            int writeBufferSize,
+            int cacheSize) {
         super(name, path, enableCache, enableCompression);
         this.maxOpenFiles = maxOpenFiles;
         this.blockSize = blockSize;
@@ -75,25 +80,22 @@ public class LevelDB extends AbstractDB {
     }
 
     /**
-     * <p>Original constructor for LevelDB, to keep compatibility with tests, for
-     * future use the user should set the {@link #maxOpenFiles} and {@link #blockSize}
-     * directly.</p>
+     * Original constructor for LevelDB, to keep compatibility with tests, for future use the user
+     * should set the {@link #maxOpenFiles} and {@link #blockSize} directly.
      *
-     * <p>Note: the values set in this constructor are not optimal, only historical.</p>
+     * <p>Note: the values set in this constructor are not optimal, only historical.
      */
     @Deprecated
-    public LevelDB(String name,
-                   String path,
-                   boolean enableCache,
-                   boolean enableCompression) {
-        this(name,
-             path,
-             enableCache,
-             enableCompression,
-             LevelDBConstants.MAX_OPEN_FILES,
-             LevelDBConstants.BLOCK_SIZE,
-             LevelDBConstants.WRITE_BUFFER_SIZE,
-             LevelDBConstants.CACHE_SIZE);
+    public LevelDB(String name, String path, boolean enableCache, boolean enableCompression) {
+        this(
+                name,
+                path,
+                enableCache,
+                enableCompression,
+                LevelDBConstants.MAX_OPEN_FILES,
+                LevelDBConstants.BLOCK_SIZE,
+                LevelDBConstants.WRITE_BUFFER_SIZE,
+                LevelDBConstants.CACHE_SIZE);
     }
 
     @Override
@@ -105,7 +107,8 @@ public class LevelDB extends AbstractDB {
         Options options = new Options();
 
         options.createIfMissing(true);
-        options.compressionType(enableDbCompression ? CompressionType.SNAPPY : CompressionType.NONE);
+        options.compressionType(
+                enableDbCompression ? CompressionType.SNAPPY : CompressionType.NONE);
         options.blockSize(this.blockSize);
         options.writeBufferSize(this.writeBufferSize); // (levelDb default: 8mb)
         options.cacheSize(enableDbCache ? this.cacheSize : 0);
@@ -116,7 +119,8 @@ public class LevelDB extends AbstractDB {
         return options;
     }
 
-    // IDatabase functionality -----------------------------------------------------------------------------------------
+    // IDatabase functionality
+    // -----------------------------------------------------------------------------------------
 
     @Override
     public boolean open() {
@@ -143,9 +147,12 @@ public class LevelDB extends AbstractDB {
             db = JniDBFactory.factory.open(f, options);
         } catch (Exception e1) {
             if (e1.getMessage().contains("lock")) {
-                LOG.error("Failed to open the database " + this.toString() +
-                    "\nCheck if you have two instances running on the same database." +
-                    "\nFailure due to: ", e1);
+                LOG.error(
+                        "Failed to open the database "
+                                + this.toString()
+                                + "\nCheck if you have two instances running on the same database."
+                                + "\nFailure due to: ",
+                        e1);
             } else {
                 LOG.error("Failed to open the database " + this.toString() + " due to: ", e1);
             }
@@ -156,17 +163,47 @@ public class LevelDB extends AbstractDB {
             }
 
             try {
+                LOG.warn("attempting to repair database {}", this.toString());
                 // attempt repair
                 JniDBFactory.factory.repair(f, options);
             } catch (Exception e2) {
                 LOG.error("Failed to repair the database " + this.toString() + " due to: ", e2);
+                // the repair failed
+                // close the connection and cleanup if needed
+                close();
             }
 
-            // close the connection and cleanup if needed
-            close();
+            // the repair didn't throw an exception
+            // try to open again
+            try {
+                db = JniDBFactory.factory.open(f, options);
+            } catch (Exception e2) {
+                LOG.error("Failed second attempt to open the database " + this.toString() + " due to: ", e2);
+                // close the connection and cleanup if needed
+                close();
+            }
         }
 
         return isOpen();
+    }
+
+    private void repair() {
+        if (isOpen()) {
+            this.close();
+        }
+
+        File f = new File(path);
+        Options options = setupLevelDbOptions();
+
+        try {
+            LOG.warn("attempting to repair database {}", this.toString());
+            // attempt repair
+            JniDBFactory.factory.repair(f, options);
+        } catch (Exception e2) {
+            LOG.error("Failed to repair the database " + this.toString() + " due to: ", e2);
+        }
+
+        this.open();
     }
 
     @Override
@@ -192,7 +229,7 @@ public class LevelDB extends AbstractDB {
     @Override
     public void compact() {
         LOG.info("Compacting " + this.toString() + ".");
-        db.compactRange(new byte[] { (byte) 0x00 }, new byte[] { (byte) 0xff });
+        db.compactRange(new byte[] {(byte) 0x00}, new byte[] {(byte) 0xff});
     }
 
     @Override
@@ -228,7 +265,8 @@ public class LevelDB extends AbstractDB {
         return count;
     }
 
-    // IKeyValueStore functionality ------------------------------------------------------------------------------------
+    // IKeyValueStore functionality
+    // ------------------------------------------------------------------------------------
 
     @Override
     public boolean isEmpty() {
@@ -267,7 +305,13 @@ public class LevelDB extends AbstractDB {
 
     @Override
     public byte[] getInternal(byte[] k) {
-        return db.get(k);
+        try {
+            return db.get(k);
+        } catch (DBException e) {
+            repair();
+            // will throw the exception if the repair did not work
+            return db.get(k);
+        }
     }
 
     @Override
@@ -314,7 +358,8 @@ public class LevelDB extends AbstractDB {
             // bulk atomic update
             db.write(batch);
         } catch (DBException e) {
-            LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+            LOG.error(
+                    "Unable to execute batch put/update operation on " + this.toString() + ".", e);
         } catch (IOException e) {
             LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
         }
@@ -345,7 +390,9 @@ public class LevelDB extends AbstractDB {
             try {
                 db.write(batch);
             } catch (DBException e) {
-                LOG.error("Unable to execute batch put/update operation on " + this.toString() + ".", e);
+                LOG.error(
+                        "Unable to execute batch put/update operation on " + this.toString() + ".",
+                        e);
             }
             try {
                 batch.close();
@@ -377,7 +424,8 @@ public class LevelDB extends AbstractDB {
         }
     }
 
-    // AbstractDB functionality ----------------------------------------------------------------------------------------
+    // AbstractDB functionality
+    // ----------------------------------------------------------------------------------------
 
     public boolean commitCache(Map<ByteArrayWrapper, byte[]> cache) {
         boolean success = false;
@@ -406,6 +454,5 @@ public class LevelDB extends AbstractDB {
         }
 
         return success;
-
     }
 }

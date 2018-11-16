@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,20 +19,14 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.api.server.types;
-
-import org.aion.base.type.Address;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+import org.aion.base.type.Address;
 
-/**
- * @author chris
- */
+/** @author chris */
 // NOTE: only used by java api
 public class FltrCt extends Fltr {
 
@@ -48,7 +42,13 @@ public class FltrCt extends Fltr {
 
     private long expireTime;
 
-    public FltrCt(byte[] contractAddress, String toBlock, String fromBlock, List<String> topics, List<byte[]> addrs, long time) {
+    public FltrCt(
+            byte[] contractAddress,
+            String toBlock,
+            String fromBlock,
+            List<String> topics,
+            List<byte[]> addrs,
+            long time) {
         super(Type.EVENT);
         this.contractAddress = contractAddress;
         this.toBlock = toBlock;
@@ -70,9 +70,7 @@ public class FltrCt extends Fltr {
         return this.contractAddress;
     }
 
-    /**
-     * verify if current log filter is for specific contract address
-     */
+    /** verify if current log filter is for specific contract address */
     public boolean isFor(Address contractAddress, String topic) {
         // topic = "0x" + topic;
         if (!Arrays.equals(this.contractAddress, contractAddress.toBytes())) {
@@ -104,5 +102,4 @@ public class FltrCt extends Fltr {
     public void setExpireTime(long expireTime) {
         this.expireTime = expireTime;
     }
-
 }
