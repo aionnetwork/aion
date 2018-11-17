@@ -28,6 +28,7 @@ import static org.aion.mcf.db.DatabaseUtils.verifyAndBuildPath;
 
 import java.io.File;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -132,7 +133,7 @@ public abstract class AbstractRepository<
      *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
-    protected void initializeDatabasesAndCaches() throws InvalidFilePathException {
+    protected void initializeDatabasesAndCaches() throws InvalidFilePathException, URISyntaxException {
         /*
          * Given that this function is not in the critical path and only called
          * on startup, enforce conditions here for safety

@@ -46,6 +46,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.Flushable;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
@@ -129,7 +130,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
         // check for database persistence requirements
         DBVendor vendor = DBVendor.fromString(local.getProperty(Props.DB_TYPE));
-        if (vendor.getPersistence()) {
+        if (vendor.getPersistence() == PersistenceMethod.FILE_BASED) {
             File pbFolder =
                     new File(local.getProperty(Props.DB_PATH), local.getProperty(Props.DB_NAME));
 

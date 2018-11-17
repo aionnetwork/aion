@@ -56,7 +56,7 @@ public enum DBVendor {
     /** Using an instance of {@Link org.aion.db.impl.mongodb.MongoDB} */
     MONGODB("mongodb", PersistenceMethod.DBMS),
     /** Using an instance of {@link org.aion.db.impl.mockdb.MockDB}. */
-    MOCKDB("mockdb", PersistenceMethod.IN_MEMORY);
+    MOCKDB("mockdb", PersistenceMethod.IN_MEMORY),
     /** Using an instance of {@link org.aion.db.impl.mockdb.PersistentMockDB}. */
     PERSISTENTMOCKDB("persistentmockdb", PersistenceMethod.FILE_BASED);
 

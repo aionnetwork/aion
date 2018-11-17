@@ -12,6 +12,8 @@ dependencies {
     compile group: 'org.ethereum', name: 'leveldbjni-all', version: '1.18.3'
     compile group: 'org.rocksdb', name: 'rocksdbjni', version: '5.11.3'
     compile group: 'com.h2database', name: 'h2-mvstore', version: '1.4.196'
+    compile group: 'org.mongodb', name: 'mongo-java-driver', version: '3.8.2'
+
 
     testCompile 'junit:junit:4.12'
     testCompile 'com.google.truth:truth:0.42'

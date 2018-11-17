@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.ByteArrayWrapper;
 
 /**
@@ -111,8 +112,9 @@ public class PersistentMockDB extends MockDB {
      *     open and saved to disk at close.
      */
     @Override
-    public boolean isPersistent() {
-        return true;
+    public PersistenceMethod getPersistenceMethod() {
+        // Default to file-based since most of our dbs are that
+        return PersistenceMethod.FILE_BASED;
     }
 
     /** @implNote Returns false because data is saved to disk only at close. */
