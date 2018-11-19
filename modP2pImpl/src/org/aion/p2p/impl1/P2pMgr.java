@@ -86,6 +86,10 @@ public final class P2pMgr implements IP2pMgr {
 
     public static final Logger p2pLOG = AionLoggerFactory.getLogger(LogEnum.P2P.name());
 
+    public static final int WORKER = 32;
+    private final int SOCKET_RECV_BUFFER = 1024 * 128;
+    private final int SOCKET_BACKLOG = 1024;
+
     private int maxTempNodes, maxActiveNodes, selfNetId, selfNodeIdHash, selfPort;
     private boolean syncSeedsOnly, upnpEnable;
     private String selfRevision, selfShortId;
@@ -156,7 +160,12 @@ public final class P2pMgr implements IP2pMgr {
         for (String _bootNode : _bootNodes) {
             Node node = Node.parseP2p(_bootNode);
             if (validateNode(node)) {
-                nodeMgr.addTempNode(node);
+                try {
+                    nodeMgr.addTempNode(node);
+                } catch (InterruptedException e) {
+                    p2pLOG.error("p2pMgr construct InterruptedException! " + node.toString(), e);
+                    continue;
+                }
                 nodeMgr.seedIpAdd(node.getIpStr());
             }
         }
@@ -176,7 +185,15 @@ public final class P2pMgr implements IP2pMgr {
             tcpServer = ServerSocketChannel.open();
             tcpServer.configureBlocking(false);
             tcpServer.socket().setReuseAddress(true);
-            tcpServer.socket().bind(new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort));
+            /*
+             * Bigger RECV_BUFFER and BACKLOG can have a better socket read/write tolerance, can be a advanced p2p settings in the config file.
+             */
+            tcpServer.socket().setReceiveBufferSize(SOCKET_RECV_BUFFER);
+            tcpServer
+                    .socket()
+                    .bind(
+                            new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort),
+                            SOCKET_BACKLOG);
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
             Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
@@ -198,15 +215,13 @@ public final class P2pMgr implements IP2pMgr {
                         });
             }
 
-            int pNum = Runtime.getRuntime().availableProcessors();
-
-            for (int i = 0; i < (pNum << 1); i++) {
+            for (int i = 0; i < WORKER; i++) {
                 Thread thrdOut = new Thread(getSendInstance(i), "p2p-out-" + i);
                 thrdOut.setPriority(Thread.NORM_PRIORITY);
                 thrdOut.start();
             }
 
-            for (int i = 0; i < pNum; i++) {
+            for (int i = 0; i < WORKER; i++) {
                 Thread t = new Thread(getReceiveInstance(), "p2p-worker-" + i);
                 t.setPriority(Thread.NORM_PRIORITY);
                 t.start();
@@ -333,6 +348,7 @@ public final class P2pMgr implements IP2pMgr {
             SelectionKey sk = _sc.keyFor(selector);
             if (sk != null) {
                 sk.cancel();
+                sk.attach(null);
             }
 
             try {
@@ -443,7 +459,6 @@ public final class P2pMgr implements IP2pMgr {
                 this.selector,
                 this.start,
                 this.nodeMgr,
-                this.tcpServer,
                 this.handlers,
                 this.sendMsgQue,
                 cachedResHandshake1,
