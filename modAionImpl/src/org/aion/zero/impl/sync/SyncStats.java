@@ -33,7 +33,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /** @author chris */
 public final class SyncStats {
@@ -306,32 +305,11 @@ public final class SyncStats {
                                             Map.Entry::getKey, // node display Id
                                             entry -> { // calculate the average response time
                                                 String _nodeId = entry.getKey();
-                                                final List<Long> requestTimes = entry.getValue();
-                                                final List<Long> responseTimes =
+                                                final List<Long> requests = entry.getValue();
+                                                final List<Long> responses =
                                                         statusResponseTimeByPeers.getOrDefault(
                                                                 _nodeId, new LinkedList<>());
-                                                return Math.ceil( // truncates average value
-                                                        IntStream.range(
-                                                                        // calculates the status
-                                                                        // response time
-                                                                        0,
-                                                                        Math.min(
-                                                                                requestTimes.size(),
-                                                                                responseTimes
-                                                                                        .size()))
-                                                                .mapToLong(
-                                                                        // subtract
-                                                                        // (response - request)
-                                                                        // time
-                                                                        i ->
-                                                                                responseTimes.get(i)
-                                                                                        - requestTimes
-                                                                                                .get(
-                                                                                                        i))
-                                                                // averaged over all
-                                                                // requests
-                                                                .average()
-                                                                .orElse(0));
+                                                return calculateAverage(requests, responses);
                                             }));
 
             overallAvgPeerResponseTime =
@@ -342,6 +320,8 @@ public final class SyncStats {
                                                     avgResponseTimeByPeers
                                                             .entrySet()
                                                             .parallelStream()
+                                                            // ignore peers without meaningful data
+                                                            .filter(entry -> entry.getValue() >= 0)
                                                             .mapToDouble(Entry::getValue)
                                                             .average()
                                                             .getAsDouble()))
@@ -350,6 +330,8 @@ public final class SyncStats {
             return avgResponseTimeByPeers
                     .entrySet()
                     .parallelStream()
+                    // ignore peers without meaningful data
+                    .filter(entry -> entry.getValue() >= 0)
                     .sorted(Map.Entry.comparingByValue())
                     .collect(
                             Collectors.toMap(
@@ -359,6 +341,38 @@ public final class SyncStats {
                                     LinkedHashMap::new));
         } finally {
             responsesLock.unlock();
+        }
+    }
+
+    /**
+     * Computes the average response time for a peer given the lists of gathered requests and
+     * response times.
+     *
+     * @param requestTimes list of times for requests made
+     * @param responseTimes list of times for responses received
+     * @return the average response time for the request-response cycle
+     */
+    private static Double calculateAverage(List<Long> requestTimes, List<Long> responseTimes) {
+        int entries = 0;
+        double sum = 0;
+
+        // only consider requests that had responses
+        for (int i = 0; i < responseTimes.size(); i++) {
+            long request = requestTimes.get(i);
+            long response = responseTimes.get(i);
+
+            // ignore data where the requests comes after the response
+            if (response >= request) {
+                sum += response - request;
+                entries++;
+            }
+        }
+
+        if (entries == 0) {
+            // indicates no data
+            return (double) -1;
+        } else {
+            return Math.ceil(sum / entries);
         }
     }
 
