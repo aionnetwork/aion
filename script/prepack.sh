@@ -1,3 +1,5 @@
+#!/bin/bash
+
 PACK_PATH="pack"
 JDK_PATH="${PACK_PATH}/jdk"
 JDK_RT="${PACK_PATH}/rt"
@@ -23,15 +25,20 @@ if [ ! -d "$JDK_PATH" ]; then
 fi
 
 # download javafx if can't find the javafx env
-if [ ! -d "$JAVAFX_PATH" ]; then
+if [[ ! $noGui = "true" || ! -d "$JAVAFX_PATH" ]]; then
   wget -c http://gluonhq.com/download/javafx-11-jmods-linux -O openjfx-11_linux-x64_bin-jmods.zip
   unzip openjfx-11_linux-x64_bin-jmods.zip -d $PACK_PATH
   mv "${PACK_PATH}/${JAVAFX_VER}" $JAVAFX_PATH
 fi
 
 # generate aion runtime
+if [[ $noGui = "true" ]]; then
+    module_path=$JDK_PATH/jmods 
+else
+    module_path=$JAVAFX_PATH:$JDK_PATH/jmods 
+fi
 if [ ! -d "$JDK_RT" ]; then
-  $JDK_PATH/bin/jlink --module-path $JAVAFX_PATH:$JDK_PATH/jmods --add-modules java.base,java.xml,java.logging,java.management,jdk.unsupported,javafx.graphics,javafx.controls,javafx.base,jdk.sctp,javafx.fxml,javafx.swing \
+  $JDK_PATH/bin/jlink --module-path $module_path --add-modules java.base,java.xml,java.logging,java.management,jdk.unsupported,javafx.graphics,javafx.controls,javafx.base,jdk.sctp,javafx.fxml,javafx.swing \
   --output $JDK_RT --compress 2 --no-man-pages
   cp $JDK_PATH/bin/jstack $JDK_RT/bin
 fi
