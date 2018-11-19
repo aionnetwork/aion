@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.zero.impl.sync;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -19,10 +42,11 @@ import org.junit.Test;
 public class SyncStatsTest {
 
     private static final List<ECKey> accounts = generateAccounts(10);
-    private final StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
-            .withValidatorConfiguration("simple")
-            .withDefaultAccounts(accounts)
-            .build();
+    private final StandaloneBlockchain.Bundle bundle =
+            new StandaloneBlockchain.Builder()
+                    .withValidatorConfiguration("simple")
+                    .withDefaultAccounts(accounts)
+                    .build();
 
     private static final List<String> peers = new ArrayList<>();
 
@@ -57,10 +81,10 @@ public class SyncStatsTest {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
 
-                }
+            }
         }
 
-        assertThat(stats.getAvgBlocksPerSec()  <= 3.).isTrue();
+        assertThat(stats.getAvgBlocksPerSec() <= 3.).isTrue();
     }
 
     @Test
@@ -80,16 +104,16 @@ public class SyncStatsTest {
         int peerNo = 0;
         int processedBlocks = 0;
 
-        for(int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
-                int blocks = totalBlocks;
-                processedBlocks += totalBlocks;
-                while(blocks > 0) {
-                        AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                        assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                        stats.update(peers.get(peerNo), blocks, chain.getBestBlock().getNumber());
-                        blocks--;
-                }
-                peerNo++;
+        for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
+            int blocks = totalBlocks;
+            processedBlocks += totalBlocks;
+            while (blocks > 0) {
+                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
+                assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
+                stats.update(peers.get(peerNo), blocks, chain.getBestBlock().getNumber());
+                blocks--;
+            }
+            peerNo++;
         }
 
         Map<String, Float> reqToPeers = stats.getPercentageOfRequestsToPeers();
@@ -105,17 +129,17 @@ public class SyncStatsTest {
 
         long lastTotalBlocks = processedBlocks;
 
-        for(String nodeId:reqToPeers.keySet()) {
-                float percentageReq = reqToPeers.get(nodeId);
-                // ensures desc order
-                assertThat(lastPercentage >= percentageReq).isTrue();
-                lastPercentage = percentageReq;
-                assertThat(percentageReq - (1. * blocks/processedBlocks) < diffThreshold).isTrue();
-                // ensures desc order
-                assertThat(lastTotalBlocks >= totalBlockReqByPeer.get(nodeId)).isTrue();
-                lastTotalBlocks = totalBlockReqByPeer.get(nodeId);
-                assertThat(totalBlockReqByPeer.get(nodeId).compareTo(Long.valueOf(blocks)) == 0);
-                blocks--;
+        for (String nodeId : reqToPeers.keySet()) {
+            float percentageReq = reqToPeers.get(nodeId);
+            // ensures desc order
+            assertThat(lastPercentage >= percentageReq).isTrue();
+            lastPercentage = percentageReq;
+            assertThat(percentageReq - (1. * blocks / processedBlocks) < diffThreshold).isTrue();
+            // ensures desc order
+            assertThat(lastTotalBlocks >= totalBlockReqByPeer.get(nodeId)).isTrue();
+            lastTotalBlocks = totalBlockReqByPeer.get(nodeId);
+            assertThat(totalBlockReqByPeer.get(nodeId).compareTo(Long.valueOf(blocks)) == 0);
+            blocks--;
         }
     }
 
@@ -132,7 +156,7 @@ public class SyncStatsTest {
         assertThat(emptyTotalBlocksByPeer.size() == 0).isTrue();
 
         int blocks = 3;
-        for(String nodeId:peers) {
+        for (String nodeId : peers) {
             int count = 0;
             while (count < blocks) {
                 stats.updateTotalBlockRequestsByPeer(nodeId, 1);
@@ -145,7 +169,7 @@ public class SyncStatsTest {
         assertThat(totalBlocksByPeer.size() == peers.size()).isTrue();
 
         Long lastTotalBlocks = (long) peers.size();
-        for(String nodeId:totalBlocksByPeer.keySet()) {
+        for (String nodeId : totalBlocksByPeer.keySet()) {
             // ensures desc order
             assertThat(lastTotalBlocks >= totalBlocksByPeer.get(nodeId)).isTrue();
             lastTotalBlocks = totalBlocksByPeer.get(nodeId);
@@ -171,13 +195,13 @@ public class SyncStatsTest {
         stats = new SyncStats(chain.getBestBlock().getNumber());
 
         int requests = 3;
-        for(String nodeId:peers) {
+        for (String nodeId : peers) {
             int count = requests;
             while (count > 0) {
                 stats.addPeerRequestTime(nodeId, System.currentTimeMillis());
                 try {
                     Thread.sleep(100 * count);
-                } catch(InterruptedException e) {
+                } catch (InterruptedException e) {
                 }
                 stats.addPeerResponseTime(nodeId, System.currentTimeMillis());
                 count--;
@@ -192,10 +216,11 @@ public class SyncStatsTest {
         int i = 0;
         for (String nodeId : avgResponseTimeByPeers.keySet()) {
             // ensures asc order
-            if(i++ == 0) {
+            if (i++ == 0) {
                 // First record correspond to the overall average response time by all peers
-                assertThat(((Long)avgResponseTimeByPeers.get(nodeId).longValue())
-                    .compareTo(stats.getOverallAveragePeerResponseTime()));
+                assertThat(
+                        ((Long) avgResponseTimeByPeers.get(nodeId).longValue())
+                                .compareTo(stats.getOverallAveragePeerResponseTime()));
             } else {
                 assertThat(avgResponseTimeByPeers.get(nodeId) > lastAvgResponseTime).isTrue();
                 lastAvgResponseTime = avgResponseTimeByPeers.get(nodeId);
