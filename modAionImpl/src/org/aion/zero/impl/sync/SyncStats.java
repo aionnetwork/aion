@@ -47,7 +47,7 @@ public final class SyncStats {
     private final Lock blockAverageLock = new ReentrantLock();
 
     /** @implNote Access to this resource is managed by the {@link #requestsLock}. */
-    private final Map<String, Long> requestsToPeers = new HashMap<>();
+    private final Map<String, RequestCounter> requestsToPeers = new HashMap<>();
 
     private final Lock requestsLock = new ReentrantLock();
 
@@ -99,7 +99,6 @@ public final class SyncStats {
                     (double) (_blockNumber - startBlock)
                             * 1000
                             / (System.currentTimeMillis() - start);
-            updateTotalRequestsToPeer(_nodeId);
             updatePeerTotalBlocks(_nodeId, _totalBlocks);
         } finally {
             blockAverageLock.unlock();
@@ -118,14 +117,30 @@ public final class SyncStats {
     /**
      * Updates the total requests made to a pear
      *
-     * @param _nodeId peer node display Id
+     * @param nodeId peer node display Id
      */
-    private void updateTotalRequestsToPeer(String _nodeId) {
+    public void updateTotalRequestsToPeer(String nodeId, RequestType type) {
         requestsLock.lock();
         try {
-            if (requestsToPeers.putIfAbsent(_nodeId, 1L) != null) {
-                requestsToPeers.computeIfPresent(_nodeId, (key, value) -> value + 1L);
+            RequestCounter current = requestsToPeers.get(nodeId);
+
+            if (current == null) {
+                current = new RequestCounter();
+                requestsToPeers.put(nodeId, current);
             }
+
+            switch (type) {
+                case STATUS:
+                    current.incStatus();
+                    break;
+                case HEADERS:
+                    current.incHeaders();
+                    break;
+                case BODIES:
+                    current.incBodies();
+                    break;
+            }
+
         } finally {
             requestsLock.unlock();
         }
@@ -143,7 +158,12 @@ public final class SyncStats {
 
         try {
             Map<String, Float> percentageReq = new HashMap<>();
-            Long totalReq = requestsToPeers.values().parallelStream().mapToLong(l -> l).sum();
+            Long totalReq =
+                    requestsToPeers
+                            .values()
+                            .parallelStream()
+                            .mapToLong(entry -> entry.getTotal())
+                            .sum();
             requestsToPeers
                     .entrySet()
                     .parallelStream()
@@ -151,7 +171,7 @@ public final class SyncStats {
                             entry ->
                                     percentageReq.put(
                                             entry.getKey(),
-                                            entry.getValue().floatValue() / totalReq.floatValue()));
+                                            entry.getValue().getTotal() / totalReq.floatValue()));
             return percentageReq
                     .entrySet()
                     .parallelStream()

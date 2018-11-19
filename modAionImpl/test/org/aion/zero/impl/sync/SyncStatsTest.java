@@ -89,6 +89,79 @@ public class SyncStatsTest {
 
     @Test
     public void testTotalRequestsToPeersStat() {
+        List<String> peers = new ArrayList<>(this.peers);
+        while (peers.size() < 4) {
+            peers.add(UUID.randomUUID().toString().substring(0, 6));
+        }
+
+        // this tests requires at least 3 peers in the list
+        assertThat(peers.size()).isAtLeast(4);
+
+        StandaloneBlockchain chain = bundle.bc;
+        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber());
+
+        // ensures correct behaviour on empty stats
+        Map<String, Float> emptyReqToPeers = stats.getPercentageOfRequestsToPeers();
+        assertThat(emptyReqToPeers.size()).isEqualTo(0);
+
+        float processedRequests = 0;
+
+        String firstPeer = peers.get(0);
+        String secondPeer = peers.get(1);
+        String thirdPeer = peers.get(2);
+
+        for (String peer : peers) {
+            // status requests
+            stats.updateTotalRequestsToPeer(peer, RequestType.STATUS);
+            processedRequests++;
+
+            if (peer == firstPeer || peer == secondPeer) {
+                // header requests
+                stats.updateTotalRequestsToPeer(peer, RequestType.HEADERS);
+                processedRequests++;
+            }
+
+            // bodies requests
+            if (peer == firstPeer) {
+                stats.updateTotalRequestsToPeer(peer, RequestType.BODIES);
+                processedRequests++;
+            }
+        }
+
+        Map<String, Float> reqToPeers = stats.getPercentageOfRequestsToPeers();
+
+        // makes sure no additional peers were created
+        assertThat(reqToPeers.size()).isEqualTo(peers.size());
+
+        // by design (the updates above are not symmetrical)
+        assertThat(reqToPeers.get(firstPeer)).isGreaterThan(reqToPeers.get(secondPeer));
+        assertThat(reqToPeers.get(firstPeer)).isEqualTo(3 / processedRequests);
+
+        assertThat(reqToPeers.get(secondPeer)).isGreaterThan(reqToPeers.get(thirdPeer));
+        assertThat(reqToPeers.get(secondPeer)).isEqualTo(2 / processedRequests);
+
+        assertThat(reqToPeers.get(thirdPeer)).isEqualTo(1 / processedRequests);
+
+        for (String otherPeers : peers.subList(3, peers.size())) {
+            assertThat(reqToPeers.get(otherPeers)).isEqualTo(reqToPeers.get(thirdPeer));
+        }
+
+        int blocks = 3;
+
+        float lastPercentage = (float) 1;
+        float diffThreshold = (float) 0.01;
+
+        for (String nodeId : reqToPeers.keySet()) {
+            float percentageReq = reqToPeers.get(nodeId);
+            // ensures desc order
+            assertThat(lastPercentage).isAtLeast(percentageReq);
+            lastPercentage = percentageReq;
+            assertThat(percentageReq - (1. * blocks / processedRequests) < diffThreshold).isTrue();
+        }
+    }
+
+    @Test
+    public void testTotalBlocksByPeer() {
 
         StandaloneBlockchain chain = bundle.bc;
         generateRandomChain(chain, 1, 1, accounts, 10);
@@ -96,9 +169,7 @@ public class SyncStatsTest {
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber());
 
         // ensures correct behaviour on empty stats
-        Map<String, Float> emptyReqToPeers = stats.getPercentageOfRequestsToPeers();
         Map<String, Long> emptyTotalBlockReqByPeer = stats.getTotalBlocksByPeer();
-        assertThat(emptyReqToPeers.size() == 0).isTrue();
         assertThat(emptyTotalBlockReqByPeer.size() == 0).isTrue();
 
         int peerNo = 0;
@@ -116,25 +187,15 @@ public class SyncStatsTest {
             peerNo++;
         }
 
-        Map<String, Float> reqToPeers = stats.getPercentageOfRequestsToPeers();
         Map<String, Long> totalBlockReqByPeer = stats.getTotalBlocksByPeer();
 
-        assertThat(reqToPeers.size() == peers.size()).isTrue();
         assertThat(totalBlockReqByPeer.size() == peers.size()).isTrue();
 
         int blocks = 3;
 
-        float lastPercentage = (float) 1;
-        float diffThreshold = (float) 0.01;
-
         long lastTotalBlocks = processedBlocks;
 
-        for (String nodeId : reqToPeers.keySet()) {
-            float percentageReq = reqToPeers.get(nodeId);
-            // ensures desc order
-            assertThat(lastPercentage >= percentageReq).isTrue();
-            lastPercentage = percentageReq;
-            assertThat(percentageReq - (1. * blocks / processedBlocks) < diffThreshold).isTrue();
+        for (String nodeId : peers) {
             // ensures desc order
             assertThat(lastTotalBlocks >= totalBlockReqByPeer.get(nodeId)).isTrue();
             lastTotalBlocks = totalBlockReqByPeer.get(nodeId);
