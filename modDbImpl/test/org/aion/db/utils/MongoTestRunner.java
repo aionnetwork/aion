@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.db.impl.DatabaseTestUtils;
@@ -35,6 +36,7 @@ public class MongoTestRunner implements AutoCloseable {
 
         // Find the path to the actual mongo db executable
         ClassLoader classLoader = getClass().getClassLoader();
+        URL resourceUrl = classLoader.getResource("mongo/bin/mongod");
         File file = new File(classLoader.getResource("mongo/bin/mongod").getFile());
         String mongodPath = file.getAbsolutePath();
 
