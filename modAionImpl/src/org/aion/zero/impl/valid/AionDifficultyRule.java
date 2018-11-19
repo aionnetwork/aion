@@ -36,7 +36,7 @@ import org.aion.zero.types.IAionBlock;
 /** Checks block's difficulty against calculated difficulty value */
 public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule<A0BlockHeader> {
 
-    IDifficultyCalculator diffCalc;
+    private IDifficultyCalculator diffCalc;
 
     public AionDifficultyRule(IChainCfg<IAionBlock, AionTransaction> configuration) {
         this.diffCalc = configuration.getDifficultyCalculator();
@@ -47,7 +47,8 @@ public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule<A0Bl
      * @implNote There is a special case in block 1 where we do not have a grandparent, to get
      *     around this we must apply a different rule.
      *     <p>Currently that rule will be defined to "pass on" the difficulty of the parent block
-     *     {@code block 0} to the current block {@code block 1}
+     *     {@code block 0} to the current block {@code block 1} If the current Header has invalid
+     *     difficulty length, will return {BigInteger.ZERO}.
      */
     @Override
     public boolean validate(
@@ -55,19 +56,25 @@ public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule<A0Bl
             A0BlockHeader parent,
             A0BlockHeader current,
             List<RuleError> errors) {
+
+        BigInteger currDiff = current.getDifficultyBI();
+
+        if (currDiff.equals(BigInteger.ZERO)) {
+            return false;
+        }
+
         if (parent.getNumber() == 0L) {
-            if (!isEqual(parent.getDifficultyBI(), current.getDifficultyBI())) {
-                addError(formatError(parent.getDifficultyBI(), current.getDifficultyBI()), errors);
+            if (!isEqual(parent.getDifficultyBI(), currDiff)) {
+                addError(formatError(parent.getDifficultyBI(), currDiff), errors);
                 return false;
             }
             return true;
         }
 
         BigInteger calcDifficulty = this.diffCalc.calculateDifficulty(parent, grandParent);
-        BigInteger difficulty = current.getDifficultyBI();
 
-        if (!isEqual(calcDifficulty, difficulty)) {
-            addError(formatError(calcDifficulty, difficulty), errors);
+        if (!isEqual(calcDifficulty, currDiff)) {
+            addError(formatError(calcDifficulty, currDiff), errors);
             return false;
         }
         return true;
