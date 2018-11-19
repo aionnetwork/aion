@@ -733,7 +733,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(obj);
         } else {
             if (LOG.isDebugEnabled()) LOG.debug("Transaction signing failed");
-            return new RpcMsg(null, RpcError.INTERNAL_ERROR, "Error in singing the transaction.");
+            return new RpcMsg(null, RpcError.INTERNAL_ERROR, "Error in signing the transaction.");
         }
     }
 

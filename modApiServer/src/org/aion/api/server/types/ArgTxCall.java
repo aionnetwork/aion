@@ -75,11 +75,11 @@ public final class ArgTxCall {
             String nonceStr = _jsonObj.optString("nonce", "0x0");
             String valueStr = _jsonObj.optString("value", "0x0");
             BigInteger nonce =
-                    nonceStr.indexOf("0x") >= 0
+                    nonceStr.contains("0x")
                             ? TypeConverter.StringHexToBigInteger(nonceStr)
                             : TypeConverter.StringNumberAsBigInt(nonceStr);
             BigInteger value =
-                    valueStr.indexOf("0x") >= 0
+                    valueStr.contains("0x")
                             ? TypeConverter.StringHexToBigInteger(valueStr)
                             : TypeConverter.StringNumberAsBigInt(valueStr);
 
@@ -89,14 +89,14 @@ public final class ArgTxCall {
             long nrg = defaultNrgLimit;
             if (nrgStr != null)
                 nrg =
-                        nrgStr.indexOf("0x") >= 0
+                        nrgStr.contains("0x")
                                 ? TypeConverter.StringHexToBigInteger(nrgStr).longValue()
                                 : TypeConverter.StringNumberAsBigInt(nrgStr).longValue();
 
             long nrgPrice;
             if (nrgPriceStr != null)
                 nrgPrice =
-                        nrgPriceStr.indexOf("0x") >= 0
+                    nrgPriceStr.contains("0x")
                                 ? TypeConverter.StringHexToBigInteger(nrgPriceStr).longValue()
                                 : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
             else nrgPrice = oracle.getNrgPrice();
