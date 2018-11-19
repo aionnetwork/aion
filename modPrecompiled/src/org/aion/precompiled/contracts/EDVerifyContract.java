@@ -25,7 +25,6 @@
 package org.aion.precompiled.contracts;
 
 import org.aion.base.type.IExecutionResult;
-import org.aion.base.util.Hex;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;

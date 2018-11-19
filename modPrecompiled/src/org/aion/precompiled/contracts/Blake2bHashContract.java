@@ -31,13 +31,13 @@ import org.aion.vm.IPrecompiledContract;
 
 public class Blake2bHashContract implements IPrecompiledContract {
 
-    /*
-     * Base on benchmark the keccak256hash and blake2bhash precompiled contract
-     * blake2b is 5 times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3
-     * of the Ethereum keccak256 precompiled contract charge.
+    /**
+     * @implNote Base on benchmark the keccak256hash and blake2bhash precompiled contract blake2b is
+     *     5 times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3 of the
+     *     Ethereum keccak256 precompiled contract charge.
      */
-
     private static final long COST = 10L;
+
     private static final int WORD_LENGTH = 4;
     private static final int NRG_CHARGE_PER_WORD = 2;
     private static final String INPUT_LENGTH_ERROR_MESSAGE = "incorrect size of the input data.";
@@ -58,7 +58,8 @@ public class Blake2bHashContract implements IPrecompiledContract {
                     ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
-        long additionalNRG = ((long) Math.ceil(((double) input.length - 1) / WORD_LENGTH)) * NRG_CHARGE_PER_WORD;
+        long additionalNRG =
+                ((long) Math.ceil(((double) input.length - 1) / WORD_LENGTH)) * NRG_CHARGE_PER_WORD;
 
         // check input nrg
         long nrgLeft = nrg - (COST + additionalNRG);
