@@ -92,25 +92,50 @@ public class TaskWrite implements Runnable {
             }
             buf.flip();
 
+            long t1 = System.nanoTime(), t2;
+            int wrote = 0;
             try {
-                while (buf.hasRemaining()) {
-                    // @Attention:  very important sleep , otherwise when NIO write buffer full,
-                    // without sleep will hangup this thread.
-                    Thread.sleep(0, 1);
-                    sc.write(buf);
+                do {
+                    int result = sc.write(buf);
+                    wrote += result;
+
+                    if (result == 0) {
+                        // @Attention:  very important sleep , otherwise when NIO write buffer full,
+                        // without sleep will hangup this thread.
+                        Thread.sleep(0, 1);
+                    }
+
+                    t2 = System.nanoTime() - t1;
+                } while (buf.hasRemaining() && (t2 < 100_000_000));
+
+                if (p2pLOG.isTraceEnabled() && (t2 > 10_000_000)) {
+                    p2pLOG.trace(
+                            "msg write: id {} size {} time {} ms length {}",
+                            nodeShortId,
+                            wrote,
+                            t2,
+                            buf.array().length);
                 }
+
             } catch (ClosedChannelException ex1) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("closed-channel-exception node={}", this.nodeShortId);
+                    p2pLOG.debug("closed-channel-exception node=" + this.nodeShortId, ex1);
                 }
 
                 channelBuffer.setClosed();
             } catch (IOException ex2) {
                 if (p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug(
-                            "write-msg-io-exception node={} err={}",
-                            this.nodeShortId,
-                            ex2.getMessage());
+                            "write-msg-io-exception node="
+                                    + this.nodeShortId
+                                    + " headerBytes="
+                                    + String.valueOf(headerBytes.length)
+                                    + " bodyLen="
+                                    + String.valueOf(bodyLen)
+                                    + " time="
+                                    + String.valueOf(System.nanoTime()- t1)
+                                    + "ns",
+                            ex2);
                 }
 
                 if (ex2.getMessage().equals("Broken pipe")) {

@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import org.aion.api.server.ApiUtil;
 import org.aion.base.type.Address;
+import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.equihash.EquihashMiner;
@@ -83,8 +84,8 @@ public class ApiAion0Test {
         msg = "test message".getBytes();
         socketId = RandomUtils.nextBytes(5);
         hash = RandomUtils.nextBytes(ApiUtil.HASH_LEN);
-        System.out.println("socketId set to " + socketId.toString());
-        System.out.println("hash set to " + hash.toString());
+        System.out.println("socketId set to " + ByteUtil.toHexString(socketId));
+        System.out.println("hash set to " + ByteUtil.toHexString(hash));
         rsp = null;
     }
 

@@ -31,9 +31,9 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -112,30 +112,22 @@ public class NodeMgrTest {
 
     private void addNodetoOutbound(INode node, UUID _uuid) {
         node.setChannel(channel);
-        try {
-            node.setId(_uuid.toString().getBytes("UTF-8"));
-            node.refreshTimestamp();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(_uuid.toString().getBytes(StandardCharsets.UTF_8));
+        node.refreshTimestamp();
         nMgr.addOutboundNode(node);
         assertNotNull(nMgr.getOutboundNode(node.getIdHash()));
     }
 
     private void addNodetoInbound(INode node, UUID _uuid) {
         node.setChannel(channel);
-        try {
-            node.setId(_uuid.toString().getBytes("UTF-8"));
-            node.refreshTimestamp();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(_uuid.toString().getBytes(StandardCharsets.UTF_8));
+        node.refreshTimestamp();
         nMgr.addInboundNode(node);
         assertNotNull(nMgr.getInboundNode(channel.hashCode()));
     }
 
     @Test
-    public void testTempNode() {
+    public void testTempNode() throws InterruptedException {
         nMgr.addTempNode(node);
         assertEquals(1, nMgr.tempNodesSize());
 
@@ -151,7 +143,7 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void testTempNodeMax_128() {
+    public void testTempNodeMax_128() throws InterruptedException {
 
         String[] nodes_max = new String[130];
         int ip = 0;
@@ -172,7 +164,7 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void testTempNodesTake() {
+    public void testTempNodesTake() throws InterruptedException {
 
         int port2 = 30305;
         String[] nodes =
@@ -203,7 +195,7 @@ public class NodeMgrTest {
     }
 
     @Test
-    public void testTempNodeMax_Any() {
+    public void testTempNodeMax_Any() throws InterruptedException {
 
         NodeMgr mgr = new NodeMgr(p2p, 512, 512, LOGGER);
         String[] nodes_max = new String[512];
@@ -239,11 +231,7 @@ public class NodeMgrTest {
 
         INode node = nMgr.allocNode(ip1, 1);
         node.setChannel(channel);
-        try {
-            node.setId(nodeId1.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(nodeId1.getBytes(StandardCharsets.UTF_8));
 
         nMgr.addInboundNode(node);
         INode iNode = nMgr.getInboundNode(channel.hashCode());
@@ -261,11 +249,7 @@ public class NodeMgrTest {
         INode node = nMgr.allocNode(ip2, 1);
 
         node.setChannel(channel);
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(nodeId2.getBytes(StandardCharsets.UTF_8));
 
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
@@ -286,11 +270,7 @@ public class NodeMgrTest {
         INode node = nMgr.allocNode(ip2, 1);
 
         node.setChannel(channel);
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(nodeId2.getBytes(StandardCharsets.UTF_8));
 
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
@@ -312,11 +292,7 @@ public class NodeMgrTest {
         INode node = nMgr.allocNode(ip2, 1);
 
         node.setChannel(channel);
-        try {
-            node.setId(nodeId2.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        node.setId(nodeId2.getBytes(StandardCharsets.UTF_8));
 
         nMgr.addInboundNode(node);
         assertEquals(0, nMgr.activeNodesSize());
@@ -588,7 +564,11 @@ public class NodeMgrTest {
                     @Override
                     public void run() {
                         while (start.get()) {
-                            nMgr.addTempNode(genNode());
+                            try {
+                                nMgr.addTempNode(genNode());
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                             try {
                                 Thread.sleep(r.nextInt(5) + 5);
                             } catch (InterruptedException e) {
@@ -624,7 +604,12 @@ public class NodeMgrTest {
                                     e.printStackTrace();
                                 }
 
-                                INode node = nMgr.tempNodesTake();
+                                INode node = null;
+                                try {
+                                    node = nMgr.tempNodesTake();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
                                 if (node == null) {
                                     continue;
                                 }
@@ -643,7 +628,12 @@ public class NodeMgrTest {
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
-                                INode node = nMgr.tempNodesTake();
+                                INode node = null;
+                                try {
+                                    node = nMgr.tempNodesTake();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
                                 if (node == null) {
                                     continue;
                                 }
