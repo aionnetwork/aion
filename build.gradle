@@ -250,9 +250,12 @@ build {
 }
 
 task prePack(type:Exec)  {
+    doFirst { 
+        ant.echo("hasProperty(noGui)" + project.hasProperty('noGui') )
+    }
     dependsOn ':aion_api:cleanPack' 
     dependsOn ':aion_api:build'
-    if (!hasProperty('noGui')) {
+    if (project.hasProperty('noGui')) {
         environment "noGui", "true"
     }
     commandLine 'bash', 'script/prepack.sh' 
@@ -278,7 +281,7 @@ task pack(type: Tar) {
     into('/aion/') { 
         from dirWorkspace
         include 'aion.sh'
-        if (!hasProperty('noGui')) {
+        if (!project.hasProperty('noGui')) {
             include 'aion_gui.sh'
         }
     }
