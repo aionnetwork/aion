@@ -282,8 +282,7 @@ task pack(type: Tar) {
         from "${dirPack}/rt"
         include '**'
     }
-
-    into('/aion/web3') {
+    into('/aion/console') {
         from "${dirPack}/web3"
         include '**'
     }
