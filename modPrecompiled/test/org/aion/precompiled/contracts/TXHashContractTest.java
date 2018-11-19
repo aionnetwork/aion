@@ -36,7 +36,7 @@ import org.apache.commons.lang3.RandomUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TXHashTest {
+public class TXHashContractTest {
 
     private static final long INPUT_NRG = 1000;
     private IPrecompiledContract tXHashContract;
