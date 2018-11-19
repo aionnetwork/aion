@@ -20,7 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
 import java.util.Collection;

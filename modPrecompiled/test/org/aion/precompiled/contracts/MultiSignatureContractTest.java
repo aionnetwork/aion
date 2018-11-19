@@ -21,7 +21,7 @@
  *     Aion foundation.
  */
 
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -42,7 +42,6 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.contracts.MultiSignatureContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;

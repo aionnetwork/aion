@@ -20,7 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertEquals;

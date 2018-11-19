@@ -21,10 +21,11 @@
  *     Aion foundation.
  */
 
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import org.aion.base.type.Address;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.precompiled.ContractFactory;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.IPrecompiledContract;
 import org.apache.commons.lang3.RandomUtils;

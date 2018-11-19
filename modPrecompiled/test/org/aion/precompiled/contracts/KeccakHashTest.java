@@ -1,4 +1,4 @@
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static junit.framework.TestCase.assertEquals;
 

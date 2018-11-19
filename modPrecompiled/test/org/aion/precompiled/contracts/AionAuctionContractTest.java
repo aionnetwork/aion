@@ -20,7 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -39,8 +39,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.precompiled.contracts.AionAuctionContract;
-import org.aion.precompiled.contracts.AionNameServiceContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.StandaloneBlockchain;
