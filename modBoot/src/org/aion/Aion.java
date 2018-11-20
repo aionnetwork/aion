@@ -42,6 +42,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TimeZone;
@@ -98,10 +99,22 @@ public class Aion {
 
         CfgAion cfg = CfgAion.inst();
 
+
         ReturnType ret = new Cli().call(args, cfg);
         if (ret != ReturnType.RUN) {
             exit(ret.getValue());
         }
+
+        Properties p = cfg.getFork().getProperties();
+        p.forEach(
+            (k, v) -> {
+                System.out.println(
+                    "<Protocol name: "
+                        + k.toString()
+                        + " block#: "
+                        + v.toString()
+                        + " updated!");
+            });
 
         // Check ZMQ server secure connect settings, generate keypair when the settings enabled and
         // can't find the keypair.

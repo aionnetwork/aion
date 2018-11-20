@@ -162,16 +162,6 @@ public final class CfgAion extends Cfg {
                                     + CfgFork.FORK_PROPERTIES_PATH);
             properties.load(fis);
 
-            properties.forEach(
-                    (k, v) -> {
-                        System.out.println(
-                                "<Protocol name: "
-                                        + k.toString()
-                                        + " block#: "
-                                        + v.toString()
-                                        + " updated!");
-                    });
-
             this.getFork().setProperties(properties);
         } catch (IOException e) {
             System.out.println(
