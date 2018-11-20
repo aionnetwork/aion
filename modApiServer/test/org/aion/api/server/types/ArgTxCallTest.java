@@ -37,7 +37,7 @@ public class ArgTxCallTest {
 
     @Test
     public void testFromJsonDefaults() {
-        long nrgLimit = 2_000_000L;
+        long nrgLimit = 90_000L;
         long nrgPrice = 10L;
 
         JSONObject tx = new JSONObject();
