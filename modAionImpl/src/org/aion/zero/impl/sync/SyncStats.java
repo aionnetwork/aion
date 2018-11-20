@@ -37,9 +37,7 @@ import java.util.stream.Collectors;
 /** @author chris */
 public final class SyncStats {
 
-    /** @implNote Access to this resource is managed by the {@link #blockAverageLock}. */
     private final long start;
-    /** @implNote Access to this resource is managed by the {@link #blockAverageLock}. */
     private final long startBlock;
     /** @implNote Access to this resource is managed by the {@link #blockAverageLock}. */
     private double avgBlocksPerSec;
@@ -70,11 +68,11 @@ public final class SyncStats {
     private final Lock leechesLock = new ReentrantLock();
 
     /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private final Map<String, LinkedList<Long>> statusRequestTimeByPeers = new HashMap<>();
+    private final Map<String, List<Long>> statusRequestTimeByPeers = new HashMap<>();
     /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private final Map<String, LinkedList<Long>> statusResponseTimeByPeers = new HashMap<>();
+    private final Map<String, List<Long>> statusResponseTimeByPeers = new HashMap<>();
     /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private Long overallAvgPeerResponseTime;
+    private long overallAvgPeerResponseTime;
 
     private final Lock responsesLock = new ReentrantLock();
 
@@ -112,9 +110,10 @@ public final class SyncStats {
     }
 
     /**
-     * Updates the total requests made to a pear
+     * Updates the total requests made to a peer.
      *
-     * @param nodeId peer node display Id
+     * @param nodeId peer node display id
+     * @param type the type of request added
      */
     public void updateTotalRequestsToPeer(String nodeId, RequestType type) {
         requestsLock.lock();
@@ -227,9 +226,10 @@ public final class SyncStats {
     }
 
     /**
-     * Updates the total block requests made by a pear
+     * Updates the total block requests made by a peer.
      *
      * @param _nodeId peer node display Id
+     * @param _totalBlocks total number of blocks requested
      */
     public void updateTotalBlockRequestsByPeer(String _nodeId, int _totalBlocks) {
         leechesLock.lock();
@@ -275,7 +275,7 @@ public final class SyncStats {
     public void addPeerRequestTime(String _nodeId, long _requestTime) {
         responsesLock.lock();
         try {
-            LinkedList<Long> requestStartTimes =
+            List<Long> requestStartTimes =
                     statusRequestTimeByPeers.containsKey(_nodeId)
                             ? statusRequestTimeByPeers.get(_nodeId)
                             : new LinkedList<>();
@@ -295,7 +295,7 @@ public final class SyncStats {
     public void addPeerResponseTime(String _nodeId, long _responseTime) {
         responsesLock.lock();
         try {
-            LinkedList<Long> responseEndTimes =
+            List<Long> responseEndTimes =
                     statusResponseTimeByPeers.containsKey(_nodeId)
                             ? statusResponseTimeByPeers.get(_nodeId)
                             : new LinkedList<>();
@@ -371,7 +371,7 @@ public final class SyncStats {
      * @param responseTimes list of times for responses received
      * @return the average response time for the request-response cycle
      */
-    private static Double calculateAverage(List<Long> requestTimes, List<Long> responseTimes) {
+    private static double calculateAverage(List<Long> requestTimes, List<Long> responseTimes) {
         int entries = 0;
         double sum = 0;
         int size = Math.min(requestTimes.size(), responseTimes.size());
@@ -401,7 +401,7 @@ public final class SyncStats {
      *
      * @return overall average response time
      */
-    Long getOverallAveragePeerResponseTime() {
+    long getOverallAveragePeerResponseTime() {
         responsesLock.lock();
         try {
             return overallAvgPeerResponseTime;
