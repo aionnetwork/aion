@@ -1,22 +1,22 @@
 package org.aion.db.utils;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import org.aion.db.impl.DatabaseTestUtils;
 
+
+import static org.junit.Assert.fail;
+
+/**
+ * Helper class for spinning up a MongoDB instance to be used for unit tests.
+ */
 public class MongoTestRunner implements AutoCloseable {
 
     private int port;
     private Process runningMongoServer;
     private File databaseFilesDir;
-
 
     private static class Holder {
         static final MongoTestRunner INSTANCE = new MongoTestRunner();
@@ -25,7 +25,6 @@ public class MongoTestRunner implements AutoCloseable {
     public static MongoTestRunner inst() {
         return Holder.INSTANCE;
     }
-
 
     private MongoTestRunner() {
         this.port = DatabaseTestUtils.findOpenPort();
@@ -36,28 +35,29 @@ public class MongoTestRunner implements AutoCloseable {
 
         // Find the path to the actual mongo db executable
         ClassLoader classLoader = getClass().getClassLoader();
-        URL resourceUrl = classLoader.getResource("mongo/bin/mongod");
         File file = new File(classLoader.getResource("mongo/bin/mongod").getFile());
         String mongodPath = file.getAbsolutePath();
 
-        List<String> commands = List.of(
-            mongodPath,
-            "--port",
-            Integer.toString(this.port),
-            "--dbpath",
-            databaseFilesDir.getAbsolutePath(),
-            "--replSet",
-            String.format("rs%d", System.currentTimeMillis()),
-            "--noauth",
-            "--nojournal"
-        );
 
         try {
+            // First we need to just start the mongo database
+            List<String> commands = List.of(
+                mongodPath,
+                "--port",
+                Integer.toString(this.port),
+                "--dbpath",
+                databaseFilesDir.getAbsolutePath(),
+                "--replSet",
+                String.format("rs%d", System.currentTimeMillis()),
+                "--noauth",
+                "--nojournal"
+            );
+
             this.runningMongoServer = new ProcessBuilder(commands)
                 .redirectError(Redirect.INHERIT)
-                // .redirectOutput(Redirect.INHERIT)
                 .start();
 
+            // Next we run a command to initialize the mongo server's replicas set and admin accounts
             List<String> initializationCommands = List.of(
                 new File(classLoader.getResource("mongo/bin/mongo").getFile()).getAbsolutePath(),
                 "--host",
@@ -88,7 +88,8 @@ public class MongoTestRunner implements AutoCloseable {
     }
 
     /**
-     * Helper method to run some initialization command on Mongo with some retry logic if the command fails.
+     * Helper method to run some initialization command on Mongo with some retry logic if the command fails. Since it's
+     * not determinate how long starting the database will take, we need this retry logic.
      * @param initializationCommands The command to actually run
      * @param retriesRemaining How many more times to retry the command if it fails
      * @param pauseTimeMillis How long to pause between retries

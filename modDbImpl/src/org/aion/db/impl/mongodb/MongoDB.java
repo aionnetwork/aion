@@ -143,12 +143,28 @@ public class MongoDB extends AbstractDB {
         public final long totalDeletes;
 
         /**
+         * Whether or not our database is read-only, which means we'll never have written anything
+         */
+        public final boolean isReadOnly;
+
+        /**
          * Creates a new instance of the WriteBatchResult from Mongo's raw BulkWriteResult
          * @param writeResult The BulkWriteResult returned from Mongo
          */
         public WriteBatchResult(BulkWriteResult writeResult) {
             this.totalUpdates = writeResult.getInsertedCount() + writeResult.getModifiedCount() + writeResult.getUpserts().size();
             this.totalDeletes = writeResult.getDeletedCount();
+            this.isReadOnly = false;
+        }
+
+        /**
+         * Overloaded constructor to return a dummy WriteBatchResult if we're ready only.
+         * @param isReadOnly Whether or not our database is read only
+         */
+        public WriteBatchResult(boolean isReadOnly) {
+            this.totalUpdates = 0;
+            this.totalDeletes = 0;
+            this.isReadOnly = isReadOnly;
         }
 
         /**
@@ -157,7 +173,8 @@ public class MongoDB extends AbstractDB {
          * @return Whether or not things were written as expected
          */
         public boolean matchedExpectation(WriteBatch batch) {
-            return batch.getDeleteCount() == this.totalDeletes && batch.getUpdateCount() == this.totalUpdates;
+            return (batch.getDeleteCount() == this.totalDeletes && batch.getUpdateCount() == this.totalUpdates) ||
+                isReadOnly;
         }
     }
 
@@ -166,13 +183,13 @@ public class MongoDB extends AbstractDB {
     private ClientSession clientSession;
     private MongoCollection<BsonDocument> collection = null;
     private WriteBatch batch = null;
-    private boolean isReader = false;
+    private boolean isReadOnly;
 
     public MongoDB(String dbName, String mongoClientUri) {
         super(dbName);
         this.mongoClientUri = mongoClientUri;
 
-        this.isReader = mongoClientUri.contains("reader");
+        this.isReadOnly = mongoClientUri.contains("reader");
     }
 
     /**
@@ -181,6 +198,11 @@ public class MongoDB extends AbstractDB {
      * @return A summary of the write results
      */
     private WriteBatchResult doBulkWrite(WriteBatch edits) {
+        if (this.isReadOnly) {
+            LOG.info("Skipping writing because database is read only");
+            return new WriteBatchResult(true);
+        }
+
         BulkWriteResult writeResult = this.collection.bulkWrite(this.clientSession, edits.getEdits());
         WriteBatchResult result = new WriteBatchResult(writeResult);
 
@@ -275,10 +297,6 @@ public class MongoDB extends AbstractDB {
         check();
         check(cache.keySet().stream().map(k -> k.getData()).collect(Collectors.toList()));
 
-        if (this.isReader) {
-            return true;
-        }
-
         WriteBatch edits = new WriteBatch().addEditsWrapper(cache);
         WriteBatchResult result = doBulkWrite(edits);
 
@@ -300,10 +318,6 @@ public class MongoDB extends AbstractDB {
         check();
         check(key);
 
-        if (this.isReader) {
-            return;
-        }
-
         // Write this single edit in as a batch
         WriteBatch edits = new WriteBatch().addEdit(key, value);
         doBulkWrite(edits);
@@ -313,10 +327,6 @@ public class MongoDB extends AbstractDB {
     public void delete(byte[] key) {
         check();
         check(key);
-
-        if (this.isReader) {
-            return;
-        }
 
         // Write this single edit in as a batch
         WriteBatch edits = new WriteBatch().addEdit(key, null);
@@ -328,10 +338,6 @@ public class MongoDB extends AbstractDB {
         check();
         check(inputMap.keySet());
 
-        if (this.isReader) {
-            return;
-        }
-
         WriteBatch edits = new WriteBatch().addEdits(inputMap);
         doBulkWrite(edits);
     }
@@ -340,10 +346,6 @@ public class MongoDB extends AbstractDB {
     public void putToBatch(byte[] key, byte[] value) {
         check();
         check(key);
-
-        if (this.isReader) {
-            return;
-        }
 
         if (this.batch == null) {
             this.batch = new WriteBatch();
@@ -355,10 +357,6 @@ public class MongoDB extends AbstractDB {
     @Override
     public void commitBatch() {
         check();
-
-        if (this.isReader) {
-            return;
-        }
 
         if (this.batch != null) {
             LOG.info("Committing batch of writes");
@@ -374,11 +372,6 @@ public class MongoDB extends AbstractDB {
     public void deleteBatch(Collection<byte[]> keys) {
         check();
         check(keys);
-
-
-        if (this.isReader) {
-            return;
-        }
 
         if (!keys.isEmpty()) {
             Map<byte[], byte[]> batch = new HashMap();
@@ -406,7 +399,8 @@ public class MongoDB extends AbstractDB {
     public void drop() {
         check();
 
-        if (this.isReader) {
+        if (this.isReadOnly) {
+            LOG.info("read-only database. Not dropping.");
             return;
         }
 

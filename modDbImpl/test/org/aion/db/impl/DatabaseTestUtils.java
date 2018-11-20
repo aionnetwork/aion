@@ -25,6 +25,8 @@ package org.aion.db.impl;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -229,7 +231,7 @@ public class DatabaseTestUtils {
         try (ServerSocket socket = new ServerSocket(0);) {
             return socket.getLocalPort();
         } catch (Exception ex) {
-            assertTrue("Exception thrown finding open port: " + ex  .getMessage(), false);
+            fail("Exception thrown finding open port: " + ex  .getMessage());
         }
 
         return -1;

@@ -113,7 +113,7 @@ public class PersistentMockDB extends MockDB {
      */
     @Override
     public PersistenceMethod getPersistenceMethod() {
-        // Default to file-based since most of our dbs are that
+        // return file-based so file cleanup / setup can proceed as expected
         return PersistenceMethod.FILE_BASED;
     }
 

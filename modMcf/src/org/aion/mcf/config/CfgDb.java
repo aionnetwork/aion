@@ -372,7 +372,7 @@ public class CfgDb {
                     DBVendor vendor =
                             DBVendor.fromString(
                                     entry.getValue().asProperties().getProperty(Props.DB_TYPE));
-                    isPersistent = vendor.getPersistence() != PersistenceMethod.IN_MEMORY;
+                    isPersistent = vendor.getPersistence() == PersistenceMethod.FILE_BASED;
                 }
             }
 
@@ -384,7 +384,7 @@ public class CfgDb {
             props.setProperty(Props.DB_TYPE, this.vendor);
             props.setProperty(Props.ENABLE_DB_COMPRESSION, String.valueOf(this.compression));
             props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
-            boolean isPersistent = DBVendor.fromString(this.vendor).getPersistence() != PersistenceMethod.IN_MEMORY;
+            boolean isPersistent = DBVendor.fromString(this.vendor).getPersistence() == PersistenceMethod.FILE_BASED;
             props.setProperty(Props.PERSISTENT, String.valueOf(isPersistent));
 
             props.setProperty(Props.ENABLE_DB_CACHE, "true");

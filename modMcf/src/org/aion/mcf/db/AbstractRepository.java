@@ -133,7 +133,7 @@ public abstract class AbstractRepository<
      *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
-    protected void initializeDatabasesAndCaches() throws InvalidFilePathException, URISyntaxException {
+    protected void initializeDatabasesAndCaches() throws InvalidFilePathException {
         /*
          * Given that this function is not in the critical path and only called
          * on startup, enforce conditions here for safety
@@ -152,15 +152,10 @@ public abstract class AbstractRepository<
         //            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist");
         //        } else {
 
-        // if persistence is required
-        URI dbPathUri = new URI(this.cfg.getDbPath());
-
-        if (dbPathUri.getScheme() == null || dbPathUri.getScheme().equalsIgnoreCase("file")) {
-            if (Boolean.valueOf(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.PERSISTENT))) {
-                // verify user-provided path
-                File f = new File(this.cfg.getDbPath());
-                verifyAndBuildPath(f);
-            }
+        if (Boolean.valueOf(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.PERSISTENT))) {
+            // verify user-provided path
+            File f = new File(this.cfg.getDbPath());
+            verifyAndBuildPath(f);
         }
 
         //        }

@@ -379,7 +379,7 @@ public class DriverBaseTest {
     }
 
     @AfterClass
-    public static void teardown() throws Exception {
+    public static void teardown() {
         assertThat(testDir.delete()).isTrue();
     }
 
@@ -763,7 +763,7 @@ public class DriverBaseTest {
     @Ignore
     /** This test is non-deterministic and may fail. If it does, re-run the test suite. */
     public void testApproximateDBSize() {
-        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED && !(db instanceof PersistentMockDB)) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED) {
             int repeat = 1_000_000;
             for (int i = 0; i < repeat; i++) {
                 db.put(String.format("%c%09d", 'a' + i % 26, i).getBytes(), "test".getBytes());

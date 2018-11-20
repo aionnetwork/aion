@@ -82,7 +82,7 @@ public class MockDB extends AbstractDB {
 
     @Override
     public PersistenceMethod getPersistenceMethod() {
-        // Default to file-based since most of our dbs are that
+        // MockDB doesn't persist anything to disk, so it's type is IN_MEMORY
         return PersistenceMethod.IN_MEMORY;
     }
 
