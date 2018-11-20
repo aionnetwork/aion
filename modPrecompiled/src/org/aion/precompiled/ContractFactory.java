@@ -80,7 +80,7 @@ public class ContractFactory implements IContractFactory {
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
         CfgFork cfg = new CfgFork();
-        String forkProperty = cfg.getProperties().getProperty("fork1");
+        String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
         boolean firstFork =
                 (forkProperty != null) && (context.blockNumber() > Long.valueOf(forkProperty));
 
