@@ -147,7 +147,6 @@ public class ApiAionTest {
     }
 
     private ApiAionImpl api;
-    private ApiWeb3Aion web3Api;
     private AionImpl impl;
     private AionRepositoryImpl repo;
 
@@ -156,7 +155,6 @@ public class ApiAionTest {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
         impl = AionImpl.inst();
         api = new ApiAionImpl(impl);
-        web3Api = new ApiWeb3Aion(impl);
         repo = AionRepositoryImpl.inst();
         testStartTime = System.currentTimeMillis();
     }
@@ -518,148 +516,5 @@ public class ApiAionTest {
                 impl.getBlockMiner().getHashrate() + hashRate,
                 Double.parseDouble(api.getHashrate()),
                 0.001);
-    }
-
-    @Test
-    public void testEthSignTransaction() {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-
-        Address toAddr = new Address(Keystore.create("testPwd"));
-
-        JSONObject tx = new JSONObject();
-        tx.put("from", "0x" + addr.toString());
-        tx.put("to", "0x" + toAddr.toString());
-        tx.put("gasPrice", "20000000000");
-        tx.put("gas", "21000");
-        tx.put("value", "500000");
-        tx.put("data", "");
-
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put(tx);
-        jsonArray.put(addr);
-
-        RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
-        assertNotNull(rpcMsg);
-
-        JSONObject result = (JSONObject) rpcMsg.getResult();
-        JSONObject outTx = (JSONObject) result.get("tx");
-        String raw = (String) result.get("raw");
-
-        assertNotNull(result);
-        assertNotNull(raw);
-        assertNotNull(tx);
-
-        assertEquals(tx.get("to"), outTx.get("to"));
-        assertEquals(
-                tx.get("value"), StringHexToBigInteger(outTx.get("value").toString()).toString());
-        assertEquals(
-                tx.get("gasPrice"),
-                StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
-        assertEquals(
-                tx.get("gasPrice"),
-                StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
-        assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("gas").toString()).toString());
-        assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("nrg").toString()).toString());
-        assertEquals("0x", outTx.get("input").toString());
-
-        JSONArray rawTxArray = new JSONArray();
-        rawTxArray.put(raw);
-        assertNotNull(web3Api.eth_sendRawTransaction(rawTxArray));
-    }
-
-    @Test
-    public void testEthSignTransactionAddressParamIsNull() {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-
-        Address toAddr = new Address(Keystore.create("testPwd"));
-
-        JSONObject tx = new JSONObject();
-        tx.put("from", addr.toString());
-        tx.put("gasPrice", "20000000000");
-        tx.put("gas", "21000");
-        tx.put("to", toAddr.toString());
-        tx.put("value", "500000");
-        tx.put("data", "");
-
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put(tx);
-        // don't pass address
-
-        RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
-        assertNotNull(rpcMsg);
-
-        JSONObject result = (JSONObject) rpcMsg.getResult();
-        assertNull(result);
-        assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
-    }
-
-    @Test
-    public void testEthSignTransactionAccountNotUnlocked() {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        Address toAddr = new Address(Keystore.create("testPwd"));
-
-        JSONObject tx = new JSONObject();
-        tx.put("from", addr.toString());
-        tx.put("gasPrice", "20000000000");
-        tx.put("gas", "21000");
-        tx.put("to", toAddr.toString());
-        tx.put("value", "500000");
-        tx.put("data", "");
-
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put(tx);
-        jsonArray.put(addr);
-
-        RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
-        assertNotNull(rpcMsg);
-
-        JSONObject result = (JSONObject) rpcMsg.getResult();
-        assertNull(result);
-        assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
-    }
-
-    @Test
-    public void testEthSendTransactionAccountNotUnlocked() {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        Address toAddr = new Address(Keystore.create("testPwd"));
-
-        JSONObject tx = new JSONObject();
-        tx.put("from", addr.toString());
-        tx.put("gasPrice", "20000000000");
-        tx.put("gas", "21000");
-        tx.put("to", toAddr.toString());
-        tx.put("value", "500000");
-        tx.put("data", "");
-
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put(tx);
-        jsonArray.put(addr);
-
-        RpcMsg rpcMsg = web3Api.eth_sendTransaction(jsonArray);
-        assertNotNull(rpcMsg);
-
-        JSONObject result = (JSONObject) rpcMsg.getResult();
-        assertNull(result);
-        assertEquals(RpcError.NOT_ALLOWED, rpcMsg.getError());
-    }
-
-    @Test
-    public void testEthGetTransactionCountPending() {
-        JSONObject req = new JSONObject();
-        req.put("address", Address.ZERO_ADDRESS().toString());
-        req.put("block", "pending");
-
-        RpcMsg rsp = web3Api.eth_getTransactionCount(req);
-        assertNull(rsp.getError());
-
-        assertEquals(
-                impl.getPendingState().getNonce(Address.ZERO_ADDRESS()),
-                StringHexToBigInteger(rsp.getResult().toString()));
     }
 }
