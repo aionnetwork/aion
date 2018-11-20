@@ -140,19 +140,35 @@ public final class CfgAion extends Cfg {
     }
 
     public void setForkProperties() {
+        setForkProperties("mainnet");
+    }
+
+    public void setForkProperties(String networkName) {
         Properties properties = new Properties();
+
+        // old kernel doesn't support the fork feature.
+        if (networkName.equals("config")) {
+            return;
+        }
+
         FileInputStream fis = null;
         try {
-            fis = new FileInputStream(getBasePath() + CfgFork.FORK_PROPERTIES_PATH);
+            fis =
+                    new FileInputStream(
+                            System.getProperty("user.dir")
+                                    + "/"
+                                    + networkName
+                                    + "/config"
+                                    + CfgFork.FORK_PROPERTIES_PATH);
             properties.load(fis);
+            this.getFork().setProperties(properties);
         } catch (IOException e) {
             System.out.println(
                     "<error on-parsing-fork-properties msg=" + e.getLocalizedMessage() + ">");
-            System.exit(1);
+            // System.exit(1);
         } finally {
             closeFileInputStream(fis);
         }
-        this.getFork().setProperties(properties);
     }
 
     public void dbFromXML() {

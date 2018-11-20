@@ -26,12 +26,14 @@ import java.util.Properties;
 
 public class CfgFork {
 
+    public CfgFork() {}
+
     public static final String FORK_PROPERTIES_PATH = "/fork.properties";
 
     private static Properties forkProperties;
 
     public void setProperties(Properties properties) {
-        this.forkProperties = properties;
+        forkProperties = properties;
     }
 
     public String getForkPropertyByNumber(final int forkNum) {

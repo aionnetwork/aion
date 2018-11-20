@@ -32,7 +32,6 @@ public class CfgForkTest {
     @Test
     public void getForkPropertyTest() {
         CfgAion cfg = CfgAion.inst();
-        cfg.setForkProperties();
         String forkProperty = cfg.getFork().getForkPropertyByNumber(1);
         assertEquals("2000000", forkProperty);
     }

@@ -24,6 +24,7 @@ package org.aion.mcf.config;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
+import java.io.IOException;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.aion.mcf.types.AbstractBlock;
@@ -142,6 +143,7 @@ public abstract class Cfg {
     private final String configFileName = "config.xml";
     private final String genesisFileName = "genesis.json";
     private final String keystoreDirName = "keystore";
+    private final String forkFileName = "fork.properties";
 
     // base path
     private final File INITIAL_PATH = new File(System.getProperty("user.dir"));
@@ -153,6 +155,8 @@ public abstract class Cfg {
     // base configuration: old kernel OR using network config
     private File baseConfigFile = null;
     private File baseGenesisFile = null;
+    private File baseForkFile = null;
+
 
     // can be absolute in config file OR depend on execution path
     private File logDir = null;
@@ -170,6 +174,7 @@ public abstract class Cfg {
     private File execConfigDir = null;
     private File execConfigFile = null;
     private File execGenesisFile = null;
+    private File execForkFile = null;
 
     /** Resets internal data containing network and path. */
     @VisibleForTesting
@@ -177,6 +182,7 @@ public abstract class Cfg {
         networkConfigDir = null;
         baseConfigFile = null;
         baseGenesisFile = null;
+        baseForkFile = null;
         logDir = null;
         databaseDir = null;
         absoluteLogDir = false;
@@ -187,6 +193,7 @@ public abstract class Cfg {
         execConfigDir = null;
         execConfigFile = null;
         execGenesisFile = null;
+        execForkFile = null;
     }
 
     /**
@@ -207,7 +214,6 @@ public abstract class Cfg {
             execGenesisFile = baseGenesisFile;
             updateStoragePaths();
         }
-        setForkProperties();
     }
 
     /**
@@ -221,6 +227,7 @@ public abstract class Cfg {
         networkConfigDir = new File(CONFIG_DIR, network);
         baseConfigFile = new File(networkConfigDir, configFileName);
         baseGenesisFile = new File(networkConfigDir, genesisFileName);
+        baseForkFile = new File(networkConfigDir, forkFileName);
 
         if (dataDir == null) {
             dataDir = INITIAL_PATH;
@@ -229,8 +236,10 @@ public abstract class Cfg {
         execConfigDir = new File(execDir, configDirName);
         execConfigFile = new File(execConfigDir, configFileName);
         execGenesisFile = new File(execConfigDir, genesisFileName);
+        execForkFile = new File(execConfigDir, forkFileName);
 
         updateStoragePaths();
+        setForkProperties(network);
     }
 
     /** Updates the path to the log, database directories. */
@@ -436,6 +445,8 @@ public abstract class Cfg {
     public abstract void toXML(final String[] args, File file);
 
     public abstract void setForkProperties();
+
+    public abstract void setForkProperties(String network);
 
     public abstract void setGenesis();
 

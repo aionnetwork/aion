@@ -28,7 +28,6 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
@@ -1166,7 +1165,10 @@ public class CliTest {
         skippedTasks.add("--db-compact");
         parameters.add(new Object[] {input, TaskPriority.REVERT, skippedTasks});
 
-        input = new String[] {"--state", "FULL", "--db-compact", "--dump-state-size", "--dump-state"};
+        input =
+                new String[] {
+                    "--state", "FULL", "--db-compact", "--dump-state-size", "--dump-state"
+                };
         skippedTasks = new HashSet<String>();
         skippedTasks.add("--db-compact");
         skippedTasks.add("--dump-state-size");
@@ -1194,7 +1196,7 @@ public class CliTest {
     @Test
     @Parameters(method = "parametersForArgumentCheck")
     public void testCheckArguments(
-        String[] input, TaskPriority expectedPriority, Set<String> expectedTasks) {
+            String[] input, TaskPriority expectedPriority, Set<String> expectedTasks) {
         Arguments options = new Arguments();
         CommandLine parser = new CommandLine(options);
         parser.parse(input);
