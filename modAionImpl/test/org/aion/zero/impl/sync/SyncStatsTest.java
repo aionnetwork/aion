@@ -76,7 +76,7 @@ public class SyncStatsTest {
                 assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
                 count++;
             }
-            stats.update(peers.get(0), totalBlocks, chain.getBestBlock().getNumber());
+            stats.updatePeerTotalBlocks(peers.get(0), totalBlocks);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -181,7 +181,7 @@ public class SyncStatsTest {
             while (blocks > 0) {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                stats.update(peers.get(peerNo), blocks, chain.getBestBlock().getNumber());
+                stats.updatePeerTotalBlocks(peers.get(peerNo), blocks);
                 blocks--;
             }
             peerNo++;

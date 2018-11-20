@@ -88,18 +88,15 @@ public final class SyncStats {
     /**
      * Update statistics based on peer nodeId, total imported blocks, and best block number
      *
-     * @param _nodeId peer node display Id
-     * @param _totalBlocks total imported blocks in batch
      * @param _blockNumber best block number
      */
-    void update(String _nodeId, int _totalBlocks, long _blockNumber) {
+    void update(long _blockNumber) {
         blockAverageLock.lock();
         try {
             avgBlocksPerSec =
                     (double) (_blockNumber - startBlock)
                             * 1000
                             / (System.currentTimeMillis() - start);
-            updatePeerTotalBlocks(_nodeId, _totalBlocks);
         } finally {
             blockAverageLock.unlock();
         }
@@ -193,7 +190,7 @@ public final class SyncStats {
      * @param _nodeId peer node display Id
      * @param _totalBlocks total number of blocks received
      */
-    private void updatePeerTotalBlocks(String _nodeId, int _totalBlocks) {
+    public void updatePeerTotalBlocks(String _nodeId, int _totalBlocks) {
         seedsLock.lock();
         try {
             long blocks = (long) _totalBlocks;
