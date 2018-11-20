@@ -25,8 +25,6 @@ package org.aion.mcf.types;
 import java.math.BigInteger;
 import org.aion.base.type.Address;
 import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.slf4j.Logger;
 import org.spongycastle.util.BigIntegers;
 
 /** Abstract BlockHeader. */
@@ -34,7 +32,7 @@ public abstract class AbstractBlockHeader {
 
     public static final int NONCE_LENGTH = 32;
     public static final int SOLUTIONSIZE = 1408;
-    static final int DIFFICULTY_LENGTH = 16;
+    private static final int DIFFICULTY_LENGTH = 16;
 
     protected byte version;
 
