@@ -25,7 +25,7 @@ if [ ! -d "$JDK_PATH" ]; then
 fi
 
 # download javafx if can't find the javafx env
-if [ "$noGui" != "true" ] || [ ! -d "$JAVAFX_PATH" ]; then
+if [ "$noGui" != "true" ] && [ ! -d "$JAVAFX_PATH" ]; then
   wget -c http://gluonhq.com/download/javafx-11-jmods-linux -O openjfx-11_linux-x64_bin-jmods.zip
   unzip openjfx-11_linux-x64_bin-jmods.zip -d $PACK_PATH
   mv "${PACK_PATH}/${JAVAFX_VER}" $JAVAFX_PATH

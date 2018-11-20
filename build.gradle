@@ -250,9 +250,6 @@ build {
 }
 
 task prePack(type:Exec)  {
-    doFirst { 
-        ant.echo("hasProperty(noGui)" + project.hasProperty('noGui') )
-    }
     dependsOn ':aion_api:cleanPack' 
     dependsOn ':aion_api:build'
     if (project.hasProperty('noGui')) {
