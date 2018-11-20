@@ -23,12 +23,18 @@
 
 package org.aion.precompiled;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import org.aion.base.type.Address;
+import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.IPrecompiledContract;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,11 +51,28 @@ public class BenchmarkTest {
 
     private static int WARMUP = 2000;
     private static int BENCH = 1000000;
+    private File forkFile;
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
+
+        new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
+        forkFile =
+            new File(
+                System.getProperty("user.dir")
+                    + "/mainnet/config"
+                    + CfgFork.FORK_PROPERTIES_PATH);
+        forkFile.createNewFile();
+
+        // Open given file in append mode.
+        BufferedWriter out = new BufferedWriter(
+            new FileWriter(forkFile, true));
+        out.write("fork0.3.2=2000000");
+        out.close();
+
+
         cf = new ContractFactory();
-        CfgAion.inst().setForkProperties();
+        CfgAion.inst();
         txHash = RandomUtils.nextBytes(32);
         origin = Address.wrap(RandomUtils.nextBytes(32));
         caller = origin;
@@ -67,6 +90,13 @@ public class BenchmarkTest {
         depth = 0;
         kind = ExecutionContext.CREATE;
         flags = 0;
+    }
+
+    @After
+    public void teardown() {
+        forkFile.delete();
+        forkFile.getParentFile().delete();
+        forkFile.getParentFile().getParentFile().delete();
     }
 
     @Test
