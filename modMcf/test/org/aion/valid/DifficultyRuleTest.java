@@ -96,7 +96,7 @@ public class DifficultyRuleTest {
      * data is <b>greater</b> than the difficulty data length.
      */
     @Test
-    public void testInvalidDiffcultyLength() {
+    public void testInvalidDifficultyLength() {
 
         currentHeader =
                 new A0BlockHeader(
@@ -130,7 +130,7 @@ public class DifficultyRuleTest {
      * data is <b>equal</b> the difficulty data length.
      */
     @Test
-    public void testDiffcultyLength() {
+    public void testDifficultyLength() {
 
         currentHeader =
                 new A0BlockHeader(
