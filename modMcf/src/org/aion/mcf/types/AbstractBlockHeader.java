@@ -32,7 +32,7 @@ public abstract class AbstractBlockHeader {
 
     public static final int NONCE_LENGTH = 32;
     public static final int SOLUTIONSIZE = 1408;
-    private static final int DIFFICULTY_LENGTH = 16;
+    private static final int MAX_DIFFICULTY_LENGTH = 16;
 
     protected byte version;
 
@@ -167,8 +167,15 @@ public abstract class AbstractBlockHeader {
         return difficulty;
     }
 
+    /**
+     * @implNote when the difficulty data field exceed the system limit(16 bytes), this method will
+     *     return BigInteger.ZERO for the letting the validate() in the AionDifficultyRule return false.
+     * @see org.aion.zero.impl.valid.AionDifficultyRule.validate;
+     * @return the difficulty as the BigInteger format.
+     */
+    @SuppressWarnings("JavadocReference")
     public BigInteger getDifficultyBI() {
-        if (difficulty == null || difficulty.length > DIFFICULTY_LENGTH) {
+        if (difficulty == null || difficulty.length > MAX_DIFFICULTY_LENGTH) {
             AionLoggerFactory.getLogger("CONS").error("Invalid difficulty length!");
             return BigInteger.ZERO;
         }
