@@ -30,14 +30,13 @@ public class CfgFork {
 
     public static final String FORK_PROPERTIES_PATH = "/fork.properties";
 
-    private static Properties forkProperties;
+    private static Properties forkProperties = new Properties();
 
     public void setProperties(Properties properties) {
         forkProperties = properties;
     }
 
-    public String getForkPropertyByNumber(final int forkNum) {
-        if (forkProperties == null) return null;
-        return forkProperties.getProperty("fork" + String.valueOf(forkNum));
+    public Properties getProperties() {
+        return forkProperties;
     }
 }
