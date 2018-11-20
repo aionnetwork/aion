@@ -374,9 +374,10 @@ public final class SyncStats {
     private static Double calculateAverage(List<Long> requestTimes, List<Long> responseTimes) {
         int entries = 0;
         double sum = 0;
+        int size = Math.min(requestTimes.size(), responseTimes.size());
 
         // only consider requests that had responses
-        for (int i = 0; i < responseTimes.size(); i++) {
+        for (int i = 0; i < size; i++) {
             long request = requestTimes.get(i);
             long response = responseTimes.get(i);
 
