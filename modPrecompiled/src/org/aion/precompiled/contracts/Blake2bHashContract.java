@@ -78,7 +78,7 @@ public class Blake2bHashContract implements IPrecompiledContract {
     }
 
     @VisibleForTesting
-    public static byte[] setupInput(int operation, byte[] inputByteArray) {
+    static byte[] setupInput(int operation, byte[] inputByteArray) {
         byte[] ret = new byte[1 + inputByteArray.length];
         ret[0] = (byte) operation;
         System.arraycopy(inputByteArray, 0, ret, 1, inputByteArray.length);
