@@ -249,9 +249,9 @@ public class SyncStatsTest {
         Map<String, Double> emptyAvgResponseTimeByPeers = stats.getAverageResponseTimeByPeers();
         // request time is logged but no response is received
         stats.addPeerRequestTime("dummy", System.nanoTime());
-        Long overallAveragePeerResponseTime = stats.getOverallAveragePeerResponseTime();
+        double overallAveragePeerResponseTime = stats.getOverallAveragePeerResponseTime();
         assertThat(emptyAvgResponseTimeByPeers.size() == 0).isTrue();
-        assertThat(overallAveragePeerResponseTime.compareTo(0L) == 0).isTrue();
+        assertThat(overallAveragePeerResponseTime).isEqualTo(0d);
 
         stats = new SyncStats(chain.getBestBlock().getNumber());
 
@@ -280,7 +280,8 @@ public class SyncStatsTest {
             if (i++ == 0) {
                 // First record correspond to the overall average response time by all peers
                 assertThat(
-                        ((Long) avgResponseTimeByPeers.get(nodeId).longValue())
+                        avgResponseTimeByPeers
+                                .get(nodeId)
                                 .compareTo(stats.getOverallAveragePeerResponseTime()));
             } else {
                 assertThat(avgResponseTimeByPeers.get(nodeId) > lastAvgResponseTime).isTrue();

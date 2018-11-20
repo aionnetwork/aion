@@ -285,13 +285,15 @@ final class TaskShowStatus implements Runnable {
         if (!avgResponseTimeByPeers.isEmpty()) {
 
             // value in milliseconds
-            Long overallAvgResponse = this.stats.getOverallAveragePeerResponseTime() / 1_000_000;
+            double overallAvgResponse = this.stats.getOverallAveragePeerResponseTime() / 1_000_000;
 
             sb.append("\n====== sync-responses-by-peer ======\n");
             sb.append(String.format("   %9s %20s\n", "peer", "avg. response"));
             sb.append("------------------------------------\n");
 
-            sb.append(String.format("   «overall» %17s ms\n", overallAvgResponse));
+            sb.append(
+                    String.format(
+                            "   «overall» %17s ms\n", String.format("%.0f", overallAvgResponse)));
 
             avgResponseTimeByPeers.forEach(
                     (nodeId, avgResponse) ->

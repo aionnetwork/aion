@@ -29,7 +29,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
@@ -72,7 +71,7 @@ public final class SyncStats {
     /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
     private final Map<String, List<Long>> statusResponseTimeByPeers = new HashMap<>();
     /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private long overallAvgPeerResponseTime;
+    private double overallAvgPeerResponseTime;
 
     private final Lock responsesLock = new ReentrantLock();
 
@@ -153,24 +152,21 @@ public final class SyncStats {
         requestsLock.lock();
 
         try {
-            Map<String, Float> percentageReq = new HashMap<>();
-            Long totalReq =
-                    requestsToPeers
-                            .values()
-                            .parallelStream()
-                            .mapToLong(entry -> entry.getTotal())
-                            .sum();
-            requestsToPeers
-                    .entrySet()
-                    .parallelStream()
-                    .forEach(
-                            entry ->
-                                    percentageReq.put(
-                                            entry.getKey(),
-                                            entry.getValue().getTotal() / totalReq.floatValue()));
+            Map<String, Float> percentageReq = new LinkedHashMap<>();
+
+            float totalReq = 0f;
+
+            for (RequestCounter rc : requestsToPeers.values()) {
+                totalReq += rc.getTotal();
+            }
+
+            for (Map.Entry<String, RequestCounter> entry : requestsToPeers.entrySet()) {
+                percentageReq.put(entry.getKey(), entry.getValue().getTotal() / totalReq);
+            }
+
             return percentageReq
                     .entrySet()
-                    .parallelStream()
+                    .stream()
                     .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                     .collect(
                             Collectors.toMap(
@@ -211,7 +207,7 @@ public final class SyncStats {
         try {
             return blocksByPeer
                     .entrySet()
-                    .parallelStream()
+                    .stream()
                     .filter(entry -> entry.getValue() > 0)
                     .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                     .collect(
@@ -253,7 +249,7 @@ public final class SyncStats {
         try {
             return blockRequestsByPeer
                     .entrySet()
-                    .parallelStream()
+                    .stream()
                     .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                     .collect(
                             Collectors.toMap(
@@ -314,43 +310,37 @@ public final class SyncStats {
     Map<String, Double> getAverageResponseTimeByPeers() {
         responsesLock.lock();
         try {
-            Map<String, Double> avgResponseTimeByPeers =
-                    statusRequestTimeByPeers
-                            .entrySet()
-                            .parallelStream()
-                            .collect(
-                                    Collectors.toMap(
-                                            // collect a map of average response times by peer
-                                            Map.Entry::getKey, // node display Id
-                                            entry -> { // calculate the average response time
-                                                String _nodeId = entry.getKey();
-                                                final List<Long> requests = entry.getValue();
-                                                final List<Long> responses =
-                                                        statusResponseTimeByPeers.getOrDefault(
-                                                                _nodeId, new LinkedList<>());
-                                                return calculateAverage(requests, responses);
-                                            }));
+            double average;
+            String nodeId;
+            List<Long> requests, responses;
+
+            Map<String, Double> avgResponseTimeByPeers = new HashMap<>();
+            overallAvgPeerResponseTime = 0d;
+
+            for (Map.Entry<String, List<Long>> peerData : statusRequestTimeByPeers.entrySet()) {
+
+                nodeId = peerData.getKey(); // node display Id
+                requests = peerData.getValue();
+                responses = statusResponseTimeByPeers.getOrDefault(nodeId, new LinkedList<>());
+
+                // calculate the average response time
+                average = calculateAverage(requests, responses);
+
+                if (average >= 0) {
+                    // collect a map of average response times by peer
+                    avgResponseTimeByPeers.put(nodeId, average);
+                    overallAvgPeerResponseTime += average;
+                }
+            }
 
             overallAvgPeerResponseTime =
-                    statusRequestTimeByPeers.isEmpty()
-                            ? overallAvgPeerResponseTime
-                            : Double.valueOf(
-                                            Math.ceil(
-                                                    avgResponseTimeByPeers
-                                                            .entrySet()
-                                                            .parallelStream()
-                                                            // ignore peers without meaningful data
-                                                            .filter(entry -> entry.getValue() >= 0)
-                                                            .mapToDouble(Entry::getValue)
-                                                            .average()
-                                                            .getAsDouble()))
-                                    .longValue();
+                    avgResponseTimeByPeers.isEmpty()
+                            ? 0d
+                            : overallAvgPeerResponseTime / avgResponseTimeByPeers.size();
 
             return avgResponseTimeByPeers
                     .entrySet()
-                    .parallelStream()
-                    // ignore peers without meaningful data
-                    .filter(entry -> entry.getValue() >= 0)
+                    .stream()
                     .sorted(Map.Entry.comparingByValue())
                     .collect(
                             Collectors.toMap(
@@ -401,7 +391,7 @@ public final class SyncStats {
      *
      * @return overall average response time
      */
-    long getOverallAveragePeerResponseTime() {
+    double getOverallAveragePeerResponseTime() {
         responsesLock.lock();
         try {
             return overallAvgPeerResponseTime;
