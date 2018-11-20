@@ -135,6 +135,8 @@ public class ApiWeb3Aion extends ApiAion {
 
     private boolean isSeedMode;
 
+    private final long BEST_PENDING_BLOCK = -1L;
+
     private final LoadingCache<Integer, ChainHeadView> CachedRecentEntities;
     private final LoadingCache<String, MinerStatsView> MinerStats;
 
@@ -571,7 +573,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         // pending transactions
-        if (bn < 0) {
+        if (bn == BEST_PENDING_BLOCK) {
             long pendingTxCount = this.ac.getAionHub().getPendingState().getPendingTxSize();
             return new RpcMsg(TypeConverter.toJsonHex(pendingTxCount));
         }
@@ -789,7 +791,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         Long bn = parseBnOrId(bnOrId);
         if (bn == null) {
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block id provided.");
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
         AionBlock b = getBlockByBN(bn);
@@ -887,7 +889,7 @@ public class ApiWeb3Aion extends ApiAion {
         Long bn = this.parseBnOrId(_bnOrId);
 
         if (bn == null) {
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block id provided.");
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
         AionBlock nb = getBlockByBN(bn);
@@ -989,7 +991,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         Long bn = parseBnOrId(_bnOrId);
         if (bn == null) {
-            return null;
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
         AionBlock b = this.getBlockByBN(bn);
@@ -1097,6 +1099,11 @@ public class ApiWeb3Aion extends ApiAion {
 
         if (bnFrom == null || bnTo == null) {
             LOG.debug("jsonrpc - eth_newFilter(): from, to block parse failed");
+            return null;
+        }
+
+        if (bnTo != BEST_PENDING_BLOCK && bnFrom > bnTo) {
+            LOG.debug("jsonrpc - eth_newFilter(): from block is after to block");
             return null;
         }
 
@@ -1338,7 +1345,7 @@ public class ApiWeb3Aion extends ApiAion {
         Long bn = parseBnOrId(_bnOrId);
 
         if (bn == null || bn < 0) {
-            return null;
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
         List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> blocks =
@@ -2823,12 +2830,12 @@ public class ApiWeb3Aion extends ApiAion {
     // comment out until resolved
     private IRepository getRepoByJsonBlockId(String _bnOrId) {
         Long bn = parseBnOrId(_bnOrId);
-        // if you passed in an invalid bnOrId, pending or it's an error
+
         if (bn == null) {
             return null;
         }
 
-        if (bn < 0) return pendingState.getRepository();
+        if (bn == BEST_PENDING_BLOCK) return pendingState.getRepository();
 
         AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
         if (b == null) {
@@ -2838,13 +2845,15 @@ public class ApiWeb3Aion extends ApiAion {
         return ac.getRepository().getSnapshotTo(b.getStateRoot());
     }
 
-    private AionBlock getBlockByBN(Long bn) {
-        if (bn < 0) {
+    private AionBlock getBlockByBN(long bn) {
+        if (bn == BEST_PENDING_BLOCK) {
             return pendingState.getBestBlock();
         } else {
             return this.ac.getBlockchain().getBlockByNumber(bn);
         }
     }
+
+    // Note: If return is null, caller sometimes assumes no blockNumber was passed in
 
     private Long parseBnOrId(String _bnOrId) {
         if (_bnOrId == null) {
@@ -2857,12 +2866,21 @@ public class ApiWeb3Aion extends ApiAion {
             } else if ("latest".equalsIgnoreCase(_bnOrId)) {
                 return getBestBlock().getNumber();
             } else if ("pending".equalsIgnoreCase(_bnOrId)) {
-                return -1L;
+                return BEST_PENDING_BLOCK;
             } else {
+
+                Long ret;
+
                 if (_bnOrId.startsWith("0x")) {
-                    return TypeConverter.StringHexToBigInteger(_bnOrId).longValue();
+                    ret = TypeConverter.StringHexToBigInteger(_bnOrId).longValue();
                 } else {
-                    return Long.parseLong(_bnOrId);
+                    ret = Long.parseLong(_bnOrId);
+                }
+                if (ret < 0) {
+                    LOG.debug("block number cannot be negative" + _bnOrId);
+                    return null;
+                } else {
+                    return ret;
                 }
             }
         } catch (Exception e) {
