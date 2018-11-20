@@ -35,7 +35,7 @@ module_path=$JDK_PATH/jmods
 add_modules="java.base,java.xml,java.logging,java.management,jdk.unsupported,jdk.sctp"
 # generate aion runtime
 if [ "$noGui" != "true" ]; then
-    module_path="$module_path:$JAVAFX_PATH/jmods"
+    module_path="$module_path:$JAVAFX_PATH"
     add_modules="$add_modules,javafx.graphics,javafx.controls,javafx.base,javafx.fxml,javafx.swing"
 fi
 if [ ! -d "$JDK_RT" ]; then
