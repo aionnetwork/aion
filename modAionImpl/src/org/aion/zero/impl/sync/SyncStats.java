@@ -270,6 +270,7 @@ public final class SyncStats {
      * Logs the time of status request to an active peer node
      *
      * @param _nodeId peer node display Id
+     * @param _requestTime time when the request was sent in nanoseconds
      */
     public void addPeerRequestTime(String _nodeId, long _requestTime) {
         responsesLock.lock();
@@ -289,16 +290,17 @@ public final class SyncStats {
      * Log the time of status response received from an active peer node
      *
      * @param _nodeId peer node display Id
+     * @param _responseTime time when the response was received in nanoseconds
      */
-    public void addPeerResponseTime(String _nodeId, long _requestTime) {
+    public void addPeerResponseTime(String _nodeId, long _responseTime) {
         responsesLock.lock();
         try {
-            LinkedList<Long> requestStartTimes =
+            LinkedList<Long> responseEndTimes =
                     statusResponseTimeByPeers.containsKey(_nodeId)
                             ? statusResponseTimeByPeers.get(_nodeId)
                             : new LinkedList<>();
-            requestStartTimes.add(_requestTime);
-            statusResponseTimeByPeers.put(_nodeId, requestStartTimes);
+            responseEndTimes.add(_responseTime);
+            statusResponseTimeByPeers.put(_nodeId, responseEndTimes);
         } finally {
             responsesLock.unlock();
         }
@@ -307,7 +309,7 @@ public final class SyncStats {
     /**
      * Obtains the average response time by each active peer node
      *
-     * @return map of average response time by peer node
+     * @return map of average response time in nanoseconds by peer node
      */
     Map<String, Double> getAverageResponseTimeByPeers() {
         responsesLock.lock();

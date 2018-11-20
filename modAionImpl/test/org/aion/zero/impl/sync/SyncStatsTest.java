@@ -248,7 +248,7 @@ public class SyncStatsTest {
         // ensures correct behaviour on empty stats
         Map<String, Double> emptyAvgResponseTimeByPeers = stats.getAverageResponseTimeByPeers();
         // request time is logged but no response is received
-        stats.addPeerRequestTime("dummy", System.currentTimeMillis());
+        stats.addPeerRequestTime("dummy", System.nanoTime());
         Long overallAveragePeerResponseTime = stats.getOverallAveragePeerResponseTime();
         assertThat(emptyAvgResponseTimeByPeers.size() == 0).isTrue();
         assertThat(overallAveragePeerResponseTime.compareTo(0L) == 0).isTrue();
@@ -259,12 +259,12 @@ public class SyncStatsTest {
         for (String nodeId : peers) {
             int count = requests;
             while (count > 0) {
-                stats.addPeerRequestTime(nodeId, System.currentTimeMillis());
+                stats.addPeerRequestTime(nodeId, System.nanoTime());
                 try {
                     Thread.sleep(100 * count);
                 } catch (InterruptedException e) {
                 }
-                stats.addPeerResponseTime(nodeId, System.currentTimeMillis());
+                stats.addPeerResponseTime(nodeId, System.nanoTime());
                 count--;
             }
             requests--;
