@@ -161,11 +161,24 @@ public final class CfgAion extends Cfg {
                                     + "/config"
                                     + CfgFork.FORK_PROPERTIES_PATH);
             properties.load(fis);
+
+            properties.forEach(
+                    (k, v) -> {
+                        System.out.println(
+                                "<Protocol name: "
+                                        + k.toString()
+                                        + " block#: "
+                                        + v.toString()
+                                        + " updated!");
+                    });
+
             this.getFork().setProperties(properties);
         } catch (IOException e) {
             System.out.println(
-                    "<error on-parsing-fork-properties msg=" + e.getLocalizedMessage() + ">");
-            // System.exit(1);
+                    "<error on-parsing-fork-properties msg="
+                            + e.getLocalizedMessage()
+                            + ">, no protocol been updated.");
+
         } finally {
             closeFileInputStream(fis);
         }
