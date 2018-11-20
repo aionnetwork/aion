@@ -170,6 +170,7 @@ public abstract class AbstractBlockHeader {
     /**
      * @implNote when the difficulty data field exceed the system limit(16 bytes), this method will
      *     return BigInteger.ZERO for the letting the validate() in the AionDifficultyRule return false.
+     *     The difficulty in the PoW blockchain should be always a positive value.
      * @see org.aion.zero.impl.valid.AionDifficultyRule.validate;
      * @return the difficulty as the BigInteger format.
      */
