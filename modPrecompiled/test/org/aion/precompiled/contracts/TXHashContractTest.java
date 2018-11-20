@@ -20,7 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
@@ -32,6 +32,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import org.aion.mcf.config.CfgFork;
+import org.aion.precompiled.ContractFactory;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.ExecutionResult;
@@ -42,7 +43,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TXHashTest {
+public class TXHashContractTest {
 
     private static final long INPUT_NRG = 1000;
     private IPrecompiledContract tXHashContract;

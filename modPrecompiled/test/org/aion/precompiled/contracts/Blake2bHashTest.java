@@ -20,7 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertEquals;
@@ -115,26 +115,6 @@ public class Blake2bHashTest {
         String blake2bStr2 = "9852d74e002f23d14ba2638b905609419bd16e50843ac147ccf4d509ed2c9dfc";
         assertEquals(blake2bStr2, ByteUtil.toHexString(output));
     }
-
-    @Test
-    @Ignore
-    public void testBlake128() {
-        byte[] input = Blake2bHashContract.setupInput(1, byteArray1);
-        ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
-        byte[] output = res.getOutput();
-
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
-        assertEquals(16, output.length);
-
-        System.out.println("The blake128 hash for '" + new String(byteArray1,
-            StandardCharsets.UTF_8) + "' is:");
-        System.out.print("      ");
-        for (byte b : output) {
-            System.out.print(b + " ");
-        }
-        System.out.println();
-    }
-
 
     @Test
     public void invalidInputLength() {

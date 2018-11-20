@@ -25,7 +25,6 @@
 package org.aion.precompiled.contracts;
 
 import org.aion.base.type.IExecutionResult;
-import org.aion.base.util.Hex;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
@@ -61,15 +60,6 @@ public class EDVerifyContract implements IPrecompiledContract {
         System.arraycopy(input, 0, msg, 0, 32);
         System.arraycopy(input, 32, sig, 0, 64);
         System.arraycopy(input, 96, pubKey, 0, 32);
-
-        // TODO: may need to remove after end-to-end test
-        try {
-            System.out.println("EDVERIFY Message: " + Hex.toHexString(msg));
-            System.out.println("EDVERIFY Sig: " + Hex.toHexString(sig));
-            System.out.println("EDVERIFY PubKey: " + Hex.toHexString(pubKey));
-        } catch (Exception e) {
-            System.out.println("could not get hex string: " + e.getMessage());
-        }
 
         try {
             boolean verify = ECKeyEd25519.verify(msg, sig, pubKey);

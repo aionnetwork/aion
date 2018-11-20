@@ -29,13 +29,14 @@ import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
 
+/**
+ * @author Jay Tseng
+ * @author William Zhai
+ * @implNote Base on benchmark the keccak256hash and blake2bhash precompiled contract blake2b is
+ *     5 times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3 of the
+ *     Ethereum keccak256 precompiled contract charge.
+ */
 public class Blake2bHashContract implements IPrecompiledContract {
-
-    /*
-     * Base on benchmark the keccak256hash and blake2bhash precompiled contract
-     * blake2b is 5 times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3
-     * of the Ethereum keccak256 precompiled contract charge.
-     */
 
     private static final long COST = 10L;
     private static final int WORD_LENGTH = 4;
@@ -58,7 +59,8 @@ public class Blake2bHashContract implements IPrecompiledContract {
                     ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
-        long additionalNRG = ((long) Math.ceil(((double) input.length - 1) / WORD_LENGTH)) * NRG_CHARGE_PER_WORD;
+        long additionalNRG =
+                ((long) Math.ceil(((double) input.length - 1) / WORD_LENGTH)) * NRG_CHARGE_PER_WORD;
 
         // check input nrg
         long nrgLeft = nrg - (COST + additionalNRG);
@@ -76,7 +78,7 @@ public class Blake2bHashContract implements IPrecompiledContract {
     }
 
     @VisibleForTesting
-    public static byte[] setupInput(int operation, byte[] inputByteArray) {
+    static byte[] setupInput(int operation, byte[] inputByteArray) {
         byte[] ret = new byte[1 + inputByteArray.length];
         ret[0] = (byte) operation;
         System.arraycopy(inputByteArray, 0, ret, 1, inputByteArray.length);

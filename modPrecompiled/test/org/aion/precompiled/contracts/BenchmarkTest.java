@@ -21,7 +21,7 @@
  *     Aion foundation.
  */
 
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -30,6 +30,7 @@ import java.io.IOException;
 import org.aion.base.type.Address;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.precompiled.ContractFactory;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.IPrecompiledContract;
 import org.aion.zero.impl.config.CfgAion;
