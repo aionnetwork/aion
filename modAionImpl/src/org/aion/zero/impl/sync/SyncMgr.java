@@ -192,6 +192,7 @@ public final class SyncMgr {
                                 downloadedHeaders,
                                 headersWithBodiesRequested,
                                 peerStates,
+                                stats,
                                 log),
                         "sync-gb");
         syncGb.start();
@@ -249,6 +250,7 @@ public final class SyncMgr {
                                 chain.getBestBlock().getNumber(),
                                 _selfTd,
                                 peerStates,
+                                stats,
                                 log));
                 queueFull.set(false);
             }
