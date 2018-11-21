@@ -139,6 +139,7 @@ public final class CfgAion extends Cfg {
         }
     }
 
+    /** @implNote the default fork settings is looking for the fork config of the mainnet. */
     public void setForkProperties() {
         setForkProperties("mainnet", null);
     }
@@ -151,30 +152,23 @@ public final class CfgAion extends Cfg {
             return;
         }
 
-        FileInputStream fis = null;
-        try {
-            if (forkFile == null) {
-                fis =
-                        new FileInputStream(
+        try (FileInputStream fis =
+                (forkFile == null)
+                        ? new FileInputStream(
                                 System.getProperty("user.dir")
                                         + "/"
                                         + networkName
                                         + "/config"
-                                        + CfgFork.FORK_PROPERTIES_PATH);
-            } else {
-                fis = new FileInputStream(forkFile);
-            }
-            properties.load(fis);
+                                        + CfgFork.FORK_PROPERTIES_PATH)
+                        : new FileInputStream(forkFile)) {
 
+            properties.load(fis);
             this.getFork().setProperties(properties);
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.out.println(
                     "<error on-parsing-fork-properties msg="
                             + e.getLocalizedMessage()
                             + ">, no protocol been updated.");
-
-        } finally {
-            closeFileInputStream(fis);
         }
     }
 
