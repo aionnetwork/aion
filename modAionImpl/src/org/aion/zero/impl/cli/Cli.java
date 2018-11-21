@@ -239,7 +239,7 @@ public class Cli {
             }
 
             // make directories for kernel execution
-            makeDirs(configFile, cfg);
+            makeDirs(configFile, forkFile, cfg);
 
             if (overwrite) {
                 // only updating the file in case the user id was not set
@@ -548,10 +548,11 @@ public class Cli {
      * Creates the directories for persistence of the kernel data. Copies the config and genesis
      * files from the initial path for the execution directory.
      *
+     * @param forkFile
      * @param cfg the configuration for the runtime kernel environment
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void makeDirs(File startConfigFile, Cfg cfg) {
+    private void makeDirs(File startConfigFile, File forkFile, Cfg cfg) {
         File file = cfg.getExecDir();
         if (!file.exists()) {
             file.mkdirs();
@@ -578,7 +579,7 @@ public class Cli {
         }
 
         // copy fork file
-        initial = cfg.getInitialForkFile();
+        initial = forkFile;
         target = cfg.getExecForkFile();
         if (!initial.equals(target)) {
             copyRecursively(initial, target);
