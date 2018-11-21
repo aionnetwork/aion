@@ -54,6 +54,8 @@ final class TaskGetBodies implements Runnable {
 
     private final Logger log;
 
+    private final SyncStats stats;
+
     /**
      * @param _p2p IP2pMgr
      * @param _run AtomicBoolean
@@ -66,12 +68,14 @@ final class TaskGetBodies implements Runnable {
             final BlockingQueue<HeadersWrapper> _downloadedHeaders,
             final ConcurrentHashMap<Integer, HeadersWrapper> _headersWithBodiesRequested,
             final Map<Integer, PeerState> peerStates,
+            final SyncStats _stats,
             final Logger log) {
         this.p2p = _p2p;
         this.run = _run;
         this.downloadedHeaders = _downloadedHeaders;
         this.headersWithBodiesRequested = _headersWithBodiesRequested;
         this.peerStates = peerStates;
+        this.stats = _stats;
         this.log = log;
     }
 
@@ -105,6 +109,8 @@ final class TaskGetBodies implements Runnable {
                     displayId,
                     new ReqBlocksBodies(
                             headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
+            stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
+
             headersWithBodiesRequested.put(idHash, hw);
 
             PeerState peerState = peerStates.get(hw.getNodeIdHash());

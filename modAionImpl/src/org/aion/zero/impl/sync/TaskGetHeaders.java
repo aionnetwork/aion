@@ -53,6 +53,8 @@ final class TaskGetHeaders implements Runnable {
 
     private final Map<Integer, PeerState> peerStates;
 
+    private final SyncStats stats;
+
     private final Logger log;
 
     private final Random random = new Random(System.currentTimeMillis());
@@ -62,11 +64,13 @@ final class TaskGetHeaders implements Runnable {
             long selfNumber,
             BigInteger selfTd,
             Map<Integer, PeerState> peerStates,
+            final SyncStats _stats,
             Logger log) {
         this.p2p = p2p;
         this.selfNumber = selfNumber;
         this.selfTd = selfTd;
         this.peerStates = peerStates;
+        this.stats = _stats;
         this.log = log;
     }
 
@@ -190,6 +194,7 @@ final class TaskGetHeaders implements Runnable {
         }
         ReqBlocksHeaders rbh = new ReqBlocksHeaders(from, size);
         this.p2p.send(node.getIdHash(), node.getIdShort(), rbh);
+        stats.updateTotalRequestsToPeer(node.getIdShort(), RequestType.STATUS);
 
         // update timestamp
         state.setLastHeaderRequest(now);

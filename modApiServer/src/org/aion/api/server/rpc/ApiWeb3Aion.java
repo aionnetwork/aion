@@ -135,6 +135,8 @@ public class ApiWeb3Aion extends ApiAion {
 
     private boolean isSeedMode;
 
+    private final long BEST_PENDING_BLOCK = -1L;
+
     private final LoadingCache<Integer, ChainHeadView> CachedRecentEntities;
     private final LoadingCache<String, MinerStatsView> MinerStats;
 
@@ -237,8 +239,9 @@ public class ApiWeb3Aion extends ApiAion {
                                     public ChainHeadView load(Integer key) { // no checked exception
                                         return new ChainHeadView(OPS_RECENT_ENTITY_COUNT).update();
                                     }
-                                    
-                                    // reload() executed asynchronously using ForkJoinPool.commonPool() 
+
+                                    // reload() executed asynchronously using
+                                    // ForkJoinPool.commonPool()
                                     public ChainHeadView reload(
                                             final Integer key, ChainHeadView prev) {
                                         return new ChainHeadView(prev).update();
@@ -272,8 +275,9 @@ public class ApiWeb3Aion extends ApiAion {
                                                         STRATUM_RECENT_BLK_COUNT, miner.toBytes())
                                                 .update();
                                     }
-                                    
-                                    // reload() executed asynchronously using ForkJoinPool.commonPool() 
+
+                                    // reload() executed asynchronously using
+                                    // ForkJoinPool.commonPool()
                                     public MinerStatsView reload(
                                             final String key, MinerStatsView prev) {
                                         return new MinerStatsView(prev).update();
@@ -426,13 +430,6 @@ public class ApiWeb3Aion extends ApiAion {
         if (!JSONObject.NULL.equals(_bnOrId)) {
             bnOrId = _bnOrId + "";
         }
-        /*
-        if (!bnOrId.equalsIgnoreCase("latest")) {
-            return new RpcMsg(
-                    null,
-                    RpcError.INVALID_PARAMS,
-                    "Default block parameter temporarily unsupported");
-        }*/
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
@@ -445,8 +442,6 @@ public class ApiWeb3Aion extends ApiAion {
                             + ". "
                             + "State may have been pruned; please check your db pruning settings in the configuration file.");
         }
-
-        // IRepository repo = this.ac.getRepository();
 
         BigInteger balance = repo.getBalance(address);
         return new RpcMsg(TypeConverter.toJsonHex(balance));
@@ -485,13 +480,6 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(
                     null, RpcError.INVALID_PARAMS, "Invalid storageIndex. Must be <= 16 bytes.");
         }
-        /*
-        if (!bnOrId.equalsIgnoreCase("latest")) {
-            return new RpcMsg(
-                    null,
-                    RpcError.INVALID_PARAMS,
-                    "Default block parameter temporarily unsupported");
-        }*/
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
@@ -504,8 +492,6 @@ public class ApiWeb3Aion extends ApiAion {
                             + ". "
                             + "State may have been pruned; please check your db pruning settings in the configuration file.");
         }
-
-        // IRepository repo = this.ac.getRepository();
 
         @SuppressWarnings("unchecked")
         IDataWord storageValue = repo.getStorageValue(address, key);
@@ -535,17 +521,6 @@ public class ApiWeb3Aion extends ApiAion {
         if (!JSONObject.NULL.equals(_bnOrId)) {
             bnOrId = _bnOrId + "";
         }
-        /*
-        if (!bnOrId.equalsIgnoreCase("latest")) {
-            return new RpcMsg(
-                    null,
-                    RpcError.INVALID_PARAMS,
-                    "Default block parameter temporarily unsupported");
-        }*/
-
-        if (bnOrId.equalsIgnoreCase("pending")) {
-            return new RpcMsg(TypeConverter.toJsonHex(pendingState.bestPendingStateNonce(address)));
-        }
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
@@ -558,8 +533,6 @@ public class ApiWeb3Aion extends ApiAion {
                             + ". "
                             + "State may have been pruned; please check your db pruning settings in the configuration file.");
         }
-
-        // IRepository repo = this.ac.getRepository();
 
         return new RpcMsg(TypeConverter.toJsonHex(repo.getNonce(address)));
     }
@@ -600,7 +573,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         // pending transactions
-        if (bn < 0) {
+        if (bn == BEST_PENDING_BLOCK) {
             long pendingTxCount = this.ac.getAionHub().getPendingState().getPendingTxSize();
             return new RpcMsg(TypeConverter.toJsonHex(pendingTxCount));
         }
@@ -635,13 +608,6 @@ public class ApiWeb3Aion extends ApiAion {
         if (!JSONObject.NULL.equals(_bnOrId)) {
             bnOrId = _bnOrId + "";
         }
-        /*
-        if (!bnOrId.equalsIgnoreCase("latest")) {
-            return new RpcMsg(
-                    null,
-                    RpcError.INVALID_PARAMS,
-                    "Default block parameter temporarily unsupported");
-        }*/
 
         IRepository repo = getRepoByJsonBlockId(bnOrId);
         if (repo == null) // invalid bnOrId
@@ -654,8 +620,6 @@ public class ApiWeb3Aion extends ApiAion {
                             + ". "
                             + "State may have been pruned; please check your db pruning settings in the configuration file.");
         }
-
-        // IRepository repo = this.ac.getRepository();
 
         byte[] code = repo.getCode(address);
         return new RpcMsg(TypeConverter.toJsonHex(code));
@@ -826,9 +790,11 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         Long bn = parseBnOrId(bnOrId);
-        if (bn == null || bn < 0) {
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block id provided.");
+        if (bn == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
+
+        AionBlock b = getBlockByBN(bn);
 
         AionTransaction tx =
                 new AionTransaction(
@@ -839,7 +805,6 @@ public class ApiWeb3Aion extends ApiAion {
                         txParams.getNrg(),
                         txParams.getNrgPrice());
 
-        AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
         AionTxReceipt receipt = this.ac.callConstant(tx, b);
 
         return new RpcMsg(TypeConverter.toJsonHex(receipt.getExecutionResult()));
@@ -923,11 +888,11 @@ public class ApiWeb3Aion extends ApiAion {
 
         Long bn = this.parseBnOrId(_bnOrId);
 
-        if (bn == null || bn < 0) {
-            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block id provided.");
+        if (bn == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
-        AionBlock nb = this.ac.getBlockchain().getBlockByNumber(bn);
+        AionBlock nb = getBlockByBN(bn);
 
         if (nb == null) {
             LOG.debug("<get-block bn={} err=not-found>", bn);
@@ -1025,11 +990,12 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         Long bn = parseBnOrId(_bnOrId);
-        if (bn == null || bn < 0) {
-            return null;
+        if (bn == null) {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
-        AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
+        AionBlock b = this.getBlockByBN(bn);
+
         if (b == null) {
             return new RpcMsg(
                     JSONObject.NULL); // json rpc spec: 'or null when no transaction was found'
@@ -1131,13 +1097,18 @@ public class ApiWeb3Aion extends ApiAion {
         Long bnFrom = parseBnOrId(rf.fromBlock);
         Long bnTo = parseBnOrId(rf.toBlock);
 
-        if (bnFrom == null || bnTo == null || bnFrom == -1 || bnTo == -1) {
+        if (bnFrom == null || bnTo == null) {
             LOG.debug("jsonrpc - eth_newFilter(): from, to block parse failed");
             return null;
         }
 
-        final AionBlock fromBlock = this.ac.getBlockchain().getBlockByNumber(bnFrom);
-        AionBlock toBlock = this.ac.getBlockchain().getBlockByNumber(bnTo);
+        if (bnTo != BEST_PENDING_BLOCK && bnFrom > bnTo) {
+            LOG.debug("jsonrpc - eth_newFilter(): from block is after to block");
+            return null;
+        }
+
+        AionBlock fromBlock = this.getBlockByBN(bnFrom);
+        AionBlock toBlock = this.getBlockByBN(bnTo);
 
         if (fromBlock != null) {
             // need to add historical data
@@ -1374,7 +1345,7 @@ public class ApiWeb3Aion extends ApiAion {
         Long bn = parseBnOrId(_bnOrId);
 
         if (bn == null || bn < 0) {
-            return null;
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid block number.");
         }
 
         List<Map.Entry<AionBlock, Map.Entry<BigInteger, Boolean>>> blocks =
@@ -2859,10 +2830,12 @@ public class ApiWeb3Aion extends ApiAion {
     // comment out until resolved
     private IRepository getRepoByJsonBlockId(String _bnOrId) {
         Long bn = parseBnOrId(_bnOrId);
-        // if you passed in an invalid bnOrId, pending or it's an error
-        if (bn == null || bn < 0) {
+
+        if (bn == null) {
             return null;
         }
+
+        if (bn == BEST_PENDING_BLOCK) return pendingState.getRepository();
 
         AionBlock b = this.ac.getBlockchain().getBlockByNumber(bn);
         if (b == null) {
@@ -2871,6 +2844,16 @@ public class ApiWeb3Aion extends ApiAion {
 
         return ac.getRepository().getSnapshotTo(b.getStateRoot());
     }
+
+    private AionBlock getBlockByBN(long bn) {
+        if (bn == BEST_PENDING_BLOCK) {
+            return pendingState.getBestBlock();
+        } else {
+            return this.ac.getBlockchain().getBlockByNumber(bn);
+        }
+    }
+
+    // Note: If return is null, caller sometimes assumes no blockNumber was passed in
 
     private Long parseBnOrId(String _bnOrId) {
         if (_bnOrId == null) {
@@ -2883,12 +2866,21 @@ public class ApiWeb3Aion extends ApiAion {
             } else if ("latest".equalsIgnoreCase(_bnOrId)) {
                 return getBestBlock().getNumber();
             } else if ("pending".equalsIgnoreCase(_bnOrId)) {
-                return -1L;
+                return BEST_PENDING_BLOCK;
             } else {
+
+                Long ret;
+
                 if (_bnOrId.startsWith("0x")) {
-                    return TypeConverter.StringHexToBigInteger(_bnOrId).longValue();
+                    ret = TypeConverter.StringHexToBigInteger(_bnOrId).longValue();
                 } else {
-                    return Long.parseLong(_bnOrId);
+                    ret = Long.parseLong(_bnOrId);
+                }
+                if (ret < 0) {
+                    LOG.debug("block number cannot be negative" + _bnOrId);
+                    return null;
+                } else {
+                    return ret;
                 }
             }
         } catch (Exception e) {

@@ -230,7 +230,12 @@ task extractVmDepsGit(dependsOn: getVmDependencies, type: Copy) {
     }
 }
 
+task cleanJars { 
+    delete 'jars'
+}
+
 task collectDependentJars(type: Copy) { 
+    dependsOn cleanJars
     into dirRuntimeJars
     from { subprojects.configurations.runtime } 
     from { subprojects.jar}
@@ -247,7 +252,10 @@ build {
 task prePack(type:Exec)  {
     dependsOn ':aion_api:cleanPack' 
     dependsOn ':aion_api:build'
-    commandLine 'sh', 'script/prepack.sh' 
+    if (project.hasProperty('noGui')) {
+        environment "noGui", "true"
+    }
+    commandLine 'bash', 'script/prepack.sh' 
 }
 task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
 
@@ -269,7 +277,10 @@ task pack(type: Tar) {
     }
     into('/aion/') { 
         from dirWorkspace
-        include 'aion.sh', 'aion_gui.sh'
+        include 'aion.sh'
+        if (!project.hasProperty('noGui')) {
+            include 'aion_gui.sh'
+        }
     }
     into('/aion/native') {
         from dirNative
@@ -313,6 +324,7 @@ task packDevDocker(type: Exec) {
 clean { 
     dependsOn "ant-3rd_clean"
     dependsOn ':aion_api:clean' 
+    dependsOn 'cleanJars'
     delete dirPack
     delete file('report')
 }
@@ -354,3 +366,4 @@ task fixIdea {
         dependsOn test
     }
 }
+

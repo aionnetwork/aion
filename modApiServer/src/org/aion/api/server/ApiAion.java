@@ -775,7 +775,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getDefaultNrgLimit() {
-        return 2_000_000L;
+        return 90_000L;
     }
 
     protected void startES(String thName) {
