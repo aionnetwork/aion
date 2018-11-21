@@ -103,7 +103,7 @@ public class CliTest {
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
 
     private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
-    private static final File oldFork = new File(CONFIG_PATH, forkFileName);
+
     private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
     private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
 
@@ -130,7 +130,7 @@ public class CliTest {
             if (!TEST_CONFIG_PATH.exists()) {
                 assertThat(TEST_CONFIG_PATH.mkdirs()).isTrue();
             }
-            Cli.copyRecursively(config, mainnetConfig);
+            Cli.copyRecursively(config, testnetConfig);
             Cli.copyRecursively(genesis, testnetGenesis);
             Cli.copyRecursively(fork, testnetFork);
         }
@@ -299,6 +299,8 @@ public class CliTest {
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
         assertThat(cfg.getExecGenesisFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+        assertThat(cfg.getExecForkFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
         assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
         assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
         assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
@@ -321,11 +323,15 @@ public class CliTest {
                         + cfg.getExecConfigFile().getAbsolutePath()
                         + "\n> Genesis write: "
                         + cfg.getExecGenesisFile().getAbsolutePath()
+                        + "\n> Fork write: "
+                        + cfg.getExecForkFile().getAbsolutePath()
                         + "\n----------------------------------------------------------------------------"
                         + "\n> Config read:   "
                         + cfg.getInitialConfigFile().getAbsolutePath()
                         + "\n> Genesis read:  "
                         + cfg.getInitialGenesisFile().getAbsolutePath()
+                        + "\n> Fork read:  "
+                        + cfg.getInitialForkFile().getAbsolutePath()
                         + "\n----------------------------------------------------------------------------\n\n");
     }
 
@@ -479,6 +485,8 @@ public class CliTest {
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
         assertThat(cfg.getExecGenesisFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+        assertThat(cfg.getExecForkFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
 
         assertThat(expectedFile.exists()).isTrue();
         assertThat(cfg.fromXML(expectedFile)).isFalse();
@@ -533,6 +541,7 @@ public class CliTest {
             cfg.toXML(null, oldConfig);
             Cli.copyRecursively(genesis, oldGenesis);
         }
+
 
         assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);

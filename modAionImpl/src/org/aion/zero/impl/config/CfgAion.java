@@ -139,16 +139,16 @@ public final class CfgAion extends Cfg {
         }
     }
 
-    /** @implNote the default fork settings is looking for the fork config of the mainnet. */
-    public void setForkProperties() {
-        setForkProperties("mainnet", null);
-    }
+//    /** @implNote the default fork settings is looking for the fork config of the mainnet. */
+//    public void setForkProperties() {
+//        setForkProperties("mainnet", null);
+//    }
 
     public void setForkProperties(String networkName, File forkFile) {
         Properties properties = new Properties();
 
         // old kernel doesn't support the fork feature.
-        if (networkName.equals("config")) {
+        if (networkName == null || networkName.equals("config")) {
             return;
         }
 
@@ -172,9 +172,9 @@ public final class CfgAion extends Cfg {
         }
     }
 
-    public void setForkProperties(String networkName) {
-        setForkProperties(networkName, null);
-    }
+//    public void setForkProperties(String networkName) {
+//        setForkProperties(networkName, null);
+//    }
 
     public void dbFromXML() {
         File cfgFile = getInitialConfigFile();

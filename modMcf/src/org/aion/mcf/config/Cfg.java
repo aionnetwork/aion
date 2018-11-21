@@ -205,6 +205,7 @@ public abstract class Cfg {
         baseConfigFile = new File(CONFIG_DIR, configFileName);
         baseGenesisFile = new File(CONFIG_DIR, genesisFileName);
 
+
         if (!baseConfigFile.exists() || !baseGenesisFile.exists()) {
             updateNetworkExecPaths();
         } else {
@@ -462,10 +463,6 @@ public abstract class Cfg {
     public abstract void toXML(final String[] args);
 
     public abstract void toXML(final String[] args, File file);
-
-    public abstract void setForkProperties();
-
-    public abstract void setForkProperties(String network);
 
     public abstract void setGenesis();
 

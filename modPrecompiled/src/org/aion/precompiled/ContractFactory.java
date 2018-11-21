@@ -85,54 +85,34 @@ public class ContractFactory implements IContractFactory {
         boolean fork_032 =
                 (forkProperty != null) && (context.blockNumber() >= Long.valueOf(forkProperty));
 
-        if (fork_032) {
-            switch (context.address().toString()) {
-                case ADDR_TOKEN_BRIDGE:
-                    TokenBridgeContract contract =
-                            new TokenBridgeContract(
-                                    context,
-                                    track,
-                                    Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
-                                    Address.wrap(ADDR_TOKEN_BRIDGE));
+        switch (context.address().toString()) {
+            case ADDR_TOKEN_BRIDGE:
+                TokenBridgeContract contract =
+                        new TokenBridgeContract(
+                                context,
+                                track,
+                                Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
+                                Address.wrap(ADDR_TOKEN_BRIDGE));
 
-                    if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
-                            && !contract.isInitialized()) {
-                        return null;
-                    }
-
-                    return contract;
-                case ADDR_ED_VERIFY:
-                    return PC_ED_VERIFY;
-                case ADDR_BLAKE2B_HASH:
-                    return PC_BLAKE2B_HASH;
-                case ADDR_TX_HASH:
-                    return new TXHashContract(context);
-                case ADDR_TOTAL_CURRENCY:
-                default:
+                if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
+                        && !contract.isInitialized()) {
                     return null;
-            }
-        } else {
-            switch (context.address().toString()) {
-                case ADDR_TOTAL_CURRENCY:
-                    return new TotalCurrencyContract(
-                            track, context.sender(), Address.wrap(ADDR_OWNER));
-                case ADDR_TOKEN_BRIDGE:
-                    TokenBridgeContract contract =
-                            new TokenBridgeContract(
-                                    context,
-                                    track,
-                                    Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
-                                    Address.wrap(ADDR_TOKEN_BRIDGE));
+                }
 
-                    if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
-                            && !contract.isInitialized()) {
-                        return null;
-                    }
-
-                    return contract;
-                default:
-                    return null;
-            }
+                return contract;
+            case ADDR_ED_VERIFY:
+                return fork_032 ? PC_ED_VERIFY : null;
+            case ADDR_BLAKE2B_HASH:
+                return fork_032 ? PC_BLAKE2B_HASH : null;
+            case ADDR_TX_HASH:
+                return fork_032 ? new TXHashContract(context) : null;
+            case ADDR_TOTAL_CURRENCY:
+                return fork_032
+                        ? null
+                        : new TotalCurrencyContract(
+                                track, context.sender(), Address.wrap(ADDR_OWNER));
+            default:
+                return null;
         }
     }
 
