@@ -239,7 +239,11 @@ public abstract class Cfg {
         execForkFile = new File(execConfigDir, forkFileName);
 
         updateStoragePaths();
-        setForkProperties(network);
+        if (execForkFile.exists()) {
+            setForkProperties(network, execForkFile);
+        } else if (baseForkFile.exists()) {
+            setForkProperties(network, baseForkFile);
+        }
     }
 
     /** Updates the path to the log, database directories. */
@@ -368,6 +372,14 @@ public abstract class Cfg {
         return execGenesisFile;
     }
 
+    /** Returns the location where the fork file is saved for kernel execution. */
+    public File getExecForkFile() {
+        if (execForkFile == null) {
+            initializeConfiguration();
+        }
+        return execForkFile;
+    }
+
     /** @implNote Maintains the old setup if the config file is present in the old location. */
     public File getInitialConfigFile() {
         if (baseConfigFile == null) {
@@ -391,6 +403,13 @@ public abstract class Cfg {
             initializeConfiguration();
         }
         return baseGenesisFile;
+    }
+
+    public File getInitialForkFile() {
+        if (baseForkFile == null) {
+            initializeConfiguration();
+        }
+        return baseForkFile;
     }
 
     public static String readValue(final XMLStreamReader sr) throws XMLStreamException {
@@ -451,4 +470,6 @@ public abstract class Cfg {
     public abstract void setGenesis();
 
     public abstract AbstractBlock<?, ?> getGenesis();
+
+    public abstract void setForkProperties(String network, File forkFile);
 }

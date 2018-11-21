@@ -99,7 +99,6 @@ public class Aion {
 
         CfgAion cfg = CfgAion.inst();
 
-
         ReturnType ret = new Cli().call(args, cfg);
         if (ret != ReturnType.RUN) {
             exit(ret.getValue());
@@ -107,14 +106,14 @@ public class Aion {
 
         Properties p = cfg.getFork().getProperties();
         p.forEach(
-            (k, v) -> {
-                System.out.println(
-                    "<Protocol name: "
-                        + k.toString()
-                        + " block#: "
-                        + v.toString()
-                        + " updated!");
-            });
+                (k, v) -> {
+                    System.out.println(
+                            "<Protocol name: "
+                                    + k.toString()
+                                    + " block#: "
+                                    + v.toString()
+                                    + " updated!");
+                });
 
         // Check ZMQ server secure connect settings, generate keypair when the settings enabled and
         // can't find the keypair.
@@ -151,7 +150,7 @@ public class Aion {
 
         // from now on, all logging to console and file happens asynchronously
 
-        String[] filePath = new String[7];
+        String[] filePath = new String[9];
         // Log/Database path
         if (!cfg.getLog().getLogFile()) {
             System.out.println(
@@ -175,8 +174,10 @@ public class Aion {
         filePath[2] = Keystore.getKeystorePath();
         filePath[3] = cfg.getExecConfigFile().getAbsolutePath();
         filePath[4] = cfg.getExecGenesisFile().getAbsolutePath();
-        filePath[5] = cfg.getInitialConfigFile().getAbsolutePath();
-        filePath[6] = cfg.getInitialGenesisFile().getAbsolutePath();
+        filePath[5] = cfg.getExecForkFile().getAbsolutePath();
+        filePath[6] = cfg.getInitialConfigFile().getAbsolutePath();
+        filePath[7] = cfg.getInitialGenesisFile().getAbsolutePath();
+        filePath[8] = cfg.getInitialForkFile().getAbsolutePath();
 
         String path =
                 "\n-------------------------------- USED PATHS --------------------------------"
@@ -190,11 +191,15 @@ public class Aion {
                         + filePath[3]
                         + "\n> Genesis write: "
                         + filePath[4]
+                        + "\n> Fork write: "
+                        + filePath[5]
                         + "\n----------------------------------------------------------------------------"
                         + "\n> Config read:   "
-                        + filePath[5]
-                        + "\n> Genesis read:  "
                         + filePath[6]
+                        + "\n> Genesis read:  "
+                        + filePath[7]
+                        + "\n> Fork read:  "
+                        + filePath[8]
                         + "\n----------------------------------------------------------------------------\n\n";
 
         String logo =
