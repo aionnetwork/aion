@@ -24,7 +24,6 @@ package org.aion.mcf.config;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
-import java.io.IOException;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.aion.mcf.types.AbstractBlock;
@@ -157,7 +156,6 @@ public abstract class Cfg {
     private File baseGenesisFile = null;
     private File baseForkFile = null;
 
-
     // can be absolute in config file OR depend on execution path
     private File logDir = null;
     private File databaseDir = null;
@@ -205,15 +203,63 @@ public abstract class Cfg {
         baseConfigFile = new File(CONFIG_DIR, configFileName);
         baseGenesisFile = new File(CONFIG_DIR, genesisFileName);
 
-
         if (!baseConfigFile.exists() || !baseGenesisFile.exists()) {
             updateNetworkExecPaths();
         } else {
-            execDir = INITIAL_PATH;
-            execConfigDir = CONFIG_DIR;
-            execConfigFile = baseConfigFile;
-            execGenesisFile = baseGenesisFile;
-            updateStoragePaths();
+            System.out.println("Migrating to the new configuration style for Aion kernels.");
+
+            // reading the old config to get setup
+            this.fromXML(baseConfigFile);
+
+            // determine the network from the read config
+            switch (this.net.getId()) {
+                case 256:
+                    network = "mainnet";
+                    break;
+                case 128:
+                    network = "conquest";
+                    break;
+                case 32:
+                    network = "mastery";
+                    break;
+                default:
+                    network = "custom";
+                    break;
+            }
+
+            // delete old config
+            try {
+                baseConfigFile.delete();
+            } catch (Exception e) {
+                System.out.println(
+                        "Unable to delete old configuration file: "
+                                + baseConfigFile.getAbsolutePath()
+                                + ". Please do it manually!");
+            }
+
+            // delete old genesis
+            try {
+                baseGenesisFile.delete();
+            } catch (Exception e) {
+                System.out.println(
+                        "Unable to delete old genesis file: "
+                                + baseGenesisFile.getAbsolutePath()
+                                + ". Please do it manually!");
+            }
+
+            // using absolute path for database
+            absoluteDatabaseDir = true;
+            databaseDir = new File(INITIAL_PATH, getDb().getPath());
+
+            // using absolute path for log
+            absoluteLogDir = true;
+            logDir = new File(INITIAL_PATH, getLog().getLogPath());
+
+            // TODO: keystore
+
+            updateNetworkExecPaths();
+
+            this.toXML(new String[] {}, baseConfigFile);
         }
     }
 
