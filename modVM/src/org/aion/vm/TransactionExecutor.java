@@ -200,7 +200,7 @@ public class TransactionExecutor extends AbstractExecutor {
         Address contractAddress = tx.getContractAddress();
 
         if (repoTrack.hasAccountState(contractAddress)) {
-            exeResult.setCodeAndNrgLeft(ResultCode.CONTRACT_ALREADY_EXISTS.toInt(), 0);
+            exeResult.setCodeAndNrgLeft(ResultCode.FAILURE.toInt(), 0);
             return;
         }
 
@@ -245,7 +245,6 @@ public class TransactionExecutor extends AbstractExecutor {
             case INSUFFICIENT_BALANCE:
                 builder.markAsRejected();
                 break;
-            case CONTRACT_ALREADY_EXISTS:
             case FAILURE:
             case OUT_OF_NRG:
             case BAD_INSTRUCTION:
@@ -253,9 +252,11 @@ public class TransactionExecutor extends AbstractExecutor {
             case STACK_OVERFLOW:
             case STACK_UNDERFLOW:
             case REVERT:
-            case INTERNAL_ERROR:
+            case STATIC_MODE_ERROR:
                 builder.markAsFailed();
                 break;
+            case VM_REJECTED:
+            case VM_INTERNAL_ERROR:
             default:
                 throw new RuntimeException("invalid code path, should not ever default");
         }

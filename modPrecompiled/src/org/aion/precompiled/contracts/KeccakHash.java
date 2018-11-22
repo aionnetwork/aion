@@ -49,7 +49,7 @@ public class KeccakHash implements IPrecompiledContract {
         // check length
         if (input.length < 1)
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg - DEFAULT_COST, "input too short".getBytes());
+                    ResultCode.FAILURE, nrg - DEFAULT_COST, "input too short".getBytes());
 
         byte[] hash = keccak256(input);
         return new ExecutionResult(ResultCode.SUCCESS, nrg - DEFAULT_COST - additionalNRG, hash);

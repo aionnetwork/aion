@@ -67,7 +67,7 @@ public class EDVerifyContract implements IPrecompiledContract {
             result[0] = verify ? (byte) 1 : (byte) 0;
             return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, nrgLimit - COST, result);
         } catch (Exception e) {
-            return new ExecutionResult(ExecutionResult.ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
         }
     }
 }
