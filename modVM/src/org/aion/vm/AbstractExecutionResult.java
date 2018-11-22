@@ -38,7 +38,14 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
     byte[] output;
 
     public enum ResultCode {
+        /*
+         * Indicates a successful transaction.
+         */
         SUCCESS(0),
+
+        /*
+         * Indicates a runtime failure when executing the smart contract code.
+         */
         FAILURE(1),
         OUT_OF_NRG(2),
         BAD_INSTRUCTION(3),
@@ -46,11 +53,21 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
         STACK_OVERFLOW(5),
         STACK_UNDERFLOW(6),
         REVERT(7),
-        INVALID_NONCE(8),
-        INVALID_NRG_LIMIT(9),
-        INSUFFICIENT_BALANCE(10),
-        CONTRACT_ALREADY_EXISTS(11),
-        INTERNAL_ERROR(-1);
+        STATIC_MODE_ERROR(8),
+
+        /*
+         * Indicates a transaction rejection. This usually happens before any code execution.
+         */
+        INVALID_NONCE(101),
+        INVALID_NRG_LIMIT(102),
+        INSUFFICIENT_BALANCE(103),
+
+        /*
+         * Indicates an internal error, because of either bug or out-of-resource.
+         * The node shall shut itself down when this occurs.
+         */
+        VM_REJECTED(-1), // VM is not willing to execute the code
+        VM_INTERNAL_ERROR(-2); // VM internal implementation error
 
         private static Map<Integer, ResultCode> intMap = new HashMap<>();
 

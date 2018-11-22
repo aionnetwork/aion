@@ -65,7 +65,7 @@ public class KeccakHashTest {
     @Test
     public void invalidInputLength() {
         ExecutionResult res2 = keccakHasher.execute(shortByteArray, INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
+        assertEquals(ResultCode.FAILURE, res2.getResultCode());
     }
 
     @Test
