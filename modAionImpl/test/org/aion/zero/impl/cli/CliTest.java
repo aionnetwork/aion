@@ -498,15 +498,13 @@ public class CliTest {
 
     /** Parameters for testing {@link #testConfig_oldLocation(String[], String)}. */
     @SuppressWarnings("unused")
-    private Object parametersWithConfigForOldLocation() {
+    private Object parametersWithoutMigration() {
         List<Object> parameters = new ArrayList<>();
 
         String[] options = new String[] {"-c", "--config"};
         String expected = MAIN_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
-            // without parameter
-            parameters.add(new Object[] {new String[] {op}, BASE_PATH});
             // invalid parameter
             parameters.add(new Object[] {new String[] {op, "invalid"}, expected});
             // mainnet as parameter
@@ -530,7 +528,7 @@ public class CliTest {
      * location.
      */
     @Test
-    @Parameters(method = "parametersWithConfigForOldLocation")
+    @Parameters(method = "parametersWithoutMigration")
     public void testConfig_oldLocation(String[] input, String expectedPath) {
         // ensure config exists on disk at expected location for old kernel
         if (!oldConfig.exists()) {
@@ -542,17 +540,67 @@ public class CliTest {
             Cli.copyRecursively(genesis, oldGenesis);
         }
 
-
         assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
+
+        // the config used it for mainnet, therefore will use the MAIN_BASE_PATH
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+
         assertThat(cfg.getExecConfigFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
         assertThat(cfg.getExecGenesisFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
 
+        // database, keystore & log are absolute and at old location
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
+
         if (verbose) {
             printPaths(cfg);
         }
+    }
+
+    /**
+     * Ensures that the { <i>-c</i>, <i>--config</i> } arguments work when using old config
+     * location.
+     */
+    @Test
+    @Parameters({"-c", "--config"})
+    public void testConfig_withMigration(String option) {
+        // ensure config exists on disk at expected location for old kernel
+        if (!oldConfig.exists()) {
+            File configPath = CONFIG_PATH;
+            if (!configPath.exists()) {
+                assertThat(configPath.mkdirs()).isTrue();
+            }
+            cfg.toXML(null, oldConfig);
+            Cli.copyRecursively(genesis, oldGenesis);
+        }
+
+        assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
+
+        // the config used it for mainnet, therefore will use the MAIN_BASE_PATH
+        assertThat(cfg.getBasePath()).isEqualTo(MAIN_BASE_PATH.getAbsolutePath());
+
+        assertThat(cfg.getInitialConfigFile()).isEqualTo(mainnetConfig);
+        assertThat(cfg.getInitialGenesisFile()).isEqualTo(mainnetGenesis);
+
+        assertThat(cfg.getExecConfigFile())
+                .isEqualTo(new File(MAIN_BASE_PATH, "config" + File.separator + configFileName));
+        assertThat(cfg.getExecGenesisFile())
+                .isEqualTo(new File(MAIN_BASE_PATH, "config" + File.separator + genesisFileName));
+
+        // database, keystore & log are absolute and at old location
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(BASE_PATH, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(BASE_PATH, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(BASE_PATH, "keystore"));
+
+        if (verbose) {
+            printPaths(cfg);
+        }
+
+        // cleanup: resetting the mainnet config to original
+        Cli.copyRecursively(config, mainnetConfig);
     }
 
     /** Parameters for testing {@link #testInfo(String[], ReturnType, String)}. */
@@ -659,7 +707,7 @@ public class CliTest {
      */
     @Test
     @Parameters({"-i", "--info"})
-    public void testInfo_oldLocation(String option) {
+    public void testInfoWithMigration(String option) {
         // ensure config exists on disk at expected location for old kernel
         if (!oldConfig.exists()) {
             File configPath = CONFIG_PATH;
@@ -671,7 +719,15 @@ public class CliTest {
         }
 
         assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
-        assertThat(cfg.getBasePath()).isEqualTo(BASE_PATH);
+        assertThat(cfg.getBasePath()).isEqualTo(MAIN_BASE_PATH.getAbsolutePath());
+
+        // database, keystore & log are absolute and at old location
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(BASE_PATH, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(BASE_PATH, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(BASE_PATH, "keystore"));
+
+        // cleanup: resetting the mainnet config to original
+        Cli.copyRecursively(config, mainnetConfig);
     }
 
     /**

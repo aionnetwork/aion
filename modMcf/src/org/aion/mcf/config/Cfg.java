@@ -24,7 +24,6 @@ package org.aion.mcf.config;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
-import java.io.IOException;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.aion.mcf.types.AbstractBlock;
@@ -35,6 +34,8 @@ public abstract class Cfg {
     protected String mode;
 
     protected String id;
+
+    protected String keystorePath = null;
 
     protected CfgApi api;
 
@@ -157,12 +158,13 @@ public abstract class Cfg {
     private File baseGenesisFile = null;
     private File baseForkFile = null;
 
-
     // can be absolute in config file OR depend on execution path
     private File logDir = null;
     private File databaseDir = null;
+    private File keystoreDir = null;
     private boolean absoluteLogDir = false;
     private boolean absoluteDatabaseDir = false;
+    private boolean absoluteKeystoreDir = false;
 
     // impact execution path
     private String network = null;
@@ -185,8 +187,10 @@ public abstract class Cfg {
         baseForkFile = null;
         logDir = null;
         databaseDir = null;
+        keystoreDir = null;
         absoluteLogDir = false;
         absoluteDatabaseDir = false;
+        absoluteKeystoreDir = false;
         network = null;
         dataDir = null;
         execDir = null;
@@ -205,15 +209,78 @@ public abstract class Cfg {
         baseConfigFile = new File(CONFIG_DIR, configFileName);
         baseGenesisFile = new File(CONFIG_DIR, genesisFileName);
 
-
         if (!baseConfigFile.exists() || !baseGenesisFile.exists()) {
             updateNetworkExecPaths();
         } else {
-            execDir = INITIAL_PATH;
-            execConfigDir = CONFIG_DIR;
-            execConfigFile = baseConfigFile;
-            execGenesisFile = baseGenesisFile;
-            updateStoragePaths();
+            System.out.println("Migrating to the new configuration style for Aion kernels.");
+
+            // reading the old config to get setup
+            this.fromXML(baseConfigFile);
+
+            // determine the network from the read config
+            switch (this.net.getId()) {
+                case 256:
+                    network = "mainnet";
+                    break;
+                case 128:
+                    network = "conquest";
+                    break;
+                case 32:
+                    network = "mastery";
+                    break;
+                default:
+                    network = "custom";
+                    break;
+            }
+
+            // delete old config
+            try {
+                if (!baseConfigFile.delete()) {
+                    System.out.println(
+                            "Unable to delete old configuration file: "
+                                    + baseConfigFile.getAbsolutePath()
+                                    + ". Please do it manually!");
+                }
+            } catch (Exception e) {
+                System.out.println(
+                        "Unable to delete old configuration file: "
+                                + baseConfigFile.getAbsolutePath()
+                                + ". Please do it manually!");
+            }
+
+            // delete old genesis
+            try {
+                if (!baseGenesisFile.delete()) {
+                    System.out.println(
+                            "Unable to delete old genesis file: "
+                                    + baseGenesisFile.getAbsolutePath()
+                                    + ". Please do it manually!");
+                }
+            } catch (Exception e) {
+                System.out.println(
+                        "Unable to delete old genesis file: "
+                                + baseGenesisFile.getAbsolutePath()
+                                + ". Please do it manually!");
+            }
+
+            // using absolute path for database
+            absoluteDatabaseDir = true;
+            databaseDir = new File(INITIAL_PATH, getDb().getPath());
+            getDb().setPath(databaseDir.getAbsolutePath());
+
+            // using absolute path for log
+            absoluteLogDir = true;
+            logDir = new File(INITIAL_PATH, getLog().getLogPath());
+            getLog().setLogPath(logDir.getAbsolutePath());
+
+            // using absolute path for keystore
+            absoluteKeystoreDir = true;
+            keystoreDir = new File(INITIAL_PATH, keystoreDirName);
+            keystorePath = keystoreDir.getAbsolutePath();
+
+            updateNetworkExecPaths();
+
+            this.toXML(new String[] {}, baseConfigFile);
         }
     }
 
@@ -258,6 +325,18 @@ public abstract class Cfg {
             databaseDir = new File(execDir, getDb().getPath());
         } else if (databaseDir == null) {
             databaseDir = new File(getDb().getPath());
+        }
+        if (!absoluteKeystoreDir) {
+            if (keystorePath != null) {
+                // absolute paths are set when reading the file
+                // so this must be a relative path
+                keystoreDir = new File(execDir, keystorePath);
+            } else {
+                // path not set so using defaults
+                keystoreDir = new File(execDir, keystoreDirName);
+            }
+        } else if (keystoreDir == null) {
+            keystoreDir = new File(keystorePath);
         }
     }
 
@@ -345,8 +424,23 @@ public abstract class Cfg {
         this.absoluteDatabaseDir = true;
     }
 
+    /**
+     * Used to set an absolute path for the keystore directory.
+     *
+     * @param _keystoreDirectory the path to be used for the keystore.
+     */
+    public void setKeystoreDir(File _keystoreDirectory) {
+        this.keystoreDir = _keystoreDirectory;
+        this.absoluteKeystoreDir = true;
+    }
+
     public File getKeystoreDir() {
-        return new File(getExecDir(), keystoreDirName);
+        if (keystoreDir == null) {
+            // was not updated with absolute path
+            keystoreDir =
+                    new File(getExecDir(), keystorePath != null ? keystorePath : keystoreDirName);
+        }
+        return keystoreDir;
     }
 
     /** Returns the configuration directory location for the kernel execution. */
