@@ -191,14 +191,14 @@ public class Aion {
                         + filePath[3]
                         + "\n> Genesis write: "
                         + filePath[4]
-                        + "\n> Fork write: "
+                        + "\n> Fork write:    "
                         + filePath[5]
                         + "\n----------------------------------------------------------------------------"
                         + "\n> Config read:   "
                         + filePath[6]
                         + "\n> Genesis read:  "
                         + filePath[7]
-                        + "\n> Fork read:  "
+                        + "\n> Fork read:     "
                         + filePath[8]
                         + "\n----------------------------------------------------------------------------\n\n";
 
