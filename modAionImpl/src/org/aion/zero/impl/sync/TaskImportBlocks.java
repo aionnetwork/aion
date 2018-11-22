@@ -586,8 +586,8 @@ final class TaskImportBlocks implements Runnable {
             }
         }
         // trigger compact when IO is slow
-        // 1 sec import time and more than 30 sec since last compact
-        if (t2 - t1 > 1000 && t2 - lastCompactTime > 30000) {
+        // 1 sec import time and more than 10 min since last compact
+        if (t2 - t1 > 1000 && t2 - lastCompactTime > 600_000) {
             t1 = System.currentTimeMillis();
             this.chain.compactState();
             t2 = System.currentTimeMillis();
