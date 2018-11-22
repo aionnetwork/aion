@@ -266,10 +266,12 @@ public abstract class Cfg {
             // using absolute path for database
             absoluteDatabaseDir = true;
             databaseDir = new File(INITIAL_PATH, getDb().getPath());
+            getDb().setPath(databaseDir.getAbsolutePath());
 
             // using absolute path for log
             absoluteLogDir = true;
             logDir = new File(INITIAL_PATH, getLog().getLogPath());
+            getLog().setLogPath(logDir.getAbsolutePath());
 
             // using absolute path for keystore
             absoluteKeystoreDir = true;
