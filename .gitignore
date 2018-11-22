@@ -61,3 +61,12 @@ tmp/
 
 # gradle
 .gradle/**
+
+# network data
+mainnet/
+conquest/
+mastery/
+
+# openjdk artifacts
+openjdk*.tar.gz
+openjfx*.zip
