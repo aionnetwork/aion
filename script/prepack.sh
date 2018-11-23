@@ -10,6 +10,7 @@ JDK_VER="11.0.1"
 JDK_TYPE="openjdk"
 JAVAFX_PATH="${PACK_PATH}/javafx"
 JAVAFX_VER="javafx-jmods-11"
+DEFAULT_NETWORK="mainnet"
 
 if [ ! -d "$PACK_PATH" ]; then
   mkdir $PACK_PATH
@@ -47,7 +48,9 @@ fi
 # copy the config files if can't find the config env
 if [ ! -d "$CONFIG_PATH" ]; then
   mkdir $CONFIG_PATH
-  cp -r ./modBoot/resource/** $CONFIG_PATH
+  mkdir -p "${PACK_PATH}/aion/${DEFAULT_NETWORK}/config"
+  cp -r ./config/** $CONFIG_PATH
+  cp  ${CONFIG_PATH}/${DEFAULT_NETWORK}/** "${PACK_PATH}/aion/${DEFAULT_NETWORK}/config"
 fi
 
 # copy the doc files if can't find the docs env

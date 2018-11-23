@@ -24,15 +24,17 @@ package org.aion.precompiled.contracts;
 
 import static com.google.common.truth.Truth.assertThat;
 import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertTrue;
 
-import java.nio.charset.StandardCharsets;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import org.aion.base.util.ByteUtil;
-import org.aion.crypto.hash.Blake2b;
-import org.aion.precompiled.contracts.Blake2bHashContract;
+import org.aion.mcf.config.CfgFork;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
-import org.junit.Assert;
+import org.aion.zero.impl.config.CfgAion;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -47,10 +49,34 @@ public class Blake2bHashTest {
     private byte[] bigByteArray = new byte[2*1024*1024];
     private byte[] bigByteArray2 = new byte[2*1024*1024+1];
     private Blake2bHashContract blake2bHasher;
+    private File forkFile;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         blake2bHasher = new Blake2bHashContract();
+
+        new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
+        forkFile =
+            new File(
+                System.getProperty("user.dir")
+                    + "/mainnet/config"
+                    + CfgFork.FORK_PROPERTIES_PATH);
+        forkFile.createNewFile();
+
+        // Open given file in append mode.
+        BufferedWriter out = new BufferedWriter(
+            new FileWriter(forkFile, true));
+        out.write("fork0.3.2=2000000");
+        out.close();
+
+        CfgAion.inst();
+    }
+
+    @After
+    public void teardown() {
+        forkFile.delete();
+        forkFile.getParentFile().delete();
+        forkFile.getParentFile().getParentFile().delete();
     }
 
     @Test

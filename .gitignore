@@ -1,12 +1,8 @@
 # aion
-/config/
-/database/
-/keystore/
 /pack/
 /reports/
 /cache/
 /ssl_keystore/
-/log/
 /rt/
 /web3/
 /zmq_keystore/
@@ -61,3 +57,13 @@ tmp/
 
 # gradle
 .gradle/**
+
+# network data
+/mainnet/
+/conquest/
+/mastery/
+/custom/
+
+# openjdk artifacts
+openjdk*.tar.gz
+openjfx*.zip

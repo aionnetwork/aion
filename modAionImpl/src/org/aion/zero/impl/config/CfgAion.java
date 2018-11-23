@@ -30,6 +30,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.UUID;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
@@ -39,6 +40,7 @@ import javax.xml.stream.XMLStreamWriter;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgApi;
 import org.aion.mcf.config.CfgDb;
+import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.config.CfgGui;
 import org.aion.mcf.config.CfgLog;
 import org.aion.mcf.config.CfgNet;
@@ -63,6 +65,7 @@ public final class CfgAion extends Cfg {
     public CfgAion() {
         this.mode = "aion";
         this.id = UUID.randomUUID().toString();
+        this.keystorePath = null;
         this.net = new CfgNet();
         this.consensus = new CfgConsensusPow();
         this.sync = new CfgSync();
@@ -72,6 +75,7 @@ public final class CfgAion extends Cfg {
         this.tx = new CfgTx();
         this.reports = new CfgReports();
         this.gui = new CfgGui();
+        this.fork = new CfgFork();
         initializeConfiguration();
     }
 
@@ -135,6 +139,43 @@ public final class CfgAion extends Cfg {
             }
         }
     }
+
+    //    /** @implNote the default fork settings is looking for the fork config of the mainnet. */
+    //    public void setForkProperties() {
+    //        setForkProperties("mainnet", null);
+    //    }
+
+    public void setForkProperties(String networkName, File forkFile) {
+        Properties properties = new Properties();
+
+        // old kernel doesn't support the fork feature.
+        if (networkName == null || networkName.equals("config")) {
+            return;
+        }
+
+        try (FileInputStream fis =
+                (forkFile == null)
+                        ? new FileInputStream(
+                                System.getProperty("user.dir")
+                                        + "/"
+                                        + networkName
+                                        + "/config"
+                                        + CfgFork.FORK_PROPERTIES_PATH)
+                        : new FileInputStream(forkFile)) {
+
+            properties.load(fis);
+            this.getFork().setProperties(properties);
+        } catch (Exception e) {
+            System.out.println(
+                    "<error on-parsing-fork-properties msg="
+                            + e.getLocalizedMessage()
+                            + ">, no protocol been updated.");
+        }
+    }
+
+    //    public void setForkProperties(String networkName) {
+    //        setForkProperties(networkName, null);
+    //    }
 
     public void dbFromXML() {
         File cfgFile = getInitialConfigFile();
@@ -267,6 +308,13 @@ public final class CfgAion extends Cfg {
             this.setLogDir(log);
         }
 
+        if (keystorePath != null) {
+            File ks = new File(keystorePath);
+            if (ks.isAbsolute()) {
+                this.setKeystoreDir(ks);
+            }
+        }
+
         return shouldWriteBackToFile;
     }
 
@@ -346,6 +394,13 @@ public final class CfgAion extends Cfg {
             sw.writeStartElement("id");
             sw.writeCharacters(this.getId());
             sw.writeEndElement();
+
+            if (keystorePath != null) {
+                sw.writeCharacters("\r\n\t");
+                sw.writeStartElement("keystore");
+                sw.writeCharacters(keystorePath);
+                sw.writeEndElement();
+            }
 
             sw.writeCharacters(this.getApi().toXML());
             sw.writeCharacters(this.getNet().toXML());

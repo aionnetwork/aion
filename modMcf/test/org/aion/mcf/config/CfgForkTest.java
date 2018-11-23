@@ -20,47 +20,33 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled.contracts;
+package org.aion.mcf.config;
 
-import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertEquals;
-import static org.aion.precompiled.contracts.TXHashContract.COST;
+import static junit.framework.TestCase.assertNull;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
-import org.aion.mcf.config.CfgFork;
-import org.aion.precompiled.ContractFactory;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionContext;
-import org.aion.vm.ExecutionResult;
-import org.aion.vm.IPrecompiledContract;
 import org.aion.zero.impl.config.CfgAion;
-import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TXHashContractTest {
+public class CfgForkTest {
 
-    private static final long INPUT_NRG = 1000;
-    private IPrecompiledContract tXHashContract;
-    private byte[] txHash = RandomUtils.nextBytes(32);
+    private CfgAion cfg;
     private File forkFile;
 
-
-
     @Before
-    public void setUp() throws IOException {
-
+    public void setup() throws IOException {
         new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
         forkFile =
-            new File(
-                System.getProperty("user.dir")
-                    + "/mainnet/config"
-                    + CfgFork.FORK_PROPERTIES_PATH);
+                new File(
+                        System.getProperty("user.dir")
+                                + "/mainnet/config"
+                                + CfgFork.FORK_PROPERTIES_PATH);
         forkFile.createNewFile();
 
         // Open given file in append mode.
@@ -69,14 +55,7 @@ public class TXHashContractTest {
         out.write("fork0.3.2=2000000");
         out.close();
 
-        CfgAion.inst();
-        ExecutionContext ctx = new ExecutionContext(txHash,
-            ContractFactory.getTxHashContractAddress(), null, null, null,
-            0L, null, null, 0, 0, 0, null,
-            2000001L, 0L, 0L,
-            null);
-
-        tXHashContract = new ContractFactory().getPrecompiledContract(ctx, null);
+        cfg = CfgAion.inst();
     }
 
     @After
@@ -87,18 +66,15 @@ public class TXHashContractTest {
     }
 
     @Test
-    public void testgetTxHash() {
-        ExecutionResult res = (ExecutionResult) tXHashContract.execute(null, INPUT_NRG);
+    public void getForkPropertyTest() {
 
-        System.out.println(res.toString());
-        assertTrue(Arrays.equals(txHash, res.getOutput()));
+        String forkProperty = cfg.getFork().getProperties().getProperty("fork0.3.2");
+        assertEquals("2000000", forkProperty);
     }
 
     @Test
-    public void testgetTxHashOutofNrg() {
-        ExecutionResult res = (ExecutionResult) tXHashContract.execute(null, COST - 1);
-
-        System.out.println(res.toString());
-        assertEquals(ResultCode.OUT_OF_NRG.toInt(), res.getResultCode().toInt());
+    public void getForkPropertyTest2() {
+        String forkProperty = cfg.getFork().getProperties().getProperty("fork0.3.1");
+        assertNull(forkProperty);
     }
 }

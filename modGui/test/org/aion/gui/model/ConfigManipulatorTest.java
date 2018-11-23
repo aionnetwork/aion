@@ -51,7 +51,6 @@ public class ConfigManipulatorTest {
     @Before
     public void before() {
         jmxCaller = mock(ConfigManipulator.JmxCaller.class);
-        ;
         fileLoaderSaver = mock(ConfigManipulator.FileLoaderSaver.class);
         cfg = new CfgAion();
         kernelLauncher = mock(KernelLauncher.class);

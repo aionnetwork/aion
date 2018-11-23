@@ -26,18 +26,25 @@ package org.aion.precompiled.contracts;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import org.aion.base.type.Address;
 import org.aion.base.type.IExecutionResult;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
+import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -49,7 +56,7 @@ public class EDVerifyContractTest {
     private Address caller = origin;
 
     private Address blockCoinbase = Address.wrap(RandomUtils.nextBytes(32));
-    private long blockNumber = 1;
+    private long blockNumber = 2000001;
     private long blockTimestamp = System.currentTimeMillis() / 1000;
     private long blockNrgLimit = 5000000;
     private DataWord blockDifficulty = new DataWord(0x100000000L);
@@ -63,22 +70,59 @@ public class EDVerifyContractTest {
     private int kind = ExecutionContext.CREATE;
     private int flags = 0;
 
+    private File forkFile;
+
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         nrgPrice = DataWord.ONE;
         nrgLimit = 20000;
         callValue = DataWord.ZERO;
         callData = new byte[0];
+
+        new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
+        forkFile =
+                new File(
+                        System.getProperty("user.dir")
+                                + "/mainnet/config"
+                                + CfgFork.FORK_PROPERTIES_PATH);
+        forkFile.createNewFile();
+
+        // Open given file in append mode.
+        BufferedWriter out = new BufferedWriter(new FileWriter(forkFile, true));
+        out.write("fork0.3.2=2000000");
+        out.close();
+
+        CfgAion.inst();
+    }
+
+    @After
+    public void teardown() {
+        forkFile.delete();
+        forkFile.getParentFile().delete();
+        forkFile.getParentFile().getParentFile().delete();
     }
 
     @Test
     public void shouldReturnSuccessTestingWith256() {
         byte[] input = setupInput();
-        ExecutionContext ctx = new ExecutionContext(txHash,
-            ContractFactory.getEdVerifyContractAddress(), origin, caller, nrgPrice,
-            nrgLimit, callValue,
-            callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
-            blockDifficulty);
+        ExecutionContext ctx =
+                new ExecutionContext(
+                        txHash,
+                        ContractFactory.getEdVerifyContractAddress(),
+                        origin,
+                        caller,
+                        nrgPrice,
+                        nrgLimit,
+                        callValue,
+                        callData,
+                        depth,
+                        kind,
+                        flags,
+                        blockCoinbase,
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
@@ -88,14 +132,27 @@ public class EDVerifyContractTest {
     }
 
     @Test
-    public void emptyInputTest(){
+    public void emptyInputTest() {
         byte[] input = new byte[128];
 
-        ExecutionContext ctx = new ExecutionContext(txHash,
-                ContractFactory.getEdVerifyContractAddress(), origin, caller, nrgPrice,
-                nrgLimit, callValue,
-                callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
-                blockDifficulty);
+        ExecutionContext ctx =
+                new ExecutionContext(
+                        txHash,
+                        ContractFactory.getEdVerifyContractAddress(),
+                        origin,
+                        caller,
+                        nrgPrice,
+                        nrgLimit,
+                        callValue,
+                        callData,
+                        depth,
+                        kind,
+                        flags,
+                        blockCoinbase,
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
@@ -105,18 +162,31 @@ public class EDVerifyContractTest {
     }
 
     @Test
-    public void incorrectInputTest(){
+    public void incorrectInputTest() {
         byte[] input = setupInput();
 
-        input[22] = (byte)((int)(input[32]) -10); // modify sig
-        input[33] = (byte)((int)(input[33]) + 4); // modify sig
-        input[99] = (byte)((int)(input[33]) - 40); // modify sig
+        input[22] = (byte) ((int) (input[32]) - 10); // modify sig
+        input[33] = (byte) ((int) (input[33]) + 4); // modify sig
+        input[99] = (byte) ((int) (input[33]) - 40); // modify sig
 
-        ExecutionContext ctx = new ExecutionContext(txHash,
-                ContractFactory.getEdVerifyContractAddress(), origin, caller, nrgPrice,
-                nrgLimit, callValue,
-                callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
-                blockDifficulty);
+        ExecutionContext ctx =
+                new ExecutionContext(
+                        txHash,
+                        ContractFactory.getEdVerifyContractAddress(),
+                        origin,
+                        caller,
+                        nrgPrice,
+                        nrgLimit,
+                        callValue,
+                        callData,
+                        depth,
+                        kind,
+                        flags,
+                        blockCoinbase,
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
@@ -130,11 +200,24 @@ public class EDVerifyContractTest {
         nrgPrice = DataWord.ONE;
 
         byte[] input = setupInput();
-        ExecutionContext ctx = new ExecutionContext(txHash,
-            ContractFactory.getEdVerifyContractAddress(), origin, caller, nrgPrice,
-            nrgLimit, callValue,
-            callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
-            blockDifficulty);
+        ExecutionContext ctx =
+                new ExecutionContext(
+                        txHash,
+                        ContractFactory.getEdVerifyContractAddress(),
+                        origin,
+                        caller,
+                        nrgPrice,
+                        nrgLimit,
+                        callValue,
+                        callData,
+                        depth,
+                        kind,
+                        flags,
+                        blockCoinbase,
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         IExecutionResult result = contract.execute(input, 2999L);
@@ -142,15 +225,28 @@ public class EDVerifyContractTest {
     }
 
     @Test
-    public void invalidInputLengthTest(){
+    public void invalidInputLengthTest() {
         byte[] input = new byte[129]; // note the length is 129
         input[128] = 0x1;
 
-        ExecutionContext ctx = new ExecutionContext(txHash,
-                ContractFactory.getEdVerifyContractAddress(), origin, caller, nrgPrice,
-                nrgLimit, callValue,
-                callData, depth, kind, flags, blockCoinbase, blockNumber, blockTimestamp, blockNrgLimit,
-                blockDifficulty);
+        ExecutionContext ctx =
+                new ExecutionContext(
+                        txHash,
+                        ContractFactory.getEdVerifyContractAddress(),
+                        origin,
+                        caller,
+                        nrgPrice,
+                        nrgLimit,
+                        callValue,
+                        callData,
+                        depth,
+                        kind,
+                        flags,
+                        blockCoinbase,
+                        blockNumber,
+                        blockTimestamp,
+                        blockNrgLimit,
+                        blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         IExecutionResult result = contract.execute(input, 21000L);
@@ -158,11 +254,13 @@ public class EDVerifyContractTest {
         assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.FAILURE.toInt());
     }
 
-    private byte[] setupInput(){
+    private byte[] setupInput() {
         ECKeyFac.setType(ECKeyFac.ECKeyType.ED25519);
         ECKey ecKey = ECKeyFac.inst().create();
-        ecKey = ecKey.fromPrivate(Hex.decode(
-                "5a90d8e67da5d1dfbf17916ae83bae04ef334f53ce8763932eba2c1116a62426fff4317ae351bda5e4fa24352904a9366d3a89e38d1ffa51498ba9acfbc65724"));
+        ecKey =
+                ecKey.fromPrivate(
+                        Hex.decode(
+                                "5a90d8e67da5d1dfbf17916ae83bae04ef334f53ce8763932eba2c1116a62426fff4317ae351bda5e4fa24352904a9366d3a89e38d1ffa51498ba9acfbc65724"));
 
         byte[] pubKey = ecKey.getPubKey();
 
@@ -180,7 +278,4 @@ public class EDVerifyContractTest {
 
         return input;
     }
-
 }
-
-

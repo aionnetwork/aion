@@ -25,12 +25,14 @@ package org.aion.precompiled;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
+import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
 import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
 import org.aion.precompiled.contracts.TXHashContract;
+import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.vm.ExecutionContext;
 import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
@@ -78,6 +80,11 @@ public class ContractFactory implements IContractFactory {
             ExecutionContext context,
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
+        CfgFork cfg = new CfgFork();
+        String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
+        boolean fork_032 =
+                (forkProperty != null) && (context.blockNumber() >= Long.valueOf(forkProperty));
+
         switch (context.address().toString()) {
             case ADDR_TOKEN_BRIDGE:
                 TokenBridgeContract contract =
@@ -94,12 +101,16 @@ public class ContractFactory implements IContractFactory {
 
                 return contract;
             case ADDR_ED_VERIFY:
-                return PC_ED_VERIFY;
+                return fork_032 ? PC_ED_VERIFY : null;
             case ADDR_BLAKE2B_HASH:
-                return PC_BLAKE2B_HASH;
+                return fork_032 ? PC_BLAKE2B_HASH : null;
             case ADDR_TX_HASH:
-                return new TXHashContract(context);
+                return fork_032 ? new TXHashContract(context) : null;
             case ADDR_TOTAL_CURRENCY:
+                return fork_032
+                        ? null
+                        : new TotalCurrencyContract(
+                                track, context.sender(), Address.wrap(ADDR_OWNER));
             default:
                 return null;
         }
