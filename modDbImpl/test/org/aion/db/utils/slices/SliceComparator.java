@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -32,19 +32,16 @@
  *     Zcash project team.
  *     Bitcoinj team.
  *     H2 Group.
- ******************************************************************************/
+ */
 package org.aion.db.utils.slices;
 
 import java.util.Comparator;
 
-public final class SliceComparator
-        implements Comparator<Slice>
-{
+public final class SliceComparator implements Comparator<Slice> {
     public static final SliceComparator SLICE_COMPARATOR = new SliceComparator();
 
     @Override
-    public int compare(Slice sliceA, Slice sliceB)
-    {
+    public int compare(Slice sliceA, Slice sliceB) {
         return sliceA.compareTo(sliceB);
     }
 }

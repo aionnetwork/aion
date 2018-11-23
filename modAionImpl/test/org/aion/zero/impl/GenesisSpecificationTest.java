@@ -32,6 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  */
+
 package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -40,28 +41,23 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
+import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.zero.exceptions.HeaderStructureException;
-import org.aion.zero.impl.AionGenesis;
-import org.aion.crypto.HashUtil;
 import org.junit.Test;
 
 /**
- * Specifies the properties of AionGenesis and intended parameters, ensures that
- * the creation of AionGenesis (atleast through suggested codepaths) always
- * produce a valid genesis block.
- * 
- * @author yao
+ * Specifies the properties of AionGenesis and intended parameters, ensures that the creation of
+ * AionGenesis (atleast through suggested codepaths) always produce a valid genesis block.
  *
+ * @author yao
  */
 public class GenesisSpecificationTest {
 
     /**
-     * Test that the default genesis block built from the builder produces the
-     * correct genesis specs
+     * Test that the default genesis block built from the builder produces the correct genesis specs
      */
     @Test
     public void defaultGenesisBlockTest() throws HeaderStructureException {
@@ -71,14 +67,16 @@ public class GenesisSpecificationTest {
         assertThat(genesis.getParentHash()).isEqualTo(AionGenesis.GENESIS_PARENT_HASH);
         assertThat(genesis.getCoinbase()).isEqualTo(AionGenesis.GENESIS_COINBASE);
         assertThat(genesis.getDifficulty()).isEqualTo(AionGenesis.GENESIS_DIFFICULTY);
-        assertThat(genesis.getDifficultyBI()).isEqualTo(new BigInteger(1, AionGenesis.GENESIS_DIFFICULTY));
+        assertThat(genesis.getDifficultyBI())
+                .isEqualTo(new BigInteger(1, AionGenesis.GENESIS_DIFFICULTY));
         assertThat(genesis.getLogBloom()).isEqualTo(AionGenesis.GENESIS_LOGSBLOOM);
         assertThat(genesis.getTimestamp()).isEqualTo(AionGenesis.GENESIS_TIMESTAMP);
         assertThat(genesis.getNrgConsumed()).isEqualTo(0);
         assertThat(genesis.getNrgLimit()).isEqualTo(AionGenesis.GENESIS_ENERGY_LIMIT);
         assertThat(genesis.getTxTrieRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
         assertThat(genesis.getReceiptsRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
-        assertThat(genesis.getDifficultyBI()).isEqualTo(new BigInteger(1, AionGenesis.GENESIS_DIFFICULTY));
+        assertThat(genesis.getDifficultyBI())
+                .isEqualTo(new BigInteger(1, AionGenesis.GENESIS_DIFFICULTY));
         assertThat(genesis.getTransactionsList().isEmpty()).isEqualTo(true);
 
         Map<Address, AccountState> premined = genesis.getPremine();
@@ -90,35 +88,38 @@ public class GenesisSpecificationTest {
     }
 
     /**
-     * Test that the genesis block can be overrode by certain configuration
-     * options that correspond to the options provided by
-     * {@link AionGenesis.Builder}
+     * Test that the genesis block can be overrode by certain configuration options that correspond
+     * to the options provided by {@link AionGenesis.Builder}
      */
     @Test
     public void overrideGenesisBlockTest() throws HeaderStructureException {
         AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
-        
+
         // values to override defaults with
-        byte[] overrideHash = ByteUtil.hexStringToBytes("DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF");
-        byte[] overrideAddress = ByteUtil.hexStringToBytes("DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF");
+        byte[] overrideHash =
+                ByteUtil.hexStringToBytes(
+                        "DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF");
+        byte[] overrideAddress =
+                ByteUtil.hexStringToBytes(
+                        "DEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF");
         BigInteger overrideValue = BigInteger.valueOf(1337);
         AccountState defaultAccountState = new AccountState(overrideValue, overrideValue);
-        
+
         HashSet<Address> accountStateSet = new HashSet<>();
         accountStateSet.add(Address.wrap(overrideHash));
-        
-        genesisBuilder
-            .withParentHash(overrideHash)
-            .withCoinbase(Address.wrap(overrideAddress))
-            .withDifficulty(overrideValue.toByteArray())
-            .withEnergyLimit(overrideValue.longValue())
-            .withNonce(overrideHash)
-            .withNumber(overrideValue.longValue())
-            .withTimestamp(overrideValue.longValue())
-            .addPreminedAccount(Address.wrap(overrideAddress), defaultAccountState);
 
-            AionGenesis genesis = genesisBuilder.build();
-        
+        genesisBuilder
+                .withParentHash(overrideHash)
+                .withCoinbase(Address.wrap(overrideAddress))
+                .withDifficulty(overrideValue.toByteArray())
+                .withEnergyLimit(overrideValue.longValue())
+                .withNonce(overrideHash)
+                .withNumber(overrideValue.longValue())
+                .withTimestamp(overrideValue.longValue())
+                .addPreminedAccount(Address.wrap(overrideAddress), defaultAccountState);
+
+        AionGenesis genesis = genesisBuilder.build();
+
         assertThat(genesis.getParentHash()).isEqualTo(overrideHash);
         assertThat(genesis.getCoinbase().toBytes()).isEqualTo(overrideAddress);
         assertThat(genesis.getDifficulty()).isEqualTo(overrideValue.toByteArray());
@@ -130,7 +131,7 @@ public class GenesisSpecificationTest {
         assertThat(genesis.getReceiptsRoot()).isEqualTo(HashUtil.EMPTY_TRIE_HASH);
         assertThat(genesis.getDifficultyBI()).isEqualTo(overrideValue);
         assertThat(genesis.getTransactionsList().isEmpty()).isEqualTo(true);
-        
+
         assertThat(genesis.getPremine().keySet()).isEqualTo(accountStateSet);
     }
 }

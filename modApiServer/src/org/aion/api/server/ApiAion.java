@@ -1,26 +1,24 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * Contributors to the aion source files in decreasing order of code volume:
- *
- * Aion foundation.
- *
+ * Contributors:
+ *     Aion foundation.
  */
 
 package org.aion.api.server;
@@ -58,6 +56,7 @@ import org.aion.evtmgr.IHandler;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
+import org.aion.mcf.blockchain.TxResponse;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -80,7 +79,7 @@ public abstract class ApiAion extends Api {
     // 2. underlying datastructure provides concurrency guarntees
 
     // delegate concurrency to underlying object
-    protected static NrgOracle NRG_ORACLE;
+    private static NrgOracle NRG_ORACLE;
     protected IAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
 
     // using java.util.concurrent library objects
@@ -118,7 +117,6 @@ public abstract class ApiAion extends Api {
 
     public final class EpApi implements Runnable {
         boolean go = true;
-
 
         @Override
         public void run() {
@@ -224,7 +222,7 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    public Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
+    protected Map.Entry<AionBlock, BigInteger> getBlockWithTotalDifficulty(long blkNr) {
         if (blkNr > 0) {
             return ((AionBlockStore) this.ac.getBlockchain().getBlockStore())
                     .getChainBlockByNumberWithTotalDifficulty(blkNr);
@@ -461,58 +459,70 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        AionTransaction tx = new AionTransaction(params.getNonce().toByteArray(), params.getFrom(), params.getTo(),
-                params.getValue().toByteArray(), params.getData(), params.getNrg(), params.getNrgPrice());
-        AionTxReceipt receipt = this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
+        Address fromAddr =
+                (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
+        AionTransaction tx =
+                new AionTransaction(
+                        params.getNonce().toByteArray(),
+                        fromAddr,
+                        params.getTo(),
+                        params.getValue().toByteArray(),
+                        params.getData(),
+                        params.getNrg(),
+                        params.getNrgPrice());
+
+        AionTxReceipt receipt =
+                this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
         return receipt.getEnergyUsed();
     }
 
-    protected ContractCreateResult createContract(ArgTxCall _params) {
+    protected ApiTxResponse createContract(ArgTxCall _params) {
+
+        if (_params == null) {
+            return (new ApiTxResponse(TxResponse.INVALID_TX));
+        }
 
         Address from = _params.getFrom();
 
-        if (from == null || from.equals(Address.EMPTY_ADDRESS())) {
-            return null;
+        if (from == null || from.isEmptyAddress()) {
+            LOG.error("<create-contract msg=invalid-from-address>");
+            return (new ApiTxResponse(TxResponse.INVALID_FROM));
         }
 
         ECKey key = this.getAccountKey(from.toString());
 
         if (key == null) {
             LOG.debug("ApiAion.createContract - null key");
-            return null;
-        } else {
-            try {
-                synchronized (pendingState) {
-                    byte[] nonce =
-                            !(_params.getNonce().equals(BigInteger.ZERO))
-                                    ? _params.getNonce().toByteArray()
-                                    : pendingState
-                                            .bestPendingStateNonce(Address.wrap(key.getAddress()))
-                                            .toByteArray();
+            return (new ApiTxResponse(TxResponse.INVALID_ACCOUNT));
+        }
 
-                    AionTransaction tx =
-                            new AionTransaction(
-                                    nonce,
-                                    from,
-                                    null,
-                                    _params.getValue().toByteArray(),
-                                    _params.getData(),
-                                    _params.getNrg(),
-                                    _params.getNrgPrice());
-                    tx.sign(key);
+        try {
+            synchronized (pendingState) {
+                byte[] nonce =
+                        !(_params.getNonce().equals(BigInteger.ZERO))
+                                ? _params.getNonce().toByteArray()
+                                : pendingState
+                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                        .toByteArray();
 
-                    pendingState.addPendingTransaction(tx);
+                AionTransaction tx =
+                        new AionTransaction(
+                                nonce,
+                                from,
+                                null,
+                                _params.getValue().toByteArray(),
+                                _params.getData(),
+                                _params.getNrg(),
+                                _params.getNrgPrice());
+                tx.sign(key);
 
-                    ContractCreateResult c = new ContractCreateResult();
-                    c.address = tx.getContractAddress();
-                    c.transId = tx.getHash();
-                    return c;
-                }
-            } catch (Exception ex) {
-                LOG.error("ApiAion.createContract - exception: [{}]", ex.getMessage());
+                TxResponse rsp = pendingState.addPendingTransaction(tx);
 
-                return null;
+                return new ApiTxResponse(rsp, tx.getHash(), tx.getContractAddress());
             }
+        } catch (Exception ex) {
+            LOG.error("ApiAion.createContract - exception: [{}]", ex.getMessage());
+            return new ApiTxResponse(TxResponse.EXCEPTION, ex);
         }
     }
 
@@ -533,19 +543,23 @@ public abstract class ApiAion extends Api {
         return this.ac.getRepository().getNonce(_address);
     }
 
-    protected byte[] sendTransaction(ArgTxCall _params) {
+    protected ApiTxResponse sendTransaction(ArgTxCall _params) {
+
+        if (_params == null) {
+            return (new ApiTxResponse(TxResponse.INVALID_TX));
+        }
 
         Address from = _params.getFrom();
 
-        if (from == null || from.equals(Address.EMPTY_ADDRESS())) {
+        if (from == null || from.isEmptyAddress()) {
             LOG.error("<send-transaction msg=invalid-from-address>");
-            return null;
+            return (new ApiTxResponse(TxResponse.INVALID_FROM));
         }
 
         ECKey key = this.getAccountKey(from.toString());
         if (key == null) {
             LOG.error("<send-transaction msg=account-not-found>");
-            return null;
+            return (new ApiTxResponse(TxResponse.INVALID_ACCOUNT));
         }
 
         try {
@@ -568,23 +582,70 @@ public abstract class ApiAion extends Api {
                                 _params.getNrgPrice());
                 tx.sign(key);
 
-                pendingState.addPendingTransaction(tx);
-
-                return tx.getHash();
+                return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getHash()));
             }
         } catch (Exception ex) {
-            return null;
+            LOG.error("ApiAion.sendTransaction exception: [{}]", ex.getMessage());
+            return (new ApiTxResponse(TxResponse.EXCEPTION, ex));
         }
     }
 
-    protected byte[] sendTransaction(byte[] signedTx) {
+    protected ApiTxResponse sendTransaction(byte[] signedTx) {
         if (signedTx == null) {
-            throw new NullPointerException();
+            return (new ApiTxResponse(TxResponse.INVALID_TX));
         }
 
         AionTransaction tx = new AionTransaction(signedTx);
-        pendingState.addPendingTransaction(tx);
-        return tx.getHash();
+        try {
+            return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getHash()));
+        } catch (Exception ex) {
+            LOG.error("<send-transaction exception>", ex);
+            return (new ApiTxResponse(TxResponse.EXCEPTION, ex));
+        }
+    }
+
+    protected AionTransaction signTransaction(ArgTxCall _params, String _address) {
+        Address address;
+        if (_address == null || _address.isEmpty()) {
+            LOG.error("<sign-transaction msg=invalid-signing-address>");
+            return null;
+        } else {
+            address = Address.wrap(_address);
+        }
+
+        ECKey key = getAccountKey(address.toString());
+        if (key == null) {
+            LOG.error("<sign-transaction msg=account-not-unlocked>");
+            return null;
+        }
+
+        try {
+            synchronized (pendingState) {
+                byte[] nonce =
+                        (!_params.getNonce().equals(BigInteger.ZERO))
+                                ? _params.getNonce().toByteArray()
+                                : pendingState
+                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                        .toByteArray();
+
+                AionTransaction tx =
+                        new AionTransaction(
+                                nonce,
+                                _params.getTo(),
+                                _params.getValue().toByteArray(),
+                                _params.getData(),
+                                _params.getNrg(),
+                                _params.getNrgPrice());
+                tx.sign(key);
+
+                return tx;
+            }
+        } catch (Exception ex) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Failed to sign the transaction");
+            }
+            return null;
+        }
     }
 
     // --Commented out by Inspection START (02/02/18 6:58 PM):
@@ -642,7 +703,9 @@ public abstract class ApiAion extends Api {
             for (Short v : p2pVersions) {
                 b.append(ByteUtil.byteArrayToInt(ByteUtil.shortToBytes(v)));
                 i++;
-                if (i < p2pVersions.size()) b.append(",");
+                if (i < p2pVersions.size()) {
+                    b.append(",");
+                }
             }
             return b.toString();
         } catch (Exception e) {
@@ -684,26 +747,26 @@ public abstract class ApiAion extends Api {
 
     // Returns a fully initialized NrgOracle object.
     protected void initNrgOracle(IAionChain _ac) {
-        if (NRG_ORACLE != null) {
-            return;
-        }
+        if (NRG_ORACLE != null) return;
 
-        IAionBlockchain bc = (IAionBlockchain)_ac.getBlockchain();
+        IAionBlockchain bc = (IAionBlockchain) _ac.getBlockchain();
         long nrgPriceDefault = CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         long nrgPriceMax = CfgAion.inst().getApi().getNrg().getNrgPriceMax();
 
         NrgOracle.Strategy oracleStrategy = NrgOracle.Strategy.SIMPLE;
-        if (CfgAion.inst().getApi().getNrg().isOracleEnabled())
+        if (CfgAion.inst().getApi().getNrg().isOracleEnabled()) {
             oracleStrategy = NrgOracle.Strategy.BLK_PRICE;
+        }
 
         NRG_ORACLE = new NrgOracle(bc, nrgPriceDefault, nrgPriceMax, oracleStrategy);
     }
 
     protected long getRecommendedNrgPrice() {
-        if (NRG_ORACLE != null)
+        if (NRG_ORACLE != null) {
             return NRG_ORACLE.getNrgPrice();
-        else
+        } else {
             return CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
+        }
     }
 
     // leak the oracle instance. NrgOracle is threadsafe, so safe to do this, but bad design
@@ -712,7 +775,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getDefaultNrgLimit() {
-        return 2_000_000L;
+        return 90_000L;
     }
 
     protected void startES(String thName) {

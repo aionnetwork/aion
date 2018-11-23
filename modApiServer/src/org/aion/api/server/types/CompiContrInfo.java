@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.api.server.types;
 
 import org.aion.solidity.Abi.Entry;
@@ -37,16 +35,14 @@ public final class CompiContrInfo {
     public String languageVersion;
 
     public String compilerVersion;
-    
+
     public String userDoc;
 
     public String developerDoc;
-    
+
     public Entry[] abiDefinition;
-    
-    /**
-     * For RPC call
-     */
+
+    /** For RPC call */
     public JSONObject toJSON() {
         JSONObject res = new JSONObject();
         res.put("source", this.source);
@@ -56,11 +52,10 @@ public final class CompiContrInfo {
         res.put("userDoc", this.userDoc);
         res.put("developerDoc", this.developerDoc);
         JSONArray arr = new JSONArray();
-        for(int i = 0, m = this.abiDefinition.length; i < m; i++) {
+        for (int i = 0, m = this.abiDefinition.length; i < m; i++) {
             arr.put(this.abiDefinition[i].toJSON());
         }
         res.put("abiDefinition", arr);
         return res;
     }
-
 }

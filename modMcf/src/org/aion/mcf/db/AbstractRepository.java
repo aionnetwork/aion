@@ -1,26 +1,30 @@
-/* ******************************************************************************
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ *     This file is part of the aion network project.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- *******************************************************************************/
+ */
 package org.aion.mcf.db;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
+import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
+import static org.aion.mcf.db.DatabaseUtils.verifyAndBuildPath;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -35,10 +39,9 @@ import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
 import org.aion.base.vm.IDataWord;
-import org.aion.db.impl.DatabaseFactory;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.mcf.config.CfgDb;
+import org.aion.mcf.config.CfgDb.Names;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.aion.mcf.ds.ArchivedDataSource;
@@ -64,16 +67,17 @@ public abstract class AbstractRepository<
     protected IRepositoryConfig cfg;
 
     /** ********* Database Name Constants ********** */
-    protected static final String TRANSACTION_DB = CfgDb.Names.TRANSACTION;
+    protected static final String TRANSACTION_DB = Names.TRANSACTION;
 
-    protected static final String INDEX_DB = CfgDb.Names.INDEX;
-    protected static final String BLOCK_DB = CfgDb.Names.BLOCK;
-    protected static final String DETAILS_DB = CfgDb.Names.DETAILS;
-    protected static final String STORAGE_DB = CfgDb.Names.STORAGE;
-    protected static final String STATE_DB = CfgDb.Names.STATE;
-    protected static final String STATE_ARCHIVE_DB = CfgDb.Names.STATE_ARCHIVE;
-    protected static final String PENDING_TX_POOL_DB = CfgDb.Names.TX_POOL;
-    protected static final String PENDING_TX_CACHE_DB = CfgDb.Names.TX_CACHE;
+    protected static final String INDEX_DB = Names.INDEX;
+    protected static final String BLOCK_DB = Names.BLOCK;
+    protected static final String PENDING_BLOCK_DB = Names.PENDING_BLOCK;
+    protected static final String DETAILS_DB = Names.DETAILS;
+    protected static final String STORAGE_DB = Names.STORAGE;
+    protected static final String STATE_DB = Names.STATE;
+    protected static final String STATE_ARCHIVE_DB = Names.STATE_ARCHIVE;
+    protected static final String PENDING_TX_POOL_DB = Names.TX_POOL;
+    protected static final String PENDING_TX_CACHE_DB = Names.TX_CACHE;
 
     // State trie.
     protected Trie worldState;
@@ -112,6 +116,9 @@ public abstract class AbstractRepository<
     // Current blockstore.
     public BSB blockStore;
 
+    // pending block store
+    protected Properties pendingStoreProperties;
+
     // Flag to see if the current instance is a snapshot.
     protected boolean isSnapshot = false;
 
@@ -120,10 +127,11 @@ public abstract class AbstractRepository<
     /**
      * Initializes all necessary databases and caches.
      *
-     * @throws Exception
+     * @throws InvalidFilePathException when called with a persistent database vendor for which the
+     *     data store cannot be created or opened.
      * @implNote This function is not locked. Locking must be done from calling function.
      */
-    protected void initializeDatabasesAndCaches() throws Exception {
+    protected void initializeDatabasesAndCaches() throws InvalidFilePathException {
         /*
          * Given that this function is not in the critical path and only called
          * on startup, enforce conditions here for safety
@@ -141,22 +149,14 @@ public abstract class AbstractRepository<
         //        if (this.cfg.getActiveVendor().equals(DBVendor.MOCKDB.toValue())) {
         //            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist");
         //        } else {
-        // verify user-provided path
-        File f = new File(this.cfg.getDbPath());
-        try {
-            // ask the OS if the path is valid
-            f.getCanonicalPath();
 
-            // try to create the directory
-            if (!f.exists()) {
-                f.mkdirs();
-            }
-        } catch (Exception e) {
-            throw new InvalidFilePathException(
-                    "Resolved file path \""
-                            + this.cfg.getDbPath()
-                            + "\" not valid as reported by the OS or a read/write permissions error occurred. Please provide an alternative DB file path in /config/config.xml.");
+        // if persistence is required
+        if (Boolean.valueOf(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.PERSISTENT))) {
+            // verify user-provided path
+            File f = new File(this.cfg.getDbPath());
+            verifyAndBuildPath(f);
         }
+
         //        }
         //
         //        if (!Arrays.asList(this.cfg.getVendorList()).contains(this.cfg.getActiveVendor()))
@@ -176,13 +176,13 @@ public abstract class AbstractRepository<
 
         Properties sharedProps;
 
-        // Setup datastores
+        // Setup data stores
         try {
             databaseGroup = new ArrayList<>();
 
             checkIntegrity =
                     Boolean.valueOf(
-                            cfg.getDatabaseConfig(CfgDb.Names.DEFAULT)
+                            cfg.getDatabaseConfig(Names.DEFAULT)
                                     .getProperty(Props.CHECK_INTEGRITY));
 
             // getting state specific properties
@@ -191,7 +191,10 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, STATE_DB);
-            this.stateDatabase = connectAndOpen(sharedProps);
+            this.stateDatabase = connectAndOpen(sharedProps, LOG);
+            if (stateDatabase == null || stateDatabase.isClosed()) {
+                throw newException(STATE_DB, sharedProps);
+            }
             databaseGroup.add(stateDatabase);
 
             // getting transaction specific properties
@@ -199,7 +202,10 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, TRANSACTION_DB);
-            this.transactionDatabase = connectAndOpen(sharedProps);
+            this.transactionDatabase = connectAndOpen(sharedProps, LOG);
+            if (transactionDatabase == null || transactionDatabase.isClosed()) {
+                throw newException(TRANSACTION_DB, sharedProps);
+            }
             databaseGroup.add(transactionDatabase);
 
             // getting details specific properties
@@ -207,7 +213,10 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, DETAILS_DB);
-            this.detailsDatabase = connectAndOpen(sharedProps);
+            this.detailsDatabase = connectAndOpen(sharedProps, LOG);
+            if (detailsDatabase == null || detailsDatabase.isClosed()) {
+                throw newException(DETAILS_DB, sharedProps);
+            }
             databaseGroup.add(detailsDatabase);
 
             // getting storage specific properties
@@ -215,7 +224,10 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, STORAGE_DB);
-            this.storageDatabase = connectAndOpen(sharedProps);
+            this.storageDatabase = connectAndOpen(sharedProps, LOG);
+            if (storageDatabase == null || storageDatabase.isClosed()) {
+                throw newException(STORAGE_DB, sharedProps);
+            }
             databaseGroup.add(storageDatabase);
 
             // getting index specific properties
@@ -223,7 +235,10 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, INDEX_DB);
-            this.indexDatabase = connectAndOpen(sharedProps);
+            this.indexDatabase = connectAndOpen(sharedProps, LOG);
+            if (indexDatabase == null || indexDatabase.isClosed()) {
+                throw newException(INDEX_DB, sharedProps);
+            }
             databaseGroup.add(indexDatabase);
 
             // getting block specific properties
@@ -231,15 +246,25 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, BLOCK_DB);
-            this.blockDatabase = connectAndOpen(sharedProps);
+            this.blockDatabase = connectAndOpen(sharedProps, LOG);
+            if (blockDatabase == null || blockDatabase.isClosed()) {
+                throw newException(BLOCK_DB, sharedProps);
+            }
             databaseGroup.add(blockDatabase);
+
+            // using block specific properties
+            sharedProps.setProperty(Props.DB_NAME, PENDING_BLOCK_DB);
+            this.pendingStoreProperties = sharedProps;
 
             // getting pending tx pool specific properties
             sharedProps = cfg.getDatabaseConfig(PENDING_TX_POOL_DB);
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, PENDING_TX_POOL_DB);
-            this.txPoolDatabase = connectAndOpen(sharedProps);
+            this.txPoolDatabase = connectAndOpen(sharedProps, LOG);
+            if (txPoolDatabase == null || txPoolDatabase.isClosed()) {
+                throw newException(PENDING_TX_POOL_DB, sharedProps);
+            }
             databaseGroup.add(txPoolDatabase);
 
             // getting pending tx cache specific properties
@@ -247,7 +272,10 @@ public abstract class AbstractRepository<
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
             sharedProps.setProperty(Props.DB_NAME, PENDING_TX_CACHE_DB);
-            this.pendingTxCacheDatabase = connectAndOpen(sharedProps);
+            this.pendingTxCacheDatabase = connectAndOpen(sharedProps, LOG);
+            if (pendingTxCacheDatabase == null || pendingTxCacheDatabase.isClosed()) {
+                throw newException(PENDING_TX_CACHE_DB, sharedProps);
+            }
             databaseGroup.add(pendingTxCacheDatabase);
 
             // Setup the cache for transaction data source.
@@ -264,7 +292,7 @@ public abstract class AbstractRepository<
                 sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
                 sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
                 sharedProps.setProperty(Props.DB_NAME, STATE_ARCHIVE_DB);
-                this.stateArchiveDatabase = connectAndOpen(sharedProps);
+                this.stateArchiveDatabase = connectAndOpen(sharedProps, LOG);
                 databaseGroup.add(stateArchiveDatabase);
 
                 stateWithArchive = new ArchivedDataSource(stateDatabase, stateArchiveDatabase);
@@ -290,6 +318,14 @@ public abstract class AbstractRepository<
         }
     }
 
+    private InvalidFilePathException newException(String dbName, Properties props) {
+        return new InvalidFilePathException(
+                "The «"
+                        + dbName
+                        + "» database from the repository could not be initialized with the given parameters: "
+                        + props);
+    }
+
     @Override
     public BSB getBlockStore() {
         return this.blockStore;
@@ -298,32 +334,6 @@ public abstract class AbstractRepository<
     @Override
     public boolean isClosed() {
         return stateDatabase == null;
-    }
-
-    private IByteArrayKeyValueDatabase connectAndOpen(Properties info) {
-        // get the database object
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(info, LOG.isDebugEnabled());
-
-        // open the database connection
-        db.open();
-
-        // check object status
-        if (db == null) {
-            LOG.error(
-                    "Database <{}> connection could not be established for <{}>.",
-                    info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
-        }
-
-        // check persistence status
-        if (!db.isCreatedOnDisk()) {
-            LOG.error(
-                    "Database <{}> cannot be saved to disk for <{}>.",
-                    info.getProperty(Props.DB_TYPE),
-                    info.getProperty(Props.DB_NAME));
-        }
-
-        return db;
     }
 
     @Override

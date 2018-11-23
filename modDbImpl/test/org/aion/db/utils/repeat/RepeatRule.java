@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -32,7 +32,7 @@
  *     Zcash project team.
  *     Bitcoinj team.
  *     H2 Group.
- ******************************************************************************/
+ */
 package org.aion.db.utils.repeat;
 
 import org.junit.rules.TestRule;
@@ -43,7 +43,7 @@ public class RepeatRule implements TestRule {
 
     private static class RepeatStatement extends Statement {
         private final Statement statement;
-        private final int repeat;    
+        private final int repeat;
 
         public RepeatStatement(Statement statement, int repeat) {
             this.statement = statement;
@@ -56,7 +56,6 @@ public class RepeatRule implements TestRule {
                 statement.evaluate();
             }
         }
-
     }
 
     @Override

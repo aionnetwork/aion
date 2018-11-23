@@ -48,8 +48,8 @@ public abstract class AbstractExecutor {
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
-    public AbstractExecutor(IRepository _repo, boolean _localCall, long _blkRemainingNrg,
-        Logger _logger) {
+    public AbstractExecutor(
+            IRepository _repo, boolean _localCall, long _blkRemainingNrg, Logger _logger) {
         this.repo = _repo;
         this.repoTrack = repo.startTracking();
         this.isLocalCall = _localCall;
@@ -70,7 +70,8 @@ public abstract class AbstractExecutor {
                     }
 
                     // charge nrg cost
-                    // Note: if the tx is a inpool tx, it will temp charge more balance for the account
+                    // Note: if the tx is a inpool tx, it will temp charge more balance for the
+                    // account
                     // once the block info been updated. the balance in pendingPool will correct.
                     BigInteger nrgLimit = BigInteger.valueOf(tx.getNrg());
                     BigInteger nrgPrice = BigInteger.valueOf(tx.getNrgPrice());
@@ -93,16 +94,15 @@ public abstract class AbstractExecutor {
     }
 
     /**
-     * Checks that the transaction passes the basic validation criteria. These criteria are:
-     *   1. the transaction energy limit is within the acceptable limit range and is larger than the
-     *      remaining energy in the block that contains the transaction.
-     *   2. contextNrgLimit is non-negative.
-     *   3. the transaction nonce is equal to the transaction sender's nonce.
-     *   4. the transaction sender has enough funds to cover the cost of the transaction.
+     * Checks that the transaction passes the basic validation criteria. These criteria are: 1. the
+     * transaction energy limit is within the acceptable limit range and is larger than the
+     * remaining energy in the block that contains the transaction. 2. contextNrgLimit is
+     * non-negative. 3. the transaction nonce is equal to the transaction sender's nonce. 4. the
+     * transaction sender has enough funds to cover the cost of the transaction.
      *
-     * Returns true if all crtieria are met or if the call is local.
-     * Returns false if the call is not local and at least one criterion is not met. In this case,
-     *   the execution result has its result code and energy left set appropriately.
+     * <p>Returns true if all crtieria are met or if the call is local. Returns false if the call is
+     * not local and at least one criterion is not met. In this case, the execution result has its
+     * result code and energy left set appropriately.
      *
      * @param tx The transaction to check.
      * @param contextNrgLmit The execution context's energy limit.
@@ -175,7 +175,8 @@ public abstract class AbstractExecutor {
      * Returns the energy remaining after the transaction was executed. Prior to execution this
      * method simply returns the energy limit for the transaction.
      *
-     * @return The energy left after the transaction executes or its energy limit prior to execution.
+     * @return The energy left after the transaction executes or its energy limit prior to
+     *     execution.
      */
     protected long getNrgLeft() {
         return exeResult.getNrgLeft();
@@ -202,13 +203,15 @@ public abstract class AbstractExecutor {
      */
     @SuppressWarnings("unchecked")
     protected ITxReceipt buildReceipt(ITxReceipt receipt, ITransaction tx, List logs) {
-        //TODO probably remove receipt and instantiate a new empty one here?
+        // TODO probably remove receipt and instantiate a new empty one here?
         receipt.setTransaction(tx);
         receipt.setLogs(logs);
-        receipt.setNrgUsed(getNrgUsed(tx.getNrg()));    // amount of energy used to execute tx
-        receipt.setExecutionResult(exeResult.getOutput());  // misnomer -> output is named result
-        receipt.setError(exeResult.getCode() == ResultCode.SUCCESS.toInt() ? ""
-            : ResultCode.fromInt(exeResult.getCode()).name());
+        receipt.setNrgUsed(getNrgUsed(tx.getNrg())); // amount of energy used to execute tx
+        receipt.setExecutionResult(exeResult.getOutput()); // misnomer -> output is named result
+        receipt.setError(
+                exeResult.getCode() == ResultCode.SUCCESS.toInt()
+                        ? ""
+                        : ResultCode.fromInt(exeResult.getCode()).name());
 
         return receipt;
     }
@@ -217,25 +220,28 @@ public abstract class AbstractExecutor {
      * Updates the repository only if the call is not local and the transaction summary was not
      * marked as rejected.
      *
-     * If the repository qualifies for an update then it is updated as follows:
-     *   1. The transaction sender is refunded for whatever outstanding energy was not consumed.
-     *   2. The transaction energy consumption amount is set accordingly.
-     *   3. The fee is transferred to the coinbase account.
-     *   4. All accounts marked for deletion (given that the transaction was successful) are deleted.
+     * <p>If the repository qualifies for an update then it is updated as follows: 1. The
+     * transaction sender is refunded for whatever outstanding energy was not consumed. 2. The
+     * transaction energy consumption amount is set accordingly. 3. The fee is transferred to the
+     * coinbase account. 4. All accounts marked for deletion (given that the transaction was
+     * successful) are deleted.
      *
      * @param summary The transaction summary.
      * @param tx The transaction.
      * @param coinbase The coinbase for the block in which the transaction was sealed.
      * @param deleteAccounts The list of accounts to be deleted if tx was successful.
      */
-    protected void updateRepo(ITxExecSummary summary, ITransaction tx, Address coinbase,
-        List<Address> deleteAccounts) {
+    protected void updateRepo(
+            ITxExecSummary summary,
+            ITransaction tx,
+            Address coinbase,
+            List<Address> deleteAccounts) {
 
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache track = repo.startTracking();
             // refund nrg left
             if (exeResult.getCode() == ResultCode.SUCCESS.toInt()
-                || exeResult.getCode() == ResultCode.REVERT.toInt()) {
+                    || exeResult.getCode() == ResultCode.REVERT.toInt()) {
                 track.addBalance(tx.getFrom(), summary.getRefund());
             }
 
@@ -262,5 +268,4 @@ public abstract class AbstractExecutor {
     protected void setExecutionResult(IExecutionResult result) {
         exeResult = result;
     }
-
 }

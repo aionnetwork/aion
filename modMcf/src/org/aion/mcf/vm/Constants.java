@@ -43,8 +43,6 @@ public class Constants {
 
     public static final int NRG_TRANSACTION_MAX = 2000000;
 
-    /**
-     * Call stack depth limit. Based on EIP-150, the theoretical limit is ~340.
-     */
+    /** Call stack depth limit. Based on EIP-150, the theoretical limit is ~340. */
     public static final int MAX_CALL_DEPTH = 128;
 }

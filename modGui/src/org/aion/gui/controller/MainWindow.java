@@ -1,6 +1,35 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.gui.controller;
 
 import com.google.common.eventbus.Subscribe;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.concurrent.Executors;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.Event;
@@ -41,16 +70,7 @@ import org.aion.wallet.storage.WalletStorage;
 import org.aion.zero.impl.config.CfgAion;
 import org.slf4j.Logger;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.concurrent.Executors;
-
-/**
- * Top-level class of the JavaFX Application.
- */
+/** Top-level class of the JavaFX Application. */
 public class MainWindow extends Application {
     /*
      * Implementation/design notes:
@@ -119,7 +139,6 @@ public class MainWindow extends Application {
     private Duration lockDelayDuration = Duration.seconds(60);
     private IdleMonitor idleMonitor;
 
-
     public MainWindow() {
         consoleManager = new ConsoleManager();
         timer = new KernelUpdateTimer(Executors.newSingleThreadScheduledExecutor());
@@ -131,25 +150,30 @@ public class MainWindow extends Application {
             // Should handle this with a nice graphical error message with
             // suggestion for how to fix.  For now just throw an exception
             // that bubbles up to terminate the program.
-            throw new IllegalStateException(String.format(
-                    "Fatal error: could not allocate wallet storage at location '%s'; exiting.",
-                    getDefaultStorageDir()
-            ), ioe);
+            throw new IllegalStateException(
+                    String.format(
+                            "Fatal error: could not allocate wallet storage at location '%s'; exiting.",
+                            getDefaultStorageDir()),
+                    ioe);
         }
 
-        kernelLauncher = new KernelLauncher(
-                CfgAion.inst().getGui().getCfgGuiLauncher(),
-                EventBusRegistry.INSTANCE,
-                new UnixProcessTerminator(),
-                unixKernelProcessHealthChecker,
-                new File(getDefaultStorageDir()));
-        kc = new KernelConnection(
-                CfgAion.inst().getApi(),
-                new EventPublisher(),
-                consoleManager);
+        kernelLauncher =
+                new KernelLauncher(
+                        CfgAion.inst().getGui().getCfgGuiLauncher(),
+                        EventBusRegistry.INSTANCE,
+                        new UnixProcessTerminator(),
+                        unixKernelProcessHealthChecker,
+                        new File(getDefaultStorageDir()));
+        kc = new KernelConnection(CfgAion.inst().getApi(), new EventPublisher(), consoleManager);
 
-        accountManager = new AccountManager(new BalanceRetriever(kc), () -> AionConstants.CCY, consoleManager, walletStorage);
-        transactionProcessor = new TransactionProcessor(kc, accountManager, new BalanceRetriever(kc));
+        accountManager =
+                new AccountManager(
+                        new BalanceRetriever(kc),
+                        () -> AionConstants.CCY,
+                        consoleManager,
+                        walletStorage);
+        transactionProcessor =
+                new TransactionProcessor(kc, accountManager, new BalanceRetriever(kc));
         accountChangeHandlers = new AccountChangeHandlers(accountManager, transactionProcessor);
     }
 
@@ -181,7 +205,6 @@ public class MainWindow extends Application {
         stage.setMaxWidth(860);
         stage.show();
 
-
         panes.put(HeaderPaneButtonEvent.Type.DASHBOARD, scene.lookup("#overviewPane"));
         panes.put(HeaderPaneButtonEvent.Type.ACCOUNTS, scene.lookup("#accountsPane"));
         panes.put(HeaderPaneButtonEvent.Type.SEND, scene.lookup("#sendPane"));
@@ -202,40 +225,45 @@ public class MainWindow extends Application {
         // Outputs relevant logger configuration
         // TODO the info/error println messages should be presented via GUI
         if (!cfg.getLog().getLogFile()) {
-            System.out.println("Logger disabled; to enable please check log settings in config.xml\n");
+            System.out.println(
+                    "Logger disabled; to enable please check log settings in config.xml\n");
         } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             System.out.println("File path is invalid; please check log setting in config.xml\n");
             System.exit(1);
         } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
             System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
         }
-        AionLoggerFactory.init(cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
+        AionLoggerFactory.init(
+                cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLog().getLogPath());
     }
 
     private FXMLLoader loader() throws IOException {
         IApiMsgErrorHandler errorHandler = new SimpleApiMsgErrorHandler();
         FXMLLoader loader = new FXMLLoader((getClass().getResource(MAIN_WINDOW_FXML)));
-        loader.setControllerFactory(new ControllerFactory()
-                .withKernelConnection(kc)
-                .withKernelLauncher(kernelLauncher)
-                .withTimer(timer)
-                .withGeneralKernelInfoRetriever(new GeneralKernelInfoRetriever(kc))
-                .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
-                .withGeneralKernelInfoRetriever(new GeneralKernelInfoRetriever(kc, errorHandler))
-                .withSyncInfoDto(new SyncInfoDto(kc, errorHandler))
-                .withConfigManipulator(new ConfigManipulator(CfgAion.inst(), kernelLauncher))
-                .withAccountManager(accountManager)
-                .withWalletStorage(walletStorage)
-                .withBlockTransactionProcessor(transactionProcessor)
-                .withConsoleManager(consoleManager)
-                .withEventBusRegistry(EventBusRegistry.INSTANCE)
-                .withHealthChecker(unixKernelProcessHealthChecker)
-                .withBalanceRetriever(new BalanceRetriever(kc))
-        );
-        loader.setBuilderFactory(new UiSubcomponentsFactory()
-                .withAccountManager(accountManager)
-                .withConsoleManager(consoleManager)
-        );
+        loader.setControllerFactory(
+                new ControllerFactory()
+                        .withKernelConnection(kc)
+                        .withKernelLauncher(kernelLauncher)
+                        .withTimer(timer)
+                        .withGeneralKernelInfoRetriever(new GeneralKernelInfoRetriever(kc))
+                        .withConfigManipulator(
+                                new ConfigManipulator(CfgAion.inst(), kernelLauncher))
+                        .withGeneralKernelInfoRetriever(
+                                new GeneralKernelInfoRetriever(kc, errorHandler))
+                        .withSyncInfoDto(new SyncInfoDto(kc, errorHandler))
+                        .withConfigManipulator(
+                                new ConfigManipulator(CfgAion.inst(), kernelLauncher))
+                        .withAccountManager(accountManager)
+                        .withWalletStorage(walletStorage)
+                        .withBlockTransactionProcessor(transactionProcessor)
+                        .withConsoleManager(consoleManager)
+                        .withEventBusRegistry(EventBusRegistry.INSTANCE)
+                        .withHealthChecker(unixKernelProcessHealthChecker)
+                        .withBalanceRetriever(new BalanceRetriever(kc)));
+        loader.setBuilderFactory(
+                new UiSubcomponentsFactory()
+                        .withAccountManager(accountManager)
+                        .withConsoleManager(consoleManager));
         return loader;
     }
 
@@ -274,13 +302,14 @@ public class MainWindow extends Application {
     }
 
     @Subscribe
-    private void handleHeaderPaneButtonEvent(final org.aion.gui.events.HeaderPaneButtonEvent event) {
-        if(stage.getScene() == null) {
+    private void handleHeaderPaneButtonEvent(
+            final org.aion.gui.events.HeaderPaneButtonEvent event) {
+        if (stage.getScene() == null) {
             return;
         }
         // todo: refactor by adding a view controller
-        for(Map.Entry<HeaderPaneButtonEvent.Type, Node> entry: panes.entrySet()) {
-            if(event.getType().equals(entry.getKey())) {
+        for (Map.Entry<HeaderPaneButtonEvent.Type, Node> entry : panes.entrySet()) {
+            if (event.getType().equals(entry.getKey())) {
                 entry.getValue().setVisible(true);
             } else {
                 entry.getValue().setVisible(false);
@@ -291,7 +320,6 @@ public class MainWindow extends Application {
     private void minimize(final WindowControlsEvent event) {
         ((Stage) event.getSource().getScene().getWindow()).setIconified(true);
     }
-
 
     private void registerIdleMonitor(AccountManager accountManager) {
         if (scene == null || lockDelayDuration == null) {
@@ -312,5 +340,4 @@ public class MainWindow extends Application {
         }
         return storageDir;
     }
-
 }

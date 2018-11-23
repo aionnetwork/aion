@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,23 +31,22 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
-package org.aion.base.util;
+ */
 
+package org.aion.base.util;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-/**
- * A streaming Hex encoder.
- */
+/** A streaming Hex encoder. */
 public class HexEncoder {
 
-    protected final byte[] encodingTable
-            = {
-                (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6', (byte) '7',
-                (byte) '8', (byte) '9', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e', (byte) 'f'
-            };
+    protected final byte[] encodingTable = {
+        (byte) '0', (byte) '1', (byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6',
+                (byte) '7',
+        (byte) '8', (byte) '9', (byte) 'a', (byte) 'b', (byte) 'c', (byte) 'd', (byte) 'e',
+                (byte) 'f'
+    };
 
     /*
      * set up the decoding table.
@@ -80,11 +79,7 @@ public class HexEncoder {
      *
      * @return the number of bytes produced.
      */
-    public int encode(
-            byte[] data,
-            int off,
-            int length,
-            OutputStream out) {
+    public int encode(byte[] data, int off, int length, OutputStream out) {
         for (int i = off; i < (off + length); i++) {
             int v = data[i] & 0xff;
             try {
@@ -97,19 +92,17 @@ public class HexEncoder {
         return length * 2;
     }
 
-    private static boolean ignore(
-            char c) {
+    private static boolean ignore(char c) {
         return c == '\n' || c == '\r' || c == '\t' || c == ' ';
     }
 
     /**
-     * decode the Hex encoded byte data writing it to the given output stream,
-     * whitespace characters will be ignored.
+     * decode the Hex encoded byte data writing it to the given output stream, whitespace characters
+     * will be ignored.
      *
      * @return the number of bytes produced.
      */
-    public int decode(byte[] data, int off, int length, OutputStream out)
-            throws IOException {
+    public int decode(byte[] data, int off, int length, OutputStream out) throws IOException {
         byte b1, b2;
         int outLen = 0;
 
@@ -154,15 +147,12 @@ public class HexEncoder {
     }
 
     /**
-     * decode the Hex encoded String data writing it to the given output stream,
-     * whitespace characters will be ignored.
+     * decode the Hex encoded String data writing it to the given output stream, whitespace
+     * characters will be ignored.
      *
      * @return the number of bytes produced.
      */
-    public int decode(
-            String data,
-            OutputStream out)
-            throws IOException {
+    public int decode(String data, OutputStream out) throws IOException {
         byte b1, b2;
         int length = 0;
 

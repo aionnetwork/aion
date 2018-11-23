@@ -1,52 +1,53 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
- * The aion network project leverages useful source code from other
- * open source projects. We greatly appreciate the effort that was
- * invested in these projects and we thank the individual contributors
- * for their work. For provenance information and contributors
- * please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
  * Contributors to the aion source files in decreasing order of code volume:
- * Aion foundation.
- * <ether.camp> team through the ethereumJ library.
- * Ether.Camp Inc. (US) team through Ethereum Harmony.
- * John Tromp through the Equihash solver.
- * Samuel Neves through the BLAKE2 implementation.
- * Zcash project team.
- * Bitcoinj team.
+ *     Aion foundation.
+ *     <ether.camp> team through the ethereumJ library.
+ *     Ether.Camp Inc. (US) team through Ethereum Harmony.
+ *     John Tromp through the Equihash solver.
+ *     Samuel Neves through the BLAKE2 implementation.
+ *     Zcash project team.
+ *     Bitcoinj team.
  */
 
 package org.aion.zero.impl.sync.handler;
 
+import java.math.BigInteger;
 import org.aion.base.util.ByteUtil;
-import org.aion.p2p.*;
-import org.slf4j.Logger;
+import org.aion.p2p.Ctrl;
+import org.aion.p2p.Handler;
+import org.aion.p2p.INode;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.Ver;
+import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResStatus;
-import org.aion.zero.impl.sync.Act;
+import org.slf4j.Logger;
 
-import java.math.BigInteger;
-
-/**
- * @author chris
- */
+/** @author chris */
 public final class ResStatusHandler extends Handler {
 
     private final Logger log;
@@ -64,29 +65,38 @@ public final class ResStatusHandler extends Handler {
 
     @Override
     public void receive(int _nodeIdHashcode, String _displayId, final byte[] _msgBytes) {
-        if (_msgBytes == null || _msgBytes.length == 0)
-            return;
+        if (_msgBytes == null || _msgBytes.length == 0) return;
         ResStatus rs = ResStatus.decode(_msgBytes);
 
         if (rs == null) {
-            this.log.error("<res-status decode-error from {} len: {}>", _displayId, _msgBytes.length);
+            this.log.error(
+                    "<res-status decode-error from {} len: {}>", _displayId, _msgBytes.length);
             if (this.log.isTraceEnabled()) {
                 this.log.trace("res-status decode-error dump: {}", ByteUtil.toHexString(_msgBytes));
             }
         }
 
+        this.syncMgr.getSyncStats().addPeerResponseTime(_displayId, System.nanoTime());
+        this.syncMgr.getSyncStats().updatePeerTotalBlocks(_displayId, 1);
+
         INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
         if (node != null && rs != null) {
             if (log.isDebugEnabled()) {
-                this.log.debug("<res-status node={} best-blk={}>", _displayId, rs.getBestBlockNumber());
+                this.log.debug(
+                        "<res-status node={} best-blk={}>", _displayId, rs.getBestBlockNumber());
             }
             long remoteBestBlockNumber = rs.getBestBlockNumber();
             byte[] remoteBestBlockHash = rs.getBestHash();
             byte[] remoteTdBytes = rs.getTotalDifficulty();
-            if(remoteTdBytes != null && remoteBestBlockHash != null){
+            if (remoteTdBytes != null && remoteBestBlockHash != null) {
                 BigInteger remoteTotalDifficulty = new BigInteger(1, remoteTdBytes);
-                node.updateStatus(remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
-                syncMgr.updateNetworkStatus(_displayId, remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
+                node.updateStatus(
+                        remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
+                syncMgr.updateNetworkStatus(
+                        _displayId,
+                        remoteBestBlockNumber,
+                        remoteBestBlockHash,
+                        remoteTotalDifficulty);
             }
         }
     }

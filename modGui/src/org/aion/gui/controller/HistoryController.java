@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,9 +22,17 @@
  */
 package org.aion.gui.controller;
 
-
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -67,46 +75,36 @@ import org.aion.wallet.util.AddressUtils;
 import org.aion.wallet.util.URLManager;
 import org.slf4j.Logger;
 
-import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.stream.Collectors;
-
 public class HistoryController extends AbstractController {
 
-    private static final Logger LOGGER = AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
+    private static final Logger LOGGER =
+            AionLoggerFactory.getLogger(org.aion.log.LogEnum.GUI.name());
 
     private static final String COPY_MENU = "Copy";
 
     private static final String LINK_STYLE = "link-style";
 
-    private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd - HH.mm.ss");
+    private static final SimpleDateFormat SIMPLE_DATE_FORMAT =
+            new SimpleDateFormat("yyyy/MM/dd - HH.mm.ss");
 
     private final TransactionProcessor transactionProcessor;
     private final AccountManager accountManager;
     private final SyncInfoDto syncInfoDto;
 
-    public HistoryController(TransactionProcessor transactionProcessor,
-                             AccountManager accountManager,
-                             SyncInfoDto syncInfoDto) {
+    public HistoryController(
+            TransactionProcessor transactionProcessor,
+            AccountManager accountManager,
+            SyncInfoDto syncInfoDto) {
         this.transactionProcessor = transactionProcessor;
         this.accountManager = accountManager;
         this.syncInfoDto = syncInfoDto;
     }
 
-    @FXML
-    private TableView<TxRow> txTable;
+    @FXML private TableView<TxRow> txTable;
 
-    @FXML
-    private TextField searchField;
+    @FXML private TextField searchField;
 
-    @FXML
-    private ComboBox<String> searchItem;
+    @FXML private ComboBox<String> searchItem;
 
     private AccountDTO account;
 
@@ -120,13 +118,9 @@ public class HistoryController extends AbstractController {
     }
 
     private void initSearchItemDropDown() {
-        searchItem.setItems(FXCollections.observableArrayList(
-                "Type",
-                "Date",
-                "Transaction hash",
-                "Value",
-                "Status"
-        ));
+        searchItem.setItems(
+                FXCollections.observableArrayList(
+                        "Type", "Date", "Transaction hash", "Value", "Status"));
         searchItem.getSelectionModel().select(0);
     }
 
@@ -139,7 +133,8 @@ public class HistoryController extends AbstractController {
 
     @Subscribe
     private void handleAccountChanged(final AccountEvent event) {
-        if (EnumSet.of(AccountEvent.Type.CHANGED, AccountEvent.Type.ADDED).contains(event.getType())) {
+        if (EnumSet.of(AccountEvent.Type.CHANGED, AccountEvent.Type.ADDED)
+                .contains(event.getType())) {
             this.account = event.getPayload();
             if (isInView()) {
                 reloadWalletView();
@@ -164,11 +159,15 @@ public class HistoryController extends AbstractController {
         if (account == null) {
             return;
         }
-        final Task<List<TxRow>> getTransactionsTask = getApiTask(
-                address -> transactionProcessor.getLatestTransactions(address).stream()
-                        .map(t -> new TxRow(address, t)).collect(Collectors.toList()),
-                account.getPublicAddress()
-        );
+        final Task<List<TxRow>> getTransactionsTask =
+                getApiTask(
+                        address ->
+                                transactionProcessor
+                                        .getLatestTransactions(address)
+                                        .stream()
+                                        .map(t -> new TxRow(address, t))
+                                        .collect(Collectors.toList()),
+                        account.getPublicAddress());
 
         runApiTask(
                 getTransactionsTask,
@@ -178,8 +177,7 @@ public class HistoryController extends AbstractController {
                     txTable.setItems(FXCollections.observableList(transactions));
                 },
                 getEmptyEvent(),
-                getEmptyEvent()
-        );
+                getEmptyEvent());
     }
 
     private void buildTableModel() {
@@ -194,7 +192,8 @@ public class HistoryController extends AbstractController {
         txTable.getColumns().addAll(Arrays.asList(typeCol, nameCol, hashCol, valueCol, statusCol));
     }
 
-    private TableColumn<TxRow, String> getTableColumn(final String header, final String property, final double sizePercent) {
+    private TableColumn<TxRow, String> getTableColumn(
+            final String header, final String property, final double sizePercent) {
         final TableColumn<TxRow, String> valueCol = new TableColumn<>(header);
         valueCol.setCellValueFactory(new PropertyValueFactory<>(property));
         valueCol.prefWidthProperty().bind(txTable.widthProperty().multiply(sizePercent));
@@ -211,25 +210,38 @@ public class HistoryController extends AbstractController {
         menu.getItems().add(copyItem);
         txTable.setContextMenu(menu);
 
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            final FilteredList<TxRow> filteredData = new FilteredList<>(FXCollections.observableList(completeTransactionList), s -> true);
-            if (!newValue.isEmpty()) {
-                filteredData.setPredicate(s -> anyFieldHasString(s, newValue));
-                SortedList<TxRow> sortedData = new SortedList<>(filteredData);
-                sortedData.comparatorProperty().bind(txTable.comparatorProperty());
-                txTable.setItems(sortedData);
-            }
-        });
+        searchField
+                .textProperty()
+                .addListener(
+                        (observable, oldValue, newValue) -> {
+                            final FilteredList<TxRow> filteredData =
+                                    new FilteredList<>(
+                                            FXCollections.observableList(completeTransactionList),
+                                            s -> true);
+                            if (!newValue.isEmpty()) {
+                                filteredData.setPredicate(s -> anyFieldHasString(s, newValue));
+                                SortedList<TxRow> sortedData = new SortedList<>(filteredData);
+                                sortedData.comparatorProperty().bind(txTable.comparatorProperty());
+                                txTable.setItems(sortedData);
+                            }
+                        });
 
-        searchItem.valueProperty().addListener((observable, oldValue, newValue) -> {
-            final FilteredList<TxRow> filteredData = new FilteredList<>(FXCollections.observableList(completeTransactionList), s -> true);
-            if(!String.valueOf(newValue).equals(String.valueOf(oldValue))) {
-                filteredData.setPredicate(s -> anyFieldHasString(s, searchField.getText()));
-                SortedList<TxRow> sortedData = new SortedList<>(filteredData);
-                sortedData.comparatorProperty().bind(txTable.comparatorProperty());
-                txTable.setItems(sortedData);
-            }
-        });
+        searchItem
+                .valueProperty()
+                .addListener(
+                        (observable, oldValue, newValue) -> {
+                            final FilteredList<TxRow> filteredData =
+                                    new FilteredList<>(
+                                            FXCollections.observableList(completeTransactionList),
+                                            s -> true);
+                            if (!String.valueOf(newValue).equals(String.valueOf(oldValue))) {
+                                filteredData.setPredicate(
+                                        s -> anyFieldHasString(s, searchField.getText()));
+                                SortedList<TxRow> sortedData = new SortedList<>(filteredData);
+                                sortedData.comparatorProperty().bind(txTable.comparatorProperty());
+                                txTable.setItems(sortedData);
+                            }
+                        });
     }
 
     private boolean anyFieldHasString(final TxRow currentRow, final String searchString) {
@@ -249,7 +261,8 @@ public class HistoryController extends AbstractController {
     }
 
     private static class KeyTableCopyEventHandler extends TableCopyEventHandler<KeyEvent> {
-        private final KeyCodeCombination copyKeyCodeCombination = new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY);
+        private final KeyCodeCombination copyKeyCodeCombination =
+                new KeyCodeCombination(KeyCode.C, KeyCombination.CONTROL_ANY);
 
         public void handle(final KeyEvent keyEvent) {
             if (copyKeyCodeCombination.match(keyEvent)) {
@@ -261,8 +274,8 @@ public class HistoryController extends AbstractController {
         }
     }
 
-    private static class ContextMenuTableCopyEventHandler extends TableCopyEventHandler<ActionEvent> {
-
+    private static class ContextMenuTableCopyEventHandler
+            extends TableCopyEventHandler<ActionEvent> {
 
         private final TableView<TxRow> txTable;
 
@@ -276,14 +289,16 @@ public class HistoryController extends AbstractController {
         }
     }
 
-    private static abstract class TableCopyEventHandler<T extends Event> implements EventHandler<T> {
+    private abstract static class TableCopyEventHandler<T extends Event>
+            implements EventHandler<T> {
 
         private static final char TAB = '\t';
         private static final char NEWLINE = '\n';
 
         protected final void copySelectionToClipboard(TableView<?> table) {
             StringBuilder clipboardString = new StringBuilder();
-            ObservableList<TablePosition> positionList = table.getSelectionModel().getSelectedCells();
+            ObservableList<TablePosition> positionList =
+                    table.getSelectionModel().getSelectedCells();
             int prevRow = -1;
             for (TablePosition position : positionList) {
                 int row = position.getRow();
@@ -311,7 +326,8 @@ public class HistoryController extends AbstractController {
 
         @Override
         public void handle(final MouseEvent mouseEvent) {
-            if (MouseEvent.MOUSE_CLICKED.equals(mouseEvent.getEventType()) && MouseButton.PRIMARY.equals(mouseEvent.getButton())) {
+            if (MouseEvent.MOUSE_CLICKED.equals(mouseEvent.getEventType())
+                    && MouseButton.PRIMARY.equals(mouseEvent.getButton())) {
                 if (mouseEvent.getSource() instanceof TableView) {
                     redirect((TableView<?>) mouseEvent.getSource());
                     mouseEvent.consume();
@@ -320,7 +336,8 @@ public class HistoryController extends AbstractController {
         }
 
         private void redirect(final TableView<?> table) {
-            ObservableList<TablePosition> positionList = table.getSelectionModel().getSelectedCells();
+            ObservableList<TablePosition> positionList =
+                    table.getSelectionModel().getSelectedCells();
             for (TablePosition position : positionList) {
                 int row = position.getRow();
                 int col = position.getColumn();
@@ -349,9 +366,12 @@ public class HistoryController extends AbstractController {
             transaction = dto;
             final AccountDTO fromAccount = accountManager.getAccount(dto.getFrom());
             final String balance = BalanceUtils.formatBalance(dto.getValue());
-            boolean isFromTx = AddressUtils.equals(requestingAddress, fromAccount.getPublicAddress());
+            boolean isFromTx =
+                    AddressUtils.equals(requestingAddress, fromAccount.getPublicAddress());
             this.type = new SimpleStringProperty(isFromTx ? TO : FROM);
-            this.date = new SimpleStringProperty(SIMPLE_DATE_FORMAT.format(new Date(dto.getTimeStamp() * 1000)));
+            this.date =
+                    new SimpleStringProperty(
+                            SIMPLE_DATE_FORMAT.format(new Date(dto.getTimeStamp() * 1000)));
             this.status = new SimpleStringProperty(getTransactionStatus(dto));
             this.value = new SimpleStringProperty(balance);
             this.txHash = new SimpleStringProperty(dto.getHash());
@@ -359,8 +379,13 @@ public class HistoryController extends AbstractController {
 
         private String getTransactionStatus(TransactionDTO dto) {
             syncInfoDto.loadFromApi();
-            final long diff = dto.getBlockNumber() + AionConstants.VALIDATION_BLOCKS_FOR_TRANSACTIONS - syncInfoDto.getNetworkBestBlkNumber();
-//            final long diff = dto.getBlockNumber() + AionConstants.VALIDATION_BLOCKS_FOR_TRANSACTIONS - blockchainConnector.getSyncInfo().getNetworkBestBlkNumber();
+            final long diff =
+                    dto.getBlockNumber()
+                            + AionConstants.VALIDATION_BLOCKS_FOR_TRANSACTIONS
+                            - syncInfoDto.getNetworkBestBlkNumber();
+            //            final long diff = dto.getBlockNumber() +
+            // AionConstants.VALIDATION_BLOCKS_FOR_TRANSACTIONS -
+            // blockchainConnector.getSyncInfo().getNetworkBestBlkNumber();
             if (diff <= 0) {
                 return "Finished";
             } else {

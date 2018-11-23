@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,7 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.mcf.core;
 
 import org.aion.mcf.types.AbstractTransaction;
@@ -31,8 +31,8 @@ import org.aion.mcf.types.AbstractTxReceipt;
  * @param <TXR>
  * @param <TX>
  */
-
-public abstract class AbstractTxInfo<TXR extends AbstractTxReceipt<?>, TX extends AbstractTransaction> {
+public abstract class AbstractTxInfo<
+        TXR extends AbstractTxReceipt<?>, TX extends AbstractTransaction> {
 
     protected TXR receipt;
 
@@ -42,19 +42,19 @@ public abstract class AbstractTxInfo<TXR extends AbstractTxReceipt<?>, TX extend
 
     protected int index;
 
-    abstract public void setTransaction(TX tx);
+    public abstract void setTransaction(TX tx);
 
-    abstract public byte[] getEncoded();
+    public abstract byte[] getEncoded();
 
-    abstract public TXR getReceipt();
+    public abstract TXR getReceipt();
 
-    abstract public byte[] getBlockHash();
+    public abstract byte[] getBlockHash();
 
-    abstract public byte[] getParentBlockHash();
+    public abstract byte[] getParentBlockHash();
 
-    abstract public void setParentBlockHash(byte[] hash);
+    public abstract void setParentBlockHash(byte[] hash);
 
-    abstract public int getIndex();
+    public abstract int getIndex();
 
-    abstract public boolean isPending();
+    public abstract boolean isPending();
 }

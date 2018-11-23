@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,11 +19,12 @@
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.mcf.config;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
 
+import com.google.common.base.Objects;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -34,8 +35,6 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-
-import com.google.common.base.Objects;
 import org.aion.base.util.Utils;
 import org.aion.db.impl.DBVendor;
 
@@ -47,6 +46,7 @@ public class CfgDb {
 
         public static final String BLOCK = "block";
         public static final String INDEX = "index";
+        public static final String PENDING_BLOCK = "pendingBlock";
 
         public static final String DETAILS = "details";
         public static final String STORAGE = "storage";
@@ -279,7 +279,7 @@ public class CfgDb {
     }
 
     public String getPath() {
-        return this.path;
+        return path;
     }
 
     public void setPath(String path) {
@@ -361,17 +361,30 @@ public class CfgDb {
         Map<String, Properties> propSet = new HashMap<>();
 
         if (expert) {
+            // set to true if any of the dbs require persistence
+            boolean isPersistent = false;
             for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
                 propSet.put(entry.getKey(), entry.getValue().asProperties());
+
+                // checks if any of the settings require persistence
+                if (!isPersistent) {
+                    DBVendor vendor =
+                            DBVendor.fromString(
+                                    entry.getValue().asProperties().getProperty(Props.DB_TYPE));
+                    isPersistent = vendor.getPersistence();
+                }
             }
 
             Properties props = propSet.get(Names.DEFAULT);
             props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
+            props.setProperty(Props.PERSISTENT, String.valueOf(isPersistent));
         } else {
             Properties props = new Properties();
             props.setProperty(Props.DB_TYPE, this.vendor);
             props.setProperty(Props.ENABLE_DB_COMPRESSION, String.valueOf(this.compression));
             props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
+            boolean isPersistent = DBVendor.fromString(this.vendor).getPersistence();
+            props.setProperty(Props.PERSISTENT, String.valueOf(isPersistent));
 
             props.setProperty(Props.ENABLE_DB_CACHE, "true");
             props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(128 * (int) Utils.MEGA_BYTE));
@@ -401,23 +414,35 @@ public class CfgDb {
         }
     }
 
+    public void setDatabasePath(String value) {
+        path = value;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgDb cfgDb = (CfgDb) o;
-        return compression == cfgDb.compression &&
-                check_integrity == cfgDb.check_integrity &&
-                expert == cfgDb.expert &&
-                Objects.equal(path, cfgDb.path) &&
-                Objects.equal(vendor, cfgDb.vendor) &&
-                Objects.equal(prune, cfgDb.prune) &&
-                prune_option == cfgDb.prune_option &&
-                Objects.equal(specificConfig, cfgDb.specificConfig);
+        return compression == cfgDb.compression
+                && check_integrity == cfgDb.check_integrity
+                && expert == cfgDb.expert
+                && Objects.equal(path, cfgDb.path)
+                && Objects.equal(vendor, cfgDb.vendor)
+                && Objects.equal(prune, cfgDb.prune)
+                && prune_option == cfgDb.prune_option
+                && Objects.equal(specificConfig, cfgDb.specificConfig);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(path, vendor, compression, check_integrity, prune, prune_option, expert, specificConfig);
+        return Objects.hashCode(
+                path,
+                vendor,
+                compression,
+                check_integrity,
+                prune,
+                prune_option,
+                expert,
+                specificConfig);
     }
 }

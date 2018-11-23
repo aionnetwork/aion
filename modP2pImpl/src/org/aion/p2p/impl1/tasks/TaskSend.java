@@ -40,26 +40,22 @@ import org.aion.p2p.P2pConstant;
 
 public class TaskSend implements Runnable {
 
-    private static final int TOTAL_LANE = Math
-        .min(Runtime.getRuntime().availableProcessors() << 1, 32);
-    private static final int THREAD_Q_LIMIT = 20000;
-
     private final IP2pMgr mgr;
     private final AtomicBoolean start;
     private final BlockingQueue<MsgOut> sendMsgQue;
     private final INodeMgr nodeMgr;
     private final Selector selector;
     private final int lane;
-
-    private static ThreadPoolExecutor tpe;
+    private final ThreadPoolExecutor tpe;
+    private static final int THREAD_Q_LIMIT = 20000;
 
     public TaskSend(
-        final IP2pMgr _mgr,
-        final int _lane,
-        final BlockingQueue<MsgOut> _sendMsgQue,
-        final AtomicBoolean _start,
-        final INodeMgr _nodeMgr,
-        final Selector _selector) {
+            final IP2pMgr _mgr,
+            final int _lane,
+            final BlockingQueue<MsgOut> _sendMsgQue,
+            final AtomicBoolean _start,
+            final INodeMgr _nodeMgr,
+            final Selector _selector) {
 
         this.mgr = _mgr;
         this.lane = _lane;
@@ -67,15 +63,14 @@ public class TaskSend implements Runnable {
         this.start = _start;
         this.nodeMgr = _nodeMgr;
         this.selector = _selector;
-
-        if (tpe == null) {
-            tpe = new ThreadPoolExecutor(TOTAL_LANE
-                , TOTAL_LANE
-                , 0
-                , TimeUnit.MILLISECONDS
-                , new LinkedBlockingQueue<>(THREAD_Q_LIMIT)
-                , Executors.defaultThreadFactory());
-        }
+        this.tpe =
+                new ThreadPoolExecutor(
+                        1,
+                        1,
+                        0,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(THREAD_Q_LIMIT),
+                        Executors.defaultThreadFactory());
     }
 
     @Override
@@ -117,17 +112,21 @@ public class TaskSend implements Runnable {
                     if (sk != null) {
                         Object attachment = sk.attachment();
                         if (attachment != null) {
-                            tpe.execute(new TaskWrite(
-                                node.getIdShort(),
-                                node.getChannel(),
-                                mo.getMsg(),
-                                (ChannelBuffer) attachment,
-                                this.mgr));
+                            tpe.execute(
+                                    new TaskWrite(
+                                            node.getIdShort(),
+                                            node.getChannel(),
+                                            mo.getMsg(),
+                                            (ChannelBuffer) attachment,
+                                            this.mgr));
                         }
                     }
                 } else {
                     if (p2pLOG.isDebugEnabled()) {
-                        p2pLOG.debug("msg-{} ->{} node-not-exist", mo.getDest().name(), mo.getDisplayId());
+                        p2pLOG.debug(
+                                "msg-{} ->{} node-not-exist",
+                                mo.getDest().name(),
+                                mo.getDisplayId());
                     }
                 }
             } catch (InterruptedException e) {
@@ -137,7 +136,7 @@ public class TaskSend implements Runnable {
                 p2pLOG.warn("task-send-reached thread queue limit", e);
             } catch (Exception e) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("TaskSend exception {}", e.getMessage());
+                    p2pLOG.debug("TaskSend exception.", e);
                 }
             }
         }
@@ -150,6 +149,6 @@ public class TaskSend implements Runnable {
         in ^= in >> (32 - 15);
         in ^= in >> (32 - 20);
         in ^= in >> (32 - 25);
-        return (in & 0b11111) * TOTAL_LANE / 32;
+        return (in & 0b11111);
     }
 }

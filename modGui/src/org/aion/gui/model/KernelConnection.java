@@ -1,7 +1,35 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.gui.model;
+
+import static org.aion.wallet.console.ConsoleManager.LogType.KERNEL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.aion.api.IAionAPI;
 import org.aion.api.impl.AionAPIImpl;
 import org.aion.api.type.ApiMsg;
@@ -11,16 +39,10 @@ import org.aion.mcf.config.CfgApi;
 import org.aion.wallet.console.ConsoleManager;
 import org.slf4j.Logger;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-import static org.aion.wallet.console.ConsoleManager.LogType.KERNEL;
-
 /**
- * Represents a connection to the kernel; provides interface to connect/disconnect to kernel API
- * and retricted access to make API calls (see {@link #getApi()} and {@link AbstractAionApiClient}
- * for details).
+ * Represents a connection to the kernel; provides interface to connect/disconnect to kernel API and
+ * retricted access to make API calls (see {@link #getApi()} and {@link AbstractAionApiClient} for
+ * details).
  */
 public class KernelConnection {
     private final ExecutorService backgroundExecutor;
@@ -36,28 +58,36 @@ public class KernelConnection {
 
     /**
      * Constructor
-     *  @param cfgApi Configuration
-     * @param eventPublisher Event bus to which notifications about connection state changes are sent
+     *
+     * @param cfgApi Configuration
+     * @param eventPublisher Event bus to which notifications about connection state changes are
+     *     sent
      */
-    public KernelConnection(CfgApi cfgApi,
-                            EventPublisher eventPublisher,
-                            ConsoleManager consoleManager) {
-        this(AionAPIImpl.inst(), cfgApi, eventPublisher, consoleManager, Executors.newSingleThreadExecutor());
+    public KernelConnection(
+            CfgApi cfgApi, EventPublisher eventPublisher, ConsoleManager consoleManager) {
+        this(
+                AionAPIImpl.inst(),
+                cfgApi,
+                eventPublisher,
+                consoleManager,
+                Executors.newSingleThreadExecutor());
     }
-
 
     /**
      * Constructor with injectable parameters for testing
-     *  @param aionApi
+     *
+     * @param aionApi
      * @param cfgApi
      * @param eventPublisher
      * @param executorService
      */
-    @VisibleForTesting KernelConnection(IAionAPI aionApi,
-                                        CfgApi cfgApi,
-                                        EventPublisher eventPublisher,
-                                        ConsoleManager consoleManager,
-                                        ExecutorService executorService) {
+    @VisibleForTesting
+    KernelConnection(
+            IAionAPI aionApi,
+            CfgApi cfgApi,
+            EventPublisher eventPublisher,
+            ConsoleManager consoleManager,
+            ExecutorService executorService) {
         this.api = aionApi;
         this.cfgApi = cfgApi;
         this.eventPublisher = eventPublisher;
@@ -70,23 +100,27 @@ public class KernelConnection {
         if (connectionFuture != null) {
             connectionFuture.cancel(true);
         }
-        connectionFuture = backgroundExecutor.submit(() -> {
-            synchronized (api) {
-                LOG.trace("About to connect to API");
-                ApiMsg msg =  api.connect(getConnectionString(), true);
-                if(msg.isError()) {
-                    // since api.connect called with reconnect = true, it should
-                    // block until msg is not error so this shouldn't happen, but
-                    // log if it does.
-                    LOG.error("Error connecting to Api.  ErrorCode = {}.  ErrString = {}",
-                            msg.getErrorCode(), msg.getErrString());
-                    consoleManager.addLog("Error connecting to kernel", KERNEL);
-                } else {
-                    consoleManager.addLog("Connected to kernel", KERNEL);
-                    eventPublisher.fireConnectionEstablished();
-                }
-            }
-        });
+        connectionFuture =
+                backgroundExecutor.submit(
+                        () -> {
+                            synchronized (api) {
+                                LOG.trace("About to connect to API");
+                                ApiMsg msg = api.connect(getConnectionString(), true);
+                                if (msg.isError()) {
+                                    // since api.connect called with reconnect = true, it should
+                                    // block until msg is not error so this shouldn't happen, but
+                                    // log if it does.
+                                    LOG.error(
+                                            "Error connecting to Api.  ErrorCode = {}.  ErrString = {}",
+                                            msg.getErrorCode(),
+                                            msg.getErrString());
+                                    consoleManager.addLog("Error connecting to kernel", KERNEL);
+                                } else {
+                                    consoleManager.addLog("Connected to kernel", KERNEL);
+                                    eventPublisher.fireConnectionEstablished();
+                                }
+                            }
+                        });
     }
 
     /** Disconnect from API. */
@@ -94,26 +128,25 @@ public class KernelConnection {
         if (!isConnected()) {
             return;
         }
-        if(connectionFuture != null) {
+        if (connectionFuture != null) {
             connectionFuture.cancel(true);
         }
-        if(disconnectionFuture != null) {
+        if (disconnectionFuture != null) {
             disconnectionFuture.cancel(true);
         }
-        disconnectionFuture = backgroundExecutor.submit(() -> {
-            synchronized (api) {
-                LOG.trace("About to destroy API");
-                api.destroyApi();
-            }
-            eventPublisher.fireDisconnected();
-            consoleManager.addLog("Disconnected from kernel", KERNEL);
-        });
-
+        disconnectionFuture =
+                backgroundExecutor.submit(
+                        () -> {
+                            synchronized (api) {
+                                LOG.trace("About to destroy API");
+                                api.destroyApi();
+                            }
+                            eventPublisher.fireDisconnected();
+                            consoleManager.addLog("Disconnected from kernel", KERNEL);
+                        });
     }
 
-    /**
-     * @return whether API is connected
-     */
+    /** @return whether API is connected */
     public boolean isConnected() {
         synchronized (api) {
             return api.isConnected();
@@ -136,10 +169,11 @@ public class KernelConnection {
 
     private String getConnectionString() {
         final String protocol = "tcp";
-        final String ip = Preconditions.checkNotNull(cfgApi.getZmq().getIp(),
-                "ip is not configured");
-        final String port = Preconditions.checkNotNull(String.valueOf(cfgApi.getZmq().getPort()),
-                "port is not configured");
+        final String ip =
+                Preconditions.checkNotNull(cfgApi.getZmq().getIp(), "ip is not configured");
+        final String port =
+                Preconditions.checkNotNull(
+                        String.valueOf(cfgApi.getZmq().getPort()), "port is not configured");
         return protocol + "://" + ip + ":" + port;
     }
 }

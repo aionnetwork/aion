@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,28 +17,27 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
+ * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
+
 package org.aion.db.impl;
 
-import org.aion.db.impl.leveldb.LevelDBConstants;
+import static org.aion.db.impl.DatabaseFactory.Props;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Properties;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static org.aion.db.impl.DatabaseFactory.Props;
-import static org.junit.Assert.assertTrue;
+import org.aion.db.impl.leveldb.LevelDBConstants;
 
 public class DatabaseTestUtils {
 
@@ -46,7 +45,8 @@ public class DatabaseTestUtils {
     static final File testDir = new File(System.getProperty("user.dir"), "tmp");
     private static final String dbPath = testDir.getAbsolutePath();
     private static final Set<String> sizeHeapCache = Set.of("0", "256");
-    private static final Set<DBVendor> vendors = Set.of(DBVendor.MOCKDB, DBVendor.H2, DBVendor.LEVELDB, DBVendor.ROCKSDB);
+    private static final Set<DBVendor> vendors =
+            Set.of(DBVendor.MOCKDB, DBVendor.H2, DBVendor.LEVELDB, DBVendor.ROCKSDB);
     private static final String enabled = String.valueOf(Boolean.TRUE);
     private static final String disabled = String.valueOf(Boolean.FALSE);
     private static final Set<String> options = Set.of(enabled, disabled);
@@ -76,9 +76,11 @@ public class DatabaseTestUtils {
         sharedProps.setProperty(Props.ENABLE_AUTO_COMMIT, enabled);
         sharedProps.setProperty(Props.MAX_HEAP_CACHE_SIZE, "0");
         sharedProps.setProperty(Props.ENABLE_HEAP_CACHE_STATS, disabled);
-        sharedProps.setProperty(Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
+        sharedProps.setProperty(
+                Props.MAX_FD_ALLOC, String.valueOf(LevelDBConstants.MAX_OPEN_FILES));
         sharedProps.setProperty(Props.BLOCK_SIZE, String.valueOf(LevelDBConstants.BLOCK_SIZE));
-        sharedProps.setProperty(Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
+        sharedProps.setProperty(
+                Props.WRITE_BUFFER_SIZE, String.valueOf(LevelDBConstants.WRITE_BUFFER_SIZE));
         sharedProps.setProperty(Props.DB_CACHE_SIZE, String.valueOf(LevelDBConstants.CACHE_SIZE));
 
         // all vendor options
@@ -130,9 +132,8 @@ public class DatabaseTestUtils {
         return parameters.toArray();
     }
 
-    private static void addDatabaseWithCacheAndCompression(DBVendor vendor,
-                                                           Properties sharedProps,
-                                                           List<Object> parameters) {
+    private static void addDatabaseWithCacheAndCompression(
+            DBVendor vendor, Properties sharedProps, List<Object> parameters) {
         if (vendor != DBVendor.MOCKDB) {
             // enable/disable db_cache
             for (String db_cache : options) {
@@ -158,30 +159,35 @@ public class DatabaseTestUtils {
     }
 
     /**
-     * From <a href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit Wiki on multithreaded code and concurrency</a>
+     * From <a
+     * href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit
+     * Wiki on multithreaded code and concurrency</a>
      */
-    public static void assertConcurrent(final String message,
-                                        final List<? extends Runnable> runnables,
-                                        final int maxTimeoutSeconds) throws InterruptedException {
+    public static void assertConcurrent(
+            final String message,
+            final List<? extends Runnable> runnables,
+            final int maxTimeoutSeconds)
+            throws InterruptedException {
         final int numThreads = runnables.size();
-        final List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
+        final List<Exception> exceptions = Collections.synchronizedList(new ArrayList<>());
         final ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
         try {
             final CountDownLatch allExecutorThreadsReady = new CountDownLatch(numThreads);
             final CountDownLatch afterInitBlocker = new CountDownLatch(1);
             final CountDownLatch allDone = new CountDownLatch(numThreads);
             for (final Runnable submittedTestRunnable : runnables) {
-                threadPool.submit(() -> {
-                    allExecutorThreadsReady.countDown();
-                    try {
-                        afterInitBlocker.await();
-                        submittedTestRunnable.run();
-                    } catch (final Throwable e) {
-                        exceptions.add(e);
-                    } finally {
-                        allDone.countDown();
-                    }
-                });
+                threadPool.submit(
+                        () -> {
+                            allExecutorThreadsReady.countDown();
+                            try {
+                                afterInitBlocker.await();
+                                submittedTestRunnable.run();
+                            } catch (final Exception e) {
+                                exceptions.add(e);
+                            } finally {
+                                allDone.countDown();
+                            }
+                        });
             }
             // wait until all threads are ready
             assertTrue(
@@ -189,8 +195,9 @@ public class DatabaseTestUtils {
                     allExecutorThreadsReady.await(runnables.size() * 10, TimeUnit.MILLISECONDS));
             // start all test runners
             afterInitBlocker.countDown();
-            assertTrue(message + " timeout! More than" + maxTimeoutSeconds + "seconds",
-                       allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
+            assertTrue(
+                    message + " timeout! More than" + maxTimeoutSeconds + "seconds",
+                    allDone.await(maxTimeoutSeconds, TimeUnit.SECONDS));
         } finally {
             threadPool.shutdownNow();
         }
@@ -199,6 +206,8 @@ public class DatabaseTestUtils {
                 e.printStackTrace();
             }
         }
-        assertTrue(message + "failed with " + exceptions.size() + " exception(s):" + exceptions, exceptions.isEmpty());
+        assertTrue(
+                message + "failed with " + exceptions.size() + " exception(s):" + exceptions,
+                exceptions.isEmpty());
     }
 }

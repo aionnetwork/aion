@@ -25,9 +25,7 @@ package org.aion.p2p;
 
 import java.nio.ByteBuffer;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class Header {
 
     public static final int LEN = 8;
@@ -51,37 +49,27 @@ public class Header {
         this.len = _len < 0 ? 0 : _len;
     }
 
-    /**
-     * @return short
-     */
+    /** @return short */
     public short getVer() {
         return this.ver;
     }
 
-    /**
-     * @return byte
-     */
+    /** @return byte */
     public byte getCtrl() {
         return this.ctrl;
     }
 
-    /**
-     * @return byte
-     */
+    /** @return byte */
     public byte getAction() {
         return this.action;
     }
 
-    /**
-     * @return int
-     */
+    /** @return int */
     public int getRoute() {
         return (ver << 16) | (ctrl << 8) | action;
     }
 
-    /**
-     * @return int
-     */
+    /** @return int */
     public int getLen() {
         return this.len;
     }
@@ -90,9 +78,7 @@ public class Header {
         this.len = _len;
     }
 
-    /**
-     * @return byte[]
-     */
+    /** @return byte[] */
     public byte[] encode() {
         return ByteBuffer.allocate(LEN).putInt(this.getRoute()).putInt(len).array();
     }

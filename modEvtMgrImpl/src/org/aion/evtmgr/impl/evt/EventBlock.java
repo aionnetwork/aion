@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,32 +19,30 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.evtmgr.impl.evt;
 
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.impl.abs.AbstractEvent;
 
-/**
- * @author jay
- *
- */
+/** @author jay */
 public class EventBlock extends AbstractEvent implements IEvent {
 
     private int callback = -1;
 
-    public final static int EVTTYPE = TYPE.BLOCK0.getValue();
+    public static final int EVTTYPE = TYPE.BLOCK0.getValue();
 
     public enum CALLBACK {
-        ONBLOCK0(0), ONTRACE0(1), ONBEST0(2);
+        ONBLOCK0(0),
+        ONTRACE0(1),
+        ONBEST0(2);
 
-        final static int MAX = 127;
-        final static int MIN = 0;
+        static final int MAX = 127;
+        static final int MIN = 0;
         private int value;
 
-        private final static CALLBACK[] intMapCallback = new CALLBACK[MAX + 1];
+        private static final CALLBACK[] intMapCallback = new CALLBACK[MAX + 1];
+
         static {
             for (CALLBACK type : CALLBACK.values()) {
                 intMapCallback[0xff & type.value] = type;
@@ -60,10 +58,8 @@ public class EventBlock extends AbstractEvent implements IEvent {
         }
 
         public static CALLBACK GETCALLBACK(final int _ctrlInt) {
-            if (_ctrlInt < MIN || _ctrlInt > MAX)
-                return null;
-            else
-                return intMapCallback[0xff & _ctrlInt];
+            if (_ctrlInt < MIN || _ctrlInt > MAX) return null;
+            else return intMapCallback[0xff & _ctrlInt];
         }
     }
 

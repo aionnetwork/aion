@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,8 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
+ */
 
 package org.aion.zero.impl.db;
 
@@ -44,9 +43,7 @@ import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * @author jay
- */
+/** @author jay */
 public class AionRepositoryDummy extends AionRepositoryImpl {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
@@ -72,7 +69,8 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         throw new UnsupportedOperationException();
     }
 
-    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
+    public void updateBatch(
+            HashMap<ByteArrayWrapper, AccountState> stateCache,
             HashMap<ByteArrayWrapper, IContractDetails<IDataWord>> detailsCache) {
 
         for (ByteArrayWrapper hash : stateCache.keySet()) {
@@ -94,21 +92,19 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
                     accountState.setCodeHash(h256(contractDetails.getCode()));
                     worldState.put(hash, accountState);
                     if (logger.isDebugEnabled()) {
-                        logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
-                                     Hex.toHexString(hash.getData()),
-                                     accountState.getNonce(),
-                                     accountState.getBalance(),
-                                     Hex.toHexString(contractDetails.getStorageHash()));
+                        logger.debug(
+                                "update: [{}],nonce: [{}] balance: [{}] \n [{}]",
+                                Hex.toHexString(hash.getData()),
+                                accountState.getNonce(),
+                                accountState.getBalance(),
+                                Hex.toHexString(contractDetails.getStorageHash()));
                     }
-
                 }
-
             }
         }
 
         stateCache.clear();
         detailsCache.clear();
-
     }
 
     public void flush() {
@@ -131,9 +127,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return new AionRepositoryCache(this);
     }
 
-    public void dumpState(IAionBlock block, long nrgUsed, int txNumber, byte[] txHash) {
-
-    }
+    public void dumpState(IAionBlock block, long nrgUsed, int txNumber, byte[] txHash) {}
 
     public Set<Address> getAccountsKeys() {
         return null;
@@ -278,7 +272,9 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         throw new UnsupportedOperationException();
     }
 
-    public void loadAccount(Address addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
+    public void loadAccount(
+            Address addr,
+            HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
             HashMap<ByteArrayWrapper, IContractDetails<IDataWord>> cacheDetails) {
 
         AccountState account = getAccountState(addr);

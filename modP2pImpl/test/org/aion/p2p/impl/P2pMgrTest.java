@@ -30,9 +30,7 @@ import java.util.UUID;
 import org.aion.p2p.impl1.P2pMgr;
 import org.junit.Test;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class P2pMgrTest {
 
     private String nodeId1 = UUID.randomUUID().toString();
@@ -52,37 +50,16 @@ public class P2pMgrTest {
         int port2 = 30304;
 
         // we want node 1 to connect to node 2
-        String[] nodes = new String[]{
-            "p2p://" + id2 + "@" + ip + ":" + port2
-        };
+        String[] nodes = new String[] {"p2p://" + id2 + "@" + ip + ":" + port2};
 
         // to guarantee they don't receive the same port
 
         System.out.println("connector on: " + TestUtilities.formatAddr(id1, ip, port1));
-        P2pMgr connector = new P2pMgr(0,
-            "",
-            id1,
-            ip,
-            port1,
-            nodes,
-            false,
-            128,
-            128,
-            false,
-            50);
+        P2pMgr connector = new P2pMgr(0, "", id1, ip, port1, nodes, false, 128, 128, false, 50);
 
         System.out.println("receiver on: " + TestUtilities.formatAddr(id2, ip, port2));
-        P2pMgr receiver = new P2pMgr(0,
-            "",
-            id2,
-            ip,
-            port2,
-            new String[0],
-            false,
-            128,
-            128,
-            false,
-            50);
+        P2pMgr receiver =
+                new P2pMgr(0, "", id2, ip, port2, new String[0], false, 128, 128, false, 50);
 
         return Map.entry(connector, receiver);
     }
@@ -90,68 +67,33 @@ public class P2pMgrTest {
     @Test
     public void testIgnoreSameNodeIdAsSelf() {
 
-        String[] nodes = new String[]{
-            "p2p://" + nodeId1 + "@" + ip2 + ":" + port2
-        };
+        String[] nodes = new String[] {"p2p://" + nodeId1 + "@" + ip2 + ":" + port2};
 
-        P2pMgr p2p = new P2pMgr(0,
-            "",
-            nodeId1,
-            ip1,
-            port1,
-            nodes,
-            false,
-            128,
-            128,
-            false,
+        P2pMgr p2p = new P2pMgr(0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, 50);
 
-            50);
         assertEquals(p2p.getTempNodesCount(), 0);
-
     }
 
     @Test
     public void testIgnoreSameIpAndPortAsSelf() {
 
-        String[] nodes = new String[]{
-            "p2p://" + nodeId2 + "@" + ip1 + ":" + port1
-        };
+        String[] nodes = new String[] {"p2p://" + nodeId2 + "@" + ip1 + ":" + port1};
 
-        P2pMgr p2p = new P2pMgr(0,
-            "",
-            nodeId1,
-            ip1,
-            port1,
-            nodes,
-            false,
-            128,
-            128,
-            false,
-            50);
+        P2pMgr p2p = new P2pMgr(0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, 50);
         assertEquals(0, p2p.getTempNodesCount());
-
     }
 
     @Test
     public void testTempNodes() {
 
-        String[] nodes = new String[]{
-            "p2p://" + nodeId2 + "@" + ip1 + ":" + port2,
-            "p2p://" + nodeId2 + "@" + ip2 + ":" + port1,
-            "p2p://" + nodeId2 + "@" + ip2 + ":" + port2,
-        };
+        String[] nodes =
+                new String[] {
+                    "p2p://" + nodeId2 + "@" + ip1 + ":" + port2,
+                    "p2p://" + nodeId2 + "@" + ip2 + ":" + port1,
+                    "p2p://" + nodeId2 + "@" + ip2 + ":" + port2,
+                };
 
-        P2pMgr p2p = new P2pMgr(0,
-            "",
-            nodeId1,
-            ip1,
-            port1,
-            nodes,
-            false,
-            128,
-            128,
-            false,
-            50);
+        P2pMgr p2p = new P2pMgr(0, "", nodeId1, ip1, port1, nodes, false, 128, 128, false, 50);
         assertEquals(p2p.getTempNodesCount(), 3);
     }
 }

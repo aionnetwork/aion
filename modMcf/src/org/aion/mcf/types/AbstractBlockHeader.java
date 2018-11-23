@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -17,25 +17,22 @@
  *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
- *
  * Contributors:
  *     Aion foundation.
-
- ******************************************************************************/
+ */
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-
 import org.aion.base.type.Address;
+import org.aion.log.AionLoggerFactory;
 import org.spongycastle.util.BigIntegers;
 
-/**
- * Abstract BlockHeader.
- */
+/** Abstract BlockHeader. */
 public abstract class AbstractBlockHeader {
 
     public static final int NONCE_LENGTH = 32;
     public static final int SOLUTIONSIZE = 1408;
+    private static final int MAX_DIFFICULTY_LENGTH = 16;
 
     protected byte version;
 
@@ -103,7 +100,7 @@ public abstract class AbstractBlockHeader {
     protected byte[] solution; // The equihash solution in compressed format
 
     /*
-    * A long value containing energy consumed within this block
+     * A long value containing energy consumed within this block
      */
     protected long energyConsumed;
 
@@ -120,8 +117,7 @@ public abstract class AbstractBlockHeader {
         this.solution = solution;
     }
 
-    public AbstractBlockHeader() {
-    }
+    public AbstractBlockHeader() {}
 
     public byte[] getParentHash() {
         return parentHash;
@@ -171,7 +167,19 @@ public abstract class AbstractBlockHeader {
         return difficulty;
     }
 
+    /**
+     * @implNote when the difficulty data field exceed the system limit(16 bytes), this method will
+     *     return BigInteger.ZERO for the letting the validate() in the AionDifficultyRule return false.
+     *     The difficulty in the PoW blockchain should be always a positive value.
+     * @see org.aion.zero.impl.valid.AionDifficultyRule.validate;
+     * @return the difficulty as the BigInteger format.
+     */
+    @SuppressWarnings("JavadocReference")
     public BigInteger getDifficultyBI() {
+        if (difficulty == null || difficulty.length > MAX_DIFFICULTY_LENGTH) {
+            AionLoggerFactory.getLogger("CONS").error("Invalid difficulty length!");
+            return BigInteger.ZERO;
+        }
         return new BigInteger(1, difficulty);
     }
 
@@ -220,7 +228,8 @@ public abstract class AbstractBlockHeader {
     }
 
     public byte[] getPowBoundary() {
-        return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
+        return BigIntegers.asUnsignedByteArray(
+                32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
     }
 
     public BigInteger getPowBoundaryBI() {

@@ -1,0 +1,9 @@
+Note: require JAVA_HOME setup before building the native lib. 
+
+1. This 3rd party porject sodium to genaration native sodium lib and jni lib.
+
+2. Execute ./dependencies.sh for installing dependencies of the running environment.
+
+3. Execute ./jni/installswig.sh for installing the tool for generate jni lib.
+
+4. Execute ant build. the native libraries will been copied to the native folder.

@@ -1,29 +1,30 @@
-/*******************************************************************************
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017, 2018 Aion foundation.
+ *     This file is part of the aion network project.
  *
- * 	This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- *******************************************************************************/
+ */
 package org.aion.mcf.core;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.aion.base.util.Functional;
 import org.aion.mcf.vm.types.DataWord;
 import org.apache.commons.collections4.MapUtils;
@@ -65,8 +66,7 @@ public class TxTouchedStorage {
 
     private Map<DataWord, Entry> entries = new HashMap<>();
 
-    public TxTouchedStorage() {
-    }
+    public TxTouchedStorage() {}
 
     public TxTouchedStorage(Collection<Entry> entries) {
         for (Entry entry : entries) {
@@ -87,18 +87,15 @@ public class TxTouchedStorage {
     }
 
     public void addReading(Map<DataWord, DataWord> entries) {
-        if (MapUtils.isEmpty(entries))
-            return;
+        if (MapUtils.isEmpty(entries)) return;
 
         for (Map.Entry<DataWord, DataWord> entry : entries.entrySet()) {
-            if (!this.entries.containsKey(entry.getKey()))
-                add(entry, false);
+            if (!this.entries.containsKey(entry.getKey())) add(entry, false);
         }
     }
 
     public void addWriting(Map<DataWord, DataWord> entries) {
-        if (MapUtils.isEmpty(entries))
-            return;
+        if (MapUtils.isEmpty(entries)) return;
 
         for (Map.Entry<DataWord, DataWord> entry : entries.entrySet()) {
             add(entry, true);
@@ -113,25 +110,26 @@ public class TxTouchedStorage {
             }
         }
         return result;
-
     }
 
     public Map<DataWord, DataWord> getChanged() {
-        return keyValues(new Functional.Function<Entry, Boolean>() {
-            @Override
-            public Boolean apply(Entry entry) {
-                return entry.isChanged();
-            }
-        });
+        return keyValues(
+                new Functional.Function<Entry, Boolean>() {
+                    @Override
+                    public Boolean apply(Entry entry) {
+                        return entry.isChanged();
+                    }
+                });
     }
 
     public Map<DataWord, DataWord> getReadOnly() {
-        return keyValues(new Functional.Function<Entry, Boolean>() {
-            @Override
-            public Boolean apply(Entry entry) {
-                return !entry.isChanged();
-            }
-        });
+        return keyValues(
+                new Functional.Function<Entry, Boolean>() {
+                    @Override
+                    public Boolean apply(Entry entry) {
+                        return !entry.isChanged();
+                    }
+                });
     }
 
     public Map<DataWord, DataWord> getAll() {

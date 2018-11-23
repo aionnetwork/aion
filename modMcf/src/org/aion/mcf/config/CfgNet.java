@@ -1,45 +1,52 @@
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
- * This file is part of the aion network project.
+ *     This file is part of the aion network project.
  *
- * The aion network project is free software: you can redistribute it
- * and/or modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation, either version 3 of
- * the License, or any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- * The aion network project is distributed in the hope that it will
- * be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with the aion network project source files.
- * If not, see <https://www.gnu.org/licenses/>.
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ *     The aion network project leverages useful source code from other
+ *     open source projects. We greatly appreciate the effort that was
+ *     invested in these projects and we thank the individual contributors
+ *     for their work. For provenance information and contributors
+ *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
  *
  * Contributors to the aion source files in decreasing order of code volume:
- *
- * Aion foundation.
- *
+ *     Aion foundation.
+ *     <ether.camp> team through the ethereumJ library.
+ *     Ether.Camp Inc. (US) team through Ethereum Harmony.
+ *     John Tromp through the Equihash solver.
+ *     Samuel Neves through the BLAKE2 implementation.
+ *     Zcash project team.
+ *     Bitcoinj team.
  */
 
 package org.aion.mcf.config;
 
 import com.google.common.base.Objects;
-
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 
-/**
- * @author chris
- */
+/** @author chris */
 public final class CfgNet {
 
     private static final boolean SINGLE = false;
@@ -61,38 +68,38 @@ public final class CfgNet {
         while (sr.hasNext()) {
             int eventType = sr.next();
             switch (eventType) {
-            case XMLStreamReader.START_ELEMENT:
-                String elementName = sr.getLocalName().toLowerCase();
-                switch (elementName) {
-                    case "id":
-                        int _id = Integer.parseInt(Cfg.readValue(sr));
-                        this.id = _id < 0 ? 0 : _id;
-                        break;
-                    case "nodes":
-                        List<String> nodes = new ArrayList<>();
-                        loopNode:
-                        while (sr.hasNext()) {
-                            int eventType1 = sr.next();
-                            switch (eventType1) {
-                            case XMLStreamReader.START_ELEMENT:
-                                nodes.add(Cfg.readValue(sr));
-                                break;
-                            case XMLStreamReader.END_ELEMENT:
-                                this.nodes = nodes.toArray(new String[nodes.size()]);
-                                break loopNode;
+                case XMLStreamReader.START_ELEMENT:
+                    String elementName = sr.getLocalName().toLowerCase();
+                    switch (elementName) {
+                        case "id":
+                            int _id = Integer.parseInt(Cfg.readValue(sr));
+                            this.id = _id < 0 ? 0 : _id;
+                            break;
+                        case "nodes":
+                            List<String> nodes = new ArrayList<>();
+                            loopNode:
+                            while (sr.hasNext()) {
+                                int eventType1 = sr.next();
+                                switch (eventType1) {
+                                    case XMLStreamReader.START_ELEMENT:
+                                        nodes.add(Cfg.readValue(sr));
+                                        break;
+                                    case XMLStreamReader.END_ELEMENT:
+                                        this.nodes = nodes.toArray(new String[nodes.size()]);
+                                        break loopNode;
+                                }
                             }
-                        }
-                        break;
-                    case "p2p":
-                        this.p2p.fromXML(sr);
-                        break;
-                    default:
-                        Cfg.skipElement(sr);
-                        break;
-                }
-                break;
-            case XMLStreamReader.END_ELEMENT:
-                break loop;
+                            break;
+                        case "p2p":
+                            this.p2p.fromXML(sr);
+                            break;
+                        default:
+                            Cfg.skipElement(sr);
+                            break;
+                    }
+                    break;
+                case XMLStreamReader.END_ELEMENT:
+                    break loop;
             }
         }
     }
@@ -148,21 +155,17 @@ public final class CfgNet {
     }
 
     public void setNodes(String[] _nodes) {
-        if (SINGLE)
-            this.nodes = new String[0];
-        else
-            this.nodes = _nodes;
+        if (SINGLE) this.nodes = new String[0];
+        else this.nodes = _nodes;
     }
 
-    public int getId(){
+    public int getId() {
         return this.id;
     }
 
     public String[] getNodes() {
-        if (SINGLE)
-            return new String[0];
-        else
-            return this.nodes;
+        if (SINGLE) return new String[0];
+        else return this.nodes;
     }
 
     public CfgNetP2p getP2p() {
@@ -174,9 +177,9 @@ public final class CfgNet {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CfgNet cfgNet = (CfgNet) o;
-        return id == cfgNet.id &&
-                Objects.equal(nodes, cfgNet.nodes) &&
-                Objects.equal(p2p, cfgNet.p2p);
+        return id == cfgNet.id
+                && Objects.equal(nodes, cfgNet.nodes)
+                && Objects.equal(p2p, cfgNet.p2p);
     }
 
     @Override

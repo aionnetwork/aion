@@ -1,0 +1,361 @@
+plugins {
+    id "de.undercouch.download" version "3.4.3"
+}
+
+ant.echo('Java version: ' + JavaVersion.current());
+
+def dirBuildFile =  "./build/main"
+def dirBuildNative = "./build/main/native"
+def dirNative = "./native"
+def dirWorkspace = "./"
+def dirPack = "./pack"
+def dirLibFile = "lib"
+def dirModFile ="./mod"
+def javaHome = System.getProperty('java.home')
+def vmVersion = "0.3.2"
+def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
+
+allprojects { 
+
+    apply plugin: 'java'
+    apply plugin: 'idea'
+
+    targetCompatibility = 10
+    sourceCompatibility = 10
+
+    repositories {
+        jcenter()
+
+        flatDir {
+            dirs './lib'
+        }
+    }
+}
+
+// used only for 3rd_build
+ant.importBuild('build.xml') { antTargetName -> 'ant-' + antTargetName }
+
+task compileNative(type:Exec) {
+    // seems kinda hacky, but need big reorganization to fix
+    dependsOn 'modCrypto:compileNative'
+    dependsOn 'modAionImpl:compileJava'
+
+
+    doFirst {
+        mkdir "${dirBuildFile}"
+        mkdir "${dirNative}/linux/equihash"
+        mkdir "${dirBuildNative}/linux/equihash"
+        ant.copy(includeemptydirs: "false", todir: "./build/native") {
+            fileset(dir: "./modAionImpl/src/org/aion/equihash/native")
+        }
+        ant.copy(includeemptydirs: "false", todir: "./build/native") {
+            fileset(dir: "./modAionImpl/build/native")
+        }
+    }
+
+
+    commandLine "g++", 
+        "-fPIC", 
+        "-shared", 
+        "-I${javaHome}/include", 
+        "-I${javaHome}/include/linux", 
+        "-I${dirBuildNative}",
+        "-I${dirNative}/linux/sodium", 
+        "-mtune=generic", 
+        "-m64", 
+        "-std=c++11", 
+        "-Wall", 
+        "-Wno-deprecated-declarations", 
+        "-D_POSIX_C_SOURCE=200112L", 
+        "-O3", 
+        "./build/native/equi.h", 
+        "./build/native/equi_miner.h", 
+        "./build/native/equiMiner.cpp", 
+        "-L${dirWorkspace}/native/linux/sodium", 
+        "-lsodium", 
+        "-o", 
+        "${dirNative}/linux/equihash/equiMiner.so", 
+        "-Wl,-rpath,${dirNative}/linux/sodium"
+    def stdout = new ByteArrayOutputStream()
+    ext.output = {
+        return stdout.toString()
+    }
+}
+
+subprojects {
+    sourceSets { 
+        main {
+            java.srcDirs = ['src']
+        }
+        test {
+            java.srcDirs = ['test']
+        }
+        integTest { 
+            java { 
+                srcDirs = ['integration-test']
+                compileClasspath += main.output + test.output
+                runtimeClasspath += main.output + test.output
+            }
+        }
+    }
+
+    task integTest(type: Test) { 
+        testClassesDirs = sourceSets.integTest.output.classesDirs
+        classpath = sourceSets.integTest.runtimeClasspath
+    }
+
+    configurations { 
+        integTestCompile.extendsFrom testCompile
+        integTestRuntime.extendsFrom testRuntime
+    }
+ 
+    task copyNativeLibsForModuleTests(type: Copy) { 
+        dependsOn rootProject.compileNative
+        from rootProject.file('native') into file('native')
+    }
+
+    task deleteNativeLibs(type: Delete) {
+        delete 'native'
+    }
+
+    afterEvaluate {
+
+ant.echo('moduleName: ' + moduleName);
+
+        if (moduleName.equals("aion.gui")) { 
+        // Override java plug-in behaviour to make JDK9+ module logic work
+        // From: https://guides.gradle.org/building-java-9-modules/#step_2_produce_java_9_modules_for_all_subprojects
+        compileJava {
+            inputs.property("moduleName", moduleName)
+            doFirst {
+                options.compilerArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'javafx.controls'
+                ]
+                classpath = files()
+            }
+        }
+        } else {
+        compileJava {
+            inputs.property("moduleName", moduleName)
+            doFirst {
+                options.compilerArgs = [
+                    '--module-path', classpath.asPath,
+                ]
+                classpath = files()
+            }
+        }
+        }
+
+/*
+        test { 
+            outputs.upToDateWhen { false } 
+        }
+  */      
+        // Need to comment this out for now, modules-info.java doesn't have 'require' declarations
+        // used by the test code.  The ant build.xml, similarly, uses module-path for build, but 
+        // classpath for building the tests (at least in modRlp).  Need to sort out how to properly set the module-path
+        // for the tests before using the stuff below.
+        /*
+        compileTestJava {
+            inputs.property("moduleName", moduleName)
+            doFirst {
+                options.compilerArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'junit',
+                    '--add-reads', "$moduleName=junit",
+                    '--patch-module', "$moduleName=" + files(sourceSets.test.java.srcDirs).asPath,
+                ]
+                classpath = files()
+            }
+        }
+
+        test {
+            inputs.property("moduleName", moduleName)
+            doFirst {
+                jvmArgs = [
+                    '--module-path', classpath.asPath,
+                    '--add-modules', 'ALL-MODULE-PATH',
+                    '--add-reads', "$moduleName=junit",
+                    '--patch-module', "$moduleName=" + files(sourceSets.test.java.outputDir).asPath,
+                ]
+                classpath = files()
+            }
+        }
+        */
+    }
+}
+
+project(':modAionImpl') { build.finalizedBy(compileNative) }
+
+task downloadFastVmGit(type:Download) { 
+    overwrite false // TODO This seems to work only when this task is directly invoked
+    onlyIfModified true
+    src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/fastvm_v${vmVersion}.tar.gz"
+    dest buildDir
+}
+
+task downloadSolidityGit(type:Download) {
+    overwrite false // TODO This seems to work only when this task is directly invoked
+    onlyIfModified true
+    src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
+    dest buildDir
+}
+
+task buildVmDependencies(type: Exec) { 
+    commandLine 'sh', 'aion_fastvm/scripts/release.sh', vmVersion, '1'
+}
+
+task getVmDependencies { 
+    if(project.hasProperty('vmFromSource')) { 
+        getVmDependencies.dependsOn buildVmDependencies
+    } else {
+        // 'overwrite' property of Download task doesn't seem to work when
+        // there's multiple files in the task, so splitting them into two
+        dependsOn downloadFastVmGit
+        dependsOn downloadSolidityGit
+    }
+}
+
+task extractVmDepsGit(dependsOn: getVmDependencies, type: Copy) { 
+    from tarTree("build/fastvm_v${vmVersion}.tar.gz") 
+    from tarTree("build/solidity_v${vmVersion}.tar.gz") 
+    into "${dirNative}/linux"
+    doLast {
+        ant.move file:  "${dirNative}/linux/fastvm_v${vmVersion}",
+                 tofile: "${dirNative}/linux/fastvm"
+        ant.move file:  "${dirNative}/linux/solidity_v${vmVersion}",
+                 tofile: "${dirNative}/linux/solidity"
+    }
+}
+
+task cleanJars { 
+    delete 'jars'
+}
+
+task collectDependentJars(type: Copy) { 
+    dependsOn cleanJars
+    into dirRuntimeJars
+    from { subprojects.configurations.runtime } 
+    from { subprojects.jar}
+    from { file("lib/libminiupnpc.so") } // called by a jar that expects this to be in same dir
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+build { 
+    dependsOn("ant-3rd_build")
+    dependsOn("extractVmDepsGit")
+    dependsOn("collectDependentJars")
+}
+
+task prePack(type:Exec)  {
+    dependsOn ':aion_api:cleanPack' 
+    dependsOn ':aion_api:build'
+    if (project.hasProperty('noGui')) {
+        environment "noGui", "true"
+    }
+    commandLine 'bash', 'script/prepack.sh' 
+}
+task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
+
+/** Replaces `ant pack_build` */
+task pack(type: Tar) {
+    dependsOn build
+    dependsOn prePack
+    dependsOn collectDependentJars 
+    dependsOn compileNative 
+    finalizedBy(postPack)
+
+    archiveName = 'aion.tar.bz2'
+    destinationDir = file(dirPack)
+    compression = Compression.BZIP2
+
+    into('/aion/jars') { 
+        from dirRuntimeJars 
+        include '*.jar', '*.so'
+    }
+    into('/aion/') { 
+        from dirWorkspace
+        include 'aion.sh'
+        if (!project.hasProperty('noGui')) {
+            include 'aion_gui.sh'
+        }
+    }
+    into('/aion/native') {
+        from dirNative
+        include '**'
+    }
+    into('/aion/config') {
+        from "${dirPack}/config"
+        include '**'
+    }
+    into('/aion/rt') {
+        from "${dirPack}/rt"
+        include '**'
+    }
+    into('/aion/console') {
+        from "${dirPack}/web3"
+        include '**'
+    }
+
+    into('/aion/script') {
+        from "${dirPack}/script"
+        include 'generateSslCert.sh', 'nohup_wrapper.sh'
+    }
+}
+
+task packDocker(type: Exec) { 
+    dependsOn pack
+    commandLine 'sh', "${dirWorkspace}/script/pack_docker.sh"
+}
+
+task packDevDocker(type: Exec) { 
+    commandLine 'sh', "${dirWorkspace}/script/pack_dev_docker.sh"
+}
+
+clean { 
+    dependsOn "ant-3rd_clean"
+    dependsOn ':aion_api:clean' 
+    dependsOn 'cleanJars'
+    delete dirPack
+    delete file('report')
+}
+
+
+/** Replaces `ant ci_build` */
+task ciBuild {
+    dependsOn build
+    def ciModules = ['modAionBase', 
+        'modCrypto', 
+        'modP2pImpl', 
+        'modTxPoolImpl', 
+        'modRlp', 
+        'modDbImpl', 
+        'aion_fastvm', 
+        'modAionImpl', 
+        'modPrecompiled', 
+        'modApiServer'] 
+
+    configure(subprojects.findAll { it.name in ciModules }) {
+        it.test { testResultsDirName = "${rootProject.projectDir}/report/${project.name}" }
+        dependsOn it.test
+    } 
+}
+
+idea { 
+    project {
+        jdkName = '11.0'
+    }
+}
+
+task fixIdea { 
+    // when importing project in IDEA, some of the library paths are not where they need to be
+    // these are set up via dependencies on build and test, but IDEA doesn't actually use them
+    // this task puts those files where IDEA expects them by running build and test
+
+    dependsOn build
+    configure(subprojects.findAll { it.name != 'aion_api' }) {
+        dependsOn test
+    }
+}
+

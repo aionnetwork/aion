@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,13 +19,11 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
+ */
 package org.aion.mcf.blockchain;
 
 import java.util.Collection;
 import java.util.List;
-
 import org.aion.base.type.IBlock;
 import org.aion.mcf.types.AbstractBlockHeaderWrapper;
 
@@ -37,9 +35,7 @@ import org.aion.mcf.types.AbstractBlockHeaderWrapper;
  */
 public interface ISyncQueue<BLK extends IBlock<?, ?>, BHW extends AbstractBlockHeaderWrapper<?>> {
 
-    /**
-     * Wanted headers
-     */
+    /** Wanted headers */
     interface HeadersRequest {
 
         long getStart();
@@ -49,9 +45,7 @@ public interface ISyncQueue<BLK extends IBlock<?, ?>, BHW extends AbstractBlockH
         boolean isReverse();
     }
 
-    /**
-     * Wanted blocks
-     */
+    /** Wanted blocks */
     interface BlocksRequest<BW extends AbstractBlockHeaderWrapper<?>> {
 
         List<BlocksRequest> split(int count);
@@ -59,33 +53,26 @@ public interface ISyncQueue<BLK extends IBlock<?, ?>, BHW extends AbstractBlockH
         List<BW> getBlockHeaders();
     }
 
-    /**
-     * Returns wanted headers request
-     */
+    /** Returns wanted headers request */
     HeadersRequest requestHeaders();
 
     /**
-     * Adds received headers. Headers need to verified. The list can be in any
-     * order and shouldn't correspond to prior headers request
+     * Adds received headers. Headers need to verified. The list can be in any order and shouldn't
+     * correspond to prior headers request
      */
     void addHeaders(Collection<BHW> headers);
 
-    /**
-     * Returns wanted blocks hashes
-     */
+    /** Returns wanted blocks hashes */
     BlocksRequest<BHW> requestBlocks(int maxSize);
 
     /**
-     * Adds new received blocks to the queue The blocks need to be verified but
-     * can be passed in any order and need not correspond to prior returned
-     * block request
+     * Adds new received blocks to the queue The blocks need to be verified but can be passed in any
+     * order and need not correspond to prior returned block request
      *
      * @return blocks ready to be imported in the valid import order.
      */
     List<BLK> addBlocks(Collection<BLK> blocks);
 
-    /**
-     * Returns approximate header count waiting for their blocks
-     */
+    /** Returns approximate header count waiting for their blocks */
     int getHeadersCount();
 }

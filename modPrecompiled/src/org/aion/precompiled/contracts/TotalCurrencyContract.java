@@ -22,6 +22,7 @@
  */
 package org.aion.precompiled.contracts;
 
+import java.math.BigInteger;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.BIUtil;
@@ -35,14 +36,10 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 
-import java.math.BigInteger;
-
-/**
- * A pre-compiled contract for retrieving and updating the total amount of currency.
- */
+/** A pre-compiled contract for retrieving and updating the total amount of currency. */
 public class TotalCurrencyContract extends StatefulPrecompiledContract {
     // set to a default cost for now, this will need to be adjusted
-    private final static long COST = 21000L;
+    private static final long COST = 21000L;
 
     private Address address;
     private Address ownerAddress;
@@ -54,7 +51,10 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      * @param address
      * @param ownerAddress
      */
-    public TotalCurrencyContract(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track, Address address, Address ownerAddress) {
+    public TotalCurrencyContract(
+            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
+            Address address,
+            Address ownerAddress) {
         super(track);
         this.address = address;
         this.ownerAddress = ownerAddress;
@@ -62,42 +62,44 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
 
     /**
      * Define the input data format as the following:
+     *
      * <p>
-     * <pre>
-     *   {@code
-     *   [<1b - chainId> | <1b - signum> | <16b - uint128 amount> | <96b signature>]
-     *   total: 1 + 1 + 16 + 96 = 114
-     *   }
-     * </pre>
+     *
+     * <pre>{@code
+     * [<1b - chainId> | <1b - signum> | <16b - uint128 amount> | <96b signature>]
+     * total: 1 + 1 + 16 + 96 = 114
+     *
+     * }</pre>
+     *
+     * <p>Where the chainId is intended to be our current chainId, in the case of the first AION
+     * network this should be set to 1. Note the presence of signum byte (bit) to check for addition
+     * or subtraction
+     *
+     * <p>Note: as a consequence of us storing the pk and signature as part of the call we can send
+     * a transaction to this contract from any address. As long as we hold the private key preset in
+     * this contract.
+     *
+     * <p>Within the contract, the storage is modelled as the following:
+     *
+     * <pre>{@code
+     * [1, total]
+     * [2, total]
+     * [3, total]
+     * ...
+     *
+     * }</pre>
+     *
+     * <p>Therefore retrieval should be relatively simple. There is also a retrieval (query)
+     * function provided, given that the input length is 4. In such a case, the input value is
+     * treated as a integer indicating the chainId, and thus the corresponding offset in the storage
+     * row to query the value from.
+     *
      * <p>
-     * Where the chainId is intended to be our current chainId, in the case of
-     * the first AION network this should be set to 1. Note the presence of signum
-     * byte (bit) to check for addition or subtraction
-     * <p>
-     * Note: as a consequence of us storing the pk and signature as part of the call
-     * we can send a transaction to this contract from any address. As long as we
-     * hold the private key preset in this contract.
-     * <p>
-     * Within the contract, the storage is modelled as the following:
-     * <pre>
-     *   {@code
-     *   [1, total]
-     *   [2, total]
-     *   [3, total]
-     *   ...
-     *   }
-     * </pre>
-     * <p>
-     * Therefore retrieval should be relatively simple. There is also a retrieval (query)
-     * function provided, given that the input length is 4. In such a case, the input value
-     * is treated as a integer indicating the chainId, and thus the corresponding offset
-     * in the storage row to query the value from.
-     * <p>
-     * <pre>
-     *     {@code
-     *     [<1b - chainId>]
-     *     }
-     * </pre>
+     *
+     * <pre>{@code
+     * [<1b - chainId>]
+     *
+     * }</pre>
      */
     @Override
     public ExecutionResult execute(byte[] input, long nrg) {
@@ -126,7 +128,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
 
         if (input.length < 114) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // process input data
@@ -147,7 +149,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         // verify signature is correct
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
         if (sig == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         byte[] payload = new byte[18];
@@ -155,21 +157,22 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         boolean b = ECKeyEd25519.verify(payload, sig.getSignature(), sig.getPubkey(null));
 
         if (!b) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // verify public key matches owner
         if (!this.ownerAddress.equals(Address.wrap(sig.getAddress()))) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // payload processing
         IDataWord totalCurr = this.track.getStorageValue(this.address, chainId);
-        BigInteger totalCurrBI = totalCurr == null ? BigInteger.ZERO : BIUtil.toBI(totalCurr.getData());
+        BigInteger totalCurrBI =
+                totalCurr == null ? BigInteger.ZERO : BIUtil.toBI(totalCurr.getData());
         BigInteger value = BIUtil.toBI(amount);
 
         if (signum != 0x0 && signum != 0x1) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         BigInteger finalValue;
@@ -179,7 +182,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         } else {
             // subtraction
             if (value.compareTo(totalCurrBI) > 0) {
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.FAILURE, 0);
             }
 
             finalValue = totalCurrBI.subtract(value);

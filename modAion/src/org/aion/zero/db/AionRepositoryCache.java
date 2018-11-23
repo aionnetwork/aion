@@ -20,23 +20,22 @@
  * Contributors:
  *     Aion foundation.
  */
+
 package org.aion.zero.db;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.AbstractRepositoryCache;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.IBlockStoreBase;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase<?, ?>> {
 
@@ -52,10 +51,9 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     /**
-     * @implNote To maintain intended functionality this method does not call
-     *         the parent's {@code flush()} method. The changes are propagated
-     *         to the parent through calling the parent's
-     *         {@code updateBatch()} method.
+     * @implNote To maintain intended functionality this method does not call the parent's {@code
+     *     flush()} method. The changes are propagated to the parent through calling the parent's
+     *     {@code updateBatch()} method.
      */
     @Override
     public void flush() {
@@ -81,14 +79,16 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                     ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctd;
                     contractDetailsCache.commit();
 
-                    if (contractDetailsCache.origContract == null && repository.hasContractDetails(entry.getKey())) {
+                    if (contractDetailsCache.origContract == null
+                            && repository.hasContractDetails(entry.getKey())) {
                         // in forked block the contract account might not exist thus
                         // it is created without
                         // origin, but on the main chain details can contain data
                         // which should be merged
                         // into a single storage trie so both branches with
                         // different stateRoots are valid
-                        contractDetailsCache.origContract = repository.getContractDetails(entry.getKey());
+                        contractDetailsCache.origContract =
+                                repository.getContractDetails(entry.getKey());
                         contractDetailsCache.commit();
                     }
                 }
@@ -103,7 +103,9 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     @Override
-    public void updateBatch(Map<Address, AccountState> accounts,final Map<Address, IContractDetails<IDataWord>> details) {
+    public void updateBatch(
+            Map<Address, AccountState> accounts,
+            final Map<Address, IContractDetails<IDataWord>> details) {
         fullyWriteLock();
         try {
 
@@ -112,14 +114,22 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
             }
 
             for (Map.Entry<Address, IContractDetails<IDataWord>> ctdEntry : details.entrySet()) {
-                ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctdEntry.getValue();
+                ContractDetailsCacheImpl contractDetailsCache =
+                        (ContractDetailsCacheImpl) ctdEntry.getValue();
                 if (contractDetailsCache.origContract != null
-                        && !(contractDetailsCache.origContract instanceof AionContractDetailsImpl)) {
-                    // Copying the parent because contract details changes were pushed to the parent in previous method (flush)
-                    cachedDetails.put(ctdEntry.getKey(), ContractDetailsCacheImpl.copy((ContractDetailsCacheImpl) contractDetailsCache.origContract));
+                        && !(contractDetailsCache.origContract
+                                instanceof AionContractDetailsImpl)) {
+                    // Copying the parent because contract details changes were pushed to the parent
+                    // in previous method (flush)
+                    cachedDetails.put(
+                            ctdEntry.getKey(),
+                            ContractDetailsCacheImpl.copy(
+                                    (ContractDetailsCacheImpl) contractDetailsCache.origContract));
                 } else {
-                    // Either no parent or we have Repo's AionContractDetailsImpl, which should be flushed through RepoImpl
-                    cachedDetails.put(ctdEntry.getKey(), ContractDetailsCacheImpl.copy(contractDetailsCache));
+                    // Either no parent or we have Repo's AionContractDetailsImpl, which should be
+                    // flushed through RepoImpl
+                    cachedDetails.put(
+                            ctdEntry.getKey(), ContractDetailsCacheImpl.copy(contractDetailsCache));
                 }
             }
         } finally {
@@ -149,7 +159,6 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     public byte[] getRoot() {
         throw new UnsupportedOperationException(
                 "The tracking cache cannot return the root. \'Get root\' should be called on the tracked repository.");
-
     }
 
     @Override

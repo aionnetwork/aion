@@ -32,9 +32,7 @@ import org.aion.p2p.Header;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Msg;
 
-/**
- * @author chris
- */
+/** @author chris */
 public class TaskWrite implements Runnable {
 
     private final String nodeShortId;
@@ -44,11 +42,11 @@ public class TaskWrite implements Runnable {
     private final IP2pMgr p2pMgr;
 
     TaskWrite(
-        final String _nodeShortId,
-        final SocketChannel _sc,
-        final Msg _msg,
-        final ChannelBuffer _cb,
-        final IP2pMgr _p2pMgr) {
+            final String _nodeShortId,
+            final SocketChannel _sc,
+            final Msg _msg,
+            final ChannelBuffer _cb,
+            final IP2pMgr _p2pMgr) {
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;
         this.msg = _msg;
@@ -78,9 +76,13 @@ public class TaskWrite implements Runnable {
             h.setLen(bodyLen);
             byte[] headerBytes = h.encode();
 
-
             if (p2pLOG.isTraceEnabled()) {
-                p2pLOG.trace("write id:{} {}-{}-{}", nodeShortId, h.getVer(), h.getCtrl(), h.getAction());
+                p2pLOG.trace(
+                        "write id:{} {}-{}-{}",
+                        nodeShortId,
+                        h.getVer(),
+                        h.getCtrl(),
+                        h.getAction());
             }
 
             ByteBuffer buf = ByteBuffer.allocate(headerBytes.length + bodyLen);
@@ -90,23 +92,50 @@ public class TaskWrite implements Runnable {
             }
             buf.flip();
 
+            long t1 = System.nanoTime(), t2;
+            int wrote = 0;
             try {
-                while (buf.hasRemaining()) {
-                    // @Attention:  very important sleep , otherwise when NIO write buffer full,
-                    // without sleep will hangup this thread.
-                    Thread.sleep(0, 1);
-                    sc.write(buf);
+                do {
+                    int result = sc.write(buf);
+                    wrote += result;
+
+                    if (result == 0) {
+                        // @Attention:  very important sleep , otherwise when NIO write buffer full,
+                        // without sleep will hangup this thread.
+                        Thread.sleep(0, 1);
+                    }
+
+                    t2 = System.nanoTime() - t1;
+                } while (buf.hasRemaining() && (t2 < 100_000_000));
+
+                if (p2pLOG.isTraceEnabled() && (t2 > 10_000_000)) {
+                    p2pLOG.trace(
+                            "msg write: id {} size {} time {} ms length {}",
+                            nodeShortId,
+                            wrote,
+                            t2,
+                            buf.array().length);
                 }
+
             } catch (ClosedChannelException ex1) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("closed-channel-exception node={}", this.nodeShortId);
+                    p2pLOG.debug("closed-channel-exception node=" + this.nodeShortId, ex1);
                 }
 
                 channelBuffer.setClosed();
             } catch (IOException ex2) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("write-msg-io-exception node={} err={}", this.nodeShortId,
-                        ex2.getMessage());
+                    p2pLOG.debug(
+                            "write-msg-io-exception node="
+                                    + this.nodeShortId
+                                    + " headerBytes="
+                                    + String.valueOf(headerBytes.length)
+                                    + " bodyLen="
+                                    + String.valueOf(bodyLen)
+                                    + " time="
+                                    + String.valueOf(System.nanoTime()- t1)
+                                    + "ns",
+                            ex2);
                 }
 
                 if (ex2.getMessage().equals("Broken pipe")) {
@@ -114,7 +143,7 @@ public class TaskWrite implements Runnable {
                 }
             }
         } catch (Exception e) {
-            p2pLOG.error("TaskWrite exception {}", e.getMessage());
+            p2pLOG.error("TaskWrite exception.", e);
         } finally {
             channelBuffer.lock.unlock();
         }

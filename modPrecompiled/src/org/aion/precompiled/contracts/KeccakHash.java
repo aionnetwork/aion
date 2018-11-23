@@ -22,32 +22,25 @@
  */
 package org.aion.precompiled.contracts;
 
-import org.aion.base.db.*;
-import org.aion.base.vm.IDataWord;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
-
 import static org.aion.crypto.HashUtil.keccak256;
 
-public class KeccakHash extends StatefulPrecompiledContract{
-    private final static long DEFAULT_COST = 100L;
+import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.ExecutionResult;
+import org.aion.vm.IPrecompiledContract;
 
-    public KeccakHash(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
-        super(track);
-    }
+public class KeccakHash implements IPrecompiledContract {
+    private static final long DEFAULT_COST = 100L;
+
+    public KeccakHash() {}
 
     /**
      * Returns the hash of given input
      *
-     * input is defined as
-     *      [nb input byte array] n > 0
+     * <p>input is defined as [nb input byte array] n > 0
      *
-     * the returned hash is in ContractExecutionResult.getOutput
+     * <p>the returned hash is in ContractExecutionResult.getOutput
      */
-    public ExecutionResult execute(byte[] input, long nrg){
+    public ExecutionResult execute(byte[] input, long nrg) {
         // check input nrg
         long additionalNRG = Math.round(Math.sqrt(input.length));
         if (nrg < DEFAULT_COST + additionalNRG)
@@ -55,7 +48,8 @@ public class KeccakHash extends StatefulPrecompiledContract{
 
         // check length
         if (input.length < 1)
-            return  new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg - DEFAULT_COST, "input too short".getBytes());
+            return new ExecutionResult(
+                    ResultCode.FAILURE, nrg - DEFAULT_COST, "input too short".getBytes());
 
         byte[] hash = keccak256(input);
         return new ExecutionResult(ResultCode.SUCCESS, nrg - DEFAULT_COST - additionalNRG, hash);

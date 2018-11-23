@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,18 +31,15 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.crypto;
+
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertArrayEquals;
 
 import org.aion.base.util.ByteUtil;
 import org.junit.AfterClass;
 import org.junit.Test;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
-import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertArrayEquals;
 
 public class ECKeyTest {
 
@@ -80,7 +77,6 @@ public class ECKeyTest {
 
         ECKey key = ECKeyFac.inst().create();
         assertThat(key.getPubKey()).isNotEqualTo(key.getAddress());
-
 
         byte[] address = key.getAddress();
         // check header for address

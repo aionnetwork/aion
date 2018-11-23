@@ -3,18 +3,18 @@
  *
  *     This file is part of the aion network project.
  *
- *     The aion network project is free software: you can redistribute it 
- *     and/or modify it under the terms of the GNU General Public License 
- *     as published by the Free Software Foundation, either version 3 of 
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
  *     the License, or any later version.
  *
- *     The aion network project is distributed in the hope that it will 
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied 
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.  
+ *     along with the aion network project source files.
  *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
@@ -22,6 +22,9 @@
  */
 package org.aion.wallet.ui.components.partials;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -42,25 +45,18 @@ import org.aion.wallet.account.AccountManager;
 import org.aion.wallet.console.ConsoleManager;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-
 public class UnlockMasterAccountDialog implements Initializable {
 
     private final AccountManager accountManager;
     private final ConsoleManager consoleManager;
 
-    @FXML
-    private PasswordField passwordField;
-    @FXML
-    private Label validationError;
+    @FXML private PasswordField passwordField;
+    @FXML private Label validationError;
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.GUI.name());
     private final Popup popup = new Popup();
 
-    public UnlockMasterAccountDialog(AccountManager accountManager,
-                                     ConsoleManager consoleManager) {
+    public UnlockMasterAccountDialog(AccountManager accountManager, ConsoleManager consoleManager) {
         this.accountManager = accountManager;
         this.consoleManager = consoleManager;
     }
@@ -76,10 +72,13 @@ public class UnlockMasterAccountDialog implements Initializable {
 
         Pane addAccountDialog;
         try {
-            FXMLLoader loader = new FXMLLoader((getClass().getResource("UnlockMasterAccountDialog.fxml")));
-            loader.setControllerFactory(new ControllerFactory()
-                    .withAccountManager(accountManager)
-                    .withConsoleManager(consoleManager)/* TODO a specialization only has what we need */);
+            FXMLLoader loader =
+                    new FXMLLoader((getClass().getResource("UnlockMasterAccountDialog.fxml")));
+            loader.setControllerFactory(
+                    new ControllerFactory()
+                            .withAccountManager(accountManager)
+                            .withConsoleManager(
+                                    consoleManager) /* TODO a specialization only has what we need */);
             addAccountDialog = loader.load();
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
@@ -89,8 +88,14 @@ public class UnlockMasterAccountDialog implements Initializable {
         Node eventSource = (Node) mouseEvent.getSource();
         final double windowX = eventSource.getScene().getWindow().getX();
         final double windowY = eventSource.getScene().getWindow().getY();
-        popup.setX(windowX + eventSource.getScene().getWidth() / 2 - addAccountDialog.getPrefWidth() / 2);
-        popup.setY(windowY + eventSource.getScene().getHeight() / 2 - addAccountDialog.getPrefHeight() / 2);
+        popup.setX(
+                windowX
+                        + eventSource.getScene().getWidth() / 2
+                        - addAccountDialog.getPrefWidth() / 2);
+        popup.setY(
+                windowY
+                        + eventSource.getScene().getHeight() / 2
+                        - addAccountDialog.getPrefHeight() / 2);
         popup.getContent().addAll(addAccountDialog);
         popup.show(eventSource.getScene().getWindow());
     }
@@ -113,7 +118,10 @@ public class UnlockMasterAccountDialog implements Initializable {
             consoleManager.addLog("Master account unlocked", ConsoleManager.LogType.ACCOUNT);
             close(mouseEvent);
         } catch (Exception e) {
-            consoleManager.addLog("Could not unlock master account", ConsoleManager.LogType.ACCOUNT, ConsoleManager.LogLevel.WARNING);
+            consoleManager.addLog(
+                    "Could not unlock master account",
+                    ConsoleManager.LogType.ACCOUNT,
+                    ConsoleManager.LogLevel.WARNING);
             showInvalidFieldsError(e.getMessage());
         }
     }

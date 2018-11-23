@@ -1,23 +1,25 @@
-/*******************************************************************************
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
  *
- * Copyright (c) 2017 Aion foundation.
+ *     This file is part of the aion network project.
  *
- *     This program is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
  *
- *     This program is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
  *
  *     You should have received a copy of the GNU General Public License
- *     along with this program.  If not, see <https://www.gnu.org/licenses/>
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
  *
  * Contributors:
  *     Aion foundation.
- ******************************************************************************/
+ */
 package org.aion.vm;
 
 import java.nio.ByteBuffer;
@@ -31,8 +33,11 @@ import org.aion.mcf.vm.types.DataWord;
  * @author yulong
  */
 public class ExecutionContext {
-    private static final int ENCODE_BASE_LEN = (Address.ADDRESS_LEN * 4) + (DataWord.BYTES * 3) +
-        (Long.BYTES * 4) + (Integer.BYTES * 4);
+    private static final int ENCODE_BASE_LEN =
+            (Address.ADDRESS_LEN * 4)
+                    + (DataWord.BYTES * 3)
+                    + (Long.BYTES * 4)
+                    + (Integer.BYTES * 4);
     public static int CALL = 0;
     public static int DELEGATECALL = 1;
     public static int CALLCODE = 2;
@@ -40,9 +45,10 @@ public class ExecutionContext {
 
     private ExecutionHelper helper;
     private Address origin;
+    private byte[] originalTxHash;
 
-    public  Address address;
-     public Address sender;
+    public Address address;
+    public Address sender;
     private Address blockCoinbase;
     private DataWord nrgPrice;
     private DataWord callValue;
@@ -77,12 +83,25 @@ public class ExecutionContext {
      * @param blockNrgLimit The block energy limit.
      * @param blockDifficulty The block difficulty.
      * @throws IllegalArgumentException if any numeric quantities are negative or txHash is not
-     * length 32.
+     *     length 32.
      */
-    public ExecutionContext(byte[] txHash, Address destination, Address origin, Address sender,
-        DataWord nrgPrice, long nrgLimit, DataWord callValue, byte[] callData, int depth, int kind,
-        int flags, Address blockCoinbase, long blockNumber, long blockTimestamp, long blockNrgLimit,
-        DataWord blockDifficulty) {
+    public ExecutionContext(
+            byte[] txHash,
+            Address destination,
+            Address origin,
+            Address sender,
+            DataWord nrgPrice,
+            long nrgLimit,
+            DataWord callValue,
+            byte[] callData,
+            int depth,
+            int kind,
+            int flags,
+            Address blockCoinbase,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            DataWord blockDifficulty) {
 
         super();
 
@@ -102,17 +121,19 @@ public class ExecutionContext {
         this.blockNrgLimit = blockNrgLimit;
         this.blockDifficulty = blockDifficulty;
         this.txHash = txHash;
+        this.originalTxHash = txHash;
+
         this.helper = new ExecutionHelper();
     }
 
     /**
      * Returns a big-endian binary encoding of this ExecutionContext in the following format:
      *
-     * |32b - address|32b - origin|32b - caller|16b - nrgPrice|8b - nrgLimit|16b - callValue|
-     * 4b - callDataLength|?b - callData|4b - depth|4b - kind|4b - flags|32b - blockCoinbase|
-     * 8b - blockNumber|8b - blockTimestamp|8b - blockNrgLimit|16b - blockDifficulty|
+     * <p>|32b - address|32b - origin|32b - caller|16b - nrgPrice|8b - nrgLimit|16b - callValue| 4b
+     * - callDataLength|?b - callData|4b - depth|4b - kind|4b - flags|32b - blockCoinbase| 8b -
+     * blockNumber|8b - blockTimestamp|8b - blockNrgLimit|16b - blockDifficulty|
      *
-     * where callDataLength is the length of callData.
+     * <p>where callDataLength is the length of callData.
      *
      * @return a binary encoding of this ExecutionContext.
      */
@@ -138,121 +159,87 @@ public class ExecutionContext {
         return buffer.array();
     }
 
-    /**
-     * @return the transaction hash.
-     */
+    /** @return the transaction hash. */
     public byte[] transactionHash() {
         return txHash;
     }
 
-    /**
-     * @return the transaction address.
-     */
+    /** @return the transaction address. */
     public Address address() {
         return address;
     }
 
-    /**
-     * @return the origination address, which is the sender of original transaction.
-     */
+    /** @return the origination address, which is the sender of original transaction. */
     public Address origin() {
         return origin;
     }
 
-    /**
-     * @return the transaction caller.
-     */
+    /** @return the transaction caller. */
     public Address sender() {
         return sender;
     }
 
-    /**
-     * @return the nrg price in current environment.
-     */
+    /** @return the nrg price in current environment. */
     public DataWord nrgPrice() {
         return nrgPrice;
     }
 
-    /**
-     * @return the nrg limit in current environment.
-     */
+    /** @return the nrg limit in current environment. */
     public long nrgLimit() {
         return nrgLimit;
     }
 
-    /**
-     * @return the deposited value by instruction/trannsaction.
-     */
+    /** @return the deposited value by instruction/trannsaction. */
     public DataWord callValue() {
         return callValue;
     }
 
-    /**
-     * @return the call data.
-     */
+    /** @return the call data. */
     public byte[] callData() {
         return callData;
     }
 
-    /**
-     * @return the execution stack depth.
-     */
+    /** @return the execution stack depth. */
     public int depth() {
         return depth;
     }
 
-    /**
-     * @return the transaction kind.
-     */
+    /** @return the transaction kind. */
     public int kind() {
         return kind;
     }
 
-    /**
-     * @return the transaction flags.
-     */
+    /** @return the transaction flags. */
     public int flags() {
         return flags;
     }
 
-    /**
-     * @return the block's beneficiary.
-     */
+    /** @return the block's beneficiary. */
     public Address blockCoinbase() {
         return blockCoinbase;
     }
 
-    /**
-     * @return the block number.
-     */
+    /** @return the block number. */
     public long blockNumber() {
         return blockNumber;
     }
 
-    /**
-     * @return the block timestamp.
-     */
+    /** @return the block timestamp. */
     public long blockTimestamp() {
         return blockTimestamp;
     }
 
-    /**
-     * @return the block energy limit.
-     */
+    /** @return the block energy limit. */
     public long blockNrgLimit() {
         return blockNrgLimit;
     }
 
-    /**
-     * @return the block difficulty.
-     */
+    /** @return the block difficulty. */
     public DataWord blockDifficulty() {
         return blockDifficulty;
     }
 
-    /**
-     * @return the transaction helper.
-     */
+    /** @return the transaction helper. */
     public ExecutionHelper helper() {
         return helper;
     }
@@ -284,4 +271,8 @@ public class ExecutionContext {
         return ENCODE_BASE_LEN + callData.length;
     }
 
+    /** @return the original transaction hash. */
+    public byte[] getOriginalTxHash() {
+        return originalTxHash;
+    }
 }

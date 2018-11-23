@@ -1,3 +1,26 @@
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
 package org.aion.precompiled.TRS;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -13,7 +36,7 @@ import java.util.Set;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.precompiled.DummyRepo;
+import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
@@ -23,9 +46,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Tests the TRSqueryContract API.
- */
+/** Tests the TRSqueryContract API. */
 public class TRSqueryContractTest extends TRShelpers {
     private static final int MAX_OP = 5;
 
@@ -49,7 +70,7 @@ public class TRSqueryContractTest extends TRShelpers {
 
     // <----------------------------------MISCELLANEOUS TESTS-------------------------------------->
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testCreateNullCaller() {
         newTRSqueryContract(null);
     }
@@ -58,7 +79,7 @@ public class TRSqueryContractTest extends TRShelpers {
     public void testCreateNullInput() {
         TRSqueryContract trs = newTRSqueryContract(getNewExistentAccount(BigInteger.ZERO));
         ExecutionResult res = trs.execute(null, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -66,7 +87,7 @@ public class TRSqueryContractTest extends TRShelpers {
     public void testCreateEmptyInput() {
         TRSqueryContract trs = newTRSqueryContract(getNewExistentAccount(BigInteger.ZERO));
         ExecutionResult res = trs.execute(ByteUtil.EMPTY_BYTE_ARRAY, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -104,7 +125,7 @@ public class TRSqueryContractTest extends TRShelpers {
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
             if ((i < 0) || (i > MAX_OP)) {
                 input[0] = (byte) i;
-                assertEquals(ResultCode.INTERNAL_ERROR, trs.execute(input, COST).getResultCode());
+                assertEquals(ResultCode.FAILURE, trs.execute(input, COST).getResultCode());
             }
         }
     }
@@ -116,7 +137,7 @@ public class TRSqueryContractTest extends TRShelpers {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = new byte[32];
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -125,7 +146,7 @@ public class TRSqueryContractTest extends TRShelpers {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = new byte[34];
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -152,8 +173,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testIsLiveOnUnlockedContract() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getIsLiveInput(contract);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -164,8 +184,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testIsLiveOnLockedContract() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createAndLockTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createAndLockTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getIsLiveInput(contract);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -176,8 +195,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testIsLiveOnLiveContract() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createLockedAndLiveTRScontract(acct, false, true,
-            1, BigInteger.ZERO, 0);
+        Address contract = createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getIsLiveInput(contract);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -193,7 +211,7 @@ public class TRSqueryContractTest extends TRShelpers {
         byte[] input = new byte[32];
         input[0] = 0x1;
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -203,7 +221,7 @@ public class TRSqueryContractTest extends TRShelpers {
         byte[] input = new byte[34];
         input[0] = 0x1;
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -230,8 +248,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testIsLockedOnUnlockedContract() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getIsLockedInput(contract);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -242,8 +259,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testIsLockedOnLockedContract() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createAndLockTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createAndLockTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getIsLockedInput(contract);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -254,8 +270,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testIsLockedOnLiveContract() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createLockedAndLiveTRScontract(acct, false, true,
-            1, BigInteger.ZERO, 0);
+        Address contract = createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getIsLockedInput(contract);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -271,7 +286,7 @@ public class TRSqueryContractTest extends TRShelpers {
         byte[] input = new byte[32];
         input[0] = 0x2;
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -281,7 +296,7 @@ public class TRSqueryContractTest extends TRShelpers {
         byte[] input = new byte[34];
         input[0] = 0x2;
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -308,8 +323,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testIsDepoEnabledWhenDisabled() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, false, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
         byte[] input = getIsDirDepoEnabledInput(contract);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -320,8 +334,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testIsDepoEnabledWhenEnabled() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getIsDirDepoEnabledInput(contract);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -337,7 +350,7 @@ public class TRSqueryContractTest extends TRShelpers {
         byte[] input = new byte[32];
         input[0] = 0x3;
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -347,7 +360,7 @@ public class TRSqueryContractTest extends TRShelpers {
         byte[] input = new byte[34];
         input[0] = 0x3;
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -356,14 +369,13 @@ public class TRSqueryContractTest extends TRShelpers {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getPeriodInput(acct);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testPeriodBeforeIsLive() {
-        Address contract = createAndLockTRScontract(AION, true, true, 4,
-            BigInteger.ZERO, 0);
+        Address contract = createAndLockTRScontract(AION, true, true, 4, BigInteger.ZERO, 0);
         AbstractTRS trs = newTRSqueryContract(AION);
         mockBlockchain(getContractTimestamp(trs, contract) + 2);
 
@@ -375,8 +387,7 @@ public class TRSqueryContractTest extends TRShelpers {
 
     @Test
     public void testPeriodOnEmptyBlockchain() {
-        Address contract = createLockedAndLiveTRScontract(AION, true, true,
-            4, BigInteger.ZERO, 0);
+        Address contract = createLockedAndLiveTRScontract(AION, true, true, 4, BigInteger.ZERO, 0);
         mockBlockchain(0);
 
         // We are using a timestamp of zero and therefore we are in period 0 at this point.
@@ -389,8 +400,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testPeriodContractDeployedAfterBestBlock() {
         mockBlockchain(0);
-        Address contract = createLockedAndLiveTRScontract(AION, true, true,
-            5, BigInteger.ZERO, 0);
+        Address contract = createLockedAndLiveTRScontract(AION, true, true, 5, BigInteger.ZERO, 0);
 
         // In period zero.
         byte[] input = getPeriodInput(contract);
@@ -402,8 +412,7 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testPeriodWhenPeriodsIsOne() {
         mockBlockchain(0);
-        Address contract = createLockedAndLiveTRScontract(AION, true, true,
-            1, BigInteger.ZERO, 0);
+        Address contract = createLockedAndLiveTRScontract(AION, true, true, 1, BigInteger.ZERO, 0);
 
         // Period is zero.
         byte[] input = getPeriodInput(contract);
@@ -432,8 +441,8 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testPeriodAtDifferentMoments() {
         int numPeriods = 4;
-        Address contract = createLockedAndLiveTRScontract(AION, true, true,
-            numPeriods, BigInteger.ZERO, 0);
+        Address contract =
+                createLockedAndLiveTRScontract(AION, true, true, numPeriods, BigInteger.ZERO, 0);
         AbstractTRS trs = newTRSqueryContract(AION);
         mockBlockchain(getContractTimestamp(trs, contract));
 
@@ -468,7 +477,7 @@ public class TRSqueryContractTest extends TRShelpers {
         byte[] input = new byte[32];
         input[0] = 0x4;
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -478,7 +487,7 @@ public class TRSqueryContractTest extends TRShelpers {
         byte[] input = new byte[34];
         input[0] = 0x4;
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -487,18 +496,17 @@ public class TRSqueryContractTest extends TRShelpers {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getPeriodAtInput(acct, 0);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
     @Test
     public void testPeriodAtNegativeBlockNumber() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createLockedAndLiveTRScontract(acct, false, true,
-            1, BigInteger.ZERO, 0);
+        Address contract = createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getPeriodAtInput(contract, -1);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -507,13 +515,12 @@ public class TRSqueryContractTest extends TRShelpers {
         int numBlocks = 1;
 
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createLockedAndLiveTRScontract(acct, false, true,
-            1, BigInteger.ZERO, 0);
+        Address contract = createLockedAndLiveTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         mockBlockchain(0);
 
         byte[] input = getPeriodAtInput(contract, numBlocks + 1);
         ExecutionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -521,8 +528,7 @@ public class TRSqueryContractTest extends TRShelpers {
     public void testPeriodAtBeforeIsLive() {
         int numBlocks = 5;
 
-        Address contract = createAndLockTRScontract(AION, true, true, 4,
-            BigInteger.ZERO, 0);
+        Address contract = createAndLockTRScontract(AION, true, true, 4, BigInteger.ZERO, 0);
         AbstractTRS trs = newTRSqueryContract(AION);
         mockBlockchain(getContractTimestamp(trs, contract) + 5);
 
@@ -534,8 +540,7 @@ public class TRSqueryContractTest extends TRShelpers {
 
     @Test
     public void testPeriodAtAfterIsLive() {
-        Address contract = createLockedAndLiveTRScontract(AION, true, true,
-            4, BigInteger.ZERO, 0);
+        Address contract = createLockedAndLiveTRScontract(AION, true, true, 4, BigInteger.ZERO, 0);
         AbstractTRS trs = newTRSqueryContract(AION);
         long blockNum = 1;
         long timestamp = getContractTimestamp(trs, contract) + 1;
@@ -565,8 +570,8 @@ public class TRSqueryContractTest extends TRShelpers {
         int periods = 5;
         int numBlocks = 10;
 
-        Address contract = createLockedAndLiveTRScontract(AION, true, true,
-            periods, BigInteger.ZERO, 0);
+        Address contract =
+                createLockedAndLiveTRScontract(AION, true, true, periods, BigInteger.ZERO, 0);
         AbstractTRS trs = newTRSqueryContract(AION);
         long blockNum = periods;
         long timestamp = getContractTimestamp(trs, contract) + 5;
@@ -595,8 +600,7 @@ public class TRSqueryContractTest extends TRShelpers {
     public void testPeriodAtWhenPeriodsIsOne() {
         int numBlocks = 5;
 
-        Address contract = createLockedAndLiveTRScontract(AION, true, true,
-            1, BigInteger.ZERO, 0);
+        Address contract = createLockedAndLiveTRScontract(AION, true, true, 1, BigInteger.ZERO, 0);
         AbstractTRS trs = newTRSqueryContract(AION);
         long blockNum = 1;
         long timestamp = getContractTimestamp(trs, contract) + 1;
@@ -624,38 +628,43 @@ public class TRSqueryContractTest extends TRShelpers {
     @Test
     public void testAvailableForInputTooShort() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 7,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 7, BigInteger.ZERO, 0);
         byte[] input = getAvailableForWithdrawalAtInput(contract, 0);
         byte[] shortInput = Arrays.copyOf(input, input.length - 1);
-        assertEquals(ResultCode.INTERNAL_ERROR, newTRSqueryContract(acct).execute(shortInput, COST).getResultCode());
+        assertEquals(
+                ResultCode.FAILURE,
+                newTRSqueryContract(acct).execute(shortInput, COST).getResultCode());
     }
 
     @Test
     public void testAvailableForInputTooLong() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 7,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 7, BigInteger.ZERO, 0);
         byte[] input = getAvailableForWithdrawalAtInput(contract, 0);
         byte[] longInput = new byte[input.length + 1];
         System.arraycopy(input, 0, longInput, 0, input.length);
-        assertEquals(ResultCode.INTERNAL_ERROR, newTRSqueryContract(acct).execute(longInput, COST).getResultCode());
+        assertEquals(
+                ResultCode.FAILURE,
+                newTRSqueryContract(acct).execute(longInput, COST).getResultCode());
     }
 
     @Test
     public void testAvailableForContractNonExistent() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getAvailableForWithdrawalAtInput(acct, 0);
-        assertEquals(ResultCode.INTERNAL_ERROR, newTRSqueryContract(acct).execute(input, COST).getResultCode());
+        assertEquals(
+                ResultCode.FAILURE,
+                newTRSqueryContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
     public void testAvailableForContractNotYetLive() {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 7,
-            BigInteger.ZERO, 0);
+        Address contract = createTRScontract(acct, false, true, 7, BigInteger.ZERO, 0);
         byte[] input = getAvailableForWithdrawalAtInput(contract, 0);
-        assertEquals(ResultCode.INTERNAL_ERROR, newTRSqueryContract(acct).execute(input, COST).getResultCode());
+        assertEquals(
+                ResultCode.FAILURE,
+                newTRSqueryContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -669,10 +678,12 @@ public class TRSqueryContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract) + (periods / 5);
-        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+        checkAvailableForResults(
+                trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
 
         timestamp = trs.getTimestamp(contract) + periods - 12;
-        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+        checkAvailableForResults(
+                trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
     }
 
     @Test
@@ -686,10 +697,12 @@ public class TRSqueryContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract) + (periods / 3);
-        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+        checkAvailableForResults(
+                trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
 
         timestamp = trs.getTimestamp(contract) + periods - 6;
-        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+        checkAvailableForResults(
+                trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
     }
 
     @Test
@@ -728,7 +741,8 @@ public class TRSqueryContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract);
-        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+        checkAvailableForResults(
+                trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
     }
 
     @Test
@@ -767,13 +781,15 @@ public class TRSqueryContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(AION);
         long timestamp = trs.getTimestamp(contract) + (periods / 7);
-        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+        checkAvailableForResults(
+                trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
 
         timestamp = trs.getTimestamp(contract) + (periods / 3);
-        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+        checkAvailableForResults(
+                trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
 
         timestamp = trs.getTimestamp(contract) + periods - 1;
-        checkAvailableForResults(trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
+        checkAvailableForResults(
+                trs, contract, timestamp, numDepositors, deposits, bonus, percent, periods);
     }
-
 }

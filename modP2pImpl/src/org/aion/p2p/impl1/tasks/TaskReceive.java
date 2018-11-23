@@ -36,9 +36,10 @@ public class TaskReceive implements Runnable {
     private final BlockingQueue<MsgIn> receiveMsgQue;
     private final Map<Integer, List<Handler>> handlers;
 
-    public TaskReceive(final AtomicBoolean _start,
-        final BlockingQueue<MsgIn> _receiveMsgQue,
-        final Map<Integer, List<Handler>> _handlers) {
+    public TaskReceive(
+            final AtomicBoolean _start,
+            final BlockingQueue<MsgIn> _receiveMsgQue,
+            final Map<Integer, List<Handler>> _handlers) {
         this.start = _start;
         this.receiveMsgQue = _receiveMsgQue;
         this.handlers = _handlers;
@@ -63,16 +64,16 @@ public class TaskReceive implements Runnable {
                         hlr.receive(mi.getNodeId(), mi.getDisplayId(), mi.getMsg());
                     } catch (Exception e) {
                         if (p2pLOG.isDebugEnabled()) {
-                            p2pLOG.debug("TaskReceive exception {}", e.getMessage());
+                            p2pLOG.debug("TaskReceive exception.", e);
                         }
                     }
                 }
             } catch (InterruptedException e) {
-                p2pLOG.error("TaskReceive interrupted {}", e.getMessage());
+                p2pLOG.error("TaskReceive interrupted.", e);
                 return;
             } catch (Exception e) {
                 if (p2pLOG.isDebugEnabled()) {
-                    p2pLOG.debug("TaskReceive exception {}", e.getMessage());
+                    p2pLOG.debug("TaskReceive exception.", e);
                 }
             }
         }

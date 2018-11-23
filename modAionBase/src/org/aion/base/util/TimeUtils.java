@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,8 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
+
 package org.aion.base.util;
 
 public class TimeUtils {
@@ -39,19 +40,17 @@ public class TimeUtils {
     /**
      * Converts minutes to millis
      *
-     * @param minutes
-     *            time in minutes
+     * @param minutes time in minutes
      * @return corresponding millis value
      */
-//    public static long minutesToMillis(long minutes) {
-//        return minutes * 60 * 1000;
-//    }
+    //    public static long minutesToMillis(long minutes) {
+    //        return minutes * 60 * 1000;
+    //    }
 
     /**
      * Converts seconds to millis
      *
-     * @param seconds
-     *            time in seconds
+     * @param seconds time in seconds
      * @return corresponding millis value
      */
     public static long secondsToMillis(long seconds) {
@@ -61,34 +60,31 @@ public class TimeUtils {
     /**
      * Converts millis to minutes
      *
-     * @param millis
-     *            time in millis
+     * @param millis time in millis
      * @return time in minutes
      */
-//    public static long millisToMinutes(long millis) {
-//        return Math.round(millis / 60.0 / 1000.0);
-//    }
+    //    public static long millisToMinutes(long millis) {
+    //        return Math.round(millis / 60.0 / 1000.0);
+    //    }
 
     /**
      * Converts millis to seconds
      *
-     * @param millis
-     *            time in millis
+     * @param millis time in millis
      * @return time in seconds
      */
-//    public static long millisToSeconds(long millis) {
-//        return Math.round(millis / 1000.0);
-//    }
+    //    public static long millisToSeconds(long millis) {
+    //        return Math.round(millis / 1000.0);
+    //    }
 
     /**
      * Returns timestamp in the future after some millis passed from now
      *
-     * @param millis
-     *            millis count
+     * @param millis millis count
      * @return future timestamp
      */
-//    public static long timeAfterMillis(long millis) {
-//        return System.currentTimeMillis() + millis;
-//    }
+    //    public static long timeAfterMillis(long millis) {
+    //        return System.currentTimeMillis() + millis;
+    //    }
 
 }

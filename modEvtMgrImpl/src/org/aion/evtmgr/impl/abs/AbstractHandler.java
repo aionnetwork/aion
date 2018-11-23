@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,9 +19,7 @@
  *
  * Contributors:
  *     Aion foundation.
- *     
- ******************************************************************************/
-
+ */
 package org.aion.evtmgr.impl.abs;
 
 import java.util.HashSet;
@@ -38,10 +36,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
-/**
- * @author jay
- *
- */
+/** @author jay */
 public abstract class AbstractHandler {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.EVTMGR.toString());
@@ -53,35 +48,42 @@ public abstract class AbstractHandler {
     private boolean interrupted = false;
     private int handlerType;
 
-    protected Thread dispatcher = new Thread(() -> {
-        try {
-            while (!interrupt.get()) {
-                IEvent e = queue.take();
-                if (e.getEventType() != EventDummy.getTypeStatic() && events.contains(e)) {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("dispatcher e[{}]", e.getEventType());
-                    }
+    protected Thread dispatcher =
+            new Thread(
+                    () -> {
+                        try {
+                            while (!interrupt.get()) {
+                                IEvent e = queue.take();
+                                if (e.getEventType() != EventDummy.getTypeStatic()
+                                        && events.contains(e)) {
+                                    if (LOG.isTraceEnabled()) {
+                                        LOG.trace("dispatcher e[{}]", e.getEventType());
+                                    }
 
-                    try {
-                        dispatch(e);
-                    } catch (Throwable ex) {
-                        LOG.error("Failed to dispatch event: eventType = {}, callbackType = {}, {}", e.getEventType(), e.getCallbackType(), ex.toString());
-                    }
-                }
-            }
+                                    try {
+                                        dispatch(e);
+                                    } catch (Exception ex) {
+                                        LOG.error(
+                                                "Failed to dispatch event: eventType = {}, callbackType = {}, {}",
+                                                e.getEventType(),
+                                                e.getCallbackType(),
+                                                ex.toString());
+                                    }
+                                }
+                            }
 
-            if (LOG.isInfoEnabled()) {
-                LOG.info("dispatcher interrupted!");
-            }
+                            if (LOG.isInfoEnabled()) {
+                                LOG.info("dispatcher interrupted!");
+                            }
 
-            queue.clear();
-            interrupted = true;
-        } catch (InterruptedException e) {
-            LOG.error("Handler interrupt exception {}", e.toString());
-        } catch (Error e) {
-            LOG.error("Handler interrupt error {}", e.toString());
-        }
-    });
+                            queue.clear();
+                            interrupted = true;
+                        } catch (InterruptedException e) {
+                            LOG.error("Handler interrupt exception ", e);
+                        } catch (Error e) {
+                            LOG.error("Handler interrupt error ", e);
+                        }
+                    });
 
     public AbstractHandler(int value) {
         handlerType = value;
@@ -90,8 +92,8 @@ public abstract class AbstractHandler {
     public synchronized boolean addEvent(IEvent _evt) {
         try {
             return this.events.add(_evt);
-        } catch (Throwable e) {
-            LOG.error("addEvent exception {}", e.toString());
+        } catch (Exception e) {
+            LOG.error("addEvent exception ", e);
             return false;
         }
     }
@@ -99,8 +101,8 @@ public abstract class AbstractHandler {
     public synchronized boolean removeEvent(IEvent _evt) {
         try {
             return this.events.remove(_evt);
-        } catch (Throwable e) {
-            LOG.error("removeEvent exception {}", e.toString());
+        } catch (Exception e) {
+            LOG.error("removeEvent exception ", e);
             return false;
         }
     }
@@ -110,8 +112,8 @@ public abstract class AbstractHandler {
         interrupt.set(true);
         try {
             this.queue.add(new EventDummy());
-        } catch (Throwable e) {
-            LOG.error("stop exception {}", e.toString());
+        } catch (Exception e) {
+            LOG.error("stop exception ", e);
         }
 
         if (LOG.isInfoEnabled()) {
@@ -135,12 +137,14 @@ public abstract class AbstractHandler {
         }
     }
 
-
     private <E extends IEvent> void dispatch(E event) {
         if (this.typeEqual(event.getEventType())) {
 
             if (LOG.isTraceEnabled()) {
-                LOG.trace("CB size:[{}] cbType:[{}]", this.eventCallback.size(), event.getCallbackType());
+                LOG.trace(
+                        "CB size:[{}] cbType:[{}]",
+                        this.eventCallback.size(),
+                        event.getCallbackType());
             }
 
             for (IEventCallback cb : this.eventCallback) {
@@ -164,12 +168,11 @@ public abstract class AbstractHandler {
         }
     }
 
-
     public void onEvent(IEvent _evt) {
         try {
             this.queue.add(_evt);
-        } catch (Throwable e) {
-            LOG.error("onEvent exception! {}", e.toString());
+        } catch (Exception e) {
+            LOG.error("onEvent exception! ", e);
         }
     }
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -19,16 +19,12 @@
  *
  * Contributors:
  *     Aion foundation.
- *
- ******************************************************************************/
-
+ */
 package org.aion.mcf.blockchain;
 
 import org.aion.mcf.mine.IMineRunner;
 
-/**
- * Chain instance pow interface.
- */
+/** Chain instance pow interface. */
 public interface IChainInstancePOW extends IChainInstanceBase {
 
     IPowChain<?, ?> getBlockchain();

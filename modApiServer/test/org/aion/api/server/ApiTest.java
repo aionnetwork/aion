@@ -23,22 +23,26 @@
 
 package org.aion.api.server;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import io.undertow.util.FileUtils;
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.util.Map;
 import org.aion.api.server.types.CompiledContr;
 import org.aion.base.type.Address;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.types.AbstractBlock;
+import org.aion.zero.impl.config.CfgAion;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
-
-import java.io.File;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.Assert.*;
 
 public class ApiTest {
 
@@ -80,15 +84,18 @@ public class ApiTest {
     }
 
     private ApiImpl api;
+    private long testStartTime;
 
     @Before
     public void setup() {
+        CfgAion.inst().getDb().setPath(DATABASE_PATH);
         api = new ApiImpl();
+        testStartTime = System.currentTimeMillis();
     }
 
     private static final String KEYSTORE_PATH;
+    private static final String DATABASE_PATH = "ApiServerTestPath";
     private String addr;
-
 
     static {
         String storageDir = System.getProperty("local.storage.dir");
@@ -98,36 +105,29 @@ public class ApiTest {
         KEYSTORE_PATH = storageDir + "/keystore";
     }
 
-    private void tearDown() {
+    @After
+    public void tearDown() {
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
+
+        if (folder == null) return;
+
         File[] AllFilesInDirectory = folder.listFiles();
-        List<String> allFileNames = new ArrayList<>();
-        List<String> filesToBeDeleted = new ArrayList<>();
 
         // check for invalid or wrong path - should not happen
-        if(AllFilesInDirectory == null)
-            return;
+        if (AllFilesInDirectory == null) return;
 
-        for(File file: AllFilesInDirectory){
-            allFileNames.add(file.getName());
+        for (File file : AllFilesInDirectory) {
+            if (file.lastModified() >= testStartTime) file.delete();
         }
+        folder = new File(DATABASE_PATH);
 
-        // get a list of the files needed to be deleted, check the ending of file names
-        // with corresponding addresses
-        for(String name: allFileNames){
-            String ending = name.substring(name.length()-64);
+        if (folder == null) return;
 
-            if(ending.equals(addr)) {
-                filesToBeDeleted.add(KEYSTORE_PATH + "/"+ name);
-            }
-        }
-
-        // iterate and delete those files
-        for (String name: filesToBeDeleted){
-            File file = new File(name);
-            if (file.delete())
-                System.out.println("Deleted file: " + name);
+        try {
+            FileUtils.deleteRecursive(folder.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -162,29 +162,34 @@ public class ApiTest {
     @Test
     public void testCompilePass1() {
         // Taken from FastVM CompilerTest.java
-        String contract = "pragma solidity ^0.4.0;\n" + //
-                "\n" + //
-                "contract SimpleStorage {\n" + //
-                "    uint storedData;\n" + //
-                "\n" + //
-                "    function set(uint x) {\n" + //
-                "        storedData = x;\n" + //
-                "    }\n" + //
-                "\n" + //
-                "    function get() constant returns (uint) {\n" + //
-                "        return storedData;\n" + //
-                "    }\n" + //
-                "}";
+        String contract =
+                "pragma solidity ^0.4.0;\n"
+                        + //
+                        "\n"
+                        + //
+                        "contract SimpleStorage {\n"
+                        + //
+                        "    uint storedData;\n"
+                        + //
+                        "\n"
+                        + //
+                        "    function set(uint x) {\n"
+                        + //
+                        "        storedData = x;\n"
+                        + //
+                        "    }\n"
+                        + //
+                        "\n"
+                        + //
+                        "    function get() constant returns (uint) {\n"
+                        + //
+                        "        return storedData;\n"
+                        + //
+                        "    }\n"
+                        + //
+                        "}";
         Map<String, CompiledContr> compileResult = api.contract_compileSolidity(contract);
         CompiledContr compiledContr = compileResult.get("SimpleStorage");
         assertNull(compiledContr.error);
     }
-
-    @Test
-    public void testContractCreateResult() {
-        ApiImpl.ContractCreateResult ccr = api.new ContractCreateResult();
-        assertNull(ccr.address);
-        assertNull(ccr.transId);
-    }
-
 }

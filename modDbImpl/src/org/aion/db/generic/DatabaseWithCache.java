@@ -1,4 +1,4 @@
-/* ******************************************************************************
+/*
  * Copyright (c) 2017-2018 Aion foundation.
  *
  *     This file is part of the aion network project.
@@ -31,7 +31,7 @@
  *     Samuel Neves through the BLAKE2 implementation.
  *     Zcash project team.
  *     Bitcoinj team.
- ******************************************************************************/
+ */
 package org.aion.db.generic;
 
 import com.google.common.cache.CacheBuilder;
@@ -39,16 +39,18 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.CacheStats;
 import com.google.common.cache.LoadingCache;
 import com.google.common.primitives.Longs;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.iq80.leveldb.DBException;
 import org.slf4j.Logger;
-
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Common functionality for database implementations including heap caching functionality.
@@ -77,15 +79,17 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     /** Flag for determining how to handle commits. */
     private boolean enableAutoCommit;
 
-    public DatabaseWithCache(AbstractDB _database,
-                             boolean enableAutoCommit,
-                             String max_cache_size,
-                             boolean enableStats) {
+    public DatabaseWithCache(
+            AbstractDB _database,
+            boolean enableAutoCommit,
+            String max_cache_size,
+            boolean enableStats) {
         this(enableAutoCommit, max_cache_size, enableStats);
         database = _database;
     }
 
-    private DatabaseWithCache(boolean enableAutoCommit, String max_cache_size, boolean enableStats) {
+    private DatabaseWithCache(
+            boolean enableAutoCommit, String max_cache_size, boolean enableStats) {
         this.enableAutoCommit = enableAutoCommit;
 
         Long val = max_cache_size != null ? Longs.tryParse(max_cache_size) : null;
@@ -121,14 +125,16 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
         }
 
         // Utilize CacheBuilder and pass in the parameters to create the cache.
-        this.loadingCache = builder.build(new CacheLoader<ByteArrayWrapper, Optional<byte[]>>() {
-            @Override
-            public Optional<byte[]> load(ByteArrayWrapper keyToLoad) {
-                // It is safe to say keyToLoad is not null or the data is null.
-                // Load from the data source.
-                return database.get(keyToLoad.getData());
-            }
-        });
+        this.loadingCache =
+                builder.build(
+                        new CacheLoader<ByteArrayWrapper, Optional<byte[]>>() {
+                            @Override
+                            public Optional<byte[]> load(ByteArrayWrapper keyToLoad) {
+                                // It is safe to say keyToLoad is not null or the data is null.
+                                // Load from the data source.
+                                return database.get(keyToLoad.getData());
+                            }
+                        });
     }
 
     /**
@@ -154,8 +160,7 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     }
 
     /**
-     * Returns the stats from the underlying cache implementation. Mainly used for
-     * testing.
+     * Returns the stats from the underlying cache implementation. Mainly used for testing.
      *
      * @return
      */
@@ -171,18 +176,18 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     }
 
     /**
-     * For testing the lock functionality of public methods.
-     * Used to ensure that locks are released after normal or exceptional execution.
+     * For testing the lock functionality of public methods. Used to ensure that locks are released
+     * after normal or exceptional execution.
      *
-     * @return {@code true} when the resource is locked,
-     *         {@code false} otherwise
+     * @return {@code true} when the resource is locked, {@code false} otherwise
      */
     @Override
     public boolean isLocked() {
         return false;
     }
 
-    // IDatabase functionality -----------------------------------------------------------------------------------------
+    // IDatabase functionality
+    // -----------------------------------------------------------------------------------------
 
     @Override
     public boolean open() {
@@ -220,7 +225,6 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
             // ensuring the db is null after close was called
             loadingCache = null;
             dirtyEntries = null;
-
         }
     }
 
@@ -235,7 +239,8 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
             LOG.warn("Commit called on database where automatic commits are already enabled.");
             if (dirtyEntries != null && dirtyEntries.size() > 0) {
                 // there should be nothing to commit
-                LOG.error("Non-permanent data found in the cache where automatic commits are enabled.");
+                LOG.error(
+                        "Non-permanent data found in the cache where automatic commits are enabled.");
             }
             // just return, everything should have already been made permanent
             success = true;
@@ -302,17 +307,30 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + ":" + propertiesInfo() + " over " + this.database.toString();
+        return this.getClass().getSimpleName()
+                + ":"
+                + propertiesInfo()
+                + " over "
+                + this.database.toString();
     }
 
     private String propertiesInfo() {
-        return "<name=" + getName().get() + //
-                ",autocommit=" + (enableAutoCommit ? "ON" : "OFF") + //
-                ",size" + (maxSize == 0 ? "=UNBOUND" : "<" + maxSize) + //
-                ",stats=" + (statsEnabled ? "ON" : "OFF") + ">";
+        return "<name="
+                + getName().get()
+                + //
+                ",autocommit="
+                + (enableAutoCommit ? "ON" : "OFF")
+                + //
+                ",size"
+                + (maxSize == 0 ? "=UNBOUND" : "<" + maxSize)
+                + //
+                ",stats="
+                + (statsEnabled ? "ON" : "OFF")
+                + ">";
     }
 
-    // IKeyValueStore functionality ------------------------------------------------------------------------------------
+    // IKeyValueStore functionality
+    // ------------------------------------------------------------------------------------
 
     @Override
     public boolean isEmpty() {
@@ -370,20 +388,21 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
         keys.addAll(database.keys());
 
         // add updated cached keys
-        dirtyEntries.forEach((k, v) -> {
-            if (v == null) {
-                keys.remove(k.getData());
-            } else {
-                keys.add(k.getData());
-            }
-        });
+        dirtyEntries.forEach(
+                (k, v) -> {
+                    if (v == null) {
+                        keys.remove(k.getData());
+                    } else {
+                        keys.add(k.getData());
+                    }
+                });
 
         return keys;
     }
 
     /**
-     * Returns the value from the cache if it exists or if not, loads it from the
-     * database given the loader and return that.
+     * Returns the value from the cache if it exists or if not, loads it from the database given the
+     * loader and return that.
      */
     @Override
     public Optional<byte[]> get(byte[] k) {
@@ -494,11 +513,11 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     }
 
     /**
-     * Pushes all the dirty key-value pairs to the database.
-     * Does not make any guarantees with respect to their continued / discontinued storage in the cache.
+     * Pushes all the dirty key-value pairs to the database. Does not make any guarantees with
+     * respect to their continued / discontinued storage in the cache.
      *
-     * @apiNote This method should be used where write locks have already been acquired
-     *         since it does not acquire write locks before modifying the data.
+     * @apiNote This method should be used where write locks have already been acquired since it
+     *     does not acquire write locks before modifying the data.
      */
     private void flushInternal() {
         if (isStatsEnabled()) {
