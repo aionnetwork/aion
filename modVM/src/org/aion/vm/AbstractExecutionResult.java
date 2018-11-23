@@ -23,13 +23,14 @@
 
 package org.aion.vm;
 
+import org.aion.base.type.IExecutionResult;
+import org.aion.base.util.ByteUtil;
+import org.aion.base.util.Hex;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
-import org.aion.base.type.IExecutionResult;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 
 /** An abstract class representing the result of either a transaction or contract execution. */
 public abstract class AbstractExecutionResult implements IExecutionResult {
@@ -46,21 +47,21 @@ public abstract class AbstractExecutionResult implements IExecutionResult {
         /*
          * Indicates a runtime failure when executing the smart contract code.
          */
-        FAILURE(1),
-        OUT_OF_NRG(2),
-        BAD_INSTRUCTION(3),
-        BAD_JUMP_DESTINATION(4),
-        STACK_OVERFLOW(5),
-        STACK_UNDERFLOW(6),
-        REVERT(7),
-        STATIC_MODE_ERROR(8),
+        FAILURE(1), // generic failure
+        OUT_OF_NRG(2), // run out of energy
+        BAD_INSTRUCTION(3), // bad FAStVM instruction
+        BAD_JUMP_DESTINATION(4), // bad JUMP destination
+        STACK_OVERFLOW(5), // stack overflow
+        STACK_UNDERFLOW(6), // stack underflow
+        REVERT(7), // the REVERT opcode triggered
+        STATIC_MODE_ERROR(8), // trying to modify the state in a STATICCALL.
 
         /*
          * Indicates a transaction rejection. This usually happens before any code execution.
          */
-        INVALID_NONCE(101),
-        INVALID_NRG_LIMIT(102),
-        INSUFFICIENT_BALANCE(103),
+        INVALID_NONCE(101), // invalid nonce
+        INVALID_NRG_LIMIT(102), // invalid energy limit
+        INSUFFICIENT_BALANCE(103), // balance is insufficient to cover the cost
 
         /*
          * Indicates an internal error, because of either bug or out-of-resource.
