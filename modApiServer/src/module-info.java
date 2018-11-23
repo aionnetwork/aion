@@ -18,6 +18,7 @@ module aion.apiserver {
     requires commons.lang3;
     requires libnzmq;
     requires com.github.benmanes.caffeine;
+    requires com.google.common;
 
     exports org.aion.api.server.pb;
     exports org.aion.api.server.zmq;
