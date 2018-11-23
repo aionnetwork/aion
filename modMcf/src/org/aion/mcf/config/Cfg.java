@@ -35,6 +35,8 @@ public abstract class Cfg {
 
     protected String id;
 
+    protected String keystorePath = null;
+
     protected CfgApi api;
 
     protected CfgNet net;
@@ -52,6 +54,8 @@ public abstract class Cfg {
     protected CfgReports reports;
 
     protected CfgGui gui;
+
+    protected CfgFork fork;
 
     public void setId(final String _id) {
         this.id = _id;
@@ -117,6 +121,10 @@ public abstract class Cfg {
         return this.gui;
     }
 
+    public CfgFork getFork() {
+        return this.fork;
+    }
+
     public String[] getNodes() {
         return this.net.getNodes();
     }
@@ -136,6 +144,7 @@ public abstract class Cfg {
     private final String configFileName = "config.xml";
     private final String genesisFileName = "genesis.json";
     private final String keystoreDirName = "keystore";
+    private final String forkFileName = "fork.properties";
 
     // base path
     private final File INITIAL_PATH = new File(System.getProperty("user.dir"));
@@ -147,12 +156,15 @@ public abstract class Cfg {
     // base configuration: old kernel OR using network config
     private File baseConfigFile = null;
     private File baseGenesisFile = null;
+    private File baseForkFile = null;
 
     // can be absolute in config file OR depend on execution path
     private File logDir = null;
     private File databaseDir = null;
+    private File keystoreDir = null;
     private boolean absoluteLogDir = false;
     private boolean absoluteDatabaseDir = false;
+    private boolean absoluteKeystoreDir = false;
 
     // impact execution path
     private String network = null;
@@ -164,6 +176,7 @@ public abstract class Cfg {
     private File execConfigDir = null;
     private File execConfigFile = null;
     private File execGenesisFile = null;
+    private File execForkFile = null;
 
     /** Resets internal data containing network and path. */
     @VisibleForTesting
@@ -171,16 +184,20 @@ public abstract class Cfg {
         networkConfigDir = null;
         baseConfigFile = null;
         baseGenesisFile = null;
+        baseForkFile = null;
         logDir = null;
         databaseDir = null;
+        keystoreDir = null;
         absoluteLogDir = false;
         absoluteDatabaseDir = false;
+        absoluteKeystoreDir = false;
         network = null;
         dataDir = null;
         execDir = null;
         execConfigDir = null;
         execConfigFile = null;
         execGenesisFile = null;
+        execForkFile = null;
     }
 
     /**
@@ -195,11 +212,75 @@ public abstract class Cfg {
         if (!baseConfigFile.exists() || !baseGenesisFile.exists()) {
             updateNetworkExecPaths();
         } else {
-            execDir = INITIAL_PATH;
-            execConfigDir = CONFIG_DIR;
-            execConfigFile = baseConfigFile;
-            execGenesisFile = baseGenesisFile;
-            updateStoragePaths();
+            System.out.println("Migrating to the new configuration style for Aion kernels.");
+
+            // reading the old config to get setup
+            this.fromXML(baseConfigFile);
+
+            // determine the network from the read config
+            switch (this.net.getId()) {
+                case 256:
+                    network = "mainnet";
+                    break;
+                case 128:
+                    network = "conquest";
+                    break;
+                case 32:
+                    network = "mastery";
+                    break;
+                default:
+                    network = "custom";
+                    break;
+            }
+
+            // delete old config
+            try {
+                if (!baseConfigFile.delete()) {
+                    System.out.println(
+                            "Unable to delete old configuration file: "
+                                    + baseConfigFile.getAbsolutePath()
+                                    + ". Please do it manually!");
+                }
+            } catch (Exception e) {
+                System.out.println(
+                        "Unable to delete old configuration file: "
+                                + baseConfigFile.getAbsolutePath()
+                                + ". Please do it manually!");
+            }
+
+            // delete old genesis
+            try {
+                if (!baseGenesisFile.delete()) {
+                    System.out.println(
+                            "Unable to delete old genesis file: "
+                                    + baseGenesisFile.getAbsolutePath()
+                                    + ". Please do it manually!");
+                }
+            } catch (Exception e) {
+                System.out.println(
+                        "Unable to delete old genesis file: "
+                                + baseGenesisFile.getAbsolutePath()
+                                + ". Please do it manually!");
+            }
+
+            // using absolute path for database
+            absoluteDatabaseDir = true;
+            databaseDir = new File(INITIAL_PATH, getDb().getPath());
+            getDb().setPath(databaseDir.getAbsolutePath());
+
+            // using absolute path for log
+            absoluteLogDir = true;
+            logDir = new File(INITIAL_PATH, getLog().getLogPath());
+            getLog().setLogPath(logDir.getAbsolutePath());
+
+            // using absolute path for keystore
+            absoluteKeystoreDir = true;
+            keystoreDir = new File(INITIAL_PATH, keystoreDirName);
+            keystorePath = keystoreDir.getAbsolutePath();
+
+            updateNetworkExecPaths();
+
+            this.toXML(new String[] {}, baseConfigFile);
         }
     }
 
@@ -214,6 +295,7 @@ public abstract class Cfg {
         networkConfigDir = new File(CONFIG_DIR, network);
         baseConfigFile = new File(networkConfigDir, configFileName);
         baseGenesisFile = new File(networkConfigDir, genesisFileName);
+        baseForkFile = new File(networkConfigDir, forkFileName);
 
         if (dataDir == null) {
             dataDir = INITIAL_PATH;
@@ -222,8 +304,14 @@ public abstract class Cfg {
         execConfigDir = new File(execDir, configDirName);
         execConfigFile = new File(execConfigDir, configFileName);
         execGenesisFile = new File(execConfigDir, genesisFileName);
+        execForkFile = new File(execConfigDir, forkFileName);
 
         updateStoragePaths();
+        if (execForkFile.exists()) {
+            setForkProperties(network, execForkFile);
+        } else if (baseForkFile.exists()) {
+            setForkProperties(network, baseForkFile);
+        }
     }
 
     /** Updates the path to the log, database directories. */
@@ -237,6 +325,18 @@ public abstract class Cfg {
             databaseDir = new File(execDir, getDb().getPath());
         } else if (databaseDir == null) {
             databaseDir = new File(getDb().getPath());
+        }
+        if (!absoluteKeystoreDir) {
+            if (keystorePath != null) {
+                // absolute paths are set when reading the file
+                // so this must be a relative path
+                keystoreDir = new File(execDir, keystorePath);
+            } else {
+                // path not set so using defaults
+                keystoreDir = new File(execDir, keystoreDirName);
+            }
+        } else if (keystoreDir == null) {
+            keystoreDir = new File(keystorePath);
         }
     }
 
@@ -324,8 +424,23 @@ public abstract class Cfg {
         this.absoluteDatabaseDir = true;
     }
 
+    /**
+     * Used to set an absolute path for the keystore directory.
+     *
+     * @param _keystoreDirectory the path to be used for the keystore.
+     */
+    public void setKeystoreDir(File _keystoreDirectory) {
+        this.keystoreDir = _keystoreDirectory;
+        this.absoluteKeystoreDir = true;
+    }
+
     public File getKeystoreDir() {
-        return new File(getExecDir(), keystoreDirName);
+        if (keystoreDir == null) {
+            // was not updated with absolute path
+            keystoreDir =
+                    new File(getExecDir(), keystorePath != null ? keystorePath : keystoreDirName);
+        }
+        return keystoreDir;
     }
 
     /** Returns the configuration directory location for the kernel execution. */
@@ -352,6 +467,14 @@ public abstract class Cfg {
         return execGenesisFile;
     }
 
+    /** Returns the location where the fork file is saved for kernel execution. */
+    public File getExecForkFile() {
+        if (execForkFile == null) {
+            initializeConfiguration();
+        }
+        return execForkFile;
+    }
+
     /** @implNote Maintains the old setup if the config file is present in the old location. */
     public File getInitialConfigFile() {
         if (baseConfigFile == null) {
@@ -375,6 +498,13 @@ public abstract class Cfg {
             initializeConfiguration();
         }
         return baseGenesisFile;
+    }
+
+    public File getInitialForkFile() {
+        if (baseForkFile == null) {
+            initializeConfiguration();
+        }
+        return baseForkFile;
     }
 
     public static String readValue(final XMLStreamReader sr) throws XMLStreamException {
@@ -431,4 +561,6 @@ public abstract class Cfg {
     public abstract void setGenesis();
 
     public abstract AbstractBlock<?, ?> getGenesis();
+
+    public abstract void setForkProperties(String network, File forkFile);
 }

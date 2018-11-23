@@ -21,7 +21,7 @@
  *     Aion foundation.
  */
 
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,7 +33,7 @@ import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.contracts.TotalCurrencyContract;
+import org.aion.precompiled.ContractFactory;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.junit.After;

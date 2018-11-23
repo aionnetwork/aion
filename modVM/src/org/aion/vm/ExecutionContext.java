@@ -45,6 +45,7 @@ public class ExecutionContext {
 
     private ExecutionHelper helper;
     private Address origin;
+    private byte[] originalTxHash;
 
     public Address address;
     public Address sender;
@@ -120,6 +121,8 @@ public class ExecutionContext {
         this.blockNrgLimit = blockNrgLimit;
         this.blockDifficulty = blockDifficulty;
         this.txHash = txHash;
+        this.originalTxHash = txHash;
+
         this.helper = new ExecutionHelper();
     }
 
@@ -266,5 +269,10 @@ public class ExecutionContext {
      */
     private int getEncodingLength() {
         return ENCODE_BASE_LEN + callData.length;
+    }
+
+    /** @return the original transaction hash. */
+    public byte[] getOriginalTxHash() {
+        return originalTxHash;
     }
 }

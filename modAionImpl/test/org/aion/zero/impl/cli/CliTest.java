@@ -28,7 +28,6 @@ import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
 import static org.aion.zero.impl.cli.Cli.ReturnType.EXIT;
 import static org.aion.zero.impl.cli.Cli.ReturnType.RUN;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
@@ -85,6 +84,7 @@ public class CliTest {
 
     private static final String configFileName = "config.xml";
     private static final String genesisFileName = "genesis.json";
+    private static final String forkFileName = "fork.properties";
 
     private static final String dataDirectory = "datadir";
     private static final String alternativeDirectory = "random";
@@ -102,6 +102,11 @@ public class CliTest {
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
 
+    private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
+
+    private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
+    private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
+
     /** @implNote set this to true to enable printing */
     private static final boolean verbose = false;
 
@@ -117,6 +122,7 @@ public class CliTest {
             }
             Cli.copyRecursively(config, mainnetConfig);
             Cli.copyRecursively(genesis, mainnetGenesis);
+            Cli.copyRecursively(fork, mainnetFork);
         }
 
         if (BASE_PATH.contains(module) && !testnetConfig.exists()) {
@@ -124,8 +130,9 @@ public class CliTest {
             if (!TEST_CONFIG_PATH.exists()) {
                 assertThat(TEST_CONFIG_PATH.mkdirs()).isTrue();
             }
-            Cli.copyRecursively(config, mainnetConfig);
+            Cli.copyRecursively(config, testnetConfig);
             Cli.copyRecursively(genesis, testnetGenesis);
+            Cli.copyRecursively(fork, testnetFork);
         }
 
         cfg.resetInternal();
@@ -292,6 +299,8 @@ public class CliTest {
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
         assertThat(cfg.getExecGenesisFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+        assertThat(cfg.getExecForkFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
         assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
         assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
         assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
@@ -314,11 +323,15 @@ public class CliTest {
                         + cfg.getExecConfigFile().getAbsolutePath()
                         + "\n> Genesis write: "
                         + cfg.getExecGenesisFile().getAbsolutePath()
+                        + "\n> Fork write: "
+                        + cfg.getExecForkFile().getAbsolutePath()
                         + "\n----------------------------------------------------------------------------"
                         + "\n> Config read:   "
                         + cfg.getInitialConfigFile().getAbsolutePath()
                         + "\n> Genesis read:  "
                         + cfg.getInitialGenesisFile().getAbsolutePath()
+                        + "\n> Fork read:  "
+                        + cfg.getInitialForkFile().getAbsolutePath()
                         + "\n----------------------------------------------------------------------------\n\n");
     }
 
@@ -472,6 +485,8 @@ public class CliTest {
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
         assertThat(cfg.getExecGenesisFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+        assertThat(cfg.getExecForkFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
 
         assertThat(expectedFile.exists()).isTrue();
         assertThat(cfg.fromXML(expectedFile)).isFalse();
@@ -483,15 +498,13 @@ public class CliTest {
 
     /** Parameters for testing {@link #testConfig_oldLocation(String[], String)}. */
     @SuppressWarnings("unused")
-    private Object parametersWithConfigForOldLocation() {
+    private Object parametersWithoutMigration() {
         List<Object> parameters = new ArrayList<>();
 
         String[] options = new String[] {"-c", "--config"};
         String expected = MAIN_BASE_PATH.getAbsolutePath();
 
         for (String op : options) {
-            // without parameter
-            parameters.add(new Object[] {new String[] {op}, BASE_PATH});
             // invalid parameter
             parameters.add(new Object[] {new String[] {op, "invalid"}, expected});
             // mainnet as parameter
@@ -515,7 +528,7 @@ public class CliTest {
      * location.
      */
     @Test
-    @Parameters(method = "parametersWithConfigForOldLocation")
+    @Parameters(method = "parametersWithoutMigration")
     public void testConfig_oldLocation(String[] input, String expectedPath) {
         // ensure config exists on disk at expected location for old kernel
         if (!oldConfig.exists()) {
@@ -528,15 +541,66 @@ public class CliTest {
         }
 
         assertThat(cli.call(input, cfg)).isEqualTo(EXIT);
+
+        // the config used it for mainnet, therefore will use the MAIN_BASE_PATH
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+
         assertThat(cfg.getExecConfigFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
         assertThat(cfg.getExecGenesisFile())
                 .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
 
+        // database, keystore & log are absolute and at old location
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
+
         if (verbose) {
             printPaths(cfg);
         }
+    }
+
+    /**
+     * Ensures that the { <i>-c</i>, <i>--config</i> } arguments work when using old config
+     * location.
+     */
+    @Test
+    @Parameters({"-c", "--config"})
+    public void testConfig_withMigration(String option) {
+        // ensure config exists on disk at expected location for old kernel
+        if (!oldConfig.exists()) {
+            File configPath = CONFIG_PATH;
+            if (!configPath.exists()) {
+                assertThat(configPath.mkdirs()).isTrue();
+            }
+            cfg.toXML(null, oldConfig);
+            Cli.copyRecursively(genesis, oldGenesis);
+        }
+
+        assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
+
+        // the config used it for mainnet, therefore will use the MAIN_BASE_PATH
+        assertThat(cfg.getBasePath()).isEqualTo(MAIN_BASE_PATH.getAbsolutePath());
+
+        assertThat(cfg.getInitialConfigFile()).isEqualTo(mainnetConfig);
+        assertThat(cfg.getInitialGenesisFile()).isEqualTo(mainnetGenesis);
+
+        assertThat(cfg.getExecConfigFile())
+                .isEqualTo(new File(MAIN_BASE_PATH, "config" + File.separator + configFileName));
+        assertThat(cfg.getExecGenesisFile())
+                .isEqualTo(new File(MAIN_BASE_PATH, "config" + File.separator + genesisFileName));
+
+        // database, keystore & log are absolute and at old location
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(BASE_PATH, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(BASE_PATH, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(BASE_PATH, "keystore"));
+
+        if (verbose) {
+            printPaths(cfg);
+        }
+
+        // cleanup: resetting the mainnet config to original
+        Cli.copyRecursively(config, mainnetConfig);
     }
 
     /** Parameters for testing {@link #testInfo(String[], ReturnType, String)}. */
@@ -643,7 +707,7 @@ public class CliTest {
      */
     @Test
     @Parameters({"-i", "--info"})
-    public void testInfo_oldLocation(String option) {
+    public void testInfoWithMigration(String option) {
         // ensure config exists on disk at expected location for old kernel
         if (!oldConfig.exists()) {
             File configPath = CONFIG_PATH;
@@ -655,7 +719,15 @@ public class CliTest {
         }
 
         assertThat(cli.call(new String[] {option}, cfg)).isEqualTo(EXIT);
-        assertThat(cfg.getBasePath()).isEqualTo(BASE_PATH);
+        assertThat(cfg.getBasePath()).isEqualTo(MAIN_BASE_PATH.getAbsolutePath());
+
+        // database, keystore & log are absolute and at old location
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(BASE_PATH, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(BASE_PATH, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(BASE_PATH, "keystore"));
+
+        // cleanup: resetting the mainnet config to original
+        Cli.copyRecursively(config, mainnetConfig);
     }
 
     /**
@@ -1158,7 +1230,10 @@ public class CliTest {
         skippedTasks.add("--db-compact");
         parameters.add(new Object[] {input, TaskPriority.REVERT, skippedTasks});
 
-        input = new String[] {"--state", "FULL", "--db-compact", "--dump-state-size", "--dump-state"};
+        input =
+                new String[] {
+                    "--state", "FULL", "--db-compact", "--dump-state-size", "--dump-state"
+                };
         skippedTasks = new HashSet<String>();
         skippedTasks.add("--db-compact");
         skippedTasks.add("--dump-state-size");
@@ -1186,7 +1261,7 @@ public class CliTest {
     @Test
     @Parameters(method = "parametersForArgumentCheck")
     public void testCheckArguments(
-        String[] input, TaskPriority expectedPriority, Set<String> expectedTasks) {
+            String[] input, TaskPriority expectedPriority, Set<String> expectedTasks) {
         Arguments options = new Arguments();
         CommandLine parser = new CommandLine(options);
         parser.parse(input);

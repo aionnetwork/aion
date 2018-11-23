@@ -24,20 +24,14 @@ package org.aion.precompiled.contracts;
 
 import static org.aion.crypto.HashUtil.keccak256;
 
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.vm.IDataWord;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
+import org.aion.vm.IPrecompiledContract;
 
-public class KeccakHash extends StatefulPrecompiledContract {
+public class KeccakHash implements IPrecompiledContract {
     private static final long DEFAULT_COST = 100L;
 
-    public KeccakHash(IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
-        super(track);
-    }
+    public KeccakHash() {}
 
     /**
      * Returns the hash of given input
