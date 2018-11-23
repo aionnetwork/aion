@@ -46,7 +46,11 @@ import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResBlocksBodies;
 import org.slf4j.Logger;
 
-/** @author chris handler for blocks bodies received from network */
+/**
+ * Handler for blocks bodies received from network.
+ *
+ * @author chris
+ */
 public final class ResBlocksBodiesHandler extends Handler {
 
     private final Logger log;
@@ -79,6 +83,7 @@ public final class ResBlocksBodiesHandler extends Handler {
                 p2pMgr.errCheck(_nodeIdHashcode, _displayId);
                 log.error("<res-bodies-empty node={}>", _displayId);
             } else {
+                syncMgr.getSyncStats().updatePeerTotalBlocks(_displayId, bodies.size());
                 syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
             }
         }

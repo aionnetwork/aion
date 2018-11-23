@@ -605,7 +605,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected AionTransaction signTransaction(ArgTxCall _params, String _address) {
-        Address address = null;
+        Address address;
         if (_address == null || _address.isEmpty()) {
             LOG.error("<sign-transaction msg=invalid-signing-address>");
             return null;
@@ -775,7 +775,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long getDefaultNrgLimit() {
-        return 2_000_000L;
+        return 90_000L;
     }
 
     protected void startES(String thName) {

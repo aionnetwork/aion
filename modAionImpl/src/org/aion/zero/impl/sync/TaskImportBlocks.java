@@ -63,6 +63,9 @@ import org.slf4j.Logger;
  */
 final class TaskImportBlocks implements Runnable {
 
+    private static final int COMPACT_FREQUENCY = 600_000; // 10 min
+    private static final int SLOW_IMPORT_TIME = 1_000; // 1 sec
+
     private final AionBlockchainImpl chain;
 
     private final AtomicBoolean start;
@@ -79,6 +82,8 @@ final class TaskImportBlocks implements Runnable {
 
     private SortedSet<Long> baseList;
     private PeerState state;
+
+    private long lastCompactTime;
 
     TaskImportBlocks(
             final AionBlockchainImpl _chain,
@@ -97,6 +102,7 @@ final class TaskImportBlocks implements Runnable {
         this.log = _log;
         this.baseList = new TreeSet<>();
         this.state = new PeerState(NORMAL, 0L);
+        this.lastCompactTime = System.currentTimeMillis();
     }
 
     ExecutorService executors =
@@ -145,7 +151,7 @@ final class TaskImportBlocks implements Runnable {
                             peerState.getBase());
                 }
 
-                stats.update(bw.getDisplayId(), bw.getBlocks().size(), getBestBlockNumber());
+                stats.update(getBestBlockNumber());
             }
         }
         if (log.isDebugEnabled()) {
@@ -583,11 +589,13 @@ final class TaskImportBlocks implements Runnable {
             }
         }
         // trigger compact when IO is slow
-        if (t2 - t1 > 400) {
+        // 1 sec import time and more than 10 min since last compact
+        if (t2 - t1 > SLOW_IMPORT_TIME && t2 - lastCompactTime > COMPACT_FREQUENCY) {
             t1 = System.currentTimeMillis();
             this.chain.compactState();
             t2 = System.currentTimeMillis();
             log.info("Compacting state database due to slow IO time. Completed in {} ms.", t2 - t1);
+            lastCompactTime = t2;
         }
         return importResult;
     }

@@ -28,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
+import org.aion.base.util.ByteUtil;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
 
@@ -51,9 +52,9 @@ public class ApiUtilTest {
         result = RandomUtils.nextBytes(resultLength);
         System.out.println("vers set to " + vers);
         System.out.println("retCode set to " + retCode);
-        System.out.println("hash set to " + hash.toString());
-        System.out.println("error set to " + error.toString());
-        System.out.println("result set to " + result.toString());
+        System.out.println("hash set to " + ByteUtil.toHexString(hash));
+        System.out.println("error set to " + ByteUtil.toHexString(error));
+        System.out.println("result set to " + ByteUtil.toHexString(result));
     }
 
     @Test
