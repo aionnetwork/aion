@@ -49,7 +49,7 @@ fi
 if [ ! -d "$CONFIG_PATH" ]; then
   mkdir $CONFIG_PATH
   mkdir -p "${PACK_PATH}/aion/${DEFAULT_NETWORK}/config"
-  cp -r ./modBoot/resource/** $CONFIG_PATH
+  cp -r ./config/** $CONFIG_PATH
   cp  ${CONFIG_PATH}/${DEFAULT_NETWORK}/** "${PACK_PATH}/aion/${DEFAULT_NETWORK}/config"
 fi
 
