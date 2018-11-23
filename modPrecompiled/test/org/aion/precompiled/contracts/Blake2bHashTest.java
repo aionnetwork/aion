@@ -162,6 +162,6 @@ public class Blake2bHashTest {
     public void testInvalidOperation() {
         byte[] input = Blake2bHashContract.setupInput(3, byteArray1);
         ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
     }
 }

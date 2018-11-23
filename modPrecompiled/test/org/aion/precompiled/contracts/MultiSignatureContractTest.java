@@ -453,20 +453,20 @@ public class MultiSignatureContractTest {
     @Test
     public void testNullInput() {
         Address caller = getExistentAddress(BigInteger.ZERO);
-        execute(caller, null, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, null, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
     public void testEmptyInput() {
         Address caller = getExistentAddress(BigInteger.ZERO);
-        execute(caller, ByteUtil.EMPTY_BYTE_ARRAY, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, ByteUtil.EMPTY_BYTE_ARRAY, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
     public void testInputWithOperationOnly() {
         Address caller = getExistentAddress(BigInteger.ZERO);
-        execute(caller, new byte[] {(byte) 0x0}, COST, ResultCode.INTERNAL_ERROR, 0);
-        execute(caller, new byte[] {(byte) 0x1}, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, new byte[] {(byte) 0x0}, COST, ResultCode.FAILURE, 0);
+        execute(caller, new byte[] {(byte) 0x1}, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -481,7 +481,7 @@ public class MultiSignatureContractTest {
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
             if ((i != 0) && (i != 1)) {
                 input[0] = (byte) i;
-                execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+                execute(caller, input, COST, ResultCode.FAILURE, 0);
             }
         }
     }
@@ -495,13 +495,13 @@ public class MultiSignatureContractTest {
         Address caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MIN_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
 
         // Test with max illegal value.
         input =
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH - 1, owners);
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -511,11 +511,11 @@ public class MultiSignatureContractTest {
         Address caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
 
         // Test with smallest illegal value.
         input = MultiSignatureContract.constructCreateWalletInput(owners.size() + 1, owners);
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -526,7 +526,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -535,7 +535,7 @@ public class MultiSignatureContractTest {
         List<Address> owners = getExistentAddresses(1, BigInteger.ZERO);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -545,7 +545,7 @@ public class MultiSignatureContractTest {
         Address caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -559,7 +559,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
 
         // Test with min amount of owners
         owners = getExistentAddresses(MultiSignatureContract.MIN_OWNERS - 1, BigInteger.ZERO);
@@ -568,7 +568,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
 
         // Test all owners same
         owners.clear();
@@ -579,7 +579,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -591,7 +591,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -612,7 +612,7 @@ public class MultiSignatureContractTest {
         System.arraycopy(in, 0, input, 0, in.length);
         System.arraycopy(partialAddr, 0, input, in.length, partialAddr.length);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
 
         // Test on max legal number of owners.
         owners = getExistentAddresses(MultiSignatureContract.MAX_OWNERS - 2, BigInteger.ZERO);
@@ -624,7 +624,7 @@ public class MultiSignatureContractTest {
         System.arraycopy(in, 0, input, 0, in.length);
         System.arraycopy(partialAddr, 0, input, in.length, partialAddr.length);
 
-        execute(caller, input, COST, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -652,7 +652,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(walletCaller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(walletCaller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -682,7 +682,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
     }
 
     @Test
@@ -791,7 +791,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -817,7 +817,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -843,7 +843,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -866,7 +866,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -889,7 +889,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -913,7 +913,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(phonyWallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(phonyWallet, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(phonyWallet, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(phonyWallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -935,7 +935,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -957,7 +957,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -979,7 +979,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1012,7 +1012,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, noNrgInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, noNrgInput, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1043,7 +1043,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1078,7 +1078,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1108,7 +1108,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1141,7 +1141,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1171,7 +1171,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1198,7 +1198,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1224,7 +1224,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1251,7 +1251,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1277,7 +1277,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1354,7 +1354,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1379,7 +1379,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1502,7 +1502,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1529,7 +1529,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1583,7 +1583,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(new Address(phony.getAddress()), input, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(new Address(phony.getAddress()), input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1611,7 +1611,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1639,7 +1639,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1667,7 +1667,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1695,7 +1695,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1723,7 +1723,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.INTERNAL_ERROR, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }

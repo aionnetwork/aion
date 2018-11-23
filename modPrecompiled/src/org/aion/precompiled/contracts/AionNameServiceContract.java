@@ -146,7 +146,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     public ExecutionResult execute(byte[] input, long nrg) {
         // check for correct input length
         if (input.length != 130 && input.length != 226)
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
 
         // declare variables for parsing the byte[] input and storing each value
         byte[] addressFirstPart = new byte[16];
@@ -185,12 +185,12 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 subdomainName = new String(trimmedSubdomainNameInBytes, "UTF-8");
 
                 if (!isValidDomainName(this.domainName)) {
-                    return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                    return new ExecutionResult(ResultCode.FAILURE, 0);
                 }
 
                 domains.put(this.domainName, this.address);
             } catch (UnsupportedEncodingException a) {
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.FAILURE, 0);
             }
         }
 
@@ -201,12 +201,12 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         boolean b = ECKeyEd25519.verify(data, sig.getSignature(), sig.getPubkey(null));
         if (!b) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // verify public key matches owner
         if (!this.ownerAddress.equals(Address.wrap(sig.getAddress()))) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // operation: {1-setResolver, 2-setTTL, 3-transferOwnership, 4-transferSubdomainOwnership}
@@ -237,7 +237,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         addressSecondPart,
                         subdomainName);
             default:
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg); // unsupported operation
+                return new ExecutionResult(ResultCode.FAILURE, nrg); // unsupported operation
         }
     }
 
@@ -275,7 +275,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         if (nrg < TRANSFER_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg);
+            return new ExecutionResult(ResultCode.FAILURE, nrg);
 
         Address.wrap(combineTwoBytes(addr1, addr2));
         storeResult(hash1, hash2, addr1, addr2);
@@ -299,7 +299,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         if (nrg < TRANSFER_COST) return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
 
         if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, nrg);
+            return new ExecutionResult(ResultCode.FAILURE, nrg);
 
         Address sdAddress = Address.wrap(subdomainAddress);
 
@@ -308,7 +308,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             this.track.addStorageRow(sdAddress, new DataWord(hash2), new DataWord(addr2));
             return new ExecutionResult(ResultCode.SUCCESS, nrg - TRANSFER_COST);
         }
-        return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+        return new ExecutionResult(ResultCode.FAILURE, 0);
     }
 
     /**
