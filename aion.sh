@@ -130,7 +130,7 @@ if $guard; then
 
 		# Execute Java kernel
 		env EVMJIT="-cache=1" ./rt/bin/java ${JAVA_OPTS} \
-			-cp "./lib/*:./lib/libminiupnp/*:./jars/*" org.aion.Aion "$@" &
+			-cp "./jars/*" org.aion.Aion "$@" &
 		kPID=$!
 		running=true
 		watching=true
@@ -216,7 +216,7 @@ else
 	# if there's CLI args, we just run it and quit
 	if [ "$#" -gt 0 ]; then
 		env EVMJIT="-cache=1" $JAVA_CMD ${JAVA_OPTS} \
-			-cp "./lib/*:./lib/libminiupnp/*:./jars/*" org.aion.Aion "$@"
+			-cp "./jars/*" org.aion.Aion "$@"
 		exit
 	fi
 
@@ -233,7 +233,7 @@ else
 	}
 
   	env EVMJIT="-cache=1" $JAVA_CMD ${JAVA_OPTS} \
-  		-cp "./lib/*:./lib/libminiupnp/*:./jars/*" org.aion.Aion "$@" &
+  		-cp "./jars/*" org.aion.Aion "$@" &
     kernel_pid=$!
     wait
 fi
