@@ -10,7 +10,7 @@ python3 ./override-config.py
 #TODO: Mostly used for development purposes
 if [ ! -z "${difficulty}" ]; then
     echo "Overriding difficulty with ${difficulty}"
-    sed 's/"difficulty": "0x4000"/"difficulty": "'${difficulty}'"/g' -i ./config/genesis.json
+    sed 's/"difficulty": "0x4000"/"difficulty": "'${difficulty}'"/g' -i ./mainnet/config/genesis.json
 fi
 
 #TODO: We wont's support setting options for the script as the container will have to be teared down after
