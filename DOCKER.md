@@ -122,7 +122,7 @@ docker ps
 
 * Start a bash session in the container
 ```bash
-docker run -it <container_id> bash
+docker exec -it <container_id> bash
 ```
 
 * Make sure you are in the `/opt/aion` directory and run your desired commands:
