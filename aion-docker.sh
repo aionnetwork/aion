@@ -1,5 +1,8 @@
 #!/bin/bash
 
+mkdir -p mainnet
+cp -r config/mainnet mainnet/config
+
 #TODO: Mostly used for development purposes; remove miner setup after changing consensus
 echo "Setting up miner..."
 /bin/bash -c ./create-coinbase.sh
