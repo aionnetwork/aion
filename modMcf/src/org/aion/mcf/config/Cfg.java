@@ -22,8 +22,12 @@
  */
 package org.aion.mcf.config;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.aion.mcf.types.AbstractBlock;
@@ -248,20 +252,7 @@ public abstract class Cfg {
                                 + ". Please do it manually!");
             }
 
-            // delete old genesis
-            try {
-                if (!baseGenesisFile.delete()) {
-                    System.out.println(
-                            "Unable to delete old genesis file: "
-                                    + baseGenesisFile.getAbsolutePath()
-                                    + ". Please do it manually!");
-                }
-            } catch (Exception e) {
-                System.out.println(
-                        "Unable to delete old genesis file: "
-                                + baseGenesisFile.getAbsolutePath()
-                                + ". Please do it manually!");
-            }
+            File oldGenesis = baseGenesisFile;
 
             // using absolute path for database
             absoluteDatabaseDir = true;
@@ -281,6 +272,36 @@ public abstract class Cfg {
             updateNetworkExecPaths();
 
             this.toXML(new String[] {}, baseConfigFile);
+
+            if (network.equals("custom")) {
+                try {
+                    // for custom networks move genesis file
+                    Files.move(oldGenesis.toPath(), baseGenesisFile.toPath(), REPLACE_EXISTING);
+                } catch (IOException e) {
+                    System.out.println(
+                            "Unable to move old genesis file "
+                                    + oldGenesis.getAbsolutePath()
+                                    + " to new location "
+                                    + baseGenesisFile.getAbsolutePath()
+                                    + ". Please do it manually!");
+                }
+            } else {
+                try {
+                    // otherwise delete old genesis
+                    // because nothing can change in the predefined network genesis
+                    if (!baseGenesisFile.delete()) {
+                        System.out.println(
+                                "Unable to delete old genesis file: "
+                                        + baseGenesisFile.getAbsolutePath()
+                                        + ". Please do it manually!");
+                    }
+                } catch (Exception e) {
+                    System.out.println(
+                            "Unable to delete old genesis file: "
+                                    + baseGenesisFile.getAbsolutePath()
+                                    + ". Please do it manually!");
+                }
+            }
         }
     }
 
