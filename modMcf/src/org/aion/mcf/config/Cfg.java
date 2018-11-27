@@ -289,16 +289,16 @@ public abstract class Cfg {
                 try {
                     // otherwise delete old genesis
                     // because nothing can change in the predefined network genesis
-                    if (!baseGenesisFile.delete()) {
+                    if (!oldGenesis.delete()) {
                         System.out.println(
                                 "Unable to delete old genesis file: "
-                                        + baseGenesisFile.getAbsolutePath()
+                                        + oldGenesis.getAbsolutePath()
                                         + ". Please do it manually!");
                     }
                 } catch (Exception e) {
                     System.out.println(
                             "Unable to delete old genesis file: "
-                                    + baseGenesisFile.getAbsolutePath()
+                                    + oldGenesis.getAbsolutePath()
                                     + ". Please do it manually!");
                 }
             }
