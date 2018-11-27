@@ -27,11 +27,7 @@ import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.zero.impl.AionHub.INIT_ERROR_EXIT_CODE;
 
-
-import java.io.File;
 import java.math.BigInteger;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -86,28 +82,6 @@ public class AionRepositoryImpl
     private static class AionRepositoryImplHolder {
         // configuration
         private static CfgAion config = CfgAion.inst();
-
-        private static RepositoryConfig getRepoConfig(CfgAion config) {
-
-            // Try to parse out the dbPath as a URI to figure out if it might be a remote DB
-            URI dbPathUri = null;
-            try {
-                dbPathUri = new URI(config.getDb().getPath());
-            } catch (URISyntaxException e) {
-                throw new RuntimeException("Invalid dbPathUri");
-            }
-
-            String fullDbPath;
-            if (dbPathUri.getScheme() == null || dbPathUri.getScheme().equalsIgnoreCase("file")) {
-                // The dbPath is file based, get the full file path
-                fullDbPath = new File(config.getBasePath(), config.getDb().getPath()).getAbsolutePath();
-            } else {
-                // The dbPath has a non-file protocol, just return it as-is and let the DB engine deal with it
-                fullDbPath = config.getDb().getPath();
-            }
-
-            return new RepositoryConfig(fullDbPath, ContractDetailsAion.getInstance(), config.getDb());
-        }
 
         // repository singleton instance
         private static final AionRepositoryImpl inst =

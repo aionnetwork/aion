@@ -34,12 +34,11 @@
  */
 package org.aion.db.impl;
 
-import org.aion.base.db.PersistenceMethod;
-import org.aion.db.impl.rocksdb.RocksDBWrapper;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.aion.base.db.PersistenceMethod;
+import org.aion.db.impl.rocksdb.RocksDBWrapper;
 
 // @ThreadSafe
 public enum DBVendor {

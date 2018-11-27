@@ -23,7 +23,6 @@
 
 package org.aion.db.generic;
 
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
