@@ -4,7 +4,7 @@ Provides a container that can run the AION kernel. Can also attach a remote debu
 
 ## Limitations
 
-Currently this image there does NOT support running CLI commands before the kernel startup. 
+Currently this image does NOT support running CLI commands before the kernel startup.
 One needs to build a custom image and bake in other CLI commands if necessary (override the container startup script).
 
 ## Prerequisites
@@ -13,15 +13,15 @@ One needs to build a custom image and bake in other CLI commands if necessary (o
 - docker (>= Docker version 17.12.1-ce, build 7390fc6)
 
 The kernel can be deployed as a container using the Dockerfile present in the root of the repo. 
-The docker image can be built using the `pack_docker` ant target. Local development can
-leverage `ant pack_dev_docker` to build a custom image based on current code base.
+The docker image can be built using the `packDocker` Gradle target. Local development can
+leverage `./gradlew packDevDocker` to build a custom image based on current code base.
 
 ## Building
 
 ### Dev build
 
 ```bash
-ant pack_dev_docker
+./gradlew packDevDocker
 ```
 
 ##### Description
@@ -50,7 +50,7 @@ and defaults to `6006`:
 ...
 ```
 
-**Note**: The image build uses the binary built in the `pack` directory by ant. 
+**Note**: The image build uses the binary built in the `pack` directory by Gradle.
 If you want to use a specific kernel binary download the binary from the official repo, rename it to `aion.tar.bz2` and 
 copy it to the `pack` directory
 
@@ -60,7 +60,7 @@ copy it to the `pack` directory
 #### Build docker image
 
 ```bash
-ant pack_docker
+./gradlew packDocker
 ```
 
 This command will create 1 docker image with the tag value as `GITVER` variable from `script/prebuild.sh` which is the
@@ -106,7 +106,7 @@ aion-core:0.2.8.f5317462
 ```
 
 **Note**: 
-We wont's support setting options for the script as the container will have to be teared down after
+We don't support setting options for the script as the container will have to be torn down after
 running and recreated again. This is not feasible in a production environment. Instead of passing options to the startup 
 script we should provide a rpc/java API that will allow the required functionality to be present after kernel startup.
 Until then we can still use that functionality by manually starting a bash session in the container and running
@@ -122,7 +122,7 @@ docker ps
 
 * Start a bash session in the container
 ```bash
-docker run -it <contaier_id> bash
+docker exec -it <container_id> bash
 ```
 
 * Make sure you are in the `/opt/aion` directory and run your desired commands:
@@ -196,4 +196,4 @@ List of environment variables than can override xml properties:
 - log_path
 ```
 
-If you need to override more properties update `override-config.py` to support those properties.
+If you need to override more properties, update `override-config.py` to support those properties.
