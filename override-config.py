@@ -3,7 +3,7 @@ import xml.etree.ElementTree
 import subprocess
 from xml.dom import minidom
 
-config_file = 'config/config.xml'
+config_file = 'mainnet/config/config.xml'
 indentation = '\t'
 
 def override_attrib(element, attrib,  name, value):
