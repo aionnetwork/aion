@@ -20,7 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNull;
@@ -45,8 +45,6 @@ import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.contracts.AionAuctionContract;
-import org.aion.precompiled.contracts.AionNameServiceContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -236,7 +234,7 @@ public class AionNameServiceContractTest {
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(3000L, res.getNrgLeft());
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
+        assertEquals(ResultCode.FAILURE, res2.getResultCode());
         assertEquals(0, res2.getNrgLeft());
     }
 
@@ -419,7 +417,7 @@ public class AionNameServiceContractTest {
         ExecutionResult res = ansc.execute(combined, inputEnergy);
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
     }
 
@@ -449,7 +447,7 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(emptyAddress, actualReturnedAddress);
     }
@@ -485,7 +483,7 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         // since the signature is incorrect, contract is not modified
         assertEquals(emptyAddress, actualReturnedAddress);
@@ -515,7 +513,7 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         assertEquals(emptyAddress, actualReturnedAddress);
     }
@@ -550,7 +548,7 @@ public class AionNameServiceContractTest {
         Address actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
         // since the signature is incorrect, contract is not modified
         assertEquals(emptyAddress, actualReturnedAddress);
@@ -596,7 +594,7 @@ public class AionNameServiceContractTest {
         assertEquals(newAddress1, actualReturnedAddress);
 
         // check for success and failure for execute with invalid new address
-        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
+        assertEquals(ResultCode.FAILURE, res2.getResultCode());
         assertEquals(inputEnergy, res2.getNrgLeft());
         assertEquals(newAddress1, actualReturnedAddress2);
     }
@@ -727,7 +725,7 @@ public class AionNameServiceContractTest {
         // check for success and failure
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getNrgLeft());
-        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
+        assertEquals(ResultCode.FAILURE, res2.getResultCode());
         assertEquals(expectedEnergyLeft2, res2.getNrgLeft());
     }
 

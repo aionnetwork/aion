@@ -12,6 +12,7 @@ JDK_VER="11.0.1"
 JDK_TYPE="openjdk"
 JAVAFX_PATH="${PACK_PATH}/javafx"
 JAVAFX_VER="javafx-jmods-11"
+DEFAULT_NETWORK="mainnet"
 
 if [ ! -d "$PACK_PATH" ]; then
   mkdir $PACK_PATH
@@ -48,7 +49,6 @@ fi
 AION_WEB3_TAR="aion_web3_0.0.4_2018-07-17.tar.gz"
 if [ ! -d "$WEB3JS_PATH" ]; then
   wget -nc "https://github.com/aionnetwork/aion_web3/releases/download/0.0.4/${AION_WEB3_TAR}" -O "${PACK_PATH}/${AION_WEB3_TAR}"
-
   mkdir $WEB3JS_PATH
   tar -xf "${PACK_PATH}/${AION_WEB3_TAR}" -C $WEB3JS_PATH
 fi
@@ -56,7 +56,9 @@ fi
 # copy the config files if can't find the config env
 if [ ! -d "$CONFIG_PATH" ]; then
   mkdir $CONFIG_PATH
-  cp -r ./modBoot/resource/** $CONFIG_PATH
+  mkdir -p "${PACK_PATH}/aion/${DEFAULT_NETWORK}/config"
+  cp -r ./config/** $CONFIG_PATH
+  cp  ${CONFIG_PATH}/${DEFAULT_NETWORK}/** "${PACK_PATH}/aion/${DEFAULT_NETWORK}/config"
 fi
 
 # copy the doc files if can't find the docs env
@@ -71,11 +73,3 @@ if [ ! -d "$SCRIPT_PATH" ]; then
   cp -r ./script/generateSslCert.sh $SCRIPT_PATH
   cp -r ./script/nohup_wrapper.sh $SCRIPT_PATH
 fi
-
-# copy the client API files if can't find the client API env
-if [ ! -d "$API_PATH" ]; then
-  mkdir $API_PATH
-  cp aion_api/pack/libAionApi-*.tar.gz $API_PATH
-fi
-
-cp aion_api/pack/Java-API*-doc.zip $DOCS_PATH

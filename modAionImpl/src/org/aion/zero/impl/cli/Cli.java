@@ -36,7 +36,11 @@ import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -170,6 +174,15 @@ public class Cli {
                 cfg.setReadConfigFiles(configFile, cfg.getExecGenesisFile());
             }
 
+            // reading from correct fork file
+            File forkFile = cfg.getExecForkFile();
+            if (forkFile == null || !forkFile.exists()) {
+                forkFile = cfg.getInitialForkFile();
+            }
+
+            if (forkFile != null && forkFile.exists()) {
+                cfg.setForkProperties(cfg.getNetwork(), forkFile);
+            }
             // true means the UUID must be set
             boolean overwrite = cfg.fromXML(configFile);
 
@@ -226,7 +239,7 @@ public class Cli {
             }
 
             // make directories for kernel execution
-            makeDirs(configFile, cfg);
+            makeDirs(configFile, forkFile, cfg);
 
             if (overwrite) {
                 // only updating the file in case the user id was not set
@@ -535,10 +548,11 @@ public class Cli {
      * Creates the directories for persistence of the kernel data. Copies the config and genesis
      * files from the initial path for the execution directory.
      *
+     * @param forkFile
      * @param cfg the configuration for the runtime kernel environment
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private void makeDirs(File startConfigFile, Cfg cfg) {
+    private void makeDirs(File startConfigFile, File forkFile, Cfg cfg) {
         File file = cfg.getExecDir();
         if (!file.exists()) {
             file.mkdirs();
@@ -562,6 +576,13 @@ public class Cli {
             if (!initial.equals(target)) {
                 copyRecursively(initial, target);
             }
+        }
+
+        // copy fork file
+        initial = forkFile;
+        target = cfg.getExecForkFile();
+        if (!initial.equals(target)) {
+            copyRecursively(initial, target);
         }
 
         // create target log directory
@@ -759,9 +780,10 @@ public class Cli {
         if (skippedTasks.isEmpty()) {
             return;
         }
-        String errorMessage = String.format(
-            "Given arguments require incompatible tasks. Skipped arguments: %s.",
-            String.join(", ", skippedTasks));
+        String errorMessage =
+                String.format(
+                        "Given arguments require incompatible tasks. Skipped arguments: %s.",
+                        String.join(", ", skippedTasks));
         System.out.println(errorMessage);
     }
 
@@ -838,56 +860,53 @@ public class Cli {
                 skippedTasks.add("--config");
             }
         }
-        if (breakingTaskPriority.compareTo(TaskPriority.INFO) < 0
-            && options.isInfo()) {
+        if (breakingTaskPriority.compareTo(TaskPriority.INFO) < 0 && options.isInfo()) {
             skippedTasks.add("--info");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.CREATE_ACCOUNT) < 0
-            && options.isCreateAccount()) {
+                && options.isCreateAccount()) {
             skippedTasks.add("--account create");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.LIST_ACCOUNTS) < 0
-            && options.isListAccounts()) {
+                && options.isListAccounts()) {
             skippedTasks.add("--account list");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.EXPORT_ACCOUNT) < 0
-            && options.getExportAccount() != null) {
+                && options.getExportAccount() != null) {
             skippedTasks.add("--account export");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.IMPORT_ACCOUNT) < 0
-            && options.getImportAccount() != null) {
+                && options.getImportAccount() != null) {
             skippedTasks.add("--account import");
         }
-        if (breakingTaskPriority.compareTo(TaskPriority.SSL) < 0
-            && options.getSsl() != null) {
+        if (breakingTaskPriority.compareTo(TaskPriority.SSL) < 0 && options.getSsl() != null) {
             skippedTasks.add("-s create");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.PRUNE_BLOCKS) < 0
-            && options.isRebuildBlockInfo()) {
+                && options.isRebuildBlockInfo()) {
             skippedTasks.add("--prune-blocks");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.REVERT) < 0
-            && options.getRevertToBlock() != null) {
+                && options.getRevertToBlock() != null) {
             skippedTasks.add("--revert");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.PRUNE_STATE) < 0
-            && options.getPruneStateOption() != null) {
+                && options.getPruneStateOption() != null) {
             skippedTasks.add("--state");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE_SIZE) < 0
-            && options.getDumpStateSizeCount() != null) {
+                && options.getDumpStateSizeCount() != null) {
             skippedTasks.add("--dump-state-size");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.DUMP_STATE) < 0
-            && options.getDumpStateCount() != null) {
+                && options.getDumpStateCount() != null) {
             skippedTasks.add("--dump-state");
         }
         if (breakingTaskPriority.compareTo(TaskPriority.DUMP_BLOCKS) < 0
-            && options.getDumpBlocksCount() != null) {
+                && options.getDumpBlocksCount() != null) {
             skippedTasks.add("--dump-blocks");
         }
-        if (breakingTaskPriority.compareTo(TaskPriority.DB_COMPACT) < 0
-            && options.isDbCompact()) {
+        if (breakingTaskPriority.compareTo(TaskPriority.DB_COMPACT) < 0 && options.isDbCompact()) {
             skippedTasks.add("--db-compact");
         }
         return skippedTasks;

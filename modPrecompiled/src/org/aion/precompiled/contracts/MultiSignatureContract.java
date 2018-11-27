@@ -258,10 +258,10 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
         }
         if (input == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
         if (input.length < 1) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         int operation = input[0];
@@ -272,7 +272,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             case 1:
                 return sendTransaction(input, nrg);
             default:
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.FAILURE, 0);
         }
     }
 
@@ -285,7 +285,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      */
     private ExecutionResult createWallet(byte[] input, long nrg) {
         if (input.length < 1 + Long.BYTES) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         ByteBuffer thresh = ByteBuffer.allocate(Long.BYTES);
@@ -299,14 +299,14 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             return new ExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
         }
         if (owners == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
         if ((owners.size() < MIN_OWNERS) || (owners.size() > MAX_OWNERS)) {
             // sanity check... owners should be null in both these cases really
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
         if ((threshold < MIN_THRESH) || (threshold > owners.size())) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         Address wallet = initNewWallet(owners, threshold);
@@ -324,7 +324,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private ExecutionResult sendTransaction(byte[] input, long nrg) {
         int length = input.length;
         if (length > 1 + ADDR_LEN + (SIG_LEN * MAX_OWNERS) + AMOUNT_LEN + Long.BYTES + ADDR_LEN) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         int walletStart = 1;
@@ -335,7 +335,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
 
         // Ensures input is min expected size except possibly signatures, which is checked below.
         if (sigsStart > amountStart) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         Address wallet = new Address(Arrays.copyOfRange(input, walletStart, sigsStart));
@@ -353,19 +353,19 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         }
         if (track.getStorageValue(wallet, new DataWord(getMetaDataKey())) == null) {
             // Then wallet is not the address of a multi-sig wallet.
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
         if (sigs == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         byte[] msg = constructMsg(wallet, track.getNonce(wallet), recipient, amount, nrgPrice);
         if (amount.compareTo(BigInteger.ZERO) < 0) {
             // Attempt to transfer negative amount.
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
         if (!areValidSignatures(wallet, sigs, msg)) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
         if (track.getBalance(wallet).compareTo(amount) < 0) {
             // Attempt to transfer more than available balance.

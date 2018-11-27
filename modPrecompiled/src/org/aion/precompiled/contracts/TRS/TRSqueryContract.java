@@ -180,10 +180,10 @@ public final class TRSqueryContract extends AbstractTRS {
     @Override
     public ExecutionResult execute(byte[] input, long nrgLimit) {
         if (input == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
         if (input.length == 0) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
         if (nrgLimit < COST) {
             return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
@@ -207,7 +207,7 @@ public final class TRSqueryContract extends AbstractTRS {
             case 5:
                 return availableForWithdrawalAt(input, nrgLimit);
             default:
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.FAILURE, 0);
         }
     }
 
@@ -232,7 +232,7 @@ public final class TRSqueryContract extends AbstractTRS {
         final int len = 33;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         byte[] result = new byte[1];
@@ -264,7 +264,7 @@ public final class TRSqueryContract extends AbstractTRS {
         final int len = 33;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         byte[] result = new byte[1];
@@ -297,7 +297,7 @@ public final class TRSqueryContract extends AbstractTRS {
         final int len = 33;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         byte[] result = new byte[1];
@@ -337,7 +337,7 @@ public final class TRSqueryContract extends AbstractTRS {
         final int len = 33;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // Grab the contract address and block number and determine the period.
@@ -375,7 +375,7 @@ public final class TRSqueryContract extends AbstractTRS {
         final int len = 41;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // Grab the contract address and block number and determine the period.
@@ -387,7 +387,7 @@ public final class TRSqueryContract extends AbstractTRS {
         long blockNum = blockBuf.getLong();
 
         if (blockNum <= 0) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         return determinePeriod(contract, blockchain.getBlockByNumber(blockNum), nrgLimit);
@@ -420,13 +420,13 @@ public final class TRSqueryContract extends AbstractTRS {
         final int len = 41;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexTimestamp));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // If a contract has its funds open then the fraction is always 1.
@@ -440,7 +440,7 @@ public final class TRSqueryContract extends AbstractTRS {
         // This operation is only well-defined when the contract has a start time. Thus the contract
         // must be in the following state: live.
         if (!isContractLive(contract)) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
@@ -500,7 +500,7 @@ public final class TRSqueryContract extends AbstractTRS {
 
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // If contract is not yet live we are in period 0.
@@ -511,7 +511,7 @@ public final class TRSqueryContract extends AbstractTRS {
 
         // Grab the timestamp of block number blockNum and calculate the period the contract is in.
         if (block == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         long blockTime = block.getTimestamp();

@@ -20,7 +20,7 @@
  * Contributors:
  *     Aion foundation.
  */
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static junit.framework.TestCase.assertEquals;
 
@@ -39,8 +39,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.precompiled.contracts.AionAuctionContract;
-import org.aion.precompiled.contracts.AionNameServiceContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -403,7 +401,7 @@ public class AionAuctionContractTest {
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res2.getResultCode());
+        assertEquals(ResultCode.FAILURE, res2.getResultCode());
         Assert.assertArrayEquals("already been extended".getBytes(), res2.getOutput());
 
         // uncomment to see extension output
@@ -434,7 +432,7 @@ public class AionAuctionContractTest {
         byte[] combined2 = setupForExtension(domainName1, Address.wrap(k2.getAddress()));
         ExecutionResult res = aac.execute(combined2, inputEnergy);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
@@ -460,7 +458,7 @@ public class AionAuctionContractTest {
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         ExecutionResult result2 = aac2.execute(combined2, inputEnergy);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, result2.getResultCode());
+        assertEquals(ResultCode.FAILURE, result2.getResultCode());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -480,7 +478,7 @@ public class AionAuctionContractTest {
                         defaultKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         ExecutionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, result.getResultCode());
+        assertEquals(ResultCode.FAILURE, result.getResultCode());
 
         byte[] combined2 =
                 setupInputs(
@@ -490,7 +488,7 @@ public class AionAuctionContractTest {
                         defaultKey);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         ExecutionResult result2 = aac2.execute(combined2, DEFAULT_INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, result2.getResultCode());
+        assertEquals(ResultCode.FAILURE, result2.getResultCode());
 
         byte[] combined3 =
                 setupInputs(
@@ -500,7 +498,7 @@ public class AionAuctionContractTest {
                         defaultKey);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
         ExecutionResult result3 = aac3.execute(combined3, DEFAULT_INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, result3.getResultCode());
+        assertEquals(ResultCode.FAILURE, result3.getResultCode());
 
         byte[] combined4 =
                 setupInputs(
@@ -510,7 +508,7 @@ public class AionAuctionContractTest {
                         defaultKey);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
         ExecutionResult result4 = aac4.execute(combined4, DEFAULT_INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, result4.getResultCode());
+        assertEquals(ResultCode.FAILURE, result4.getResultCode());
 
         byte[] combined5 =
                 setupInputs(
@@ -520,7 +518,7 @@ public class AionAuctionContractTest {
                         defaultKey);
         AionAuctionContract aac5 = new AionAuctionContract(repo, AION, blockchain);
         ExecutionResult result5 = aac5.execute(combined5, DEFAULT_INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, result5.getResultCode());
+        assertEquals(ResultCode.FAILURE, result5.getResultCode());
     }
 
     @Test
@@ -534,7 +532,7 @@ public class AionAuctionContractTest {
                         notExistKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         ExecutionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, result.getResultCode());
+        assertEquals(ResultCode.FAILURE, result.getResultCode());
         Assert.assertArrayEquals("bidder account does not exist".getBytes(), result.getOutput());
     }
 
@@ -551,7 +549,7 @@ public class AionAuctionContractTest {
                         defaultBidAmount.toByteArray(),
                         poorKey);
         ExecutionResult result = testAAC.execute(combined3, DEFAULT_INPUT_NRG);
-        assertEquals(ResultCode.INTERNAL_ERROR, result.getResultCode());
+        assertEquals(ResultCode.FAILURE, result.getResultCode());
         Assert.assertArrayEquals("insufficient balance".getBytes(), result.getOutput());
     }
 
@@ -574,7 +572,7 @@ public class AionAuctionContractTest {
         System.arraycopy(input, 0, wrongInput2, 0, 131);
         ExecutionResult result2 = testAAC.execute(wrongInput2, DEFAULT_INPUT_NRG);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, result.getResultCode());
+        assertEquals(ResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getNrgLeft(), 4000);
         Assert.assertArrayEquals("incorrect input length".getBytes(), result.getOutput());
 
@@ -596,7 +594,7 @@ public class AionAuctionContractTest {
         input[110] = (byte) ~input[65];
         ExecutionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, result.getResultCode());
+        assertEquals(ResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getNrgLeft(), 4000);
         Assert.assertArrayEquals("incorrect signature".getBytes(), result.getOutput());
     }
@@ -613,7 +611,7 @@ public class AionAuctionContractTest {
                         anotherKey);
         ExecutionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, result.getResultCode());
+        assertEquals(ResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getNrgLeft(), 4000);
         Assert.assertArrayEquals("incorrect key".getBytes(), result.getOutput());
     }
@@ -644,7 +642,7 @@ public class AionAuctionContractTest {
                         defaultKey);
         ExecutionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, result.getResultCode());
+        assertEquals(ResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getNrgLeft(), 4000);
         Assert.assertArrayEquals("negative bid value".getBytes(), result.getOutput());
     }

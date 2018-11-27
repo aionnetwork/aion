@@ -28,7 +28,7 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import org.aion.base.type.Address;
 import org.aion.crypto.HashUtil;
-import org.aion.precompiled.DummyRepo;
+import org.aion.precompiled.contracts.DummyRepo;
 import org.junit.Before;
 import org.junit.Test;
 

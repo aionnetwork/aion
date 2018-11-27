@@ -12,8 +12,7 @@ def dirPack = "./pack"
 def dirLibFile = "lib"
 def dirModFile ="./mod"
 def javaHome = System.getProperty('java.home')
-
-def vmVersion = "0.3.1"
+def vmVersion = "0.3.2"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
 allprojects { 
@@ -60,7 +59,7 @@ task compileNative(type:Exec) {
         "-shared", 
         "-I${javaHome}/include", 
         "-I${javaHome}/include/linux", 
-        "-I${dirBuildNative}", 
+        "-I${dirBuildNative}",
         "-I${dirNative}/linux/sodium", 
         "-mtune=generic", 
         "-m64", 
@@ -196,7 +195,7 @@ task downloadFastVmGit(type:Download) {
     dest buildDir
 }
 
-task downloadSolidityGit(type:Download) { 
+task downloadSolidityGit(type:Download) {
     overwrite false // TODO This seems to work only when this task is directly invoked
     onlyIfModified true
     src "https://github.com/aionnetwork/aion_fastvm/releases/download/v${vmVersion}/solidity_v${vmVersion}.tar.gz"
@@ -294,18 +293,11 @@ task pack(type: Tar) {
         from "${dirPack}/rt"
         include '**'
     }
-    into('/aion/web3') {
+    into('/aion/web-console') {
         from "${dirPack}/web3"
         include '**'
     }
-    into('/aion/docs') {
-        from "${dirPack}/docs"
-        include '**'
-    }
-    into('/aion/clientAPI') {
-        from "${dirPack}/clientAPI"
-        include '**'
-    }
+
     into('/aion/script') {
         from "${dirPack}/script"
         include 'generateSslCert.sh', 'nohup_wrapper.sh'

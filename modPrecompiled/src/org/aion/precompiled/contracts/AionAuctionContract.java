@@ -163,24 +163,24 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         // check length for both operations
         if (input.length < 131) {
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+                    ResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
         }
 
         int domainNameLength = input[0];
         if (domainNameLength < 0)
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+                    ResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
 
         // check if input is too short for extension function
         if (input.length < 130 + domainNameLength)
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+                    ResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
         int balanceLength = input[129 + domainNameLength];
 
         if (balanceLength > 0) {
             if (input.length < 130 + domainNameLength + balanceLength) {
                 return new ExecutionResult(
-                        ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect input length".getBytes());
+                        ResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
             }
         }
 
@@ -206,14 +206,14 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         // check if the domain name already has active parent domain
         if (hasActiveParentDomain(domainNameRaw))
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR,
+                    ResultCode.FAILURE,
                     nrg - COST,
                     "the given domain name has a parent that is already active".getBytes());
 
         // check if the domain name is valid to register
         if (!isValidDomainName(domainNameRaw))
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg - COST, "domain name is invalid".getBytes());
+                    ResultCode.FAILURE, nrg - COST, "domain name is invalid".getBytes());
 
         // add zeros for storing
         byte[] domainNameInBytesWithZeros = addLeadingZeros(domainNameInBytes);
@@ -232,12 +232,12 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         // verify public key matches owner
         if (!b) {
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect signature".getBytes());
+                    ResultCode.FAILURE, nrg - COST, "incorrect signature".getBytes());
         }
 
         if (!bidderAddress.equals(Address.wrap(sig.getAddress()))) {
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg - COST, "incorrect key".getBytes());
+                    ResultCode.FAILURE, nrg - COST, "incorrect key".getBytes());
         }
 
         // if this domain name does not have an callerAddress
@@ -263,17 +263,17 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         // check if bidValue is valid (greater than 0)
         if (bidValue.compareTo(new BigInteger("0")) < 0)
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, nrg - COST, "negative bid value".getBytes());
+                    ResultCode.FAILURE, nrg - COST, "negative bid value".getBytes());
 
         // check bidder addr and its balance
         if (this.track.hasAccountState(bidderAddress)) {
             if (this.track.getAccountState(bidderAddress).getBalance().compareTo(bidValue) < 0) {
                 return new ExecutionResult(
-                        ResultCode.INTERNAL_ERROR, nrg - COST, "insufficient balance".getBytes());
+                        ResultCode.FAILURE, nrg - COST, "insufficient balance".getBytes());
             }
         } else
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR,
+                    ResultCode.FAILURE,
                     nrg - COST,
                     "bidder account does not exist".getBytes());
 
@@ -341,7 +341,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         if (expireDateFromStorage.getTime() < currentDate.getTime()
                 || difference > ACTIVE_TIME.intValue()) {
             return new ExecutionResult(
-                    ResultCode.INTERNAL_ERROR, COST - nrg, "already been extended".getBytes());
+                    ResultCode.FAILURE, COST - nrg, "already been extended".getBytes());
         }
 
         // add the new expire date

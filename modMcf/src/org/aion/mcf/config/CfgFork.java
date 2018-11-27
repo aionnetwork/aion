@@ -20,11 +20,23 @@
  * Contributors:
  *     Aion foundation.
  */
+package org.aion.mcf.config;
 
-package org.aion.zero.impl;
+import java.util.Properties;
 
-public class Version {
-    public static final String KERNEL_VERSION = "0.3.2";
-    public static final String REPO_VERSION = "0.1.0";
-    public static final boolean FORK = true;
+public class CfgFork {
+
+    public CfgFork() {}
+
+    public static final String FORK_PROPERTIES_PATH = "/fork.properties";
+
+    private static Properties forkProperties = new Properties();
+
+    public void setProperties(Properties properties) {
+        forkProperties = properties;
+    }
+
+    public Properties getProperties() {
+        return forkProperties;
+    }
 }
