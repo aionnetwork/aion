@@ -128,7 +128,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
 
         if (input.length < 114) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // process input data
@@ -149,7 +149,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         // verify signature is correct
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
         if (sig == null) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         byte[] payload = new byte[18];
@@ -157,12 +157,12 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         boolean b = ECKeyEd25519.verify(payload, sig.getSignature(), sig.getPubkey(null));
 
         if (!b) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // verify public key matches owner
         if (!this.ownerAddress.equals(Address.wrap(sig.getAddress()))) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         // payload processing
@@ -172,7 +172,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         BigInteger value = BIUtil.toBI(amount);
 
         if (signum != 0x0 && signum != 0x1) {
-            return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+            return new ExecutionResult(ResultCode.FAILURE, 0);
         }
 
         BigInteger finalValue;
@@ -182,7 +182,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         } else {
             // subtraction
             if (value.compareTo(totalCurrBI) > 0) {
-                return new ExecutionResult(ResultCode.INTERNAL_ERROR, 0);
+                return new ExecutionResult(ResultCode.FAILURE, 0);
             }
 
             finalValue = totalCurrBI.subtract(value);

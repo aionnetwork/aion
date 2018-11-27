@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.precompiled.DummyRepo;
+import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
@@ -81,7 +81,7 @@ public class TRSstateContractTest extends TRShelpers {
     public void testCreateNullInput() {
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
         ExecutionResult res = trs.execute(null, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -89,7 +89,7 @@ public class TRSstateContractTest extends TRShelpers {
     public void testCreateEmptyInput() {
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
         ExecutionResult res = trs.execute(ByteUtil.EMPTY_BYTE_ARRAY, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -119,7 +119,7 @@ public class TRSstateContractTest extends TRShelpers {
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
             if ((i < 0) || (i > MAX_OP)) {
                 input[0] = (byte) i;
-                assertEquals(ResultCode.INTERNAL_ERROR, trs.execute(input, COST).getResultCode());
+                assertEquals(ResultCode.FAILURE, trs.execute(input, COST).getResultCode());
             }
         }
     }
@@ -132,13 +132,13 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getCreateInput(true, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test isDirectDeposit true
         input = getCreateInput(true, true, 1, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -147,7 +147,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getCreateInput(false, false, 0, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -157,13 +157,13 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getCreateInput(false, false, 1201, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Largest too-large period: 65,535
         input = getCreateInput(false, false, 65_535, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -173,13 +173,13 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 19);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Largest too-large precision: 255
         input = getCreateInput(false, false, 1, BigInteger.ZERO, 255);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -452,14 +452,14 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getCreateInput(false, false, 1, raw, 0);
         TRSstateContract trs = newTRSstateContract(caller);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test 18 shifts.
         raw = new BigInteger("100000000000000000001");
         input = getCreateInput(false, false, 1, raw, 18);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test all 9 bytes of percent as 1's using zero shifts.
@@ -479,13 +479,13 @@ public class TRSstateContractTest extends TRShelpers {
         raw = new BigInteger(rawBytes);
         input = getCreateInput(false, false, 1, raw, 0);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test all 9 bytes of percent as 1's using 18 shifts -> 4722.36% still no good.
         input = getCreateInput(false, false, 1, raw, 18);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -547,7 +547,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getCreateInput(false, false, 1, raw, shifts);
         TRSstateContract trs = newTRSstateContract(caller);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // With 12 shifts we have: 872.743562198734% -> no good
@@ -555,7 +555,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getCreateInput(false, false, 1, raw, shifts);
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // With 13 shifts we have: 87.2743562198734% -> good
@@ -703,7 +703,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[0] = (byte) 0x1;
         TRSstateContract trs = newTRSstateContract(acct);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test on address size 31.
@@ -711,7 +711,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[0] = (byte) 0x1;
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -724,7 +724,7 @@ public class TRSstateContractTest extends TRShelpers {
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         TRSstateContract trs = newTRSstateContract(acct);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -736,7 +736,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getLockInput(acct);
         TRSstateContract trs = newTRSstateContract(acct);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test attempt to lock what looks like a TRS address (proper prefix).
@@ -744,7 +744,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[input.length - 1] = (byte) ~input[input.length - 1];
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -756,7 +756,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getLockInput(contract);
         TRSstateContract trs = newTRSstateContract(AION);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test in test mode: owner is AION, caller is acct.
@@ -764,7 +764,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -794,7 +794,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         // attempt to lock the contract again...
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test in test mode.
@@ -819,7 +819,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         // attempt to lock the contract again...
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -886,7 +886,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test in test mode.
@@ -904,7 +904,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(AION);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -915,7 +915,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getLockInput(contract);
         ExecutionResult res = newTRSstateContract(owner).execute(input, COST);
         AbstractTRS trs = newTRSstateContract(owner);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertFalse(isContractLocked(trs, contract));
 
@@ -929,7 +929,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         input = getLockInput(contract);
         res = newTRSstateContract(owner).execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
         assertFalse(isContractLocked(trs, contract));
     }
@@ -945,7 +945,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[0] = (byte) 0x1;
         TRSstateContract trs = newTRSstateContract(acct);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test on address size 31.
@@ -953,7 +953,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[0] = (byte) 0x1;
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -966,7 +966,7 @@ public class TRSstateContractTest extends TRShelpers {
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         TRSstateContract trs = newTRSstateContract(acct);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -980,7 +980,7 @@ public class TRSstateContractTest extends TRShelpers {
         System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
         TRSstateContract trs = newTRSstateContract(acct);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         repo.incrementNonce(acct);
@@ -990,7 +990,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[input.length - 1] = (byte) ~input[input.length - 1]; // flip a bit
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -1002,7 +1002,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getLockInput(contract);
         TRSstateContract trs = newTRSstateContract(AION);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test in test mode: owner is AION, caller is acct.
@@ -1010,7 +1010,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -1031,7 +1031,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         // Try to start contract again.
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test in test mode.
@@ -1048,7 +1048,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         // Try to start contract again.
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -1063,7 +1063,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getStartInput(contract);
         ExecutionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
 
         // Test in test mode.
@@ -1074,7 +1074,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getStartInput(contract);
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getNrgLeft());
     }
 
@@ -1276,7 +1276,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getOpenFundsInput(contract);
         byte[] shortInput = Arrays.copyOf(input, input.length - 1);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSstateContract(acct).execute(shortInput, COST).getResultCode());
     }
 
@@ -1289,7 +1289,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] longInput = new byte[input.length + 1];
         System.arraycopy(input, 0, longInput, 0, input.length);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSstateContract(acct).execute(longInput, COST).getResultCode());
     }
 
@@ -1301,7 +1301,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getOpenFundsInput(contract);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSstateContract(other).execute(input, COST).getResultCode());
     }
 
@@ -1312,7 +1312,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getOpenFundsInput(contract);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1321,7 +1321,7 @@ public class TRSstateContractTest extends TRShelpers {
         Address acct = getNewExistentAccount(BigInteger.TEN);
         byte[] input = getOpenFundsInput(acct);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1362,10 +1362,10 @@ public class TRSstateContractTest extends TRShelpers {
         assertEquals(
                 ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1419,13 +1419,13 @@ public class TRSstateContractTest extends TRShelpers {
 
         // A subsequent withdraw operation should not withdraw anything now.
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSuseContract(acct1).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSuseContract(acct2).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSuseContract(acct3).execute(input, COST).getResultCode());
         assertEquals(owings1, repo.getBalance(acct1));
         assertEquals(owings2, repo.getBalance(acct2));
@@ -1496,7 +1496,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         input = getLockInput(contract);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1512,7 +1512,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         input = getStartInput(contract);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1550,7 +1550,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to withdraw.
         input = getWithdrawInput(contract);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
     }
@@ -1568,7 +1568,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to deposit.
         input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
         assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct));
@@ -1588,7 +1588,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to deposit.
         input = getDepositForInput(contract, other, BigInteger.ONE);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
         assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, other));
@@ -1619,7 +1619,7 @@ public class TRSstateContractTest extends TRShelpers {
         BigInteger total = deposit.multiply(BigInteger.valueOf(numBeneficiaries));
         repo.addBalance(owner, total);
         input = getBulkDepositForInput(contract, beneficiaries, amounts);
-        assertEquals(ResultCode.INTERNAL_ERROR, trs.execute(input, COST).getResultCode());
+        assertEquals(ResultCode.FAILURE, trs.execute(input, COST).getResultCode());
         for (Address acc : beneficiaries) {
             assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acc));
         }
@@ -1645,7 +1645,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to refund.
         input = getRefundInput(contract, other, BigInteger.ONE);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.ONE, getDepositBalance(trs, contract, other));
         assertEquals(BigInteger.ZERO, repo.getBalance(other));
@@ -1666,7 +1666,7 @@ public class TRSstateContractTest extends TRShelpers {
         repo.addBalance(acct, extra);
         input = getAddExtraInput(contract, extra);
         assertEquals(
-                ResultCode.INTERNAL_ERROR,
+                ResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.ZERO, getExtraFunds(trs, contract));
     }

@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import org.aion.base.type.Address;
-import org.aion.precompiled.DummyRepo;
+import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
 import org.aion.vm.AbstractExecutionResult.ResultCode;

@@ -21,7 +21,7 @@
  *     Aion foundation.
  */
 
-package org.aion.precompiled;
+package org.aion.precompiled.contracts;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,7 +33,7 @@ import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.precompiled.contracts.TotalCurrencyContract;
+import org.aion.precompiled.ContractFactory;
 import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.vm.ExecutionResult;
 import org.junit.After;
@@ -104,7 +104,7 @@ public class TotalCurrencyContractTest {
         ExecutionResult res = tcc.execute(payload, COST);
 
         System.out.println("Contract result: " + res.toString());
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
@@ -197,7 +197,7 @@ public class TotalCurrencyContractTest {
                         constructUpdateInput((byte) 0x0, (byte) 0x0), 0, 100); // cut sig short.
         ExecutionResult res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -213,7 +213,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x0);
         ExecutionResult res = contract.execute(input, COST);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -225,7 +225,7 @@ public class TotalCurrencyContractTest {
         input[30] = (byte) ~input[30]; // flip a bit
 
         ExecutionResult res = tcc.execute(input, COST);
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
@@ -262,7 +262,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x1); // 0x1 == subtract
         ExecutionResult res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
 
         // Verify total amount is non-negative.
@@ -277,7 +277,7 @@ public class TotalCurrencyContractTest {
         byte[] input = constructUpdateInput((byte) 0x0, (byte) 0x2); // only 0, 1 are valid.
         ExecutionResult res = tcc.execute(input, COST);
 
-        assertEquals(ResultCode.INTERNAL_ERROR, res.getResultCode());
+        assertEquals(ResultCode.FAILURE, res.getResultCode());
         assertEquals(0L, res.getNrgLeft());
     }
 
