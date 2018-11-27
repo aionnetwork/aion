@@ -23,11 +23,6 @@
 
 package org.aion.db.generic;
 
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.PersistenceMethod;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.slf4j.Logger;
 
 import java.util.Collection;
 import java.util.Map;
@@ -36,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;

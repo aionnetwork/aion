@@ -279,6 +279,11 @@ public class CfgDb {
         }
     }
 
+    public boolean isFileBased() {
+        DBVendor vendor = DBVendor.fromString(this.vendor);
+        return vendor.isFileBased();
+    }
+
     public String getPath() {
         return path;
     }
@@ -372,7 +377,7 @@ public class CfgDb {
                     DBVendor vendor =
                             DBVendor.fromString(
                                     entry.getValue().asProperties().getProperty(Props.DB_TYPE));
-                    isPersistent = vendor.getPersistence() == PersistenceMethod.FILE_BASED;
+                    isPersistent = vendor.isFileBased();
                 }
             }
 
@@ -384,7 +389,7 @@ public class CfgDb {
             props.setProperty(Props.DB_TYPE, this.vendor);
             props.setProperty(Props.ENABLE_DB_COMPRESSION, String.valueOf(this.compression));
             props.setProperty(Props.CHECK_INTEGRITY, String.valueOf(this.check_integrity));
-            boolean isPersistent = DBVendor.fromString(this.vendor).getPersistence() == PersistenceMethod.FILE_BASED;
+            boolean isPersistent = DBVendor.fromString(this.vendor).isFileBased();
             props.setProperty(Props.PERSISTENT, String.valueOf(isPersistent));
 
             props.setProperty(Props.ENABLE_DB_CACHE, "true");

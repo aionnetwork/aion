@@ -9,7 +9,6 @@ module aion.boot {
     requires aion.p2p;
     requires aion.fastvm;
     requires aion.txpool.impl;
-    requires jdk.unsupported;
 
     uses org.aion.evtmgr.EventMgrModule;
     uses org.aion.log.AionLoggerFactory;

@@ -403,7 +403,11 @@ public abstract class Cfg {
     }
 
     public String getDatabasePath() {
-        return getDatabaseDir().getAbsolutePath();
+        if (getDb().isFileBased()) {
+            return getDatabaseDir().getAbsolutePath();
+        } else {
+            return getDb().getPath();
+        }
     }
 
     public File getDatabaseDir() {

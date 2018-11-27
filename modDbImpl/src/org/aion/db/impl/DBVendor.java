@@ -40,7 +40,6 @@ import org.aion.db.impl.rocksdb.RocksDBWrapper;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.aion.db.impl.rocksdb.RocksDBWrapper;
 
 // @ThreadSafe
 public enum DBVendor {
@@ -99,12 +98,21 @@ public enum DBVendor {
     }
 
     /**
-     * Check whether the DB provided by the vendor is intended to be persistent.
+     * Gets the persistence method of this database vendor
      *
-     * @return {@code true} if the DB provider is intended to be persistent
+     * @return The persistence method of the database
      */
     public PersistenceMethod getPersistence() {
         return this.persistence;
+    }
+
+    /**
+     * Gets Whether or not this database uses file-based persistence
+     *
+     * @return Whether or not this database uses file-based persistence
+     */
+    public boolean isFileBased() {
+        return this.persistence == PersistenceMethod.FILE_BASED;
     }
 
     /** @return {@code false} for a DBVendor with an undefined driver implementation */

@@ -27,8 +27,6 @@ import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
 import static org.aion.mcf.db.DatabaseUtils.verifyAndBuildPath;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;

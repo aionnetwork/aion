@@ -111,7 +111,10 @@ public class AionRepositoryImpl
 
         // repository singleton instance
         private static final AionRepositoryImpl inst =
-                new AionRepositoryImpl(getRepoConfig(config));
+                new AionRepositoryImpl(new RepositoryConfig(
+                    config.getDatabasePath(),
+                    ContractDetailsAion.getInstance(),
+                    config.getDb()));
     }
 
     public static AionRepositoryImpl inst() {
