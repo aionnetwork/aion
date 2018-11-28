@@ -50,12 +50,20 @@ public class MongoTestRunner implements AutoCloseable {
                 "--replSet",
                 String.format("rs%d", System.currentTimeMillis()),
                 "--noauth",
-                "--nojournal"
+                "--nojournal",
+                "--quiet",
+                "--logpath",
+                new File(databaseFilesDir, "log.log").getAbsolutePath()
             );
 
             this.runningMongoServer = new ProcessBuilder(commands)
                 .redirectError(Redirect.INHERIT)
                 .start();
+
+            this.runningMongoServer.onExit().thenAccept(p -> {
+                System.err.println("Unexpected mongo database shutdown with code " + p.exitValue());
+                fail("Mongo database crashed");
+            });
 
             // Next we run a command to initialize the mongo server's replicas set and admin accounts
             List<String> initializationCommands = List.of(
@@ -68,6 +76,7 @@ public class MongoTestRunner implements AutoCloseable {
             );
 
             tryInitializeDb(initializationCommands, 30, 100);
+
         } catch (IOException e) {
             e.printStackTrace();
             fail("Exception thrown while starting Mongo");
@@ -136,7 +145,7 @@ public class MongoTestRunner implements AutoCloseable {
     @Override
     public void close() throws Exception {
         if (this.runningMongoServer != null) {
-            this.runningMongoServer.destroyForcibly();
+            this.runningMongoServer.destroy();
             FileUtils.deleteRecursively(this.databaseFilesDir);
         }
 
