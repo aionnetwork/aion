@@ -32,6 +32,11 @@ import org.aion.db.impl.AbstractDB;
 import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 
+/**
+ * This class allows us to connect to a MongoDB instance to write the kernel's data. To test this out locally, you can
+ * use the script located at modDbImpl/test_resources/mongo/start_mongo_local.sh to spin up a mongo database using
+ * docker, and then modify your config.xml to point to that local database
+ */
 public class MongoDB extends AbstractDB {
 
     /**
