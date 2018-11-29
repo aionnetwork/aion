@@ -231,6 +231,12 @@ public class Cli {
 
             // 5. options that can be influenced by the -d and -n arguments
 
+            if (options.getPort() != null) {
+                // update port in the config file
+                cfg.toXML(new String[] {"--p2p=" + ","+ options.getPort()}, configFile);
+                // no return, allow for other parameters combined with -p
+            }
+
             if (options.isInfo()) {
                 System.out.println(
                         "Reading config file from: "
@@ -860,6 +866,9 @@ public class Cli {
             }
             if (options.getDirectory() != null) {
                 skippedTasks.add("--datadir");
+            }
+            if (options.getPort() != null) {
+                skippedTasks.add("--port");
             }
             if (options.getConfig() != null) {
                 skippedTasks.add("--config");

@@ -354,7 +354,7 @@ public final class CfgAion extends Cfg {
                     override = true;
                     String[] subArgsArr = arg.replace("--p2p=", "").split(",");
                     if (subArgsArr.length == 2) {
-                        this.getNet().getP2p().setIp(subArgsArr[0]);
+                        if (!subArgsArr[0].equals("")) this.getNet().getP2p().setIp(subArgsArr[0]);
                         this.getNet().getP2p().setPort(Integer.parseInt(subArgsArr[1]));
                     }
                 }
