@@ -39,6 +39,7 @@ import org.aion.log.LogLevel;
 public class CfgLog {
 
     private Map<String, String> modules;
+    // TODO: rename to enabled; current name leads to confusion
     boolean logFile;
     String logPath;
 
@@ -169,11 +170,6 @@ public class CfgLog {
     /** Method returns user input folder path of logger */
     public String getLogPath() {
         return logPath;
-    }
-
-    /** Method checks folder path for illegal inputs */
-    public boolean isValidPath() {
-        return logPath.length() > 0 && !logPath.matches(".*[-=+,.?;:'!@#$%^&*].*");
     }
 
     @Override
