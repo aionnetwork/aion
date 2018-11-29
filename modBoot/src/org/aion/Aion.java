@@ -156,12 +156,7 @@ public class Aion {
             System.out.println(
                     "Logger disabled; to enable please update log settings in config.xml and restart kernel.");
             filePath[0] = "« disabled »";
-        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println(
-                    "Logger disabled due to invalid file path; to enable please update log setting in config.xml and restart kernel.");
-            cfg.getLog().disableLogging();
-            filePath[0] = "« disabled »";
-        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+        } else {
             filePath[0] = cfg.getLogPath();
         }
 

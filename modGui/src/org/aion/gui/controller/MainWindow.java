@@ -227,10 +227,7 @@ public class MainWindow extends Application {
         if (!cfg.getLog().getLogFile()) {
             System.out.println(
                     "Logger disabled; to enable please check log settings in config.xml\n");
-        } else if (!cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
-            System.out.println("File path is invalid; please check log setting in config.xml\n");
-            System.exit(1);
-        } else if (cfg.getLog().isValidPath() && cfg.getLog().getLogFile()) {
+        } else {
             System.out.println("Logger file path: '" + cfg.getLog().getLogPath() + "'\n");
         }
         AionLoggerFactory.init(

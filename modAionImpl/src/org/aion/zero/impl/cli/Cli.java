@@ -171,7 +171,12 @@ public class Cli {
                 configFile = cfg.getInitialConfigFile();
             } else {
                 // marks that the files were read from the execution path
-                cfg.setReadConfigFiles(configFile, cfg.getExecGenesisFile());
+                File forkFile = cfg.getExecForkFile();
+                if (forkFile.exists()) {
+                    cfg.setReadConfigFiles(configFile, cfg.getExecGenesisFile(), forkFile);
+                } else {
+                    cfg.setReadConfigFiles(configFile, cfg.getExecGenesisFile());
+                }
             }
 
             // reading from correct fork file

@@ -513,6 +513,15 @@ public abstract class Cfg {
         this.baseGenesisFile = genesisFile;
     }
 
+    /**
+     * Used to updated the initial configuration to using the execution configuration files when
+     * reading the initial configuration from those files.
+     */
+    public void setReadConfigFiles(File configFile, File genesisFile, File forkFile) {
+        setReadConfigFiles(configFile, genesisFile);
+        this.baseForkFile = forkFile;
+    }
+
     /** @implNote Maintains the old setup if the genesis file is present in the old location. */
     public File getInitialGenesisFile() {
         if (baseGenesisFile == null) {
