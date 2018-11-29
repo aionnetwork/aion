@@ -107,6 +107,8 @@ public class CliTest {
     private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
     private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
 
+    private static final String PORT_NUMBER = "12345";
+
     /** @implNote set this to true to enable printing */
     private static final boolean verbose = false;
 
@@ -608,6 +610,278 @@ public class CliTest {
         Cli.copyRecursively(config, mainnetConfig);
     }
 
+    /** Parameters for testing {@Link #testPort(String[], ReturnType, String, String)}. */
+    @SuppressWarnings("unused")
+    private Object parametersWithPort() {
+        List<Object> parameters = new ArrayList<>();
+
+        String[] port_options = new String[] {"-p", "--port"};
+        String[] net_options = new String[] {"-n", "--network"};
+        String[] dir_options = new String[] {"-d", "--datadir"};
+        String expectedPath = MAIN_BASE_PATH.getAbsolutePath();
+        String expPathOnError = MAIN_BASE_PATH.getAbsolutePath();
+        String expPortOnError = Integer.toString(cfg.getNet().getP2p().getPort());
+
+        // port alone
+        for (String opPort : port_options) {
+            // without parameter
+            parameters.add(
+                    new Object[] {new String[] {opPort}, ERROR, expPathOnError, expPortOnError});
+            // with two parameters
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, PORT_NUMBER, PORT_NUMBER},
+                        ERROR,
+                        expPathOnError,
+                        expPortOnError
+                    });
+            // with invalid parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, "invalid"}, ERROR, expPathOnError, expPortOnError
+                    });
+            // with testing port number
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, PORT_NUMBER}, RUN, expectedPath, PORT_NUMBER
+                    });
+        }
+
+        // port with help and version
+        for (String opPort : port_options) {
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, PORT_NUMBER, "-h"}, EXIT, expectedPath, expPortOnError
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, PORT_NUMBER, "-v"}, EXIT, expectedPath, expPortOnError
+                    });
+        }
+
+        // network and port
+        String[] net_values = new String[] {"mainnet", "invalid"};
+        for (String opNet : net_options) {
+            for (String valNet : net_values) {
+                for (String opPort : port_options) {
+                    // without port parameter
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opNet, valNet, opPort},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, opNet, valNet},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    // with invalid port parameter
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opNet, valNet, opPort, "invalid"},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, "invalid", opNet, valNet},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    // with testing port number
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opNet, valNet, opPort, PORT_NUMBER},
+                                RUN,
+                                expectedPath,
+                                PORT_NUMBER
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, PORT_NUMBER, opNet, valNet},
+                                RUN,
+                                expectedPath,
+                                PORT_NUMBER
+                            });
+                }
+            }
+        }
+
+        // network and port with testnet
+        net_values = new String[] {"mastery", "testnet"};
+        expectedPath = TEST_BASE_PATH.getAbsolutePath();
+        for (String opNet : net_options) {
+            for (String valNet : net_values) {
+                for (String opPort : port_options) {
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opNet, valNet, opPort, PORT_NUMBER},
+                                RUN,
+                                expectedPath,
+                                PORT_NUMBER
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, PORT_NUMBER, opNet, valNet},
+                                RUN,
+                                expectedPath,
+                                PORT_NUMBER
+                            });
+                }
+            }
+        }
+
+        // directory and port
+        String[] dir_values = new String[] {dataDirectory, path.getAbsolutePath()};
+        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        for (String opDir : dir_options) {
+            for (String valDir : dir_values) {
+                for (String opPort : port_options) {
+                    // without port parameter
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opDir, valDir, opPort},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, opDir, valDir},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    // with invalid port parameter
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opDir, valDir, opPort, "invalid"},
+                                ERROR,
+                                expectedPath,
+                                expPortOnError
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, "invalid", opDir, valDir},
+                                ERROR,
+                                expectedPath,
+                                expPortOnError
+                            });
+                    // with testing port number
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opDir, valDir, opPort, PORT_NUMBER},
+                                RUN,
+                                expectedPath,
+                                PORT_NUMBER
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, PORT_NUMBER, opDir, valDir},
+                                RUN,
+                                expectedPath,
+                                PORT_NUMBER
+                            });
+                }
+            }
+        }
+
+        // network, directory and port
+        net_values = new String[] {"mainnet", "mastery"};
+        for (String opNet : net_options) {
+            for (String valNet : net_values) {
+                for (String opDir : dir_options) {
+                    for (String valDir : dir_values) {
+                        for (String opPort : port_options) {
+                            expectedPath = new File(path, valNet).getAbsolutePath();
+                            parameters.add(
+                                    new Object[] {
+                                        new String[] {
+                                            opNet, valNet, opDir, valDir, opPort, PORT_NUMBER
+                                        },
+                                        RUN,
+                                        expectedPath,
+                                        PORT_NUMBER
+                                    });
+                        }
+                    }
+                }
+            }
+        }
+
+        // directory with subdirectories and port
+        String dir = dataDirectory + File.separator + "subfolder";
+        File path = new File(BASE_PATH, dir);
+        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        for (String opDir : dir_options) {
+            for (String opPort : port_options) {
+                // with relative path with subdirectories
+                parameters.add(
+                        new Object[] {
+                            new String[] {opDir, dir, opPort, PORT_NUMBER},
+                            RUN,
+                            expectedPath,
+                            PORT_NUMBER
+                        });
+            }
+        }
+
+        // port and info
+        String[] info_options = new String[] {"-i", "--info"};
+        expectedPath = MAIN_BASE_PATH.getAbsolutePath();
+        expPathOnError = expectedPath;
+        for (String opInfo : info_options) {
+            // test port number as parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opInfo, "-p", PORT_NUMBER}, EXIT, expectedPath, PORT_NUMBER
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-p", PORT_NUMBER, opInfo}, EXIT, expectedPath, PORT_NUMBER
+                    });
+            // test invalid port parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opInfo, "-p", "invalid"},
+                        ERROR,
+                        expPathOnError,
+                        expPortOnError
+                    });
+        }
+
+        return parameters.toArray();
+    }
+
+    @Test
+    @Parameters(method = "parametersWithPort")
+    public void testPort(
+            String[] input, ReturnType expectedReturn, String expectedPath, String expectedPort) {
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getExecConfigFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getExecGenesisFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+        assertThat(cfg.getExecForkFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
+        // test port is updated
+        assertThat(Integer.toString(cfg.getNet().getP2p().getPort())).isEqualTo(expectedPort);
+
+        if (verbose) {
+            printPaths(cfg);
+        }
+    }
+
     /** Parameters for testing {@link #testInfo(String[], ReturnType, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithInfo() {
@@ -657,6 +931,16 @@ public class CliTest {
                     new Object[] {
                         new String[] {op, "value", "-d", path.getAbsolutePath()}, ERROR, expOnError
                     });
+        }
+
+        // with port
+        expected = MAIN_BASE_PATH.getAbsolutePath();
+        for (String op : options) {
+            // test port number as parameter
+            parameters.add(new Object[] {new String[] {op, "-p", PORT_NUMBER}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {"-p", PORT_NUMBER, op}, EXIT, expected});
+            // invalid port parameter
+            parameters.add(new Object[] {new String[] {op, "-p", "invalid"}, ERROR, expOnError});
         }
 
         // with network and directory
