@@ -117,26 +117,23 @@ public class CfgLogTest extends CfgLog {
 
         // Test for default file path
         CfgLog config = new CfgLog();
-        assertTrue(config.isValidPath());
         assertEquals("log", config.getLogPath());
 
         // Test for valid file path
         config.logPath = path[0];
-        assertTrue(config.isValidPath());
         assertEquals("LOGGER", config.getLogPath());
 
         // Test for invalid file path
         config.logPath = path[1];
-        assertFalse(config.isValidPath());
+        assertEquals("l!@#*g", config.getLogPath());
 
         // Test for folder hierarchy path
         config.logPath = path[2];
-        assertTrue(config.isValidPath());
         assertEquals("log/logging/LOGGER", config.getLogPath());
 
         // Test for null path
         config.logPath = path[3];
-        assertFalse(config.isValidPath());
+        assertEquals("", config.getLogPath());
     }
 
     /** Test for: - if archives are stored under correct file name */
@@ -145,9 +142,9 @@ public class CfgLogTest extends CfgLog {
 
         // Test Case Default
         CfgLog config = new CfgLog();
-        assertFalse(config.logFile && config.isValidPath());
+        assertFalse(config.logFile);
 
-        if (config.logFile && config.isValidPath()) {
+        if (config.logFile) {
             AionLoggerFactory.init(_logModules, config.logFile, "testLog/" + config.logPath);
             generatedPath = testRoot.listFiles()[0];
             assertEquals("log", generatedPath.getName());
@@ -160,13 +157,14 @@ public class CfgLogTest extends CfgLog {
                 config.logFile = Boolean.parseBoolean(toggle[a]);
                 config.logPath = path[b];
 
-                if (config.logFile && config.isValidPath()) {
+                if (config.logFile && config.logPath.length() > 0) {
                     AionLoggerFactory.init(
                             _logModules, config.logFile, "testLog/" + config.logPath);
                     generatedPath = testRoot.listFiles()[0];
 
                     accumulatedPath = generatedPath.getName();
-                    while (generatedPath.listFiles()[0].isDirectory()) {
+                    while (generatedPath.isDirectory()
+                            && generatedPath.listFiles()[0].isDirectory()) {
                         generatedPath = generatedPath.listFiles()[0];
                         accumulatedPath = accumulatedPath + "/" + generatedPath.getName();
                     }
