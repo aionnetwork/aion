@@ -325,16 +325,28 @@ clean {
 /** Replaces `ant ci_build` */
 task ciBuild {
     dependsOn build
-    def ciModules = ['modAionBase', 
-        'modCrypto', 
-        'modP2pImpl', 
-        'modTxPoolImpl', 
-        'modRlp', 
-        'modDbImpl', 
-        'aion_fastvm', 
-        'modAionImpl', 
-        'modPrecompiled', 
-        'modApiServer'] 
+    def ciModules = [
+            'aion_fastvm',
+            'modAion',
+            'modAionBase',
+            'modAionImpl',
+            'modApiServer',
+            'modBoot',
+            'modCrypto',
+            'modDbImpl',
+            'modEvtMgr',
+            'modEvtMgrImpl',
+            'modGui',
+            'modLogger',
+            'modMcf',
+            'modP2p',
+            'modP2pImpl',
+            'modPrecompiled',
+            'modRlp',
+            'modTxPool',
+            'modTxPoolImpl',
+            'modVM'
+    ] 
 
     configure(subprojects.findAll { it.name in ciModules }) {
         it.test { testResultsDirName = "${rootProject.projectDir}/report/${project.name}" }
