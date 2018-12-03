@@ -232,8 +232,16 @@ public class Cli {
             // 5. options that can be influenced by the -d and -n arguments
 
             if (options.getPort() != null) {
-                // update port in the config file
-                cfg.toXML(new String[] {"--p2p=" + ","+ options.getPort()}, configFile);
+                int port_number = Integer.parseInt(options.getPort());
+                if (port_number < 0 || port_number > 0xFFFF) {
+                    System.out.println(
+                            "\nport out of range: "
+                                    + port_number
+                                    + ", switching to the current port configuration: \n");
+                } else {
+                    // update port in the config file
+                    cfg.toXML(new String[] {"--p2p=" + "," + options.getPort()}, configFile);
+                }
                 // no return, allow for other parameters combined with -p
             }
 

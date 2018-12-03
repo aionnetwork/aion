@@ -107,7 +107,9 @@ public class CliTest {
     private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
     private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
 
-    private static final String PORT_NUMBER = "12345";
+    private static final String DEFAULT_PORT = "30303";
+    private static final String TEST_PORT = "12345";
+    private static final String INVALID_PORT = "123450";
 
     /** @implNote set this to true to enable printing */
     private static final boolean verbose = false;
@@ -630,7 +632,7 @@ public class CliTest {
             // with two parameters
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, PORT_NUMBER, PORT_NUMBER},
+                        new String[] {opPort, TEST_PORT, TEST_PORT},
                         ERROR,
                         expPathOnError,
                         expPortOnError
@@ -638,12 +640,16 @@ public class CliTest {
             // with invalid parameter
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, "invalid"}, ERROR, expPathOnError, expPortOnError
+                        new String[] {opPort, INVALID_PORT}, RUN, expPathOnError, expPortOnError
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, "-12345"}, RUN, expPathOnError, expPortOnError
                     });
             // with testing port number
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, PORT_NUMBER}, RUN, expectedPath, PORT_NUMBER
+                        new String[] {opPort, TEST_PORT}, RUN, expectedPath, TEST_PORT
                     });
         }
 
@@ -651,11 +657,11 @@ public class CliTest {
         for (String opPort : port_options) {
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, PORT_NUMBER, "-h"}, EXIT, expectedPath, expPortOnError
+                        new String[] {opPort, TEST_PORT, "-h"}, EXIT, expectedPath, expPortOnError
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {opPort, PORT_NUMBER, "-v"}, EXIT, expectedPath, expPortOnError
+                        new String[] {opPort, TEST_PORT, "-v"}, EXIT, expectedPath, expPortOnError
                     });
         }
 
@@ -682,32 +688,32 @@ public class CliTest {
                     // with invalid port parameter
                     parameters.add(
                             new Object[] {
-                                new String[] {opNet, valNet, opPort, "invalid"},
-                                ERROR,
+                                new String[] {opNet, valNet, opPort, INVALID_PORT},
+                                RUN,
                                 expPathOnError,
                                 expPortOnError
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opPort, "invalid", opNet, valNet},
-                                ERROR,
+                                new String[] {opPort, INVALID_PORT, opNet, valNet},
+                                RUN,
                                 expPathOnError,
                                 expPortOnError
                             });
                     // with testing port number
                     parameters.add(
                             new Object[] {
-                                new String[] {opNet, valNet, opPort, PORT_NUMBER},
+                                new String[] {opNet, valNet, opPort, TEST_PORT},
                                 RUN,
                                 expectedPath,
-                                PORT_NUMBER
+                                TEST_PORT
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opPort, PORT_NUMBER, opNet, valNet},
+                                new String[] {opPort, TEST_PORT, opNet, valNet},
                                 RUN,
                                 expectedPath,
-                                PORT_NUMBER
+                                TEST_PORT
                             });
                 }
             }
@@ -721,17 +727,17 @@ public class CliTest {
                 for (String opPort : port_options) {
                     parameters.add(
                             new Object[] {
-                                new String[] {opNet, valNet, opPort, PORT_NUMBER},
+                                new String[] {opNet, valNet, opPort, TEST_PORT},
                                 RUN,
                                 expectedPath,
-                                PORT_NUMBER
+                                TEST_PORT
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opPort, PORT_NUMBER, opNet, valNet},
+                                new String[] {opPort, TEST_PORT, opNet, valNet},
                                 RUN,
                                 expectedPath,
-                                PORT_NUMBER
+                                TEST_PORT
                             });
                 }
             }
@@ -761,32 +767,32 @@ public class CliTest {
                     // with invalid port parameter
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, valDir, opPort, "invalid"},
-                                ERROR,
+                                new String[] {opDir, valDir, opPort, INVALID_PORT},
+                                RUN,
                                 expectedPath,
                                 expPortOnError
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opPort, "invalid", opDir, valDir},
-                                ERROR,
+                                new String[] {opPort, INVALID_PORT, opDir, valDir},
+                                RUN,
                                 expectedPath,
                                 expPortOnError
                             });
                     // with testing port number
                     parameters.add(
                             new Object[] {
-                                new String[] {opDir, valDir, opPort, PORT_NUMBER},
+                                new String[] {opDir, valDir, opPort, TEST_PORT},
                                 RUN,
                                 expectedPath,
-                                PORT_NUMBER
+                                TEST_PORT
                             });
                     parameters.add(
                             new Object[] {
-                                new String[] {opPort, PORT_NUMBER, opDir, valDir},
+                                new String[] {opPort, TEST_PORT, opDir, valDir},
                                 RUN,
                                 expectedPath,
-                                PORT_NUMBER
+                                TEST_PORT
                             });
                 }
             }
@@ -803,11 +809,11 @@ public class CliTest {
                             parameters.add(
                                     new Object[] {
                                         new String[] {
-                                            opNet, valNet, opDir, valDir, opPort, PORT_NUMBER
+                                            opNet, valNet, opDir, valDir, opPort, TEST_PORT
                                         },
                                         RUN,
                                         expectedPath,
-                                        PORT_NUMBER
+                                        TEST_PORT
                                     });
                         }
                     }
@@ -824,10 +830,10 @@ public class CliTest {
                 // with relative path with subdirectories
                 parameters.add(
                         new Object[] {
-                            new String[] {opDir, dir, opPort, PORT_NUMBER},
+                            new String[] {opDir, dir, opPort, TEST_PORT},
                             RUN,
                             expectedPath,
-                            PORT_NUMBER
+                            TEST_PORT
                         });
             }
         }
@@ -840,17 +846,17 @@ public class CliTest {
             // test port number as parameter
             parameters.add(
                     new Object[] {
-                        new String[] {opInfo, "-p", PORT_NUMBER}, EXIT, expectedPath, PORT_NUMBER
+                        new String[] {opInfo, "-p", TEST_PORT}, EXIT, expectedPath, TEST_PORT
                     });
             parameters.add(
                     new Object[] {
-                        new String[] {"-p", PORT_NUMBER, opInfo}, EXIT, expectedPath, PORT_NUMBER
+                        new String[] {"-p", TEST_PORT, opInfo}, EXIT, expectedPath, TEST_PORT
                     });
             // test invalid port parameter
             parameters.add(
                     new Object[] {
-                        new String[] {opInfo, "-p", "invalid"},
-                        ERROR,
+                        new String[] {opInfo, "-p", INVALID_PORT},
+                        EXIT,
                         expPathOnError,
                         expPortOnError
                     });
@@ -863,6 +869,9 @@ public class CliTest {
     @Parameters(method = "parametersWithPort")
     public void testPort(
             String[] input, ReturnType expectedReturn, String expectedPath, String expectedPort) {
+
+        cfg.toXML(new String[] {"--p2p=" + "," + DEFAULT_PORT}, cfg.getInitialConfigFile());
+
         assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
         assertThat(cfg.getExecConfigFile())
@@ -937,10 +946,10 @@ public class CliTest {
         expected = MAIN_BASE_PATH.getAbsolutePath();
         for (String op : options) {
             // test port number as parameter
-            parameters.add(new Object[] {new String[] {op, "-p", PORT_NUMBER}, EXIT, expected});
-            parameters.add(new Object[] {new String[] {"-p", PORT_NUMBER, op}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {op, "-p", TEST_PORT}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {"-p", TEST_PORT, op}, EXIT, expected});
             // invalid port parameter
-            parameters.add(new Object[] {new String[] {op, "-p", "invalid"}, ERROR, expOnError});
+            parameters.add(new Object[] {new String[] {op, "-p", INVALID_PORT}, EXIT, expOnError});
         }
 
         // with network and directory
@@ -1439,81 +1448,81 @@ public class CliTest {
         Set<String> skippedTasks;
 
         input = new String[] {"--info"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         parameters.add(new Object[] {input, TaskPriority.INFO, skippedTasks});
 
         input = new String[] {"--account list", "--account create"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--account list");
         parameters.add(new Object[] {input, TaskPriority.CREATE_ACCOUNT, skippedTasks});
 
         input = new String[] {"--info", "--config", "mainnet", "-s create"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--info");
         skippedTasks.add("-s create");
         parameters.add(new Object[] {input, TaskPriority.CONFIG, skippedTasks});
 
         input = new String[] {"--help", "--network", "mainnet", "--datadir", dataDirectory};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--network");
         skippedTasks.add("--datadir");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
         input = new String[] {"--version", "-v"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
 
         input = new String[] {"--dump-blocks", "5", "--dump-state", "5", "--dump-state-size", "5"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--dump-blocks");
         skippedTasks.add("--dump-state");
         parameters.add(new Object[] {input, TaskPriority.DUMP_STATE_SIZE, skippedTasks});
 
         input = new String[] {"ac", "ae", "account"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--account export");
         parameters.add(new Object[] {input, TaskPriority.CREATE_ACCOUNT, skippedTasks});
 
         input = new String[] {"--prune-blocks", "--state", "FULL"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--state");
         parameters.add(new Object[] {input, TaskPriority.PRUNE_BLOCKS, skippedTasks});
 
         input = new String[] {"-h", "-v"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("-v");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
         input = new String[] {"-h", "--version"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--version");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
         input = new String[] {"-h", "-c"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--config");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
         input = new String[] {"-i", "ac"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--account create");
         parameters.add(new Object[] {input, TaskPriority.INFO, skippedTasks});
 
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
         input = new String[] {"-c", "ai", pKey};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--account import");
         parameters.add(new Object[] {input, TaskPriority.CONFIG, skippedTasks});
 
         input = new String[] {"-s create", "-r", "100", "pb"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--revert");
         skippedTasks.add("--prune-blocks");
         parameters.add(new Object[] {input, TaskPriority.SSL, skippedTasks});
 
         input = new String[] {"-r", "100", "--state", "FULL", "--dump-state-size", "--db-compact"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--state");
         skippedTasks.add("--dump-state-size");
         skippedTasks.add("--db-compact");
@@ -1523,24 +1532,24 @@ public class CliTest {
                 new String[] {
                     "--state", "FULL", "--db-compact", "--dump-state-size", "--dump-state"
                 };
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--db-compact");
         skippedTasks.add("--dump-state-size");
         skippedTasks.add("--dump-state");
         parameters.add(new Object[] {input, TaskPriority.PRUNE_STATE, skippedTasks});
 
         input = new String[] {"--dump-state-size", "--dump-state"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--dump-state");
         parameters.add(new Object[] {input, TaskPriority.DUMP_STATE_SIZE, skippedTasks});
 
         input = new String[] {"--dump-state", "--dump-blocks"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--dump-blocks");
         parameters.add(new Object[] {input, TaskPriority.DUMP_STATE, skippedTasks});
 
         input = new String[] {"--dump-blocks", "--db-compact"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--db-compact");
         parameters.add(new Object[] {input, TaskPriority.DUMP_BLOCKS, skippedTasks});
 
