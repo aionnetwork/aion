@@ -8,6 +8,7 @@ dependencies {
     compile project(':modCrypto')
     compile project(':modAion')
     compile project(':modVM')
+    compile project(':aion_vm_api')
     compile 'com.google.guava:guava:25.1-jre'
     compile 'com.google.code.findbugs:jsr305:3.0.2'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'

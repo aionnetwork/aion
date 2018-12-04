@@ -4,6 +4,7 @@ module aion.vm {
     requires transitive slf4j.api;
     requires aion.zero;
     requires commons.lang3;
+    requires aion.vm.api;
 
     exports org.aion.vm;
 }

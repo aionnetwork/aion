@@ -29,7 +29,7 @@ public abstract class AbstractTxReceipt<TX extends ITransaction>
         return postTxState;
     }
 
-    public byte[] getExecutionResult() {
+    public byte[] getTransactionOutput() {
         return executionResult;
     }
 

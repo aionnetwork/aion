@@ -1,6 +1,7 @@
 package org.aion.vm;
 
 import org.aion.base.db.IRepositoryCache;
+import org.aion.vm.api.TransactionResult;
 
 /**
  * High-level interface of Aion virtual machine.
@@ -17,5 +18,5 @@ public interface VirtualMachine {
      * @param track state repository track
      * @return the execution result
      */
-    ExecutionResult run(byte[] code, ExecutionContext ctx, IRepositoryCache track);
+    TransactionResult run(byte[] code, ExecutionContext ctx, IRepositoryCache track);
 }

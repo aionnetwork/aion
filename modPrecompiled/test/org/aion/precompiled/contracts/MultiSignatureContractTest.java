@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
@@ -20,8 +22,6 @@ import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -63,13 +63,13 @@ public class MultiSignatureContractTest {
 
     // Executes a MSC with input and NRG_LIMIT args, calls it with address caller, and expects
     // code and nrg as results of the execution. Returns the result.
-    private ExecutionResult execute(
+    private TransactionResult execute(
             Address caller, byte[] input, long nrgLimit, ResultCode code, long nrg) {
 
         MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
-        ExecutionResult res = msc.execute(input, nrgLimit);
+        TransactionResult res = msc.execute(input, nrgLimit);
         assertEquals(code, res.getResultCode());
-        assertEquals(nrg, res.getNrgLeft());
+        assertEquals(nrg, res.getEnergyRemaining());
         return res;
     }
 
@@ -268,7 +268,7 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, ownerAddrs);
         MultiSignatureContract msc = new MultiSignatureContract(repo, ownerAddrs.get(0));
-        ExecutionResult res = msc.execute(input, COST);
+        TransactionResult res = msc.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
         Address wallet = new Address(res.getOutput());
         repo.addBalance(wallet, balance);
@@ -296,7 +296,7 @@ public class MultiSignatureContractTest {
 
     // Verifies that the result of a create-wallet operation, res, saves a wallet with threshold
     // threshold and consists of all the owners in owners and no more.
-    private void checkCreateResult(ExecutionResult res, long threshold, List<Address> owners) {
+    private void checkCreateResult(TransactionResult res, long threshold, List<Address> owners) {
         Address walletId = new Address(res.getOutput());
         addrsToClean.add(walletId);
         assertEquals(BigInteger.ZERO, repo.getBalance(walletId));
@@ -341,10 +341,10 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, Long.MIN_VALUE, ResultCode.OUT_OF_NRG, 0);
+        execute(caller, input, Long.MIN_VALUE, ResultCode.OUT_OF_ENERGY, 0);
 
         // Test with max illegal cost.
-        execute(caller, input, COST - 1, ResultCode.OUT_OF_NRG, 0);
+        execute(caller, input, COST - 1, ResultCode.OUT_OF_ENERGY, 0);
 
         // Second test send-tx logic.
         // Test with min illegal cost.
@@ -364,7 +364,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, Long.MIN_VALUE, ResultCode.OUT_OF_NRG, 0);
+        execute(sendCaller, input, Long.MIN_VALUE, ResultCode.OUT_OF_ENERGY, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
 
@@ -375,7 +375,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, COST - 1, ResultCode.OUT_OF_NRG, 0);
+        execute(sendCaller, input, COST - 1, ResultCode.OUT_OF_ENERGY, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -392,10 +392,10 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, nrgLimit, ResultCode.INVALID_NRG_LIMIT, nrgLimit);
+        execute(caller, input, nrgLimit, ResultCode.INVALID_ENERGY_LIMIT, nrgLimit);
 
         // Test with max illegal cost.
-        execute(caller, input, Long.MAX_VALUE, ResultCode.INVALID_NRG_LIMIT, Long.MAX_VALUE);
+        execute(caller, input, Long.MAX_VALUE, ResultCode.INVALID_ENERGY_LIMIT, Long.MAX_VALUE);
 
         // Second test send-tx logic.
         // Test with min illegal cost.
@@ -415,14 +415,14 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, nrgLimit, ResultCode.INVALID_NRG_LIMIT, nrgLimit);
+        execute(sendCaller, input, nrgLimit, ResultCode.INVALID_ENERGY_LIMIT, nrgLimit);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
 
         // Test with max illegal cost.
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, Long.MAX_VALUE, ResultCode.INVALID_NRG_LIMIT, Long.MAX_VALUE);
+        execute(sendCaller, input, Long.MAX_VALUE, ResultCode.INVALID_ENERGY_LIMIT, Long.MAX_VALUE);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -614,7 +614,7 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
+        TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
 
         Address walletCaller = new Address(res.getOutput());
@@ -642,7 +642,7 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
+        TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
 
         Address wallet = new Address(res.getOutput());
@@ -672,7 +672,7 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
+        TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
         checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
@@ -698,7 +698,7 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
+        TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         Address wallet1 = new Address(res.getOutput());
 
@@ -717,7 +717,7 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
+        TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         Address wallet = new Address(res.getOutput());
         assertTrue(wallet.toString().startsWith("a0"));
@@ -733,7 +733,7 @@ public class MultiSignatureContractTest {
         long threshold = MultiSignatureContract.MIN_THRESH;
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
+        TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
         checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
