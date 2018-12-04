@@ -14,6 +14,7 @@ include 'modAionBase', 'modAion', 'modAionImpl',
     'modApiServer',
     'aion_fastvm/modFastVM',
     'aion_api',
+    'aion_vm_api',
     'modBoot'
 
 project(":aion_fastvm/modFastVM").name = "aion_fastvm"
@@ -23,8 +24,6 @@ if (hasProperty('modGuiPath') && !modGuiPath.empty) {
     include modGuiPath
     project(':' + modGuiPath).name = "modGui"
     gradle.ext.useGui = true;
-} else { 
+} else {
     gradle.ext.useGui = false;
 }
-
-
