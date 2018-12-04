@@ -238,9 +238,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                             getMsgIdMapping().get(txHashW).getKey(),
                             _state.getValue(),
                             ByteArrayWrapper.wrap(
-                                    ((AionTxReceipt) _txRcpt).getExecutionResult() == null
+                                    ((AionTxReceipt) _txRcpt).getTransactionOutput() == null
                                             ? EMPTY_BYTE_ARRAY
-                                            : ((AionTxReceipt) _txRcpt).getExecutionResult()),
+                                            : ((AionTxReceipt) _txRcpt).getTransactionOutput()),
                             ((AionTxReceipt) _txRcpt).getError()));
 
             if (_state.isPending()) {

@@ -26,8 +26,8 @@ package org.aion.precompiled.contracts;
 import static junit.framework.TestCase.assertEquals;
 
 import java.nio.charset.StandardCharsets;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,7 +45,7 @@ public class KeccakHashTest {
 
     @Test
     public void testKeccak256() {
-        ExecutionResult res = keccakHasher.execute(byteArray1, INPUT_NRG);
+        TransactionResult res = keccakHasher.execute(byteArray1, INPUT_NRG);
         byte[] output = res.getOutput();
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -64,13 +64,13 @@ public class KeccakHashTest {
 
     @Test
     public void invalidInputLength() {
-        ExecutionResult res2 = keccakHasher.execute(shortByteArray, INPUT_NRG);
+        TransactionResult res2 = keccakHasher.execute(shortByteArray, INPUT_NRG);
         assertEquals(ResultCode.FAILURE, res2.getResultCode());
     }
 
     @Test
     public void insufficientNRG() {
-        ExecutionResult res2 = keccakHasher.execute(byteArray1, 30);
-        assertEquals(ResultCode.OUT_OF_NRG, res2.getResultCode());
+        TransactionResult res2 = keccakHasher.execute(byteArray1, 30);
+        assertEquals(ResultCode.OUT_OF_ENERGY, res2.getResultCode());
     }
 }

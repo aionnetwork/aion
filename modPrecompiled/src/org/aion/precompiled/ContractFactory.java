@@ -82,6 +82,7 @@ public class ContractFactory implements IContractFactory {
 
         CfgFork cfg = new CfgFork();
         String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
+
         boolean fork_032 =
                 (forkProperty != null) && (context.blockNumber() >= Long.valueOf(forkProperty));
 

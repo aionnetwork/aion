@@ -25,7 +25,7 @@ package org.aion.precompiled.contracts.ATB;
 
 import java.math.BigInteger;
 import javax.annotation.Nonnull;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.TransactionResult;
 
 public interface Transferable {
     /**
@@ -40,5 +40,5 @@ public interface Transferable {
      * @param value to be sent (in base units)
      * @return {@code true} if value was performed, {@code false} otherwise
      */
-    ExecutionResult transfer(@Nonnull final byte[] to, @Nonnull final BigInteger value);
+    TransactionResult transfer(@Nonnull final byte[] to, @Nonnull final BigInteger value);
 }

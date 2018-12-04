@@ -24,11 +24,10 @@
 
 package org.aion.precompiled.contracts;
 
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.base.type.Address;
-import org.aion.base.type.IExecutionResult;
 import org.aion.crypto.ed25519.ECKeyEd25519;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
 
 public class EDVerifyContract implements IPrecompiledContract {
@@ -43,16 +42,16 @@ public class EDVerifyContract implements IPrecompiledContract {
      * @return the verification result of the given input (publickey address for pass, all-0's address for fail)
      */
     @Override
-    public IExecutionResult execute(byte[] input, long nrgLimit) {
+    public TransactionResult execute(byte[] input, long nrgLimit) {
 
         // check length
         if (input == null || input.length != 128) {
-            return new ExecutionResult(
+            return new TransactionResult(
                 ResultCode.FAILURE, nrgLimit - COST, INCORRECT_LENGTH.getBytes());
         }
 
         if (COST > nrgLimit) {
-            return new ExecutionResult(ExecutionResult.ResultCode.OUT_OF_NRG, 0);
+            return new TransactionResult(ResultCode.OUT_OF_ENERGY, 0);
         }
         byte[] msg = new byte[32];
         byte[] sig = new byte[64];
@@ -65,9 +64,9 @@ public class EDVerifyContract implements IPrecompiledContract {
 
         try {
             boolean verify = ECKeyEd25519.verify(msg, sig, pubKey);
-            return new ExecutionResult(ExecutionResult.ResultCode.SUCCESS, nrgLimit - COST, verify ? pubKey : Address.ZERO_ADDRESS().toBytes());
+            return new TransactionResult(ResultCode.SUCCESS, nrgLimit - COST, verify ? pubKey : Address.ZERO_ADDRESS().toBytes());
         } catch (Exception e) {
-            return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
+            return new TransactionResult(ResultCode.FAILURE, 0);
         }
     }
 }

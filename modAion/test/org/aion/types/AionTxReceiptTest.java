@@ -63,7 +63,7 @@ public class AionTxReceiptTest {
         byte[] encoded = receipt.getEncoded();
         AionTxReceipt resp = new AionTxReceipt(encoded);
 
-        assertThat(resp.getExecutionResult(), is(equalTo(receipt.getExecutionResult())));
+        assertThat(resp.getTransactionOutput(), is(equalTo(receipt.getTransactionOutput())));
         assertThat(resp.getBloomFilter(), is(equalTo(receipt.getBloomFilter())));
         assertThat(resp.getError(), is(equalTo(receipt.getError())));
     }

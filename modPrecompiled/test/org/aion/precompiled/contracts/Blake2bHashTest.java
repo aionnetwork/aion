@@ -29,10 +29,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.config.CfgFork;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Before;
@@ -81,7 +81,7 @@ public class Blake2bHashTest {
 
     @Test
     public void testBlake256() {
-        ExecutionResult res = blake2bHasher.execute(byteArray1, INPUT_NRG);
+        TransactionResult res = blake2bHasher.execute(byteArray1, INPUT_NRG);
         byte[] output = res.getOutput();
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -92,7 +92,7 @@ public class Blake2bHashTest {
 
     @Test
     public void testBlake256_2() {
-        ExecutionResult res = blake2bHasher.execute(byteArray2, INPUT_NRG);
+        TransactionResult res = blake2bHasher.execute(byteArray2, INPUT_NRG);
         byte[] output = res.getOutput();
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -104,7 +104,7 @@ public class Blake2bHashTest {
 
     @Test
     public void testBlake256_3() {
-        ExecutionResult res = blake2bHasher.execute(bigByteArray, 2_000_000L);
+        TransactionResult res = blake2bHasher.execute(bigByteArray, 2_000_000L);
         byte[] output = res.getOutput();
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -116,31 +116,31 @@ public class Blake2bHashTest {
 
     @Test
     public void invalidInputLength() {
-        ExecutionResult res = blake2bHasher.execute(shortByteArray, INPUT_NRG);
+        TransactionResult res = blake2bHasher.execute(shortByteArray, INPUT_NRG);
         assertEquals(ResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
     public void invalidInputLength2() {
-        ExecutionResult res = blake2bHasher.execute(bigByteArray2, INPUT_NRG);
+        TransactionResult res = blake2bHasher.execute(bigByteArray2, INPUT_NRG);
         assertEquals(ResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
     public void insufficientNRG() {
         byte[] input = Blake2bHashContract.setupInput(0, byteArray1);
-        ExecutionResult res = blake2bHasher.execute(input, 10);
-        assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
+        TransactionResult res = blake2bHasher.execute(input, 10);
+        assertEquals(ResultCode.OUT_OF_ENERGY, res.getResultCode());
     }
 
     @Test
     public void insufficientNRG2() {
         long nrg = (long) (Math.ceil((float)bigByteArray.length / 4) * 2 + 10);
-        ExecutionResult res = blake2bHasher.execute(bigByteArray, nrg);
+        TransactionResult res = blake2bHasher.execute(bigByteArray, nrg);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
 
         res = blake2bHasher.execute(bigByteArray, nrg - 1);
-        assertEquals(ResultCode.OUT_OF_NRG, res.getResultCode());
+        assertEquals(ResultCode.OUT_OF_ENERGY, res.getResultCode());
     }
 
     @Test
@@ -149,9 +149,9 @@ public class Blake2bHashTest {
         byte[] input1Copy = Blake2bHashContract.setupInput(1, byteArray1);
         byte[] input2 = Blake2bHashContract.setupInput(1, byteArray2);
 
-        ExecutionResult res1 = blake2bHasher.execute(input1, INPUT_NRG);
-        ExecutionResult res1Copy = blake2bHasher.execute(input1Copy, INPUT_NRG);
-        ExecutionResult res2 = blake2bHasher.execute(input2, INPUT_NRG);
+        TransactionResult res1 = blake2bHasher.execute(input1, INPUT_NRG);
+        TransactionResult res1Copy = blake2bHasher.execute(input1Copy, INPUT_NRG);
+        TransactionResult res2 = blake2bHasher.execute(input2, INPUT_NRG);
 
         assertThat(res1.getOutput()).isEqualTo(res1Copy.getOutput());
         assertThat(res1.getOutput()).isNotEqualTo(res2.getOutput());
@@ -161,7 +161,7 @@ public class Blake2bHashTest {
     @Ignore
     public void testInvalidOperation() {
         byte[] input = Blake2bHashContract.setupInput(3, byteArray1);
-        ExecutionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        TransactionResult res = blake2bHasher.execute(input, INPUT_NRG);
         assertEquals(ResultCode.FAILURE, res.getResultCode());
     }
 }

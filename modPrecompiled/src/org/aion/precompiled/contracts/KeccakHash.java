@@ -24,8 +24,8 @@ package org.aion.precompiled.contracts;
 
 import static org.aion.crypto.HashUtil.keccak256;
 
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.vm.IPrecompiledContract;
 
 public class KeccakHash implements IPrecompiledContract {
@@ -40,18 +40,18 @@ public class KeccakHash implements IPrecompiledContract {
      *
      * <p>the returned hash is in ContractExecutionResult.getOutput
      */
-    public ExecutionResult execute(byte[] input, long nrg) {
+    public TransactionResult execute(byte[] input, long nrg) {
         // check input nrg
         long additionalNRG = Math.round(Math.sqrt(input.length));
         if (nrg < DEFAULT_COST + additionalNRG)
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new TransactionResult(ResultCode.OUT_OF_ENERGY, 0);
 
         // check length
         if (input.length < 1)
-            return new ExecutionResult(
+            return new TransactionResult(
                     ResultCode.FAILURE, nrg - DEFAULT_COST, "input too short".getBytes());
 
         byte[] hash = keccak256(input);
-        return new ExecutionResult(ResultCode.SUCCESS, nrg - DEFAULT_COST - additionalNRG, hash);
+        return new TransactionResult(ResultCode.SUCCESS, nrg - DEFAULT_COST - additionalNRG, hash);
     }
 }

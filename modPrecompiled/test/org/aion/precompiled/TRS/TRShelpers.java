@@ -38,6 +38,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
@@ -51,8 +53,6 @@ import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -107,7 +107,7 @@ class TRShelpers {
 
         byte[] input = getCreateInput(isTest, isDirectDeposit, periods, percent, precision);
         TRSstateContract trs = new TRSstateContract(repo, owner, blockchain);
-        ExecutionResult res = trs.execute(input, COST);
+        TransactionResult res = trs.execute(input, COST);
         if (!res.getResultCode().equals(ResultCode.SUCCESS)) {
             fail("Unable to create contract!");
         }
@@ -915,7 +915,7 @@ class TRShelpers {
         byte[] input = getAvailableForWithdrawalAtInput(contract, timestamp);
         Set<Address> contributors = getAllDepositors(trs, contract);
         for (Address acc : contributors) {
-            ExecutionResult res = newTRSqueryContract(acc).execute(input, COST);
+            TransactionResult res = newTRSqueryContract(acc).execute(input, COST);
             assertEquals(ResultCode.SUCCESS, res.getResultCode());
             BigDecimal frac = new BigDecimal(new BigInteger(res.getOutput())).movePointLeft(18);
             assertEquals(expectedFraction, frac);

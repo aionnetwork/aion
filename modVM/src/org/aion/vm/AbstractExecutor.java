@@ -28,14 +28,14 @@ import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
-import org.aion.base.type.IExecutionResult;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxExecSummary;
 import org.aion.base.type.ITxReceipt;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.slf4j.Logger;
 
 public abstract class AbstractExecutor {
@@ -44,7 +44,7 @@ public abstract class AbstractExecutor {
     protected IRepository repo;
     protected IRepositoryCache repoTrack;
     private boolean isLocalCall;
-    protected IExecutionResult exeResult;
+    protected TransactionResult exeResult;
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
@@ -118,18 +118,18 @@ public abstract class AbstractExecutor {
 
         if (tx.isContractCreation()) {
             if (!isValidNrgContractCreate(txNrgLimit)) {
-                exeResult.setCodeAndNrgLeft(ResultCode.INVALID_NRG_LIMIT.toInt(), txNrgLimit);
+                exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_ENERGY_LIMIT, txNrgLimit);
                 return false;
             }
         } else {
             if (!isValidNrgTx(txNrgLimit)) {
-                exeResult.setCodeAndNrgLeft(ResultCode.INVALID_NRG_LIMIT.toInt(), txNrgLimit);
+                exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_ENERGY_LIMIT, txNrgLimit);
                 return false;
             }
         }
 
         if (txNrgLimit > blockRemainingNrg || contextNrgLmit < 0) {
-            exeResult.setCodeAndNrgLeft(ResultCode.INVALID_NRG_LIMIT.toInt(), 0);
+            exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_ENERGY_LIMIT, 0);
             return false;
         }
 
@@ -139,7 +139,7 @@ public abstract class AbstractExecutor {
             BigInteger nonce = repo.getNonce(tx.getFrom());
 
             if (!txNonce.equals(nonce)) {
-                exeResult.setCodeAndNrgLeft(ResultCode.INVALID_NONCE.toInt(), 0);
+                exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_NONCE, 0);
                 return false;
             }
         }
@@ -149,7 +149,7 @@ public abstract class AbstractExecutor {
         BigInteger txTotal = txNrgPrice.multiply(BigInteger.valueOf(txNrgLimit)).add(txValue);
         BigInteger balance = repo.getBalance(tx.getFrom());
         if (txTotal.compareTo(balance) > 0) {
-            exeResult.setCodeAndNrgLeft(ResultCode.INSUFFICIENT_BALANCE.toInt(), 0);
+            exeResult.setResultCodeAndEnergyRemaining(ResultCode.INSUFFICIENT_BALANCE, 0);
             return false;
         }
 
@@ -179,7 +179,7 @@ public abstract class AbstractExecutor {
      *     execution.
      */
     protected long getNrgLeft() {
-        return exeResult.getNrgLeft();
+        return exeResult.getEnergyRemaining();
     }
 
     /**
@@ -190,7 +190,7 @@ public abstract class AbstractExecutor {
      * @return the energy used as defined above.
      */
     private long getNrgUsed(long limit) {
-        return limit - exeResult.getNrgLeft();
+        return limit - exeResult.getEnergyRemaining();
     }
 
     /**
@@ -209,9 +209,9 @@ public abstract class AbstractExecutor {
         receipt.setNrgUsed(getNrgUsed(tx.getNrg())); // amount of energy used to execute tx
         receipt.setExecutionResult(exeResult.getOutput()); // misnomer -> output is named result
         receipt.setError(
-                exeResult.getCode() == ResultCode.SUCCESS.toInt()
+                exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()
                         ? ""
-                        : ResultCode.fromInt(exeResult.getCode()).name());
+                        : exeResult.getResultCode().name());
 
         return receipt;
     }
@@ -240,8 +240,8 @@ public abstract class AbstractExecutor {
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache track = repo.startTracking();
             // refund nrg left
-            if (exeResult.getCode() == ResultCode.SUCCESS.toInt()
-                    || exeResult.getCode() == ResultCode.REVERT.toInt()) {
+            if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()
+                    || exeResult.getResultCode().toInt() == ResultCode.REVERT.toInt()) {
                 track.addBalance(tx.getFrom(), summary.getRefund());
             }
 
@@ -250,7 +250,7 @@ public abstract class AbstractExecutor {
             // Transfer fees to miner
             track.addBalance(coinbase, summary.getFee());
 
-            if (exeResult.getCode() == ResultCode.SUCCESS.toInt()) {
+            if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()) {
                 // Delete accounts
                 for (Address addr : deleteAccounts) {
                     track.deleteAccount(addr);
@@ -265,7 +265,7 @@ public abstract class AbstractExecutor {
         }
     }
 
-    protected void setExecutionResult(IExecutionResult result) {
+    protected void setTransactionResult(TransactionResult result) {
         exeResult = result;
     }
 }

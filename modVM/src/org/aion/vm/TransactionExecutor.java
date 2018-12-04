@@ -25,16 +25,16 @@ package org.aion.vm;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
-import org.aion.base.type.IExecutionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -144,7 +144,7 @@ public class TransactionExecutor extends AbstractExecutor {
                         blockNrgLimit,
                         blockDifficulty);
 
-        exeResult = new ExecutionResult(ResultCode.SUCCESS, nrgLimit);
+        exeResult = new TransactionResult(ResultCode.SUCCESS, nrgLimit, null);
     }
 
     /** Creates a transaction executor (use block nrg limit). */
@@ -200,7 +200,7 @@ public class TransactionExecutor extends AbstractExecutor {
         Address contractAddress = tx.getContractAddress();
 
         if (repoTrack.hasAccountState(contractAddress)) {
-            exeResult.setCodeAndNrgLeft(ResultCode.FAILURE.toInt(), 0);
+            exeResult.setResultCodeAndEnergyRemaining(ResultCode.FAILURE, 0);
             return;
         }
 
@@ -212,7 +212,7 @@ public class TransactionExecutor extends AbstractExecutor {
             VirtualMachine fvm = this.provider.getVM();
             exeResult = fvm.run(tx.getData(), ctx, repoTrack);
 
-            if (exeResult.getCode() == ResultCode.SUCCESS.toInt()) {
+            if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()) {
                 repoTrack.saveCode(contractAddress, exeResult.getOutput());
             }
         }
@@ -227,7 +227,7 @@ public class TransactionExecutor extends AbstractExecutor {
     protected AionTxExecSummary finish() {
 
         ExecutionHelper rootHelper = new ExecutionHelper();
-        rootHelper.merge(ctx.helper(), exeResult.getCode() == ResultCode.SUCCESS.toInt());
+        rootHelper.merge(ctx.helper(), exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt());
 
         AionTxExecSummary.Builder builder =
                 AionTxExecSummary.builderFor(getReceipt(rootHelper.getLogs())) //
@@ -236,23 +236,26 @@ public class TransactionExecutor extends AbstractExecutor {
                         .internalTransactions(rootHelper.getInternalTransactions()) //
                         .result(exeResult.getOutput());
 
-        switch (((ExecutionResult) exeResult).getResultCode()) {
+        switch (exeResult.getResultCode()) {
             case SUCCESS:
                 repoTrack.flush();
                 break;
             case INVALID_NONCE:
-            case INVALID_NRG_LIMIT:
+            case INVALID_ENERGY_LIMIT:
             case INSUFFICIENT_BALANCE:
                 builder.markAsRejected();
                 break;
             case FAILURE:
-            case OUT_OF_NRG:
+            case OUT_OF_ENERGY:
             case BAD_INSTRUCTION:
             case BAD_JUMP_DESTINATION:
             case STACK_OVERFLOW:
             case STACK_UNDERFLOW:
             case REVERT:
             case STATIC_MODE_ERROR:
+            case FAILED_INVALID_DATA:
+            case UNCAUGHT_EXCEPTION:
+            case ABORT:
                 builder.markAsFailed();
                 break;
             case VM_REJECTED:
@@ -274,7 +277,7 @@ public class TransactionExecutor extends AbstractExecutor {
         //        receipt.setTransaction(tx);
         //        receipt.setLogs(txResult.getLogs());
         //        receipt.setNrgUsed(getNrgUsed(tx.nrgLimit()));
-        //        receipt.setExecutionResult(exeResult.getOutput());
+        //        receipt.setTransactionResult(exeResult.getOutput());
         //        receipt
         //            .setError(exeResult.getCode() == ResultCode.SUCCESS ? "" :
         // exeResult.getCode().name());
@@ -287,7 +290,7 @@ public class TransactionExecutor extends AbstractExecutor {
         return ctx;
     }
 
-    public IExecutionResult getResult() {
+    public TransactionResult getResult() {
         return exeResult;
     }
 }

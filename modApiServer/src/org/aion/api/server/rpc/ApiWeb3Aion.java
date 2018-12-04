@@ -807,7 +807,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         AionTxReceipt receipt = this.ac.callConstant(tx, b);
 
-        return new RpcMsg(TypeConverter.toJsonHex(receipt.getExecutionResult()));
+        return new RpcMsg(TypeConverter.toJsonHex(receipt.getTransactionOutput()));
     }
 
     public RpcMsg eth_estimateGas(Object _params) {

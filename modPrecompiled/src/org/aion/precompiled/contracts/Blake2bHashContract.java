@@ -25,8 +25,8 @@ package org.aion.precompiled.contracts;
 import static org.aion.crypto.HashUtil.blake256;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.vm.IPrecompiledContract;
 
 /**
@@ -51,12 +51,12 @@ public class Blake2bHashContract implements IPrecompiledContract {
      * @param input data input; must be less or equal than 2 MB
      * @return the returned blake2b 256bits hash is in ExecutionResult.getOutput
      */
-    public ExecutionResult execute(byte[] input, long nrg) {
+    public TransactionResult execute(byte[] input, long nrg) {
 
         // check length
         if (input == null || input.length == 0 || input.length > 2_097_152L) {
-            return new ExecutionResult(
-                    ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
+            return new TransactionResult(
+                ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
         long additionalNRG =
@@ -66,15 +66,15 @@ public class Blake2bHashContract implements IPrecompiledContract {
         long nrgLeft = nrg - (COST + additionalNRG);
 
         if (nrgLeft < 0) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new TransactionResult(ResultCode.OUT_OF_ENERGY, 0);
         }
 
         return blake256Hash(input, nrgLeft);
     }
 
-    private ExecutionResult blake256Hash(byte[] input, long nrg) {
+    private TransactionResult blake256Hash(byte[] input, long nrg) {
         byte[] hash = blake256(input);
-        return new ExecutionResult(ResultCode.SUCCESS, nrg, hash);
+        return new TransactionResult(ResultCode.SUCCESS, nrg, hash);
     }
 
     @VisibleForTesting

@@ -29,6 +29,7 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
@@ -39,7 +40,6 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.ExecutionResult;
 
 /**
  * The purpose of this abstract class is mostly as a place to store important constants and methods
@@ -135,7 +135,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     // The execute method for subclasses to implement.
-    public abstract ExecutionResult execute(byte[] input, long nrgLimit);
+    public abstract TransactionResult execute(byte[] input, long nrgLimit);
 
     // <-------------------------------------HELPER METHODS---------------------------------------->
 

@@ -455,7 +455,7 @@ public abstract class ApiAion extends Api {
                         _params.getNrgPrice());
         AionTxReceipt rec =
                 this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
-        return rec.getExecutionResult();
+        return rec.getTransactionOutput();
     }
 
     protected long estimateNrg(ArgTxCall params) {
