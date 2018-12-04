@@ -6,6 +6,8 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
@@ -21,9 +23,7 @@ import org.aion.precompiled.encoding.AbiEncoder;
 import org.aion.precompiled.encoding.AddressFVM;
 import org.aion.precompiled.encoding.ListFVM;
 import org.aion.precompiled.encoding.Uint128FVM;
-import org.aion.vm.AbstractExecutionResult;
 import org.aion.vm.ExecutionContext;
-import org.aion.vm.ExecutionResult;
 import org.aion.zero.types.AionInternalTx;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +66,7 @@ public class TokenBridgeContractTest {
     @Test
     public void testNotEnoughEnergyExecution() {
         assertThat(this.connector.getInitialized()).isFalse();
-        ExecutionResult result =
+        TransactionResult result =
                 this.contract.execute(BridgeFuncSig.PURE_OWNER.getBytes(), 20_000L);
         assertThat(this.connector.getInitialized()).isFalse();
     }
@@ -74,10 +74,10 @@ public class TokenBridgeContractTest {
     @Test
     public void testGetOwner() {
         assertThat(this.connector.getInitialized()).isFalse();
-        ExecutionResult result =
+        TransactionResult result =
                 this.contract.execute(BridgeFuncSig.PURE_OWNER.getBytes(), DEFAULT_NRG);
         assertThat(result.getOutput()).isEqualTo(OWNER_ADDR.toBytes());
-        assertThat(result.getNrgLeft()).isEqualTo(0L);
+        assertThat(result.getEnergyRemaining()).isEqualTo(0L);
         assertThat(this.connector.getInitialized()).isTrue();
     }
 
@@ -102,14 +102,14 @@ public class TokenBridgeContractTest {
         System.out.println("encoded payload: " + ByteUtil.toHexString(payload));
 
         assertThat(this.connector.getInitialized()).isFalse();
-        ExecutionResult setResult = this.contract.execute(payload, DEFAULT_NRG);
+        TransactionResult setResult = this.contract.execute(payload, DEFAULT_NRG);
         assertThat(this.connector.getInitialized()).isTrue();
-        assertThat(setResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        assertThat(setResult.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
-        ExecutionResult result =
+        TransactionResult result =
                 this.contract.execute(BridgeFuncSig.PURE_NEW_OWNER.getBytes(), DEFAULT_NRG);
         assertThat(result.getOutput()).isEqualTo(newOwner);
-        assertThat(result.getNrgLeft()).isEqualTo(0L);
+        assertThat(result.getEnergyRemaining()).isEqualTo(0L);
     }
 
     @Test
@@ -133,8 +133,8 @@ public class TokenBridgeContractTest {
                         .encodeBytes();
         System.out.println("encoded payload: " + ByteUtil.toHexString(payload));
 
-        ExecutionResult setResult = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(setResult.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult setResult = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(setResult.getResultCode()).isEqualTo(ResultCode.FAILURE);
     }
 
     @Test
@@ -156,8 +156,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // pull results from controller
         for (ECKey k : members) {
@@ -184,8 +184,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.FAILURE);
     }
 
     @Test
@@ -206,8 +206,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // set relayer
         byte[] callPayload =
@@ -216,9 +216,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
@@ -323,7 +323,7 @@ public class TokenBridgeContractTest {
                 .isEqualTo(submitBundleContext.transactionHash());
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         for (BridgeTransfer b : transfers) {
             assertThat(this.repository.getBalance(new Address(b.getRecipient())))
@@ -398,8 +398,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // set relayer
         byte[] callPayload =
@@ -408,9 +408,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
@@ -514,7 +514,7 @@ public class TokenBridgeContractTest {
                 .isEqualTo(submitBundleContext.transactionHash());
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         for (BridgeTransfer b : transfers) {
             assertThat(this.repository.getBalance(new Address(b.getRecipient())))
@@ -589,8 +589,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // set relayer
         byte[] callPayload =
@@ -599,9 +599,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
@@ -703,7 +703,7 @@ public class TokenBridgeContractTest {
                         .encodeBytes();
         transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
     }
 
     @Test
@@ -725,8 +725,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // set relayer
         byte[] callPayload =
@@ -735,9 +735,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         ExecutionContext submitBundleContext =
@@ -815,7 +815,7 @@ public class TokenBridgeContractTest {
         /// VERIFICATION
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         for (BridgeTransfer b : transfers) {
             assertThat(this.repository.getBalance(new Address(b.getRecipient())))
@@ -845,8 +845,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // set relayer
         byte[] callPayload =
@@ -855,9 +855,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
@@ -940,7 +940,7 @@ public class TokenBridgeContractTest {
 
         /// VERIFICATION
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
         assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
         assertThat(submitBundleContext.helper().getLogs().size()).isEqualTo(1);
 
@@ -978,9 +978,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
@@ -1082,7 +1082,7 @@ public class TokenBridgeContractTest {
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         // check that nothing has been modified from the failed transfer
         for (BridgeTransfer b : transfers) {
@@ -1113,8 +1113,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // not setting relayer
 
@@ -1203,7 +1203,7 @@ public class TokenBridgeContractTest {
                                 sigChunk2,
                                 sigChunk3)
                         .encodeBytes();
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
 
         // VERIFICATION - failure
         assertThat(
@@ -1217,7 +1217,7 @@ public class TokenBridgeContractTest {
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         // check that nothing has been modified from the failed transfer
         for (BridgeTransfer b : transfers) {
@@ -1248,8 +1248,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // set relayer
         byte[] callPayload =
@@ -1258,9 +1258,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
@@ -1361,7 +1361,7 @@ public class TokenBridgeContractTest {
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         // check that nothing has been modified from the failed transfer
         for (BridgeTransfer b : transfers) {
@@ -1392,8 +1392,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // set relayer
         byte[] callPayload =
@@ -1402,9 +1402,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
@@ -1507,7 +1507,7 @@ public class TokenBridgeContractTest {
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         // check that nothing has been changed from the failed transfer
         for (BridgeTransfer b : transfers) {
@@ -1539,8 +1539,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // set relayer
         byte[] callPayload =
@@ -1549,9 +1549,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
@@ -1657,7 +1657,7 @@ public class TokenBridgeContractTest {
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         // check that nothing has been changed from the failed transfer
         for (BridgeTransfer b : transfers) {
@@ -1704,12 +1704,12 @@ public class TokenBridgeContractTest {
         byte[] payloadHash = fromSetup.payloadHash;
         byte[] callPayload = fromSetup.callPayload;
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
 
         /// VERIFICATION
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         int i = 0;
         for (BridgeTransfer b : transfers) {
@@ -1796,9 +1796,9 @@ public class TokenBridgeContractTest {
         byte[] callPayload = fromSetup.callPayload;
 
         callPayload[50] = (byte) 0x128; // make the list offset here too big
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         // VERIFICATION failure
         assertThat(
@@ -1812,7 +1812,7 @@ public class TokenBridgeContractTest {
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         // check that nothing has been changed from the failed transfer
         for (BridgeTransfer b : transfers) {
@@ -1847,9 +1847,9 @@ public class TokenBridgeContractTest {
         byte[] callPayload = fromSetup.callPayload;
 
         callPayload[50] = (byte) 0x128;
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         // VERIFICATION failure
         assertThat(
@@ -1863,7 +1863,7 @@ public class TokenBridgeContractTest {
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
 
         // check that nothing has been changed from the failed transfer
         for (BridgeTransfer b : transfers) {
@@ -1904,17 +1904,17 @@ public class TokenBridgeContractTest {
         for (i = 1; i < 404; i++) {
             byte[] input = new byte[i];
             System.arraycopy(callPayload, 0, input, 0, i);
-            ExecutionResult result = this.contract.execute(input, DEFAULT_NRG);
+            TransactionResult result = this.contract.execute(input, DEFAULT_NRG);
             assertThat(result.getResultCode())
-                    .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                    .isEqualTo(ResultCode.FAILURE);
         }
         System.out.println("fail count: " + i);
 
         // try with more bytes than expected
         byte[] input = new byte[555];
         System.arraycopy(callPayload, 0, input, 0, 404);
-        ExecutionResult result = this.contract.execute(input, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(input, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
     }
 
     @Test
@@ -1952,9 +1952,9 @@ public class TokenBridgeContractTest {
         for (i = 1; i < 1508; i++) {
             byte[] input = new byte[i];
             System.arraycopy(callPayload, 0, input, 0, i);
-            ExecutionResult result = this.contract.execute(input, DEFAULT_NRG);
+            TransactionResult result = this.contract.execute(input, DEFAULT_NRG);
             assertThat(result.getResultCode())
-                    .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                    .isEqualTo(ResultCode.FAILURE);
         }
         System.out.println("fail count: " + i);
     }
@@ -1976,8 +1976,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // set relayer
         byte[] callPayload =
@@ -1986,9 +1986,9 @@ public class TokenBridgeContractTest {
                                 new AddressFVM(new ByteArrayWrapper(members[0].getAddress())))
                         .encodeBytes();
 
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // override defaults
         this.repository.addBalance(CONTRACT_ADDR, BigInteger.TEN);
@@ -2095,16 +2095,16 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // try before
         byte[] callPayload =
                 new AbiEncoder(BridgeFuncSig.PURE_RING_LOCKED.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
         assertThat(transferResult.getOutput()).isEqualTo(DataWord.ONE.getData());
 
         // lock the ring
@@ -2114,9 +2114,9 @@ public class TokenBridgeContractTest {
         byte[] callPayload2 =
                 new AbiEncoder(BridgeFuncSig.PURE_RING_LOCKED.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult transferResult2 = this.contract.execute(callPayload2, DEFAULT_NRG);
+        TransactionResult transferResult2 = this.contract.execute(callPayload2, DEFAULT_NRG);
         assertThat(transferResult2.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
         assertThat(transferResult2.getOutput()).isEqualTo(DataWord.ZERO.getData());
     }
 
@@ -2140,16 +2140,16 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // try before
         byte[] callPayload =
                 new AbiEncoder(BridgeFuncSig.PURE_MIN_THRESH.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
         assertThat(transferResult.getOutput())
                 .isEqualTo(new DataWord(new BigInteger("3")).getData());
 
@@ -2160,9 +2160,9 @@ public class TokenBridgeContractTest {
         byte[] callPayload2 =
                 new AbiEncoder(BridgeFuncSig.PURE_MIN_THRESH.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult transferResult2 = this.contract.execute(callPayload2, DEFAULT_NRG);
+        TransactionResult transferResult2 = this.contract.execute(callPayload2, DEFAULT_NRG);
         assertThat(transferResult2.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
         assertThat(transferResult2.getOutput())
                 .isEqualTo(new DataWord(new BigInteger("5")).getData());
 
@@ -2173,9 +2173,9 @@ public class TokenBridgeContractTest {
         byte[] callPayload3 =
                 new AbiEncoder(BridgeFuncSig.PURE_MIN_THRESH.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult transferResult3 = this.contract.execute(callPayload3, DEFAULT_NRG);
+        TransactionResult transferResult3 = this.contract.execute(callPayload3, DEFAULT_NRG);
         assertThat(transferResult3.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
         assertThat(transferResult3.getOutput())
                 .isEqualTo(new DataWord(new BigInteger("10")).getData());
     }
@@ -2200,16 +2200,16 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // try before
         byte[] callPayload =
                 new AbiEncoder(BridgeFuncSig.PURE_MEMBER_COUNT.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
         assertThat(transferResult.getOutput())
                 .isEqualTo(new DataWord(new BigInteger("5")).getData());
 
@@ -2220,9 +2220,9 @@ public class TokenBridgeContractTest {
         byte[] callPayload2 =
                 new AbiEncoder(BridgeFuncSig.PURE_MEMBER_COUNT.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult transferResult2 = this.contract.execute(callPayload2, DEFAULT_NRG);
+        TransactionResult transferResult2 = this.contract.execute(callPayload2, DEFAULT_NRG);
         assertThat(transferResult2.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
         assertThat(transferResult2.getOutput())
                 .isEqualTo(new DataWord(new BigInteger("10")).getData());
     }
@@ -2247,8 +2247,8 @@ public class TokenBridgeContractTest {
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // create input byte[]
         byte[] callPayload = new byte[36];
@@ -2260,14 +2260,14 @@ public class TokenBridgeContractTest {
         System.arraycopy(randomAddress, 0, callPayload, 4, 32);
 
         // execute with valid input
-        ExecutionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
+        TransactionResult transferResult = this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+                .isEqualTo(ResultCode.SUCCESS);
 
         // execute with invalid input
-        ExecutionResult transferResult2 = this.contract.execute(encodeBytes, DEFAULT_NRG);
+        TransactionResult transferResult2 = this.contract.execute(encodeBytes, DEFAULT_NRG);
         assertThat(transferResult2.getResultCode())
-                .isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+                .isEqualTo(ResultCode.FAILURE);
     }
 
     @Test
@@ -2290,8 +2290,8 @@ public class TokenBridgeContractTest {
         // address null
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature()).encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         this.connector.setRingLocked(true);
 
@@ -2299,8 +2299,8 @@ public class TokenBridgeContractTest {
         byte[] payload2 =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_INITIALIZE.getSignature(), encodingList)
                         .encodeBytes();
-        ExecutionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
-        assertThat(result2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
+        assertThat(result2.getResultCode()).isEqualTo(ResultCode.FAILURE);
     }
 
     @Test
@@ -2323,8 +2323,8 @@ public class TokenBridgeContractTest {
         // address null - fail
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_ADD_MEMBER.getSignature()).encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         // add new member - fail
         byte[] sig =
@@ -2335,8 +2335,8 @@ public class TokenBridgeContractTest {
         System.arraycopy(sig, 0, payload2, 0, 4);
         System.arraycopy(newMember, 0, payload2, 4, 32);
 
-        ExecutionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
-        assertThat(result2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
+        assertThat(result2.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         // lock the ring
         this.connector.setRingLocked(true);
@@ -2350,8 +2350,8 @@ public class TokenBridgeContractTest {
         System.arraycopy(sig3, 0, payload3, 0, 4);
         System.arraycopy(newMember3, 0, payload3, 4, 32);
 
-        ExecutionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
-        assertThat(result3.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
+        assertThat(result3.getResultCode()).isEqualTo(ResultCode.SUCCESS);
     }
 
     @Test
@@ -2383,8 +2383,8 @@ public class TokenBridgeContractTest {
         System.arraycopy(sig3, 0, payload3, 0, 4);
         System.arraycopy(newMember3, 0, payload3, 4, 32);
 
-        ExecutionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
-        assertThat(result3.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
+        assertThat(result3.getResultCode()).isEqualTo(ResultCode.FAILURE);
     }
 
     @Test
@@ -2407,8 +2407,8 @@ public class TokenBridgeContractTest {
         // address null - fail
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature()).encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         // add new member - fail
         byte[] sig =
@@ -2419,8 +2419,8 @@ public class TokenBridgeContractTest {
         System.arraycopy(sig, 0, payload2, 0, 4);
         System.arraycopy(newMember, 0, payload2, 4, 32);
 
-        ExecutionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
-        assertThat(result2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
+        assertThat(result2.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         // initialize ring
         byte[] ring =
@@ -2437,8 +2437,8 @@ public class TokenBridgeContractTest {
         System.arraycopy(sig3, 0, payload3, 0, 4);
         System.arraycopy(newMember3, 0, payload3, 4, 32);
 
-        ExecutionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
-        assertThat(result3.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
+        assertThat(result3.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         // remove member - success, member exists
         byte[] sig4 =
@@ -2448,8 +2448,8 @@ public class TokenBridgeContractTest {
         System.arraycopy(sig4, 0, payload4, 0, 4);
         System.arraycopy(members[0].getAddress(), 0, payload4, 4, 32);
 
-        ExecutionResult result4 = this.contract.execute(payload4, DEFAULT_NRG);
-        assertThat(result4.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result4 = this.contract.execute(payload4, DEFAULT_NRG);
+        assertThat(result4.getResultCode()).isEqualTo(ResultCode.SUCCESS);
     }
 
     @Test
@@ -2472,8 +2472,8 @@ public class TokenBridgeContractTest {
         // address null - fail
         byte[] payload =
                 new AbiEncoder(BridgeFuncSig.SIG_RING_REMOVE_MEMBER.getSignature()).encodeBytes();
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         // add new member - fail
         byte[] sig =
@@ -2484,8 +2484,8 @@ public class TokenBridgeContractTest {
         System.arraycopy(sig, 0, payload2, 0, 4);
         System.arraycopy(newMember, 0, payload2, 4, 32);
 
-        ExecutionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
-        assertThat(result2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
+        assertThat(result2.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         // initialize ring
         byte[] ring =
@@ -2502,8 +2502,8 @@ public class TokenBridgeContractTest {
         System.arraycopy(sig3, 0, payload3, 0, 4);
         System.arraycopy(newMember3, 0, payload3, 4, 32);
 
-        ExecutionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
-        assertThat(result3.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result3 = this.contract.execute(payload3, DEFAULT_NRG);
+        assertThat(result3.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         // override defaults
         this.contract =
@@ -2523,8 +2523,8 @@ public class TokenBridgeContractTest {
         System.arraycopy(sig4, 0, payload4, 0, 4);
         System.arraycopy(members[0].getAddress(), 0, payload4, 4, 32);
 
-        ExecutionResult result4 = this.contract.execute(payload4, DEFAULT_NRG);
-        assertThat(result4.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result4 = this.contract.execute(payload4, DEFAULT_NRG);
+        assertThat(result4.getResultCode()).isEqualTo(ResultCode.FAILURE);
     }
 
     @Test
@@ -2547,8 +2547,8 @@ public class TokenBridgeContractTest {
         // address null
         byte[] nullInput =
                 new AbiEncoder(BridgeFuncSig.SIG_SET_RELAYER.getSignature()).encodeBytes();
-        ExecutionResult res = this.contract.execute(nullInput, DEFAULT_NRG);
-        assertThat(res.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult res = this.contract.execute(nullInput, DEFAULT_NRG);
+        assertThat(res.getResultCode()).isEqualTo(ResultCode.FAILURE);
 
         // address valid
         byte[] sig = new AbiEncoder(BridgeFuncSig.SIG_SET_RELAYER.getSignature()).encodeBytes();
@@ -2557,8 +2557,8 @@ public class TokenBridgeContractTest {
 
         System.arraycopy(sig, 0, payload, 0, 4);
         System.arraycopy(newReplayer, 0, payload, 4, 32);
-        ExecutionResult result = this.contract.execute(payload, DEFAULT_NRG);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(payload, DEFAULT_NRG);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
 
         // caller not owner - fail
         Address address1 = Address.wrap(ECKeyFac.inst().create().getAddress());
@@ -2577,8 +2577,8 @@ public class TokenBridgeContractTest {
 
         System.arraycopy(sig2, 0, payload2, 0, 4);
         System.arraycopy(newReplayer2, 0, payload2, 4, 32);
-        ExecutionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
-        assertThat(result2.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.FAILURE);
+        TransactionResult result2 = this.contract.execute(payload2, DEFAULT_NRG);
+        assertThat(result2.getResultCode()).isEqualTo(ResultCode.FAILURE);
     }
 
     @Test
@@ -2594,8 +2594,8 @@ public class TokenBridgeContractTest {
         this.connector = this.contract.getConnector();
 
         assertThat(this.connector.getInitialized()).isFalse();
-        ExecutionResult result = this.contract.execute(ByteUtil.EMPTY_BYTE_ARRAY, 21_000L);
-        assertThat(result.getResultCode()).isEqualTo(AbstractExecutionResult.ResultCode.SUCCESS);
+        TransactionResult result = this.contract.execute(ByteUtil.EMPTY_BYTE_ARRAY, 21_000L);
+        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
         assertThat(this.connector.getInitialized()).isTrue();
     }
 }

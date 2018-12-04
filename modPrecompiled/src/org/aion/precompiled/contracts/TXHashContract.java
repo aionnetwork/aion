@@ -1,10 +1,9 @@
 package org.aion.precompiled.contracts;
 
 import javax.annotation.Nonnull;
-import org.aion.base.type.IExecutionResult;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.api.ResultCode;
+import org.aion.vm.api.TransactionResult;
 import org.aion.vm.ExecutionContext;
-import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
 
 public class TXHashContract implements IPrecompiledContract {
@@ -17,14 +16,14 @@ public class TXHashContract implements IPrecompiledContract {
     }
 
     @Override
-    public IExecutionResult execute(byte[] input, long nrgLimit) {
+    public TransactionResult execute(byte[] input, long nrgLimit) {
 
         long nrgLeft = nrgLimit - COST;
 
         if (nrgLeft < 0) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new TransactionResult(ResultCode.OUT_OF_ENERGY, 0, null);
         }
 
-        return new ExecutionResult(ResultCode.SUCCESS, nrgLeft, context.getOriginalTxHash());
+        return new TransactionResult(ResultCode.SUCCESS, nrgLeft, context.getOriginalTxHash());
     }
 }
