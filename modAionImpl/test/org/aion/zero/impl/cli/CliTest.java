@@ -646,6 +646,10 @@ public class CliTest {
                     new Object[] {
                         new String[] {opPort, "-12345"}, RUN, expPathOnError, expPortOnError
                     });
+            parameters.add(
+                new Object[] {
+                    new String[] {opPort, "invalid"}, RUN, expPathOnError, expPortOnError
+                });
             // with testing port number
             parameters.add(
                     new Object[] {
