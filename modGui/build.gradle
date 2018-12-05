@@ -1,4 +1,3 @@
-
 ext.moduleName = 'aion.gui'
 test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
@@ -15,6 +14,7 @@ buildscript {
 apply plugin: 'com.google.osdetector'
 ext.platform = osdetector.os == 'osx' ? 'mac' : osdetector.os == 'windows' ? 'win' : osdetector.os
 
+apply plugin: "de.undercouch.download" //version: '3.4.3'
 
 sourceSets {
     main {
@@ -30,7 +30,6 @@ sourceSets {
 }
 
 dependencies {
-
     compile project(':modLogger')
     compile project(':modMcf')
     compile project(':modAionImpl')
@@ -74,4 +73,37 @@ integTest {
     systemProperty "testfx.headless", "true"
     systemProperty "prism.order", "sw"
     systemProperty "prism.text", "t2k"
+}
+
+task fetchJavaFxRuntime(type: Download) { 
+    onlyIfModified
+    overwrite false
+    src "http://gluonhq.com/download/javafx-11-jmods-linux"
+    dest "${buildDir}/jfx/openjfx-11_linux-x64_bin-jmods.zip"
+}
+
+task unzipJavaFxRuntime(type: Copy) { 
+    dependsOn fetchJavaFxRuntime
+
+    def outDir = file("${buildDir}/pack");
+    from zipTree(fetchJavaFxRuntime.dest)
+    into outDir
+
+    rootProject.tasks['prePack'].configure { 
+        def jfxOutputDir = '/javafx-jmods-11' // the dir that Zip file is expected to extract to
+        environment "JAVAFX_PATH", outDir.canonicalPath + jfxOutputDir
+        environment "JAVAFX_MODULES", 
+            "javafx.graphics,javafx.controls,javafx.base,javafx.fxml,javafx.swing"
+    } 
+}
+
+task copyShellScripts(type: Copy) {
+    def aionGuiSh = file("aion_gui.sh");
+    rootProject.tasks['pack'].configure { 
+        from aionGuiSh into('/aion/') 
+    }
+}
+
+task setupAionRootProject {
+    dependsOn unzipJavaFxRuntime, copyShellScripts
 }

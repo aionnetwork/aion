@@ -15,6 +15,7 @@ def javaHome = System.getProperty('java.home')
 def vmVersion = "0.3.2"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
+
 allprojects { 
 
     apply plugin: 'java'
@@ -251,11 +252,14 @@ build {
 task prePack(type:Exec)  {
     dependsOn ':aion_api:cleanPack' 
     dependsOn ':aion_api:build'
-    if (project.hasProperty('noGui')) {
-        environment "noGui", "true"
+
+    if(findProject(":modGui") != null && gradle.useGui) { 
+        dependsOn ':modGui:setupAionRootProject';
+        environment "useGui", "true"
     }
     commandLine 'bash', 'script/prepack.sh' 
 }
+
 task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
 
 /** Replaces `ant pack_build` */
@@ -277,9 +281,6 @@ task pack(type: Tar) {
     into('/aion/') { 
         from dirWorkspace
         include 'aion.sh'
-        if (!project.hasProperty('noGui')) {
-            include 'aion_gui.sh'
-        }
     }
     into('/aion/native') {
         from dirNative
