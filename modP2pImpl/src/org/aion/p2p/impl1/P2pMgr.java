@@ -189,11 +189,23 @@ public final class P2pMgr implements IP2pMgr {
              * Bigger RECV_BUFFER and BACKLOG can have a better socket read/write tolerance, can be a advanced p2p settings in the config file.
              */
             tcpServer.socket().setReceiveBufferSize(SOCKET_RECV_BUFFER);
-            tcpServer
-                    .socket()
-                    .bind(
-                            new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort),
-                            SOCKET_BACKLOG);
+
+            try {
+                tcpServer
+                        .socket()
+                        .bind(
+                                new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort),
+                                SOCKET_BACKLOG);
+            } catch (IOException e) {
+                p2pLOG.error(
+                        "Failed to connect to Socket Address: "
+                                + Node.ipBytesToStr(selfIp)
+                                + ":"
+                                + selfPort
+                                + ", please check your ip and port configration!",
+                        e);
+            }
+
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
             Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
