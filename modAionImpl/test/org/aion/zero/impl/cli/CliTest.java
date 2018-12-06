@@ -617,15 +617,15 @@ public class CliTest {
     private Object parametersWithPort() {
         List<Object> parameters = new ArrayList<>();
 
-        String[] port_options = new String[] {"-p", "--port"};
-        String[] net_options = new String[] {"-n", "--network"};
-        String[] dir_options = new String[] {"-d", "--datadir"};
+        String[] portOptions = new String[] {"-p", "--port"};
+        String[] netOptions = new String[] {"-n", "--network"};
+        String[] dirOptions = new String[] {"-d", "--datadir"};
         String expectedPath = MAIN_BASE_PATH.getAbsolutePath();
         String expPathOnError = MAIN_BASE_PATH.getAbsolutePath();
         String expPortOnError = Integer.toString(cfg.getNet().getP2p().getPort());
 
         // port alone
-        for (String opPort : port_options) {
+        for (String opPort : portOptions) {
             // without parameter
             parameters.add(
                     new Object[] {new String[] {opPort}, ERROR, expPathOnError, expPortOnError});
@@ -647,18 +647,16 @@ public class CliTest {
                         new String[] {opPort, "-12345"}, RUN, expPathOnError, expPortOnError
                     });
             parameters.add(
-                new Object[] {
-                    new String[] {opPort, "invalid"}, RUN, expPathOnError, expPortOnError
-                });
+                    new Object[] {
+                        new String[] {opPort, "invalid"}, RUN, expPathOnError, expPortOnError
+                    });
             // with testing port number
             parameters.add(
-                    new Object[] {
-                        new String[] {opPort, TEST_PORT}, RUN, expectedPath, TEST_PORT
-                    });
+                    new Object[] {new String[] {opPort, TEST_PORT}, RUN, expectedPath, TEST_PORT});
         }
 
         // port with help and version
-        for (String opPort : port_options) {
+        for (String opPort : portOptions) {
             parameters.add(
                     new Object[] {
                         new String[] {opPort, TEST_PORT, "-h"}, EXIT, expectedPath, expPortOnError
@@ -670,10 +668,10 @@ public class CliTest {
         }
 
         // network and port
-        String[] net_values = new String[] {"mainnet", "invalid"};
-        for (String opNet : net_options) {
-            for (String valNet : net_values) {
-                for (String opPort : port_options) {
+        String[] netValues = new String[] {"mainnet", "invalid"};
+        for (String opNet : netOptions) {
+            for (String valNet : netValues) {
+                for (String opPort : portOptions) {
                     // without port parameter
                     parameters.add(
                             new Object[] {
@@ -724,11 +722,11 @@ public class CliTest {
         }
 
         // network and port with testnet
-        net_values = new String[] {"mastery", "testnet"};
+        netValues = new String[] {"mastery", "testnet"};
         expectedPath = TEST_BASE_PATH.getAbsolutePath();
-        for (String opNet : net_options) {
-            for (String valNet : net_values) {
-                for (String opPort : port_options) {
+        for (String opNet : netOptions) {
+            for (String valNet : netValues) {
+                for (String opPort : portOptions) {
                     parameters.add(
                             new Object[] {
                                 new String[] {opNet, valNet, opPort, TEST_PORT},
@@ -748,11 +746,11 @@ public class CliTest {
         }
 
         // directory and port
-        String[] dir_values = new String[] {dataDirectory, path.getAbsolutePath()};
+        String[] dirValues = new String[] {dataDirectory, path.getAbsolutePath()};
         expectedPath = new File(path, "mainnet").getAbsolutePath();
-        for (String opDir : dir_options) {
-            for (String valDir : dir_values) {
-                for (String opPort : port_options) {
+        for (String opDir : dirOptions) {
+            for (String valDir : dirValues) {
+                for (String opPort : portOptions) {
                     // without port parameter
                     parameters.add(
                             new Object[] {
@@ -803,12 +801,12 @@ public class CliTest {
         }
 
         // network, directory and port
-        net_values = new String[] {"mainnet", "mastery"};
-        for (String opNet : net_options) {
-            for (String valNet : net_values) {
-                for (String opDir : dir_options) {
-                    for (String valDir : dir_values) {
-                        for (String opPort : port_options) {
+        netValues = new String[] {"mainnet", "mastery"};
+        for (String opNet : netOptions) {
+            for (String valNet : netValues) {
+                for (String opDir : dirOptions) {
+                    for (String valDir : dirValues) {
+                        for (String opPort : portOptions) {
                             expectedPath = new File(path, valNet).getAbsolutePath();
                             parameters.add(
                                     new Object[] {
@@ -827,10 +825,10 @@ public class CliTest {
 
         // directory with subdirectories and port
         String dir = dataDirectory + File.separator + "subfolder";
-        File path = new File(BASE_PATH, dir);
-        expectedPath = new File(path, "mainnet").getAbsolutePath();
-        for (String opDir : dir_options) {
-            for (String opPort : port_options) {
+        File testPath = new File(BASE_PATH, dir);
+        expectedPath = new File(testPath, "mainnet").getAbsolutePath();
+        for (String opDir : dirOptions) {
+            for (String opPort : portOptions) {
                 // with relative path with subdirectories
                 parameters.add(
                         new Object[] {
@@ -842,27 +840,51 @@ public class CliTest {
             }
         }
 
-        // port and info
-        String[] info_options = new String[] {"-i", "--info"};
-        expectedPath = MAIN_BASE_PATH.getAbsolutePath();
-        expPathOnError = expectedPath;
-        for (String opInfo : info_options) {
-            // test port number as parameter
+        // port with config and directory
+        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        for (String opPort : portOptions) {
+            // with relative path
             parameters.add(
                     new Object[] {
-                        new String[] {opInfo, "-p", TEST_PORT}, EXIT, expectedPath, TEST_PORT
-                    });
-            parameters.add(
-                    new Object[] {
-                        new String[] {"-p", TEST_PORT, opInfo}, EXIT, expectedPath, TEST_PORT
-                    });
-            // test invalid port parameter
-            parameters.add(
-                    new Object[] {
-                        new String[] {opInfo, "-p", INVALID_PORT},
+                        new String[] {
+                            "--datadir",
+                            path.getAbsolutePath(),
+                            "--config",
+                            "mainnet",
+                            opPort,
+                            TEST_PORT
+                        },
                         EXIT,
-                        expPathOnError,
-                        expPortOnError
+                        expectedPath,
+                        TEST_PORT
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            "-c", "mainnet", opPort, TEST_PORT, "--datadir", path.getAbsolutePath()
+                        },
+                        EXIT,
+                        expectedPath,
+                        TEST_PORT
+                    });
+            // with absolute path
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            opPort, TEST_PORT, "-d", path.getAbsolutePath(), "--config", "mainnet"
+                        },
+                        EXIT,
+                        expectedPath,
+                        TEST_PORT
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            "-c", "mainnet", "-d", path.getAbsolutePath(), opPort, TEST_PORT
+                        },
+                        EXIT,
+                        expectedPath,
+                        TEST_PORT
                     });
         }
 
@@ -889,6 +911,10 @@ public class CliTest {
         assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
         // test port is updated
         assertThat(Integer.toString(cfg.getNet().getP2p().getPort())).isEqualTo(expectedPort);
+        // test port in initial config is unchanged
+        cfg.resetInternal();
+        cfg.fromXML();
+        assertThat(Integer.toString(cfg.getNet().getP2p().getPort())).isEqualTo(DEFAULT_PORT);
 
         if (verbose) {
             printPaths(cfg);
@@ -1466,14 +1492,30 @@ public class CliTest {
         skippedTasks.add("-s create");
         parameters.add(new Object[] {input, TaskPriority.CONFIG, skippedTasks});
 
+        input = new String[] {"--help", "--port", TEST_PORT};
+        skippedTasks = new HashSet<>();
+        skippedTasks.add("--port");
+        parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
+
         input = new String[] {"--help", "--network", "mainnet", "--datadir", dataDirectory};
         skippedTasks = new HashSet<>();
         skippedTasks.add("--network");
         skippedTasks.add("--datadir");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
+        input = new String[] {"--version", "--port", TEST_PORT, "--datadir", dataDirectory};
+        skippedTasks = new HashSet<>();
+        skippedTasks.add("--port");
+        skippedTasks.add("--datadir");
+        parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
+
         input = new String[] {"--version", "-v"};
         skippedTasks = new HashSet<>();
+        parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
+
+        input = new String[] {"--version", "--port", TEST_PORT};
+        skippedTasks = new HashSet<>();
+        skippedTasks.add("--port");
         parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
 
         input = new String[] {"--dump-blocks", "5", "--dump-state", "5", "--dump-state-size", "5"};

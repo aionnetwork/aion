@@ -191,6 +191,37 @@ public class Cli {
             // true means the UUID must be set
             boolean overwrite = cfg.fromXML(configFile);
 
+            // port option can be used with the -n, -d, -c, -i arguments
+            if (options.getPort() != null) {
+
+                int currentPort = cfg.getNet().getP2p().getPort();
+                int portNumber = currentPort;
+                boolean validPort = true;
+
+                try {
+                    portNumber = Integer.parseInt(options.getPort());
+                } catch (NumberFormatException e) {
+                    validPort = false;
+                    System.out.println("Port must be an integer value");
+                }
+
+                if (portNumber < 0 || portNumber > 0xFFFF) {
+                    validPort = false;
+                    System.out.println("Port out of range: " + portNumber);
+                }
+
+                if (validPort && portNumber != currentPort) {
+                    // update port in config
+                    cfg.getNet().getP2p().setPort(portNumber);
+                    overwrite = true;
+                    System.out.println("Port set to: " + portNumber);
+                } else {
+                    System.out.println(
+                        "Using the current port configuration: " + currentPort);
+                }
+                // no return, allow for other parameters combined with -c, -p
+            }
+
             // 4. can be influenced by the -d argument above
 
             if (options.getConfig() != null) {
@@ -230,36 +261,6 @@ public class Cli {
             }
 
             // 5. options that can be influenced by the -d and -n arguments
-
-            if (options.getPort() != null) {
-
-                int currentPort = cfg.getNet().getP2p().getPort();
-                int portNumber = currentPort;
-                boolean validPort = true;
-
-                try {
-                    portNumber = Integer.parseInt(options.getPort());
-                } catch (NumberFormatException e) {
-                    validPort = false;
-                    System.out.println("Port must be an integer value");
-                }
-
-                if (portNumber < 0 || portNumber > 0xFFFF) {
-                    validPort = false;
-                    System.out.println("Port out of range: " + portNumber);
-                }
-
-                if (validPort && portNumber != currentPort) {
-                    // update port in config
-                    cfg.getNet().getP2p().setPort(portNumber);
-                    overwrite = true;
-                    System.out.println("Port set to: " + portNumber);
-                } else {
-                    System.out.println(
-                        "Using the current port configuration: " + currentPort);
-                }
-                // no return, allow for other parameters combined with -p
-            }
 
             if (options.isInfo()) {
                 System.out.println(
