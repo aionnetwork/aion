@@ -31,14 +31,13 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IBloomFilter;
 import org.aion.vm.api.interfaces.IExecutionLog;
 
 /** A log is emitted by the LOGX vm instruction. It's composed of address, topics and data. */
 public class Log implements IExecutionLog {
 
-    private Address addr;
+    private org.aion.vm.api.interfaces.Address addr;
     private List<byte[]> topics = new ArrayList<>();
     private byte[] data;
 
@@ -59,14 +58,14 @@ public class Log implements IExecutionLog {
         }
     }
 
-    public Log(Address address, List<byte[]> topics, byte[] data) {
+    public Log(org.aion.vm.api.interfaces.Address address, List<byte[]> topics, byte[] data) {
         this.addr = address;
         this.topics = (topics != null) ? topics : new ArrayList<>();
         this.data = (data != null) ? data : new byte[] {};
     }
 
     @Override
-    public Address getLogSourceAddress() {
+    public org.aion.vm.api.interfaces.Address getLogSourceAddress() {
         return addr;
     }
 

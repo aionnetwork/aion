@@ -25,6 +25,7 @@ module aion.zero.impl {
     requires commons.lang3;
     requires commons.collections4;
     requires libJson;
+    requires aion.vm.api;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;

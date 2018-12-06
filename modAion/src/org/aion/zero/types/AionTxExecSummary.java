@@ -246,7 +246,7 @@ public class AionTxExecSummary implements ITxExecSummary {
     }
 
     public byte[] getTransactionHash() {
-        return getTransaction().getHash();
+        return getTransaction().getTransactionHash();
     }
 
     public BigInteger getValue() {
@@ -333,11 +333,11 @@ public class AionTxExecSummary implements ITxExecSummary {
             rlpParse();
         }
 
-        BigInteger energyLimit = BigInteger.valueOf(this.getTransaction().getNrg());
+        BigInteger energyLimit = BigInteger.valueOf(this.getTransaction().getEnergyLimit());
         BigInteger energyUsed = BigInteger.valueOf(this.getReceipt().getEnergyUsed());
         return energyLimit
                 .subtract(energyUsed)
-                .multiply(BigInteger.valueOf(this.getTransaction().getNrgPrice()));
+                .multiply(BigInteger.valueOf(this.getTransaction().getEnergyPrice()));
     }
 
     public BigInteger getFee() {
@@ -345,7 +345,7 @@ public class AionTxExecSummary implements ITxExecSummary {
             rlpParse();
         }
         return BigInteger.valueOf(this.getReceipt().getEnergyUsed())
-                .multiply(BigInteger.valueOf(this.getTransaction().getNrgPrice()));
+                .multiply(BigInteger.valueOf(this.getTransaction().getEnergyPrice()));
     }
 
     public BigInteger getNrgUsed() {

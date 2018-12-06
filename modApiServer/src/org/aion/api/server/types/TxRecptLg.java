@@ -56,7 +56,7 @@ public class TxRecptLg {
         this.blockHash = b == null ? null : TypeConverter.toJsonHex(b.getHash());
         this.transactionIndex =
                 (b == null || txIndex == null) ? null : TypeConverter.toJsonHex(txIndex);
-        this.transactionHash = TypeConverter.toJsonHex(tx.getHash());
+        this.transactionHash = TypeConverter.toJsonHex(tx.getTransactionHash());
         this.address = TypeConverter.toJsonHex(logInfo.getLogSourceAddress().toString());
         this.data = TypeConverter.toJsonHex(logInfo.getLogData());
         this.removed = !isMainchain;

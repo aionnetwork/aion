@@ -85,7 +85,7 @@ public class AionBlockLoader {
                         true,
                         b -> {
                             for (AionTransaction tx : b.getTransactionsList()) {
-                                tx.getFrom();
+                                tx.getSenderAddress();
                             }
                             return b;
                         },

@@ -98,6 +98,7 @@ import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.aion.vm.api.interfaces.Address;
 
 // TODO: clean and clarify best block
 // bestKnownBlock - block with the highest block number
@@ -1004,7 +1005,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                     getBlockByHash(block.getParentHash()).getStateRoot());
                 }
 
-                Map<AionAddress, BigInteger> nonceCache = new HashMap<>();
+                Map<Address, BigInteger> nonceCache = new HashMap<>();
 
                 if (txs.parallelStream().anyMatch(tx -> !TXValidator.isValid(tx))) {
                     LOG.error("Some transactions in the block are invalid");
@@ -1012,7 +1013,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
 
                 for (AionTransaction tx : txs) {
-                    AionAddress txSender = tx.getFrom();
+                    Address txSender = tx.getSenderAddress();
 
                     BigInteger expectedNonce = nonceCache.get(txSender);
 

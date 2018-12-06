@@ -28,6 +28,7 @@ import org.aion.base.type.ITransaction;
 import org.aion.crypto.ISignature;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.api.interfaces.Address;
 import org.slf4j.Logger;
 
 public abstract class AbstractTransaction implements ITransaction {
@@ -49,7 +50,7 @@ public abstract class AbstractTransaction implements ITransaction {
 
     /* the address of the destination account
      * In creation transaction the receive address is - 0 */
-    protected AionAddress to;
+    protected Address to;
 
     /* a counter used to make sure each transaction can only be processed once */
     protected byte[] nonce;
@@ -70,7 +71,7 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public AbstractTransaction() {}
 
-    public AbstractTransaction(byte[] nonce, AionAddress receiveAddress, byte[] value, byte[] data) {
+    public AbstractTransaction(byte[] nonce, Address receiveAddress, byte[] value, byte[] data) {
         this.nonce = nonce;
         this.to = receiveAddress;
         this.value = value;
@@ -81,7 +82,7 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public AbstractTransaction(
             byte[] nonce,
-            AionAddress receiveAddress,
+            Address receiveAddress,
             byte[] value,
             byte[] data,
             long nrg,
@@ -93,7 +94,7 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public AbstractTransaction(
             byte[] nonce,
-            AionAddress receiveAddress,
+            Address receiveAddress,
             byte[] value,
             byte[] data,
             long nrg,
@@ -111,15 +112,15 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public abstract byte[] getEncoded();
 
-    public abstract AionAddress getFrom();
+    public abstract Address getSenderAddress();
 
-    public abstract AionAddress getTo();
+    public abstract Address getDestinationAddress();
 
     public abstract byte[] getNonce();
 
     public abstract byte[] getTimeStamp();
 
-    public abstract AionAddress getContractAddress();
+    public abstract Address getContractAddress();
 
     public abstract AbstractTransaction clone();
 
@@ -127,7 +128,7 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public abstract void setNrgConsume(long consume);
 
-    public abstract byte getType();
+    public abstract byte getTransactionType();
 
     public abstract BigInteger getNonceBI();
 

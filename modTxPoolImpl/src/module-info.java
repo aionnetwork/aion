@@ -4,6 +4,7 @@ module aion.txpool.impl {
     requires aion.base;
     requires aion.txpool;
     requires libnsc;
+    requires aion.vm.api;
 
     provides org.aion.txpool.ITxPool with
             org.aion.txpool.zero.TxPoolA0;

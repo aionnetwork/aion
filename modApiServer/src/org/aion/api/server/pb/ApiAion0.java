@@ -81,6 +81,7 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
@@ -135,8 +136,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     for (AionTxReceipt txr : txrs) {
                         AionTransaction tx = txr.getTransaction();
-                        AionAddress contractAddress =
-                                Optional.ofNullable(tx.getTo()).orElse(tx.getContractAddress());
+                        Address contractAddress =
+                                Optional.ofNullable(tx.getDestinationAddress()).orElse(tx.getContractAddress());
 
                         Integer cnt = 0;
                         txr.getLogInfoList()
@@ -161,8 +162,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                         for (AionTransaction t :
                                                                                 txList) {
                                                                             if (Arrays.equals(
-                                                                                    t.getHash(),
-                                                                                    tx.getHash())) {
+                                                                                    t.getTransactionHash(),
+                                                                                    tx.getTransactionHash())) {
                                                                                 break;
                                                                             }
                                                                             insideCnt++;
@@ -185,7 +186,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                         false,
                                                                                         insideCnt,
                                                                                         tx
-                                                                                                .getHash());
+                                                                                                .getTransactionHash());
 
                                                                         _fltr.add(ec);
                                                                     }
@@ -209,7 +210,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
     protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
         ByteArrayWrapper txHashW =
-                ByteArrayWrapper.wrap(((AionTxReceipt) _txRcpt).getTransaction().getHash());
+                ByteArrayWrapper.wrap(((AionTxReceipt) _txRcpt).getTransaction().getTransactionHash());
 
         if (LOG.isTraceEnabled()) {
             LOG.trace(
@@ -644,7 +645,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_success_VALUE);
                         return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
                     } catch (Exception e) {
-                        LOG.error("ApiAion0.process.getNrgPrice exception: [{}]", e.getMessage());
+                        LOG.error("ApiAion0.process.getEnergyPrice exception: [{}]", e.getMessage());
                         return ApiUtil.toReturnHeader(
                                 getApiVersion(), Retcode.r_fail_function_exception_VALUE);
                     }
@@ -1911,14 +1912,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 Map<ByteArrayWrapper, AionTxReceipt> receipts = new HashMap<>();
                                 for (AionTxReceipt r : bs.getReceipts()) {
                                     receipts.put(
-                                            new ByteArrayWrapper(r.getTransaction().getHash()), r);
+                                            new ByteArrayWrapper(r.getTransaction().getTransactionHash()), r);
                                 }
 
                                 List<AionTransaction> txns = b.getTransactionsList();
                                 for (int j = 0; j < txns.size(); j++) {
                                     AionTransaction tx = txns.get(j);
                                     AionTxReceipt r =
-                                            receipts.get(new ByteArrayWrapper(tx.getHash()));
+                                            receipts.get(new ByteArrayWrapper(tx.getTransactionHash()));
                                     if (r == null) {
                                         if (LOG.isDebugEnabled()) {
                                             LOG.debug(
@@ -1933,13 +1934,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                         .getAionHub()
                                                                         .getBlockchain())
                                                         .getTransactionInfoLite(
-                                                                tx.getHash(), b.getHash());
+                                                                tx.getTransactionHash(), b.getHash());
                                         r = ti.getReceipt();
                                     }
                                     if (r == null) {
                                         LOG.error(
                                                 "BlockSqlByRange: missing DB transaction: "
-                                                        + ByteUtil.toHexString(tx.getHash()));
+                                                        + ByteUtil.toHexString(tx.getTransactionHash()));
                                     } else {
                                         transactionSql.add(
                                                 generateTransactionSqlStatement(
@@ -1968,7 +1969,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                             .getAionHub()
                                                                                             .getBlockchain())
                                                                             .getTransactionInfoLite(
-                                                                                    tx.getHash(),
+                                                                                    tx.getTransactionHash(),
                                                                                     b.getHash());
                                                             if (ti == null) {
                                                                 LOG.error(
@@ -1976,7 +1977,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                 + ByteUtil
                                                                                         .toHexString(
                                                                                                 tx
-                                                                                                        .getHash()));
+                                                                                                        .getTransactionHash()));
                                                                 return null;
                                                             } else {
                                                                 return generateTransactionSqlStatement(
@@ -2138,14 +2139,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 Map<ByteArrayWrapper, AionTxReceipt> receipts = new HashMap<>();
                                 for (AionTxReceipt r : bs.getReceipts()) {
                                     receipts.put(
-                                            new ByteArrayWrapper(r.getTransaction().getHash()), r);
+                                            new ByteArrayWrapper(r.getTransaction().getTransactionHash()), r);
                                 }
 
                                 List<AionTransaction> txns = b.getTransactionsList();
                                 for (int j = 0; j < txns.size(); j++) {
                                     AionTransaction tx = txns.get(j);
                                     AionTxReceipt r =
-                                            receipts.get(new ByteArrayWrapper(tx.getHash()));
+                                            receipts.get(new ByteArrayWrapper(tx.getTransactionHash()));
                                     if (r == null) {
                                         if (LOG.isDebugEnabled()) {
                                             LOG.debug(
@@ -2160,13 +2161,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                         .getAionHub()
                                                                         .getBlockchain())
                                                         .getTransactionInfoLite(
-                                                                tx.getHash(), b.getHash());
+                                                                tx.getTransactionHash(), b.getHash());
                                         r = ti.getReceipt();
                                     }
                                     if (r == null) {
                                         LOG.error(
                                                 "getBlockDetailsByRange: missing DB transaction: "
-                                                        + ByteUtil.toHexString(tx.getHash()));
+                                                        + ByteUtil.toHexString(tx.getTransactionHash()));
                                     } else {
                                         txDetails.add(
                                                 getTxDetailsObj(
@@ -2196,7 +2197,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                             .getAionHub()
                                                                                             .getBlockchain())
                                                                             .getTransactionInfoLite(
-                                                                                    tx.getHash(),
+                                                                                    tx.getTransactionHash(),
                                                                                     b.getHash());
                                                             if (ti == null) {
                                                                 LOG.error(
@@ -2204,7 +2205,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                 + ByteUtil
                                                                                         .toHexString(
                                                                                                 tx
-                                                                                                        .getHash()));
+                                                                                                        .getTransactionHash()));
                                                                 return null;
                                                             } else {
                                                                 return getTxDetailsObj(
@@ -2451,7 +2452,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
             List<ByteString> al = new ArrayList<>();
             for (AionTransaction tx : blk.getTransactionsList()) {
-                al.add(ByteString.copyFrom(tx.getHash()));
+                al.add(ByteString.copyFrom(tx.getTransactionHash()));
             }
 
             BigInteger td =
@@ -2468,16 +2469,16 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 .newBuilder()
                 .setBlockhash(ByteString.copyFrom(tx.getBlockHash()))
                 .setBlocknumber(tx.getBlockNumber())
-                .setFrom(ByteString.copyFrom(tx.getFrom().toBytes()))
+                .setFrom(ByteString.copyFrom(tx.getSenderAddress().toBytes()))
                 .setNrgConsume(tx.getNrgConsume())
-                .setNrgPrice(tx.getNrgPrice())
-                .setTxHash(ByteString.copyFrom(tx.getHash()))
+                .setNrgPrice(tx.getEnergyPrice())
+                .setTxHash(ByteString.copyFrom(tx.getTransactionHash()))
                 .setData(
                         ByteString.copyFrom(tx.getData() == null ? EMPTY_BYTE_ARRAY : tx.getData()))
                 .setNonce(ByteString.copyFrom(tx.getNonce()))
                 .setTo(
                         ByteString.copyFrom(
-                                tx.getTo() == null ? EMPTY_BYTE_ARRAY : tx.getTo().toBytes()))
+                                tx.getDestinationAddress() == null ? EMPTY_BYTE_ARRAY : tx.getDestinationAddress().toBytes()))
                 .setValue(ByteString.copyFrom(tx.getValue()))
                 .setTxIndex((int) tx.getTxIndexInBlock())
                 .setTimeStamp(ByteUtil.byteArrayToLong(tx.getTimeStamp()))
@@ -2596,13 +2597,13 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 Message.t_TxDetail
                         .newBuilder()
                         .setData(ByteString.copyFrom(t.getData()))
-                        .setTo(ByteString.copyFrom(t.getTo().toBytes()))
-                        .setFrom(ByteString.copyFrom(t.getFrom().toBytes()))
+                        .setTo(ByteString.copyFrom(t.getDestinationAddress().toBytes()))
+                        .setFrom(ByteString.copyFrom(t.getSenderAddress().toBytes()))
                         .setNonce(ByteString.copyFrom(t.getNonce()))
                         .setValue(ByteString.copyFrom(t.getValue()))
                         .setNrgConsumed(nrgConsumed)
-                        .setNrgPrice(t.getNrgPrice())
-                        .setTxHash(ByteString.copyFrom(t.getHash()))
+                        .setNrgPrice(t.getEnergyPrice())
+                        .setTxHash(ByteString.copyFrom(t.getTransactionHash()))
                         .setTxIndex(txIndex)
                         .setTimestamp(ByteUtil.byteArrayToLong(t.getTimeStamp()))
                         .setError(error)
@@ -2738,7 +2739,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
          */
 
         return "'"
-                + ByteUtil.toHexString(t.getHash())
+                + ByteUtil.toHexString(t.getTransactionHash())
                 + "',"
                 + "'"
                 + ByteUtil.toHexString(b.getHash())
@@ -2748,14 +2749,14 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                 + txIndex
                 + ","
                 + "'"
-                + ByteUtil.toHexString(t.getFrom().toBytes())
+                + ByteUtil.toHexString(t.getSenderAddress().toBytes())
                 + "',"
                 + "'"
-                + ByteUtil.toHexString(t.getTo().toBytes())
+                + ByteUtil.toHexString(t.getDestinationAddress().toBytes())
                 + "',"
                 + nrgConsumed
                 + ","
-                + t.getNrgPrice()
+                + t.getEnergyPrice()
                 + ","
                 + ByteUtil.byteArrayToLong(t.getTimeStamp())
                 + ","
@@ -2823,7 +2824,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                         .getAionHub()
                                                                                         .getBlockchain())
                                                                         .getTransactionInfoLite(
-                                                                                tx.getHash(),
+                                                                                tx.getTransactionHash(),
                                                                                 b.getHash());
 
                                                         List<Message.t_LgEle> tles =
@@ -2879,11 +2880,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                                 .getData()))
                                                                         .setTo(
                                                                                 ByteString.copyFrom(
-                                                                                        tx.getTo()
+                                                                                        tx.getDestinationAddress()
                                                                                                 .toBytes()))
                                                                         .setFrom(
                                                                                 ByteString.copyFrom(
-                                                                                        tx.getFrom()
+                                                                                        tx.getSenderAddress()
                                                                                                 .toBytes()))
                                                                         .setNonce(
                                                                                 ByteString.copyFrom(
@@ -2897,11 +2898,11 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                                                 ti.getReceipt()
                                                                                         .getEnergyUsed())
                                                                         .setNrgPrice(
-                                                                                tx.getNrgPrice())
+                                                                                tx.getEnergyPrice())
                                                                         .setTxHash(
                                                                                 ByteString.copyFrom(
                                                                                         tx
-                                                                                                .getHash()))
+                                                                                                .getTransactionHash()))
                                                                         .setTxIndex(ti.getIndex())
                                                                         .addAllLogs(tles);
 

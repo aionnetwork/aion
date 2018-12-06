@@ -136,7 +136,7 @@ public class TxRecptLgTest {
         result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 
-        AionTxInfo info = bc.getTransactionInfo(tx3.getHash());
+        AionTxInfo info = bc.getTransactionInfo(tx3.getTransactionHash());
         AionTxReceipt receipt = info.getReceipt();
         System.out.println(receipt);
         assertEquals(4, receipt.getLogInfoList().size());

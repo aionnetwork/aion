@@ -59,6 +59,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
+import org.aion.vm.api.interfaces.Address;
 
 public class TxnPoolTest {
 
@@ -198,8 +199,8 @@ public class TxnPoolTest {
         txl = tp.snapshot();
         assertTrue(txl.size() == cnt);
 
-        Map<AionAddress, BigInteger> account = new HashMap<>();
-        account.put(txl.get(0).getFrom(), BigInteger.valueOf(10));
+        Map<Address, BigInteger> account = new HashMap<>();
+        account.put(txl.get(0).getSenderAddress(), BigInteger.valueOf(10));
         rtn = tp.remove(account);
         assertTrue(rtn.size() == 10);
         assertTrue(tp.size() == 10);
@@ -548,15 +549,15 @@ public class TxnPoolTest {
         for (ITransaction tx : txl) {
             if (check < 25) {
                 assertTrue(
-                        Hash256.wrap(txnl.get(check).getHash())
+                        Hash256.wrap(txnl.get(check).getTransactionHash())
                                 .toString()
-                                .equals(Hash256.wrap(tx.getHash()).toString()));
+                                .equals(Hash256.wrap(tx.getTransactionHash()).toString()));
                 check++;
             } else {
                 assertTrue(
-                        Hash256.wrap(txnl2.get(check - 25).getHash())
+                        Hash256.wrap(txnl2.get(check - 25).getTransactionHash())
                                 .toString()
-                                .equals(Hash256.wrap(tx.getHash()).toString()));
+                                .equals(Hash256.wrap(tx.getTransactionHash()).toString()));
                 check++;
             }
         }
@@ -623,9 +624,9 @@ public class TxnPoolTest {
         int check = 0;
         for (ITransaction tx : txl) {
             assertTrue(
-                    Hash256.wrap(txnl.get(check).getHash())
+                    Hash256.wrap(txnl.get(check).getTransactionHash())
                             .toString()
-                            .equals(Hash256.wrap(tx.getHash()).toString()));
+                            .equals(Hash256.wrap(tx.getTransactionHash()).toString()));
             check++;
         }
     }
@@ -744,7 +745,7 @@ public class TxnPoolTest {
 
         ((AionTransaction) txn).sign(key.get(0));
         txnl.add(txn);
-        long t = new BigInteger(txn.getTimeStamp()).longValue();
+        long t = new BigInteger(txn.getTimestamp()).longValue();
 
         tp.add(txnl);
 
@@ -752,7 +753,7 @@ public class TxnPoolTest {
 
         List<ITransaction> txl = tp.snapshot();
         assertTrue(txl.size() == 1);
-        assertTrue(new BigInteger(txl.get(0).getTimeStamp()).longValue() == t);
+        assertTrue(new BigInteger(txl.get(0).getTimestamp()).longValue() == t);
     }
 
     @Test
@@ -762,7 +763,7 @@ public class TxnPoolTest {
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
-        AionAddress acc = AionAddress.wrap(key.get(0).getAddress());
+        Address acc = AionAddress.wrap(key.get(0).getAddress());
 
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 100;
@@ -807,7 +808,7 @@ public class TxnPoolTest {
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 100;
         for (ECKey aKey1 : key) {
-            AionAddress acc = AionAddress.wrap(aKey1.getAddress());
+            Address acc = AionAddress.wrap(aKey1.getAddress());
             for (int i = 0; i < cnt; i++) {
                 byte[] nonce = new byte[Long.BYTES];
                 nonce[Long.BYTES - 1] = (byte) (i + 1);
@@ -855,7 +856,7 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             nonce[Long.BYTES - 1] = 1;
 
-            AionAddress addr = AionAddress.wrap(key2.get(i).getAddress());
+            Address addr = AionAddress.wrap(key2.get(i).getAddress());
             ITransaction txn =
                     new AionTransaction(
                             nonce,
@@ -960,7 +961,7 @@ public class TxnPoolTest {
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 10000;
         for (ECKey aKey1 : key) {
-            AionAddress acc = AionAddress.wrap(aKey1.getAddress());
+            Address acc = AionAddress.wrap(aKey1.getAddress());
             for (int i = 0; i < cnt; i++) {
                 ITransaction txn =
                         new AionTransaction(
@@ -1007,7 +1008,7 @@ public class TxnPoolTest {
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 10000;
         for (ECKey aKey2 : key) {
-            AionAddress acc = AionAddress.wrap(aKey2.getAddress());
+            Address acc = AionAddress.wrap(aKey2.getAddress());
             for (int i = 0; i < cnt; i++) {
                 ITransaction txn =
                         new AionTransaction(
@@ -1085,7 +1086,7 @@ public class TxnPoolTest {
         System.out.println("Gen new transactions --");
         long start = System.currentTimeMillis();
         for (ECKey aKey21 : key2) {
-            AionAddress acc = AionAddress.wrap(aKey21.getAddress());
+            Address acc = AionAddress.wrap(aKey21.getAddress());
             for (int i = 0; i < cnt; i++) {
                 ITransaction txn =
                         new AionTransaction(
@@ -1137,7 +1138,7 @@ public class TxnPoolTest {
         List<ITransaction> txnlrm = new ArrayList<>();
         int cnt = 100000;
         int rmCnt = 10;
-        AionAddress acc = AionAddress.wrap(key.get(0).getAddress());
+        Address acc = AionAddress.wrap(key.get(0).getAddress());
         System.out.println("gen new transactions...");
         long start = System.currentTimeMillis();
         for (int i = 0; i < cnt; i++) {
@@ -1204,7 +1205,7 @@ public class TxnPoolTest {
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 10000;
         for (ECKey aKey1 : key) {
-            AionAddress acc = AionAddress.wrap(aKey1.getAddress());
+            Address acc = AionAddress.wrap(aKey1.getAddress());
             for (int i = 0; i < cnt; i++) {
                 ITransaction txn =
                         new AionTransaction(

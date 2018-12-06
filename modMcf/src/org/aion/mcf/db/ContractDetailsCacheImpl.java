@@ -31,6 +31,7 @@ import org.aion.base.db.IContractDetails;
 import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.vm.api.interfaces.Address;
 
 /** Contract details cache implementation. */
 public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord> {
@@ -187,7 +188,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @return the associated address.
      */
     @Override
-    public AionAddress getAddress() {
+    public Address getAddress() {
         return (origContract == null) ? null : origContract.getAddress();
     }
 
@@ -197,7 +198,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @param address The address to set.
      */
     @Override
-    public void setAddress(AionAddress address) {
+    public void setAddress(Address address) {
         if (origContract != null) {
             origContract.setAddress(address);
         }

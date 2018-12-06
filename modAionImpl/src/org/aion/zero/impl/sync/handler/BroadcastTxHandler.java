@@ -156,8 +156,8 @@ public final class BroadcastTxHandler extends Handler {
         for (byte[] raw : broadCastTx) {
             try {
                 AionTransaction tx = new AionTransaction(raw);
-                if (tx.getHash() != null) {
-                    if (!TXValidator.isInCache(ByteArrayWrapper.wrap(tx.getHash()))) {
+                if (tx.getTransactionHash() != null) {
+                    if (!TXValidator.isInCache(ByteArrayWrapper.wrap(tx.getTransactionHash()))) {
                         if (TXValidator.isValid(tx)) {
                             rtn.add(tx);
                         }

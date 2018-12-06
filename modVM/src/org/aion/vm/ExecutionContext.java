@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import org.aion.base.type.AionAddress;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * Execution context, including both transaction and block information.
@@ -44,12 +45,12 @@ public class ExecutionContext {
     public static int CREATE = 3;
 
     private ExecutionHelper helper;
-    private AionAddress origin;
+    private Address origin;
     private byte[] originalTxHash;
 
-    public AionAddress address;
-    public AionAddress sender;
-    private AionAddress blockCoinbase;
+    public Address address;
+    public Address sender;
+    private Address blockCoinbase;
     private DataWord nrgPrice;
     private DataWord callValue;
     private DataWord blockDifficulty;
@@ -87,9 +88,9 @@ public class ExecutionContext {
      */
     public ExecutionContext(
             byte[] txHash,
-            AionAddress destination,
-            AionAddress origin,
-            AionAddress sender,
+            Address destination,
+            Address origin,
+            Address sender,
             DataWord nrgPrice,
             long nrgLimit,
             DataWord callValue,
@@ -97,7 +98,7 @@ public class ExecutionContext {
             int depth,
             int kind,
             int flags,
-            AionAddress blockCoinbase,
+            Address blockCoinbase,
             long blockNumber,
             long blockTimestamp,
             long blockNrgLimit,
@@ -165,17 +166,17 @@ public class ExecutionContext {
     }
 
     /** @return the transaction address. */
-    public AionAddress address() {
+    public Address address() {
         return address;
     }
 
     /** @return the origination address, which is the sender of original transaction. */
-    public AionAddress origin() {
+    public Address origin() {
         return origin;
     }
 
     /** @return the transaction caller. */
-    public AionAddress sender() {
+    public Address sender() {
         return sender;
     }
 
@@ -215,7 +216,7 @@ public class ExecutionContext {
     }
 
     /** @return the block's beneficiary. */
-    public AionAddress blockCoinbase() {
+    public Address blockCoinbase() {
         return blockCoinbase;
     }
 

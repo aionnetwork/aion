@@ -40,13 +40,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.Constant;
-import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
+import org.aion.vm.api.interfaces.Address;
 
 public abstract class AbstractTxPool<TX extends ITransaction> {
 
@@ -91,16 +91,16 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
      * accountView : Map<ByteArrayWrapper, AccountState> @ByteArrayWrapper account
      * address @AccountState
      */
-    private final Map<AionAddress, AccountState> accountView = new ConcurrentHashMap<>();
+    private final Map<Address, AccountState> accountView = new ConcurrentHashMap<>();
     /**
      * poolStateView : Map<ByteArrayWrapper, List<PoolState>> @ByteArrayWrapper account
      * address @PoolState continuous transaction state including starting nonce
      */
-    private final Map<AionAddress, List<PoolState>> poolStateView = new ConcurrentHashMap<>();
+    private final Map<Address, List<PoolState>> poolStateView = new ConcurrentHashMap<>();
 
     private final List<TX> outDated = new ArrayList<>();
 
-    private final Map<AionAddress, BigInteger> bestNonce = new ConcurrentHashMap<>();
+    private final Map<Address, BigInteger> bestNonce = new ConcurrentHashMap<>();
 
     protected final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
@@ -123,17 +123,17 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         return this.feeView;
     }
 
-    protected AccountState getAccView(AionAddress acc) {
+    protected AccountState getAccView(Address acc) {
 
         this.accountView.computeIfAbsent(acc, k -> new AccountState());
         return this.accountView.get(acc);
     }
 
-    protected Map<AionAddress, AccountState> getFullAcc() {
+    protected Map<Address, AccountState> getFullAcc() {
         return this.accountView;
     }
 
-    protected List<PoolState> getPoolStateView(AionAddress acc) {
+    protected List<PoolState> getPoolStateView(Address acc) {
 
         if (this.accountView.get(acc) == null) {
             this.poolStateView.put(acc, new LinkedList<>());
@@ -163,7 +163,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
     protected void sortTxn() {
 
-        Map<AionAddress, Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>>> accMap =
+        Map<Address, Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>>> accMap =
                 new ConcurrentHashMap<>();
         SortedMap<Long, LinkedHashSet<ByteArrayWrapper>> timeMap =
                 Collections.synchronizedSortedMap(new TreeMap<>());
@@ -187,8 +187,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                             Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>> nonceMap;
                             ITransaction replacedTx = null;
                             synchronized (accMap) {
-                                if (accMap.get(tx.getFrom()) != null) {
-                                    nonceMap = accMap.get(tx.getFrom());
+                                if (accMap.get(tx.getSenderAddress()) != null) {
+                                    nonceMap = accMap.get(tx.getSenderAddress());
                                 } else {
                                     nonceMap = Collections.synchronizedSortedMap(new TreeMap<>());
                                 }
@@ -197,7 +197,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                 BigInteger nonce = tx.getNonceBI();
 
                                 BigInteger nrgCharge =
-                                        BigInteger.valueOf(tx.getNrgPrice())
+                                        BigInteger.valueOf(tx.getEnergyPrice())
                                                 .multiply(BigInteger.valueOf(tx.getNrgConsume()));
 
                                 if (LOG.isTraceEnabled()) {
@@ -239,11 +239,11 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                 if (LOG.isTraceEnabled()) {
                                     LOG.trace(
                                             "AbstractTxPool.sortTxn Put tx into accMap: acc:[{}] mapSize[{}] ",
-                                            tx.getFrom().toString(),
+                                            tx.getSenderAddress().toString(),
                                             nonceMap.size());
                                 }
 
-                                accMap.put(tx.getFrom(), nonceMap);
+                                accMap.put(tx.getSenderAddress(), nonceMap);
                             }
 
                             LinkedHashSet<ByteArrayWrapper> lhs;
@@ -271,7 +271,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                         timeMap.get(t)
                                                 .remove(
                                                         ByteArrayWrapper.wrap(
-                                                                replacedTx.getHash()));
+                                                                replacedTx.getTransactionHash()));
                                     }
                                 }
                             }
@@ -281,7 +281,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
         if (!updatedTx.isEmpty()) {
             for (Map.Entry<ITransaction, Long> en : updatedTx.entrySet()) {
-                ByteArrayWrapper bw = ByteArrayWrapper.wrap(en.getKey().getHash());
+                ByteArrayWrapper bw = ByteArrayWrapper.wrap(en.getKey().getTransactionHash());
                 if (this.timeView.get(en.getValue()) != null) {
                     this.timeView.get(en.getValue()).remove(bw);
                 }
@@ -328,8 +328,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     protected void updateAccPoolState() {
 
         // iterate tx by account
-        List<AionAddress> clearAddr = new ArrayList<>();
-        for (Entry<AionAddress, AccountState> e : this.accountView.entrySet()) {
+        List<Address> clearAddr = new ArrayList<>();
+        for (Entry<Address, AccountState> e : this.accountView.entrySet()) {
             AccountState as = e.getValue();
             if (as.isDirty()) {
 
@@ -525,7 +525,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
     }
 
     protected void updateFeeMap() {
-        for (Entry<AionAddress, List<PoolState>> e : this.poolStateView.entrySet()) {
+        for (Entry<Address, List<PoolState>> e : this.poolStateView.entrySet()) {
             ByteArrayWrapper dependTx = null;
             for (PoolState ps : e.getValue()) {
 
@@ -598,7 +598,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         }
     }
 
-    protected void setBestNonce(AionAddress addr, BigInteger bn) {
+    protected void setBestNonce(Address addr, BigInteger bn) {
         if (addr == null || bn == null) {
             throw new NullPointerException();
         }
@@ -616,7 +616,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         }
     }
 
-    protected BigInteger getBestNonce(AionAddress addr) {
+    protected BigInteger getBestNonce(Address addr) {
         if (addr == null || bestNonce.get(addr) == null) {
             return BigInteger.ONE.negate();
         }

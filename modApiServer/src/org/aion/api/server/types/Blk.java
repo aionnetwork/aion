@@ -81,22 +81,22 @@ public class Blk {
                         (tx.getContractAddress() != null)
                                 ? TypeConverter.toJsonHex(tx.getContractAddress().toString())
                                 : null);
-                jsonTx.put("hash", TypeConverter.toJsonHex(tx.getHash()));
+                jsonTx.put("hash", TypeConverter.toJsonHex(tx.getTransactionHash()));
                 jsonTx.put("transactionIndex", i);
                 jsonTx.put("value", TypeConverter.toJsonHex(tx.getValue()));
-                jsonTx.put("nrg", tx.getNrg());
-                jsonTx.put("nrgPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
-                jsonTx.put("gas", tx.getNrg());
-                jsonTx.put("gasPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
+                jsonTx.put("nrg", tx.getEnergyLimit());
+                jsonTx.put("nrgPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
+                jsonTx.put("gas", tx.getEnergyLimit());
+                jsonTx.put("gasPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
                 jsonTx.put("nonce", ByteUtil.byteArrayToLong(tx.getNonce()));
-                jsonTx.put("from", TypeConverter.toJsonHex(tx.getFrom().toString()));
-                jsonTx.put("to", TypeConverter.toJsonHex(tx.getTo().toString()));
+                jsonTx.put("from", TypeConverter.toJsonHex(tx.getSenderAddress().toString()));
+                jsonTx.put("to", TypeConverter.toJsonHex(tx.getDestinationAddress().toString()));
                 jsonTx.put("timestamp", block.getTimestamp());
                 jsonTx.put("input", TypeConverter.toJsonHex(tx.getData()));
                 jsonTx.put("blockNumber", block.getNumber());
                 jsonTxs.put(jsonTx);
             } else {
-                jsonTxs.put(TypeConverter.toJsonHex(tx.getHash()));
+                jsonTxs.put(TypeConverter.toJsonHex(tx.getTransactionHash()));
             }
         }
         obj.put("transactions", jsonTxs);

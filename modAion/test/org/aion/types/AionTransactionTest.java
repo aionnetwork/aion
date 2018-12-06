@@ -48,13 +48,13 @@ import org.junit.Test;
 public class AionTransactionTest {
 
     private void assertTransactionEquals(AionTransaction tx, AionTransaction tx2) {
-        assertArrayEquals(tx.getHash(), tx2.getHash());
+        assertArrayEquals(tx.getTransactionHash(), tx2.getTransactionHash());
         assertArrayEquals(tx.getNonce(), tx2.getNonce());
         assertArrayEquals(tx.getValue(), tx2.getValue());
         assertArrayEquals(tx.getData(), tx2.getData());
-        assertEquals(tx.getNrg(), tx2.getNrg());
-        assertEquals(tx.getNrgPrice(), tx2.getNrgPrice());
-        assertEquals(tx.getType(), tx2.getType());
+        assertEquals(tx.getEnergyLimit(), tx2.getEnergyLimit());
+        assertEquals(tx.getEnergyPrice(), tx2.getEnergyPrice());
+        assertEquals(tx.getTransactionType(), tx2.getTransactionType());
 
         assertArrayEquals(tx.getTimeStamp(), tx2.getTimeStamp());
         assertArrayEquals(tx.getSignature().toBytes(), tx2.getSignature().toBytes());

@@ -36,6 +36,7 @@ import org.aion.crypto.ECKey;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
 
 /** aion internal transaction class. */
 public class AionInternalTx extends AionTransaction {
@@ -55,8 +56,8 @@ public class AionInternalTx extends AionTransaction {
             int deep,
             int index,
             byte[] nonce,
-            AionAddress sendAddress,
-            AionAddress receiveAddress,
+            Address sendAddress,
+            Address receiveAddress,
             byte[] value,
             byte[] data,
             String note) {
@@ -111,7 +112,7 @@ public class AionInternalTx extends AionTransaction {
     }
 
     @Override
-    public AionAddress getFrom() {
+    public Address getSenderAddress() {
         if (!parsed) {
             rlpParse();
         }
@@ -129,7 +130,8 @@ public class AionInternalTx extends AionTransaction {
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
 
-            byte[] to = (getTo() == null) ? new byte[0] : getTo().toBytes();
+            byte[] to = (this.getDestinationAddress() == null) ? new byte[0] : this
+                .getDestinationAddress().toBytes();
             byte[] nonce = getNonce();
             boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
 
@@ -137,7 +139,7 @@ public class AionInternalTx extends AionTransaction {
                     RLP.encodeList(
                             RLP.encodeElement(isEmptyNonce ? null : nonce),
                             RLP.encodeElement(this.parentHash),
-                            RLP.encodeElement(getFrom().toBytes()),
+                            RLP.encodeElement(this.getSenderAddress().toBytes()),
                             RLP.encodeElement(to),
                             RLP.encodeElement(getValue()),
                             RLP.encodeElement(getData()),
@@ -192,16 +194,16 @@ public class AionInternalTx extends AionTransaction {
 
     @Override
     public String toString() {
-        String to = (getTo() == null) ? "" : getTo().toString();
+        String to = (this.getDestinationAddress() == null) ? "" : this.getDestinationAddress().toString();
         return "TransactionData ["
                 + "  parentHash="
                 + toHexString(getParentHash())
                 + ", hash="
-                + toHexString(getHash())
+                + toHexString(this.getTransactionHash())
                 + ", nonce="
                 + toHexString(getNonce())
                 + ", fromAddress="
-                + getFrom().toString()
+                + this.getSenderAddress().toString()
                 + ", toAddress="
                 + to
                 + ", value="

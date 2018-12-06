@@ -36,6 +36,7 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxExecSummary;
 import org.aion.base.type.ITxReceipt;
+import org.aion.vm.api.interfaces.TransactionInterface;
 import org.slf4j.Logger;
 
 public abstract class AbstractExecutor {
@@ -57,7 +58,7 @@ public abstract class AbstractExecutor {
         LOGGER = _logger;
     }
 
-    protected ITxExecSummary execute(ITransaction tx, long contextNrgLmit) {
+    protected ITxExecSummary execute(TransactionInterface tx, long contextNrgLmit) {
         synchronized (lock) {
             // prepare, preliminary check
             if (prepare(tx, contextNrgLmit)) {
@@ -66,22 +67,22 @@ public abstract class AbstractExecutor {
                     IRepositoryCache track = repo.startTracking();
                     // increase nonce
                     if (askNonce) {
-                        track.incrementNonce(tx.getFrom());
+                        track.incrementNonce(tx.getSenderAddress());
                     }
 
                     // charge nrg cost
                     // Note: if the tx is a inpool tx, it will temp charge more balance for the
                     // account
                     // once the block info been updated. the balance in pendingPool will correct.
-                    BigInteger nrgLimit = BigInteger.valueOf(tx.getNrg());
-                    BigInteger nrgPrice = BigInteger.valueOf(tx.getNrgPrice());
+                    BigInteger nrgLimit = BigInteger.valueOf(tx.getEnergyLimit());
+                    BigInteger nrgPrice = BigInteger.valueOf(tx.getEnergyPrice());
                     BigInteger txNrgCost = nrgLimit.multiply(nrgPrice);
-                    track.addBalance(tx.getFrom(), txNrgCost.negate());
+                    track.addBalance(tx.getSenderAddress(), txNrgCost.negate());
                     track.flush();
                 }
 
                 // run the logic
-                if (tx.isContractCreation()) {
+                if (tx.isContractCreationTransaction()) {
                     create();
                 } else {
                     call();
@@ -108,15 +109,15 @@ public abstract class AbstractExecutor {
      * @param contextNrgLmit The execution context's energy limit.
      * @return true if call is local or if all criteria listed above are met.
      */
-    protected final boolean prepare(ITransaction tx, long contextNrgLmit) {
+    protected final boolean prepare(TransactionInterface tx, long contextNrgLmit) {
         if (isLocalCall) {
             return true;
         }
 
-        BigInteger txNrgPrice = BigInteger.valueOf(tx.getNrgPrice());
-        long txNrgLimit = tx.getNrg();
+        BigInteger txNrgPrice = BigInteger.valueOf(tx.getEnergyPrice());
+        long txNrgLimit = tx.getEnergyLimit();
 
-        if (tx.isContractCreation()) {
+        if (tx.isContractCreationTransaction()) {
             if (!isValidNrgContractCreate(txNrgLimit)) {
                 exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_ENERGY_LIMIT, txNrgLimit);
                 return false;
@@ -136,7 +137,7 @@ public abstract class AbstractExecutor {
         // check nonce
         if (askNonce) {
             BigInteger txNonce = new BigInteger(1, tx.getNonce());
-            BigInteger nonce = repo.getNonce(tx.getFrom());
+            BigInteger nonce = repo.getNonce(tx.getSenderAddress());
 
             if (!txNonce.equals(nonce)) {
                 exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_NONCE, 0);
@@ -147,7 +148,7 @@ public abstract class AbstractExecutor {
         // check balance
         BigInteger txValue = new BigInteger(1, tx.getValue());
         BigInteger txTotal = txNrgPrice.multiply(BigInteger.valueOf(txNrgLimit)).add(txValue);
-        BigInteger balance = repo.getBalance(tx.getFrom());
+        BigInteger balance = repo.getBalance(tx.getSenderAddress());
         if (txTotal.compareTo(balance) > 0) {
             exeResult.setResultCodeAndEnergyRemaining(ResultCode.INSUFFICIENT_BALANCE, 0);
             return false;
@@ -206,7 +207,7 @@ public abstract class AbstractExecutor {
         // TODO probably remove receipt and instantiate a new empty one here?
         receipt.setTransaction(tx);
         receipt.setLogs(logs);
-        receipt.setNrgUsed(getNrgUsed(tx.getNrg())); // amount of energy used to execute tx
+        receipt.setNrgUsed(getNrgUsed(tx.getEnergyLimit())); // amount of energy used to execute tx
         receipt.setExecutionResult(exeResult.getOutput()); // misnomer -> output is named result
         receipt.setError(
                 exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()
@@ -242,10 +243,10 @@ public abstract class AbstractExecutor {
             // refund nrg left
             if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()
                     || exeResult.getResultCode().toInt() == ResultCode.REVERT.toInt()) {
-                track.addBalance(tx.getFrom(), summary.getRefund());
+                track.addBalance(tx.getSenderAddress(), summary.getRefund());
             }
 
-            tx.setNrgConsume(getNrgUsed(tx.getNrg()));
+            tx.setNrgConsume(getNrgUsed(tx.getEnergyLimit()));
 
             // Transfer fees to miner
             track.addBalance(coinbase, summary.getFee());
@@ -268,4 +269,5 @@ public abstract class AbstractExecutor {
     protected void setTransactionResult(TransactionResult result) {
         exeResult = result;
     }
+
 }

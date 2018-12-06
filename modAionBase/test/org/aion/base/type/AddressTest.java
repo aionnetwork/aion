@@ -31,7 +31,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.junit.Test;
 
-public class AionAddressTest {
+public class AddressTest {
 
     private final String[] addrHex = {
         null, // 0 - Null

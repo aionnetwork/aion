@@ -41,6 +41,6 @@ public class EvtTx extends Evt {
 
     @Override
     public String toJSON() {
-        return TypeConverter.toJsonHex(tx.getHash());
+        return TypeConverter.toJsonHex(tx.getTransactionHash());
     }
 }

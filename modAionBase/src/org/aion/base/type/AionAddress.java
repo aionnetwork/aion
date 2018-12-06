@@ -40,7 +40,6 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Bytesable;
 import org.aion.base.util.FastByteComparisons;
-import org.aion.vm.api.interfaces.Address;
 
 /**
  * The address class is a byte array wrapper represent fixed-32bytes array for the kernel account
@@ -48,7 +47,7 @@ import org.aion.vm.api.interfaces.Address;
  *
  * @author jay
  */
-public final class AionAddress implements Address, Comparable<AionAddress>, Bytesable<AionAddress>, Cloneable {
+public final class AionAddress implements org.aion.vm.api.interfaces.Address, Comparable<AionAddress>, Bytesable<AionAddress>, Cloneable {
     private static final AionAddress zeroAddr = AionAddress.wrap(new byte[SIZE]);
     private static final AionAddress emptyAddr = AionAddress.wrap(new byte[0]);
 

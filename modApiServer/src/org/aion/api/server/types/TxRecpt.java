@@ -33,6 +33,7 @@ import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.mcf.vm.types.Log;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -75,9 +76,9 @@ public final class TxRecpt {
     /** pb abi */
     public byte[] txRoot;
 
-    public AionAddress fromAddr;
+    public Address fromAddr;
 
-    public AionAddress toAddr;
+    public Address toAddr;
 
     public long txTimeStamp;
 
@@ -121,22 +122,22 @@ public final class TxRecpt {
 
         this.cumulativeNrgUsed = cumulativeNrgUsed;
         this.nrgUsed = ((AionTxReceipt) receipt).getEnergyUsed();
-        this.gasPrice = ((AionTxReceipt) receipt).getTransaction().getNrgPrice();
-        this.nrgLimit = ((AionTxReceipt) receipt).getTransaction().getNrg();
+        this.gasPrice = ((AionTxReceipt) receipt).getTransaction().getEnergyPrice();
+        this.nrgLimit = ((AionTxReceipt) receipt).getTransaction().getEnergyLimit();
 
         if (receipt.getTransaction().getContractAddress() != null)
             this.contractAddress =
                     toJsonHex(receipt.getTransaction().getContractAddress().toString());
-        this.transactionHash = toJsonHex(receipt.getTransaction().getHash());
+        this.transactionHash = toJsonHex(receipt.getTransaction().getTransactionHash());
         this.transactionIndex = txInfo.getIndex();
         this.root = ByteUtil.toHexString(this.txRoot);
-        this.fromAddr = receipt.getTransaction().getFrom();
+        this.fromAddr = receipt.getTransaction().getSenderAddress();
         this.from =
                 toJsonHex(
                         this.fromAddr == null
                                 ? ByteUtil.EMPTY_BYTE_ARRAY
                                 : this.fromAddr.toBytes());
-        this.toAddr = receipt.getTransaction().getTo();
+        this.toAddr = receipt.getTransaction().getDestinationAddress();
         this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toBytes());
 
         this.txTimeStamp = ByteUtil.byteArrayToLong(receipt.getTransaction().getTimeStamp());
@@ -179,24 +180,24 @@ public final class TxRecpt {
                 tx.getContractAddress() != null
                         ? toJsonHex(tx.getContractAddress().toString())
                         : null;
-        this.transactionHash = toJsonHex(tx.getHash());
+        this.transactionHash = toJsonHex(tx.getTransactionHash());
         this.transactionIndex = txIndex;
         this.root = this.txRoot != null ? ByteUtil.toHexString(this.txRoot) : null;
-        this.fromAddr = tx.getFrom();
+        this.fromAddr = tx.getSenderAddress();
         this.from =
                 toJsonHex(
                         this.fromAddr == null
                                 ? ByteUtil.EMPTY_BYTE_ARRAY
                                 : this.fromAddr.toBytes());
-        this.toAddr = tx.getTo();
+        this.toAddr = tx.getDestinationAddress();
         this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toBytes());
 
         this.txTimeStamp = ByteUtil.byteArrayToLong(tx.getTimeStamp());
         this.txValue = toJsonHex(tx.getValue());
         this.txNonce = ByteUtil.byteArrayToLong(tx.getNonce());
         this.txData = tx.getData() == null ? "" : toJsonHex(tx.getData());
-        this.gasPrice = tx.getNrgPrice();
-        this.nrgLimit = tx.getNrg();
+        this.gasPrice = tx.getEnergyPrice();
+        this.nrgLimit = tx.getEnergyLimit();
 
         this.logsBloom = receipt.getBloomFilter().toString();
         this.successful = receipt.isSuccessful();

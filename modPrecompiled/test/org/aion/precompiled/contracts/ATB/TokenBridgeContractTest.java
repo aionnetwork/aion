@@ -367,13 +367,13 @@ public class TokenBridgeContractTest {
             assertThat(tx.isRejected()).isFalse();
 
             // verify the from is the contract address
-            assertThat(tx.getFrom()).isEqualTo(CONTRACT_ADDR);
+            assertThat(tx.getSenderAddress()).isEqualTo(CONTRACT_ADDR);
 
             // verify that we sent the correct amount
             assertThat(new BigInteger(1, tx.getValue()).intValueExact()).isEqualTo(1);
 
             // verify that the recipient is what we intended (in the order we submitted)
-            assertThat(tx.getTo()).isEqualTo(new AionAddress(transfers[i].getRecipient()));
+            assertThat(tx.getDestinationAddress()).isEqualTo(new AionAddress(transfers[i].getRecipient()));
             i++;
         }
 
@@ -558,13 +558,13 @@ public class TokenBridgeContractTest {
             assertThat(tx.isRejected()).isFalse();
 
             // verify the from is the contract address
-            assertThat(tx.getFrom()).isEqualTo(CONTRACT_ADDR);
+            assertThat(tx.getSenderAddress()).isEqualTo(CONTRACT_ADDR);
 
             // verify that we sent the correct amount
             assertThat(new BigInteger(1, tx.getValue()).intValueExact()).isEqualTo(1);
 
             // verify that the recipient is what we intended (in the order we submitted)
-            assertThat(tx.getTo()).isEqualTo(new AionAddress(transfers[i].getRecipient()));
+            assertThat(tx.getDestinationAddress()).isEqualTo(new AionAddress(transfers[i].getRecipient()));
             i++;
         }
 
@@ -1760,13 +1760,13 @@ public class TokenBridgeContractTest {
             assertThat(tx.isRejected()).isFalse();
 
             // verify the from is the contract address
-            assertThat(tx.getFrom()).isEqualTo(CONTRACT_ADDR);
+            assertThat(tx.getSenderAddress()).isEqualTo(CONTRACT_ADDR);
 
             // verify that we sent the correct amount
             assertThat(new BigInteger(1, tx.getValue()).intValueExact()).isEqualTo(1);
 
             // verify that the recipient is what we intended (in the order we submitted)
-            assertThat(tx.getTo()).isEqualTo(new AionAddress(transfers[i].getRecipient()));
+            assertThat(tx.getDestinationAddress()).isEqualTo(new AionAddress(transfers[i].getRecipient()));
             i++;
         }
 

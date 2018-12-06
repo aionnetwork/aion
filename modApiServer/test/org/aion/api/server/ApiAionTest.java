@@ -292,10 +292,10 @@ public class ApiAionTest {
         assertEquals(
                 1,
                 api.getTransactionCount(
-                        blk.getTransactionsList().get(0).getFrom(), blk.getNumber()));
+                        blk.getTransactionsList().get(0).getSenderAddress(), blk.getNumber()));
         assertEquals(0, api.getTransactionCount(AionAddress.EMPTY_ADDRESS(), blk.getNumber()));
 
-        assertEquals(tx, api.getTransactionByHash(tx.getHash()));
+        assertEquals(tx, api.getTransactionByHash(tx.getTransactionHash()));
     }
 
     @Test

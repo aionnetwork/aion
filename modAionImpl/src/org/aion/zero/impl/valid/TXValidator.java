@@ -47,12 +47,12 @@ public class TXValidator {
             Collections.synchronizedMap(new LRUMap<>(128 * 1024));
 
     public static boolean isValid(AionTransaction tx) {
-        Boolean valid = cache.get(ByteArrayWrapper.wrap(tx.getHash()));
+        Boolean valid = cache.get(ByteArrayWrapper.wrap(tx.getTransactionHash()));
         if (valid != null) {
             return valid;
         } else {
             valid = isValid0(tx);
-            cache.put(ByteArrayWrapper.wrap(tx.getHash()), valid);
+            cache.put(ByteArrayWrapper.wrap(tx.getTransactionHash()), valid);
             return valid;
         }
     }
@@ -86,8 +86,8 @@ public class TXValidator {
             return false;
         }
 
-        long nrg = tx.getNrg();
-        if (tx.isContractCreation()) {
+        long nrg = tx.getEnergyLimit();
+        if (tx.isContractCreationTransaction()) {
             if (!isValidNrgContractCreate(nrg)) {
                 LOG.error("invalid contract create nrg!");
                 return false;
@@ -99,7 +99,7 @@ public class TXValidator {
             }
         }
 
-        nrg = tx.getNrgPrice();
+        nrg = tx.getEnergyPrice();
         if (nrg < 0 || nrg > Long.MAX_VALUE) {
             LOG.error("invalid tx nrgprice!");
             return false;

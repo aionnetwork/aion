@@ -25,23 +25,23 @@ package org.aion.txpool.common;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.base.type.AionAddress;
+import org.aion.vm.api.interfaces.Address;
 
 public class TxDependList<BW> {
     private final List<BW> txList;
     private BW dependTx;
-    private AionAddress address;
+    private Address address;
     private BigInteger timeStamp;
 
     public TxDependList() {
         txList = new ArrayList<>();
     }
 
-    public AionAddress getAddress() {
+    public Address getAddress() {
         return address;
     }
 
-    public void setAddress(AionAddress address) {
+    public void setAddress(Address address) {
         this.address = address;
     }
 

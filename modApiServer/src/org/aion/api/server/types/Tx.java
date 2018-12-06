@@ -59,16 +59,16 @@ public class Tx {
                 (tx.getContractAddress() != null)
                         ? TypeConverter.toJsonHex(tx.getContractAddress().toString())
                         : null);
-        json.put("hash", TypeConverter.toJsonHex(tx.getHash()));
+        json.put("hash", TypeConverter.toJsonHex(tx.getTransactionHash()));
         json.put("transactionIndex", index);
         json.put("value", TypeConverter.toJsonHex(tx.getValue()));
-        json.put("nrg", tx.getNrg());
-        json.put("nrgPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
-        json.put("gas", tx.getNrg());
-        json.put("gasPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
+        json.put("nrg", tx.getEnergyLimit());
+        json.put("nrgPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
+        json.put("gas", tx.getEnergyLimit());
+        json.put("gasPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
         json.put("nonce", ByteUtil.byteArrayToLong(tx.getNonce()));
-        json.put("from", TypeConverter.toJsonHex(tx.getFrom().toString()));
-        json.put("to", TypeConverter.toJsonHex(tx.getTo().toString()));
+        json.put("from", TypeConverter.toJsonHex(tx.getSenderAddress().toString()));
+        json.put("to", TypeConverter.toJsonHex(tx.getDestinationAddress().toString()));
         json.put("timestamp", b.getTimestamp());
         json.put("input", TypeConverter.toJsonHex(tx.getData()));
         json.put("blockNumber", TypeConverter.toJsonHex(b.getNumber()));

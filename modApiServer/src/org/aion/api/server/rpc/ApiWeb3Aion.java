@@ -178,7 +178,7 @@ public class ApiWeb3Aion extends ApiAion {
                                             "<filter append, onPendingTransaction fltrSize={} type={} txHash={}>",
                                             f.getSize(),
                                             f.getType().name(),
-                                            TypeConverter.toJsonHex(_tx.getHash()));
+                                            TypeConverter.toJsonHex(_tx.getTransactionHash()));
                                 }
                             });
         }
@@ -684,14 +684,14 @@ public class ApiWeb3Aion extends ApiAion {
 
             JSONObject txObj = new JSONObject();
             txObj.put("nonce", TypeConverter.toJsonHex(tx.getNonce()));
-            txObj.put("gasPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
-            txObj.put("nrgPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
-            txObj.put("gas", TypeConverter.toJsonHex(tx.getNrg()));
-            txObj.put("nrg", TypeConverter.toJsonHex(tx.getNrg()));
-            txObj.put("to", TypeConverter.toJsonHex(tx.getTo().toString()));
+            txObj.put("gasPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
+            txObj.put("nrgPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
+            txObj.put("gas", TypeConverter.toJsonHex(tx.getEnergyLimit()));
+            txObj.put("nrg", TypeConverter.toJsonHex(tx.getEnergyLimit()));
+            txObj.put("to", TypeConverter.toJsonHex(tx.getDestinationAddress().toString()));
             txObj.put("value", TypeConverter.toJsonHex(tx.getValue()));
             txObj.put("input", TypeConverter.toJsonHex(tx.getData()));
-            txObj.put("hash", TypeConverter.toJsonHex(tx.getHash()));
+            txObj.put("hash", TypeConverter.toJsonHex(tx.getTransactionHash()));
 
             obj.put("tx", txObj);
             return new RpcMsg(obj);
@@ -1422,7 +1422,7 @@ public class ApiWeb3Aion extends ApiAion {
             if (fullTx) {
                 arr.put(Tx.AionTransactionToJSON(transactions.get(i), defaultBlock, i));
             } else {
-                arr.put(ByteUtil.toHexString(transactions.get(i).getHash()));
+                arr.put(ByteUtil.toHexString(transactions.get(i).getTransactionHash()));
             }
         }
         return new RpcMsg(arr);
@@ -2153,14 +2153,14 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject result = new JSONObject();
         result.put("timestampVal", block.getTimestamp());
-        result.put("transactionHash", TypeConverter.toJsonHex(tx.getHash()));
+        result.put("transactionHash", TypeConverter.toJsonHex(tx.getTransactionHash()));
         result.put("blockNumber", block.getNumber());
         result.put("blockHash", TypeConverter.toJsonHex(block.getHash()));
         result.put("nonce", TypeConverter.toJsonHex(tx.getNonce()));
-        result.put("fromAddr", TypeConverter.toJsonHex(tx.getFrom().toBytes()));
-        result.put("toAddr", TypeConverter.toJsonHex(tx.getTo().toBytes()));
+        result.put("fromAddr", TypeConverter.toJsonHex(tx.getSenderAddress().toBytes()));
+        result.put("toAddr", TypeConverter.toJsonHex(tx.getDestinationAddress().toBytes()));
         result.put("value", TypeConverter.toJsonHex(tx.getValue()));
-        result.put("nrgPrice", tx.getNrgPrice());
+        result.put("nrgPrice", tx.getEnergyPrice());
         result.put("nrgConsumed", txInfo.getReceipt().getEnergyUsed());
         result.put("data", TypeConverter.toJsonHex(tx.getData()));
         result.put("transactionIndex", txInfo.getIndex());
@@ -2272,9 +2272,9 @@ public class ApiWeb3Aion extends ApiAion {
             for (AionTransaction tx : block.getTransactionsList()) {
                 // transactionHash, fromAddr, toAddr, value, timestampVal, blockNumber, blockHash
                 JSONArray t = new JSONArray();
-                t.put(TypeConverter.toJsonHex(tx.getHash()));
-                t.put(TypeConverter.toJsonHex(tx.getFrom().toBytes()));
-                t.put(TypeConverter.toJsonHex(tx.getTo().toBytes()));
+                t.put(TypeConverter.toJsonHex(tx.getTransactionHash()));
+                t.put(TypeConverter.toJsonHex(tx.getSenderAddress().toBytes()));
+                t.put(TypeConverter.toJsonHex(tx.getDestinationAddress().toBytes()));
                 t.put(TypeConverter.toJsonHex(tx.getValue()));
                 t.put(block.getTimestamp());
                 t.put(block.getNumber());
@@ -2344,7 +2344,7 @@ public class ApiWeb3Aion extends ApiAion {
         AionBlock block = blockCache.get(new ByteArrayWrapper(blockHash));
 
         AionTransaction t = block.getTransactionsList().get(info.getIndex());
-        if (FastByteComparisons.compareTo(t.getHash(), transactionHash) != 0) {
+        if (FastByteComparisons.compareTo(t.getTransactionHash(), transactionHash) != 0) {
             LOG.error("INCONSISTENT STATE: transaction info's transaction index is wrong.");
             return new RpcMsg(null, RpcError.INTERNAL_ERROR, "Database Error");
         }
@@ -2383,7 +2383,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         Function<AionTransaction, JSONObject> extractTxReceipt =
                 t -> {
-                    AionTxInfo info = chain.getTransactionInfoLite(t.getHash(), b.getHash());
+                    AionTxInfo info = chain.getTransactionInfoLite(t.getTransactionHash(), b.getHash());
                     info.setTransaction(t);
                     return ((new TxRecpt(b, info, 0L, true)).toJson());
                 };

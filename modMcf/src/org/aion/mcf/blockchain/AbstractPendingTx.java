@@ -23,9 +23,9 @@
 package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
-import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteUtil;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * Abstract Pending Transaction Class.
@@ -61,12 +61,12 @@ public abstract class AbstractPendingTx<TX extends ITransaction> {
         return blockNumber;
     }
 
-    public AionAddress getSender() {
-        return transaction.getFrom();
+    public Address getSender() {
+        return transaction.getSenderAddress();
     }
 
     public byte[] getHash() {
-        return transaction.getHash();
+        return transaction.getTransactionHash();
     }
 
     public byte[] getBytes() {

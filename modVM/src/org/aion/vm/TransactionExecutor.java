@@ -25,16 +25,17 @@ package org.aion.vm;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -84,10 +85,10 @@ public class TransactionExecutor extends AbstractExecutor {
         /*
          * transaction info
          */
-        byte[] txHash = tx.getHash();
-        AionAddress address = tx.isContractCreation() ? tx.getContractAddress() : tx.getTo();
-        AionAddress origin = tx.getFrom();
-        AionAddress caller = tx.getFrom();
+        byte[] txHash = tx.getTransactionHash();
+        Address address = tx.isContractCreationTransaction() ? tx.getContractAddress() : tx.getDestinationAddress();
+        Address origin = tx.getSenderAddress();
+        Address caller = tx.getSenderAddress();
 
         /*
          * nrg info
@@ -96,7 +97,7 @@ public class TransactionExecutor extends AbstractExecutor {
         long nrgLimit = tx.nrgLimit() - tx.transactionCost(block.getNumber());
         DataWord callValue = new DataWord(ArrayUtils.nullToEmpty(tx.getValue()));
         byte[] callData =
-                tx.isContractCreation()
+                tx.isContractCreationTransaction()
                         ? ByteUtil.EMPTY_BYTE_ARRAY
                         : ArrayUtils.nullToEmpty(tx.getData());
 
@@ -104,7 +105,7 @@ public class TransactionExecutor extends AbstractExecutor {
          * execution info
          */
         int depth = 0;
-        int kind = tx.isContractCreation() ? ExecutionContext.CREATE : ExecutionContext.CALL;
+        int kind = tx.isContractCreationTransaction() ? ExecutionContext.CREATE : ExecutionContext.CALL;
         int flags = 0;
 
         /*
@@ -182,7 +183,7 @@ public class TransactionExecutor extends AbstractExecutor {
             exeResult = pc.execute(tx.getData(), ctx.nrgLimit());
         } else {
             // execute code
-            byte[] code = repoTrack.getCode(tx.getTo());
+            byte[] code = repoTrack.getCode(tx.getDestinationAddress());
             if (!ArrayUtils.isEmpty(code)) {
                 VirtualMachine fvm = this.provider.getVM();
                 exeResult = fvm.run(code, ctx, repoTrack);
@@ -191,8 +192,8 @@ public class TransactionExecutor extends AbstractExecutor {
 
         // transfer value
         BigInteger txValue = new BigInteger(1, tx.getValue());
-        repoTrack.addBalance(tx.getFrom(), txValue.negate());
-        repoTrack.addBalance(tx.getTo(), txValue);
+        repoTrack.addBalance(tx.getSenderAddress(), txValue.negate());
+        repoTrack.addBalance(tx.getDestinationAddress(), txValue);
     }
 
     /** Prepares contract create. */
@@ -219,7 +220,7 @@ public class TransactionExecutor extends AbstractExecutor {
 
         // transfer value
         BigInteger txValue = new BigInteger(1, tx.getValue());
-        repoTrack.addBalance(tx.getFrom(), txValue.negate());
+        repoTrack.addBalance(tx.getSenderAddress(), txValue.negate());
         repoTrack.addBalance(contractAddress, txValue);
     }
 

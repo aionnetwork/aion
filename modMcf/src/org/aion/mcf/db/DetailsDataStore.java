@@ -52,6 +52,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
+import org.aion.vm.api.interfaces.Address;
 
 /** Detail data storage , */
 public class DetailsDataStore<
@@ -114,7 +115,7 @@ public class DetailsDataStore<
         return detailsImpl;
     }
 
-    public synchronized void update(AionAddress key, IContractDetails<IDataWord> contractDetails) {
+    public synchronized void update(Address key, IContractDetails<IDataWord> contractDetails) {
 
         contractDetails.setAddress(key);
         ByteArrayWrapper wrappedKey = wrap(key.toBytes());

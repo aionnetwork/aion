@@ -47,6 +47,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
 
 public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> {
 
@@ -54,7 +55,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
 
     private byte[] rlpEncoded;
 
-    private AionAddress address = AionAddress.EMPTY_ADDRESS();
+    private Address address = AionAddress.EMPTY_ADDRESS();
 
     private SecureTrie storageTrie = new SecureTrie(null);
 
@@ -68,7 +69,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
     }
 
     private AionContractDetailsImpl(
-            AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
+            Address address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
         this.address = address;
         this.storageTrie = storageTrie;
         setCodes(codes);
@@ -280,7 +281,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @return the associated address.
      */
     @Override
-    public AionAddress getAddress() {
+    public Address getAddress() {
         return address;
     }
 
@@ -290,7 +291,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @param address The address to set.
      */
     @Override
-    public void setAddress(AionAddress address) {
+    public void setAddress(Address address) {
         this.address = address;
         this.rlpEncoded = null;
     }

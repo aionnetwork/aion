@@ -39,8 +39,8 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
+import org.aion.vm.api.interfaces.Address;
 
 /** Repository interface for information retrieval. */
 public interface IRepositoryQuery<AS, DW> {
@@ -54,7 +54,7 @@ public interface IRepositoryQuery<AS, DW> {
      * @param address the address of the account of interest
      * @return {@code true} if the account exists, {@code false} otherwise
      */
-    boolean hasAccountState(AionAddress address);
+    boolean hasAccountState(Address address);
 
     /**
      * Loads the account (and contract) state associated with the given address into the given hash
@@ -67,7 +67,7 @@ public interface IRepositoryQuery<AS, DW> {
      *     details will be loaded
      */
     void loadAccountState(
-            AionAddress address, Map<AionAddress, AS> accounts, Map<AionAddress, IContractDetails<DW>> details);
+            Address address, Map<Address, AS> accounts, Map<Address, IContractDetails<DW>> details);
 
     /**
      * Retrieves the current state of the account associated with the given address.
@@ -76,7 +76,7 @@ public interface IRepositoryQuery<AS, DW> {
      * @return a {@link AS} object representing the account state as is stored in the database or
      *     cache
      */
-    AS getAccountState(AionAddress address);
+    AS getAccountState(Address address);
 
     /**
      * Retrieves the current balance of the account associated with the given address.
@@ -84,7 +84,7 @@ public interface IRepositoryQuery<AS, DW> {
      * @param address the address of the account of interest
      * @return a {@link BigInteger} value representing the current account balance
      */
-    BigInteger getBalance(AionAddress address);
+    BigInteger getBalance(Address address);
 
     /**
      * Retrieves the current nonce of the account associated with the given address.
@@ -92,7 +92,7 @@ public interface IRepositoryQuery<AS, DW> {
      * @param address the address of the account of interest
      * @return a {@link BigInteger} value representing the current account nonce
      */
-    BigInteger getNonce(AionAddress address);
+    BigInteger getNonce(Address address);
 
     // getters relating to contracts
     // -----------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ public interface IRepositoryQuery<AS, DW> {
      * @return {@code true} if there are contract details associated with the account, {@code false}
      *     otherwise
      */
-    boolean hasContractDetails(AionAddress addr);
+    boolean hasContractDetails(Address addr);
 
     /**
      * Retrieves the contract details of the account associated with the given address.
@@ -113,7 +113,7 @@ public interface IRepositoryQuery<AS, DW> {
      * @return a {@link IContractDetails<DW>} object representing the contract details as are stored
      *     in the database or cache
      */
-    IContractDetails<DW> getContractDetails(AionAddress addr);
+    IContractDetails<DW> getContractDetails(Address addr);
 
     /**
      * Retrieves the code for the account associated with the given address.
@@ -121,7 +121,7 @@ public interface IRepositoryQuery<AS, DW> {
      * @param address the address of the account of interest
      * @return the code associated to the account in {@code byte} array format
      */
-    byte[] getCode(AionAddress address);
+    byte[] getCode(Address address);
 
     // getters relating to storage
     // -------------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ public interface IRepositoryQuery<AS, DW> {
      *     is {@code null}
      * @apiNote When called with a null key collection, the method retrieves all the storage keys.
      */
-    Map<DW, DW> getStorage(AionAddress address, Collection<DW> keys);
+    Map<DW, DW> getStorage(Address address, Collection<DW> keys);
 
     //    /**
     //     * Retrieves the storage size the account associated with the given address.
@@ -166,7 +166,7 @@ public interface IRepositoryQuery<AS, DW> {
      * @param key the key of interest
      * @return a {@link DW} representing the data associated with the given key
      */
-    IDataWord getStorageValue(AionAddress address, DW key);
+    IDataWord getStorageValue(Address address, DW key);
 
     /**
      * Retrieves the stored transactions for recovering pool tx.
