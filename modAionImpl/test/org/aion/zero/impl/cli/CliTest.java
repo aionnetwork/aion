@@ -982,8 +982,26 @@ public class CliTest {
             parameters.add(new Object[] {new String[] {op, "-p", INVALID_PORT}, EXIT, expOnError});
         }
 
+        // with port and directory
+        expected = new File(path, "mainnet").getAbsolutePath();
+        for (String op : options) {
+            // with relative path
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "-d", dataDirectory, "-p", TEST_PORT}, EXIT, expected
+                    });
+            // with absolute path
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "-p", TEST_PORT, "-d", path.getAbsolutePath()},
+                        EXIT,
+                        expected
+                    });
+        }
+
         // with network and directory
         expected = new File(path, "mastery").getAbsolutePath();
+
         for (String op : options) {
             // with relative path
             parameters.add(

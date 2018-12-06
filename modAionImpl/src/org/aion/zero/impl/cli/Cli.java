@@ -191,7 +191,7 @@ public class Cli {
             // true means the UUID must be set
             boolean overwrite = cfg.fromXML(configFile);
 
-            // port option can be used with the -n, -d, -c, -i arguments
+            // determine the port configuration, can be combined with the -n, -d, -c, -i arguments
             if (options.getPort() != null) {
 
                 int currentPort = cfg.getNet().getP2p().getPort();
@@ -216,13 +216,12 @@ public class Cli {
                     overwrite = true;
                     System.out.println("Port set to: " + portNumber);
                 } else {
-                    System.out.println(
-                        "Using the current port configuration: " + currentPort);
+                    System.out.println("Using the current port configuration: " + currentPort);
                 }
-                // no return, allow for other parameters combined with -c, -p
+                // no return, allow for other parameters combined with -p
             }
 
-            // 4. can be influenced by the -d argument above
+            // 4. can be influenced by the -n, -d, -p arguments above
 
             if (options.getConfig() != null) {
                 // network was already set above
@@ -260,7 +259,7 @@ public class Cli {
                 return ReturnType.EXIT;
             }
 
-            // 5. options that can be influenced by the -d and -n arguments
+            // 5. options that can be influenced by the -d, -n and -p arguments
 
             if (options.isInfo()) {
                 System.out.println(
