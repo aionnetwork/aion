@@ -25,7 +25,7 @@ package org.aion.zero.impl;
 import java.math.BigInteger;
 import java.util.Map;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -37,7 +37,7 @@ public class AionHubUtils {
         // initialization section for network balance contract
         IRepositoryCache track = repository.startTracking();
 
-        Address networkBalanceAddress = ContractFactory.getTotalCurrencyContractAddress();
+        AionAddress networkBalanceAddress = ContractFactory.getTotalCurrencyContractAddress();
         track.createAccount(networkBalanceAddress);
 
         for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
@@ -47,7 +47,7 @@ public class AionHubUtils {
                     new DataWord(addr.getValue()));
         }
 
-        for (Address addr : genesis.getPremine().keySet()) {
+        for (AionAddress addr : genesis.getPremine().keySet()) {
             track.createAccount(addr);
             track.addBalance(addr, genesis.getPremine().get(addr).getBalance());
         }

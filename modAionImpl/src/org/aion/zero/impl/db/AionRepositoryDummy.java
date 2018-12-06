@@ -32,7 +32,7 @@ import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
@@ -129,7 +129,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
 
     public void dumpState(IAionBlock block, long nrgUsed, int txNumber, byte[] txHash) {}
 
-    public Set<Address> getAccountsKeys() {
+    public Set<AionAddress> getAccountsKeys() {
         return null;
     }
 
@@ -137,7 +137,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return worldState.keySet();
     }
 
-    public BigInteger addBalance(Address addr, BigInteger value) {
+    public BigInteger addBalance(AionAddress addr, BigInteger value) {
         AccountState account = getAccountState(addr);
 
         if (account == null) {
@@ -150,7 +150,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return result;
     }
 
-    public BigInteger getBalance(Address addr) {
+    public BigInteger getBalance(AionAddress addr) {
         AccountState account = getAccountState(addr);
 
         if (account == null) {
@@ -160,7 +160,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return account.getBalance();
     }
 
-    public IDataWord getStorageValue(Address addr, IDataWord key) {
+    public IDataWord getStorageValue(AionAddress addr, IDataWord key) {
         IContractDetails<IDataWord> details = getContractDetails(addr);
         IDataWord value = (details == null) ? null : details.get(key);
         if (value == null) {
@@ -169,7 +169,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return (value.isZero()) ? null : value;
     }
 
-    public void addStorageRow(Address addr, IDataWord key, IDataWord value) {
+    public void addStorageRow(AionAddress addr, IDataWord key, IDataWord value) {
         IContractDetails<IDataWord> details = getContractDetails(addr);
 
         if (details == null) {
@@ -181,7 +181,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         detailsDB.put(addr.toByteArrayWrapper(), details);
     }
 
-    public byte[] getCode(Address addr) {
+    public byte[] getCode(AionAddress addr) {
         IContractDetails<IDataWord> details = getContractDetails(addr);
 
         if (details == null) {
@@ -191,7 +191,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return details.getCode();
     }
 
-    public void saveCode(Address addr, byte[] code) {
+    public void saveCode(AionAddress addr, byte[] code) {
         IContractDetails<IDataWord> details = getContractDetails(addr);
 
         if (details == null) {
@@ -203,7 +203,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         detailsDB.put(addr.toByteArrayWrapper(), details);
     }
 
-    public BigInteger getNonce(Address addr) {
+    public BigInteger getNonce(AionAddress addr) {
         AccountState account = getAccountState(addr);
 
         if (account == null) {
@@ -213,7 +213,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return account.getNonce();
     }
 
-    public BigInteger increaseNonce(Address addr) {
+    public BigInteger increaseNonce(AionAddress addr) {
         AccountState account = getAccountState(addr);
 
         if (account == null) {
@@ -226,7 +226,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return account.getNonce();
     }
 
-    public BigInteger setNonce(Address addr, BigInteger nonce) {
+    public BigInteger setNonce(AionAddress addr, BigInteger nonce) {
 
         AccountState account = getAccountState(addr);
 
@@ -240,21 +240,21 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return account.getNonce();
     }
 
-    public void delete(Address addr) {
+    public void delete(AionAddress addr) {
         worldState.remove(addr.toByteArrayWrapper());
         detailsDB.remove(addr.toByteArrayWrapper());
     }
 
-    public IContractDetails<IDataWord> getContractDetails(Address addr) {
+    public IContractDetails<IDataWord> getContractDetails(AionAddress addr) {
 
         return detailsDB.get(addr.toByteArrayWrapper());
     }
 
-    public AccountState getAccountState(Address addr) {
+    public AccountState getAccountState(AionAddress addr) {
         return worldState.get((addr.toByteArrayWrapper()));
     }
 
-    public AccountState createAccount(Address addr) {
+    public AccountState createAccount(AionAddress addr) {
         AccountState accountState = new AccountState();
         worldState.put(addr.toByteArrayWrapper(), accountState);
 
@@ -264,7 +264,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return accountState;
     }
 
-    public boolean isExist(Address addr) {
+    public boolean isExist(AionAddress addr) {
         return getAccountState(addr) != null;
     }
 
@@ -273,7 +273,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
     }
 
     public void loadAccount(
-            Address addr,
+            AionAddress addr,
             HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
             HashMap<ByteArrayWrapper, IContractDetails<IDataWord>> cacheDetails) {
 

@@ -35,10 +35,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
@@ -60,9 +60,9 @@ public class MultiSignatureContractTest {
     private static final BigInteger AMOUNT = BigInteger.TEN;
     private static final long NRG_LIMIT = 100000L;
     private static final long NRG_PRICE = 10000000000L;
-    private Address to;
+    private AionAddress to;
     private IRepositoryCache repo;
-    private List<Address> addrsToClean;
+    private List<AionAddress> addrsToClean;
 
     @Before
     public void setup() {
@@ -74,7 +74,7 @@ public class MultiSignatureContractTest {
 
     @After
     public void tearDown() {
-        for (Address addr : addrsToClean) {
+        for (AionAddress addr : addrsToClean) {
             repo.deleteAccount(addr);
         }
         repo = null;
@@ -87,7 +87,7 @@ public class MultiSignatureContractTest {
     // Executes a MSC with input and NRG_LIMIT args, calls it with address caller, and expects
     // code and nrg as results of the execution. Returns the result.
     private TransactionResult execute(
-            Address caller, byte[] input, long nrgLimit, ResultCode code, long nrg) {
+            AionAddress caller, byte[] input, long nrgLimit, ResultCode code, long nrg) {
 
         MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
         TransactionResult res = msc.execute(input, nrgLimit);
@@ -97,8 +97,8 @@ public class MultiSignatureContractTest {
     }
 
     // Creates a new account with initial balance balance that will be deleted at test end.
-    private Address getExistentAddress(BigInteger balance) {
-        Address addr = Address.wrap(ECKeyFac.inst().create().getAddress());
+    private AionAddress getExistentAddress(BigInteger balance) {
+        AionAddress addr = AionAddress.wrap(ECKeyFac.inst().create().getAddress());
         repo.createAccount(addr);
         repo.addBalance(addr, balance);
         addrsToClean.add(addr);
@@ -106,8 +106,8 @@ public class MultiSignatureContractTest {
     }
 
     // Returns a list of existent accounts of size numOwners, each of which has initial balance.
-    private List<Address> getExistentAddresses(long numOwners, BigInteger balance) {
-        List<Address> accounts = new ArrayList<>();
+    private List<AionAddress> getExistentAddresses(long numOwners, BigInteger balance) {
+        List<AionAddress> accounts = new ArrayList<>();
         for (int i = 0; i < numOwners; i++) {
             accounts.add(getExistentAddress(balance));
         }
@@ -116,9 +116,9 @@ public class MultiSignatureContractTest {
 
     // Returns a list of existent accounts of size umOtherOwners + 1 that contains owner and then
     // numOtherOwners other owners each with initial balance balance.
-    private List<Address> getExistentAddresses(
-            long numOtherOwners, Address owner, BigInteger balance) {
-        List<Address> accounts = new ArrayList<>();
+    private List<AionAddress> getExistentAddresses(
+            long numOtherOwners, AionAddress owner, BigInteger balance) {
+        List<AionAddress> accounts = new ArrayList<>();
         for (int i = 0; i < numOtherOwners; i++) {
             accounts.add(getExistentAddress(balance));
         }
@@ -130,8 +130,8 @@ public class MultiSignatureContractTest {
     private static byte[] customMsg(
             IRepositoryCache repo,
             BigInteger nonce,
-            Address walletId,
-            Address to,
+            AionAddress walletId,
+            AionAddress to,
             BigInteger amount,
             long nrgPrice,
             long nrgLimit) {
@@ -156,12 +156,12 @@ public class MultiSignatureContractTest {
     // Returns a properly formatted byte array for these input params for send-tx logic. We want to
     // allow null values so we can simulate missing elements in the input array.
     private byte[] toValidSendInput(
-            Address wallet, List<ISignature> signatures, BigInteger amount, long nrg, Address to) {
+            AionAddress wallet, List<ISignature> signatures, BigInteger amount, long nrg, AionAddress to) {
 
-        int walletLen = (wallet == null) ? 0 : Address.ADDRESS_LEN;
+        int walletLen = (wallet == null) ? 0 : AionAddress.SIZE;
         int sigsLen = (signatures == null) ? 0 : (signatures.size() * SIG_SIZE);
         int amtLen = (amount == null) ? 0 : AMT_SIZE;
-        int toLen = (to == null) ? 0 : Address.ADDRESS_LEN;
+        int toLen = (to == null) ? 0 : AionAddress.SIZE;
 
         int len = 1 + walletLen + sigsLen + amtLen + Long.BYTES + toLen;
         byte[] input = new byte[len];
@@ -170,8 +170,8 @@ public class MultiSignatureContractTest {
         input[index] = (byte) 0x1;
         index++;
         if (wallet != null) {
-            System.arraycopy(wallet.toBytes(), 0, input, index, Address.ADDRESS_LEN);
-            index += Address.ADDRESS_LEN;
+            System.arraycopy(wallet.toBytes(), 0, input, index, AionAddress.SIZE);
+            index += AionAddress.SIZE;
         }
 
         if (signatures != null) {
@@ -199,7 +199,7 @@ public class MultiSignatureContractTest {
         index += Long.BYTES;
 
         if (to != null) {
-            System.arraycopy(to.toBytes(), 0, input, index, Address.ADDRESS_LEN);
+            System.arraycopy(to.toBytes(), 0, input, index, AionAddress.SIZE);
         }
         return input;
     }
@@ -207,7 +207,7 @@ public class MultiSignatureContractTest {
     // Returns a list of size 2 containing the threshold & number of owners of this multi-sig
     // wallet.
     // If walletId is not a multi-sig wallet this method fails.
-    private List<Long> getWalletThresholdAndNumOwners(Address walletId) {
+    private List<Long> getWalletThresholdAndNumOwners(AionAddress walletId) {
         List<Long> values = new ArrayList<>();
         byte[] metaKey = new byte[DataWord.BYTES];
         metaKey[0] = (byte) 0x80;
@@ -229,13 +229,13 @@ public class MultiSignatureContractTest {
 
     // Returns a set of numOwners owners of the wallet. If the wallet has duplicate owners this
     // method fails.
-    private Set<Address> getWalletOwners(Address walletId, long numOwners) {
-        Set<Address> owners = new HashSet<>();
+    private Set<AionAddress> getWalletOwners(AionAddress walletId, long numOwners) {
+        Set<AionAddress> owners = new HashSet<>();
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         DataWord portion;
 
         for (long i = 0; i < numOwners; i++) {
-            byte[] account = new byte[Address.ADDRESS_LEN];
+            byte[] account = new byte[AionAddress.SIZE];
             buffer.putLong(i);
             buffer.flip();
             byte[] request = new byte[DataWord.BYTES];
@@ -253,7 +253,7 @@ public class MultiSignatureContractTest {
             }
             System.arraycopy(portion.getData(), 0, account, DataWord.BYTES, DataWord.BYTES);
 
-            Address address = new Address(account);
+            AionAddress address = new AionAddress(account);
             if (owners.contains(address)) {
                 fail();
             }
@@ -275,15 +275,15 @@ public class MultiSignatureContractTest {
 
     // Returns the address of the new multi-sig wallet that uses the addresses in the keys of owners
     // as the owners, requires at least threshold signatures and has initial balance balance.
-    private Address createMultiSigWallet(
+    private AionAddress createMultiSigWallet(
             List<ECKeyEd25519> owners, long threshold, BigInteger balance) {
         if (owners.isEmpty()) {
             fail();
         }
-        List<Address> ownerAddrs = new ArrayList<>();
-        Address addr;
+        List<AionAddress> ownerAddrs = new ArrayList<>();
+        AionAddress addr;
         for (ECKeyEd25519 key : owners) {
-            addr = new Address(key.getAddress());
+            addr = new AionAddress(key.getAddress());
             repo.createAccount(addr);
             addrsToClean.add(addr);
             ownerAddrs.add(addr);
@@ -293,7 +293,7 @@ public class MultiSignatureContractTest {
         MultiSignatureContract msc = new MultiSignatureContract(repo, ownerAddrs.get(0));
         TransactionResult res = msc.execute(input, COST);
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
-        Address wallet = new Address(res.getOutput());
+        AionAddress wallet = new AionAddress(res.getOutput());
         repo.addBalance(wallet, balance);
         addrsToClean.add(wallet);
         repo.flush();
@@ -319,8 +319,8 @@ public class MultiSignatureContractTest {
 
     // Verifies that the result of a create-wallet operation, res, saves a wallet with threshold
     // threshold and consists of all the owners in owners and no more.
-    private void checkCreateResult(TransactionResult res, long threshold, List<Address> owners) {
-        Address walletId = new Address(res.getOutput());
+    private void checkCreateResult(TransactionResult res, long threshold, List<AionAddress> owners) {
+        AionAddress walletId = new AionAddress(res.getOutput());
         addrsToClean.add(walletId);
         assertEquals(BigInteger.ZERO, repo.getBalance(walletId));
         assertEquals(BigInteger.ZERO, repo.getNonce(walletId));
@@ -329,15 +329,15 @@ public class MultiSignatureContractTest {
         assertEquals(threshold, threshAndOwners.get(0).longValue());
         assertEquals(owners.size(), threshAndOwners.get(1).longValue());
 
-        Set<Address> walletOwners = getWalletOwners(walletId, threshAndOwners.get(1));
+        Set<AionAddress> walletOwners = getWalletOwners(walletId, threshAndOwners.get(1));
         assertEquals(owners.size(), walletOwners.size());
-        for (Address own : owners) {
+        for (AionAddress own : owners) {
             assertTrue(walletOwners.contains(own));
         }
     }
 
     // Verifies that account has a nonce equal to nonce and a balance equal to balance.
-    private void checkAccountState(Address account, BigInteger nonce, BigInteger balance) {
+    private void checkAccountState(AionAddress account, BigInteger nonce, BigInteger balance) {
         assertEquals(nonce, repo.getNonce(account));
         assertEquals(balance, repo.getBalance(account));
     }
@@ -346,7 +346,7 @@ public class MultiSignatureContractTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testConstructWithNullTrack() {
-        new MultiSignatureContract(null, Address.wrap(ECKeyFac.inst().create().getAddress()));
+        new MultiSignatureContract(null, AionAddress.wrap(ECKeyFac.inst().create().getAddress()));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -358,8 +358,8 @@ public class MultiSignatureContractTest {
     public void testNrgBelowLegalLimit() {
         // First test create-wallet logic.
         // Test with min illegal cost.
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners = getExistentAddresses(3, BigInteger.ZERO);
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners = getExistentAddresses(3, BigInteger.ZERO);
         byte[] input =
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
@@ -372,8 +372,8 @@ public class MultiSignatureContractTest {
         // Second test send-tx logic.
         // Test with min illegal cost.
         List<ECKeyEd25519> sendOwners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address sendCaller = new Address(sendOwners.get(0).getAddress());
-        Address wallet =
+        AionAddress sendCaller = new AionAddress(sendOwners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(
                         sendOwners, MultiSignatureContract.MIN_OWNERS - 1, DEFAULT_BALANCE);
         byte[] txMsg =
@@ -409,8 +409,8 @@ public class MultiSignatureContractTest {
 
         // First test create-wallet logic.
         // Test with min illegal cost.
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners = getExistentAddresses(3, BigInteger.ZERO);
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners = getExistentAddresses(3, BigInteger.ZERO);
         byte[] input =
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
@@ -423,8 +423,8 @@ public class MultiSignatureContractTest {
         // Second test send-tx logic.
         // Test with min illegal cost.
         List<ECKeyEd25519> sendOwners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address sendCaller = new Address(sendOwners.get(0).getAddress());
-        Address wallet =
+        AionAddress sendCaller = new AionAddress(sendOwners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(
                         sendOwners, MultiSignatureContract.MIN_OWNERS - 1, DEFAULT_BALANCE);
         byte[] txMsg =
@@ -452,27 +452,27 @@ public class MultiSignatureContractTest {
 
     @Test
     public void testNullInput() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
         execute(caller, null, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
     public void testEmptyInput() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
         execute(caller, ByteUtil.EMPTY_BYTE_ARRAY, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
     public void testInputWithOperationOnly() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
         execute(caller, new byte[] {(byte) 0x0}, COST, ResultCode.FAILURE, 0);
         execute(caller, new byte[] {(byte) 0x1}, COST, ResultCode.FAILURE, 0);
     }
 
     @Test
     public void testInputWithUnsupportedOperation() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners = getExistentAddresses(3, BigInteger.ZERO);
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners = getExistentAddresses(3, BigInteger.ZERO);
         byte[] input =
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
@@ -491,8 +491,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testCreateWalletThresholdBelowLegalLimit() {
         // Test with min illegal value.
-        List<Address> owners = getExistentAddresses(3, BigInteger.ZERO);
-        Address caller = owners.get(0);
+        List<AionAddress> owners = getExistentAddresses(3, BigInteger.ZERO);
+        AionAddress caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MIN_VALUE, owners);
 
         execute(caller, input, COST, ResultCode.FAILURE, 0);
@@ -507,8 +507,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testCreateWalletWithThresholdLargerThanNumOwners() {
         // Test with max illegal value.
-        List<Address> owners = getExistentAddresses(3, BigInteger.ZERO);
-        Address caller = owners.get(0);
+        List<AionAddress> owners = getExistentAddresses(3, BigInteger.ZERO);
+        AionAddress caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
         execute(caller, input, COST, ResultCode.FAILURE, 0);
@@ -520,8 +520,8 @@ public class MultiSignatureContractTest {
 
     @Test
     public void testCreateWalletZeroOwners() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners = new ArrayList<>();
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners = new ArrayList<>();
         byte[] input =
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
@@ -531,8 +531,8 @@ public class MultiSignatureContractTest {
 
     @Test
     public void testCreateWalletOneOwner() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners = getExistentAddresses(1, BigInteger.ZERO);
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners = getExistentAddresses(1, BigInteger.ZERO);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
         execute(caller, input, COST, ResultCode.FAILURE, 0);
@@ -540,9 +540,9 @@ public class MultiSignatureContractTest {
 
     @Test
     public void testCreateWalletWithMoreOwnersThanLegalLimit() {
-        List<Address> owners =
+        List<AionAddress> owners =
                 getExistentAddresses(MultiSignatureContract.MAX_OWNERS + 1, BigInteger.ZERO);
-        Address caller = owners.get(0);
+        AionAddress caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
         execute(caller, input, COST, ResultCode.FAILURE, 0);
@@ -551,8 +551,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testCreateWalletWithTwoDuplicateOwners() {
         // Test with max amount of owners
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners =
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners =
                 getExistentAddresses(MultiSignatureContract.MAX_OWNERS - 1, BigInteger.ZERO);
         owners.add(owners.get(0));
         byte[] input =
@@ -584,8 +584,8 @@ public class MultiSignatureContractTest {
 
     @Test
     public void testCreateWalletButCallerIsNotAnOwner() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners =
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners =
                 getExistentAddresses(MultiSignatureContract.MIN_OWNERS, BigInteger.ZERO);
         byte[] input =
                 MultiSignatureContract.constructCreateWalletInput(
@@ -597,15 +597,15 @@ public class MultiSignatureContractTest {
     @Test
     public void testCreateWalletWithPartiallyCompleteAddress() {
         // Test on nearly min legal number of owners.
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners =
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners =
                 getExistentAddresses(MultiSignatureContract.MIN_OWNERS - 1, BigInteger.ZERO);
         owners.add(caller);
         byte[] in =
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        byte[] partialAddr = new byte[Address.ADDRESS_LEN - 1];
+        byte[] partialAddr = new byte[AionAddress.SIZE - 1];
         ThreadLocalRandom.current().nextBytes(partialAddr);
 
         byte[] input = new byte[in.length + partialAddr.length];
@@ -630,8 +630,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testCreateWalletWithMultiSigWalletCaller() {
         // First create a multi-sig wallet.
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners =
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners =
                 getExistentAddresses(
                         MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
         long threshold = owners.size();
@@ -640,7 +640,7 @@ public class MultiSignatureContractTest {
         TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
 
-        Address walletCaller = new Address(res.getOutput());
+        AionAddress walletCaller = new AionAddress(res.getOutput());
         addrsToClean.add(walletCaller);
         checkAccountState(walletCaller, BigInteger.ZERO, BigInteger.ZERO);
 
@@ -658,8 +658,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testCreateWalletWithOwnerAsAMultiSigWallet() {
         // First create a multi-sig wallet.
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners =
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners =
                 getExistentAddresses(
                         MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
         long threshold = owners.size();
@@ -668,12 +668,12 @@ public class MultiSignatureContractTest {
         TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
 
-        Address wallet = new Address(res.getOutput());
+        AionAddress wallet = new AionAddress(res.getOutput());
         addrsToClean.add(wallet);
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
 
         // Now try to create a wallet using this wallet as one of the owners.
-        Address newCaller = getExistentAddress(BigInteger.ZERO);
+        AionAddress newCaller = getExistentAddress(BigInteger.ZERO);
         owners =
                 getExistentAddresses(
                         MultiSignatureContract.MAX_OWNERS - 2, wallet, BigInteger.ZERO);
@@ -688,8 +688,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testCreateWalletWithThresholdEqualToLegalNumOwners() {
         // Test using min legal number of owners.
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners =
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners =
                 getExistentAddresses(
                         MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
         long threshold = owners.size();
@@ -698,7 +698,7 @@ public class MultiSignatureContractTest {
         TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
 
         // Test using max legal number of owners.
         owners =
@@ -709,13 +709,13 @@ public class MultiSignatureContractTest {
 
         res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
     public void testCreateWalletAddressIsDeterministic() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners =
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners =
                 getExistentAddresses(
                         MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
         long threshold = owners.size();
@@ -723,18 +723,18 @@ public class MultiSignatureContractTest {
 
         TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
-        Address wallet1 = new Address(res.getOutput());
+        AionAddress wallet1 = new AionAddress(res.getOutput());
 
         res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
-        Address wallet2 = new Address(res.getOutput());
+        AionAddress wallet2 = new AionAddress(res.getOutput());
 
         assertEquals(wallet1, wallet2);
     }
 
     @Test
     public void testWalletAddressStartsWithAionPrefix() {
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners =
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners =
                 getExistentAddresses(
                         MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
         long threshold = owners.size();
@@ -742,15 +742,15 @@ public class MultiSignatureContractTest {
 
         TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
-        Address wallet = new Address(res.getOutput());
+        AionAddress wallet = new AionAddress(res.getOutput());
         assertTrue(wallet.toString().startsWith("a0"));
     }
 
     @Test
     public void testCreateWalletWithMinimumLegalThreshold() {
         // Test using min legal number of owners.
-        Address caller = getExistentAddress(BigInteger.ZERO);
-        List<Address> owners =
+        AionAddress caller = getExistentAddress(BigInteger.ZERO);
+        List<AionAddress> owners =
                 getExistentAddresses(
                         MultiSignatureContract.MIN_OWNERS - 1, caller, BigInteger.ZERO);
         long threshold = MultiSignatureContract.MIN_THRESH;
@@ -759,7 +759,7 @@ public class MultiSignatureContractTest {
         TransactionResult res =
                 execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
 
         // Test using max legal number of owners.
         owners =
@@ -770,7 +770,7 @@ public class MultiSignatureContractTest {
 
         res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
     }
 
     // <----------------------------------SEND TRANSACTION TESTS----------------------------------->
@@ -778,8 +778,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWithZeroSignatures() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
 
         // No signatures.
@@ -800,8 +800,8 @@ public class MultiSignatureContractTest {
     public void testSendTxWithMoreThanMaxOwnersSignatures() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS + 1);
         ECKeyEd25519 extra = owners.remove(0);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
         // Have all owners plus one extra sign the tx.
@@ -826,8 +826,8 @@ public class MultiSignatureContractTest {
     public void testSendTxValidSignaturesMeetsThresholdPlusPhonySig() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS + 1);
         ECKeyEd25519 phony = owners.remove(0);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Have all owners sign, meet threshold requirement, and attach a phony signaure.
@@ -851,8 +851,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNegativeAmountWithZeroBalance() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, BigInteger.ZERO);
         BigInteger amt = AMOUNT.negate();
 
@@ -874,8 +874,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNegativeAmountWithActualBalance() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
         BigInteger amt = AMOUNT.negate();
 
@@ -898,7 +898,7 @@ public class MultiSignatureContractTest {
     public void testSendTxFromRegularAddress() {
         // Our wallet is not a wallet...
         List<ECKeyEd25519> phonies = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address phonyWallet = new Address(phonies.get(0).getAddress());
+        AionAddress phonyWallet = new AionAddress(phonies.get(0).getAddress());
         repo.addBalance(phonyWallet, DEFAULT_BALANCE);
         BigInteger amt = BigInteger.ONE;
 
@@ -921,8 +921,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNoSenderInInput() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         byte[] txMsg =
@@ -943,8 +943,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNoRecipient() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         byte[] txMsg =
@@ -965,8 +965,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNoAmount() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         byte[] txMsg =
@@ -987,8 +987,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNoNrgPrice() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         byte[] txMsg =
@@ -1002,13 +1002,13 @@ public class MultiSignatureContractTest {
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
         byte[] noNrgInput = new byte[input.length - Long.BYTES];
         System.arraycopy(
-                input, 0, noNrgInput, 0, input.length - Address.ADDRESS_LEN - Long.BYTES - 1);
+                input, 0, noNrgInput, 0, input.length - AionAddress.SIZE - Long.BYTES - 1);
         System.arraycopy(
                 input,
-                input.length - Address.ADDRESS_LEN,
+                input.length - AionAddress.SIZE,
                 noNrgInput,
-                input.length - Address.ADDRESS_LEN - Long.BYTES,
-                Address.ADDRESS_LEN);
+                input.length - AionAddress.SIZE - Long.BYTES,
+                AionAddress.SIZE);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
@@ -1020,8 +1020,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWithSignatureUsingPreviousNonce() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // We sign a tx msg that uses the previous nonce.
@@ -1051,8 +1051,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWhereSignedMessagesDifferInNonce() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // One signee signs tx with a different nonce than the others. The others sign correct tx.
@@ -1086,8 +1086,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWhereSignedMessagesDifferInRecipient() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // One signee signs tx with a different recipient than the others. The others sign correct
@@ -1116,8 +1116,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWhereSignedMessagesDifferInAmount() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // One signee signs tx with a different amount than the others. The others sign correct tx.
@@ -1149,8 +1149,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWhereSignedMessagesDifferInNrgPrice() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // One signee signs tx with a different nrg price than the others. The others sign correct
@@ -1179,10 +1179,10 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxAllSignWrongRecipient() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
-        Address stranger = getExistentAddress(BigInteger.ZERO);
+        AionAddress stranger = getExistentAddress(BigInteger.ZERO);
 
         // Everyone signs a valid recipient and whole tx is fine but the recipient stated in input
         // differs.
@@ -1206,8 +1206,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxAllSignWrongAmount() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Everyone signs a valid amount and whole tx is fine but the amount stated in input
@@ -1232,10 +1232,10 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxAllSignWrongNonce() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
-        Address stranger = getExistentAddress(BigInteger.ZERO);
+        AionAddress stranger = getExistentAddress(BigInteger.ZERO);
 
         // Everyone signs a different nonce than the wallet's current one.
         BigInteger nonce = repo.getNonce(wallet);
@@ -1259,8 +1259,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxAllSignWrongNrgPrice() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Everyone signs a valid NRG_PRICE and whole tx is fine but the NRG_PRICE stated in input
@@ -1286,8 +1286,8 @@ public class MultiSignatureContractTest {
     public void testSendTxInsufficientBalance() {
         // Create account with zero balance.
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, BigInteger.ZERO);
 
         byte[] txMsg =
@@ -1310,10 +1310,10 @@ public class MultiSignatureContractTest {
     public void testWalletAbleToSendTxToDiffWallet() {
         List<ECKeyEd25519> owners1 = produceKeys(MultiSignatureContract.MIN_OWNERS);
         List<ECKeyEd25519> owners2 = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners1.get(0).getAddress());
-        Address wallet1 =
+        AionAddress caller = new AionAddress(owners1.get(0).getAddress());
+        AionAddress wallet1 =
                 createMultiSigWallet(owners1, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
-        Address wallet2 =
+        AionAddress wallet2 =
                 createMultiSigWallet(owners2, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
 
         // Sign tx to send from wallet1 to wallet2.
@@ -1337,8 +1337,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxLessSignaturesThanThresholdMinOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Have 1 less owner than required sign the tx msg.
@@ -1362,8 +1362,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxLessSignaturesThanThresholdMaxOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
         // Have 1 less owner than required sign the tx msg.
@@ -1387,8 +1387,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxSameSignaturesAsThresholdMinOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
 
         // Have each owner sign the tx msg.
@@ -1411,8 +1411,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxSameSignaturesAsThresholdMaxOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
         // Have each owner sign the tx msg.
@@ -1435,8 +1435,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxMoreSignaturesThanThresholdMinOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(
                         owners, MultiSignatureContract.MIN_OWNERS - 1, DEFAULT_BALANCE);
 
@@ -1460,8 +1460,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxMoreSignaturesThanThresholdMaxOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
 
         // Have all the owners sign.
@@ -1484,8 +1484,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxDuplicateSignee() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
         // All owners but 1 sign, and 1 signs twice to meet threshold req.
@@ -1511,8 +1511,8 @@ public class MultiSignatureContractTest {
     public void testSendTxSignatureOneSigneeIsNonOwner() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
         ECKeyEd25519 phony = produceKeys(1).get(0);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
         // All owners but 1 sign, and then the phony signs.
@@ -1538,8 +1538,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxSignedProperlyButNotSignedByOwnerCaller() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
 
         // Adequate number of signees but we skip signee 0 since they are caller.
@@ -1566,7 +1566,7 @@ public class MultiSignatureContractTest {
     public void testSendTxSignedProperlyButCallerIsNotOwner() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
         ECKeyEd25519 phony = produceKeys(1).get(0);
-        Address wallet =
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Signed adequately.
@@ -1583,7 +1583,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(new Address(phony.getAddress()), input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(new AionAddress(phony.getAddress()), input, NRG_LIMIT, ResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1591,8 +1591,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialSignature() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Signed adequately.
@@ -1606,7 +1606,7 @@ public class MultiSignatureContractTest {
         byte[] input =
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
-        int amtStart = input.length - Address.ADDRESS_LEN - Long.BYTES - AMT_SIZE;
+        int amtStart = input.length - AionAddress.SIZE - Long.BYTES - AMT_SIZE;
         byte[] shiftedInput = shiftLeftAtIndex(input, amtStart);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
@@ -1619,8 +1619,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialWalletAddress() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Signed adequately.
@@ -1634,7 +1634,7 @@ public class MultiSignatureContractTest {
         byte[] input =
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
-        int sigsStart = 1 + Address.ADDRESS_LEN;
+        int sigsStart = 1 + AionAddress.SIZE;
         byte[] shiftedInput = shiftLeftAtIndex(input, sigsStart);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
@@ -1647,8 +1647,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialRecipientAddress() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Signed adequately.
@@ -1675,8 +1675,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialAmount() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Signed adequately.
@@ -1690,7 +1690,7 @@ public class MultiSignatureContractTest {
         byte[] input =
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
-        int nrgStart = input.length - Address.ADDRESS_LEN - Long.BYTES;
+        int nrgStart = input.length - AionAddress.SIZE - Long.BYTES;
         byte[] shiftedInput = shiftLeftAtIndex(input, nrgStart);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
@@ -1703,8 +1703,8 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialNrgPrice() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
-        Address wallet =
+        AionAddress caller = new AionAddress(owners.get(0).getAddress());
+        AionAddress wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
         // Signed adequately.
@@ -1718,7 +1718,7 @@ public class MultiSignatureContractTest {
         byte[] input =
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
-        int toStart = input.length - Address.ADDRESS_LEN;
+        int toStart = input.length - AionAddress.SIZE;
         byte[] shiftedInput = shiftLeftAtIndex(input, toStart);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);

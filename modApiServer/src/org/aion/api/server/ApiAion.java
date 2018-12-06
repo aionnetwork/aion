@@ -43,7 +43,7 @@ import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
@@ -333,7 +333,7 @@ public abstract class ApiAion extends Api {
         return pBlk.getTransactionsList().size();
     }
 
-    protected long getTransactionCount(Address addr, long blkNr) {
+    protected long getTransactionCount(AionAddress addr, long blkNr) {
         AionBlock pBlk = this.getBlock(blkNr);
         if (pBlk == null) {
             LOG.error(
@@ -375,7 +375,7 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    public byte[] getCode(Address addr) {
+    public byte[] getCode(AionAddress addr) {
         return this.ac.getRepository().getCode(addr);
     }
 
@@ -459,8 +459,8 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        Address fromAddr =
-                (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
+        AionAddress fromAddr =
+                (params.getFrom().isEmptyAddress()) ? AionAddress.ZERO_ADDRESS() : params.getFrom();
         AionTransaction tx =
                 new AionTransaction(
                         params.getNonce().toByteArray(),
@@ -482,7 +482,7 @@ public abstract class ApiAion extends Api {
             return (new ApiTxResponse(TxResponse.INVALID_TX));
         }
 
-        Address from = _params.getFrom();
+        AionAddress from = _params.getFrom();
 
         if (from == null || from.isEmptyAddress()) {
             LOG.error("<create-contract msg=invalid-from-address>");
@@ -502,7 +502,7 @@ public abstract class ApiAion extends Api {
                         !(_params.getNonce().equals(BigInteger.ZERO))
                                 ? _params.getNonce().toByteArray()
                                 : pendingState
-                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                        .bestPendingStateNonce(AionAddress.wrap(key.getAddress()))
                                         .toByteArray();
 
                 AionTransaction tx =
@@ -528,18 +528,18 @@ public abstract class ApiAion extends Api {
 
     // Transaction Level
     public BigInteger getBalance(String _address) {
-        return this.ac.getRepository().getBalance(Address.wrap(_address));
+        return this.ac.getRepository().getBalance(AionAddress.wrap(_address));
     }
 
-    public BigInteger getBalance(Address _address) {
+    public BigInteger getBalance(AionAddress _address) {
         return this.ac.getRepository().getBalance(_address);
     }
 
     public BigInteger getNonce(String _address) {
-        return this.ac.getRepository().getNonce(Address.wrap(_address));
+        return this.ac.getRepository().getNonce(AionAddress.wrap(_address));
     }
 
-    public BigInteger getNonce(Address _address) {
+    public BigInteger getNonce(AionAddress _address) {
         return this.ac.getRepository().getNonce(_address);
     }
 
@@ -549,7 +549,7 @@ public abstract class ApiAion extends Api {
             return (new ApiTxResponse(TxResponse.INVALID_TX));
         }
 
-        Address from = _params.getFrom();
+        AionAddress from = _params.getFrom();
 
         if (from == null || from.isEmptyAddress()) {
             LOG.error("<send-transaction msg=invalid-from-address>");
@@ -569,7 +569,7 @@ public abstract class ApiAion extends Api {
                         (!_params.getNonce().equals(BigInteger.ZERO))
                                 ? _params.getNonce().toByteArray()
                                 : pendingState
-                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                        .bestPendingStateNonce(AionAddress.wrap(key.getAddress()))
                                         .toByteArray();
 
                 AionTransaction tx =
@@ -605,12 +605,12 @@ public abstract class ApiAion extends Api {
     }
 
     protected AionTransaction signTransaction(ArgTxCall _params, String _address) {
-        Address address;
+        AionAddress address;
         if (_address == null || _address.isEmpty()) {
             LOG.error("<sign-transaction msg=invalid-signing-address>");
             return null;
         } else {
-            address = Address.wrap(_address);
+            address = AionAddress.wrap(_address);
         }
 
         ECKey key = getAccountKey(address.toString());
@@ -625,7 +625,7 @@ public abstract class ApiAion extends Api {
                         (!_params.getNonce().equals(BigInteger.ZERO))
                                 ? _params.getNonce().toByteArray()
                                 : pendingState
-                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                        .bestPendingStateNonce(AionAddress.wrap(key.getAddress()))
                                         .toByteArray();
 
                 AionTransaction tx =

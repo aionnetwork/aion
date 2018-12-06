@@ -38,7 +38,7 @@ package org.aion.zero.impl.core;
 import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
 import org.junit.Test;
@@ -59,8 +59,8 @@ public class BloomFilterTest {
 
     @Test
     public void testContainsAddress() {
-        Address addr =
-                new Address("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        AionAddress addr =
+                new AionAddress("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
         Bloom bloom = BloomFilter.create(addr.toBytes());
         assertThat(BloomFilter.containsAddress(bloom, addr)).isTrue();
     }
@@ -82,8 +82,8 @@ public class BloomFilterTest {
 
     @Test
     public void testCompositeBloomFiltering() {
-        Address addr =
-                new Address("BEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEFFFF");
+        AionAddress addr =
+                new AionAddress("BEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEBEEFFFF");
         byte[] someEvent = HashUtil.h256(BigInteger.ONE.toByteArray());
         byte[] anotherEvent = HashUtil.h256(BigInteger.TWO.toByteArray());
 

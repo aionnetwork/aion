@@ -22,9 +22,9 @@
  */
 package org.aion.precompiled.contracts.TRS;
 
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -43,7 +43,7 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  * in that the latter calls this contract to perform any supported operations it needs.
  */
 public final class PrivateTRScontract extends StatefulPrecompiledContract {
-    private final Address caller;
+    private final AionAddress caller;
 
     /**
      * Constructs a new PrivateTRScontract that will use repo as the database cache to update its
@@ -53,7 +53,7 @@ public final class PrivateTRScontract extends StatefulPrecompiledContract {
      * @param caller The calling address.
      */
     public PrivateTRScontract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller) {
+            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, AionAddress caller) {
 
         super(repo);
         this.caller = caller;

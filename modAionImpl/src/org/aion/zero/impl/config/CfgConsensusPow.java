@@ -30,7 +30,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgConsensus;
 
@@ -40,7 +40,7 @@ public final class CfgConsensusPow extends CfgConsensus {
 
     CfgConsensusPow() {
         this.mining = false;
-        this.minerAddress = Address.ZERO_ADDRESS().toString();
+        this.minerAddress = AionAddress.ZERO_ADDRESS().toString();
         this.cpuMineThreads =
                 (byte)
                         (Runtime.getRuntime().availableProcessors()

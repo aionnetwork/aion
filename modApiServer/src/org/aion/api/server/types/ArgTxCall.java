@@ -24,7 +24,7 @@ package org.aion.api.server.types;
 
 import java.math.BigInteger;
 import org.aion.api.server.nrgprice.NrgOracle;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.log.AionLoggerFactory;
@@ -35,8 +35,8 @@ import org.slf4j.Logger;
 /** @author chris */
 public final class ArgTxCall {
 
-    private final Address from;
-    private final Address to;
+    private final AionAddress from;
+    private final AionAddress to;
     private final byte[] data;
     private final BigInteger nonce;
     private final BigInteger value;
@@ -49,8 +49,8 @@ public final class ArgTxCall {
     // TODO: create a builder class for create this class
 
     public ArgTxCall(
-            final Address _from,
-            final Address _to,
+            final AionAddress _from,
+            final AionAddress _to,
             final byte[] _data,
             final BigInteger _nonce,
             final BigInteger _value,
@@ -68,8 +68,9 @@ public final class ArgTxCall {
     public static ArgTxCall fromJSON(
             final JSONObject _jsonObj, NrgOracle oracle, long defaultNrgLimit) {
         try {
-            Address from = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
-            Address to = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
+            AionAddress from = AionAddress
+                .wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
+            AionAddress to = AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
             byte[] data = ByteUtil.hexStringToBytes(_jsonObj.optString("data", ""));
 
             String nonceStr = _jsonObj.optString("nonce", "0x0");
@@ -108,11 +109,11 @@ public final class ArgTxCall {
         }
     }
 
-    public Address getFrom() {
+    public AionAddress getFrom() {
         return this.from;
     }
 
-    public Address getTo() {
+    public AionAddress getTo() {
         return this.to;
     }
 

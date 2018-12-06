@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxExecSummary;
@@ -47,7 +47,7 @@ public class AbstractBlockSummary<
         TXES extends ITxExecSummary> {
 
     protected BLK block;
-    protected Map<Address, BigInteger> rewards;
+    protected Map<AionAddress, BigInteger> rewards;
     protected List<TXR> receipts;
     protected List<TXES> summaries;
     protected BigInteger totalDifficulty = BigInteger.ZERO;
@@ -66,12 +66,12 @@ public class AbstractBlockSummary<
         return summaries;
     }
 
-    protected static byte[] encodeRewards(Map<Address, BigInteger> rewards) {
+    protected static byte[] encodeRewards(Map<AionAddress, BigInteger> rewards) {
         return encodeMap(
                 rewards,
-                new Functional.Function<Address, byte[]>() {
+                new Functional.Function<AionAddress, byte[]>() {
                     @Override
-                    public byte[] apply(Address address) {
+                    public byte[] apply(AionAddress address) {
                         return RLP.encodeElement(address.toBytes());
                     }
                 },
@@ -83,13 +83,13 @@ public class AbstractBlockSummary<
                 });
     }
 
-    protected static Map<Address, BigInteger> decodeRewards(RLPList rewards) {
+    protected static Map<AionAddress, BigInteger> decodeRewards(RLPList rewards) {
         return decodeMap(
                 rewards,
-                new Functional.Function<byte[], Address>() {
+                new Functional.Function<byte[], AionAddress>() {
                     @Override
-                    public Address apply(byte[] bytes) {
-                        return Address.wrap(bytes);
+                    public AionAddress apply(byte[] bytes) {
+                        return AionAddress.wrap(bytes);
                     }
                 },
                 new Functional.Function<byte[], BigInteger>() {
@@ -106,7 +106,7 @@ public class AbstractBlockSummary<
      * All the mining rewards paid out for this block, including the main block rewards, uncle
      * rewards, and transaction fees.
      */
-    public Map<Address, BigInteger> getRewards() {
+    public Map<AionAddress, BigInteger> getRewards() {
         return rewards;
     }
 

@@ -28,7 +28,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.aion.api.server.nrgprice.NrgPriceAdvisor;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.impl.types.AionBlock;
@@ -132,7 +132,7 @@ public class NrgBlockPriceAveraging extends NrgPriceAdvisor<AionBlock, AionTrans
         if (blk == null) return null;
 
         List<AionTransaction> txns = blk.getTransactionsList();
-        Address coinbase = blk.getCoinbase();
+        AionAddress coinbase = blk.getCoinbase();
 
         // there is nothing stopping nrg price to be 0. don't explicitly enforce non-zero nrg.
         Long minNrg = null;

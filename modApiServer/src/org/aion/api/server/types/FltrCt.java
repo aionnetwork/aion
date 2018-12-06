@@ -24,7 +24,7 @@ package org.aion.api.server.types;
 
 import java.util.Arrays;
 import java.util.List;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 
 /** @author chris */
 // NOTE: only used by java api
@@ -71,7 +71,7 @@ public class FltrCt extends Fltr {
     }
 
     /** verify if current log filter is for specific contract address */
-    public boolean isFor(Address contractAddress, String topic) {
+    public boolean isFor(AionAddress contractAddress, String topic) {
         // topic = "0x" + topic;
         if (!Arrays.equals(this.contractAddress, contractAddress.toBytes())) {
             return false;

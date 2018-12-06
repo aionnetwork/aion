@@ -26,7 +26,7 @@ package org.aion.precompiled.contracts.ATB;
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.contracts.DummyRepo;
 import org.junit.Before;
@@ -36,9 +36,9 @@ public class BridgeRingInitializationTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private static final Address CONTRACT_ADDR =
-            new Address(HashUtil.h256("contractAddress".getBytes()));
-    private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
+    private static final AionAddress CONTRACT_ADDR =
+            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
+    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     @Before
     public void beforeEach() {

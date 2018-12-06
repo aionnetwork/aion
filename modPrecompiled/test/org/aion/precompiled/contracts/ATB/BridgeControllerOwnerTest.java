@@ -27,7 +27,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 
 import java.util.List;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Log;
@@ -43,9 +43,9 @@ public class BridgeControllerOwnerTest {
     private BridgeController controller;
     private ExecutionHelper result;
 
-    private static final Address CONTRACT_ADDR =
-            new Address(HashUtil.h256("contractAddress".getBytes()));
-    private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
+    private static final AionAddress CONTRACT_ADDR =
+            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
+    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     @Before
     public void beforeEach() {
@@ -81,9 +81,9 @@ public class BridgeControllerOwnerTest {
         assertThat(logs.size()).isEqualTo(1);
 
         Log changedOwnerLog = logs.get(0);
-        assertThat(changedOwnerLog.getData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
-        assertThat(changedOwnerLog.getTopics().get(0)).isEqualTo(transferOwnership);
-        assertThat(changedOwnerLog.getTopics().get(1)).isEqualTo(newOwner);
+        assertThat(changedOwnerLog.getLogData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
+        assertThat(changedOwnerLog.getLogTopics().get(0)).isEqualTo(transferOwnership);
+        assertThat(changedOwnerLog.getLogTopics().get(1)).isEqualTo(newOwner);
     }
 
     @Test

@@ -29,9 +29,9 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
@@ -47,14 +47,14 @@ import org.aion.precompiled.type.StatefulPrecompiledContract;
  */
 public abstract class AbstractTRS extends StatefulPrecompiledContract {
     // TODO: grab AION from CfgAion later and preferrably aion prefix too.
-    static final Address AION =
-            Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+    static final AionAddress AION =
+            AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     static final long COST = 21000L; // temporary.
     private static final long TEST_DURATION = 1;
     private static final long PERIOD_DURATION = TimeUnit.DAYS.toSeconds(30);
     static final byte AION_PREFIX = (byte) 0xA0;
     static final byte TRS_PREFIX = (byte) 0xC0;
-    final Address caller;
+    final AionAddress caller;
     protected final IBlockchain blockchain;
 
     /*
@@ -124,7 +124,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     // Constructor.
     AbstractTRS(
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
-            Address caller,
+            AionAddress caller,
             IBlockchain blockchain) {
         super(track);
         if (caller == null) {
@@ -155,7 +155,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract address to query.
      * @return the contract specifications or null if not a TRS contract.
      */
-    public byte[] getContractSpecs(Address contract) {
+    public byte[] getContractSpecs(AionAddress contract) {
         if (contract.toBytes()[0] != TRS_PREFIX) {
             return null;
         }
@@ -183,7 +183,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param precision the number of decimal places to left-shift percent.
      */
     void setContractSpecs(
-            Address contract,
+            AionAddress contract,
             boolean isTest,
             boolean isDirectDeposit,
             int periods,
@@ -216,9 +216,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract address to query.
      * @return the owner of the contract or null if not a TRS contract.
      */
-    public Address getContractOwner(Address contract) {
+    public AionAddress getContractOwner(AionAddress contract) {
         IDataWord owner = track.getStorageValue(contract, OWNER_KEY);
-        return (owner == null) ? null : new Address(owner.getData());
+        return (owner == null) ? null : new AionAddress(owner.getData());
     }
 
     /**
@@ -231,7 +231,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      *
      * @param contract The TRS contract to update.
      */
-    void setContractOwner(Address contract) {
+    void setContractOwner(AionAddress contract) {
         if (track.getStorageValue(contract, OWNER_KEY) != null) {
             return;
         }
@@ -252,7 +252,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return a byte array if there is a non-null head or null otherwise.
      * @throws NullPointerException if contract has no linked list.
      */
-    public byte[] getListHead(Address contract) {
+    public byte[] getListHead(AionAddress contract) {
         IDataWord head = track.getStorageValue(contract, LIST_HEAD_KEY);
         if (head == null) {
             throw new NullPointerException("Contract has no list: " + contract);
@@ -278,7 +278,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @param head The head entry data to add.
      */
-    void setListHead(Address contract, byte[] head) {
+    void setListHead(AionAddress contract, byte[] head) {
         if (head == null) {
             track.addStorageRow(contract, LIST_HEAD_KEY, NULL32);
         } else if (head.length == DOUBLE_WORD_SIZE) {
@@ -301,7 +301,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return a byte array if there is a non-null head or null otherwise.
      * @throws NullPointerException if contract has no linked list.
      */
-    public byte[] getListPrev(Address contract, Address account) {
+    public byte[] getListPrev(AionAddress contract, AionAddress account) {
         byte[] prevKey = new byte[DOUBLE_WORD_SIZE];
         prevKey[0] = LIST_PREV_PREFIX;
         System.arraycopy(account.toBytes(), 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
@@ -334,7 +334,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account in contract whose previous entry is being updated.
      * @param prev The previous entry.
      */
-    void setListPrevious(Address contract, Address account, byte[] prev) {
+    void setListPrevious(AionAddress contract, AionAddress account, byte[] prev) {
         setListPrevious(contract, account.toBytes(), prev);
     }
 
@@ -356,7 +356,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account in contract whose previous entry is being updated.
      * @param prev The previous entry.
      */
-    void setListPrevious(Address contract, byte[] account, byte[] prev) {
+    void setListPrevious(AionAddress contract, byte[] account, byte[] prev) {
         byte[] prevKey = new byte[DOUBLE_WORD_SIZE];
         prevKey[0] = LIST_PREV_PREFIX;
         System.arraycopy(account, 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
@@ -384,7 +384,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return account's next entry.
      * @throws NullPointerException if account has no next entry.
      */
-    public byte[] getListNext(Address contract, Address account) {
+    public byte[] getListNext(AionAddress contract, AionAddress account) {
         return getListNext(contract, account.toBytes());
     }
 
@@ -403,7 +403,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return account's next entry.
      * @throws NullPointerException if account has no next entry.
      */
-    byte[] getListNext(Address contract, byte[] account) {
+    byte[] getListNext(AionAddress contract, byte[] account) {
         IDataWord next = track.getStorageValue(contract, toIDataWord(account));
         if (next == null) {
             throw new NullPointerException("Account has no next: " + ByteUtil.toHexString(account));
@@ -431,7 +431,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return account's next entry.
      * @throws NullPointerException if account has no next entry.
      */
-    public byte[] getListNextBytes(Address contract, Address account) {
+    public byte[] getListNextBytes(AionAddress contract, AionAddress account) {
         IDataWord next = track.getStorageValue(contract, toIDataWord(account.toBytes()));
         if (next == null) {
             throw new NullPointerException("Account has no next: " + account);
@@ -467,7 +467,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param isValid True only if the account is to be marked as invalid or deleted.
      */
     void setListNext(
-            Address contract, Address account, byte oldMeta, byte[] next, boolean isValid) {
+            AionAddress contract, AionAddress account, byte oldMeta, byte[] next, boolean isValid) {
         setListNext(contract, account.toBytes(), oldMeta, next, isValid);
     }
 
@@ -498,7 +498,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param next The next entry.
      * @param isValid True only if the account is to be marked as invalid or deleted.
      */
-    void setListNext(Address contract, byte[] account, byte oldMeta, byte[] next, boolean isValid) {
+    void setListNext(AionAddress contract, byte[] account, byte oldMeta, byte[] next, boolean isValid) {
         if (!isValid) {
             // Mark account invalid and also make it ineligible for special withdrawal.
             track.addStorageRow(contract, toIDataWord(account), INVALID);
@@ -536,7 +536,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to query.
      * @return the total balance of the contract.
      */
-    public BigInteger getTotalBalance(Address contract) {
+    public BigInteger getTotalBalance(AionAddress contract) {
         IDataWord ttlSpec = track.getStorageValue(contract, FUNDS_SPECS_KEY);
         int numRows =
                 ByteBuffer.wrap(
@@ -575,7 +575,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param balance The total balance to set.
      * @throws IllegalArgumentException if balance is negative.
      */
-    void setTotalBalance(Address contract, BigInteger balance) {
+    void setTotalBalance(AionAddress contract, BigInteger balance) {
         if (balance.compareTo(BigInteger.ZERO) < 0) {
             throw new IllegalArgumentException("setTotalBalance to negative balance!");
         }
@@ -606,7 +606,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to look up.
      * @return the account's deposit balance for this TRS contract.
      */
-    public BigInteger getDepositBalance(Address contract, Address account) {
+    public BigInteger getDepositBalance(AionAddress contract, AionAddress account) {
         IDataWord accountData = track.getStorageValue(contract, toIDataWord(account.toBytes()));
         if (accountData == null) {
             return BigInteger.ZERO;
@@ -646,7 +646,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to update.
      * @param balance The deposit balance to set.
      */
-    boolean setDepositBalance(Address contract, Address account, BigInteger balance) {
+    boolean setDepositBalance(AionAddress contract, AionAddress account, BigInteger balance) {
         if (balance.compareTo(BigInteger.ONE) < 0) {
             return true;
         }
@@ -689,7 +689,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      *
      * @param contract The address of the TRS contract.
      */
-    void setLock(Address contract) {
+    void setLock(AionAddress contract) {
         byte[] spec = getContractSpecs(contract);
         spec[LOCK_OFFSET] = (byte) 0x1;
         track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
@@ -703,7 +703,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      *
      * @param contract The address of the TRS contract.
      */
-    void setLive(Address contract) {
+    void setLive(AionAddress contract) {
         byte[] spec = getContractSpecs(contract);
         spec[LIVE_OFFSET] = (byte) 0x1;
         track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
@@ -752,7 +752,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @param timestamp The timestamp value to set.
      */
-    public void setTimestamp(Address contract, long timestamp) {
+    public void setTimestamp(AionAddress contract, long timestamp) {
         if (track.getStorageValue(contract, TIMESTAMP) != null) {
             return;
         }
@@ -774,7 +774,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to query.
      * @return The timestamp for the TRS contract contract.
      */
-    public long getTimestamp(Address contract) {
+    public long getTimestamp(AionAddress contract) {
         IDataWord value = track.getStorageValue(contract, TIMESTAMP);
         if (value == null) {
             return -1;
@@ -826,7 +826,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to withdraw funds from.
      * @return true only if a non-zero amount was withdrawn from the contract into account.
      */
-    boolean makeWithdrawal(Address contract, Address account) {
+    boolean makeWithdrawal(AionAddress contract, AionAddress account) {
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return false;
@@ -894,7 +894,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @param account The account whose withdrawal stats will be initialized.
      */
-    private void initWithdrawalStats(Address contract, Address account) {
+    private void initWithdrawalStats(AionAddress contract, AionAddress account) {
         byte[] stats = new byte[SINGLE_WORD_SIZE];
         stats[0] = 0x1; // set is-eligible.
         stats[SINGLE_WORD_SIZE - 1] = 0x0; // sanity. Set is-done to false (is done withdrawing)
@@ -910,7 +910,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @param account The account to update.
      */
-    private void setAccountIsDoneWithdrawing(Address contract, Address account) {
+    private void setAccountIsDoneWithdrawing(AionAddress contract, AionAddress account) {
         IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
         if (stats == null) {
             return;
@@ -933,7 +933,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to query.
      * @return true only if account is done withdrawing funds from contract.
      */
-    public boolean isAccountDoneWithdrawing(Address contract, Address account) {
+    public boolean isAccountDoneWithdrawing(AionAddress contract, AionAddress account) {
         IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
         if (stats == null) {
             return true;
@@ -953,7 +953,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @param account The account to be made ineligible for the special withdrawal.
      */
-    private void setAccountIneligibleForSpecial(Address contract, byte[] account) {
+    private void setAccountIneligibleForSpecial(AionAddress contract, byte[] account) {
         IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
         byte[] statsBytes = (stats == null) ? new byte[SINGLE_WORD_SIZE] : stats.getData();
         statsBytes[0] = 0x0; // unset is-eligible.
@@ -971,7 +971,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account whose most recent period is to be updated.
      * @throws NullPointerException if account has no withdrawal stats.
      */
-    private void updateAccountLastWithdrawalPeriod(Address contract, Address account, int period) {
+    private void updateAccountLastWithdrawalPeriod(AionAddress contract, AionAddress account, int period) {
         IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
         if (stats == null) {
             throw new NullPointerException("Account has no withdrawal stats!");
@@ -994,7 +994,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to query.
      * @return the last period in which account has withdrawn from the contract.
      */
-    public int getAccountLastWithdrawalPeriod(Address contract, Address account) {
+    public int getAccountLastWithdrawalPeriod(AionAddress contract, AionAddress account) {
         IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
         if ((stats == null) || (!accountIsValid(getListNextBytes(contract, account)))) {
             return -1;
@@ -1016,7 +1016,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account whose special withdrawal eligibility is to be queried.
      * @return true only if the account is eligible for the special withdrawal event.
      */
-    public boolean accountIsEligibleForSpecial(Address contract, Address account) {
+    public boolean accountIsEligibleForSpecial(AionAddress contract, AionAddress account) {
         IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
         return ((stats != null) && (stats.getData()[0] == 0x1));
     }
@@ -1036,7 +1036,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to query.
      * @return the amount of tokens account is eligible to withdraw in special one-off event.
      */
-    private BigInteger computeSpecialWithdrawalAmount(Address contract, Address account) {
+    private BigInteger computeSpecialWithdrawalAmount(AionAddress contract, AionAddress account) {
         if (accountIsEligibleForSpecial(contract, account)) {
             return computeRawSpecialAmount(contract, account);
         } else {
@@ -1053,7 +1053,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to query.
      * @return the amount account is eligible to withdraw in the special event.
      */
-    BigInteger computeRawSpecialAmount(Address contract, Address account) {
+    BigInteger computeRawSpecialAmount(AionAddress contract, AionAddress account) {
         BigDecimal owed = new BigDecimal(computeTotalOwed(contract, account));
         BigDecimal percent = getPercentage(getContractSpecs(contract)).movePointLeft(2);
         return owed.multiply(percent).toBigInteger();
@@ -1070,7 +1070,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param currPeriod The current period the contract is in.
      * @return the number of withdrawal periods account is behind currPeriod by.
      */
-    private int computeNumberPeriodsBehind(Address contract, Address account, int currPeriod) {
+    private int computeNumberPeriodsBehind(AionAddress contract, AionAddress account, int currPeriod) {
         return currPeriod - getAccountLastWithdrawalPeriod(contract, account);
     }
 
@@ -1092,7 +1092,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the amount of funds account is eligible to withdraw each period, excluding special
      *     funds.
      */
-    BigInteger computeAmountWithdrawPerPeriod(Address contract, Address account) {
+    BigInteger computeAmountWithdrawPerPeriod(AionAddress contract, AionAddress account) {
         BigDecimal owedWithoutSpecial =
                 new BigDecimal(
                         computeTotalOwed(contract, account)
@@ -1113,7 +1113,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to query.
      * @return the total amount of funds owed to account over the lifetime of the contract.
      */
-    public BigInteger computeTotalOwed(Address contract, Address account) {
+    public BigInteger computeTotalOwed(AionAddress contract, AionAddress account) {
         return getDepositBalance(contract, account).add(computeBonusShare(contract, account));
     }
 
@@ -1130,7 +1130,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the share of bonus tokens account is entitled to receive.
      * @throws IllegalStateException if contract has no total balance.
      */
-    public BigInteger computeBonusShare(Address contract, Address account) {
+    public BigInteger computeBonusShare(AionAddress contract, AionAddress account) {
         BigDecimal bonusFunds = new BigDecimal(getBonusBalance(contract));
         BigDecimal fraction = getDepositorFraction(contract, account);
         BigDecimal share = fraction.multiply(bonusFunds);
@@ -1145,7 +1145,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account.
      * @return the fraction of the total deposits account owns.
      */
-    private BigDecimal getDepositorFraction(Address contract, Address account) {
+    private BigDecimal getDepositorFraction(AionAddress contract, AionAddress account) {
         BigDecimal acctBalance = new BigDecimal(getDepositBalance(contract, account));
         BigInteger totalBalance = getTotalBalance(contract);
         if (totalBalance.compareTo(BigInteger.ZERO) <= 0) {
@@ -1166,7 +1166,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to query.
      * @return the amount of unclaimed tokens account has yet to withdraw from their total owings.
      */
-    private BigInteger computeOutstadingOwings(Address contract, Address account) {
+    private BigInteger computeOutstadingOwings(AionAddress contract, AionAddress account) {
         int lastPeriod = getAccountLastWithdrawalPeriod(contract, account);
         BigInteger amtPerPeriod = computeAmountWithdrawPerPeriod(contract, account);
         BigInteger specialAmt = computeRawSpecialAmount(contract, account);
@@ -1207,7 +1207,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the extra funds account is able to withdraw.
      */
     public BigInteger computeExtraFundsToWithdraw(
-            Address contract, Address account, BigDecimal fraction, int currPeriod) {
+            AionAddress contract, AionAddress account, BigDecimal fraction, int currPeriod) {
 
         BigInteger share =
                 fraction.multiply(new BigDecimal(getExtraFunds(contract))).toBigInteger();
@@ -1239,7 +1239,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @throws IllegalStateException if contract has no balance.
      */
-    void setBonusBalance(Address contract) {
+    void setBonusBalance(AionAddress contract) {
         if (track.getStorageValue(contract, BONUS_SPECS_KEY) != null) {
             return;
         }
@@ -1272,7 +1272,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to query.
      * @return the bonus balance of the TRS contract contract.
      */
-    public BigInteger getBonusBalance(Address contract) {
+    public BigInteger getBonusBalance(AionAddress contract) {
         IDataWord bonusSpec = track.getStorageValue(contract, BONUS_SPECS_KEY);
         if (bonusSpec == null) {
             return BigInteger.ZERO;
@@ -1308,7 +1308,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @param account The account to update.
      */
-    private void initExtraWithdrawalSpecs(Address contract, Address account) {
+    private void initExtraWithdrawalSpecs(AionAddress contract, AionAddress account) {
         byte[] specs = new byte[SINGLE_WORD_SIZE];
         specs[0] = 0x0;
         track.addStorageRow(contract, toIDataWord(makeExtraSpecsKey(account)), toIDataWord(specs));
@@ -1325,7 +1325,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to query.
      * @return the extra funds account has already withdrawn from contract.
      */
-    public BigInteger getExtraWithdrawalBalance(Address contract, Address account) {
+    public BigInteger getExtraWithdrawalBalance(AionAddress contract, AionAddress account) {
         IDataWord extraSpecs =
                 track.getStorageValue(contract, toIDataWord(makeExtraSpecsKey(account)));
         if (extraSpecs == null) {
@@ -1351,7 +1351,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @param account The TRS account to update.
      */
-    private void setExtraWithdrawalBalance(Address contract, Address account, BigInteger amount) {
+    private void setExtraWithdrawalBalance(AionAddress contract, AionAddress account, BigInteger amount) {
         if (amount.compareTo(BigInteger.ONE) < 0) {
             return;
         }
@@ -1380,7 +1380,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to query.
      * @return the amount of extra funds contract has.
      */
-    public BigInteger getExtraFunds(Address contract) {
+    public BigInteger getExtraFunds(AionAddress contract) {
         IDataWord extraSpecs = track.getStorageValue(contract, EXTRA_SPECS_KEY);
         if (extraSpecs == null) {
             return BigInteger.ZERO;
@@ -1415,7 +1415,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to update.
      * @param amount The amount of extra funds contract will now have.
      */
-    void setExtraFunds(Address contract, BigInteger amount) {
+    void setExtraFunds(AionAddress contract, BigInteger amount) {
         if (amount.compareTo(BigInteger.ONE) < 0) {
             return;
         }
@@ -1443,7 +1443,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * Initializes the open funds data so that the is-open-funds bit is not set. If an open funds
      * entry in the database already exists then this method does nothing.
      */
-    void initOpenFunds(Address contract) {
+    void initOpenFunds(AionAddress contract) {
         if (track.getStorageValue(contract, OPEN_KEY) != null) {
             return;
         }
@@ -1466,7 +1466,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * <p>If contract does not exist this method throws an exception for debugging. This should
      * never happen.
      */
-    void setIsOpenFunds(Address contract) {
+    void setIsOpenFunds(AionAddress contract) {
         IDataWord value = track.getStorageValue(contract, OPEN_KEY);
         if (value == null) {
             throw new IllegalStateException(
@@ -1482,7 +1482,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      *
      * @return true only if the contract's funds are open and the contract has been killed.
      */
-    public boolean isOpenFunds(Address contract) {
+    public boolean isOpenFunds(AionAddress contract) {
         IDataWord value = track.getStorageValue(contract, OPEN_KEY);
         return ((value != null) && (value.getData()[0] == 0x1));
     }
@@ -1507,7 +1507,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param currTime The time at which the contract is being queried for.
      * @return the period the contract is in at currTime.
      */
-    public int calculatePeriod(Address contract, byte[] specs, long currTime) {
+    public int calculatePeriod(AionAddress contract, byte[] specs, long currTime) {
         long timestamp = getTimestamp(contract);
         if (timestamp > currTime) {
             return 0;
@@ -1527,7 +1527,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to query.
      * @return true if contract is locked.
      */
-    public boolean isContractLocked(Address contract) {
+    public boolean isContractLocked(AionAddress contract) {
         if (isOpenFunds(contract)) {
             return false;
         }
@@ -1541,7 +1541,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to query.
      * @return true if contract is live.
      */
-    public boolean isContractLive(Address contract) {
+    public boolean isContractLive(AionAddress contract) {
         if (isOpenFunds(contract)) {
             return false;
         }
@@ -1555,7 +1555,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param contract The TRS contract to query.
      * @return true only if direct deposits are enabled.
      */
-    public boolean isDirDepositsEnabled(Address contract) {
+    public boolean isDirDepositsEnabled(AionAddress contract) {
         if (isOpenFunds(contract)) {
             return false;
         }
@@ -1614,10 +1614,10 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account whose withdrawal specs this key is for.
      * @return the key to access the specified withdrawal specifications entry.
      */
-    private byte[] makeExtraSpecsKey(Address account) {
+    private byte[] makeExtraSpecsKey(AionAddress account) {
         byte[] extraSpecKey = new byte[DOUBLE_WORD_SIZE];
         extraSpecKey[0] = EXTRA_WITH_SPEC_PREFIX;
-        System.arraycopy(account.toBytes(), 1, extraSpecKey, 1, Address.ADDRESS_LEN - 1);
+        System.arraycopy(account.toBytes(), 1, extraSpecKey, 1, AionAddress.SIZE - 1);
         return extraSpecKey;
     }
 
@@ -1629,11 +1629,11 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param row The row of the extras-withdrawn amount this key is for.
      * @return the key to access the specified extras-withdrawn entry.
      */
-    private byte[] makeExtraWithdrawnKey(Address account, int row) {
+    private byte[] makeExtraWithdrawnKey(AionAddress account, int row) {
         byte[] extraWithKey = new byte[DOUBLE_WORD_SIZE];
         extraWithKey[0] = EXTRA_WITH_PREFIX;
         extraWithKey[0] |= (row & 0x0F);
-        System.arraycopy(account.toBytes(), 1, extraWithKey, 1, Address.ADDRESS_LEN - 1);
+        System.arraycopy(account.toBytes(), 1, extraWithKey, 1, AionAddress.SIZE - 1);
         return extraWithKey;
     }
 
@@ -1661,7 +1661,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param row The balance row to query.
      * @return the key to access the specified balance row for the account in contract.
      */
-    private byte[] makeBalanceKey(Address account, int row) {
+    private byte[] makeBalanceKey(AionAddress account, int row) {
         if (account == null) {
             return DataWord.ZERO.getData();
         }
@@ -1679,7 +1679,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to look up.
      * @return the key to access the account's withdrawal stats.
      */
-    private byte[] makeWithdrawalKey(Address account) {
+    private byte[] makeWithdrawalKey(AionAddress account) {
         if (account == null) {
             return DataWord.ZERO.getData();
         }

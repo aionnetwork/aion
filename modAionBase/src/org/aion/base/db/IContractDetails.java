@@ -38,7 +38,7 @@ package org.aion.base.db;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 
 public interface IContractDetails<DW> {
 
@@ -166,14 +166,14 @@ public interface IContractDetails<DW> {
      *
      * @return the associated address.
      */
-    Address getAddress();
+    AionAddress getAddress();
 
     /**
      * Sets the associated address to address.
      *
      * @param address The address to set.
      */
-    void setAddress(Address address);
+    void setAddress(AionAddress address);
 
     /**
      * Returns a string representation of this IContractDetails.

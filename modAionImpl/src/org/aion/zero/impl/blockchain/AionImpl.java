@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
@@ -104,7 +104,7 @@ public class AionImpl implements IAionChain {
     @Override
     public IMineRunner getBlockMiner() {
 
-        Address minerCoinbase = Address.wrap(this.cfg.getConsensus().getMinerAddress());
+        AionAddress minerCoinbase = AionAddress.wrap(this.cfg.getConsensus().getMinerAddress());
 
         if (minerCoinbase.isEmptyAddress()) {
             LOG_GEN.info("Miner address is not set");
@@ -121,7 +121,7 @@ public class AionImpl implements IAionChain {
 
     @Override
     public AionTransaction createTransaction(
-            BigInteger nonce, Address to, BigInteger value, byte[] data) {
+            BigInteger nonce, AionAddress to, BigInteger value, byte[] data) {
         byte[] nonceBytes = ByteUtil.bigIntegerToBytes(nonce);
         byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
         return new AionTransaction(nonceBytes, to, valueBytes, data);
@@ -285,7 +285,7 @@ public class AionImpl implements IAionChain {
 
     // assumes a correctly formatted block number
     @Override
-    public Optional<AccountState> getAccountState(Address address, long blockNumber) {
+    public Optional<AccountState> getAccountState(AionAddress address, long blockNumber) {
         try {
             byte[] stateRoot =
                     this.aionHub.getBlockStore().getChainBlockByNumber(blockNumber).getStateRoot();
@@ -307,7 +307,7 @@ public class AionImpl implements IAionChain {
 
     // assumes a correctly formatted blockHash
     @Override
-    public Optional<AccountState> getAccountState(Address address, byte[] blockHash) {
+    public Optional<AccountState> getAccountState(AionAddress address, byte[] blockHash) {
         try {
             byte[] stateRoot =
                     this.aionHub.getBlockchain().getBlockByHash(blockHash).getStateRoot();
@@ -328,7 +328,7 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public Optional<AccountState> getAccountState(Address address) {
+    public Optional<AccountState> getAccountState(AionAddress address) {
         try {
             byte[] stateRoot = this.aionHub.getBlockchain().getBestBlock().getStateRoot();
             AccountState account =
@@ -348,7 +348,7 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public Optional<ByteArrayWrapper> getCode(Address address) {
+    public Optional<ByteArrayWrapper> getCode(AionAddress address) {
         byte[] code = this.aionHub.getRepository().getCode(address);
         if (code == null) return Optional.empty();
         return Optional.of(new ByteArrayWrapper(code));

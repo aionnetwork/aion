@@ -30,7 +30,7 @@ import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.vm.types.DataWord;
@@ -55,8 +55,8 @@ public class AionInternalTx extends AionTransaction {
             int deep,
             int index,
             byte[] nonce,
-            Address sendAddress,
-            Address receiveAddress,
+            AionAddress sendAddress,
+            AionAddress receiveAddress,
             byte[] value,
             byte[] data,
             String note) {
@@ -111,7 +111,7 @@ public class AionInternalTx extends AionTransaction {
     }
 
     @Override
-    public Address getFrom() {
+    public AionAddress getFrom() {
         if (!parsed) {
             rlpParse();
         }
@@ -163,8 +163,8 @@ public class AionInternalTx extends AionTransaction {
         int rlpIdx = 0;
         this.nonce = transaction.get(rlpIdx++).getRLPData();
         this.parentHash = transaction.get(rlpIdx++).getRLPData();
-        this.from = Address.wrap(transaction.get(rlpIdx++).getRLPData());
-        this.to = Address.wrap(transaction.get(rlpIdx++).getRLPData());
+        this.from = AionAddress.wrap(transaction.get(rlpIdx++).getRLPData());
+        this.to = AionAddress.wrap(transaction.get(rlpIdx++).getRLPData());
         this.value = transaction.get(rlpIdx++).getRLPData();
 
         // TODO: check the order

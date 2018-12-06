@@ -24,10 +24,10 @@ package org.aion.precompiled.contracts.TRS;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
@@ -68,7 +68,7 @@ public final class TRSuseContract extends AbstractTRS {
      */
     public TRSuseContract(
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo,
-            Address caller,
+            AionAddress caller,
             IBlockchain blockchain) {
 
         super(repo, caller, blockchain);
@@ -275,14 +275,14 @@ public final class TRSuseContract extends AbstractTRS {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, indexAmount));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
         // A deposit operation can only execute if direct depositing is enabled or caller is owner.
-        Address owner = getContractOwner(contract);
+        AionAddress owner = getContractOwner(contract);
         if (!caller.equals(owner) && !isDirDepositsEnabled(contract)) {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
@@ -336,7 +336,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, len));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new TransactionResult(ResultCode.FAILURE, 0);
@@ -384,7 +384,7 @@ public final class TRSuseContract extends AbstractTRS {
         final int indexContract = 1;
         final int indexEntries = 33;
         final int entryLen = 160;
-        final int entryAddrLen = Address.ADDRESS_LEN;
+        final int entryAddrLen = AionAddress.SIZE;
         final int maxEntries = 100;
 
         // First ensure some basic properties about input hold: its lower and upper size limits and
@@ -396,7 +396,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexEntries));
+        AionAddress contract = AionAddress
+            .wrap(Arrays.copyOfRange(input, indexContract, indexEntries));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new TransactionResult(ResultCode.FAILURE, 0);
@@ -419,7 +420,7 @@ public final class TRSuseContract extends AbstractTRS {
         int amtLen = entryLen - entryAddrLen;
         int index = indexEntries;
         byte[] amountBytes;
-        Address[] beneficiaries = new Address[numEntries];
+        AionAddress[] beneficiaries = new AionAddress[numEntries];
         BigInteger[] amounts = new BigInteger[numEntries];
         for (int i = 0; i < numEntries; i++) {
             // Put amount in a byte array one byte larger with an empty initial byte so it is
@@ -433,7 +434,7 @@ public final class TRSuseContract extends AbstractTRS {
                 return new TransactionResult(ResultCode.FAILURE, 0);
             }
 
-            beneficiaries[i] = Address.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
+            beneficiaries[i] = AionAddress.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
             index += 32 + 128;
         }
 
@@ -479,7 +480,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, len));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new TransactionResult(ResultCode.FAILURE, 0);
@@ -504,7 +505,7 @@ public final class TRSuseContract extends AbstractTRS {
 
         while (curr != null) {
             curr[0] = AION_PREFIX;
-            Address currAcct = new Address(curr);
+            AionAddress currAcct = new AionAddress(curr);
             makeWithdrawal(contract, currAcct);
             curr = getListNext(contract, currAcct);
         }
@@ -545,14 +546,15 @@ public final class TRSuseContract extends AbstractTRS {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
+        AionAddress contract = AionAddress
+            .wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
         // A refund operation can only execute if the caller is the contract owner.
-        Address owner = getContractOwner(contract);
+        AionAddress owner = getContractOwner(contract);
         if (!caller.equals(owner)) {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
@@ -565,7 +567,7 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         // Ensure the account exists (ie. has a positive deposit balance for the contract).
-        Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+        AionAddress account = AionAddress.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
         BigInteger accountBalance = getDepositBalance(contract, account);
         if (accountBalance.equals(BigInteger.ZERO)) {
             return new TransactionResult(ResultCode.FAILURE, 0);
@@ -632,7 +634,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
+        AionAddress contract = AionAddress
+            .wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new TransactionResult(ResultCode.FAILURE, 0);
@@ -666,7 +669,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
-        Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+        AionAddress account = AionAddress.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
         TransactionResult result = makeDeposit(contract, account, amount, nrgLimit);
         if (result.getResultCode().equals(ResultCode.SUCCESS)) {
             track.flush();
@@ -700,7 +703,7 @@ public final class TRSuseContract extends AbstractTRS {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAmount));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new TransactionResult(ResultCode.FAILURE, 0);
@@ -755,7 +758,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @return an execution result of either success or internal error.
      */
     private TransactionResult makeDeposit(
-            Address contract, Address account, BigInteger amount, long nrgLimit) {
+            AionAddress contract, AionAddress account, BigInteger amount, long nrgLimit) {
 
         // If deposit amount is larger than zero, update the curret deposit balance of the account
         // for which this deposit is on the behalf of, and update the meta-deta etc.
@@ -783,7 +786,7 @@ public final class TRSuseContract extends AbstractTRS {
      *
      * @param contract The TRS contract to update.
      */
-    private void listAddCallerToHead(Address contract) {
+    private void listAddCallerToHead(AionAddress contract) {
         listAddToHead(contract, caller);
     }
 
@@ -799,7 +802,7 @@ public final class TRSuseContract extends AbstractTRS {
      *
      * @param contract The TRS contract to update.
      */
-    private void listAddToHead(Address contract, Address account) {
+    private void listAddToHead(AionAddress contract, AionAddress account) {
         byte[] next = getListNextBytes(contract, account);
         if (accountIsValid(next)) {
             return;
@@ -814,12 +817,12 @@ public final class TRSuseContract extends AbstractTRS {
             head[0] = AION_PREFIX;
             setListPrevious(
                     contract,
-                    Address.wrap(head),
-                    Arrays.copyOf(account.toBytes(), Address.ADDRESS_LEN));
+                    AionAddress.wrap(head),
+                    Arrays.copyOf(account.toBytes(), AionAddress.SIZE));
         }
 
         // Set the head of the list to point to account and set account's previous entry to null.
-        setListHead(contract, Arrays.copyOf(account.toBytes(), Address.ADDRESS_LEN));
+        setListHead(contract, Arrays.copyOf(account.toBytes(), AionAddress.SIZE));
         setListPrevious(contract, account, null);
     }
 
@@ -837,7 +840,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @param contract The TRS contract to update.
      * @param account The account to remove from the list.
      */
-    private void listRemoveAccount(Address contract, Address account) {
+    private void listRemoveAccount(AionAddress contract, AionAddress account) {
         byte[] prev = getListPrev(contract, account);
         byte[] next = getListNext(contract, account);
 

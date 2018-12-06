@@ -28,11 +28,11 @@ import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 import java.math.BigInteger;
 import java.util.List;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxExecSummary;
 import org.aion.base.type.ITxReceipt;
@@ -234,8 +234,8 @@ public abstract class AbstractExecutor {
     protected void updateRepo(
             ITxExecSummary summary,
             ITransaction tx,
-            Address coinbase,
-            List<Address> deleteAccounts) {
+            AionAddress coinbase,
+            List<AionAddress> deleteAccounts) {
 
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache track = repo.startTracking();
@@ -252,7 +252,7 @@ public abstract class AbstractExecutor {
 
             if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()) {
                 // Delete accounts
-                for (Address addr : deleteAccounts) {
+                for (AionAddress addr : deleteAccounts) {
                     track.deleteAccount(addr);
                 }
             }

@@ -37,7 +37,7 @@ package org.aion.base.db;
 
 import java.util.Map;
 import java.util.Set;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 
 /**
  * Database-like functionality.
@@ -63,7 +63,7 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
      * @param contractDetails cached contract details
      */
     void updateBatch(
-            Map<Address, AS> accountStates, Map<Address, IContractDetails<DW>> contractDetails);
+            Map<AionAddress, AS> accountStates, Map<AionAddress, IContractDetails<DW>> contractDetails);
 
     /** Reverts all the changes performed by this repository. */
     void rollback();

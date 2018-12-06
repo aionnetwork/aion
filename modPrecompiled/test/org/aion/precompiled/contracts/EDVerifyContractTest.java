@@ -32,9 +32,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
-import org.aion.base.type.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -54,10 +54,10 @@ import org.spongycastle.util.encoders.Hex;
 public class EDVerifyContractTest {
 
     private byte[] txHash = RandomUtils.nextBytes(32);
-    private Address origin = Address.wrap(RandomUtils.nextBytes(32));
-    private Address caller = origin;
+    private AionAddress origin = AionAddress.wrap(RandomUtils.nextBytes(32));
+    private AionAddress caller = origin;
 
-    private Address blockCoinbase = Address.wrap(RandomUtils.nextBytes(32));
+    private AionAddress blockCoinbase = AionAddress.wrap(RandomUtils.nextBytes(32));
     private long blockNumber = 2000001;
     private long blockTimestamp = System.currentTimeMillis() / 1000;
     private long blockNrgLimit = 5000000;
@@ -195,7 +195,7 @@ public class EDVerifyContractTest {
         assertNotNull(contract);
         TransactionResult result = contract.execute(input, 21000L);
         assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
-        assertThat(Arrays.equals(result.getOutput(), Address.ZERO_ADDRESS().toBytes()));
+        assertThat(Arrays.equals(result.getOutput(), AionAddress.ZERO_ADDRESS().toBytes()));
     }
 
     @Test

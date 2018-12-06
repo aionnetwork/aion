@@ -30,7 +30,7 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.api.server.types.TxRecptLg;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -110,9 +110,9 @@ public class TxRecptLgTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 
-        Address addressA = tx1.getContractAddress();
+        AionAddress addressA = tx1.getContractAddress();
         System.out.println("contract A address = " + addressA);
-        Address addressB = tx2.getContractAddress();
+        AionAddress addressB = tx2.getContractAddress();
         System.out.println("contract B address = " + addressB);
         Thread.sleep(1000);
 

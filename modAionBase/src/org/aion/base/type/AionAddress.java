@@ -40,6 +40,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Bytesable;
 import org.aion.base.util.FastByteComparisons;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * The address class is a byte array wrapper represent fixed-32bytes array for the kernel account
@@ -47,43 +48,41 @@ import org.aion.base.util.FastByteComparisons;
  *
  * @author jay
  */
-public final class Address implements Comparable<Address>, Bytesable<Address>, Cloneable {
-
-    public static final int ADDRESS_LEN = 32;
-    private static final Address zeroAddr = Address.wrap(new byte[ADDRESS_LEN]);
-    private static final Address emptyAddr = Address.wrap(new byte[0]);
+public final class AionAddress implements Address, Comparable<AionAddress>, Bytesable<AionAddress>, Cloneable {
+    private static final AionAddress zeroAddr = AionAddress.wrap(new byte[SIZE]);
+    private static final AionAddress emptyAddr = AionAddress.wrap(new byte[0]);
 
     private byte[] address;
     private int hashCode = 0;
 
-    public Address(final byte[] in) {
+    public AionAddress(final byte[] in) {
 
         if (in == null) {
             throw new IllegalArgumentException("Null input!");
         }
 
-        if (in.length != ADDRESS_LEN && in.length != 0) {
+        if (in.length != SIZE && in.length != 0) {
             throw new IllegalArgumentException();
         }
 
         setupData(in);
     }
 
-    public Address(final ByteArrayWrapper in) {
+    public AionAddress(final ByteArrayWrapper in) {
 
         if (in == null) {
             throw new IllegalArgumentException("Null input!");
         }
 
         byte[] data = in.getData();
-        if (data == null || (data.length != ADDRESS_LEN && data.length != 0)) {
+        if (data == null || (data.length != SIZE && data.length != 0)) {
             throw new IllegalArgumentException();
         }
 
         setupData(data);
     }
 
-    public Address(final String in) {
+    public AionAddress(final String in) {
 
         if (in == null) {
             throw new IllegalArgumentException();
@@ -91,7 +90,7 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
 
         byte[] hexByte = ByteUtil.hexStringToBytes(in);
 
-        if (hexByte.length != ADDRESS_LEN && hexByte.length != 0) {
+        if (hexByte.length != SIZE && hexByte.length != 0) {
             throw new IllegalArgumentException();
         }
 
@@ -103,16 +102,16 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
         this.hashCode = Arrays.hashCode(in);
     }
 
-    public static Address wrap(final byte[] addr) {
-        return new Address(addr);
+    public static AionAddress wrap(final byte[] addr) {
+        return new AionAddress(addr);
     }
 
-    public static Address wrap(final String addr) {
-        return new Address(addr);
+    public static AionAddress wrap(final String addr) {
+        return new AionAddress(addr);
     }
 
-    public static Address wrap(final ByteArrayWrapper addr) {
-        return new Address(addr);
+    public static AionAddress wrap(final ByteArrayWrapper addr) {
+        return new AionAddress(addr);
     }
 
     public final String toString() {
@@ -129,19 +128,19 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
     }
 
     @Override
-    public final Address clone() {
+    public final AionAddress clone() {
         if (this.address.length == 0) {
             return emptyAddr;
         } else {
-            return new Address(Arrays.copyOf(this.address, ADDRESS_LEN));
+            return new AionAddress(Arrays.copyOf(this.address, SIZE));
         }
     }
 
     public boolean equals(Object other) {
-        if (!(other instanceof Address)) {
+        if (!(other instanceof AionAddress)) {
             return false;
         } else {
-            byte[] otherAddress = ((Address) other).toBytes();
+            byte[] otherAddress = ((AionAddress) other).toBytes();
             return FastByteComparisons.compareTo(
                             this.address,
                             0,
@@ -158,25 +157,25 @@ public final class Address implements Comparable<Address>, Bytesable<Address>, C
     }
 
     @Override
-    public int compareTo(Address o) {
+    public int compareTo(AionAddress o) {
         return FastByteComparisons.compareTo(
-                this.address, 0, ADDRESS_LEN, o.toBytes(), 0, o.toBytes().length);
+                this.address, 0, SIZE, o.toBytes(), 0, o.toBytes().length);
     }
 
     public int compareTo(byte[] o) {
-        return FastByteComparisons.compareTo(this.address, 0, ADDRESS_LEN, o, 0, o.length);
+        return FastByteComparisons.compareTo(this.address, 0, SIZE, o, 0, o.length);
     }
 
     @Override
-    public final Address fromBytes(byte[] bs) {
-        return new Address(bs);
+    public final AionAddress fromBytes(byte[] bs) {
+        return new AionAddress(bs);
     }
 
-    public static Address ZERO_ADDRESS() {
+    public static AionAddress ZERO_ADDRESS() {
         return zeroAddr;
     }
 
-    public static Address EMPTY_ADDRESS() {
+    public static AionAddress EMPTY_ADDRESS() {
         return emptyAddr;
     }
 

@@ -41,7 +41,7 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
@@ -79,11 +79,11 @@ public class GenesisSpecificationTest {
                 .isEqualTo(new BigInteger(1, AionGenesis.GENESIS_DIFFICULTY));
         assertThat(genesis.getTransactionsList().isEmpty()).isEqualTo(true);
 
-        Map<Address, AccountState> premined = genesis.getPremine();
-        Set<Address> keySet = premined.keySet();
+        Map<AionAddress, AccountState> premined = genesis.getPremine();
+        Set<AionAddress> keySet = premined.keySet();
 
         // default set
-        Set<Address> defaultKeySet = AionGenesis.GENESIS_PREMINE.keySet();
+        Set<AionAddress> defaultKeySet = AionGenesis.GENESIS_PREMINE.keySet();
         assertThat(defaultKeySet.equals(keySet)).isEqualTo(true);
     }
 
@@ -105,18 +105,18 @@ public class GenesisSpecificationTest {
         BigInteger overrideValue = BigInteger.valueOf(1337);
         AccountState defaultAccountState = new AccountState(overrideValue, overrideValue);
 
-        HashSet<Address> accountStateSet = new HashSet<>();
-        accountStateSet.add(Address.wrap(overrideHash));
+        HashSet<AionAddress> accountStateSet = new HashSet<>();
+        accountStateSet.add(AionAddress.wrap(overrideHash));
 
         genesisBuilder
                 .withParentHash(overrideHash)
-                .withCoinbase(Address.wrap(overrideAddress))
+                .withCoinbase(AionAddress.wrap(overrideAddress))
                 .withDifficulty(overrideValue.toByteArray())
                 .withEnergyLimit(overrideValue.longValue())
                 .withNonce(overrideHash)
                 .withNumber(overrideValue.longValue())
                 .withTimestamp(overrideValue.longValue())
-                .addPreminedAccount(Address.wrap(overrideAddress), defaultAccountState);
+                .addPreminedAccount(AionAddress.wrap(overrideAddress), defaultAccountState);
 
         AionGenesis genesis = genesisBuilder.build();
 

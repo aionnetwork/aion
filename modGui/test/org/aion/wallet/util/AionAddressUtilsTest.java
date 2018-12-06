@@ -27,7 +27,7 @@ import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
 
-public class AddressUtilsTest {
+public class AionAddressUtilsTest {
     @Test
     public void isValidWhenInputIsValid() {
         String full = "0xa0cafecafe111111111111111111111111111111111111111111111111111111";

@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigInteger;
 import org.aion.api.server.nrgprice.NrgOracle;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.json.JSONObject;
 import org.junit.Test;
 
@@ -45,8 +45,8 @@ public class ArgTxCallTest {
         when(nrgOracle.getNrgPrice()).thenReturn(nrgPrice);
         ArgTxCall txCall = ArgTxCall.fromJSON(tx, nrgOracle, nrgLimit);
 
-        assertEquals(Address.EMPTY_ADDRESS(), txCall.getFrom());
-        assertEquals(Address.EMPTY_ADDRESS(), txCall.getTo());
+        assertEquals(AionAddress.EMPTY_ADDRESS(), txCall.getFrom());
+        assertEquals(AionAddress.EMPTY_ADDRESS(), txCall.getTo());
         assertEquals(0, txCall.getData().length);
         assertEquals(BigInteger.ZERO, txCall.getNonce());
         assertEquals(BigInteger.ZERO, txCall.getValue());

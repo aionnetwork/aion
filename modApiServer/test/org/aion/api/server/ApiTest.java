@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
 import org.aion.api.server.types.CompiledContr;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.types.AbstractBlock;
@@ -133,9 +133,9 @@ public class ApiTest {
 
     @Test
     public void testLockAndUnlock() {
-        assertFalse(api.unlockAccount(Address.ZERO_ADDRESS(), "testPassword", 0));
-        assertFalse(api.unlockAccount(Address.ZERO_ADDRESS().toString(), "testPassword", 0));
-        assertFalse(api.lockAccount(Address.ZERO_ADDRESS(), "testPassword"));
+        assertFalse(api.unlockAccount(AionAddress.ZERO_ADDRESS(), "testPassword", 0));
+        assertFalse(api.unlockAccount(AionAddress.ZERO_ADDRESS().toString(), "testPassword", 0));
+        assertFalse(api.lockAccount(AionAddress.ZERO_ADDRESS(), "testPassword"));
 
         addr = Keystore.create("testPwd");
         assertTrue(api.unlockAccount(addr, "testPwd", 50000));
@@ -144,10 +144,10 @@ public class ApiTest {
 
     @Test
     public void testAccountRetrieval() {
-        assertNull(api.getAccountKey(Address.ZERO_ADDRESS().toString()));
+        assertNull(api.getAccountKey(AionAddress.ZERO_ADDRESS().toString()));
 
         addr = Keystore.create("testPwd");
-        assertEquals(AccountManager.inst().getKey(Address.wrap(addr)), api.getAccountKey(addr));
+        assertEquals(AccountManager.inst().getKey(AionAddress.wrap(addr)), api.getAccountKey(addr));
 
         assertTrue(api.getAccounts().contains(addr));
         tearDown();

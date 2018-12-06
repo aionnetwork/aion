@@ -33,7 +33,7 @@ import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
@@ -56,7 +56,7 @@ public class DoubleDataWordTest {
     private IRepository repo;
     private IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
     private Random rand;
-    private Address addr;
+    private AionAddress addr;
 
     @Before
     public void setup() {
@@ -89,7 +89,7 @@ public class DoubleDataWordTest {
         this.repo = AionRepositoryImpl.createForTesting(repoConfig);
         this.track = new AionRepositoryCache(repo);
         this.rand = new Random();
-        this.addr = Address.wrap(ECKeyFac.inst().create().getAddress());
+        this.addr = AionAddress.wrap(ECKeyFac.inst().create().getAddress());
     }
 
     @After

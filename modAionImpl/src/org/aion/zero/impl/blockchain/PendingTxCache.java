@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.zero.types.AionTransaction;
@@ -42,8 +42,8 @@ import org.slf4j.Logger;
 
 public class PendingTxCache {
 
-    private Map<Address, TreeMap<BigInteger, AionTransaction>> cacheTxMap;
-    private Map<Address, Integer> cachedAccountSize;
+    private Map<AionAddress, TreeMap<BigInteger, AionTransaction>> cacheTxMap;
+    private Map<AionAddress, Integer> cachedAccountSize;
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TX.name());
     private static int CacheMax;
     private AtomicInteger currentSize = new AtomicInteger(0);
@@ -78,7 +78,7 @@ public class PendingTxCache {
         }
     }
 
-    private int getAccountSize(Address addr) {
+    private int getAccountSize(AionAddress addr) {
         return cachedAccountSize.get(addr) == null ? 0 : cachedAccountSize.get(addr);
     }
 
@@ -171,10 +171,10 @@ public class PendingTxCache {
         } else {
             if (cacheTxMap.size() == cacheAccountLimit) {
                 // remove firstAccount in pendingTxCache
-                Iterator<Map.Entry<Address, TreeMap<BigInteger, AionTransaction>>> it =
+                Iterator<Map.Entry<AionAddress, TreeMap<BigInteger, AionTransaction>>> it =
                         cacheTxMap.entrySet().iterator();
                 if (it.hasNext()) {
-                    Map.Entry<Address, TreeMap<BigInteger, AionTransaction>> e = it.next();
+                    Map.Entry<AionAddress, TreeMap<BigInteger, AionTransaction>> e = it.next();
                     currentSize.addAndGet(-getAccountSize(e.getKey()));
                     cachedAccountSize.remove(tx.getFrom());
                     if (isPoolBackup) {
@@ -211,16 +211,16 @@ public class PendingTxCache {
         }
     }
 
-    private void addAccountSize(Address from, int txSize) {
+    private void addAccountSize(AionAddress from, int txSize) {
         cachedAccountSize.merge(from, txSize, (a, b) -> (a + b));
     }
 
-    private void subAccountSize(Address from, int txSize) {
+    private void subAccountSize(AionAddress from, int txSize) {
         if (cachedAccountSize.get(from) != null)
             cachedAccountSize.put(from, (cachedAccountSize.get(from) - txSize));
     }
 
-    public List<AionTransaction> flush(Map<Address, BigInteger> nonceMap) {
+    public List<AionTransaction> flush(Map<AionAddress, BigInteger> nonceMap) {
         if (nonceMap == null) {
             throw new NullPointerException();
         }
@@ -234,7 +234,7 @@ public class PendingTxCache {
         }
 
         int cacheTxNumber = 0;
-        for (Address addr : nonceMap.keySet()) {
+        for (AionAddress addr : nonceMap.keySet()) {
             BigInteger bn = nonceMap.get(addr);
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -291,13 +291,13 @@ public class PendingTxCache {
         return timeMap.values().isEmpty() ? new ArrayList<>() : new ArrayList<>(timeMap.values());
     }
 
-    public boolean isInCache(Address addr, BigInteger nonce) {
+    public boolean isInCache(AionAddress addr, BigInteger nonce) {
         return this.cacheTxMap.get(addr) != null && (this.cacheTxMap.get(addr).get(nonce) != null);
     }
 
-    Set<Address> getCacheTxAccount() {
-        Set<Address> acc = new HashSet<>();
-        for (Map.Entry<Address, TreeMap<BigInteger, AionTransaction>> e :
+    Set<AionAddress> getCacheTxAccount() {
+        Set<AionAddress> acc = new HashSet<>();
+        for (Map.Entry<AionAddress, TreeMap<BigInteger, AionTransaction>> e :
                 this.cacheTxMap.entrySet()) {
             if (!e.getValue().isEmpty()) {
                 acc.add(e.getKey());
@@ -307,7 +307,7 @@ public class PendingTxCache {
         return acc;
     }
 
-    Map<BigInteger, AionTransaction> getCacheTx(Address from) {
+    Map<BigInteger, AionTransaction> getCacheTx(AionAddress from) {
         if (from == null) {
             throw new NullPointerException();
         }

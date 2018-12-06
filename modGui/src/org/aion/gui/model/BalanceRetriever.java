@@ -24,7 +24,7 @@ package org.aion.gui.model;
 
 import java.math.BigInteger;
 import org.aion.api.type.ApiMsg;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 
 public class BalanceRetriever extends AbstractAionApiClient {
 
@@ -49,7 +49,7 @@ public class BalanceRetriever extends AbstractAionApiClient {
         if (!apiIsConnected()) {
             balance = null;
         } else {
-            ApiMsg msg = callApi(api -> api.getChain().getBalance(new Address(address)));
+            ApiMsg msg = callApi(api -> api.getChain().getBalance(new AionAddress(address)));
             balance = msg.getObject();
         }
         return balance;

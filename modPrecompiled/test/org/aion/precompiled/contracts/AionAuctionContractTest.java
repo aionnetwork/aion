@@ -28,10 +28,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -54,10 +54,10 @@ import org.junit.Test;
 @Ignore
 public class AionAuctionContractTest {
     // use this addr for test to trigger test time periods
-    private static final Address AION =
-            Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
-    private Address domainAddress1 =
-            Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
+    private static final AionAddress AION =
+            AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+    private AionAddress domainAddress1 =
+            AionAddress.wrap("a011111111111111111111111111111101010101010101010101010101010101");
     private String domainName1 = "bion.aion";
     private String domainName2 = "cion.aion.aion";
     private IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo;
@@ -84,21 +84,21 @@ public class AionAuctionContractTest {
         repo = new DummyRepo();
         defaultKey = ECKeyFac.inst().create();
         testAAC = new AionAuctionContract(repo, AION, blockchain);
-        repo.createAccount(Address.wrap(defaultKey.getAddress()));
-        repo.addBalance(Address.wrap(defaultKey.getAddress()), new BigInteger("4000000"));
+        repo.createAccount(AionAddress.wrap(defaultKey.getAddress()));
+        repo.addBalance(AionAddress.wrap(defaultKey.getAddress()), new BigInteger("4000000"));
 
         k = ECKeyFac.inst().create();
         k2 = ECKeyFac.inst().create();
         k3 = ECKeyFac.inst().create();
         k4 = ECKeyFac.inst().create();
-        repo.createAccount(Address.wrap(k.getAddress()));
-        repo.createAccount(Address.wrap(k2.getAddress()));
-        repo.createAccount(Address.wrap(k3.getAddress()));
-        repo.createAccount(Address.wrap(k4.getAddress()));
-        repo.addBalance(Address.wrap(k.getAddress()), new BigInteger("10000"));
-        repo.addBalance(Address.wrap(k2.getAddress()), new BigInteger("10000"));
-        repo.addBalance(Address.wrap(k3.getAddress()), new BigInteger("10000"));
-        repo.addBalance(Address.wrap(k4.getAddress()), new BigInteger("10000"));
+        repo.createAccount(AionAddress.wrap(k.getAddress()));
+        repo.createAccount(AionAddress.wrap(k2.getAddress()));
+        repo.createAccount(AionAddress.wrap(k3.getAddress()));
+        repo.createAccount(AionAddress.wrap(k4.getAddress()));
+        repo.addBalance(AionAddress.wrap(k.getAddress()), new BigInteger("10000"));
+        repo.addBalance(AionAddress.wrap(k2.getAddress()), new BigInteger("10000"));
+        repo.addBalance(AionAddress.wrap(k3.getAddress()), new BigInteger("10000"));
+        repo.addBalance(AionAddress.wrap(k4.getAddress()), new BigInteger("10000"));
     }
 
     @Test()
@@ -109,7 +109,7 @@ public class AionAuctionContractTest {
         byte[] combined =
                 setupInputs(
                         "12312421412.41dsfsdgsdg.aion",
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         amount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
@@ -130,33 +130,33 @@ public class AionAuctionContractTest {
 
         BigInteger amount = new BigInteger("1000");
         byte[] combined =
-                setupInputs(domainName2, Address.wrap(k.getAddress()), amount.toByteArray(), k);
+                setupInputs(domainName2, AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         TransactionResult result = aac.execute(combined, inputEnergy);
 
         BigInteger amount4 = new BigInteger("6000");
         byte[] combined4 =
-                setupInputs(domainName2, Address.wrap(k4.getAddress()), amount4.toByteArray(), k4);
+                setupInputs(domainName2, AionAddress.wrap(k4.getAddress()), amount4.toByteArray(), k4);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
         aac4.execute(combined4, inputEnergy);
 
         BigInteger amount2 = new BigInteger("5000");
         byte[] combined2 =
-                setupInputs(domainName2, Address.wrap(k2.getAddress()), amount2.toByteArray(), k2);
+                setupInputs(domainName2, AionAddress.wrap(k2.getAddress()), amount2.toByteArray(), k2);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         aac2.execute(combined2, inputEnergy);
 
         BigInteger amount3 = new BigInteger("2000");
         byte[] combined3 =
-                setupInputs(domainName2, Address.wrap(k3.getAddress()), amount3.toByteArray(), k3);
+                setupInputs(domainName2, AionAddress.wrap(k3.getAddress()), amount3.toByteArray(), k3);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
         aac3.execute(combined3, inputEnergy);
 
         // check balances after bidding
-        assertEquals(9000, repo.getBalance(Address.wrap(k.getAddress())).intValue());
-        assertEquals(5000, repo.getBalance(Address.wrap(k2.getAddress())).intValue());
-        assertEquals(8000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
-        assertEquals(4000, repo.getBalance(Address.wrap(k4.getAddress())).intValue()); // winner
+        assertEquals(9000, repo.getBalance(AionAddress.wrap(k.getAddress())).intValue());
+        assertEquals(5000, repo.getBalance(AionAddress.wrap(k2.getAddress())).intValue());
+        assertEquals(8000, repo.getBalance(AionAddress.wrap(k3.getAddress())).intValue());
+        assertEquals(4000, repo.getBalance(AionAddress.wrap(k4.getAddress())).intValue()); // winner
 
         try {
             Thread.sleep(3 * 1000L);
@@ -165,15 +165,15 @@ public class AionAuctionContractTest {
         }
 
         // check balances after auction, balances should be returned
-        assertEquals(10000, repo.getBalance(Address.wrap(k.getAddress())).intValue());
-        assertEquals(10000, repo.getBalance(Address.wrap(k2.getAddress())).intValue());
-        assertEquals(10000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
+        assertEquals(10000, repo.getBalance(AionAddress.wrap(k.getAddress())).intValue());
+        assertEquals(10000, repo.getBalance(AionAddress.wrap(k2.getAddress())).intValue());
+        assertEquals(10000, repo.getBalance(AionAddress.wrap(k3.getAddress())).intValue());
         assertEquals(
-                5000, repo.getBalance(Address.wrap(k4.getAddress())).intValue()); // deposits 5000
+                5000, repo.getBalance(AionAddress.wrap(k4.getAddress())).intValue()); // deposits 5000
 
         AionNameServiceContract ansc2 =
                 new AionNameServiceContract(
-                        repo, Address.wrap(result.getOutput()), Address.wrap(k4.getAddress()));
+                        repo, AionAddress.wrap(result.getOutput()), AionAddress.wrap(k4.getAddress()));
         assertEquals(ResultCode.SUCCESS, result.getResultCode());
     }
 
@@ -182,25 +182,25 @@ public class AionAuctionContractTest {
         final long inputEnergy = 24000L;
         BigInteger amount = new BigInteger("1000");
         byte[] combined =
-                setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
+                setupInputs(domainName1, AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined, inputEnergy);
 
         BigInteger amount2 = new BigInteger("3000");
         byte[] combined2 =
-                setupInputs(domainName1, Address.wrap(k2.getAddress()), amount2.toByteArray(), k2);
+                setupInputs(domainName1, AionAddress.wrap(k2.getAddress()), amount2.toByteArray(), k2);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         aac2.execute(combined2, inputEnergy);
 
         BigInteger amount3 = new BigInteger("2000");
         byte[] combined3 =
-                setupInputs(domainName1, Address.wrap(k3.getAddress()), amount3.toByteArray(), k3);
+                setupInputs(domainName1, AionAddress.wrap(k3.getAddress()), amount3.toByteArray(), k3);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
         aac3.execute(combined3, inputEnergy);
 
         BigInteger amount4 = new BigInteger("5000");
         byte[] combined4 =
-                setupInputs(domainName1, Address.wrap(k4.getAddress()), amount4.toByteArray(), k4);
+                setupInputs(domainName1, AionAddress.wrap(k4.getAddress()), amount4.toByteArray(), k4);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
         aac4.execute(combined4, inputEnergy);
 
@@ -211,29 +211,29 @@ public class AionAuctionContractTest {
         }
 
         // check balances after bidding
-        assertEquals(9000, repo.getBalance(Address.wrap(k.getAddress())).intValue());
-        assertEquals(7000, repo.getBalance(Address.wrap(k2.getAddress())).intValue());
-        assertEquals(8000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
-        assertEquals(5000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
+        assertEquals(9000, repo.getBalance(AionAddress.wrap(k.getAddress())).intValue());
+        assertEquals(7000, repo.getBalance(AionAddress.wrap(k2.getAddress())).intValue());
+        assertEquals(8000, repo.getBalance(AionAddress.wrap(k3.getAddress())).intValue());
+        assertEquals(5000, repo.getBalance(AionAddress.wrap(k4.getAddress())).intValue());
 
         BigInteger amount6 = new BigInteger("2000");
 
         byte[] combined6 =
-                setupInputs(domainName2, Address.wrap(k.getAddress()), amount6.toByteArray(), k);
+                setupInputs(domainName2, AionAddress.wrap(k.getAddress()), amount6.toByteArray(), k);
         AionAuctionContract aac6 = new AionAuctionContract(repo, AION, blockchain);
         aac6.execute(combined6, inputEnergy);
 
         BigInteger amount7 = new BigInteger("4000");
         byte[] combined7 =
-                setupInputs(domainName2, Address.wrap(k2.getAddress()), amount7.toByteArray(), k2);
+                setupInputs(domainName2, AionAddress.wrap(k2.getAddress()), amount7.toByteArray(), k2);
         AionAuctionContract aac7 = new AionAuctionContract(repo, AION, blockchain);
         aac7.execute(combined7, inputEnergy);
 
         // check balances after bidding both domains
-        assertEquals(7000, repo.getBalance(Address.wrap(k.getAddress())).intValue());
-        assertEquals(3000, repo.getBalance(Address.wrap(k2.getAddress())).intValue());
-        assertEquals(8000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
-        assertEquals(5000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
+        assertEquals(7000, repo.getBalance(AionAddress.wrap(k.getAddress())).intValue());
+        assertEquals(3000, repo.getBalance(AionAddress.wrap(k2.getAddress())).intValue());
+        assertEquals(8000, repo.getBalance(AionAddress.wrap(k3.getAddress())).intValue());
+        assertEquals(5000, repo.getBalance(AionAddress.wrap(k4.getAddress())).intValue());
 
         try {
             Thread.sleep(2500L);
@@ -242,10 +242,10 @@ public class AionAuctionContractTest {
         }
 
         // check balances after both auctions are complete, winners should have their deposits gone
-        assertEquals(10000, repo.getBalance(Address.wrap(k.getAddress())).intValue());
-        assertEquals(8000, repo.getBalance(Address.wrap(k2.getAddress())).intValue());
-        assertEquals(10000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
-        assertEquals(7000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
+        assertEquals(10000, repo.getBalance(AionAddress.wrap(k.getAddress())).intValue());
+        assertEquals(8000, repo.getBalance(AionAddress.wrap(k2.getAddress())).intValue());
+        assertEquals(10000, repo.getBalance(AionAddress.wrap(k3.getAddress())).intValue());
+        assertEquals(7000, repo.getBalance(AionAddress.wrap(k4.getAddress())).intValue());
 
         try {
             Thread.sleep(2 * 1000L);
@@ -255,10 +255,10 @@ public class AionAuctionContractTest {
 
         // check balances after both domains become inactive, all accounts should have their
         // original balance
-        assertEquals(10000, repo.getBalance(Address.wrap(k.getAddress())).intValue());
-        assertEquals(10000, repo.getBalance(Address.wrap(k2.getAddress())).intValue());
-        assertEquals(10000, repo.getBalance(Address.wrap(k3.getAddress())).intValue());
-        assertEquals(10000, repo.getBalance(Address.wrap(k4.getAddress())).intValue());
+        assertEquals(10000, repo.getBalance(AionAddress.wrap(k.getAddress())).intValue());
+        assertEquals(10000, repo.getBalance(AionAddress.wrap(k2.getAddress())).intValue());
+        assertEquals(10000, repo.getBalance(AionAddress.wrap(k3.getAddress())).intValue());
+        assertEquals(10000, repo.getBalance(AionAddress.wrap(k4.getAddress())).intValue());
     }
 
     @Test()
@@ -272,23 +272,23 @@ public class AionAuctionContractTest {
         BigInteger amount4 = new BigInteger("4000");
 
         byte[] combined =
-                setupInputs("aion.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k);
+                setupInputs("aion.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined, DEFAULT_INPUT_NRG);
 
         byte[] combined2 =
-                setupInputs("aaaa.aion", Address.wrap(k.getAddress()), amount2.toByteArray(), k);
+                setupInputs("aaaa.aion", AionAddress.wrap(k.getAddress()), amount2.toByteArray(), k);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined2, DEFAULT_INPUT_NRG);
 
         byte[] combined3 =
                 setupInputs(
-                        "bbbb.aaaa.aion", Address.wrap(k2.getAddress()), amount3.toByteArray(), k2);
+                        "bbbb.aaaa.aion", AionAddress.wrap(k2.getAddress()), amount3.toByteArray(), k2);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined3, DEFAULT_INPUT_NRG);
 
         byte[] combined8 =
-                setupInputs("aion.aion", Address.wrap(k.getAddress()), amount2.toByteArray(), k);
+                setupInputs("aion.aion", AionAddress.wrap(k.getAddress()), amount2.toByteArray(), k);
         AionAuctionContract aac8 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined8, DEFAULT_INPUT_NRG);
 
@@ -297,22 +297,22 @@ public class AionAuctionContractTest {
 
         // displayAuctionDomainLRU Tests, show with debug
         aac.execute(
-                setupInputs("111.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k),
+                setupInputs("111.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k),
                 DEFAULT_INPUT_NRG);
         aac.execute(
-                setupInputs("222.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k),
+                setupInputs("222.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k),
                 DEFAULT_INPUT_NRG);
         aac.execute(
-                setupInputs("333.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k),
+                setupInputs("333.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k),
                 DEFAULT_INPUT_NRG);
         aac.execute(
-                setupInputs("444.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k),
+                setupInputs("444.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k),
                 DEFAULT_INPUT_NRG);
         aac.execute(
-                setupInputs("555.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k),
+                setupInputs("555.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k),
                 DEFAULT_INPUT_NRG);
         aac.execute(
-                setupInputs("666.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k),
+                setupInputs("666.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k),
                 DEFAULT_INPUT_NRG);
         aac.displayAuctionDomainLRU("111.aion"); // 1
         aac.displayAuctionDomainLRU("222.aion"); // 1 2
@@ -339,19 +339,19 @@ public class AionAuctionContractTest {
 
         byte[] combined4 =
                 setupInputs(
-                        "cccc.aaaa.aion", Address.wrap(k.getAddress()), amount3.toByteArray(), k);
+                        "cccc.aaaa.aion", AionAddress.wrap(k.getAddress()), amount3.toByteArray(), k);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined4, DEFAULT_INPUT_NRG);
 
         byte[] combined6 =
                 setupInputs(
-                        "cccc.aaaa.aion", Address.wrap(k2.getAddress()), amount.toByteArray(), k2);
+                        "cccc.aaaa.aion", AionAddress.wrap(k2.getAddress()), amount.toByteArray(), k2);
         AionAuctionContract aac6 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined6, DEFAULT_INPUT_NRG);
 
         byte[] combined7 =
                 setupInputs(
-                        "cccc.aaaa.aion", Address.wrap(k2.getAddress()), amount4.toByteArray(), k2);
+                        "cccc.aaaa.aion", AionAddress.wrap(k2.getAddress()), amount4.toByteArray(), k2);
         AionAuctionContract aac7 = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined7, DEFAULT_INPUT_NRG);
 
@@ -381,7 +381,7 @@ public class AionAuctionContractTest {
 
         BigInteger amount = new BigInteger("1000");
         byte[] combined =
-                setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
+                setupInputs(domainName1, AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined, inputEnergy);
 
@@ -392,11 +392,11 @@ public class AionAuctionContractTest {
         }
 
         // try to extend - should work
-        byte[] combined2 = setupForExtension(domainName1, Address.wrap(k.getAddress()));
+        byte[] combined2 = setupForExtension(domainName1, AionAddress.wrap(k.getAddress()));
         TransactionResult res = aac.execute(combined2, inputEnergy);
 
         // try to extend 2nd time in a row - should be denied
-        byte[] combined3 = setupForExtension(domainName1, Address.wrap(k.getAddress()));
+        byte[] combined3 = setupForExtension(domainName1, AionAddress.wrap(k.getAddress()));
         TransactionResult res2 = aac.execute(combined3, inputEnergy);
 
         assertEquals(ResultCode.SUCCESS, res.getResultCode());
@@ -418,7 +418,7 @@ public class AionAuctionContractTest {
 
         BigInteger amount = new BigInteger("1000");
         byte[] combined =
-                setupInputs(domainName1, Address.wrap(k.getAddress()), amount.toByteArray(), k);
+                setupInputs(domainName1, AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined, inputEnergy);
 
@@ -429,7 +429,7 @@ public class AionAuctionContractTest {
         }
 
         // try to extend - should not work since owner is incorrect
-        byte[] combined2 = setupForExtension(domainName1, Address.wrap(k2.getAddress()));
+        byte[] combined2 = setupForExtension(domainName1, AionAddress.wrap(k2.getAddress()));
         TransactionResult res = aac.execute(combined2, inputEnergy);
 
         assertEquals(ResultCode.FAILURE, res.getResultCode());
@@ -441,7 +441,7 @@ public class AionAuctionContractTest {
         BigInteger amount = new BigInteger("1000");
 
         byte[] combined =
-                setupInputs("parent.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k);
+                setupInputs("parent.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         aac.execute(combined, inputEnergy);
 
@@ -454,7 +454,7 @@ public class AionAuctionContractTest {
 
         byte[] combined2 =
                 setupInputs(
-                        "child.parent.aion", Address.wrap(k.getAddress()), amount.toByteArray(), k);
+                        "child.parent.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         TransactionResult result2 = aac2.execute(combined2, inputEnergy);
 
@@ -465,7 +465,7 @@ public class AionAuctionContractTest {
     public void testUnregisteredDomain() {
         ECKey k = ECKeyFac.inst().create();
         AionNameServiceContract ansc =
-                new AionNameServiceContract(repo, domainAddress1, Address.wrap(k.getAddress()));
+                new AionNameServiceContract(repo, domainAddress1, AionAddress.wrap(k.getAddress()));
     }
 
     @Test()
@@ -473,7 +473,7 @@ public class AionAuctionContractTest {
         byte[] combined =
                 setupInputs(
                         "aa.aion",
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
@@ -483,7 +483,7 @@ public class AionAuctionContractTest {
         byte[] combined2 =
                 setupInputs(
                         "#$%aion.aion",
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
@@ -493,7 +493,7 @@ public class AionAuctionContractTest {
         byte[] combined3 =
                 setupInputs(
                         "withoutdotaion",
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
@@ -503,7 +503,7 @@ public class AionAuctionContractTest {
         byte[] combined4 =
                 setupInputs(
                         "ai.ai.ai.ai.aion",
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
@@ -513,7 +513,7 @@ public class AionAuctionContractTest {
         byte[] combined5 =
                 setupInputs(
                         "network.aion",
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac5 = new AionAuctionContract(repo, AION, blockchain);
@@ -527,7 +527,7 @@ public class AionAuctionContractTest {
         byte[] combined =
                 setupInputs(
                         "bion.bion.aion",
-                        Address.wrap(notExistKey.getAddress()),
+                        AionAddress.wrap(notExistKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         notExistKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
@@ -539,13 +539,13 @@ public class AionAuctionContractTest {
     @Test
     public void testInsufficientBalance() {
         ECKey poorKey = ECKeyFac.inst().create();
-        repo.createAccount(Address.wrap(poorKey.getAddress()));
-        repo.addBalance(Address.wrap(poorKey.getAddress()), new BigInteger("100"));
+        repo.createAccount(AionAddress.wrap(poorKey.getAddress()));
+        repo.addBalance(AionAddress.wrap(poorKey.getAddress()), new BigInteger("100"));
 
         byte[] combined3 =
                 setupInputs(
                         domainName1,
-                        Address.wrap(poorKey.getAddress()),
+                        AionAddress.wrap(poorKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         poorKey);
         TransactionResult result = testAAC.execute(combined3, DEFAULT_INPUT_NRG);
@@ -558,12 +558,12 @@ public class AionAuctionContractTest {
         byte[] input =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         byte[] wrongInput = new byte[130];
         byte[] wrongInput2 = new byte[131];
-        byte[] wrongInput3 = setupForExtension(domainName1, Address.wrap(defaultKey.getAddress()));
+        byte[] wrongInput3 = setupForExtension(domainName1, AionAddress.wrap(defaultKey.getAddress()));
         byte[] wrongInput5 = new byte[wrongInput3.length];
         byte[] wrongInput4 = new byte[input.length - 2];
 
@@ -587,7 +587,7 @@ public class AionAuctionContractTest {
         byte[] input =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         // modify the signature in the 65th byte (arbitrarily)
@@ -606,7 +606,7 @@ public class AionAuctionContractTest {
         byte[] input =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         anotherKey);
         TransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
@@ -621,7 +621,7 @@ public class AionAuctionContractTest {
         byte[] input =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         TransactionResult result = testAAC.execute(input, 18000);
@@ -637,7 +637,7 @@ public class AionAuctionContractTest {
         byte[] input =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         negativeBidAmount.toByteArray(),
                         defaultKey);
         TransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
@@ -652,7 +652,7 @@ public class AionAuctionContractTest {
         byte[] input =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         testAAC.execute(input, DEFAULT_INPUT_NRG);
@@ -670,7 +670,7 @@ public class AionAuctionContractTest {
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         byte[] input2 =
                 setupInputs(
-                        domainName1, Address.wrap(k2.getAddress()), bidAmount2.toByteArray(), k2);
+                        domainName1, AionAddress.wrap(k2.getAddress()), bidAmount2.toByteArray(), k2);
         TransactionResult result2 = aac2.execute(input2, DEFAULT_INPUT_NRG);
 
         assertEquals(ResultCode.FAILURE, result2.getResultCode());
@@ -684,7 +684,7 @@ public class AionAuctionContractTest {
         byte[] input =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         TransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
@@ -693,7 +693,7 @@ public class AionAuctionContractTest {
         byte[] input2 =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         newBidAmount.toByteArray(),
                         defaultKey);
         TransactionResult result2 = testAAC.execute(input2, DEFAULT_INPUT_NRG);
@@ -701,7 +701,7 @@ public class AionAuctionContractTest {
         BigInteger anotherBid = new BigInteger("10");
         byte[] input3 =
                 setupInputs(
-                        domainName1, Address.wrap(k2.getAddress()), anotherBid.toByteArray(), k2);
+                        domainName1, AionAddress.wrap(k2.getAddress()), anotherBid.toByteArray(), k2);
         TransactionResult result3 = testAAC.execute(input3, DEFAULT_INPUT_NRG);
 
         try {
@@ -716,13 +716,13 @@ public class AionAuctionContractTest {
         BigInteger anotherBid = new BigInteger("50");
         byte[] input3 =
                 setupInputs(
-                        domainName1, Address.wrap(k2.getAddress()), anotherBid.toByteArray(), k2);
+                        domainName1, AionAddress.wrap(k2.getAddress()), anotherBid.toByteArray(), k2);
         TransactionResult result3 = testAAC.execute(input3, DEFAULT_INPUT_NRG);
 
         byte[] input =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         TransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
@@ -731,7 +731,7 @@ public class AionAuctionContractTest {
         byte[] input2 =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         newBidAmount.toByteArray(),
                         defaultKey);
         TransactionResult result2 = testAAC.execute(input2, DEFAULT_INPUT_NRG);
@@ -748,7 +748,7 @@ public class AionAuctionContractTest {
         byte[] input =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         testAAC.execute(input, DEFAULT_INPUT_NRG);
@@ -758,7 +758,7 @@ public class AionAuctionContractTest {
         byte[] input3 =
                 setupInputs(
                         domainName1,
-                        Address.wrap(k3.getAddress()),
+                        AionAddress.wrap(k3.getAddress()),
                         anotherAmount.toByteArray(),
                         k3);
         aac3.execute(input3, DEFAULT_INPUT_NRG);
@@ -774,7 +774,7 @@ public class AionAuctionContractTest {
         byte[] input2 =
                 setupInputs(
                         domainName1,
-                        Address.wrap(defaultKey.getAddress()),
+                        AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         TransactionResult result2 = testAAC.execute(input2, DEFAULT_INPUT_NRG);
@@ -790,7 +790,7 @@ public class AionAuctionContractTest {
         assertEquals(32, result2.getOutput().length); // check that an address was returned
     }
 
-    private byte[] setupInputs(String domainName, Address ownerAddress, byte[] amount, ECKey k) {
+    private byte[] setupInputs(String domainName, AionAddress ownerAddress, byte[] amount, ECKey k) {
         int domainLength = domainName.length();
         int amountLength = amount.length;
         int offset = 0;
@@ -813,7 +813,7 @@ public class AionAuctionContractTest {
         return ret;
     }
 
-    private byte[] setupForExtension(String domainName, Address ownerAddress) {
+    private byte[] setupForExtension(String domainName, AionAddress ownerAddress) {
         int domainLength = domainName.length();
         int offset = 0;
         byte[] ret = new byte[1 + domainLength + 32 + 96 + 1];
@@ -860,12 +860,12 @@ public class AionAuctionContractTest {
             StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
         byte[] ZERO_BYTE = new byte[0];
 
-        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
+        BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
         List<AionTransaction> transactions = new ArrayList<>();
 
         // create 100 transactions per bundle
         for (int i = 0; i < 100; i++) {
-            Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
+            AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),

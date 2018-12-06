@@ -24,7 +24,7 @@ package org.aion.api.server.types;
 
 import static org.aion.base.util.TypeConverter.toJsonHex;
 
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.util.ByteUtil;
@@ -75,9 +75,9 @@ public final class TxRecpt {
     /** pb abi */
     public byte[] txRoot;
 
-    public Address fromAddr;
+    public AionAddress fromAddr;
 
-    public Address toAddr;
+    public AionAddress toAddr;
 
     public long txTimeStamp;
 

@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
@@ -153,7 +153,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private boolean fork = false;
 
-    private Address minerCoinbase;
+    private AionAddress minerCoinbase;
     private byte[] minerExtraData;
 
     private Stack<State> stateStack = new Stack<>();
@@ -179,7 +179,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         ChainConfiguration config = new ChainConfiguration();
         return new A0BCConfig() {
             @Override
-            public Address getCoinbase() {
+            public AionAddress getCoinbase() {
                 return cfgAion.getGenesis().getCoinbase();
             }
 
@@ -195,8 +195,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             @Override
-            public Address getMinerCoinbase() {
-                return Address.wrap(cfgAion.getConsensus().getMinerAddress());
+            public AionAddress getMinerCoinbase() {
+                return AionAddress.wrap(cfgAion.getConsensus().getMinerAddress());
             }
 
             // TODO: hook up to configuration file
@@ -1004,7 +1004,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                     getBlockByHash(block.getParentHash()).getStateRoot());
                 }
 
-                Map<Address, BigInteger> nonceCache = new HashMap<>();
+                Map<AionAddress, BigInteger> nonceCache = new HashMap<>();
 
                 if (txs.parallelStream().anyMatch(tx -> !TXValidator.isValid(tx))) {
                     LOG.error("Some transactions in the block are invalid");
@@ -1012,7 +1012,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
 
                 for (AionTransaction tx : txs) {
-                    Address txSender = tx.getFrom();
+                    AionAddress txSender = tx.getFrom();
 
                     BigInteger expectedNonce = nonceCache.get(txSender);
 
@@ -1066,7 +1066,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         } else {
             return new AionBlockSummary(
                     block,
-                    new HashMap<Address, BigInteger>(),
+                    new HashMap<AionAddress, BigInteger>(),
                     new ArrayList<AionTxReceipt>(),
                     new ArrayList<AionTxExecSummary>());
         }
@@ -1110,7 +1110,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
-        Map<Address, BigInteger> rewards = addReward(block, summaries);
+        Map<AionAddress, BigInteger> rewards = addReward(block, summaries);
 
         track.flush();
 
@@ -1137,7 +1137,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             summaries.add(summary);
         }
-        Map<Address, BigInteger> rewards = addReward(block, summaries);
+        Map<AionAddress, BigInteger> rewards = addReward(block, summaries);
 
         long totalTime = System.nanoTime() - saveTime;
         chainStats.addBlockExecTime(totalTime);
@@ -1150,10 +1150,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param block object containing the header and uncles
      */
-    private Map<Address, BigInteger> addReward(
+    private Map<AionAddress, BigInteger> addReward(
             IAionBlock block, List<AionTxExecSummary> summaries) {
 
-        Map<Address, BigInteger> rewards = new HashMap<>();
+        Map<AionAddress, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
                 this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
         rewards.put(block.getCoinbase(), minerReward);
@@ -1327,7 +1327,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public Address getMinerCoinbase() {
+    public AionAddress getMinerCoinbase() {
         return minerCoinbase;
     }
 

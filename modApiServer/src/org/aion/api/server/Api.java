@@ -33,7 +33,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import org.aion.api.server.types.CompiContrInfo;
 import org.aion.api.server.types.CompiledContr;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
@@ -81,15 +81,15 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
 
     public boolean unlockAccount(
             final String _address, final String _password, final int _duration) {
-        return this.ACCOUNT_MANAGER.unlockAccount(Address.wrap(_address), _password, _duration);
+        return this.ACCOUNT_MANAGER.unlockAccount(AionAddress.wrap(_address), _password, _duration);
     }
 
     public boolean unlockAccount(
-            final Address _address, final String _password, final int _duration) {
+            final AionAddress _address, final String _password, final int _duration) {
         return this.ACCOUNT_MANAGER.unlockAccount(_address, _password, _duration);
     }
 
-    public boolean lockAccount(final Address _addr, final String _password) {
+    public boolean lockAccount(final AionAddress _addr, final String _password) {
         return this.ACCOUNT_MANAGER.lockAccount(_addr, _password);
     }
 
@@ -98,7 +98,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     }
 
     public ECKey getAccountKey(final String _address) {
-        return ACCOUNT_MANAGER.getKey(Address.wrap(_address));
+        return ACCOUNT_MANAGER.getKey(AionAddress.wrap(_address));
     }
 
     @SuppressWarnings("rawtypes")

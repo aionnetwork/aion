@@ -24,16 +24,19 @@ package org.aion.mcf.vm.types;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IBloomFilter;
+import org.aion.vm.api.interfaces.IExecutionLog;
 
 /** A log is emitted by the LOGX vm instruction. It's composed of address, topics and data. */
-public class Log {
+public class Log implements IExecutionLog {
 
     private Address addr;
     private List<byte[]> topics = new ArrayList<>();
@@ -47,7 +50,7 @@ public class Log {
         RLPList topics = (RLPList) logInfo.get(1);
         RLPItem data = (RLPItem) logInfo.get(2);
 
-        this.addr = address.getRLPData() != null ? Address.wrap(address.getRLPData()) : null;
+        this.addr = address.getRLPData() != null ? AionAddress.wrap(address.getRLPData()) : null;
         this.data = data.getRLPData() != null ? data.getRLPData() : new byte[] {};
 
         for (RLPElement topic1 : topics) {
@@ -62,15 +65,18 @@ public class Log {
         this.data = (data != null) ? data : new byte[] {};
     }
 
-    public Address getAddress() {
+    @Override
+    public Address getLogSourceAddress() {
         return addr;
     }
 
-    public List<byte[]> getTopics() {
+    @Override
+    public List<byte[]> getLogTopics() {
         return topics;
     }
 
-    public byte[] getData() {
+    @Override
+    public byte[] getLogData() {
         return data;
     }
 
@@ -98,7 +104,8 @@ public class Log {
         return RLP.encodeList(addressEncoded, RLP.encodeList(topicsEncoded), dataEncoded);
     }
 
-    public Bloom getBloom() {
+    @Override
+    public IBloomFilter getBloomFilterForLog() {
         Bloom ret = Bloom.create(HashUtil.h256(this.addr.toBytes()));
         for (byte[] topic : topics) {
             ret.or(Bloom.create(HashUtil.h256(topic)));

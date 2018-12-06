@@ -30,7 +30,7 @@ import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepositoryCache;
@@ -60,8 +60,8 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
         fullyWriteLock();
         try {
             // determine which accounts should get stored
-            HashMap<Address, AccountState> cleanedCacheAccounts = new HashMap<>();
-            for (Map.Entry<Address, AccountState> entry : cachedAccounts.entrySet()) {
+            HashMap<AionAddress, AccountState> cleanedCacheAccounts = new HashMap<>();
+            for (Map.Entry<AionAddress, AccountState> entry : cachedAccounts.entrySet()) {
                 AccountState account = entry.getValue();
                 if (account != null && account.isDirty() && account.isEmpty()) {
                     // ignore contract state for empty accounts at storage
@@ -71,7 +71,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                 }
             }
             // determine which contracts should get stored
-            for (Map.Entry<Address, IContractDetails<IDataWord>> entry : cachedDetails.entrySet()) {
+            for (Map.Entry<AionAddress, IContractDetails<IDataWord>> entry : cachedDetails.entrySet()) {
                 IContractDetails<IDataWord> ctd = entry.getValue();
                 // TODO: this functionality will be improved with the switch to a
                 // different ContractDetails implementation
@@ -104,16 +104,16 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
 
     @Override
     public void updateBatch(
-            Map<Address, AccountState> accounts,
-            final Map<Address, IContractDetails<IDataWord>> details) {
+            Map<AionAddress, AccountState> accounts,
+            final Map<AionAddress, IContractDetails<IDataWord>> details) {
         fullyWriteLock();
         try {
 
-            for (Map.Entry<Address, AccountState> accEntry : accounts.entrySet()) {
+            for (Map.Entry<AionAddress, AccountState> accEntry : accounts.entrySet()) {
                 this.cachedAccounts.put(accEntry.getKey(), accEntry.getValue());
             }
 
-            for (Map.Entry<Address, IContractDetails<IDataWord>> ctdEntry : details.entrySet()) {
+            for (Map.Entry<AionAddress, IContractDetails<IDataWord>> ctdEntry : details.entrySet()) {
                 ContractDetailsCacheImpl contractDetailsCache =
                         (ContractDetailsCacheImpl) ctdEntry.getValue();
                 if (contractDetailsCache.origContract != null

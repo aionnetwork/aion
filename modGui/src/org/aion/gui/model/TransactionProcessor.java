@@ -46,7 +46,7 @@ import org.aion.api.type.BlockDetails;
 import org.aion.api.type.MsgRsp;
 import org.aion.api.type.TxArgs;
 import org.aion.api.type.TxDetails;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.TypeConverter;
 import org.aion.gui.events.EventPublisher;
@@ -290,8 +290,8 @@ public class TransactionProcessor extends AbstractAionApiClient {
         final BigInteger latestTransactionNonce = getLatestTransactionNonce(dto.getFrom());
         TxArgs txArgs =
                 new TxArgs.TxArgsBuilder()
-                        .from(new Address(TypeConverter.toJsonHex(dto.getFrom())))
-                        .to(new Address(TypeConverter.toJsonHex(dto.getTo())))
+                        .from(new AionAddress(TypeConverter.toJsonHex(dto.getFrom())))
+                        .to(new AionAddress(TypeConverter.toJsonHex(dto.getTo())))
                         .value(dto.getValue())
                         .nonce(latestTransactionNonce)
                         .data(new ByteArrayWrapper(dto.getData()))
@@ -326,7 +326,7 @@ public class TransactionProcessor extends AbstractAionApiClient {
 
     private BigInteger getLatestTransactionNonce(final String address) {
         if (apiIsConnected()) {
-            return callApi(api -> api.getChain().getNonce(Address.wrap(address))).getObject();
+            return callApi(api -> api.getChain().getNonce(AionAddress.wrap(address))).getObject();
         } else {
             return BigInteger.ZERO;
         }

@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.regex.Pattern;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.zero.exceptions.HeaderStructureException;
@@ -72,7 +72,7 @@ public class GenesisBlockLoader {
                 }
 
                 if (mapper.has("coinbase")) {
-                    genesisBuilder.withCoinbase(Address.wrap(mapper.getString("coinbase")));
+                    genesisBuilder.withCoinbase(AionAddress.wrap(mapper.getString("coinbase")));
                 }
 
                 if (mapper.has("difficulty")) {
@@ -152,7 +152,7 @@ public class GenesisBlockLoader {
                                 new BigInteger(
                                         accountAllocs.getJSONObject(key).getString("balance"));
                         AccountState acctState = new AccountState(BigInteger.ZERO, balance);
-                        genesisBuilder.addPreminedAccount(Address.wrap(key), acctState);
+                        genesisBuilder.addPreminedAccount(AionAddress.wrap(key), acctState);
                     }
                 }
 

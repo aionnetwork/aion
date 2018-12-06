@@ -39,7 +39,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.api.BlockConstants;
@@ -73,7 +73,7 @@ public class BlockchainRewardTest {
         ImportResult res = bc.tryToConnect(block);
         assertThat(res).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        Address coinbase = block.getCoinbase();
+        AionAddress coinbase = block.getCoinbase();
         BigInteger previousBalance = bc.getRepository().getBalance(coinbase);
 
         // first block already sealed

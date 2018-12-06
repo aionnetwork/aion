@@ -23,7 +23,7 @@
 package org.aion.precompiled;
 
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.core.AccountState;
@@ -92,10 +92,10 @@ public class ContractFactory implements IContractFactory {
                         new TokenBridgeContract(
                                 context,
                                 track,
-                                Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
-                                Address.wrap(ADDR_TOKEN_BRIDGE));
+                                AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
+                                AionAddress.wrap(ADDR_TOKEN_BRIDGE));
 
-                if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
+                if (!context.origin().equals(AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
                         && !contract.isInitialized()) {
                     return null;
                 }
@@ -111,7 +111,7 @@ public class ContractFactory implements IContractFactory {
                 return fork_032
                         ? null
                         : new TotalCurrencyContract(
-                                track, context.sender(), Address.wrap(ADDR_OWNER));
+                                track, context.sender(), AionAddress.wrap(ADDR_OWNER));
             default:
                 return null;
         }
@@ -123,7 +123,7 @@ public class ContractFactory implements IContractFactory {
      * @param address The address to check.
      * @return true iff address is address of a pre-compiled contract.
      */
-    public static boolean isPrecompiledContract(Address address) {
+    public static boolean isPrecompiledContract(AionAddress address) {
         switch (address.toString()) {
             case ADDR_TOKEN_BRIDGE:
             case ADDR_ED_VERIFY:
@@ -141,8 +141,8 @@ public class ContractFactory implements IContractFactory {
      *
      * @return the contract address.
      */
-    public static Address getTotalCurrencyContractAddress() {
-        return Address.wrap(ADDR_TOTAL_CURRENCY);
+    public static AionAddress getTotalCurrencyContractAddress() {
+        return AionAddress.wrap(ADDR_TOTAL_CURRENCY);
     }
 
     /**
@@ -150,8 +150,8 @@ public class ContractFactory implements IContractFactory {
      *
      * @return the contract address
      */
-    public static Address getEdVerifyContractAddress() {
-        return Address.wrap(ADDR_ED_VERIFY);
+    public static AionAddress getEdVerifyContractAddress() {
+        return AionAddress.wrap(ADDR_ED_VERIFY);
     }
 
     /**
@@ -159,8 +159,8 @@ public class ContractFactory implements IContractFactory {
      *
      * @return the contract address
      */
-    public static Address getTxHashContractAddress() {
-        return Address.wrap(ADDR_TX_HASH);
+    public static AionAddress getTxHashContractAddress() {
+        return AionAddress.wrap(ADDR_TX_HASH);
     }
 
     /**
@@ -168,7 +168,7 @@ public class ContractFactory implements IContractFactory {
      *
      * @return the contract address
      */
-    public static Address getBlake2bHashContractAddress() {
-        return Address.wrap(ADDR_BLAKE2B_HASH);
+    public static AionAddress getBlake2bHashContractAddress() {
+        return AionAddress.wrap(ADDR_BLAKE2B_HASH);
     }
 }

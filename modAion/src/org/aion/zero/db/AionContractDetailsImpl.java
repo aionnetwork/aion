@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.db.AbstractContractDetails;
@@ -54,7 +54,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
 
     private byte[] rlpEncoded;
 
-    private Address address = Address.EMPTY_ADDRESS();
+    private AionAddress address = AionAddress.EMPTY_ADDRESS();
 
     private SecureTrie storageTrie = new SecureTrie(null);
 
@@ -68,7 +68,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
     }
 
     private AionContractDetailsImpl(
-            Address address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
+            AionAddress address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
         this.address = address;
         this.storageTrie = storageTrie;
         setCodes(codes);
@@ -159,9 +159,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         RLPElement code = rlpList.get(4);
 
         if (address.getRLPData() == null) {
-            this.address = Address.EMPTY_ADDRESS();
+            this.address = AionAddress.EMPTY_ADDRESS();
         } else {
-            this.address = Address.wrap(address.getRLPData());
+            this.address = AionAddress.wrap(address.getRLPData());
         }
 
         if (code instanceof RLPList) {
@@ -280,7 +280,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @return the associated address.
      */
     @Override
-    public Address getAddress() {
+    public AionAddress getAddress() {
         return address;
     }
 
@@ -290,7 +290,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @param address The address to set.
      */
     @Override
-    public void setAddress(Address address) {
+    public void setAddress(AionAddress address) {
         this.address = address;
         this.rlpEncoded = null;
     }

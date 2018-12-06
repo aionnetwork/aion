@@ -31,7 +31,7 @@ import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
@@ -40,9 +40,9 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 
 public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> {
-    private Map<Address, AccountState> accounts = new HashMap<>();
-    private Map<Address, byte[]> contracts = new HashMap<>();
-    private Map<Address, Map<String, byte[]>> storage = new HashMap<>();
+    private Map<AionAddress, AccountState> accounts = new HashMap<>();
+    private Map<AionAddress, byte[]> contracts = new HashMap<>();
+    private Map<AionAddress, Map<String, byte[]>> storage = new HashMap<>();
 
     // Made this alterable for testing since this default value is not always what real
     // implementations
@@ -58,24 +58,24 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
         storage.putAll(parent.storage);
     }
 
-    void addContract(Address address, byte[] code) {
+    void addContract(AionAddress address, byte[] code) {
         contracts.put(address, code);
     }
 
     @Override
-    public AccountState createAccount(Address addr) {
+    public AccountState createAccount(AionAddress addr) {
         AccountState as = new AccountState();
         accounts.put(addr, as);
         return as;
     }
 
     @Override
-    public boolean hasAccountState(Address addr) {
+    public boolean hasAccountState(AionAddress addr) {
         return accounts.containsKey(addr);
     }
 
     @Override
-    public AccountState getAccountState(Address addr) {
+    public AccountState getAccountState(AionAddress addr) {
         if (!hasAccountState(addr)) {
             createAccount(addr);
         }
@@ -83,63 +83,63 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public void deleteAccount(Address addr) {
+    public void deleteAccount(AionAddress addr) {
         accounts.remove(addr);
     }
 
     // Throws exception if account does not exist.
     @Override
-    public BigInteger incrementNonce(Address addr) {
+    public BigInteger incrementNonce(AionAddress addr) {
         AccountState as = getAccountState(addr);
         as.incrementNonce();
         return as.getNonce();
     }
 
     @Override
-    public BigInteger setNonce(Address address, BigInteger nonce) {
+    public BigInteger setNonce(AionAddress address, BigInteger nonce) {
         throw new RuntimeException("Not supported");
     }
 
     // an exception will be thrown if account does not exist
     @Override
-    public BigInteger getNonce(Address addr) {
+    public BigInteger getNonce(AionAddress addr) {
         return getAccountState(addr).getNonce();
     }
 
     @Override
-    public IContractDetails<IDataWord> getContractDetails(Address addr) {
+    public IContractDetails<IDataWord> getContractDetails(AionAddress addr) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean hasContractDetails(Address addr) {
+    public boolean hasContractDetails(AionAddress addr) {
         return contracts.containsKey(addr);
     }
 
     @Override
-    public void saveCode(Address addr, byte[] code) {
+    public void saveCode(AionAddress addr, byte[] code) {
         contracts.put(addr, code);
     }
 
     @Override
-    public byte[] getCode(Address addr) {
+    public byte[] getCode(AionAddress addr) {
         byte[] code = contracts.get(addr);
         return code == null ? ByteUtil.EMPTY_BYTE_ARRAY : code;
     }
 
     @Override
-    public Map<IDataWord, IDataWord> getStorage(Address address, Collection<IDataWord> keys) {
+    public Map<IDataWord, IDataWord> getStorage(AionAddress address, Collection<IDataWord> keys) {
         throw new RuntimeException("Not supported");
     }
 
     @Override
-    public void addStorageRow(Address addr, IDataWord key, IDataWord value) {
+    public void addStorageRow(AionAddress addr, IDataWord key, IDataWord value) {
         Map<String, byte[]> map = storage.computeIfAbsent(addr, k -> new HashMap<>());
         map.put(key.toString(), value.getData());
     }
 
     @Override
-    public IDataWord getStorageValue(Address addr, IDataWord key) {
+    public IDataWord getStorageValue(AionAddress addr, IDataWord key) {
         Map<String, byte[]> map = storage.get(addr);
         if (map != null && map.containsKey(key.toString())) {
             byte[] res = map.get(key.toString());
@@ -163,12 +163,12 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public BigInteger getBalance(Address addr) {
+    public BigInteger getBalance(AionAddress addr) {
         return getAccountState(addr).getBalance();
     }
 
     @Override
-    public BigInteger addBalance(Address addr, BigInteger value) {
+    public BigInteger addBalance(AionAddress addr, BigInteger value) {
         return getAccountState(addr).addToBalance(value);
     }
 
@@ -201,8 +201,8 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
 
     @Override
     public void updateBatch(
-            Map<Address, AccountState> accountStates,
-            Map<Address, IContractDetails<IDataWord>> contractDetailes) {
+            Map<AionAddress, AccountState> accountStates,
+            Map<AionAddress, IContractDetails<IDataWord>> contractDetailes) {
         throw new UnsupportedOperationException();
     }
 
@@ -213,9 +213,9 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
 
     @Override
     public void loadAccountState(
-            Address addr,
-            Map<Address, AccountState> cacheAccounts,
-            Map<Address, IContractDetails<IDataWord>> cacheDetails) {
+            AionAddress addr,
+            Map<AionAddress, AccountState> cacheAccounts,
+            Map<AionAddress, IContractDetails<IDataWord>> cacheDetails) {
         throw new UnsupportedOperationException();
     }
 

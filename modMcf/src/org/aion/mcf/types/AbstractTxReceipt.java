@@ -102,7 +102,7 @@ public abstract class AbstractTxReceipt<TX extends ITransaction>
         this.logInfoList = logInfoList;
 
         for (Log loginfo : logInfoList) {
-            bloomFilter.or(loginfo.getBloom());
+            bloomFilter.or(loginfo.getBloomFilterForLog());
         }
         rlpEncoded = null;
     }

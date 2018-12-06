@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.Hash256;
 import org.aion.base.type.ITransaction;
 import org.aion.crypto.ECKey;
@@ -114,8 +114,8 @@ public class TxnPoolTest {
         return Collections.singletonList(
                 new AionTransaction(
                         ByteUtils.fromHexString("0000000000000001"),
-                        Address.wrap(key.get(0).getAddress()),
-                        Address.wrap(
+                        AionAddress.wrap(key.get(0).getAddress()),
+                        AionAddress.wrap(
                                 "0000000000000000000000000000000000000000000000000000000000000001"),
                         ByteUtils.fromHexString("1"),
                         ByteUtils.fromHexString("1"),
@@ -198,7 +198,7 @@ public class TxnPoolTest {
         txl = tp.snapshot();
         assertTrue(txl.size() == cnt);
 
-        Map<Address, BigInteger> account = new HashMap<>();
+        Map<AionAddress, BigInteger> account = new HashMap<>();
         account.put(txl.get(0).getFrom(), BigInteger.valueOf(10));
         rtn = tp.remove(account);
         assertTrue(rtn.size() == 10);
@@ -208,8 +208,8 @@ public class TxnPoolTest {
     private ITransaction genTransaction(byte[] nonce) {
         return new AionTransaction(
                 nonce,
-                Address.wrap(key.get(0).getAddress()),
-                Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
+                AionAddress.wrap(key.get(0).getAddress()),
+                AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
@@ -219,8 +219,8 @@ public class TxnPoolTest {
     private ITransaction genTransaction(byte[] nonce, int _index) {
         return new AionTransaction(
                 nonce,
-                Address.wrap(key.get(_index).getAddress()),
-                Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
+                AionAddress.wrap(key.get(_index).getAddress()),
+                AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
@@ -230,8 +230,8 @@ public class TxnPoolTest {
     private ITransaction genTransactionRandomPrice(byte[] nonce, long price) {
         return new AionTransaction(
                 nonce,
-                Address.wrap(key.get(0).getAddress()),
-                Address.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
+                AionAddress.wrap(key.get(0).getAddress()),
+                AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000001"),
                 ByteUtils.fromHexString("1"),
                 ByteUtils.fromHexString("1"),
                 10000L,
@@ -639,8 +639,8 @@ public class TxnPoolTest {
         ITransaction txn =
                 new AionTransaction(
                         ByteUtils.fromHexString("0000000000000001"),
-                        Address.wrap(key.get(0).getAddress()),
-                        Address.wrap(key.get(0).getAddress()),
+                        AionAddress.wrap(key.get(0).getAddress()),
+                        AionAddress.wrap(key.get(0).getAddress()),
                         ByteUtils.fromHexString("1"),
                         ByteUtils.fromHexString("1"),
                         10000L,
@@ -762,7 +762,7 @@ public class TxnPoolTest {
 
         TxPoolA0<ITransaction> tp = new TxPoolA0<>(config);
 
-        Address acc = Address.wrap(key.get(0).getAddress());
+        AionAddress acc = AionAddress.wrap(key.get(0).getAddress());
 
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 100;
@@ -773,7 +773,7 @@ public class TxnPoolTest {
                     new AionTransaction(
                             nonce,
                             acc,
-                            Address.wrap(
+                            AionAddress.wrap(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
@@ -807,7 +807,7 @@ public class TxnPoolTest {
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 100;
         for (ECKey aKey1 : key) {
-            Address acc = Address.wrap(aKey1.getAddress());
+            AionAddress acc = AionAddress.wrap(aKey1.getAddress());
             for (int i = 0; i < cnt; i++) {
                 byte[] nonce = new byte[Long.BYTES];
                 nonce[Long.BYTES - 1] = (byte) (i + 1);
@@ -815,7 +815,7 @@ public class TxnPoolTest {
                         new AionTransaction(
                                 nonce,
                                 acc,
-                                Address.wrap(
+                                AionAddress.wrap(
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
@@ -835,7 +835,7 @@ public class TxnPoolTest {
         tp.snapshot();
 
         for (ECKey aKey : key) {
-            List<BigInteger> nl = tp.getNonceList(Address.wrap(aKey.getAddress()));
+            List<BigInteger> nl = tp.getNonceList(AionAddress.wrap(aKey.getAddress()));
             for (int i = 0; i < cnt; i++) {
                 assertTrue(nl.get(i).equals(BigInteger.valueOf(i + 1)));
             }
@@ -855,12 +855,12 @@ public class TxnPoolTest {
         for (int i = 0; i < cnt; i++) {
             nonce[Long.BYTES - 1] = 1;
 
-            Address addr = Address.wrap(key2.get(i).getAddress());
+            AionAddress addr = AionAddress.wrap(key2.get(i).getAddress());
             ITransaction txn =
                     new AionTransaction(
                             nonce,
                             addr,
-                            Address.wrap(
+                            AionAddress.wrap(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
@@ -960,13 +960,13 @@ public class TxnPoolTest {
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 10000;
         for (ECKey aKey1 : key) {
-            Address acc = Address.wrap(aKey1.getAddress());
+            AionAddress acc = AionAddress.wrap(aKey1.getAddress());
             for (int i = 0; i < cnt; i++) {
                 ITransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(i).toByteArray(),
                                 acc,
-                                Address.wrap(
+                                AionAddress.wrap(
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
@@ -987,7 +987,7 @@ public class TxnPoolTest {
         System.out.println("time spent: " + (System.currentTimeMillis() - start) + " ms.");
 
         for (ECKey aKey : key) {
-            List<BigInteger> nl = tp.getNonceList(Address.wrap(aKey.getAddress()));
+            List<BigInteger> nl = tp.getNonceList(AionAddress.wrap(aKey.getAddress()));
             for (int i = 0; i < cnt; i++) {
                 assertTrue(nl.get(i).equals(BigInteger.valueOf(i)));
             }
@@ -1007,13 +1007,13 @@ public class TxnPoolTest {
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 10000;
         for (ECKey aKey2 : key) {
-            Address acc = Address.wrap(aKey2.getAddress());
+            AionAddress acc = AionAddress.wrap(aKey2.getAddress());
             for (int i = 0; i < cnt; i++) {
                 ITransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(i).toByteArray(),
                                 acc,
-                                Address.wrap(
+                                AionAddress.wrap(
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
@@ -1040,8 +1040,8 @@ public class TxnPoolTest {
                 ITransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(cnt + i).toByteArray(),
-                                Address.wrap(aKey1.getAddress()),
-                                Address.wrap(
+                                AionAddress.wrap(aKey1.getAddress()),
+                                AionAddress.wrap(
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
@@ -1061,7 +1061,7 @@ public class TxnPoolTest {
         System.out.println("2nd time spent: " + (System.currentTimeMillis() - start) + " ms.");
 
         for (ECKey aKey : key) {
-            List<BigInteger> nl = tp.getNonceList(Address.wrap(aKey.getAddress()));
+            List<BigInteger> nl = tp.getNonceList(AionAddress.wrap(aKey.getAddress()));
             for (int i = 0; i < cnt + cnt2; i++) {
                 assertTrue(nl.get(i).equals(BigInteger.valueOf(i)));
             }
@@ -1085,13 +1085,13 @@ public class TxnPoolTest {
         System.out.println("Gen new transactions --");
         long start = System.currentTimeMillis();
         for (ECKey aKey21 : key2) {
-            Address acc = Address.wrap(aKey21.getAddress());
+            AionAddress acc = AionAddress.wrap(aKey21.getAddress());
             for (int i = 0; i < cnt; i++) {
                 ITransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(i).toByteArray(),
                                 acc,
-                                Address.wrap(
+                                AionAddress.wrap(
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
@@ -1118,7 +1118,7 @@ public class TxnPoolTest {
         System.out.println("time spent: " + (System.currentTimeMillis() - start) + " ms.");
 
         for (ECKey aKey2 : key2) {
-            List<BigInteger> nl = tp.getNonceList(Address.wrap(aKey2.getAddress()));
+            List<BigInteger> nl = tp.getNonceList(AionAddress.wrap(aKey2.getAddress()));
             for (int i = 0; i < cnt; i++) {
                 assertTrue(nl.get(i).equals(BigInteger.valueOf(i)));
             }
@@ -1137,7 +1137,7 @@ public class TxnPoolTest {
         List<ITransaction> txnlrm = new ArrayList<>();
         int cnt = 100000;
         int rmCnt = 10;
-        Address acc = Address.wrap(key.get(0).getAddress());
+        AionAddress acc = AionAddress.wrap(key.get(0).getAddress());
         System.out.println("gen new transactions...");
         long start = System.currentTimeMillis();
         for (int i = 0; i < cnt; i++) {
@@ -1145,7 +1145,7 @@ public class TxnPoolTest {
                     new AionTransaction(
                             BigInteger.valueOf(i).toByteArray(),
                             acc,
-                            Address.wrap(
+                            AionAddress.wrap(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
@@ -1185,7 +1185,7 @@ public class TxnPoolTest {
         tp.snapshot();
         System.out.println("time spent: " + (System.currentTimeMillis() - start) + " ms.");
 
-        List<BigInteger> nl = tp.getNonceList(Address.wrap(key.get(0).getAddress()));
+        List<BigInteger> nl = tp.getNonceList(AionAddress.wrap(key.get(0).getAddress()));
         for (int i = 0; i < nl.size(); i++) {
             assertTrue(nl.get(i).equals(BigInteger.valueOf(i).add(BigInteger.valueOf(rmCnt))));
         }
@@ -1204,13 +1204,13 @@ public class TxnPoolTest {
         List<ITransaction> txnl = new ArrayList<>();
         int cnt = 10000;
         for (ECKey aKey1 : key) {
-            Address acc = Address.wrap(aKey1.getAddress());
+            AionAddress acc = AionAddress.wrap(aKey1.getAddress());
             for (int i = 0; i < cnt; i++) {
                 ITransaction txn =
                         new AionTransaction(
                                 BigInteger.valueOf(i).toByteArray(),
                                 acc,
-                                Address.wrap(
+                                AionAddress.wrap(
                                         "0000000000000000000000000000000000000000000000000000000000000001"),
                                 ByteUtils.fromHexString("1"),
                                 ByteUtils.fromHexString("1"),
@@ -1237,7 +1237,7 @@ public class TxnPoolTest {
         System.out.println("2nd time spent: " + (System.currentTimeMillis() - start) + " ms.");
 
         for (ECKey aKey : key) {
-            List<BigInteger> nl = tp.getNonceList(Address.wrap(aKey.getAddress()));
+            List<BigInteger> nl = tp.getNonceList(AionAddress.wrap(aKey.getAddress()));
             for (int i = 0; i < cnt; i++) {
                 assertTrue(nl.get(i).equals(BigInteger.valueOf(i)));
             }
@@ -1254,8 +1254,8 @@ public class TxnPoolTest {
             AionTransaction tx =
                     new AionTransaction(
                             BigInteger.valueOf(i).toByteArray(),
-                            Address.wrap(key.getAddress()),
-                            Address.wrap(
+                            AionAddress.wrap(key.getAddress()),
+                            AionAddress.wrap(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
@@ -1288,8 +1288,8 @@ public class TxnPoolTest {
             AionTransaction tx =
                     new AionTransaction(
                             BigInteger.valueOf(i).toByteArray(),
-                            Address.wrap(key.getAddress()),
-                            Address.wrap(
+                            AionAddress.wrap(key.getAddress()),
+                            AionAddress.wrap(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),
@@ -1318,8 +1318,8 @@ public class TxnPoolTest {
             AionTransaction tx =
                     new AionTransaction(
                             BigInteger.valueOf(i).toByteArray(),
-                            Address.wrap(key.getAddress()),
-                            Address.wrap(
+                            AionAddress.wrap(key.getAddress()),
+                            AionAddress.wrap(
                                     "0000000000000000000000000000000000000000000000000000000000000001"),
                             ByteUtils.fromHexString("1"),
                             ByteUtils.fromHexString("1"),

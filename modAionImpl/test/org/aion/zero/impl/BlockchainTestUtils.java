@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -68,7 +68,7 @@ public class BlockchainTestUtils {
             // get the current nonce for each account
             Map<ECKey, BigInteger> nonces = new HashMap<>();
             for (ECKey key : accounts) {
-                nonces.put(key, repo.getNonce(new Address(key.getAddress())));
+                nonces.put(key, repo.getNonce(new AionAddress(key.getAddress())));
             }
 
             List<AionTransaction> transactions = new ArrayList<>();
@@ -79,7 +79,7 @@ public class BlockchainTestUtils {
                 BigInteger accountNonce = nonces.get(key);
 
                 // generate a random address
-                Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
+                AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
                 AionTransaction newTx =
                         new AionTransaction(
                                 accountNonce.toByteArray(),

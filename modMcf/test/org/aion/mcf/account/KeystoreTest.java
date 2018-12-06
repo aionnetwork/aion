@@ -35,7 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
@@ -150,12 +150,12 @@ public class KeystoreTest {
         String addr = Keystore.create(password, key);
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
 
-        Map<Address, String> arg = new HashMap<>();
-        arg.put(Address.wrap(addr), password);
+        Map<AionAddress, String> arg = new HashMap<>();
+        arg.put(AionAddress.wrap(addr), password);
 
-        Map<Address, ByteArrayWrapper> export = Keystore.exportAccount(arg);
+        Map<AionAddress, ByteArrayWrapper> export = Keystore.exportAccount(arg);
 
-        assertTrue(export.containsKey(Address.wrap(addr)));
+        assertTrue(export.containsKey(AionAddress.wrap(addr)));
         assertTrue(export.containsValue(ByteArrayWrapper.wrap(key.getPrivKeyBytes())));
         filesToRemove.add(addr);
     }
@@ -169,17 +169,17 @@ public class KeystoreTest {
         String addr = Keystore.create(password, key);
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
 
-        Map<Address, String> arg = new HashMap<>();
-        arg.put(Address.wrap(addr), password);
+        Map<AionAddress, String> arg = new HashMap<>();
+        arg.put(AionAddress.wrap(addr), password);
 
-        Map<Address, ByteArrayWrapper> export = Keystore.backupAccount(arg);
+        Map<AionAddress, ByteArrayWrapper> export = Keystore.backupAccount(arg);
 
         assertNotNull(export);
 
         File f = Keystore.getAccountFile(addr.substring(2), password);
         assertNotNull(f);
 
-        assertTrue(export.containsKey(Address.wrap(addr)));
+        assertTrue(export.containsKey(AionAddress.wrap(addr)));
         try {
             assertTrue(export.containsValue(ByteArrayWrapper.wrap(Files.readAllBytes(f.toPath()))));
         } catch (IOException e) {

@@ -45,7 +45,7 @@ import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
@@ -114,7 +114,7 @@ public class DetailsDataStore<
         return detailsImpl;
     }
 
-    public synchronized void update(Address key, IContractDetails<IDataWord> contractDetails) {
+    public synchronized void update(AionAddress key, IContractDetails<IDataWord> contractDetails) {
 
         contractDetails.setAddress(key);
         ByteArrayWrapper wrappedKey = wrap(key.toBytes());

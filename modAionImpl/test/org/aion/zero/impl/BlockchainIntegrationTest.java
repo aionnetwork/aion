@@ -41,7 +41,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.base.db.IRepository;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -87,7 +87,7 @@ public class BlockchainIntegrationTest {
         StandaloneBlockchain.Bundle b =
                 (new StandaloneBlockchain.Builder()).withDefaultAccounts().build();
         for (ECKey k : b.privateKeys) {
-            assertThat(b.bc.getRepository().getBalance(Address.wrap(k.getAddress())))
+            assertThat(b.bc.getRepository().getBalance(AionAddress.wrap(k.getAddress())))
                     .isNotEqualTo(BigInteger.ZERO);
         }
         assertThat(b.privateKeys.size()).isEqualTo(10);
@@ -105,8 +105,8 @@ public class BlockchainIntegrationTest {
     @Test
     public void testSimpleFailedTransactionInsufficientBalance() {
         // generate a recipient
-        final Address receiverAddress =
-                Address.wrap(
+        final AionAddress receiverAddress =
+                AionAddress.wrap(
                         ByteUtil.hexStringToBytes(
                                 "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
 
@@ -140,8 +140,8 @@ public class BlockchainIntegrationTest {
     @Test
     public void testSimpleOneTokenBalanceTransfer() {
         // generate a recipient
-        final Address receiverAddress =
-                Address.wrap(
+        final AionAddress receiverAddress =
+                AionAddress.wrap(
                         ByteUtil.hexStringToBytes(
                                 "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
 
@@ -154,7 +154,7 @@ public class BlockchainIntegrationTest {
 
         final ECKey sender = bundle.privateKeys.get(0);
         final BigInteger senderInitialBalance =
-                bc.getRepository().getBalance(Address.wrap(sender.getAddress()));
+                bc.getRepository().getBalance(AionAddress.wrap(sender.getAddress()));
 
         AionTransaction tx =
                 new AionTransaction(
@@ -178,7 +178,7 @@ public class BlockchainIntegrationTest {
         IRepository repo = bc.getRepository();
 
         assertThat(repo.getBalance(receiverAddress)).isEqualTo(BigInteger.valueOf(100));
-        assertThat(repo.getBalance(Address.wrap(sender.getAddress())))
+        assertThat(repo.getBalance(AionAddress.wrap(sender.getAddress())))
                 .isEqualTo(
                         senderInitialBalance
                                 .subtract(BigInteger.valueOf(21000))
@@ -204,8 +204,8 @@ public class BlockchainIntegrationTest {
     @Test
     public void testPruningEnabledBalanceTransfer() {
         // generate a recipient
-        final Address receiverAddress =
-                Address.wrap(
+        final AionAddress receiverAddress =
+                AionAddress.wrap(
                         ByteUtil.hexStringToBytes(
                                 "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
 
@@ -262,7 +262,7 @@ public class BlockchainIntegrationTest {
         AionTransaction contractDeploymentTx =
                 new AionTransaction(
                         BigInteger.ZERO.toByteArray(),
-                        Address.EMPTY_ADDRESS(),
+                        AionAddress.EMPTY_ADDRESS(),
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(cryptoKittiesCode),
                         4699999L,
@@ -339,7 +339,7 @@ public class BlockchainIntegrationTest {
 
         // no transaction so fee should be zero
         assertThat(context.transactionFee).isEqualTo(BigInteger.ZERO);
-        Address beneficiary = context.block.getCoinbase();
+        AionAddress beneficiary = context.block.getCoinbase();
 
         ImportResult result = bc.tryToConnect(context.block);
         // check that the correct amount was stored

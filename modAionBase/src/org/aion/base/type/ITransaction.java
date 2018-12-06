@@ -44,9 +44,9 @@ public interface ITransaction extends Cloneable {
 
     byte[] getEncoded();
 
-    Address getFrom();
+    AionAddress getFrom();
 
-    Address getTo();
+    AionAddress getTo();
 
     byte[] getNonce();
 

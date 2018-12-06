@@ -27,7 +27,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.vm.IDataWord;
 import org.aion.crypto.HashUtil;
@@ -90,11 +90,11 @@ public class BridgeStorageConnector {
     }
 
     private final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
-    private final Address contractAddress;
+    private final AionAddress contractAddress;
 
     public BridgeStorageConnector(
             @Nonnull final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
-            @Nonnull final Address contractAddress) {
+            @Nonnull final AionAddress contractAddress) {
         this.track = track;
         this.contractAddress = contractAddress;
     }

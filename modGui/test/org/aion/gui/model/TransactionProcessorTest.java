@@ -51,7 +51,7 @@ import org.aion.api.type.BlockDetails;
 import org.aion.api.type.MsgRsp;
 import org.aion.api.type.TxArgs;
 import org.aion.api.type.TxDetails;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.wallet.account.AccountManager;
@@ -191,7 +191,7 @@ public class TransactionProcessorTest {
                                         .hash(new Hash256(irrelevantHash))
                                         .nonce(new BigInteger("1"))
                                         .difficulty(new BigInteger("1"))
-                                        .miner(new Address(irrelevantAddress1))
+                                        .miner(new AionAddress(irrelevantAddress1))
                                         .stateRoot(new Hash256(irrelevantHash))
                                         .txTrieRoot(new Hash256(irrelevantHash))
                                         .receiptTxRoot(new Hash256(irrelevantHash))
@@ -200,7 +200,7 @@ public class TransactionProcessorTest {
                                 new TxDetails.TxDetailsBuilder()
                                         .from(null /* gets filled in later */)
                                         .to(null /* gets filled in later */)
-                                        .contract(new Address(irrelevantAddress2))
+                                        .contract(new AionAddress(irrelevantAddress2))
                                         .txHash(new Hash256(irrelevantHash))
                                         .value(new BigInteger("1"))
                                         .nonce(new BigInteger("1"))
@@ -215,10 +215,10 @@ public class TransactionProcessorTest {
                                                                  // value for verification later
                                                                 tdBuilder
                                                                         .from(
-                                                                                new Address(
+                                                                                new AionAddress(
                                                                                         addressToProcess)) // should get added
                                                                         .to(
-                                                                                new Address(
+                                                                                new AionAddress(
                                                                                         irrelevantAddress1))
                                                                         .value(
                                                                                 new BigInteger(
@@ -226,10 +226,10 @@ public class TransactionProcessorTest {
                                                                         .createTxDetails(),
                                                                 tdBuilder
                                                                         .from(
-                                                                                new Address(
+                                                                                new AionAddress(
                                                                                         irrelevantAddress1)) // should get
                                                                         .to(
-                                                                                new Address(
+                                                                                new AionAddress(
                                                                                         addressToProcess))
                                                                         .value(
                                                                                 new BigInteger(
@@ -237,10 +237,10 @@ public class TransactionProcessorTest {
                                                                         .createTxDetails(),
                                                                 tdBuilder
                                                                         .from(
-                                                                                new Address(
+                                                                                new AionAddress(
                                                                                         irrelevantAddress1))
                                                                         .to(
-                                                                                new Address(
+                                                                                new AionAddress(
                                                                                         irrelevantAddress2))
                                                                         .value(
                                                                                 new BigInteger(
@@ -382,7 +382,7 @@ public class TransactionProcessorTest {
 
         // mock getting latest transaction nonce
         ApiMsg latestNonceApiMsg = mock(ApiMsg.class);
-        when(api.getChain().getNonce(Address.wrap(senderAddress))).thenReturn(latestNonceApiMsg);
+        when(api.getChain().getNonce(AionAddress.wrap(senderAddress))).thenReturn(latestNonceApiMsg);
         when(latestNonceApiMsg.getObject()).thenReturn(latestNonce);
 
         // mock responding to the send request

@@ -38,7 +38,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.TimeInstant;
@@ -101,7 +101,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
      * @param acc
      * @return
      */
-    public List<BigInteger> getNonceList(Address acc) {
+    public List<BigInteger> getNonceList(AionAddress acc) {
 
         List<BigInteger> nl = Collections.synchronizedList(new ArrayList<>());
         lock.readLock().lock();
@@ -208,10 +208,10 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     @Override
-    public List<TX> remove(Map<Address, BigInteger> accNonce) {
+    public List<TX> remove(Map<AionAddress, BigInteger> accNonce) {
 
         List<ByteArrayWrapper> bwList = new ArrayList<>();
-        for (Map.Entry<Address, BigInteger> en1 : accNonce.entrySet()) {
+        for (Map.Entry<AionAddress, BigInteger> en1 : accNonce.entrySet()) {
             AccountState as = this.getAccView(en1.getKey());
             lock.writeLock().lock();
             Iterator<Map.Entry<BigInteger, AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger>>>
@@ -303,7 +303,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     public List<TX> remove(List<TX> txs) {
 
         List<TX> removedTxl = Collections.synchronizedList(new ArrayList<>());
-        Set<Address> checkedAddress = Collections.synchronizedSet(new HashSet<>());
+        Set<AionAddress> checkedAddress = Collections.synchronizedSet(new HashSet<>());
 
         for (TX tx : txs) {
             ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getHash());
@@ -336,7 +336,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             // remove the all transactions belong to the given address in the feeView
-            Address address = tx.getFrom();
+            AionAddress address = tx.getFrom();
             Set<BigInteger> fee = Collections.synchronizedSet(new HashSet<>());
             if (!checkedAddress.contains(address)) {
 
@@ -413,7 +413,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
     }
 
     @Override
-    public TX getPoolTx(Address from, BigInteger txNonce) {
+    public TX getPoolTx(AionAddress from, BigInteger txNonce) {
         if (from == null || txNonce == null) {
             LOG.error("TxPoolA0.getPoolTx null args");
             return null;
@@ -438,7 +438,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         removeTimeoutTxn();
 
         List<TX> rtn = new ArrayList<>();
-        for (Map.Entry<Address, AccountState> as : this.getFullAcc().entrySet()) {
+        for (Map.Entry<AionAddress, AccountState> as : this.getFullAcc().entrySet()) {
             for (Map.Entry<ByteArrayWrapper, BigInteger> txMap : as.getValue().getMap().values()) {
                 if (this.getMainMap().get(txMap.getKey()) == null) {
                     LOG.error("can't find the tx in the mainMap");
@@ -613,7 +613,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         return "0.1.0";
     }
 
-    public BigInteger bestPoolNonce(Address addr) {
+    public BigInteger bestPoolNonce(AionAddress addr) {
         return getBestNonce(addr);
     }
 

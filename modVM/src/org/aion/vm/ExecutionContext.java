@@ -24,7 +24,7 @@ package org.aion.vm;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.vm.types.DataWord;
 
 /**
@@ -34,7 +34,7 @@ import org.aion.mcf.vm.types.DataWord;
  */
 public class ExecutionContext {
     private static final int ENCODE_BASE_LEN =
-            (Address.ADDRESS_LEN * 4)
+            (AionAddress.SIZE * 4)
                     + (DataWord.BYTES * 3)
                     + (Long.BYTES * 4)
                     + (Integer.BYTES * 4);
@@ -44,12 +44,12 @@ public class ExecutionContext {
     public static int CREATE = 3;
 
     private ExecutionHelper helper;
-    private Address origin;
+    private AionAddress origin;
     private byte[] originalTxHash;
 
-    public Address address;
-    public Address sender;
-    private Address blockCoinbase;
+    public AionAddress address;
+    public AionAddress sender;
+    private AionAddress blockCoinbase;
     private DataWord nrgPrice;
     private DataWord callValue;
     private DataWord blockDifficulty;
@@ -87,9 +87,9 @@ public class ExecutionContext {
      */
     public ExecutionContext(
             byte[] txHash,
-            Address destination,
-            Address origin,
-            Address sender,
+            AionAddress destination,
+            AionAddress origin,
+            AionAddress sender,
             DataWord nrgPrice,
             long nrgLimit,
             DataWord callValue,
@@ -97,7 +97,7 @@ public class ExecutionContext {
             int depth,
             int kind,
             int flags,
-            Address blockCoinbase,
+            AionAddress blockCoinbase,
             long blockNumber,
             long blockTimestamp,
             long blockNrgLimit,
@@ -165,17 +165,17 @@ public class ExecutionContext {
     }
 
     /** @return the transaction address. */
-    public Address address() {
+    public AionAddress address() {
         return address;
     }
 
     /** @return the origination address, which is the sender of original transaction. */
-    public Address origin() {
+    public AionAddress origin() {
         return origin;
     }
 
     /** @return the transaction caller. */
-    public Address sender() {
+    public AionAddress sender() {
         return sender;
     }
 
@@ -215,7 +215,7 @@ public class ExecutionContext {
     }
 
     /** @return the block's beneficiary. */
-    public Address blockCoinbase() {
+    public AionAddress blockCoinbase() {
         return blockCoinbase;
     }
 
@@ -249,7 +249,7 @@ public class ExecutionContext {
      *
      * @param destination The new address.
      */
-    public void setDestination(Address destination) {
+    public void setDestination(AionAddress destination) {
         this.address = destination;
     }
 
