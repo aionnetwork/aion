@@ -11,8 +11,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
-import org.aion.base.type.Address;
 import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
@@ -33,7 +33,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
     @After
     public void tearDown() {
-        for (Address acct : tempAddrs) {
+        for (AionAddress acct : tempAddrs) {
             repo.deleteAccount(acct);
         }
         tempAddrs = null;
@@ -43,8 +43,8 @@ public class TRSlinkedListTest extends TRShelpers {
 
     @Test
     public void testLinkedListNoDepositors() {
-        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         TRSuseContract trs = newTRSuseContract(acct);
         assertNull(getLinkedListHead(trs, contract));
     }
@@ -52,8 +52,8 @@ public class TRSlinkedListTest extends TRShelpers {
     @Test
     public void testLinkedListOneDepositor() {
         // First test using deposit.
-        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         TRSuseContract trs = newTRSuseContract(acct);
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
@@ -72,9 +72,9 @@ public class TRSlinkedListTest extends TRShelpers {
     @Test
     public void testLinkedListTwoDepositors() {
         // First test using deposit.
-        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
 
         TRSuseContract trs = newTRSuseContract(acct);
@@ -113,12 +113,12 @@ public class TRSlinkedListTest extends TRShelpers {
     @Test
     public void testLinkedListMultipleDepositors() {
         // First test using deposit.
-        Address acct1, acct2, acct3, acct4;
+        AionAddress acct1, acct2, acct3, acct4;
         acct1 = getNewExistentAccount(DEFAULT_BALANCE);
         acct2 = getNewExistentAccount(DEFAULT_BALANCE);
         acct3 = getNewExistentAccount(DEFAULT_BALANCE);
         acct4 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress contract = createTRScontract(acct1, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
 
         newTRSuseContract(acct1).execute(input, COST);
@@ -159,8 +159,8 @@ public class TRSlinkedListTest extends TRShelpers {
     @Test
     public void testRemoveHeadOfListWithHeadOnly() {
         // Test using deposit.
-        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
 
@@ -178,9 +178,9 @@ public class TRSlinkedListTest extends TRShelpers {
     @Test
     public void testRemoveHeadOfListWithHeadAndNextOnly() {
         // Test using deposit.
-        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
@@ -208,8 +208,8 @@ public class TRSlinkedListTest extends TRShelpers {
     public void testRemoveHeadOfLargerList() {
         // Test using deposit.
         int listSize = 10;
-        Address owner = getNewExistentAccount(BigInteger.ONE);
-        Address contract =
+        AionAddress owner = getNewExistentAccount(BigInteger.ONE);
+        AionAddress contract =
                 getContractMultipleDepositors(listSize, owner, false, true, 1, BigInteger.ZERO, 0);
 
         checkRemoveHeadOfLargerList(contract, owner, listSize);
@@ -226,9 +226,9 @@ public class TRSlinkedListTest extends TRShelpers {
     @Test
     public void testRemoveTailOfSizeTwoList() {
         // Test using deposit.
-        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
@@ -256,8 +256,8 @@ public class TRSlinkedListTest extends TRShelpers {
     public void testRemoveTailOfLargerList() {
         // Test using deposit.
         int listSize = 10;
-        Address owner = getNewExistentAccount(BigInteger.ONE);
-        Address contract =
+        AionAddress owner = getNewExistentAccount(BigInteger.ONE);
+        AionAddress contract =
                 getContractMultipleDepositors(listSize, owner, false, true, 1, BigInteger.ZERO, 0);
 
         checkRemoveTailOfLargerList(contract, owner, listSize);
@@ -274,10 +274,10 @@ public class TRSlinkedListTest extends TRShelpers {
     @Test
     public void testRemoveInteriorOfSizeThreeList() {
         // Test using deposit.
-        Address acct = getNewExistentAccount(DEFAULT_BALANCE);
-        Address acct2 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address acct3 = getNewExistentAccount(DEFAULT_BALANCE);
-        Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
+        AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress acct2 = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress acct3 = getNewExistentAccount(DEFAULT_BALANCE);
+        AionAddress contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
@@ -310,8 +310,8 @@ public class TRSlinkedListTest extends TRShelpers {
     public void testRemoveInteriorOfLargerList() {
         // Test using deposit.
         int listSize = 10;
-        Address owner = getNewExistentAccount(BigInteger.ONE);
-        Address contract =
+        AionAddress owner = getNewExistentAccount(BigInteger.ONE);
+        AionAddress contract =
                 getContractMultipleDepositors(listSize, owner, false, true, 1, BigInteger.ZERO, 0);
 
         checkRemoveInteriorOfLargerList(contract, owner, listSize);
@@ -329,8 +329,8 @@ public class TRSlinkedListTest extends TRShelpers {
     public void testMultipleListRemovals() {
         // Test using deposit.
         int listSize = 10;
-        Address owner = getNewExistentAccount(BigInteger.ONE);
-        Address contract =
+        AionAddress owner = getNewExistentAccount(BigInteger.ONE);
+        AionAddress contract =
                 getContractMultipleDepositors(listSize, owner, false, true, 1, BigInteger.ZERO, 0);
 
         checkMultipleListRemovals(contract, owner, listSize);
@@ -347,7 +347,7 @@ public class TRSlinkedListTest extends TRShelpers {
     // <---------------------------------------HELPERS BELOW--------------------------------------->
 
     private void checkLinkedListOneDepositor(
-            AbstractTRS trs, Address contract, Address acct, byte[] input) {
+            AbstractTRS trs, AionAddress contract, AionAddress acct, byte[] input) {
         assertEquals(acct, getLinkedListHead(trs, contract));
         assertNull(getLinkedListNext(trs, contract, acct));
         assertNull(getLinkedListPrev(trs, contract, acct));
@@ -362,7 +362,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
     // We expect a list with acct2 as head as such: null <- acct2 <-> acct -> null
     private void checkLinkedListTwoDepositors(
-            AbstractTRS trs, Address contract, Address acct, Address acct2) {
+            AbstractTRS trs, AionAddress contract, AionAddress acct, AionAddress acct2) {
 
         assertEquals(acct2, getLinkedListHead(trs, contract));
         assertEquals(acct, getLinkedListNext(trs, contract, acct2));
@@ -373,7 +373,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
     // Expect a list with acct3 as head as such: null <- acct3 <-> acct2 <-> acct4 <-> acct1 -> null
     private void checkLinkedListMultipleDepositors(
-            Address contract, Address acct1, Address acct2, Address acct3, Address acct4) {
+            AionAddress contract, AionAddress acct1, AionAddress acct2, AionAddress acct3, AionAddress acct4) {
 
         TRSuseContract trs = newTRSuseContract(acct1);
         assertEquals(acct3, getLinkedListHead(trs, contract));
@@ -388,7 +388,7 @@ public class TRSlinkedListTest extends TRShelpers {
     }
 
     private void checkRemoveHeadOfListWithHeadOnly(
-            AbstractTRS trs, Address contract, Address acct, byte[] input) {
+            AbstractTRS trs, AionAddress contract, AionAddress acct, byte[] input) {
 
         assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
@@ -405,7 +405,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
     // Expects acct2 as head with:  null <- acct2 <-> acct -> null
     private void checkRemoveHeadOfListWithHeadAndNextOnly(
-            AbstractTRS trs, Address contract, Address acct, Address acct2) {
+            AbstractTRS trs, AionAddress contract, AionAddress acct, AionAddress acct2) {
 
         assertEquals(acct2, getLinkedListHead(trs, contract));
         assertEquals(acct, getLinkedListNext(trs, contract, acct2));
@@ -423,11 +423,11 @@ public class TRSlinkedListTest extends TRShelpers {
         assertNull(getLinkedListPrev(trs, contract, acct));
     }
 
-    private void checkRemoveHeadOfLargerList(Address contract, Address owner, int listSize) {
+    private void checkRemoveHeadOfLargerList(AionAddress contract, AionAddress owner, int listSize) {
         // We have a linked list with 10 depositors. Remove the head.
         TRSuseContract trs = newTRSuseContract(owner);
-        Address head = getLinkedListHead(trs, contract);
-        Address next = getLinkedListNext(trs, contract, head);
+        AionAddress head = getLinkedListHead(trs, contract);
+        AionAddress next = getLinkedListNext(trs, contract, head);
         assertNull(getLinkedListPrev(trs, contract, head));
         assertEquals(head, getLinkedListPrev(trs, contract, next));
         byte[] input = getRefundInput(contract, head, DEFAULT_BALANCE);
@@ -439,7 +439,7 @@ public class TRSlinkedListTest extends TRShelpers {
         assertNull(getLinkedListPrev(trs, contract, next));
 
         // We also make sure each address in the list is unique.
-        Set<Address> addressesInList = new HashSet<>();
+        Set<AionAddress> addressesInList = new HashSet<>();
         for (int i = 0; i < listSize - 1; i++) {
             if (i == listSize - 2) {
                 assertNull(getLinkedListNext(trs, contract, next));
@@ -454,7 +454,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
     // Expects acct2 as head with:  null <- acct2 <-> acct -> null
     private void checkRemoveTailOfSizeTwoList(
-            AbstractTRS trs, Address contract, Address acct, Address acct2) {
+            AbstractTRS trs, AionAddress contract, AionAddress acct, AionAddress acct2) {
 
         assertEquals(acct2, getLinkedListHead(trs, contract));
         assertEquals(acct, getLinkedListNext(trs, contract, acct2));
@@ -472,13 +472,13 @@ public class TRSlinkedListTest extends TRShelpers {
         assertNull(getLinkedListPrev(trs, contract, acct2));
     }
 
-    private void checkRemoveTailOfLargerList(Address contract, Address owner, int listSize) {
+    private void checkRemoveTailOfLargerList(AionAddress contract, AionAddress owner, int listSize) {
         // We have a linked list with 10 depositors. First find the tail. Ensure each address is
         // unique too.
         TRSuseContract trs = newTRSuseContract(owner);
-        Address next = getLinkedListHead(trs, contract);
-        Address head = new Address(next.toBytes());
-        Set<Address> addressesInList = new HashSet<>();
+        AionAddress next = getLinkedListHead(trs, contract);
+        AionAddress head = new AionAddress(next.toBytes());
+        Set<AionAddress> addressesInList = new HashSet<>();
         for (int i = 0; i < listSize; i++) {
             if (i == listSize - 1) {
                 assertNull(getLinkedListNext(trs, contract, next));
@@ -510,7 +510,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
     // Expects acct3 as head with: null <- acct3 <-> acct2 <-> acct -> null
     private void checkRemoveInteriorOfSizeThreeList(
-            AbstractTRS trs, Address contract, Address acct, Address acct2, Address acct3) {
+            AbstractTRS trs, AionAddress contract, AionAddress acct, AionAddress acct2, AionAddress acct3) {
 
         assertEquals(acct3, getLinkedListHead(trs, contract));
         assertEquals(acct2, getLinkedListNext(trs, contract, acct3));
@@ -532,14 +532,14 @@ public class TRSlinkedListTest extends TRShelpers {
         assertNull(getLinkedListPrev(trs, contract, acct3));
     }
 
-    private void checkRemoveInteriorOfLargerList(Address contract, Address owner, int listSize) {
+    private void checkRemoveInteriorOfLargerList(AionAddress contract, AionAddress owner, int listSize) {
         // We have a linked list with 10 depositors. Grab the 5th in line. Ensure each address is
         // unique too.
         TRSuseContract trs = newTRSuseContract(owner);
-        Address next = getLinkedListHead(trs, contract);
-        Address head = new Address(next.toBytes());
-        Address mid = null;
-        Set<Address> addressesInList = new HashSet<>();
+        AionAddress next = getLinkedListHead(trs, contract);
+        AionAddress head = new AionAddress(next.toBytes());
+        AionAddress mid = null;
+        Set<AionAddress> addressesInList = new HashSet<>();
         for (int i = 0; i < listSize; i++) {
             if (i == listSize - 1) {
                 assertNull(getLinkedListNext(trs, contract, next));
@@ -548,7 +548,7 @@ public class TRSlinkedListTest extends TRShelpers {
                 assertNotNull(next);
                 assertFalse(addressesInList.contains(next));
                 addressesInList.add(next);
-                mid = new Address(next.toBytes());
+                mid = new AionAddress(next.toBytes());
             } else {
                 next = getLinkedListNext(trs, contract, next);
                 assertNotNull(next);
@@ -575,13 +575,13 @@ public class TRSlinkedListTest extends TRShelpers {
         }
     }
 
-    private void checkMultipleListRemovals(Address contract, Address owner, int listSize) {
+    private void checkMultipleListRemovals(AionAddress contract, AionAddress owner, int listSize) {
         // We have a linked list with 10 depositors. Ensure each address is unique. Grab every other
         // address to remove.
         TRSuseContract trs = newTRSuseContract(owner);
-        Address next = getLinkedListHead(trs, contract);
-        Set<Address> removals = new HashSet<>();
-        Set<Address> addressesInList = new HashSet<>();
+        AionAddress next = getLinkedListHead(trs, contract);
+        Set<AionAddress> removals = new HashSet<>();
+        Set<AionAddress> addressesInList = new HashSet<>();
         for (int i = 0; i < listSize; i++) {
             if (i == listSize - 1) {
                 assertNull(getLinkedListNext(trs, contract, next));
@@ -597,14 +597,14 @@ public class TRSlinkedListTest extends TRShelpers {
         }
 
         // Remove all accts in removals. Iterate over list again.
-        for (Address rm : removals) {
+        for (AionAddress rm : removals) {
             byte[] input = getRefundInput(contract, rm, DEFAULT_BALANCE);
             assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
             assertFalse(accountIsValid(trs, contract, rm));
         }
 
         // Note: may give +/-1 errors if listSize is not divisible by 2.
-        Address head = getLinkedListHead(trs, contract);
+        AionAddress head = getLinkedListHead(trs, contract);
         assertFalse(removals.contains(head));
         for (int i = 0; i < listSize / 2; i++) {
             if (i == (listSize / 2) - 1) {

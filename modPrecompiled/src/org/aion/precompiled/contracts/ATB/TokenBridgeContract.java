@@ -11,10 +11,10 @@ import static org.aion.precompiled.contracts.ATB.BridgeUtilities.orDefaultDword;
 
 import java.math.BigInteger;
 import javax.annotation.Nonnull;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -34,7 +34,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
     private final BridgeStorageConnector connector;
     private final BridgeController controller;
-    private final Address contractAddress;
+    private final AionAddress contractAddress;
 
     // some useful defaults
     // TODO: add passing returns (need more though on gas consumption)
@@ -42,8 +42,8 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     public TokenBridgeContract(
             @Nonnull final ExecutionContext context,
             @Nonnull final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
-            @Nonnull final Address ownerAddress,
-            @Nonnull final Address contractAddress) {
+            @Nonnull final AionAddress ownerAddress,
+            @Nonnull final AionAddress contractAddress) {
         super(track);
         this.context = context;
         this.track = track;
@@ -235,7 +235,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
     private boolean isFromAddress(byte[] address) {
         if (address == null) return false;
-        return this.context.sender().equals(Address.wrap(address));
+        return this.context.sender().equals(AionAddress.wrap(address));
     }
 
     /**
@@ -256,8 +256,8 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             return new TransactionResult(ResultCode.FAILURE, 0);
 
         // assemble an internal transaction
-        Address from = this.contractAddress;
-        Address recipient = new Address(to);
+        AionAddress from = this.contractAddress;
+        AionAddress recipient = new AionAddress(to);
         BigInteger nonce = this.track.getNonce(from);
         DataWord valueToSend = new DataWord(value);
         byte[] dataToSend = new byte[0];
@@ -281,7 +281,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * <p>NOTE: copied from {@code Callback}
      */
     private AionInternalTx newInternalTx(
-            Address from, Address to, BigInteger nonce, DataWord value, byte[] data, String note) {
+            AionAddress from, AionAddress to, BigInteger nonce, DataWord value, byte[] data, String note) {
         byte[] parentHash = context.transactionHash();
         int depth = context.depth();
         int index = context.helper().getInternalTransactions().size();

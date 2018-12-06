@@ -5,10 +5,10 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.type.IBlock;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
@@ -49,7 +49,7 @@ public final class TRSqueryContract extends AbstractTRS {
      */
     public TRSqueryContract(
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo,
-            Address caller,
+            AionAddress caller,
             IBlockchain blockchain) {
 
         super(repo, caller, blockchain);
@@ -214,7 +214,7 @@ public final class TRSqueryContract extends AbstractTRS {
         }
 
         byte[] result = new byte[1];
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, len));
         if (!isOpenFunds(contract) && isContractLive(contract)) {
             result[0] = 0x1;
         }
@@ -246,7 +246,7 @@ public final class TRSqueryContract extends AbstractTRS {
         }
 
         byte[] result = new byte[1];
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, len));
         if (!isOpenFunds(contract) && isContractLocked(contract)) {
             result[0] = 0x1;
         }
@@ -279,7 +279,7 @@ public final class TRSqueryContract extends AbstractTRS {
         }
 
         byte[] result = new byte[1];
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, len));
         if (!isOpenFunds(contract) && isDirDepositsEnabled(contract)) {
             result[0] = 0x1;
         }
@@ -319,7 +319,7 @@ public final class TRSqueryContract extends AbstractTRS {
         }
 
         // Grab the contract address and block number and determine the period.
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, len));
 
         return determinePeriod(contract, blockchain.getBestBlock(), nrgLimit);
     }
@@ -357,7 +357,8 @@ public final class TRSqueryContract extends AbstractTRS {
         }
 
         // Grab the contract address and block number and determine the period.
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, indexBlockNum));
+        AionAddress contract = AionAddress
+            .wrap(Arrays.copyOfRange(input, indexAddress, indexBlockNum));
 
         ByteBuffer blockBuf = ByteBuffer.allocate(Long.BYTES);
         blockBuf.put(Arrays.copyOfRange(input, indexBlockNum, len));
@@ -401,7 +402,8 @@ public final class TRSqueryContract extends AbstractTRS {
             return new TransactionResult(ResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexTimestamp));
+        AionAddress contract = AionAddress
+            .wrap(Arrays.copyOfRange(input, indexContract, indexTimestamp));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new TransactionResult(ResultCode.FAILURE, 0);
@@ -472,7 +474,7 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param nrg The energy.
      * @return the period the contract is in at time given by block's timestamp.
      */
-    private TransactionResult determinePeriod(Address contract, IBlock block, long nrg) {
+    private TransactionResult determinePeriod(AionAddress contract, IBlock block, long nrg) {
         // If contract doesn't exist, return an error.
         ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
 

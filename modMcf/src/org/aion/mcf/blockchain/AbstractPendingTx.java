@@ -1,7 +1,7 @@
 package org.aion.mcf.blockchain;
 
 import java.math.BigInteger;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteUtil;
 
@@ -39,7 +39,7 @@ public abstract class AbstractPendingTx<TX extends ITransaction> {
         return blockNumber;
     }
 
-    public Address getSender() {
+    public AionAddress getSender() {
         return transaction.getFrom();
     }
 

@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
 
@@ -165,7 +165,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @return the associated address.
      */
     @Override
-    public Address getAddress() {
+    public AionAddress getAddress() {
         return (origContract == null) ? null : origContract.getAddress();
     }
 
@@ -175,7 +175,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @param address The address to set.
      */
     @Override
-    public void setAddress(Address address) {
+    public void setAddress(AionAddress address) {
         if (origContract != null) {
             origContract.setAddress(address);
         }

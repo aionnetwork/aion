@@ -3,7 +3,7 @@ package org.aion.mcf.blockchain;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
 
 public interface IPendingState<TX extends ITransaction> {
@@ -16,7 +16,7 @@ public interface IPendingState<TX extends ITransaction> {
 
     List<TX> getPendingTransactions();
 
-    BigInteger bestPendingStateNonce(Address addr);
+    BigInteger bestPendingStateNonce(AionAddress addr);
 
     String getVersion();
 }

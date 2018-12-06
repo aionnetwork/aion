@@ -18,7 +18,7 @@ import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
@@ -117,13 +117,13 @@ public class AionRepositoryImpl
 
     @Override
     public void updateBatch(
-            Map<Address, AccountState> stateCache,
-            Map<Address, IContractDetails<IDataWord>> detailsCache) {
+            Map<AionAddress, AccountState> stateCache,
+            Map<AionAddress, IContractDetails<IDataWord>> detailsCache) {
         rwLock.writeLock().lock();
 
         try {
-            for (Map.Entry<Address, AccountState> entry : stateCache.entrySet()) {
-                Address address = entry.getKey();
+            for (Map.Entry<AionAddress, AccountState> entry : stateCache.entrySet()) {
+                AionAddress address = entry.getKey();
                 AccountState accountState = entry.getValue();
                 IContractDetails<IDataWord> contractDetails = detailsCache.get(address);
 
@@ -204,7 +204,7 @@ public class AionRepositoryImpl
 
     /** @implNote The method calling this method must handle the locking. */
     private void updateContractDetails(
-            final Address address, final IContractDetails<IDataWord> contractDetails) {
+            final AionAddress address, final IContractDetails<IDataWord> contractDetails) {
         // locked by calling method
         detailsDS.update(address, contractDetails);
     }
@@ -290,13 +290,13 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public BigInteger getBalance(Address address) {
+    public BigInteger getBalance(AionAddress address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getBalance();
     }
 
     @Override
-    public IDataWord getStorageValue(Address address, IDataWord key) {
+    public IDataWord getStorageValue(AionAddress address, IDataWord key) {
         IContractDetails<IDataWord> details = getContractDetails(address);
         IDataWord value = (details == null) ? null : details.get(key);
         if (value == null) {
@@ -346,13 +346,13 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public Map<IDataWord, IDataWord> getStorage(Address address, Collection<IDataWord> keys) {
+    public Map<IDataWord, IDataWord> getStorage(AionAddress address, Collection<IDataWord> keys) {
         IContractDetails<IDataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
 
     @Override
-    public byte[] getCode(Address address) {
+    public byte[] getCode(AionAddress address) {
         AccountState accountState = getAccountState(address);
 
         if (accountState == null) {
@@ -366,13 +366,13 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public BigInteger getNonce(Address address) {
+    public BigInteger getNonce(AionAddress address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getNonce();
     }
 
     /** @implNote The method calling this method must handle the locking. */
-    private void updateAccountState(Address address, AccountState accountState) {
+    private void updateAccountState(AionAddress address, AccountState accountState) {
         // locked by calling method
         worldState.update(address.toBytes(), accountState.getEncoded());
     }
@@ -385,7 +385,7 @@ public class AionRepositoryImpl
      *     or synchronized</b>, depending on the specific use case.
      */
     @Override
-    public IContractDetails<IDataWord> getContractDetails(Address address) {
+    public IContractDetails<IDataWord> getContractDetails(AionAddress address) {
         rwLock.readLock().lock();
 
         try {
@@ -412,7 +412,7 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public boolean hasContractDetails(Address address) {
+    public boolean hasContractDetails(AionAddress address) {
         rwLock.readLock().lock();
         try {
             return detailsDS.get(address.toBytes()) != null;
@@ -428,7 +428,7 @@ public class AionRepositoryImpl
      *     <b>may not need to be locked or synchronized</b>, depending on the specific use case.
      */
     @Override
-    public AccountState getAccountState(Address address) {
+    public AccountState getAccountState(AionAddress address) {
         rwLock.readLock().lock();
 
         AccountState result = null;
@@ -448,7 +448,7 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public boolean hasAccountState(Address address) {
+    public boolean hasAccountState(AionAddress address) {
         return getAccountState(address) != null;
     }
 
@@ -458,9 +458,9 @@ public class AionRepositoryImpl
      */
     @Override
     public void loadAccountState(
-            Address address,
-            Map<Address, AccountState> cacheAccounts,
-            Map<Address, IContractDetails<IDataWord>> cacheDetails) {
+            AionAddress address,
+            Map<AionAddress, AccountState> cacheAccounts,
+            Map<AionAddress, IContractDetails<IDataWord>> cacheDetails) {
 
         AccountState account = getAccountState(address);
         IContractDetails<IDataWord> details = getContractDetails(address);

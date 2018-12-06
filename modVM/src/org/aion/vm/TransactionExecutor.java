@@ -7,7 +7,7 @@ import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -63,9 +63,9 @@ public class TransactionExecutor extends AbstractExecutor {
          * transaction info
          */
         byte[] txHash = tx.getHash();
-        Address address = tx.isContractCreation() ? tx.getContractAddress() : tx.getTo();
-        Address origin = tx.getFrom();
-        Address caller = tx.getFrom();
+        AionAddress address = tx.isContractCreation() ? tx.getContractAddress() : tx.getTo();
+        AionAddress origin = tx.getFrom();
+        AionAddress caller = tx.getFrom();
 
         /*
          * nrg info
@@ -88,7 +88,7 @@ public class TransactionExecutor extends AbstractExecutor {
         /*
          * block info
          */
-        Address blockCoinbase = block.getCoinbase();
+        AionAddress blockCoinbase = block.getCoinbase();
         long blockNumber = block.getNumber();
         long blockTimestamp = block.getTimestamp();
         long blockNrgLimit = block.getNrgLimit();
@@ -175,7 +175,7 @@ public class TransactionExecutor extends AbstractExecutor {
 
     /** Prepares contract create. */
     protected void create() {
-        Address contractAddress = tx.getContractAddress();
+        AionAddress contractAddress = tx.getContractAddress();
 
         if (repoTrack.hasAccountState(contractAddress)) {
             exeResult.setResultCodeAndEnergyRemaining(ResultCode.FAILURE, 0);

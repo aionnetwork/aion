@@ -1,4 +1,5 @@
 module aion.base {
+    requires aion.vm.api;
     exports org.aion.base.timer;
     exports org.aion.base.type;
     exports org.aion.base.util;

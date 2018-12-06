@@ -38,7 +38,7 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.Tx;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.db.IRepository;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.Hash256;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
@@ -247,7 +247,7 @@ public class ApiWeb3Aion extends ApiAion {
                         .build(
                                 new CacheLoader<>() {
                                     public MinerStatsView load(String key) { // no checked exception
-                                        Address miner = new Address(key);
+                                        AionAddress miner = new AionAddress(key);
                                         return new MinerStatsView(
                                                         STRATUM_RECENT_BLK_COUNT, miner.toBytes())
                                                 .update();
@@ -401,7 +401,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        AionAddress address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -440,7 +440,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        AionAddress address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -492,7 +492,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        AionAddress address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -579,7 +579,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        AionAddress address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -615,7 +615,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = Address.wrap(_address);
+        AionAddress address = AionAddress.wrap(_address);
         ECKey key = getAccountKey(address.toString());
         if (key == null) {
             return new RpcMsg(null, RpcError.NOT_ALLOWED, "Account not unlocked.");
@@ -1284,7 +1284,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        return new RpcMsg(lockAccount(Address.wrap(_account), _password));
+        return new RpcMsg(lockAccount(AionAddress.wrap(_account), _password));
     }
 
     public RpcMsg personal_newAccount(Object _params) {
@@ -1785,10 +1785,10 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address;
+        AionAddress address;
 
         try {
-            address = new Address(_address);
+            address = new AionAddress(_address);
         } catch (Exception e) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid address provided.");
         }
@@ -2145,10 +2145,10 @@ public class ApiWeb3Aion extends ApiAion {
         JSONArray logs = new JSONArray();
         for (Log l : txInfo.getReceipt().getLogInfoList()) {
             JSONObject log = new JSONObject();
-            log.put("address", l.getAddress().toString());
-            log.put("data", TypeConverter.toJsonHex(l.getData()));
+            log.put("address", l.getLogSourceAddress().toString());
+            log.put("data", TypeConverter.toJsonHex(l.getLogData()));
             JSONArray topics = new JSONArray();
-            for (byte[] topic : l.getTopics()) {
+            for (byte[] topic : l.getLogTopics()) {
                 topics.put(TypeConverter.toJsonHex(topic));
             }
             log.put("topics", topics);

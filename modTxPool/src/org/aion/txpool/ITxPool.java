@@ -3,7 +3,7 @@ package org.aion.txpool;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
 
 /**
@@ -26,7 +26,7 @@ public interface ITxPool<TX extends ITransaction> {
 
     List<TX> remove(List<TX> tx);
 
-    List<TX> remove(Map<Address, BigInteger> accNonce);
+    List<TX> remove(Map<AionAddress, BigInteger> accNonce);
 
     int size();
 
@@ -36,7 +36,7 @@ public interface ITxPool<TX extends ITransaction> {
 
     long getOutDateTime();
 
-    BigInteger bestPoolNonce(Address addr);
+    BigInteger bestPoolNonce(AionAddress addr);
 
     void updateBlkNrgLimit(long nrg);
 
@@ -45,5 +45,5 @@ public interface ITxPool<TX extends ITransaction> {
 
     List<TX> snapshotAll();
 
-    TX getPoolTx(Address from, BigInteger txNonce);
+    TX getPoolTx(AionAddress from, BigInteger txNonce);
 }
