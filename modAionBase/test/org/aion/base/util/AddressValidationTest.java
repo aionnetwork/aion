@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class AionAddressValidationTest {
+public class AddressValidationTest {
 
     @Test
     public void allZeroPrefix() {

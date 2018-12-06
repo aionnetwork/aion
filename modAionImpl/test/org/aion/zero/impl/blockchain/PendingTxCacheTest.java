@@ -12,6 +12,7 @@ import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Before;
 import org.junit.Test;
@@ -164,7 +165,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 10);
 
-        Map<AionAddress, BigInteger> map = new HashMap<>();
+        Map<Address, BigInteger> map = new HashMap<>();
         map.put(AionAddress.wrap(key.get(0).getAddress()), BigInteger.TWO);
 
         newCache = cache.flush(map);
@@ -188,7 +189,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 10);
 
-        Map<AionAddress, BigInteger> map = new HashMap<>();
+        Map<Address, BigInteger> map = new HashMap<>();
         map.put(AionAddress.wrap(key.get(1).getAddress()), BigInteger.TWO);
         cache.flush(map);
 
@@ -214,7 +215,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 10);
 
-        Map<AionAddress, BigInteger> map = new HashMap<>();
+        Map<Address, BigInteger> map = new HashMap<>();
         map.put(AionAddress.wrap(key.get(0).getAddress()), BigInteger.TWO);
         cache.flush(map);
 
@@ -243,7 +244,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 20);
 
-        Map<AionAddress, BigInteger> map = new HashMap<>();
+        Map<Address, BigInteger> map = new HashMap<>();
         map.put(AionAddress.wrap(key.get(0).getAddress()), BigInteger.TWO);
         map.put(AionAddress.wrap(key.get(1).getAddress()), BigInteger.TWO);
         cache.flush(map);
@@ -273,7 +274,7 @@ public class PendingTxCacheTest {
 
         assertTrue(cache.cacheTxSize() == 20000);
 
-        Map<AionAddress, BigInteger> map = new HashMap<>();
+        Map<Address, BigInteger> map = new HashMap<>();
         map.put(AionAddress.wrap(key.get(0).getAddress()), BigInteger.valueOf(input + 1));
         map.put(AionAddress.wrap(key.get(1).getAddress()), BigInteger.valueOf(input + 1));
         cache.flush(map);
@@ -468,7 +469,7 @@ public class PendingTxCacheTest {
         assertTrue(cache.cacheTxSize() == (input << 1));
 
         System.out.println("flush starting");
-        Map<AionAddress, BigInteger> flushMap = new HashMap<>();
+        Map<Address, BigInteger> flushMap = new HashMap<>();
         flushMap.put(AionAddress.wrap(key.get(0).getAddress()), BigInteger.valueOf(remove));
         flushMap.put(AionAddress.wrap(key.get(1).getAddress()), BigInteger.valueOf(remove));
 

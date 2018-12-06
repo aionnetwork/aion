@@ -244,7 +244,7 @@ public class BlockchainAccountStateBenchmark {
 
         creationTx.sign(key);
         AionBlock block = bc.createNewBlock(parentBlock, Arrays.asList(creationTx), true);
-        return Pair.of(block, creationTx.getHash());
+        return Pair.of(block, creationTx.getTransactionHash());
     }
 
     private static AionBlock createContractBundle(

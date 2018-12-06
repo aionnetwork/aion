@@ -34,6 +34,7 @@ import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.TxResponse;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -242,7 +243,7 @@ public abstract class ApiAion extends Api {
             return null;
         }
 
-        TxRecpt receipt = this.getTransactionReceipt(tx.getHash());
+        TxRecpt receipt = this.getTransactionReceipt(tx.getTransactionHash());
         // @Jay this should not happen!
         // TODO
         if (receipt == null) {
@@ -275,7 +276,7 @@ public abstract class ApiAion extends Api {
             return null;
         }
 
-        TxRecpt receipt = this.getTransactionReceipt(tx.getHash());
+        TxRecpt receipt = this.getTransactionReceipt(tx.getTransactionHash());
         // The receipt shouldn't be null!
         if (receipt == null) {
             throw new NullPointerException();
@@ -310,7 +311,7 @@ public abstract class ApiAion extends Api {
         return pBlk.getTransactionsList().size();
     }
 
-    protected long getTransactionCount(AionAddress addr, long blkNr) {
+    protected long getTransactionCount(Address addr, long blkNr) {
         AionBlock pBlk = this.getBlock(blkNr);
         if (pBlk == null) {
             LOG.error(
@@ -320,7 +321,7 @@ public abstract class ApiAion extends Api {
         long cnt = 0;
         List<AionTransaction> txList = pBlk.getTransactionsList();
         for (AionTransaction tx : txList) {
-            if (addr.equals(tx.getFrom())) {
+            if (addr.equals(tx.getSenderAddress())) {
                 cnt++;
             }
         }
@@ -400,7 +401,7 @@ public abstract class ApiAion extends Api {
         for (AionTransaction atx : block.getTransactionsList()) {
 
             // @Jay: This should not happen!
-            byte[] hash = atx.getHash();
+            byte[] hash = atx.getTransactionHash();
             if (hash == null) {
                 throw new NullPointerException();
             }
@@ -495,7 +496,7 @@ public abstract class ApiAion extends Api {
 
                 TxResponse rsp = pendingState.addPendingTransaction(tx);
 
-                return new ApiTxResponse(rsp, tx.getHash(), tx.getContractAddress());
+                return new ApiTxResponse(rsp, tx.getTransactionHash(), tx.getContractAddress());
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.createContract - exception: [{}]", ex.getMessage());
@@ -559,7 +560,7 @@ public abstract class ApiAion extends Api {
                                 _params.getNrgPrice());
                 tx.sign(key);
 
-                return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getHash()));
+                return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.sendTransaction exception: [{}]", ex.getMessage());
@@ -574,7 +575,7 @@ public abstract class ApiAion extends Api {
 
         AionTransaction tx = new AionTransaction(signedTx);
         try {
-            return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getHash()));
+            return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
         } catch (Exception ex) {
             LOG.error("<send-transaction exception>", ex);
             return (new ApiTxResponse(TxResponse.EXCEPTION, ex));

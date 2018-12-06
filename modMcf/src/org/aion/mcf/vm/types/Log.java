@@ -9,9 +9,9 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IBloomFilter;
 import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.Address;
 
 /** A log is emitted by the LOGX vm instruction. It's composed of address, topics and data. */
 public class Log implements IExecutionLog {

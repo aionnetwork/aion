@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.type.AionAddress;
+import org.aion.vm.api.interfaces.Address;
 
 public interface IContractDetails<DW> {
 
@@ -131,14 +132,14 @@ public interface IContractDetails<DW> {
      *
      * @return the associated address.
      */
-    AionAddress getAddress();
+    Address getAddress();
 
     /**
      * Sets the associated address to address.
      *
      * @param address The address to set.
      */
-    void setAddress(AionAddress address);
+    void setAddress(Address address);
 
     /**
      * Returns a string representation of this IContractDetails.
