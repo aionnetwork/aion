@@ -12,12 +12,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.slf4j.Logger;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * Abstract repository cache.
@@ -34,16 +34,16 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     protected IRepository<AccountState, IDataWord, BSB> repository;
 
     /** local accounts cache */
-    protected Map<AionAddress, AccountState> cachedAccounts;
+    protected Map<Address, AccountState> cachedAccounts;
 
     protected ReadWriteLock lockAccounts = new ReentrantReadWriteLock();
     /** local contract details cache */
-    protected Map<AionAddress, IContractDetails<IDataWord>> cachedDetails;
+    protected Map<Address, IContractDetails<IDataWord>> cachedDetails;
 
     protected ReadWriteLock lockDetails = new ReentrantReadWriteLock();
 
     @Override
-    public AccountState createAccount(AionAddress address) {
+    public AccountState createAccount(Address address) {
         fullyWriteLock();
         try {
             AccountState accountState = new AccountState();
@@ -70,7 +70,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
      * @implNote If there is no account associated with the given address, it will create it.
      */
     @Override
-    public AccountState getAccountState(AionAddress address) {
+    public AccountState getAccountState(Address address) {
         lockAccounts.readLock().lock();
 
         try {
@@ -96,7 +96,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
         }
     }
 
-    public boolean hasAccountState(AionAddress address) {
+    public boolean hasAccountState(Address address) {
         lockAccounts.readLock().lock();
         try {
             AccountState accountState = cachedAccounts.get(address);
@@ -115,7 +115,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public IContractDetails<IDataWord> getContractDetails(AionAddress address) {
+    public IContractDetails<IDataWord> getContractDetails(Address address) {
         lockDetails.readLock().lock();
 
         try {
@@ -142,7 +142,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public boolean hasContractDetails(AionAddress address) {
+    public boolean hasContractDetails(Address address) {
         lockDetails.readLock().lock();
 
         try {
@@ -166,9 +166,9 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
      */
     @Override
     public void loadAccountState(
-            AionAddress address,
-            Map<AionAddress, AccountState> accounts,
-            Map<AionAddress, IContractDetails<IDataWord>> details) {
+            Address address,
+            Map<Address, AccountState> accounts,
+            Map<Address, IContractDetails<IDataWord>> details) {
         fullyReadLock();
 
         try {
@@ -198,7 +198,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
      *     calling this method.
      * @apiNote If the account was never stored this call will create it.
      */
-    private void loadAccountState(AionAddress address) {
+    private void loadAccountState(Address address) {
         fullyWriteLock();
         try {
             repository.loadAccountState(address, this.cachedAccounts, this.cachedDetails);
@@ -208,7 +208,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public void deleteAccount(AionAddress address) {
+    public void deleteAccount(Address address) {
         fullyWriteLock();
         try {
             getAccountState(address).delete();
@@ -219,7 +219,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public BigInteger incrementNonce(AionAddress address) {
+    public BigInteger incrementNonce(Address address) {
         lockAccounts.writeLock().lock();
         try {
             return getAccountState(address).incrementNonce();
@@ -229,7 +229,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public BigInteger setNonce(AionAddress address, BigInteger newNonce) {
+    public BigInteger setNonce(Address address, BigInteger newNonce) {
         lockAccounts.writeLock().lock();
         try {
             return getAccountState(address).setNonce(newNonce);
@@ -239,7 +239,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public BigInteger getNonce(AionAddress address) {
+    public BigInteger getNonce(Address address) {
         AccountState accountState = getAccountState(address);
         // account state can never be null, but may be empty or deleted
         return (accountState.isEmpty() || accountState.isDeleted())
@@ -248,7 +248,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public BigInteger getBalance(AionAddress address) {
+    public BigInteger getBalance(Address address) {
         AccountState accountState = getAccountState(address);
         // account state can never be null, but may be empty or deleted
         return (accountState.isEmpty() || accountState.isDeleted())
@@ -257,7 +257,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public BigInteger addBalance(AionAddress address, BigInteger value) {
+    public BigInteger addBalance(Address address, BigInteger value) {
         lockAccounts.writeLock().lock();
         try {
             // TODO: where do we ensure that this does not result in a negative value?
@@ -269,7 +269,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public void saveCode(AionAddress address, byte[] code) {
+    public void saveCode(Address address, byte[] code) {
         fullyWriteLock();
         try {
             // save the code
@@ -288,7 +288,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public byte[] getCode(AionAddress address) {
+    public byte[] getCode(Address address) {
         if (!hasAccountState(address)) {
             return EMPTY_BYTE_ARRAY;
         }
@@ -300,7 +300,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public void addStorageRow(AionAddress address, IDataWord key, IDataWord value) {
+    public void addStorageRow(Address address, IDataWord key, IDataWord value) {
         lockDetails.writeLock().lock();
         try {
             getContractDetails(address).put(key, value);
@@ -310,7 +310,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public IDataWord getStorageValue(AionAddress address, IDataWord key) {
+    public IDataWord getStorageValue(Address address, IDataWord key) {
         IDataWord value = getContractDetails(address).get(key);
         if (value == null) {
             return null;
@@ -319,7 +319,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public Map<IDataWord, IDataWord> getStorage(AionAddress address, Collection<IDataWord> keys) {
+    public Map<IDataWord, IDataWord> getStorage(Address address, Collection<IDataWord> keys) {
         IContractDetails<IDataWord> details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
