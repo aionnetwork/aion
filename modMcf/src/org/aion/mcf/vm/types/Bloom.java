@@ -25,9 +25,10 @@ package org.aion.mcf.vm.types;
 import java.util.Arrays;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
+import org.aion.vm.api.interfaces.IBloomFilter;
 
 /** Utility class for creating/operating bloom. */
-public class Bloom {
+public class Bloom implements IBloomFilter {
 
     public byte[] data = new byte[256];
 
@@ -55,19 +56,22 @@ public class Bloom {
         return bloom;
     }
 
-    public void or(Bloom bloom) {
+    @Override
+    public void or(IBloomFilter bloom) {
         for (int i = 0; i < data.length; ++i) {
-            data[i] |= bloom.data[i];
+            data[i] |= bloom.getBloomFilterBytes()[i];
         }
     }
 
-    public void and(Bloom bloom) {
+    @Override
+    public void and(IBloomFilter bloom) {
         for (int i = 0; i < data.length; ++i) {
-            data[i] &= bloom.data[i];
+            data[i] &= bloom.getBloomFilterBytes()[i];
         }
     }
 
-    public boolean matches(Bloom topicBloom) {
+    @Override
+    public boolean matches(IBloomFilter topicBloom) {
         Bloom copy = copy();
         copy.or(topicBloom);
         return this.equals(copy);
@@ -80,18 +84,20 @@ public class Bloom {
      * @param topicBloom another bloom already set with bloomBits
      * @return {@code true} if our bloom contains other bloom, {@code false} otherwise
      */
-    public boolean contains(Bloom topicBloom) {
+    @Override
+    public boolean contains(IBloomFilter topicBloom) {
         Bloom copy = copy();
         copy.and(topicBloom);
         return topicBloom.equals(copy);
     }
 
-    public byte[] getData() {
+    @Override
+    public byte[] getBloomFilterBytes() {
         return data;
     }
 
     public Bloom copy() {
-        return new Bloom(Arrays.copyOf(getData(), getData().length));
+        return new Bloom(Arrays.copyOf(getBloomFilterBytes(), getBloomFilterBytes().length));
     }
 
     @Override

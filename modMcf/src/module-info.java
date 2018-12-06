@@ -10,6 +10,7 @@ module aion.mcf {
     requires com.google.common;
     requires libnsc;
     requires commons.collections4;
+    requires aion.vm.api;
 
     exports org.aion.mcf.account;
     exports org.aion.mcf.blockchain;

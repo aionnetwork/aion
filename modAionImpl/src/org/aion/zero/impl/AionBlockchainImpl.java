@@ -771,7 +771,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 preBlock.txs,
                 calcTxTrie(preBlock.txs),
                 stateRoot,
-                logBloom.getData(),
+                logBloom.getBloomFilterBytes(),
                 calcReceiptsTrie(preBlock.receipts),
                 totalEnergyUsed);
 
@@ -924,14 +924,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
         Bloom retBloomFilter = new Bloom();
 
         if (receipts == null || receipts.isEmpty()) {
-            return retBloomFilter.getData();
+            return retBloomFilter.getBloomFilterBytes();
         }
 
         for (AionTxReceipt receipt : receipts) {
             retBloomFilter.or(receipt.getBloomFilter());
         }
 
-        return retBloomFilter.getData();
+        return retBloomFilter.getBloomFilterBytes();
     }
 
     private IAionBlock getParent(A0BlockHeader header) {

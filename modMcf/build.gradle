@@ -10,6 +10,7 @@ dependencies {
     compile project(':modCrypto')
     compile project(':modRlp')
     compile project(':modDbImpl')
+    compile project(':aion_vm_api')
     compile files('../lib/libnsc.jar')
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'com.google.guava:guava:25.1-jre'
