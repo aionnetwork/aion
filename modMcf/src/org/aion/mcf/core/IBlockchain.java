@@ -3,7 +3,7 @@ package org.aion.mcf.core;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
@@ -114,7 +114,7 @@ public interface IBlockchain<
 
     void setExitOn(long exitOn);
 
-    Address getMinerCoinbase();
+    AionAddress getMinerCoinbase();
 
     boolean isBlockExist(byte[] hash);
 

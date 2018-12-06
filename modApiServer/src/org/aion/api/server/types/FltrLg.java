@@ -14,6 +14,7 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
+import org.aion.vm.api.interfaces.IBloomFilter;
 
 /** @author chris */
 
@@ -55,7 +56,7 @@ public final class FltrLg extends Fltr {
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
                         for (Log logInfo : receipt.getLogInfoList()) {
-                            if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
+                            if (matchBloom(logInfo.getBloomFilterForLog()) && matchesExactly(logInfo)) {
                                 add(
                                         new EvtLg(
                                                 new TxRecptLg(
@@ -93,7 +94,7 @@ public final class FltrLg extends Fltr {
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
                         for (Log logInfo : receipt.getLogInfoList()) {
-                            if (matchBloom(logInfo.getBloom()) && matchesExactly(logInfo)) {
+                            if (matchBloom(logInfo.getBloomFilterForLog()) && matchesExactly(logInfo)) {
                                 add(
                                         new EvtLg(
                                                 new TxRecptLg(
@@ -132,7 +133,7 @@ public final class FltrLg extends Fltr {
         }
     }
 
-    public boolean matchBloom(Bloom blockBloom) {
+    public boolean matchBloom(IBloomFilter blockBloom) {
         initBlooms();
         for (Bloom[] andBloom : filterBlooms) {
             boolean orMatches = false;
@@ -157,8 +158,8 @@ public final class FltrLg extends Fltr {
 
     public boolean matchesExactly(Log logInfo) {
         initBlooms();
-        if (!matchesContractAddress(logInfo.getAddress().toBytes())) return false;
-        List<byte[]> logTopics = logInfo.getTopics();
+        if (!matchesContractAddress(logInfo.getLogSourceAddress().toBytes())) return false;
+        List<byte[]> logTopics = logInfo.getLogTopics();
         for (int i = 0; i < this.topics.size(); i++) {
             if (i >= logTopics.size()) return false;
             byte[][] orTopics = topics.get(i);

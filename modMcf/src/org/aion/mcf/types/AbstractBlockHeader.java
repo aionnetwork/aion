@@ -1,7 +1,7 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.log.AionLoggerFactory;
 import org.spongycastle.util.BigIntegers;
 
@@ -21,7 +21,7 @@ public abstract class AbstractBlockHeader {
      * The 256-bit address to which all fees collected from the successful
      * mining of this block be transferred; formally
      */
-    protected Address coinbase;
+    protected AionAddress coinbase;
     /*
      * The SHA3 256-bit hash of the root node of the state trie, after all
      * transactions are executed and finalisations applied
@@ -101,11 +101,11 @@ public abstract class AbstractBlockHeader {
         return parentHash;
     }
 
-    public Address getCoinbase() {
+    public AionAddress getCoinbase() {
         return coinbase;
     }
 
-    public void setCoinbase(Address coinbase) {
+    public void setCoinbase(AionAddress coinbase) {
         this.coinbase = coinbase;
     }
 

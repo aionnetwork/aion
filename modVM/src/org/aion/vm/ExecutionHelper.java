@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.vm.types.Log;
 import org.aion.zero.types.AionInternalTx;
 
@@ -24,7 +24,7 @@ import org.aion.zero.types.AionInternalTx;
  */
 public class ExecutionHelper {
 
-    private Set<Address> deleteAccounts = new HashSet<>();
+    private Set<AionAddress> deleteAccounts = new HashSet<>();
     private List<AionInternalTx> internalTxs = new ArrayList<>();
     private List<Log> logs = new ArrayList<>();
     private List<Call> calls = new ArrayList<>();
@@ -60,7 +60,7 @@ public class ExecutionHelper {
      *
      * @param address The address to add to the deleted accounts.
      */
-    public void addDeleteAccount(Address address) {
+    public void addDeleteAccount(AionAddress address) {
         deleteAccounts.add(address);
     }
 
@@ -69,8 +69,8 @@ public class ExecutionHelper {
      *
      * @param addresses The addressed to add to the set of deleted accounts.
      */
-    public void addDeleteAccounts(Collection<Address> addresses) {
-        for (Address addr : addresses) {
+    public void addDeleteAccounts(Collection<AionAddress> addresses) {
+        for (AionAddress addr : addresses) {
             if (addr != null) {
                 deleteAccounts.add(addr);
             }
@@ -158,7 +158,7 @@ public class ExecutionHelper {
      *
      * @return the deleted accounts list.
      */
-    public List<Address> getDeleteAccounts() {
+    public List<AionAddress> getDeleteAccounts() {
         return new ArrayList<>(deleteAccounts);
     }
 

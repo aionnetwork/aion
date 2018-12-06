@@ -1,7 +1,7 @@
 package org.aion.base.db;
 
 import java.math.BigInteger;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 
 /**
  * Repository interface for individual account additions and updates.
@@ -19,7 +19,7 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
      * @param address the address of the account to be created
      * @return a {@link AS} object storing the newly created account state
      */
-    AS createAccount(Address address);
+    AS createAccount(AionAddress address);
 
     /**
      * Deletes the account from the cache and database.
@@ -28,7 +28,7 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
      * @implNote This method only marks the account for deletion. Removing the account from the
      *     database is done at the next flush operation.
      */
-    void deleteAccount(Address address);
+    void deleteAccount(AionAddress address);
 
     /**
      * Increases by one the account associated with the given address.
@@ -36,7 +36,7 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
      * @param address the address of the account of interest
      * @return the updated value of the nonce
      */
-    BigInteger incrementNonce(Address address);
+    BigInteger incrementNonce(AionAddress address);
 
     /**
      * Sets to a specific value the nonce of the account associated with the given address.
@@ -44,7 +44,7 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
      * @param address the address of the account of interest
      * @return the updated nonce value for the account
      */
-    BigInteger setNonce(Address address, BigInteger nonce);
+    BigInteger setNonce(AionAddress address, BigInteger nonce);
 
     /**
      * Adds the given value to the balance of the account associated with the given address.
@@ -53,7 +53,7 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
      * @param value to be added to the balance
      * @return the updated balance for the account
      */
-    BigInteger addBalance(Address address, BigInteger value);
+    BigInteger addBalance(AionAddress address, BigInteger value);
 
     // setters relating to contracts
     // -----------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
      * @implNote Calling this method on already initialized code should leave the account and
      *     contract state unaltered.
      */
-    void saveCode(Address address, byte[] code);
+    void saveCode(AionAddress address, byte[] code);
 
     // setters relating to storage
     // -------------------------------------------------------------------------------------
@@ -78,5 +78,5 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
      * @param key the key at which the date will be stored
      * @param value the data to be stored
      */
-    void addStorageRow(Address address, DW key, DW value);
+    void addStorageRow(AionAddress address, DW key, DW value);
 }
