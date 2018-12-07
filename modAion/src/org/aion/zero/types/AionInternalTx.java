@@ -14,9 +14,10 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 /** aion internal transaction class. */
-public class AionInternalTx extends AionTransaction {
+public class AionInternalTx extends AionTransaction implements InternalTransactionInterface {
 
     private byte[] parentHash;
     private int deep;
@@ -56,18 +57,21 @@ public class AionInternalTx extends AionTransaction {
         return (nrgPrice == null) ? ByteUtil.EMPTY_BYTE_ARRAY : nrgPrice.getData();
     }
 
-    public void reject() {
+    @Override
+    public void markAsRejected() {
         this.rejected = true;
     }
 
-    public int getDeep() {
+    @Override
+    public int getStackDepth() {
         if (!parsed) {
             rlpParse();
         }
         return deep;
     }
 
-    public int getIndex() {
+    @Override
+    public int getIndexOfInternalTransaction() {
         if (!parsed) {
             rlpParse();
         }
@@ -96,7 +100,8 @@ public class AionInternalTx extends AionTransaction {
         return from;
     }
 
-    public byte[] getParentHash() {
+    @Override
+    public byte[] getParentTransactionHash() {
         if (!parsed) {
             rlpParse();
         }
@@ -174,7 +179,7 @@ public class AionInternalTx extends AionTransaction {
         String to = (this.getDestinationAddress() == null) ? "" : this.getDestinationAddress().toString();
         return "TransactionData ["
                 + "  parentHash="
-                + toHexString(getParentHash())
+                + toHexString(getParentTransactionHash())
                 + ", hash="
                 + toHexString(this.getTransactionHash())
                 + ", nonce="
@@ -190,9 +195,9 @@ public class AionInternalTx extends AionTransaction {
                 + ", note="
                 + getNote()
                 + ", deep="
-                + getDeep()
+                + getStackDepth()
                 + ", index="
-                + getIndex()
+                + getIndexOfInternalTransaction()
                 + ", rejected="
                 + isRejected()
                 + "]";
