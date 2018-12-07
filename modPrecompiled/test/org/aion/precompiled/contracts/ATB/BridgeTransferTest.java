@@ -33,10 +33,10 @@ import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.vm.ExecutionContext;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -338,10 +338,10 @@ public class BridgeTransferTest {
 
         // check status of result
         assertThat(tuple.results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
-        assertThat(this.context.helper().getLogs().size()).isEqualTo(1);
-        assertThat(this.context.helper().getLogs().get(0).getLogTopics().get(0))
+        assertThat(this.context.getSideEffects().getExecutionLogs().size()).isEqualTo(1);
+        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getLogTopics().get(0))
                 .isEqualTo(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed());
-        assertThat(this.context.helper().getLogs().get(0).getLogTopics().get(1))
+        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getLogTopics().get(1))
                 .isEqualTo(aionTransactionHash);
 
         // one transfer should have gone through, second shouldn't
@@ -379,9 +379,9 @@ public class BridgeTransferTest {
                 .isEqualTo(transferTotalBigInteger);
 
         // 511 transfer events + 1 distributed event
-        assertThat(this.context.helper().getLogs().size()).isEqualTo(512);
+        assertThat(this.context.getSideEffects().getExecutionLogs().size()).isEqualTo(512);
 
-        List<Log> logs = this.context.helper().getLogs();
+        List<IExecutionLog> logs = this.context.getSideEffects().getExecutionLogs();
         for (int i = 0; i < 511; i++) {
             List<byte[]> topics = logs.get(i).getLogTopics();
             assertThat(topics.get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());

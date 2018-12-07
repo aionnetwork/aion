@@ -33,9 +33,9 @@ import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
 import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
-import org.aion.vm.ExecutionContext;
 import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.vm.api.interfaces.TransactionContext;
 
 /** A factory class that produces pre-compiled contract instances. */
 public class ContractFactory implements IContractFactory {
@@ -77,16 +77,16 @@ public class ContractFactory implements IContractFactory {
      */
     @Override
     public IPrecompiledContract getPrecompiledContract(
-            ExecutionContext context,
+            TransactionContext context,
             IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
 
         CfgFork cfg = new CfgFork();
         String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
 
         boolean fork_032 =
-                (forkProperty != null) && (context.blockNumber() >= Long.valueOf(forkProperty));
+                (forkProperty != null) && (context.getBlockNumber() >= Long.valueOf(forkProperty));
 
-        switch (context.address().toString()) {
+        switch (context.getDestinationAddress().toString()) {
             case ADDR_TOKEN_BRIDGE:
                 TokenBridgeContract contract =
                         new TokenBridgeContract(
@@ -95,7 +95,7 @@ public class ContractFactory implements IContractFactory {
                                 AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
                                 AionAddress.wrap(ADDR_TOKEN_BRIDGE));
 
-                if (!context.origin().equals(AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
+                if (!context.getOriginAddress().equals(AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
                         && !contract.isInitialized()) {
                     return null;
                 }
@@ -111,7 +111,7 @@ public class ContractFactory implements IContractFactory {
                 return fork_032
                         ? null
                         : new TotalCurrencyContract(
-                                track, context.sender(), AionAddress.wrap(ADDR_OWNER));
+                                track, context.getSenderAddress(), AionAddress.wrap(ADDR_OWNER));
             default:
                 return null;
         }

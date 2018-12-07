@@ -41,7 +41,7 @@ import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.PrecompiledUtilities;
-import org.aion.vm.ExecutionHelper;
+import org.aion.vm.api.interfaces.TransactionSideEffects;
 
 /**
  * Contains the functional components of the Aion Token Bridge, this class is removed from concerns
@@ -50,14 +50,14 @@ import org.aion.vm.ExecutionHelper;
 public class BridgeController {
 
     private final BridgeStorageConnector connector;
-    private final ExecutionHelper result;
+    private final TransactionSideEffects result;
     private final AionAddress contractAddress;
     private final AionAddress ownerAddress;
     private Transferable transferable;
 
     public BridgeController(
             @Nonnull final BridgeStorageConnector storageConnector,
-            @Nonnull final ExecutionHelper helper,
+            @Nonnull final TransactionSideEffects helper,
             @Nonnull final AionAddress contractAddress,
             @Nonnull final AionAddress ownerAddress) {
         this.connector = storageConnector;

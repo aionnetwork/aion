@@ -27,9 +27,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.aion.base.type.AionAddress;
-import org.aion.mcf.vm.types.Log;
-import org.aion.zero.types.AionInternalTx;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.InternalTransactionInterface;
+import org.aion.vm.api.interfaces.TransactionSideEffects;
 
 /**
  * An internal helper class which holds all the dynamically generated effects:
@@ -44,11 +45,11 @@ import org.aion.zero.types.AionInternalTx;
  *
  * @author yulong
  */
-public class ExecutionHelper {
+public class SideEffects implements TransactionSideEffects {
 
-    private Set<AionAddress> deleteAccounts = new HashSet<>();
-    private List<AionInternalTx> internalTxs = new ArrayList<>();
-    private List<Log> logs = new ArrayList<>();
+    private Set<Address> deleteAccounts = new HashSet<>();
+    private List<InternalTransactionInterface> internalTxs = new ArrayList<>();
+    private List<IExecutionLog> logs = new ArrayList<>();
     private List<Call> calls = new ArrayList<>();
 
     public static class Call {
@@ -76,13 +77,8 @@ public class ExecutionHelper {
         }
     }
 
-    /**
-     * Adds address to the set of deleted accounts if address is non-null and is not already in the
-     * set.
-     *
-     * @param address The address to add to the deleted accounts.
-     */
-    public void addDeleteAccount(AionAddress address) {
+    @Override
+    public void addToDeletedAddresses(Address address) {
         deleteAccounts.add(address);
     }
 
@@ -91,8 +87,9 @@ public class ExecutionHelper {
      *
      * @param addresses The addressed to add to the set of deleted accounts.
      */
-    public void addDeleteAccounts(Collection<AionAddress> addresses) {
-        for (AionAddress addr : addresses) {
+    @Override
+    public void addAllToDeletedAddresses(Collection<Address> addresses) {
+        for (Address addr : addresses) {
             if (addr != null) {
                 deleteAccounts.add(addr);
             }
@@ -104,7 +101,8 @@ public class ExecutionHelper {
      *
      * @param log The log to add to the execution logs.
      */
-    public void addLog(Log log) {
+    @Override
+    public void addLog(IExecutionLog log) {
         logs.add(log);
     }
 
@@ -113,8 +111,9 @@ public class ExecutionHelper {
      *
      * @param logs The collection of logs to add to the execution logs.
      */
-    public void addLogs(Collection<Log> logs) {
-        for (Log log : logs) {
+    @Override
+    public void addLogs(Collection<IExecutionLog> logs) {
+        for (IExecutionLog log : logs) {
             if (log != null) {
                 this.logs.add(log);
             }
@@ -137,7 +136,8 @@ public class ExecutionHelper {
      *
      * @param tx The internal transaction to add.
      */
-    public void addInternalTransaction(AionInternalTx tx) {
+    @Override
+    public void addInternalTransaction(InternalTransactionInterface tx) {
         internalTxs.add(tx);
     }
 
@@ -146,50 +146,36 @@ public class ExecutionHelper {
      *
      * @param txs The collection of internal transactions to add.
      */
-    public void addInternalTransactions(Collection<AionInternalTx> txs) {
-        for (AionInternalTx tx : txs) {
+    @Override
+    public void addInternalTransactions(List<InternalTransactionInterface> txs) {
+        for (InternalTransactionInterface tx : txs) {
             if (tx != null) {
                 this.internalTxs.add(tx);
             }
         }
     }
 
-    /** Rejects all internal transactions. */
-    public void rejectInternalTransactions() {
-        for (AionInternalTx tx : getInternalTransactions()) {
+    @Override
+    public void markAllInternalTransactionsAsRejected() {
+        for (InternalTransactionInterface tx : getInternalTransactions()) {
             tx.markAsRejected();
         }
     }
 
-    /**
-     * Merges another ExecutionHelper into this ExecutionHelper.
-     *
-     * @param other another transaction result
-     * @param success whether the other transaction is success or not
-     */
-    public void merge(ExecutionHelper other, boolean success) {
+    @Override
+    public void merge(TransactionSideEffects other) {
         addInternalTransactions(other.getInternalTransactions());
-        if (success) {
-            addDeleteAccounts(other.getDeleteAccounts());
-            addLogs(other.getLogs());
-        }
+        addAllToDeletedAddresses(other.getAddressesToBeDeleted());
+        addLogs(other.getExecutionLogs());
     }
 
-    /**
-     * Returns the list of deleted accounts, the accounts to be deleted following a transaction.
-     *
-     * @return the deleted accounts list.
-     */
-    public List<AionAddress> getDeleteAccounts() {
+    @Override
+    public List<Address> getAddressesToBeDeleted() {
         return new ArrayList<>(deleteAccounts);
     }
 
-    /**
-     * Returns the execution logs.
-     *
-     * @return the execution logs.
-     */
-    public List<Log> getLogs() {
+    @Override
+    public List<IExecutionLog> getExecutionLogs() {
         return logs;
     }
 
@@ -207,7 +193,8 @@ public class ExecutionHelper {
      *
      * @return the internal transactions.
      */
-    public List<AionInternalTx> getInternalTransactions() {
+    @Override
+    public List<InternalTransactionInterface> getInternalTransactions() {
         return internalTxs;
     }
 }

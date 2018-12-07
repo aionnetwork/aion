@@ -34,8 +34,9 @@ import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.vm.types.Log;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -52,7 +53,7 @@ import org.slf4j.Logger;
 public class TransactionExecutor extends AbstractExecutor {
     // provider is essential to execute, but it is only set manually with a setter, not good
     // practice
-    private ExecutionContext ctx;
+    private TransactionContext ctx;
     private AionTransaction tx;
     private IAionBlock block;
     private ExecutorProvider provider;
@@ -173,14 +174,14 @@ public class TransactionExecutor extends AbstractExecutor {
 
     /** Execute the transaction */
     public AionTxExecSummary execute() {
-        return (AionTxExecSummary) execute(tx, ctx.nrgLimit());
+        return (AionTxExecSummary) execute(tx, ctx.getTransactionEnergyLimit());
     }
 
     /** Prepares contract call. */
     protected void call() {
         IPrecompiledContract pc = this.provider.getPrecompiledContract(this.ctx, this.repoTrack);
         if (pc != null) {
-            exeResult = pc.execute(tx.getData(), ctx.nrgLimit());
+            exeResult = pc.execute(tx.getData(), ctx.getTransactionEnergyLimit());
         } else {
             // execute code
             byte[] code = repoTrack.getCode(tx.getDestinationAddress());
@@ -227,13 +228,17 @@ public class TransactionExecutor extends AbstractExecutor {
     /** Finalize state changes and returns summary. */
     protected AionTxExecSummary finish() {
 
-        ExecutionHelper rootHelper = new ExecutionHelper();
-        rootHelper.merge(ctx.helper(), exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt());
+        SideEffects rootHelper = new SideEffects();
+        if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()) {
+            rootHelper.merge(ctx.getSideEffects());
+        } else {
+            rootHelper.addInternalTransactions(ctx.getSideEffects().getInternalTransactions());
+        }
 
         AionTxExecSummary.Builder builder =
-                AionTxExecSummary.builderFor(getReceipt(rootHelper.getLogs())) //
-                        .logs(rootHelper.getLogs()) //
-                        .deletedAccounts(rootHelper.getDeleteAccounts()) //
+                AionTxExecSummary.builderFor(getReceipt(rootHelper.getExecutionLogs())) //
+                        .logs(rootHelper.getExecutionLogs()) //
+                        .deletedAccounts(rootHelper.getAddressesToBeDeleted()) //
                         .internalTransactions(rootHelper.getInternalTransactions()) //
                         .result(exeResult.getOutput());
 
@@ -267,13 +272,13 @@ public class TransactionExecutor extends AbstractExecutor {
 
         AionTxExecSummary summary = builder.build();
 
-        updateRepo(summary, tx, block.getCoinbase(), rootHelper.getDeleteAccounts());
+        updateRepo(summary, tx, block.getCoinbase(), rootHelper.getAddressesToBeDeleted());
 
         return summary;
     }
 
     /** Returns the transaction receipt. */
-    protected AionTxReceipt getReceipt(List<Log> logs) {
+    protected AionTxReceipt getReceipt(List<IExecutionLog> logs) {
         //        AionTxReceipt receipt = new AionTxReceipt();
         //        receipt.setTransaction(tx);
         //        receipt.setLogs(txResult.getLogs());
@@ -287,7 +292,7 @@ public class TransactionExecutor extends AbstractExecutor {
         return (AionTxReceipt) buildReceipt(new AionTxReceipt(), tx, logs);
     }
 
-    public ExecutionContext getContext() {
+    public TransactionContext getContext() {
         return ctx;
     }
 

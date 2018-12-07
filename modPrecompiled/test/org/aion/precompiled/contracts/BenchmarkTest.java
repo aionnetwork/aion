@@ -126,13 +126,13 @@ public class BenchmarkTest {
         // warm up
         for (int i = 0; i < WARMUP; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.nrgLimit());
+            ct.execute(txHash, ctx.getTransactionEnergyLimit());
         }
 
         long t1 = System.currentTimeMillis();
         for (int i = 0; i < BENCH; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.nrgLimit());
+            ct.execute(txHash, ctx.getTransactionEnergyLimit());
         }
         System.out.println(
                 "Bench blake2b: " + String.valueOf(System.currentTimeMillis() - t1) + "ms");

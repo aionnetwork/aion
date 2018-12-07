@@ -26,16 +26,16 @@ package org.aion.zero.impl.vm;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.fastvm.FastVM;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.ExecutionContext;
 import org.aion.vm.ExecutorProvider;
 import org.aion.vm.IPrecompiledContract;
 import org.aion.vm.VirtualMachine;
+import org.aion.vm.api.interfaces.TransactionContext;
 
 public class AionExecutorProvider implements ExecutorProvider {
 
     @Override
     public IPrecompiledContract getPrecompiledContract(
-            ExecutionContext context, IRepositoryCache track) {
+            TransactionContext context, IRepositoryCache track) {
         return new ContractFactory().getPrecompiledContract(context, track);
     }
 

@@ -30,10 +30,10 @@ import java.util.List;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.vm.ExecutionContext;
-import org.aion.vm.ExecutionHelper;
+import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.TransactionSideEffects;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,7 +41,7 @@ public class BridgeControllerOwnerTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private ExecutionHelper result;
+    private TransactionSideEffects result;
 
     private static final AionAddress CONTRACT_ADDR =
             new AionAddress(HashUtil.h256("contractAddress".getBytes()));
@@ -53,7 +53,7 @@ public class BridgeControllerOwnerTest {
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
 
         ExecutionContext context = dummyContext();
-        this.result = context.helper();
+        this.result = context.getSideEffects();
         this.controller = new BridgeController(connector, this.result, CONTRACT_ADDR, OWNER_ADDR);
     }
 
@@ -77,10 +77,10 @@ public class BridgeControllerOwnerTest {
 
         assertThat(this.connector.getOwner()).isEqualTo(newOwner);
         // check that an event was properly generated
-        List<Log> logs = this.result.getLogs();
+        List<IExecutionLog> logs = this.result.getExecutionLogs();
         assertThat(logs.size()).isEqualTo(1);
 
-        Log changedOwnerLog = logs.get(0);
+        IExecutionLog changedOwnerLog = logs.get(0);
         assertThat(changedOwnerLog.getLogData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
         assertThat(changedOwnerLog.getLogTopics().get(0)).isEqualTo(transferOwnership);
         assertThat(changedOwnerLog.getLogTopics().get(1)).isEqualTo(newOwner);

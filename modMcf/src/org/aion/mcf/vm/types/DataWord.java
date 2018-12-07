@@ -29,11 +29,12 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
+import org.aion.vm.api.interfaces.DataWordStub;
 
 /**
  * Data word is the basic unit data used by virtual machine. The size of a data word is 128 bits.
  */
-public class DataWord implements Comparable<DataWord>, IDataWord {
+public class DataWord implements Comparable<DataWord>, IDataWord, DataWordStub {
 
     public static final BigInteger MAX_VALUE =
             BigInteger.valueOf(2).pow(128).subtract(BigInteger.ONE);

@@ -3,15 +3,15 @@ package org.aion.precompiled.contracts;
 import javax.annotation.Nonnull;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
-import org.aion.vm.ExecutionContext;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.vm.api.interfaces.TransactionContext;
 
 public class TXHashContract implements IPrecompiledContract {
     public static final long COST = 20L;
 
-    private final ExecutionContext context;
+    private final TransactionContext context;
 
-    public TXHashContract(@Nonnull final ExecutionContext _context) {
+    public TXHashContract(@Nonnull final TransactionContext _context) {
         context = _context;
     }
 
@@ -24,6 +24,6 @@ public class TXHashContract implements IPrecompiledContract {
             return new TransactionResult(ResultCode.OUT_OF_ENERGY, 0, null);
         }
 
-        return new TransactionResult(ResultCode.SUCCESS, nrgLeft, context.getOriginalTxHash());
+        return new TransactionResult(ResultCode.SUCCESS, nrgLeft, context.getHashOfOriginTransaction());
     }
 }
