@@ -13,6 +13,7 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxExecSummary;
 import org.aion.base.type.ITxReceipt;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.TransactionInterface;
 import org.slf4j.Logger;
 
@@ -212,8 +213,8 @@ public abstract class AbstractExecutor {
     protected void updateRepo(
             ITxExecSummary summary,
             ITransaction tx,
-            AionAddress coinbase,
-            List<AionAddress> deleteAccounts) {
+            Address coinbase,
+            List<Address> deleteAccounts) {
 
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache track = repo.startTracking();
@@ -230,7 +231,7 @@ public abstract class AbstractExecutor {
 
             if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()) {
                 // Delete accounts
-                for (AionAddress addr : deleteAccounts) {
+                for (Address addr : deleteAccounts) {
                     track.deleteAccount(addr);
                 }
             }

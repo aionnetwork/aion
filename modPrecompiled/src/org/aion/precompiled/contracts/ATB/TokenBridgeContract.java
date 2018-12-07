@@ -20,7 +20,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.ExecutionContext;
+import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.zero.types.AionInternalTx;
 
 public class TokenBridgeContract extends StatefulPrecompiledContract implements Transferable {
@@ -29,7 +29,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
     // queries
 
-    private final ExecutionContext context;
+    private final TransactionContext context;
     private final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
 
     private final BridgeStorageConnector connector;
@@ -40,7 +40,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     // TODO: add passing returns (need more though on gas consumption)
 
     public TokenBridgeContract(
-            @Nonnull final ExecutionContext context,
+            @Nonnull final TransactionContext context,
             @Nonnull final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
             @Nonnull final AionAddress ownerAddress,
             @Nonnull final AionAddress contractAddress) {
@@ -50,7 +50,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.connector = new BridgeStorageConnector(this.track, contractAddress);
         this.controller =
                 new BridgeController(
-                        this.connector, this.context.helper(), contractAddress, ownerAddress);
+                        this.connector, this.context.getSideEffects(), contractAddress, ownerAddress);
         this.controller.setTransferable(this);
 
         this.contractAddress = contractAddress;
@@ -98,14 +98,14 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     if (address == null) return fail();
 
                     ErrCode code =
-                            this.controller.setNewOwner(this.context.sender().toBytes(), address);
+                            this.controller.setNewOwner(this.context.getSenderAddress().toBytes(), address);
 
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
                 }
             case SIG_ACCEPT_OWNERSHIP:
                 {
-                    ErrCode code = this.controller.acceptOwnership(this.context.sender().toBytes());
+                    ErrCode code = this.controller.acceptOwnership(this.context.getSenderAddress().toBytes());
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
                 }
@@ -119,7 +119,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
                     ErrCode code =
                             this.controller.ringInitialize(
-                                    this.context.sender().toBytes(), addressList);
+                                    this.context.getSenderAddress().toBytes(), addressList);
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
                 }
@@ -131,7 +131,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     if (address == null) return fail();
 
                     ErrCode code =
-                            this.controller.ringAddMember(this.context.sender().toBytes(), address);
+                            this.controller.ringAddMember(this.context.getSenderAddress().toBytes(), address);
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
                 }
@@ -145,7 +145,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
                     ErrCode code =
                             this.controller.ringRemoveMember(
-                                    this.context.sender().toBytes(), address);
+                                    this.context.getSenderAddress().toBytes(), address);
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
                 }
@@ -156,7 +156,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     byte[] address = parseAddressFromCall(input);
                     if (address == null) return fail();
                     ErrCode code =
-                            this.controller.setRelayer(this.context.sender().toBytes(), address);
+                            this.controller.setRelayer(this.context.getSenderAddress().toBytes(), address);
 
                     if (code != ErrCode.NO_ERROR) return fail();
                     return success();
@@ -175,8 +175,8 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
                     // we can refer to it at a later time.
                     BridgeController.ProcessedResults results =
                             this.controller.processBundles(
-                                    this.context.sender().toBytes(),
-                                    this.context.transactionHash(),
+                                    this.context.getSenderAddress().toBytes(),
+                                    this.context.getTransactionHash(),
                                     bundleRequests.blockHash,
                                     bundleRequests.bundles,
                                     bundleRequests.signatures);
@@ -217,25 +217,25 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             new TransactionResult(ResultCode.FAILURE, 0);
 
     private TransactionResult fail() {
-        this.context.helper().rejectInternalTransactions();
+        this.context.getSideEffects().markAllInternalTransactionsAsRejected();
         return THROW;
     }
 
     private TransactionResult success() {
-        long energyRemaining = this.context.nrgLimit() - ENERGY_CONSUME;
+        long energyRemaining = this.context.getTransactionEnergyLimit() - ENERGY_CONSUME;
         return new TransactionResult(ResultCode.SUCCESS, energyRemaining);
     }
 
     private TransactionResult success(@Nonnull final byte[] response) {
         // should always be positive
-        long energyRemaining = this.context.nrgLimit() - ENERGY_CONSUME;
+        long energyRemaining = this.context.getTransactionEnergyLimit() - ENERGY_CONSUME;
         assert energyRemaining >= 0;
         return new TransactionResult(ResultCode.SUCCESS, energyRemaining, response);
     }
 
     private boolean isFromAddress(byte[] address) {
         if (address == null) return false;
-        return this.context.sender().equals(AionAddress.wrap(address));
+        return this.context.getSenderAddress().equals(AionAddress.wrap(address));
     }
 
     /**
@@ -264,7 +264,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         AionInternalTx tx = newInternalTx(from, recipient, nonce, valueToSend, dataToSend, "call");
 
         // add transaction to result
-        this.context.helper().addInternalTransaction(tx);
+        this.context.getSideEffects().addInternalTransaction(tx);
 
         // increase the nonce and do the transfer without executing code
         this.track.incrementNonce(from);
@@ -282,9 +282,9 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      */
     private AionInternalTx newInternalTx(
             AionAddress from, AionAddress to, BigInteger nonce, DataWord value, byte[] data, String note) {
-        byte[] parentHash = context.transactionHash();
-        int depth = context.depth();
-        int index = context.helper().getInternalTransactions().size();
+        byte[] parentHash = context.getTransactionHash();
+        int depth = context.getTransactionStackDepth();
+        int index = context.getSideEffects().getInternalTransactions().size();
 
         return new AionInternalTx(
                 parentHash,
