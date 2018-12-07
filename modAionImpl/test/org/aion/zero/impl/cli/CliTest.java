@@ -146,6 +146,11 @@ public class CliTest {
         deleteRecursively(path);
         deleteRecursively(alternativePath);
 
+        // in case absolute paths are used
+        deleteRecursively(cfg.getKeystoreDir());
+        deleteRecursively(cfg.getDatabaseDir());
+        deleteRecursively(cfg.getLogDir());
+
         // to avoid deleting config for all tests
         if (BASE_PATH.contains(module)) {
             deleteRecursively(CONFIG_PATH);

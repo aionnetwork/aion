@@ -71,6 +71,7 @@ public class ApiAion0Test {
 
     private static final String KEYSTORE_PATH;
     private static final String DATABASE_PATH = "ApiServerTestPath";
+    private static final String MAINNET_PATH;
 
     static {
         String storageDir = System.getProperty("local.storage.dir");
@@ -78,6 +79,7 @@ public class ApiAion0Test {
             storageDir = System.getProperty("user.dir");
         }
         KEYSTORE_PATH = storageDir + "/keystore";
+        MAINNET_PATH = storageDir + "/mainnet";
     }
 
     public ApiAion0Test() {
@@ -142,21 +144,20 @@ public class ApiAion0Test {
 
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
-
-        if (folder == null) return;
-
-        File[] AllFilesInDirectory = folder.listFiles();
-
-        // check for invalid or wrong path - should not happen
-        if (AllFilesInDirectory == null) return;
-
-        for (File file : AllFilesInDirectory) {
-            if (file.lastModified() >= testStartTime) file.delete();
+        try {
+            FileUtils.deleteRecursive(folder.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
         folder = new File(DATABASE_PATH);
+        try {
+            FileUtils.deleteRecursive(folder.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        if (folder == null) return;
-
+        folder = new File(MAINNET_PATH);
         try {
             FileUtils.deleteRecursive(folder.toPath());
         } catch (IOException e) {
