@@ -59,6 +59,7 @@ public class Log implements IExecutionLog {
     }
 
     /* [address, [topic, topic ...] data] */
+    @Override
     public byte[] getEncoded() {
 
         byte[] addressEncoded;

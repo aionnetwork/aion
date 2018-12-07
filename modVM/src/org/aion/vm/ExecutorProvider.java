@@ -1,6 +1,7 @@
 package org.aion.vm;
 
 import org.aion.base.db.IRepositoryCache;
+import org.aion.vm.api.interfaces.TransactionContext;
 
 public interface ExecutorProvider {
 
@@ -15,7 +16,7 @@ public interface ExecutorProvider {
      * @param track
      * @return @{code precompiled contract} if available {@code null} otherwise
      */
-    IPrecompiledContract getPrecompiledContract(ExecutionContext context, IRepositoryCache track);
+    IPrecompiledContract getPrecompiledContract(TransactionContext context, IRepositoryCache track);
 
     VirtualMachine getVM();
 }

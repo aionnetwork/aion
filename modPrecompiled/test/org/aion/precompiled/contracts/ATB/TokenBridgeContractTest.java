@@ -16,7 +16,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.vm.types.Log;
+import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.encoding.AbiEncoder;
@@ -24,7 +24,8 @@ import org.aion.precompiled.encoding.AddressFVM;
 import org.aion.precompiled.encoding.ListFVM;
 import org.aion.precompiled.encoding.Uint128FVM;
 import org.aion.vm.ExecutionContext;
-import org.aion.zero.types.AionInternalTx;
+import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -320,7 +321,7 @@ public class TokenBridgeContractTest {
                                                 payloadHash),
                                         21000L)
                                 .getOutput())
-                .isEqualTo(submitBundleContext.transactionHash());
+                .isEqualTo(submitBundleContext.getTransactionHash());
 
         assertThat(transferResult.getResultCode())
                 .isEqualTo(ResultCode.SUCCESS);
@@ -336,9 +337,9 @@ public class TokenBridgeContractTest {
         // 10 internal transactions (that all succeed)
         // 10 Distributed events
         // 1  ProcessedBundle Event
-        assertThat(submitBundleContext.helper().getInternalTransactions().size()).isEqualTo(10);
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (AionInternalTx tx : submitBundleContext.helper().getInternalTransactions()) {
+        for (InternalTransactionInterface tx : submitBundleContext.getSideEffects().getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -355,9 +356,9 @@ public class TokenBridgeContractTest {
         }
 
         // check that proper events are emit
-        assertThat(submitBundleContext.helper().getLogs().size()).isEqualTo(11);
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().size()).isEqualTo(11);
         i = 0;
-        for (Log l : submitBundleContext.helper().getLogs()) {
+        for (IExecutionLog l : submitBundleContext.getSideEffects().getExecutionLogs()) {
             // verify address is correct
             assertThat(l.getLogSourceAddress()).isEqualTo(CONTRACT_ADDR);
 
@@ -511,7 +512,7 @@ public class TokenBridgeContractTest {
                                                 payloadHash),
                                         21000L)
                                 .getOutput())
-                .isEqualTo(submitBundleContext.transactionHash());
+                .isEqualTo(submitBundleContext.getTransactionHash());
 
         assertThat(transferResult.getResultCode())
                 .isEqualTo(ResultCode.SUCCESS);
@@ -527,9 +528,9 @@ public class TokenBridgeContractTest {
         // 10 internal transactions (that all succeed)
         // 10 Distributed events
         // 1  ProcessedBundle Event
-        assertThat(submitBundleContext.helper().getInternalTransactions().size()).isEqualTo(10);
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (AionInternalTx tx : submitBundleContext.helper().getInternalTransactions()) {
+        for (InternalTransactionInterface tx : submitBundleContext.getSideEffects().getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -546,9 +547,9 @@ public class TokenBridgeContractTest {
         }
 
         // check that proper events are emit
-        assertThat(submitBundleContext.helper().getLogs().size()).isEqualTo(11);
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().size()).isEqualTo(11);
         i = 0;
-        for (Log l : submitBundleContext.helper().getLogs()) {
+        for (IExecutionLog l : submitBundleContext.getSideEffects().getExecutionLogs()) {
             // verify address is correct
             assertThat(l.getLogSourceAddress()).isEqualTo(CONTRACT_ADDR);
 
@@ -823,8 +824,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(1024));
 
-        assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.helper().getLogs()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -893,7 +894,7 @@ public class TokenBridgeContractTest {
         byte[] payloadHash = BridgeUtilities.computeBundleHash(blockHash, transfers);
 
         // ATB-4.1 in order to test, we pretend that a bundle is already complete
-        this.connector.setBundle(payloadHash, submitBundleContext.transactionHash());
+        this.connector.setBundle(payloadHash, submitBundleContext.getTransactionHash());
 
         byte[][] signatures = new byte[members.length][];
         int i = 0;
@@ -941,15 +942,15 @@ public class TokenBridgeContractTest {
         /// VERIFICATION
         assertThat(transferResult.getResultCode())
                 .isEqualTo(ResultCode.SUCCESS);
-        assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.helper().getLogs().size()).isEqualTo(1);
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().size()).isEqualTo(1);
 
         // ATB 4.1 check that proper event was emit
-        assertThat(submitBundleContext.helper().getLogs().get(0).getLogTopics().get(0))
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().get(0).getLogTopics().get(0))
                 .isEqualTo(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed());
 
-        assertThat(submitBundleContext.helper().getLogs().get(0).getLogTopics().get(1))
-                .isEqualTo(submitBundleContext.transactionHash());
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().get(0).getLogTopics().get(1))
+                .isEqualTo(submitBundleContext.getTransactionHash());
     }
 
     // william test
@@ -1091,8 +1092,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.helper().getLogs()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -1226,8 +1227,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.helper().getLogs()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -1370,8 +1371,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.helper().getLogs()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -1516,8 +1517,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.helper().getLogs()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -1666,8 +1667,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.helper().getLogs()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -1729,9 +1730,9 @@ public class TokenBridgeContractTest {
         // 10 internal transactions (that all succeed)
         // 10 Distributed events
         // 1  ProcessedBundle Event
-        assertThat(submitBundleContext.helper().getInternalTransactions().size()).isEqualTo(10);
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions().size()).isEqualTo(10);
         i = 0;
-        for (AionInternalTx tx : submitBundleContext.helper().getInternalTransactions()) {
+        for (InternalTransactionInterface tx : submitBundleContext.getSideEffects().getInternalTransactions()) {
 
             // verify the internal transaction is not rejected
             assertThat(tx.isRejected()).isFalse();
@@ -1748,9 +1749,9 @@ public class TokenBridgeContractTest {
         }
 
         // check that proper events are emit
-        assertThat(submitBundleContext.helper().getLogs().size()).isEqualTo(11);
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs().size()).isEqualTo(11);
         i = 0;
-        for (Log l : submitBundleContext.helper().getLogs()) {
+        for (IExecutionLog l : submitBundleContext.getSideEffects().getExecutionLogs()) {
             // verify address is correct
             assertThat(l.getLogSourceAddress()).isEqualTo(CONTRACT_ADDR);
 
@@ -1821,8 +1822,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.helper().getLogs()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
     }
 
     @Test
@@ -1872,8 +1873,8 @@ public class TokenBridgeContractTest {
         }
         assertThat(this.repository.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.valueOf(10));
 
-        assertThat(submitBundleContext.helper().getInternalTransactions()).isEmpty();
-        assertThat(submitBundleContext.helper().getLogs()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getInternalTransactions()).isEmpty();
+        assertThat(submitBundleContext.getSideEffects().getExecutionLogs()).isEmpty();
     }
 
     @Test
