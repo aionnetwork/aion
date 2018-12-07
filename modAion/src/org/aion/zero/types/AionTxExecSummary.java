@@ -442,7 +442,7 @@ public class AionTxExecSummary implements ITxExecSummary {
 
             if (summary.failed != null && summary.failed != TransactionStatus.SUCCESS) {
                 for (AionInternalTx transaction : summary.internalTransactions) {
-                    transaction.reject();
+                    transaction.markAsRejected();
                 }
             }
             return summary;

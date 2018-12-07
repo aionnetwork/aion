@@ -157,7 +157,7 @@ public class ExecutionHelper {
     /** Rejects all internal transactions. */
     public void rejectInternalTransactions() {
         for (AionInternalTx tx : getInternalTransactions()) {
-            tx.reject();
+            tx.markAsRejected();
         }
     }
 
