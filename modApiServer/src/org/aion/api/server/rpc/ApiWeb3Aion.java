@@ -47,7 +47,6 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.TypeConverter;
 import org.aion.base.util.Utils;
-import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
@@ -69,6 +68,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
+import org.aion.base.vm.IDataWord;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -471,7 +471,7 @@ public class ApiWeb3Aion extends ApiAion {
         }
 
         @SuppressWarnings("unchecked")
-        IDataWord storageValue = repo.getStorageValue(address, key);
+        IDataWord storageValue = (IDataWord) repo.getStorageValue(address, key);
         if (storageValue != null) {
             return new RpcMsg(TypeConverter.toJsonHex(storageValue.getData()));
         } else {
