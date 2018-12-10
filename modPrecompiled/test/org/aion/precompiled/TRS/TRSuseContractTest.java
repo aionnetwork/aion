@@ -499,7 +499,7 @@ public class TRSuseContractTest extends TRShelpers {
         byte[] input = getDepositInput(contract, total);
         trs.execute(input, COST);
 
-        int rows = repo.getStorageValue(contract, newIDataWord(acct.toBytes())).getData()[0] & 0x0F;
+        int rows = repo.getStorageValue(contract, newDataWordStub(acct.toBytes())).getData()[0] & 0x0F;
         assertEquals(1, rows);
     }
 
@@ -512,7 +512,7 @@ public class TRSuseContractTest extends TRShelpers {
         byte[] input = getDepositInput(contract, total);
         trs.execute(input, COST);
 
-        int rows = repo.getStorageValue(contract, newIDataWord(acct.toBytes())).getData()[0] & 0x0F;
+        int rows = repo.getStorageValue(contract, newDataWordStub(acct.toBytes())).getData()[0] & 0x0F;
         assertEquals(2, rows);
     }
 

@@ -32,10 +32,10 @@ import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.IBlock;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.base.vm.IDataWord;
 
 /**
  * The TRSqueryContract is 1 of 3 inter-dependent but separate contracts that together make up the

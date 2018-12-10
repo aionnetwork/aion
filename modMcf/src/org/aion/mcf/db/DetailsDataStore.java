@@ -45,7 +45,6 @@ import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.AionAddress;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;

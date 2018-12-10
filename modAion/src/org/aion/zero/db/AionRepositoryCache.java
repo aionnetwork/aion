@@ -30,12 +30,12 @@ import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepositoryCache;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.base.vm.IDataWord;
 
 public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase<?, ?>> {
 

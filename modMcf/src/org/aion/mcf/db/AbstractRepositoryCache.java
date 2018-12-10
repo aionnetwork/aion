@@ -34,10 +34,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.vm.IDataWord;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
+import org.aion.base.vm.IDataWord;
 import org.slf4j.Logger;
 import org.aion.vm.api.interfaces.Address;
 

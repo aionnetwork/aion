@@ -28,10 +28,9 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
-import org.aion.base.type.AionAddress;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.base.vm.IDataWord;
 
 /** Contract details cache implementation. */
 public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord> {

@@ -23,10 +23,10 @@
 package org.aion.precompiled.type;
 
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.base.vm.IDataWord;
 
 /**
  * A pre-compiled contract that is capable of modifying state.

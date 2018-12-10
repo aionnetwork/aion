@@ -24,7 +24,6 @@ package org.aion.precompiled;
 
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.AionAddress;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -35,6 +34,7 @@ import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.base.vm.IDataWord;
 import org.aion.vm.api.interfaces.TransactionContext;
 
 /** A factory class that produces pre-compiled contract instances. */

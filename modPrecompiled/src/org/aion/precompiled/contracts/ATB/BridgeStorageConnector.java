@@ -29,13 +29,13 @@ import javax.annotation.Nonnull;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
-import org.aion.base.vm.IDataWord;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.base.vm.IDataWord;
 
 /**
  * Storage layout mapping as the following:

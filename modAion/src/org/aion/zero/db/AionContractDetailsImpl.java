@@ -37,7 +37,6 @@ import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
@@ -48,6 +47,7 @@ import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.base.vm.IDataWord;
 
 public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> {
 
@@ -84,7 +84,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
     }
 
     /**
-     * Adds the key-value pair to the database unless value is an IDataWord whose underlying byte
+     * Adds the key-value pair to the database unless value is an DataWordStub whose underlying byte
      * array consists only of zeros. In this case, if key already exists in the database it will be
      * deleted.
      *

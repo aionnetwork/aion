@@ -42,7 +42,6 @@ import org.aion.base.type.AionAddress;
 import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.AccountState;
@@ -53,6 +52,7 @@ import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
+import org.aion.base.vm.IDataWord;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -944,8 +944,8 @@ class TRShelpers {
         return OUT;
     }
 
-    // Returns a new IDataWord that wraps data. Here so we can switch types easy if needed.
-    IDataWord newIDataWord(byte[] data) {
+    // Returns a new DataWordStub that wraps data. Here so we can switch types easy if needed.
+    IDataWord newDataWordStub(byte[] data) {
         if (data.length == DataWord.BYTES) {
             return new DataWord(data);
         } else if (data.length == DoubleDataWord.BYTES) {

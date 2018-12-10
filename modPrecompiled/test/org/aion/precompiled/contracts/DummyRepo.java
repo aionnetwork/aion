@@ -33,12 +33,12 @@ import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.base.vm.IDataWord;
 
 public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> {
     private Map<Address, AccountState> accounts = new HashMap<>();

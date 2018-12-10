@@ -39,7 +39,6 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.vm.IDataWord;
 import org.aion.vm.api.interfaces.Address;
 
 /** Repository interface for information retrieval. */
@@ -166,7 +165,7 @@ public interface IRepositoryQuery<AS, DW> {
      * @param key the key of interest
      * @return a {@link DW} representing the data associated with the given key
      */
-    IDataWord getStorageValue(Address address, DW key);
+    DW getStorageValue(Address address, DW key);
 
     /**
      * Retrieves the stored transactions for recovering pool tx.

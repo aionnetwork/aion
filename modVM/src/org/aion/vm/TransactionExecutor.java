@@ -35,6 +35,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.base.vm.IDataWord;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.zero.types.AionTransaction;
@@ -153,7 +154,7 @@ public class TransactionExecutor extends AbstractExecutor {
     public TransactionExecutor(
             AionTransaction tx,
             IAionBlock block,
-            IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo,
+            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo,
             boolean isLocalCall,
             Logger logger) {
         this(tx, block, repo, isLocalCall, block.getNrgLimit(), logger);
@@ -163,7 +164,7 @@ public class TransactionExecutor extends AbstractExecutor {
     public TransactionExecutor(
             AionTransaction tx,
             IAionBlock block,
-            IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo,
+            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo,
             Logger logger) {
         this(tx, block, repo, false, block.getNrgLimit(), logger);
     }

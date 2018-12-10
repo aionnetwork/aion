@@ -32,9 +32,9 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.util.Hex;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.base.vm.IDataWord;
 import org.aion.zero.db.AionContractDetailsImpl;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -333,7 +333,7 @@ public class IContractDetailsTest {
     }
 
     /**
-     * Tests putting key and value into cache and then putting a zero-byte IDataWord into cache with
+     * Tests putting key and value into cache and then putting a zero-byte DataWordStub into cache with
      * key and then calling get() on that key.
      */
     private void doPutKeyValueThenOverwriteValueWithZero(

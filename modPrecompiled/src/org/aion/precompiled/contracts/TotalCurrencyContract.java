@@ -28,7 +28,6 @@ import org.aion.vm.api.ResultCode;
 import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.util.BIUtil;
-import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
@@ -36,6 +35,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.base.vm.IDataWord;
 
 /** A pre-compiled contract for retrieving and updating the total amount of currency. */
 public class TotalCurrencyContract extends StatefulPrecompiledContract {

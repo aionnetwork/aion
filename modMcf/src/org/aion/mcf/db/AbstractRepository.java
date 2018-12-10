@@ -38,7 +38,6 @@ import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
-import org.aion.base.vm.IDataWord;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb.Names;
@@ -48,6 +47,7 @@ import org.aion.mcf.ds.ArchivedDataSource;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlock;
+import org.aion.base.vm.IDataWord;
 import org.slf4j.Logger;
 
 // import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
