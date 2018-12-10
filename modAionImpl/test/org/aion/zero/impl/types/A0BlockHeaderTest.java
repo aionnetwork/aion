@@ -80,7 +80,8 @@ public class A0BlockHeaderTest {
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
                 .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+                .withNonce(NONCE_BYTES)
+                .withVersion((byte) 0x01);
 
         A0BlockHeader header = builder.build();
 
@@ -95,6 +96,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(NONCE_BYTES);
+        assertThat(header.getVersion() == (byte) 0x01);
     }
 
     @Test
@@ -113,7 +115,8 @@ public class A0BlockHeaderTest {
                 .withNumber(NUMBER_BYTES)
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH);
+                .withParentHash(PARENT_HASH)
+                .withVersion((byte) 0x01);
 
         A0BlockHeader header = builder.build();
 
@@ -129,6 +132,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_WORD);
         assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
+        assertThat(header.getVersion() == (byte) 0x01);
     }
 
     // Test is a self referencing
@@ -148,7 +152,8 @@ public class A0BlockHeaderTest {
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
                 .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+                .withNonce(NONCE_BYTES)
+                .withVersion((byte) 0x01);
 
         A0BlockHeader header = builder.build();
         byte[] encoded = header.getEncoded();
@@ -165,6 +170,7 @@ public class A0BlockHeaderTest {
         assertThat(reconstructed.getParentHash()).isEqualTo(header.getParentHash());
         assertThat(reconstructed.getNonce()).isEqualTo(header.getNonce());
         assertThat(reconstructed.getDifficulty()).isEqualTo(header.getDifficulty());
+        assertThat(reconstructed.getVersion() == header.getVersion());
 
         byte[] difficulty = reconstructed.getDifficulty();
     }
