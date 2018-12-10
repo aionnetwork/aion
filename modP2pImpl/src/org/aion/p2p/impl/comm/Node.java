@@ -28,9 +28,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.regex.Pattern;
-import org.aion.base.util.ByteUtil;
 import org.aion.p2p.INode;
 import org.aion.p2p.IPeerMetric;
+import org.aion.util.bytes.ByteUtil;
 
 /**
  * @author Chris p2p://{node-id}@{ip}:{port} node-id could be any non-empty string update to 36

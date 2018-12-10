@@ -1,8 +1,6 @@
 ext.moduleName = 'aion.p2p'
 
 dependencies {
-    compile project(':modAionBase')
-
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-core:1.3'
 }
