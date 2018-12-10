@@ -24,11 +24,11 @@
 package org.aion.crypto.ed25519;
 
 import java.math.BigInteger;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.NativeLoader;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ISignature;
+import org.aion.util.NativeLoader;
+import org.aion.util.bytes.ByteUtil;
 import org.libsodium.jni.NaCl;
 import org.libsodium.jni.Sodium;
 import org.spongycastle.util.encoders.Hex;
@@ -148,6 +148,7 @@ public class ECKeyEd25519 implements ECKey {
 
     @Override
     public String toString() {
+        // TODO: why is this using Hex from spongycastle lib?
         return "pub:" + Hex.toHexString(pk);
     }
 }

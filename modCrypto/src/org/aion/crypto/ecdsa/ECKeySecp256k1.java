@@ -36,7 +36,7 @@
 package org.aion.crypto.ecdsa;
 
 import static java.util.Arrays.copyOfRange;
-import static org.aion.base.util.ByteUtil.bigIntegerToBytes;
+import static org.aion.util.bytes.ByteUtil.bigIntegerToBytes;
 
 import java.io.Serializable;
 import java.math.BigInteger;

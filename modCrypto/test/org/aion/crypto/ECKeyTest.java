@@ -37,7 +37,7 @@ package org.aion.crypto;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 
-import org.aion.base.util.ByteUtil;
+import org.aion.util.bytes.ByteUtil;
 import org.junit.AfterClass;
 import org.junit.Test;
 

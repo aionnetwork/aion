@@ -35,19 +35,18 @@
 
 package org.aion.crypto.ecdsa;
 
-import static org.aion.base.util.BIUtil.isLessThan;
-import static org.aion.base.util.ByteUtil.bigIntegerToBytes;
 import static org.aion.crypto.ecdsa.ECKeySecp256k1.CURVE;
 import static org.aion.crypto.ecdsa.ECKeySecp256k1.ETH_SECP256K1N;
 import static org.aion.crypto.ecdsa.ECKeySecp256k1.HALF_CURVE_ORDER;
+import static org.aion.util.bytes.ByteUtil.bigIntegerToBytes;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 import org.aion.crypto.ISignature;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.hex.Hex;
 import org.spongycastle.asn1.ASN1InputStream;
 import org.spongycastle.asn1.ASN1Integer;
 import org.spongycastle.asn1.DLSequence;
@@ -160,6 +159,15 @@ public class ECDSASignature implements ISignature {
             return false;
         }
         return isLessThan(s, ETH_SECP256K1N);
+    }
+
+    /**
+     * @param valueA - not null
+     * @param valueB - not null
+     * @return true - if the valueA is less than valueB is zero
+     */
+    public static boolean isLessThan(BigInteger valueA, BigInteger valueB) {
+        return valueA.compareTo(valueB) < 0;
     }
 
     public static ECDSASignature decodeFromDER(byte[] bytes) {

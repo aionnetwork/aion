@@ -35,7 +35,7 @@
 package org.aion.crypto.ecdsa;
 
 import java.math.BigInteger;
-import org.aion.base.util.Hex;
+import org.aion.util.hex.Hex;
 import org.junit.Test;
 
 public class ECDSATest {
