@@ -25,6 +25,7 @@ package org.aion.zero.types;
 
 import static org.aion.base.util.ByteUtil.longToBytes;
 import static org.aion.base.util.ByteUtil.merge;
+import static org.aion.base.util.ByteUtil.oneByteToHexString;
 import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
@@ -69,7 +70,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
     // TODO: Update this
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
-        obj.putOpt("version", toHexString(this.parentHash));
+        obj.putOpt("version", oneByteToHexString(this.version));
         obj.putOpt("number", toHexString(longToBytes(this.number)));
         obj.putOpt("parentHash", toHexString(this.parentHash));
         obj.putOpt("coinBase", toHexString(this.coinbase.toBytes()));
