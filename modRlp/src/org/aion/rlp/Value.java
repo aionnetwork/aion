@@ -37,8 +37,8 @@ package org.aion.rlp;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.hex.Hex;
 
 /**
  * Class to encapsulate an object and provide utilities for conversion

@@ -25,7 +25,7 @@ package org.aion.rlp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.aion.base.util.ByteUtil;
+import org.aion.util.bytes.ByteUtil;
 import org.junit.Test;
 
 public class RLPElementTest {

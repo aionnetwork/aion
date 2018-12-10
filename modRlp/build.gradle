@@ -1,7 +1,7 @@
 ext.moduleName = 'aion.rlp'
 
 dependencies {
-    compile project(':modAionBase')
+    compile project(':modUtil')
     compile files('../lib/libnsc.jar')
     compile 'com.google.guava:guava:25.1-jre'
 

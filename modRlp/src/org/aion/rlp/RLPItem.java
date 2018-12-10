@@ -34,7 +34,7 @@
  */
 package org.aion.rlp;
 
-import org.aion.base.util.ByteUtil;
+import org.aion.util.bytes.ByteUtil;
 
 /**
  * @author Roman Mandeleil 2014

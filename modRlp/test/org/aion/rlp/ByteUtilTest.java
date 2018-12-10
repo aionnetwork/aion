@@ -42,14 +42,15 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.Hex;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.hex.Hex;
 import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.BigIntegers;
 
+/** TODO: functionality should be moved to modUtil */
 public class ByteUtilTest {
 
     @Test
@@ -268,7 +269,7 @@ public class ByteUtilTest {
             byte[] max = ByteBuffer.allocate(4).putInt(Integer.MAX_VALUE).array();
             long start1 = System.currentTimeMillis();
             while (ByteUtil.increment(counter1)) {
-                if (FastByteComparisons.compareTo(counter1, 0, 4, max, 0, 4) == 0) {
+                if (compareTo(counter1, 0, 4, max, 0, 4) == 0) {
                     break;
                 }
             }
@@ -292,6 +293,15 @@ public class ByteUtilTest {
                             + "ms to reach: "
                             + Hex.toHexString(BigIntegers.asUnsignedByteArray(4, counter2)));
         }
+    }
+
+    /** Compares two regions of byte array. */
+    public static int compareTo(
+            byte[] array1, int offset1, int size1, byte[] array2, int offset2, int size2) {
+        byte[] b1 = Arrays.copyOfRange(array1, offset1, offset1 + size1);
+        byte[] b2 = Arrays.copyOfRange(array2, offset2, offset2 + size2);
+
+        return Arrays.compare(b1, b2);
     }
 
     @Test
