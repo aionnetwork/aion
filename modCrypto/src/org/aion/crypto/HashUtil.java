@@ -36,18 +36,18 @@
 package org.aion.crypto;
 
 import static java.util.Arrays.copyOfRange;
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import org.aion.base.util.NativeLoader;
 import org.aion.crypto.hash.Blake2b;
 import org.aion.crypto.hash.Blake2bNative;
 import org.aion.rlp.RLP;
+import org.aion.util.NativeLoader;
 import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.crypto.digests.RIPEMD160Digest;

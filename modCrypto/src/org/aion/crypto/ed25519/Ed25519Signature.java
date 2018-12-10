@@ -23,9 +23,9 @@
 package org.aion.crypto.ed25519;
 
 import java.util.Arrays;
-import org.aion.base.util.ByteUtil;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ISignature;
+import org.aion.util.bytes.ByteUtil;
 
 /**
  * ED25519 signature implementation. Each {@link Ed25519Signature} contains two components, public

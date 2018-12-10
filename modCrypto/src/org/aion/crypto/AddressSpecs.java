@@ -26,7 +26,7 @@ package org.aion.crypto;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 import java.util.Optional;
-import org.aion.base.util.ByteUtil;
+import org.aion.util.bytes.ByteUtil;
 
 /** A set of static functions to define the creation of addresses */
 public class AddressSpecs {
