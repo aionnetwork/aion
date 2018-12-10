@@ -1,11 +1,13 @@
 package org.aion.vm;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import org.aion.base.type.AionAddress;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.vm.api.interfaces.Address;
-import org.aion.vm.api.interfaces.DataWordStub;
+import org.aion.base.vm.IDataWord;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.vm.api.interfaces.TransactionSideEffects;
 
@@ -32,9 +34,9 @@ public class ExecutionContext implements TransactionContext {
     public Address address;
     public Address sender;
     private Address blockCoinbase;
-    private DataWordStub nrgPrice;
-    private DataWordStub callValue;
-    private DataWordStub blockDifficulty;
+    private IDataWord nrgPrice;
+    private IDataWord callValue;
+    private IDataWord blockDifficulty;
     private byte[] callData;
     private byte[] txHash;
     private long nrgLimit; // NOTE: nrg_limit = tx_nrg_limit - tx_basic_cost
@@ -72,9 +74,9 @@ public class ExecutionContext implements TransactionContext {
             Address destination,
             Address origin,
             Address sender,
-            DataWordStub nrgPrice,
+            IDataWord nrgPrice,
             long nrgLimit,
-            DataWordStub callValue,
+            IDataWord callValue,
             byte[] callData,
             int depth,
             int kind,
@@ -83,7 +85,7 @@ public class ExecutionContext implements TransactionContext {
             long blockNumber,
             long blockTimestamp,
             long blockNrgLimit,
-            DataWordStub blockDifficulty) {
+            IDataWord blockDifficulty) {
 
         super();
 
@@ -91,6 +93,7 @@ public class ExecutionContext implements TransactionContext {
         this.origin = origin;
         this.sender = sender;
         this.nrgPrice = nrgPrice;
+        this.blockDifficulty = blockDifficulty;
         this.nrgLimit = nrgLimit;
         this.callValue = callValue;
         this.callData = callData;
@@ -101,7 +104,6 @@ public class ExecutionContext implements TransactionContext {
         this.blockNumber = blockNumber;
         this.blockTimestamp = blockTimestamp;
         this.blockNrgLimit = blockNrgLimit;
-        this.blockDifficulty = blockDifficulty;
         this.txHash = txHash;
         this.originalTxHash = txHash;
 
@@ -173,8 +175,12 @@ public class ExecutionContext implements TransactionContext {
 
     /** @return the nrg price in current environment. */
     @Override
-    public DataWordStub getTransactionEnergyPrice() {
-        return nrgPrice;
+    public long getTransactionEnergyPrice() {
+        if (this.nrgPrice instanceof DataWord) {
+            return ((DataWord) this.nrgPrice).longValue();
+        } else {
+            return ((DoubleDataWord) this.nrgPrice).longValue();
+        }
     }
 
     /** @return the nrg limit in current environment. */
@@ -182,10 +188,10 @@ public class ExecutionContext implements TransactionContext {
         return nrgLimit;
     }
 
-    /** @return the deposited value by instruction/trannsaction. */
+    /** @return the deposited value by instruction/transaction. */
     @Override
-    public DataWordStub getTransferValue() {
-        return callValue;
+    public BigInteger getTransferValue() {
+        return callValue.value();
     }
 
     /** @return the call data. */
@@ -238,8 +244,12 @@ public class ExecutionContext implements TransactionContext {
 
     /** @return the block difficulty. */
     @Override
-    public DataWordStub getBlockDifficulty() {
-        return blockDifficulty;
+    public long getBlockDifficulty() {
+        if (blockDifficulty instanceof DataWord) {
+            return ((DataWord) blockDifficulty).longValue();
+        } else {
+            return ((DoubleDataWord) blockDifficulty).longValue();
+        }
     }
 
     /** @return the transaction helper. */
