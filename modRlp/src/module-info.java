@@ -1,5 +1,5 @@
 module aion.rlp {
-    requires aion.base;
+    requires aion.util;
 
     exports org.aion.rlp;
 }

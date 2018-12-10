@@ -34,7 +34,6 @@
  */
 package org.aion.rlp;
 
-import static org.aion.base.util.ByteUtil.byteArrayToInt;
 import static org.aion.rlp.RLP.decode;
 import static org.aion.rlp.RLP.decode2;
 import static org.aion.rlp.RLP.decodeInt;
@@ -74,6 +73,7 @@ import static org.aion.rlp.RlpTestData.test09;
 import static org.aion.rlp.RlpTestData.test12;
 import static org.aion.rlp.RlpTestData.test13;
 import static org.aion.rlp.RlpTestData.test16;
+import static org.aion.util.bytes.ByteUtil.byteArrayToInt;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertArrayEquals;
@@ -88,7 +88,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Objects;
-import org.aion.base.util.Hex;
+import org.aion.util.hex.Hex;
 import org.junit.Test;
 
 public class RLPTest {

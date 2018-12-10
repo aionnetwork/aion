@@ -35,7 +35,7 @@
 package org.aion.rlp;
 
 import java.util.ArrayList;
-import org.aion.base.util.ByteUtil;
+import org.aion.util.bytes.ByteUtil;
 
 /**
  * @author Roman Mandeleil

@@ -36,8 +36,8 @@ package org.aion.rlp;
 
 import static java.util.Arrays.copyOf;
 import static java.util.Arrays.copyOfRange;
-import static org.aion.base.util.ByteUtil.appendByte;
 import static org.aion.rlp.Utils.hexEncode;
+import static org.aion.util.bytes.ByteUtil.appendByte;
 
 import java.util.HashMap;
 import java.util.Map;

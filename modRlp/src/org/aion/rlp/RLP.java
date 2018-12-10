@@ -35,18 +35,18 @@
 package org.aion.rlp;
 
 import static java.util.Arrays.copyOfRange;
-import static org.aion.base.util.ByteUtil.byteArrayToInt;
-import static org.aion.base.util.ByteUtil.intToBytesNoLeadZeroes;
-import static org.aion.base.util.ByteUtil.isNullOrZeroArray;
-import static org.aion.base.util.ByteUtil.isSingleZero;
 import static org.aion.rlp.Utils.asUnsignedByteArray;
 import static org.aion.rlp.Utils.concatenate;
+import static org.aion.util.bytes.ByteUtil.byteArrayToInt;
+import static org.aion.util.bytes.ByteUtil.intToBytesNoLeadZeroes;
+import static org.aion.util.bytes.ByteUtil.isNullOrZeroArray;
+import static org.aion.util.bytes.ByteUtil.isSingleZero;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.hex.Hex;
 
 /**
  * @author Roman Mandeleil 2014
