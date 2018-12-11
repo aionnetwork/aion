@@ -39,7 +39,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
-/** Utility class for converting hex data to bytes and back again. */
+/**
+ * Utility class for converting hex data to bytes and back again.
+ *
+ * @apiNote This functionality is migrated to modUtil. Use that class instead.
+ */
+@Deprecated
 public class Hex {
 
     private static final HexEncoder encoder = new HexEncoder();

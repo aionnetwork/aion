@@ -48,7 +48,9 @@ import java.util.Scanner;
  * Native library loader.
  *
  * @author jin
+ * @apiNote This functionality is migrated to modUtil. Use that class instead.
  */
+@Deprecated
 public class NativeLoader {
 
     /**
