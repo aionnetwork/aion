@@ -212,14 +212,14 @@ public class MongoDB extends AbstractDB {
         WriteBatchResult result = new WriteBatchResult(writeResult);
 
         if (result.totalDeletes != edits.getDeleteCount()) {
-            LOG.warn("Expected {} deletes but only deleted {}", edits.getDeleteCount(), result.totalDeletes);
+            LOG.debug("Expected {} deletes but only deleted {}", edits.getDeleteCount(), result.totalDeletes);
         }
 
         if (result.totalUpdates != edits.getUpdateCount()) {
-            LOG.warn("Expected {} upserts but only got {}", edits.getUpdateCount(), result.totalUpdates);
+            LOG.debug("Expected {} upserts but only got {}", edits.getUpdateCount(), result.totalUpdates);
         }
 
-        LOG.info("Successfully wrote {} edits", edits.getEdits().size());
+        LOG.debug("Successfully wrote {} edits", edits.getEdits().size());
 
         return result;
     }
@@ -285,14 +285,14 @@ public class MongoDB extends AbstractDB {
     public Set<byte[]> keys() {
         check();
 
-        LOG.info("Getting the collection of keys");
+        LOG.debug("Getting the collection of keys");
 
         Set<byte[]> keys = this.collection.find(this.clientSession)
             .projection(Projections.fields(Projections.include(MongoConstants.ID_FIELD_NAME)))
             .map(f -> f.getBinary(MongoConstants.ID_FIELD_NAME).getData())
             .into(new HashSet<>());
 
-        LOG.info("The database contains {} keys", keys.size());
+        LOG.debug("The database contains {} keys", keys.size());
 
         return keys;
     }
@@ -364,10 +364,10 @@ public class MongoDB extends AbstractDB {
         check();
 
         if (this.batch != null) {
-            LOG.info("Committing batch of writes");
+            LOG.debug("Committing batch of writes");
             doBulkWrite(this.batch);
         } else {
-            LOG.info("Attempting to commit empty batch, skipping");
+            LOG.debug("Attempting to commit empty batch, skipping");
         }
 
         this.batch = null;

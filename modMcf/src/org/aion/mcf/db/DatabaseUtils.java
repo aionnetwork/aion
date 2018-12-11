@@ -32,6 +32,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Properties;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.mcf.db.exception.InvalidFilePathException;
@@ -56,7 +57,7 @@ public class DatabaseUtils {
         }
 
         // check persistence status
-        if (!db.isCreatedOnDisk()) {
+        if (!db.isCreatedOnDisk() && db.getPersistenceMethod() != PersistenceMethod.DBMS) {
             LOG.error(
                     "Database <{}> cannot be saved to disk for <{}>.",
                     info.getProperty(Props.DB_TYPE),
