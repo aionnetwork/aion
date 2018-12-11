@@ -245,7 +245,9 @@ public class Arguments {
         return directory;
     }
 
-    public String getPort() { return port; }
+    public String getPort() {
+        return port;
+    }
 
     public String getPruneStateOption() {
         return pruntStateOption;
