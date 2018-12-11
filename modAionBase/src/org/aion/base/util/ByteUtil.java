@@ -44,6 +44,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/** @apiNote This functionality is migrated to modUtil. Use that class instead. */
+@Deprecated
 public class ByteUtil {
 
     public static final byte[] EMPTY_WORD = new byte[32];

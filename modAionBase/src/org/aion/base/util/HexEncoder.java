@@ -38,7 +38,12 @@ package org.aion.base.util;
 import java.io.IOException;
 import java.io.OutputStream;
 
-/** A streaming Hex encoder. */
+/**
+ * A streaming Hex encoder.
+ *
+ * @apiNote This functionality is migrated to modUtil. Use that class instead.
+ */
+@Deprecated
 public class HexEncoder {
 
     protected final byte[] encodingTable = {
