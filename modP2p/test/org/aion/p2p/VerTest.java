@@ -43,7 +43,7 @@ public class VerTest {
         /*
          * inactive versions
          */
-        byte b1 = (byte) ThreadLocalRandom.current().nextInt(2, Short.MAX_VALUE);
+        byte b1 = (byte) ThreadLocalRandom.current().nextInt(2, Byte.MAX_VALUE);
         assertEquals(Ver.UNKNOWN, Ver.filter(b1));
     }
 }
