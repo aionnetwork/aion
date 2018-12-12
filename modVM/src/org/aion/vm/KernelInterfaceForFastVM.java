@@ -27,6 +27,26 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         this.isLocalCall = isLocalCall;
     }
 
+    // These 4 methods are temporary. Really any of this type of functionality should be moved out
+    // into the kernel.
+    public KernelInterfaceForFastVM startTracking() {
+        return new KernelInterfaceForFastVM(
+                this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall);
+    }
+
+    public void flush() {
+        this.repositoryCache.flush();
+    }
+
+    public void rollback() {
+        this.repositoryCache.rollback();
+    }
+
+    public IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?,?>> getRepositoryCache() {
+        return this.repositoryCache;
+    }
+    // The above 4 methods are temporary. See comment just above.
+
     @Override
     public void createAccount(Address address) {
         this.repositoryCache.createAccount(address);
@@ -58,7 +78,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     public byte[] getStorage(Address address, byte[] key) {
         DataWord storageKey = new DataWord(key);
         IDataWord value = this.repositoryCache.getStorageValue(address, storageKey);
-        return (value == null) ? null : value.getData();
+        return (value == null) ? DataWord.ZERO.getData() : value.getData();
     }
 
     @Override
@@ -77,8 +97,13 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
-    public long getNonce(Address address) {
-        return this.repositoryCache.getNonce(address).longValue();
+    public byte[] getBlockHashByNumber(long blockNumber) {
+        return this.repositoryCache.getBlockStore().getBlockHashByNumber(blockNumber);
+    }
+
+    @Override
+    public BigInteger getNonce(Address address) {
+        return this.repositoryCache.getNonce(address);
     }
 
     @Override
@@ -89,8 +114,8 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
-    public boolean accountNonceEquals(Address address, long nonce) {
-        return (this.isLocalCall) ? true : getNonce(address) == nonce;
+    public boolean accountNonceEquals(Address address, BigInteger nonce) {
+        return (this.isLocalCall) ? true : getNonce(address).equals(nonce);
     }
 
     @Override

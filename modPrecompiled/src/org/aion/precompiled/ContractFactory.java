@@ -1,10 +1,7 @@
 package org.aion.precompiled;
 
-import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.AionAddress;
 import org.aion.mcf.config.CfgFork;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
 import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
@@ -12,7 +9,7 @@ import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.vm.IContractFactory;
 import org.aion.vm.IPrecompiledContract;
-import org.aion.base.vm.IDataWord;
+import org.aion.vm.KernelInterfaceForFastVM;
 import org.aion.vm.api.interfaces.TransactionContext;
 
 /** A factory class that produces pre-compiled contract instances. */
@@ -56,7 +53,7 @@ public class ContractFactory implements IContractFactory {
     @Override
     public IPrecompiledContract getPrecompiledContract(
             TransactionContext context,
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
+            KernelInterfaceForFastVM track) {
 
         CfgFork cfg = new CfgFork();
         String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
@@ -69,7 +66,7 @@ public class ContractFactory implements IContractFactory {
                 TokenBridgeContract contract =
                         new TokenBridgeContract(
                                 context,
-                                track,
+                                track.getRepositoryCache(),
                                 AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
                                 AionAddress.wrap(ADDR_TOKEN_BRIDGE));
 
@@ -89,7 +86,7 @@ public class ContractFactory implements IContractFactory {
                 return fork_032
                         ? null
                         : new TotalCurrencyContract(
-                                track, context.getSenderAddress(), AionAddress.wrap(ADDR_OWNER));
+                                track.getRepositoryCache(), context.getSenderAddress(), AionAddress.wrap(ADDR_OWNER));
             default:
                 return null;
         }

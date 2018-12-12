@@ -157,7 +157,9 @@ public class TransactionExecutor extends AbstractExecutor {
 
     /** Prepares contract call. */
     protected void call() {
-        IPrecompiledContract pc = this.provider.getPrecompiledContract(this.ctx, this.repoTrack);
+        KernelInterfaceForFastVM kernel = new KernelInterfaceForFastVM(repoTrack, askNonce, isLocalCall);
+
+        IPrecompiledContract pc = this.provider.getPrecompiledContract(this.ctx, kernel);
         if (pc != null) {
             exeResult = pc.execute(tx.getData(), ctx.getTransactionEnergyLimit());
         } else {
@@ -165,7 +167,7 @@ public class TransactionExecutor extends AbstractExecutor {
             byte[] code = repoTrack.getCode(tx.getDestinationAddress());
             if (!ArrayUtils.isEmpty(code)) {
                 VirtualMachine fvm = this.provider.getVM();
-                exeResult = fvm.run(code, ctx, repoTrack);
+                exeResult = fvm.run(code, ctx, kernel);
             }
         }
 
@@ -190,7 +192,8 @@ public class TransactionExecutor extends AbstractExecutor {
         // execute contract deployer
         if (!ArrayUtils.isEmpty(tx.getData())) {
             VirtualMachine fvm = this.provider.getVM();
-            exeResult = fvm.run(tx.getData(), ctx, repoTrack);
+            KernelInterfaceForFastVM kernel = new KernelInterfaceForFastVM(repoTrack, askNonce, isLocalCall);
+            exeResult = fvm.run(tx.getData(), ctx, kernel);
 
             if (exeResult.getResultCode().toInt() == FastVmResultCode.SUCCESS.toInt()) {
                 repoTrack.saveCode(contractAddress, exeResult.getOutput());
