@@ -126,6 +126,11 @@ public class Arguments {
             description = "execute kernel with selected database directory")
     private String directory = null;
 
+    @Option(
+            names = {"-p", "--port"},
+            description = "execute kernel with selected port")
+    private String port = null;
+
     // offline database query and update
     @Option(
             names = {"ps", "--state"},
@@ -238,6 +243,10 @@ public class Arguments {
 
     public String getDirectory() {
         return directory;
+    }
+
+    public String getPort() {
+        return port;
     }
 
     public String getPruneStateOption() {

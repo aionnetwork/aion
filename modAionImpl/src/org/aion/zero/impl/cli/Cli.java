@@ -191,7 +191,37 @@ public class Cli {
             // true means the UUID must be set
             boolean overwrite = cfg.fromXML(configFile);
 
-            // 4. can be influenced by the -d argument above
+            // determine the port configuration, can be combined with the -n, -d, -c, -i arguments
+            if (options.getPort() != null) {
+
+                int currentPort = cfg.getNet().getP2p().getPort();
+                int portNumber = currentPort;
+                boolean validPort = true;
+
+                try {
+                    portNumber = Integer.parseInt(options.getPort());
+                } catch (NumberFormatException e) {
+                    validPort = false;
+                    System.out.println("Port must be an integer value");
+                }
+
+                if (portNumber < 0 || portNumber > 0xFFFF) {
+                    validPort = false;
+                    System.out.println("Port out of range: " + portNumber);
+                }
+
+                if (validPort && portNumber != currentPort) {
+                    // update port in config
+                    cfg.getNet().getP2p().setPort(portNumber);
+                    overwrite = true;
+                    System.out.println("Port set to: " + portNumber);
+                } else {
+                    System.out.println("Using the current port configuration: " + currentPort);
+                }
+                // no return, allow for other parameters combined with -p
+            }
+
+            // 4. can be influenced by the -n, -d, -p arguments above
 
             if (options.getConfig() != null) {
                 // network was already set above
@@ -229,15 +259,15 @@ public class Cli {
                 return ReturnType.EXIT;
             }
 
-            // 5. options that can be influenced by the -d and -n arguments
+            // 5. options that can be influenced by the -d, -n and -p arguments
 
             if (options.isInfo()) {
                 System.out.println(
                         "Reading config file from: "
                                 + getRelativePath(configFile.getAbsolutePath()));
                 if (overwrite) {
-                    // updating the file in case the user id was not set
-                    cfg.toXML(new String[] {"--id=" + cfg.getId()}, configFile);
+                    // updating the file in case the user id was not set; overwrite port
+                    cfg.toXML(null, configFile);
                 }
                 printInfo(cfg);
                 return ReturnType.EXIT;
@@ -247,8 +277,8 @@ public class Cli {
             makeDirs(configFile, forkFile, cfg);
 
             if (overwrite) {
-                // only updating the file in case the user id was not set
-                cfg.toXML(new String[] {"--id=" + cfg.getId()}, cfg.getExecConfigFile());
+                // updating the file in case the user id was not set; overwrite port
+                cfg.toXML(null, cfg.getExecConfigFile());
             }
 
             // set correct keystore directory
@@ -860,6 +890,9 @@ public class Cli {
             }
             if (options.getDirectory() != null) {
                 skippedTasks.add("--datadir");
+            }
+            if (options.getPort() != null) {
+                skippedTasks.add("--port");
             }
             if (options.getConfig() != null) {
                 skippedTasks.add("--config");
