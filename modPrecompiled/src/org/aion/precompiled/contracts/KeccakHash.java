@@ -24,8 +24,8 @@ package org.aion.precompiled.contracts;
 
 import static org.aion.crypto.HashUtil.keccak256;
 
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.vm.IPrecompiledContract;
 
 public class KeccakHash implements IPrecompiledContract {
@@ -40,18 +40,21 @@ public class KeccakHash implements IPrecompiledContract {
      *
      * <p>the returned hash is in ContractExecutionResult.getOutput
      */
-    public FastVmTransactionResult execute(byte[] input, long nrg) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrg) {
         // check input nrg
         long additionalNRG = Math.round(Math.sqrt(input.length));
         if (nrg < DEFAULT_COST + additionalNRG)
-            return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
 
         // check length
         if (input.length < 1)
-            return new FastVmTransactionResult(
-                    FastVmResultCode.FAILURE, nrg - DEFAULT_COST, "input too short".getBytes());
+            return new PrecompiledTransactionResult(
+                    PrecompiledResultCode.FAILURE,
+                    nrg - DEFAULT_COST,
+                    "input too short".getBytes());
 
         byte[] hash = keccak256(input);
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - DEFAULT_COST - additionalNRG, hash);
+        return new PrecompiledTransactionResult(
+                PrecompiledResultCode.SUCCESS, nrg - DEFAULT_COST - additionalNRG, hash);
     }
 }

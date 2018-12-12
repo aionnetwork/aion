@@ -41,9 +41,9 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.apache.commons.collections4.map.LRUMap;
 
 /**
@@ -143,10 +143,10 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
      * bytes] - optional 130 + 32 + 32 + 32 = 226
      */
     @Override
-    public FastVmTransactionResult execute(byte[] input, long nrg) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrg) {
         // check for correct input length
         if (input.length != 130 && input.length != 226)
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
 
         // declare variables for parsing the byte[] input and storing each value
         byte[] addressFirstPart = new byte[16];
@@ -185,12 +185,12 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 subdomainName = new String(trimmedSubdomainNameInBytes, "UTF-8");
 
                 if (!isValidDomainName(this.domainName)) {
-                    return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+                    return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
                 }
 
                 domains.put(this.domainName, this.address);
             } catch (UnsupportedEncodingException a) {
-                return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
             }
         }
 
@@ -201,12 +201,12 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         boolean b = ECKeyEd25519.verify(data, sig.getSignature(), sig.getPubkey(null));
         if (!b) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // verify public key matches owner
         if (!this.ownerAddress.equals(AionAddress.wrap(sig.getAddress()))) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // operation: {1-setResolver, 2-setTTL, 3-transferOwnership, 4-transferSubdomainOwnership}
@@ -237,15 +237,16 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         addressSecondPart,
                         subdomainName);
             default:
-                return new FastVmTransactionResult(
-                        FastVmResultCode.FAILURE, nrg); // unsupported operation
+                return new PrecompiledTransactionResult(
+                        PrecompiledResultCode.FAILURE, nrg); // unsupported operation
         }
     }
 
     /** Set Resolver for this domain */
-    private FastVmTransactionResult setResolver(
+    private PrecompiledTransactionResult setResolver(
             byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
-        if (nrg < SET_COST) return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
+        if (nrg < SET_COST)
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
 
         storeResult(hash1, hash2, addr1, addr2);
 
@@ -253,13 +254,14 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] combined = combineTwoBytes(hash1, hash2);
         this.resolverAddressKey = new AionAddress(combined);
 
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - SET_COST);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - SET_COST);
     }
 
     /** Set Time to Live for this domain */
-    private FastVmTransactionResult setTTL(
+    private PrecompiledTransactionResult setTTL(
             byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
-        if (nrg < SET_COST) return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
+        if (nrg < SET_COST)
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
 
         storeResult(hash1, hash2, addr1, addr2);
 
@@ -267,16 +269,17 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] combined = combineTwoBytes(hash1, hash2);
         this.TTLKey = new AionAddress(combined);
 
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - SET_COST);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - SET_COST);
     }
 
     /** Transfer the ownership of this domain */
-    private FastVmTransactionResult transferOwnership(
+    private PrecompiledTransactionResult transferOwnership(
             byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2, long nrg) {
-        if (nrg < TRANSFER_COST) return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
+        if (nrg < TRANSFER_COST)
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
 
         if (!isValidOwnerAddress(AionAddress.wrap(combineTwoBytes(addr1, addr2))))
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, nrg);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, nrg);
 
         AionAddress.wrap(combineTwoBytes(addr1, addr2));
         storeResult(hash1, hash2, addr1, addr2);
@@ -285,11 +288,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] combined = combineTwoBytes(hash1, hash2);
         this.ownerAddressKey = new AionAddress(combined);
 
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - TRANSFER_COST);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - TRANSFER_COST);
     }
 
     /** Transfer the ownership of subdomain */
-    private FastVmTransactionResult transferSubdomainOwnership(
+    private PrecompiledTransactionResult transferSubdomainOwnership(
             byte[] subdomainAddress,
             long nrg,
             byte[] hash1,
@@ -297,10 +300,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             byte[] addr1,
             byte[] addr2,
             String subdomain) {
-        if (nrg < TRANSFER_COST) return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
+        if (nrg < TRANSFER_COST)
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
 
         if (!isValidOwnerAddress(AionAddress.wrap(combineTwoBytes(addr1, addr2))))
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, nrg);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, nrg);
 
         AionAddress sdAddress = AionAddress.wrap(subdomainAddress);
 
@@ -309,9 +313,10 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                     sdAddress, new DataWord(hash1).toWrapper(), new DataWord(addr1).toWrapper());
             this.track.addStorageRow(
                     sdAddress, new DataWord(hash2).toWrapper(), new DataWord(addr2).toWrapper());
-            return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - TRANSFER_COST);
+            return new PrecompiledTransactionResult(
+                    PrecompiledResultCode.SUCCESS, nrg - TRANSFER_COST);
         }
-        return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
     }
 
     /**

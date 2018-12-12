@@ -25,15 +25,15 @@ package org.aion.precompiled.contracts;
 import static org.aion.crypto.HashUtil.blake256;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.vm.IPrecompiledContract;
 
 /**
  * @author Jay Tseng
  * @author William Zhai
- * @implNote Base on benchmark the keccak256hash and blake2bhash precompiled contract blake2b is
- *     5 times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3 of the
+ * @implNote Base on benchmark the keccak256hash and blake2bhash precompiled contract blake2b is 5
+ *     times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3 of the
  *     Ethereum keccak256 precompiled contract charge.
  */
 public class Blake2bHashContract implements IPrecompiledContract {
@@ -51,12 +51,14 @@ public class Blake2bHashContract implements IPrecompiledContract {
      * @param input data input; must be less or equal than 2 MB
      * @return the returned blake2b 256bits hash is in ExecutionResult.getOutput
      */
-    public FastVmTransactionResult execute(byte[] input, long nrg) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrg) {
 
         // check length
         if (input == null || input.length == 0 || input.length > 2_097_152L) {
-            return new FastVmTransactionResult(
-                FastVmResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
+            return new PrecompiledTransactionResult(
+                    PrecompiledResultCode.FAILURE,
+                    nrg - COST,
+                    INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
         long additionalNRG =
@@ -66,15 +68,15 @@ public class Blake2bHashContract implements IPrecompiledContract {
         long nrgLeft = nrg - (COST + additionalNRG);
 
         if (nrgLeft < 0) {
-            return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
 
         return blake256Hash(input, nrgLeft);
     }
 
-    private FastVmTransactionResult blake256Hash(byte[] input, long nrg) {
+    private PrecompiledTransactionResult blake256Hash(byte[] input, long nrg) {
         byte[] hash = blake256(input);
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg, hash);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg, hash);
     }
 
     @VisibleForTesting

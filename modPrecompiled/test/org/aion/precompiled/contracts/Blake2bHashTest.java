@@ -29,10 +29,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.config.CfgFork;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.junit.After;
 import org.junit.Before;
@@ -81,10 +81,10 @@ public class Blake2bHashTest {
 
     @Test
     public void testBlake256() {
-        FastVmTransactionResult res = blake2bHasher.execute(byteArray1, INPUT_NRG);
+        PrecompiledTransactionResult res = blake2bHasher.execute(byteArray1, INPUT_NRG);
         byte[] output = res.getOutput();
 
-        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
         String blake2bStr1 = "aa6648de0988479263cf3730a48ef744d238b96a5954aa77d647ae965d3f7715";
         assertEquals(blake2bStr1, ByteUtil.toHexString(output));
@@ -92,10 +92,10 @@ public class Blake2bHashTest {
 
     @Test
     public void testBlake256_2() {
-        FastVmTransactionResult res = blake2bHasher.execute(byteArray2, INPUT_NRG);
+        PrecompiledTransactionResult res = blake2bHasher.execute(byteArray2, INPUT_NRG);
         byte[] output = res.getOutput();
 
-        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
 
         String blake2bStr2 = "92cdf578c47085a5992256f0dcf97d0b19f1f1c9de4d5fe30c3ace6191b6e5db";
@@ -104,10 +104,10 @@ public class Blake2bHashTest {
 
     @Test
     public void testBlake256_3() {
-        FastVmTransactionResult res = blake2bHasher.execute(bigByteArray, 2_000_000L);
+        PrecompiledTransactionResult res = blake2bHasher.execute(bigByteArray, 2_000_000L);
         byte[] output = res.getOutput();
 
-        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
 
         String blake2bStr2 = "9852d74e002f23d14ba2638b905609419bd16e50843ac147ccf4d509ed2c9dfc";
@@ -116,31 +116,31 @@ public class Blake2bHashTest {
 
     @Test
     public void invalidInputLength() {
-        FastVmTransactionResult res = blake2bHasher.execute(shortByteArray, INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
+        PrecompiledTransactionResult res = blake2bHasher.execute(shortByteArray, INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
     public void invalidInputLength2() {
-        FastVmTransactionResult res = blake2bHasher.execute(bigByteArray2, INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
+        PrecompiledTransactionResult res = blake2bHasher.execute(bigByteArray2, INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
     public void insufficientNRG() {
         byte[] input = Blake2bHashContract.setupInput(0, byteArray1);
-        FastVmTransactionResult res = blake2bHasher.execute(input, 10);
-        assertEquals(FastVmResultCode.OUT_OF_NRG, res.getResultCode());
+        PrecompiledTransactionResult res = blake2bHasher.execute(input, 10);
+        assertEquals(PrecompiledResultCode.OUT_OF_NRG, res.getResultCode());
     }
 
     @Test
     public void insufficientNRG2() {
         long nrg = (long) (Math.ceil((float)bigByteArray.length / 4) * 2 + 10);
-        FastVmTransactionResult res = blake2bHasher.execute(bigByteArray, nrg);
-        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
+        PrecompiledTransactionResult res = blake2bHasher.execute(bigByteArray, nrg);
+        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
 
         res = blake2bHasher.execute(bigByteArray, nrg - 1);
-        assertEquals(FastVmResultCode.OUT_OF_NRG, res.getResultCode());
+        assertEquals(PrecompiledResultCode.OUT_OF_NRG, res.getResultCode());
     }
 
     @Test
@@ -149,9 +149,9 @@ public class Blake2bHashTest {
         byte[] input1Copy = Blake2bHashContract.setupInput(1, byteArray1);
         byte[] input2 = Blake2bHashContract.setupInput(1, byteArray2);
 
-        FastVmTransactionResult res1 = blake2bHasher.execute(input1, INPUT_NRG);
-        FastVmTransactionResult res1Copy = blake2bHasher.execute(input1Copy, INPUT_NRG);
-        FastVmTransactionResult res2 = blake2bHasher.execute(input2, INPUT_NRG);
+        PrecompiledTransactionResult res1 = blake2bHasher.execute(input1, INPUT_NRG);
+        PrecompiledTransactionResult res1Copy = blake2bHasher.execute(input1Copy, INPUT_NRG);
+        PrecompiledTransactionResult res2 = blake2bHasher.execute(input2, INPUT_NRG);
 
         assertThat(res1.getOutput()).isEqualTo(res1Copy.getOutput());
         assertThat(res1.getOutput()).isNotEqualTo(res2.getOutput());
@@ -161,7 +161,7 @@ public class Blake2bHashTest {
     @Ignore
     public void testInvalidOperation() {
         byte[] input = Blake2bHashContract.setupInput(3, byteArray1);
-        FastVmTransactionResult res = blake2bHasher.execute(input, INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
+        PrecompiledTransactionResult res = blake2bHasher.execute(input, INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
     }
 }

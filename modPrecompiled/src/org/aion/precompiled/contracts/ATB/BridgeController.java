@@ -34,12 +34,12 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.vm.api.interfaces.TransactionSideEffects;
 
@@ -278,7 +278,7 @@ public class BridgeController {
         if (signed < minThresh) return processError(ErrCode.NOT_ENOUGH_SIGNATURES);
 
         // otherwise, we're clear to proceed with transfers
-        List<FastVmTransactionResult> results = new ArrayList<>();
+        List<PrecompiledTransactionResult> results = new ArrayList<>();
         for (BridgeTransfer b : transfers) {
 
             if (b.getTransferValue().compareTo(BigInteger.ZERO) == 0)
@@ -297,15 +297,15 @@ public class BridgeController {
              * For how this is documented, check the {@code Transferable}
              * interface documentation.
              */
-            FastVmTransactionResult result;
+            PrecompiledTransactionResult result;
             if ((result = transferable.transfer(b.getRecipient(), b.getTransferValue()))
                             .getResultCode()
-                    == FastVmResultCode.FAILURE)
+                    == PrecompiledResultCode.FAILURE)
                 // no need to return list of transactions, since they're all being dropped
                 return processError(ErrCode.INVALID_TRANSFER);
 
             // otherwise if transfer was successful
-            if (result.getResultCode() == FastVmResultCode.SUCCESS)
+            if (result.getResultCode() == PrecompiledResultCode.SUCCESS)
                 if (!emitDistributed(
                         b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue()))
                     return processError(ErrCode.INVALID_TRANSFER);
@@ -369,9 +369,9 @@ public class BridgeController {
 
     static class ProcessedResults {
         final ErrCode controllerResult;
-        final List<FastVmTransactionResult> internalResults;
+        final List<PrecompiledTransactionResult> internalResults;
 
-        private ProcessedResults(ErrCode code, List<FastVmTransactionResult> internalResults) {
+        private ProcessedResults(ErrCode code, List<PrecompiledTransactionResult> internalResults) {
             this.controllerResult = code;
             this.internalResults = internalResults;
         }
@@ -380,7 +380,7 @@ public class BridgeController {
             return new ProcessedResults(code, null);
         }
 
-        static ProcessedResults processSuccess(List<FastVmTransactionResult> results) {
+        static ProcessedResults processSuccess(List<PrecompiledTransactionResult> results) {
             return new ProcessedResults(ErrCode.NO_ERROR, results);
         }
     }

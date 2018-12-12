@@ -36,6 +36,7 @@ import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.api.interfaces.TransactionContext;
+import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -210,7 +211,8 @@ public class TransactionExecutor extends AbstractExecutor {
         AionAddress contractAddress = tx.getContractAddress();
 
         if (repoTrack.hasAccountState(contractAddress)) {
-            exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.FAILURE, 0);
+            exeResult.setResultCode(FastVmResultCode.FAILURE);
+            exeResult.setEnergyRemaining(0);
             return;
         }
 
@@ -288,7 +290,7 @@ public class TransactionExecutor extends AbstractExecutor {
         return ctx;
     }
 
-    public FastVmTransactionResult getResult() {
+    public TransactionResult getResult() {
         return exeResult;
     }
 }

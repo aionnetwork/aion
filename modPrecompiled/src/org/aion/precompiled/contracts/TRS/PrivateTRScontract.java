@@ -26,8 +26,8 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.AionAddress;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.FastVmTransactionResult;
 
 /**
  * The PrivateTRScontract is a private version of the TRS contract that is used solely by The Aion
@@ -64,7 +64,7 @@ public final class PrivateTRScontract extends StatefulPrecompiledContract {
      * @return the result of calling execute on the specified input.
      */
     @Override
-    public FastVmTransactionResult execute(byte[] input, long nrgLimit) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrgLimit) {
         // TODO
         return null;
     }

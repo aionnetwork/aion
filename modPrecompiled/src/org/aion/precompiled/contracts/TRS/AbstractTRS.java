@@ -38,8 +38,8 @@ import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.FastVmTransactionResult;
 
 /**
  * The purpose of this abstract class is mostly as a place to store important constants and methods
@@ -135,7 +135,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     // The execute method for subclasses to implement.
-    public abstract FastVmTransactionResult execute(byte[] input, long nrgLimit);
+    public abstract PrecompiledTransactionResult execute(byte[] input, long nrgLimit);
 
     // <-------------------------------------HELPER METHODS---------------------------------------->
 

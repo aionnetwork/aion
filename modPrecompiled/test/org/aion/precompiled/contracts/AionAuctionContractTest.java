@@ -38,8 +38,8 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -112,14 +112,14 @@ public class AionAuctionContractTest {
                         amount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
-        FastVmTransactionResult result = aac.execute(combined, inputEnergy);
+        PrecompiledTransactionResult result = aac.execute(combined, inputEnergy);
 
         try {
             Thread.sleep(3 * 1000L);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        assertEquals(FastVmResultCode.SUCCESS, result.getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, result.getResultCode());
     }
 
     // -------------------------------Auction Correctness Test------------------------------------//
@@ -131,7 +131,7 @@ public class AionAuctionContractTest {
         byte[] combined =
                 setupInputs(domainName2, AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
-        FastVmTransactionResult result = aac.execute(combined, inputEnergy);
+        PrecompiledTransactionResult result = aac.execute(combined, inputEnergy);
 
         BigInteger amount4 = new BigInteger("6000");
         byte[] combined4 =
@@ -179,7 +179,7 @@ public class AionAuctionContractTest {
                         repo,
                         AionAddress.wrap(result.getOutput()),
                         AionAddress.wrap(k4.getAddress()));
-        assertEquals(FastVmResultCode.SUCCESS, result.getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, result.getResultCode());
     }
 
     @Test
@@ -417,15 +417,15 @@ public class AionAuctionContractTest {
 
         // try to extend - should work
         byte[] combined2 = setupForExtension(domainName1, AionAddress.wrap(k.getAddress()));
-        FastVmTransactionResult res = aac.execute(combined2, inputEnergy);
+        PrecompiledTransactionResult res = aac.execute(combined2, inputEnergy);
 
         // try to extend 2nd time in a row - should be denied
         byte[] combined3 = setupForExtension(domainName1, AionAddress.wrap(k.getAddress()));
-        FastVmTransactionResult res2 = aac.execute(combined3, inputEnergy);
+        PrecompiledTransactionResult res2 = aac.execute(combined3, inputEnergy);
 
-        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
 
-        assertEquals(FastVmResultCode.FAILURE, res2.getResultCode());
+        assertEquals(PrecompiledResultCode.FAILURE, res2.getResultCode());
         Assert.assertArrayEquals("already been extended".getBytes(), res2.getOutput());
 
         // uncomment to see extension output
@@ -454,9 +454,9 @@ public class AionAuctionContractTest {
 
         // try to extend - should not work since owner is incorrect
         byte[] combined2 = setupForExtension(domainName1, AionAddress.wrap(k2.getAddress()));
-        FastVmTransactionResult res = aac.execute(combined2, inputEnergy);
+        PrecompiledTransactionResult res = aac.execute(combined2, inputEnergy);
 
-        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
+        assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
     }
 
     @Test
@@ -484,9 +484,9 @@ public class AionAuctionContractTest {
                         amount.toByteArray(),
                         k);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
-        FastVmTransactionResult result2 = aac2.execute(combined2, inputEnergy);
+        PrecompiledTransactionResult result2 = aac2.execute(combined2, inputEnergy);
 
-        assertEquals(FastVmResultCode.FAILURE, result2.getResultCode());
+        assertEquals(PrecompiledResultCode.FAILURE, result2.getResultCode());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -505,8 +505,8 @@ public class AionAuctionContractTest {
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
-        FastVmTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, result.getResultCode());
+        PrecompiledTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
 
         byte[] combined2 =
                 setupInputs(
@@ -515,8 +515,8 @@ public class AionAuctionContractTest {
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
-        FastVmTransactionResult result2 = aac2.execute(combined2, DEFAULT_INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, result2.getResultCode());
+        PrecompiledTransactionResult result2 = aac2.execute(combined2, DEFAULT_INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, result2.getResultCode());
 
         byte[] combined3 =
                 setupInputs(
@@ -525,8 +525,8 @@ public class AionAuctionContractTest {
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
-        FastVmTransactionResult result3 = aac3.execute(combined3, DEFAULT_INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, result3.getResultCode());
+        PrecompiledTransactionResult result3 = aac3.execute(combined3, DEFAULT_INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, result3.getResultCode());
 
         byte[] combined4 =
                 setupInputs(
@@ -535,8 +535,8 @@ public class AionAuctionContractTest {
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
-        FastVmTransactionResult result4 = aac4.execute(combined4, DEFAULT_INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, result4.getResultCode());
+        PrecompiledTransactionResult result4 = aac4.execute(combined4, DEFAULT_INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, result4.getResultCode());
 
         byte[] combined5 =
                 setupInputs(
@@ -545,8 +545,8 @@ public class AionAuctionContractTest {
                         defaultBidAmount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac5 = new AionAuctionContract(repo, AION, blockchain);
-        FastVmTransactionResult result5 = aac5.execute(combined5, DEFAULT_INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, result5.getResultCode());
+        PrecompiledTransactionResult result5 = aac5.execute(combined5, DEFAULT_INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, result5.getResultCode());
     }
 
     @Test
@@ -559,8 +559,8 @@ public class AionAuctionContractTest {
                         defaultBidAmount.toByteArray(),
                         notExistKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
-        FastVmTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, result.getResultCode());
+        PrecompiledTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         Assert.assertArrayEquals("bidder account does not exist".getBytes(), result.getOutput());
     }
 
@@ -576,8 +576,8 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(poorKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         poorKey);
-        FastVmTransactionResult result = testAAC.execute(combined3, DEFAULT_INPUT_NRG);
-        assertEquals(FastVmResultCode.FAILURE, result.getResultCode());
+        PrecompiledTransactionResult result = testAAC.execute(combined3, DEFAULT_INPUT_NRG);
+        assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         Assert.assertArrayEquals("insufficient balance".getBytes(), result.getOutput());
     }
 
@@ -597,18 +597,18 @@ public class AionAuctionContractTest {
         byte[] wrongInput4 = new byte[input.length - 2];
 
         System.arraycopy(input, 0, wrongInput, 0, 130);
-        FastVmTransactionResult result = testAAC.execute(wrongInput, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result = testAAC.execute(wrongInput, DEFAULT_INPUT_NRG);
         System.arraycopy(input, 0, wrongInput2, 0, 131);
-        FastVmTransactionResult result2 = testAAC.execute(wrongInput2, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result2 = testAAC.execute(wrongInput2, DEFAULT_INPUT_NRG);
 
-        assertEquals(FastVmResultCode.FAILURE, result.getResultCode());
+        assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 4000);
         Assert.assertArrayEquals("incorrect input length".getBytes(), result.getOutput());
 
         wrongInput3[0] = -1;
         System.arraycopy(input, 0, wrongInput4, 0, input.length - 2);
-        FastVmTransactionResult result3 = testAAC.execute(wrongInput5, DEFAULT_INPUT_NRG);
-        FastVmTransactionResult result4 = testAAC.execute(wrongInput4, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result3 = testAAC.execute(wrongInput5, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result4 = testAAC.execute(wrongInput4, DEFAULT_INPUT_NRG);
     }
 
     @Test
@@ -621,9 +621,9 @@ public class AionAuctionContractTest {
                         defaultKey);
         // modify the signature in the 65th byte (arbitrarily)
         input[110] = (byte) ~input[65];
-        FastVmTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
 
-        assertEquals(FastVmResultCode.FAILURE, result.getResultCode());
+        assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 4000);
         Assert.assertArrayEquals("incorrect signature".getBytes(), result.getOutput());
     }
@@ -638,9 +638,9 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         anotherKey);
-        FastVmTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
 
-        assertEquals(FastVmResultCode.FAILURE, result.getResultCode());
+        assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 4000);
         Assert.assertArrayEquals("incorrect key".getBytes(), result.getOutput());
     }
@@ -653,9 +653,9 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
-        FastVmTransactionResult result = testAAC.execute(input, 18000);
+        PrecompiledTransactionResult result = testAAC.execute(input, 18000);
 
-        assertEquals(FastVmResultCode.OUT_OF_NRG, result.getResultCode());
+        assertEquals(PrecompiledResultCode.OUT_OF_NRG, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 0);
         Assert.assertArrayEquals("insufficient energy".getBytes(), result.getOutput());
     }
@@ -669,9 +669,9 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(defaultKey.getAddress()),
                         negativeBidAmount.toByteArray(),
                         defaultKey);
-        FastVmTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
 
-        assertEquals(FastVmResultCode.FAILURE, result.getResultCode());
+        assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 4000);
         Assert.assertArrayEquals("negative bid value".getBytes(), result.getOutput());
     }
@@ -703,9 +703,9 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(k2.getAddress()),
                         bidAmount2.toByteArray(),
                         k2);
-        FastVmTransactionResult result2 = aac2.execute(input2, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result2 = aac2.execute(input2, DEFAULT_INPUT_NRG);
 
-        assertEquals(FastVmResultCode.FAILURE, result2.getResultCode());
+        assertEquals(PrecompiledResultCode.FAILURE, result2.getResultCode());
         assertEquals(result2.getEnergyRemaining(), 4000);
         Assert.assertArrayEquals(
                 "requested domain is already active".getBytes(), result2.getOutput());
@@ -719,7 +719,7 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
-        FastVmTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
 
         BigInteger newBidAmount = new BigInteger("50");
         byte[] input2 =
@@ -728,7 +728,7 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(defaultKey.getAddress()),
                         newBidAmount.toByteArray(),
                         defaultKey);
-        FastVmTransactionResult result2 = testAAC.execute(input2, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result2 = testAAC.execute(input2, DEFAULT_INPUT_NRG);
 
         BigInteger anotherBid = new BigInteger("10");
         byte[] input3 =
@@ -737,7 +737,7 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(k2.getAddress()),
                         anotherBid.toByteArray(),
                         k2);
-        FastVmTransactionResult result3 = testAAC.execute(input3, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result3 = testAAC.execute(input3, DEFAULT_INPUT_NRG);
 
         try {
             Thread.sleep(2 * 1000L);
@@ -755,7 +755,7 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(k2.getAddress()),
                         anotherBid.toByteArray(),
                         k2);
-        FastVmTransactionResult result3 = testAAC.execute(input3, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result3 = testAAC.execute(input3, DEFAULT_INPUT_NRG);
 
         byte[] input =
                 setupInputs(
@@ -763,7 +763,7 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
-        FastVmTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result = testAAC.execute(input, DEFAULT_INPUT_NRG);
 
         BigInteger newBidAmount = new BigInteger("10000");
         byte[] input2 =
@@ -772,7 +772,7 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(defaultKey.getAddress()),
                         newBidAmount.toByteArray(),
                         defaultKey);
-        FastVmTransactionResult result2 = testAAC.execute(input2, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result2 = testAAC.execute(input2, DEFAULT_INPUT_NRG);
 
         try {
             Thread.sleep(2 * 1000L);
@@ -815,7 +815,7 @@ public class AionAuctionContractTest {
                         AionAddress.wrap(defaultKey.getAddress()),
                         defaultBidAmount.toByteArray(),
                         defaultKey);
-        FastVmTransactionResult result2 = testAAC.execute(input2, DEFAULT_INPUT_NRG);
+        PrecompiledTransactionResult result2 = testAAC.execute(input2, DEFAULT_INPUT_NRG);
 
         try {
             Thread.sleep(2 * 1000L);
@@ -823,7 +823,7 @@ public class AionAuctionContractTest {
             e.printStackTrace();
         }
 
-        assertEquals(FastVmResultCode.SUCCESS, result2.getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, result2.getResultCode());
         assertEquals(result2.getEnergyRemaining(), 4000);
         assertEquals(32, result2.getOutput().length); // check that an address was returned
     }

@@ -35,6 +35,7 @@ import org.aion.base.type.ITxExecSummary;
 import org.aion.base.type.ITxReceipt;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.TransactionInterface;
+import org.aion.vm.api.interfaces.TransactionResult;
 import org.slf4j.Logger;
 
 public abstract class AbstractExecutor {
@@ -43,7 +44,7 @@ public abstract class AbstractExecutor {
     protected IRepository repo;
     protected IRepositoryCache repoTrack;
     protected boolean isLocalCall;
-    protected FastVmTransactionResult exeResult;
+    protected TransactionResult exeResult;
     private long blockRemainingNrg;
     protected boolean askNonce = true;
 
@@ -117,18 +118,21 @@ public abstract class AbstractExecutor {
 
         if (tx.isContractCreationTransaction()) {
             if (!isValidNrgContractCreate(txNrgLimit)) {
-                exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INVALID_NRG_LIMIT, txNrgLimit);
+                exeResult.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
+                exeResult.setEnergyRemaining(txNrgLimit);
                 return false;
             }
         } else {
             if (!isValidNrgTx(txNrgLimit)) {
-                exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INVALID_NRG_LIMIT, txNrgLimit);
+                exeResult.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
+                exeResult.setEnergyRemaining(txNrgLimit);
                 return false;
             }
         }
 
         if (txNrgLimit > blockRemainingNrg || contextNrgLmit < 0) {
-            exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INVALID_NRG_LIMIT, 0);
+            exeResult.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
+            exeResult.setEnergyRemaining(0);
             return false;
         }
 
@@ -138,7 +142,8 @@ public abstract class AbstractExecutor {
             BigInteger nonce = repo.getNonce(tx.getSenderAddress());
 
             if (!txNonce.equals(nonce)) {
-                exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INVALID_NONCE, 0);
+                exeResult.setResultCode(FastVmResultCode.INVALID_NONCE);
+                exeResult.setEnergyRemaining(0);
                 return false;
             }
         }
@@ -148,7 +153,8 @@ public abstract class AbstractExecutor {
         BigInteger txTotal = txNrgPrice.multiply(BigInteger.valueOf(txNrgLimit)).add(txValue);
         BigInteger balance = repo.getBalance(tx.getSenderAddress());
         if (txTotal.compareTo(balance) > 0) {
-            exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INSUFFICIENT_BALANCE, 0);
+            exeResult.setResultCode(FastVmResultCode.INSUFFICIENT_BALANCE);
+            exeResult.setEnergyRemaining(0);
             return false;
         }
 

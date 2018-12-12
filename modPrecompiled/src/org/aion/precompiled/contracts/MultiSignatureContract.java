@@ -40,9 +40,9 @@ import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 
 /**
  * An N of M implementation of a multi-signature pre-compiled contract.
@@ -256,15 +256,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * message so that all parties can be sure they are signing identical transactions.
      */
     @Override
-    public FastVmTransactionResult execute(byte[] input, long nrg) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrg) {
         if (nrg < COST) {
-            return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
         if (input == null) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (input.length < 1) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         int operation = input[0];
@@ -275,7 +275,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             case 1:
                 return sendTransaction(input, nrg);
             default:
-                return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
     }
 
@@ -286,9 +286,9 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param nrg The energy to use.
      * @return the result of the create operation.
      */
-    private FastVmTransactionResult createWallet(byte[] input, long nrg) {
+    private PrecompiledTransactionResult createWallet(byte[] input, long nrg) {
         if (input.length < 1 + Long.BYTES) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         ByteBuffer thresh = ByteBuffer.allocate(Long.BYTES);
@@ -299,22 +299,22 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
                 extractAddresses(Arrays.copyOfRange(input, 1 + Long.BYTES, input.length));
 
         if (!isValidTxNrg(nrg)) {
-            return new FastVmTransactionResult(FastVmResultCode.INVALID_NRG_LIMIT, nrg);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INVALID_NRG_LIMIT, nrg);
         }
         if (owners == null) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if ((owners.size() < MIN_OWNERS) || (owners.size() > MAX_OWNERS)) {
             // sanity check... owners should be null in both these cases really
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if ((threshold < MIN_THRESH) || (threshold > owners.size())) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         AionAddress wallet = initNewWallet(owners, threshold);
         track.flush();
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - COST, wallet.toBytes());
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - COST, wallet.toBytes());
     }
 
     /**
@@ -324,10 +324,10 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param nrg The energy to use.
      * @return the result of the send operation.
      */
-    private FastVmTransactionResult sendTransaction(byte[] input, long nrg) {
+    private PrecompiledTransactionResult sendTransaction(byte[] input, long nrg) {
         int length = input.length;
         if (length > 1 + ADDR_LEN + (SIG_LEN * MAX_OWNERS) + AMOUNT_LEN + Long.BYTES + ADDR_LEN) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         int walletStart = 1;
@@ -338,7 +338,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
 
         // Ensures input is min expected size except possibly signatures, which is checked below.
         if (sigsStart > amountStart) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         AionAddress wallet = new AionAddress(Arrays.copyOfRange(input, walletStart, sigsStart));
@@ -352,34 +352,34 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         Long nrgPrice = buffer.getLong();
 
         if (!isValidTxNrg(nrg)) {
-            return new FastVmTransactionResult(FastVmResultCode.INVALID_NRG_LIMIT, nrg);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INVALID_NRG_LIMIT, nrg);
         }
         if (track.getStorageValue(wallet, new DataWord(getMetaDataKey()).toWrapper()) == null) {
             // Then wallet is not the address of a multi-sig wallet.
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (sigs == null) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         byte[] msg = constructMsg(wallet, track.getNonce(wallet), recipient, amount, nrgPrice);
         if (amount.compareTo(BigInteger.ZERO) < 0) {
             // Attempt to transfer negative amount.
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (!areValidSignatures(wallet, sigs, msg)) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (track.getBalance(wallet).compareTo(amount) < 0) {
             // Attempt to transfer more than available balance.
-            return new FastVmTransactionResult(FastVmResultCode.INSUFFICIENT_BALANCE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         track.incrementNonce(wallet);
         track.addBalance(wallet, amount.negate());
         track.addBalance(recipient, amount);
         track.flush();
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - COST);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - COST);
     }
 
     /**

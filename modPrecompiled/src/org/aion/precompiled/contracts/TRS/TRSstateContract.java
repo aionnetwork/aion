@@ -32,8 +32,8 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 
 /**
  * The TRSstateContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -144,18 +144,18 @@ public final class TRSstateContract extends AbstractTRS {
      * @return the result of calling execute on the specified input.
      */
     @Override
-    public FastVmTransactionResult execute(byte[] input, long nrgLimit) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrgLimit) {
         if (input == null) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (input.length == 0) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (nrgLimit < COST) {
-            return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
         if (!isValidTxNrg(nrgLimit)) {
-            return new FastVmTransactionResult(FastVmResultCode.INVALID_NRG_LIMIT, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INVALID_NRG_LIMIT, 0);
         }
 
         int operation = input[0];
@@ -169,7 +169,7 @@ public final class TRSstateContract extends AbstractTRS {
             case 3:
                 return openFunds(input, nrgLimit);
             default:
-                return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
     }
 
@@ -200,7 +200,7 @@ public final class TRSstateContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private FastVmTransactionResult create(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult create(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexDepo = 1;
         final int indexPeriod = 2;
@@ -209,18 +209,18 @@ public final class TRSstateContract extends AbstractTRS {
         final int len = 14;
 
         if (input.length != len) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         int deposit = input[indexDepo];
         if (deposit < 0 || deposit > 3) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // If request for a test contract, verify caller is Aion.
         boolean isTestContract = (deposit == 2 || deposit == 3);
         if (isTestContract && !caller.equals(AION)) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         boolean isDirectDeposit = (deposit == 1 || deposit == 3);
@@ -231,14 +231,14 @@ public final class TRSstateContract extends AbstractTRS {
         periods <<= Byte.SIZE;
         periods |= (input[indexPeriod + 1] & 0xFF);
         if (periods < 1 || periods > 1200) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // Grab the precision and percentage and perform the shiftings and verify the range.
         // 2 byte representation cast to 4-byte int, result is interpreted as unsigned & positive.
         int precision = input[indexPrecision];
         if (precision < 0 || precision > 18) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // Keep first byte of percentBytes unused (as zero) so result is always unsigned.
@@ -248,9 +248,9 @@ public final class TRSstateContract extends AbstractTRS {
         BigInteger percent = new BigInteger(percentBytes);
         BigDecimal realPercent = new BigDecimal(percent).movePointLeft(precision);
         if (realPercent.compareTo(BigDecimal.ZERO) < 0) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         } else if (realPercent.compareTo(new BigDecimal("100")) > 0) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // All checks OK. Generate contract address, save the new contract & return to caller.
@@ -263,8 +263,8 @@ public final class TRSstateContract extends AbstractTRS {
         AionAddress contract = new AionAddress(trsAddr);
 
         saveNewContract(contract, isTestContract, isDirectDeposit, periods, percent, precision);
-        return new FastVmTransactionResult(
-                FastVmResultCode.SUCCESS, nrgLimit - COST, contract.toBytes());
+        return new PrecompiledTransactionResult(
+                PrecompiledResultCode.SUCCESS, nrgLimit - COST, contract.toBytes());
     }
 
     /**
@@ -284,44 +284,44 @@ public final class TRSstateContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private FastVmTransactionResult lock(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult lock(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddr = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // The caller must also be the owner of this contract.
         AionAddress contract =
                 new AionAddress(Arrays.copyOfRange(input, indexAddr, indexAddr + AionAddress.SIZE));
         if (!caller.equals(getContractOwner(contract))) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A lock call can only execute if the current state of the TRS contract is as follows:
         // contract is unlocked & contract is not live.
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A contract must have a strictly positive balance before it can be locked.
         if (getTotalBalance(contract).compareTo(BigInteger.ZERO) <= 0) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A lock call can only execute if the contract is in the following state:
         // contract is not locked and not live and its funds are not open.
         if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // All checks OK. Change contract state to locked.
         setLock(contract);
         track.flush();
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrgLimit - COST);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrgLimit - COST);
     }
 
     /**
@@ -339,40 +339,40 @@ public final class TRSstateContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private FastVmTransactionResult start(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult start(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddr = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // The caller must also be the owner of this contract.
         AionAddress contract =
                 new AionAddress(Arrays.copyOfRange(input, indexAddr, indexAddr + AionAddress.SIZE));
         if (!caller.equals(getContractOwner(contract))) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A start call can only execute if the current state of the TRS contract is as follows:
         // contract is locked & contract is not live.
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A contract can only be started if it is in the following state:
         // the contract is locked and not live and its funds are not open.
         if (!isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // All checks OK. Change contract state to live and save set bonus balance for the contract.
         setLive(contract);
         setBonusBalance(contract);
         track.flush();
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrgLimit - COST);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrgLimit - COST);
     }
 
     /**
@@ -391,41 +391,41 @@ public final class TRSstateContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private FastVmTransactionResult openFunds(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult openFunds(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexContract = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexContract, len));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // An openFunds operation can only execute if the caller is the owner of the contract.
         if (!getContractOwner(contract).equals(caller)) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // An openFunds operation can only execute if the current state of the TRS contract is:
         // contract is not live.
         if (isContractLive(contract)) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // An openFunds operation can only execute if the contract does not already have its funds
         // open - this is to protect against re-setting the bonus balance (not necessarily bad?).
         if (isOpenFunds(contract)) {
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         setIsOpenFunds(contract);
         setBonusBalance(contract);
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, COST - nrgLimit);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, COST - nrgLimit);
     }
 
     // <------------------------------------HELPER METHODS----------------------------------------->

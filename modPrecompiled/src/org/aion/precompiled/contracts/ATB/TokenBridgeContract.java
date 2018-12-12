@@ -39,9 +39,9 @@ import org.aion.base.type.AionAddress;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.zero.types.AionInternalTx;
 
@@ -94,7 +94,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     }
 
     @Override
-    public FastVmTransactionResult execute(@Nonnull final byte[] input, final long nrgLimit) {
+    public PrecompiledTransactionResult execute(@Nonnull final byte[] input, final long nrgLimit) {
         if (nrgLimit < ENERGY_CONSUME) return THROW;
 
         // as a preset, try to initialize before execution
@@ -243,24 +243,25 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         // throw new RuntimeException("should never reach here");
     }
 
-    private static final FastVmTransactionResult THROW =
-            new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+    private static final PrecompiledTransactionResult THROW =
+            new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
 
-    private FastVmTransactionResult fail() {
+    private PrecompiledTransactionResult fail() {
         this.context.getSideEffects().markAllInternalTransactionsAsRejected();
         return THROW;
     }
 
-    private FastVmTransactionResult success() {
+    private PrecompiledTransactionResult success() {
         long energyRemaining = this.context.getTransactionEnergyLimit() - ENERGY_CONSUME;
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, energyRemaining);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, energyRemaining);
     }
 
-    private FastVmTransactionResult success(@Nonnull final byte[] response) {
+    private PrecompiledTransactionResult success(@Nonnull final byte[] response) {
         // should always be positive
         long energyRemaining = this.context.getTransactionEnergyLimit() - ENERGY_CONSUME;
         assert energyRemaining >= 0;
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, energyRemaining, response);
+        return new PrecompiledTransactionResult(
+                PrecompiledResultCode.SUCCESS, energyRemaining, response);
     }
 
     private boolean isFromAddress(byte[] address) {
@@ -280,11 +281,11 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * @param value to be sent (in base units)
      * @return {@code true} if value was performed, {@code false} otherwise
      */
-    public FastVmTransactionResult transfer(
+    public PrecompiledTransactionResult transfer(
             @Nonnull final byte[] to, @Nonnull final BigInteger value) {
         // some initial checks, treat as failure
         if (this.track.getBalance(this.contractAddress).compareTo(value) < 0)
-            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
 
         // assemble an internal transaction
         AionAddress from = this.contractAddress;
@@ -303,7 +304,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
         this.track.addBalance(recipient, value);
 
         // construct result
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, 0);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, 0);
     }
 
     /**
