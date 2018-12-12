@@ -1,7 +1,10 @@
 package org.aion.vm;
 
+<<<<<<< HEAD
 import org.aion.vm.api.interfaces.TransactionResult;
 
+=======
+>>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
 /** A pre-compiled contract interface. */
 public interface IPrecompiledContract {
 
@@ -13,5 +16,5 @@ public interface IPrecompiledContract {
      * @param nrgLimit The energy limit.
      * @return the contract execution result.
      */
-    TransactionResult execute(byte[] input, long nrgLimit);
+    FastVmTransactionResult execute(byte[] input, long nrgLimit);
 }

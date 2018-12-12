@@ -5,6 +5,7 @@ module aion.vm {
     requires aion.zero;
     requires commons.lang3;
     requires aion.vm.api;
+    requires aion.util;
 
     exports org.aion.vm;
 }
