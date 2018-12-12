@@ -46,7 +46,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.hex.Hex;
+import org.aion.util.conversions.Hex;
 
 /**
  * @author Roman Mandeleil 2014

@@ -36,7 +36,7 @@ package org.aion.crypto;
 
 import static org.junit.Assert.assertEquals;
 
-import org.aion.util.hex.Hex;
+import org.aion.util.conversions.Hex;
 import org.junit.Test;
 
 public class HashTest {

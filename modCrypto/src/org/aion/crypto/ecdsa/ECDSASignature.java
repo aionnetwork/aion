@@ -46,7 +46,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import org.aion.crypto.ISignature;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.hex.Hex;
+import org.aion.util.conversions.Hex;
 import org.spongycastle.asn1.ASN1InputStream;
 import org.spongycastle.asn1.ASN1Integer;
 import org.spongycastle.asn1.DLSequence;

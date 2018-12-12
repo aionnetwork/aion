@@ -43,7 +43,7 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import org.aion.util.hex.Hex;
+import org.aion.util.conversions.Hex;
 
 public class ByteUtil {
 

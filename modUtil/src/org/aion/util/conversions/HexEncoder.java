@@ -33,7 +33,7 @@
  *     Bitcoinj team.
  */
 
-package org.aion.util.hex;
+package org.aion.util.conversions;
 
 import java.io.IOException;
 import java.io.OutputStream;
