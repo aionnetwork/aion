@@ -14,7 +14,6 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
-import org.aion.base.vm.IDataWord;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
@@ -25,7 +24,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
     private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
-    private Map<ByteArrayWrapper, IContractDetails<IDataWord>> detailsDB = new HashMap<>();
+    private Map<ByteArrayWrapper, IContractDetails> detailsDB = new HashMap<>();
 
     public AionRepositoryDummy(IRepositoryConfig cfg) {
         super(cfg);
@@ -48,12 +47,12 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
 
     public void updateBatch(
             HashMap<ByteArrayWrapper, AccountState> stateCache,
-            HashMap<ByteArrayWrapper, IContractDetails<IDataWord>> detailsCache) {
+            HashMap<ByteArrayWrapper, IContractDetails> detailsCache) {
 
         for (ByteArrayWrapper hash : stateCache.keySet()) {
 
             AccountState accountState = stateCache.get(hash);
-            IContractDetails<IDataWord> contractDetails = detailsCache.get(hash);
+            IContractDetails contractDetails = detailsCache.get(hash);
 
             if (accountState.isDeleted()) {
                 worldState.remove(hash);
@@ -100,7 +99,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         throw new UnsupportedOperationException();
     }
 
-    public IRepositoryCache<?, ?, ?> startTracking() {
+    public IRepositoryCache<?, ?> startTracking() {
         return new AionRepositoryCache(this);
     }
 
@@ -137,17 +136,17 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return account.getBalance();
     }
 
-    public IDataWord getStorageValue(AionAddress addr, IDataWord key) {
-        IContractDetails<IDataWord> details = getContractDetails(addr);
-        IDataWord value = (details == null) ? null : details.get(key);
+    public ByteArrayWrapper getStorageValue(AionAddress addr, ByteArrayWrapper key) {
+        IContractDetails details = getContractDetails(addr);
+        ByteArrayWrapper value = (details == null) ? null : details.get(key);
         if (value == null) {
             return null;
         }
         return (value.isZero()) ? null : value;
     }
 
-    public void addStorageRow(AionAddress addr, IDataWord key, IDataWord value) {
-        IContractDetails<IDataWord> details = getContractDetails(addr);
+    public void addStorageRow(AionAddress addr, ByteArrayWrapper key, ByteArrayWrapper value) {
+        IContractDetails details = getContractDetails(addr);
 
         if (details == null) {
             createAccount(addr);
@@ -159,7 +158,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
     }
 
     public byte[] getCode(AionAddress addr) {
-        IContractDetails<IDataWord> details = getContractDetails(addr);
+        IContractDetails details = getContractDetails(addr);
 
         if (details == null) {
             return null;
@@ -169,7 +168,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
     }
 
     public void saveCode(AionAddress addr, byte[] code) {
-        IContractDetails<IDataWord> details = getContractDetails(addr);
+        IContractDetails details = getContractDetails(addr);
 
         if (details == null) {
             createAccount(addr);
@@ -222,7 +221,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         detailsDB.remove(addr.toByteArrayWrapper());
     }
 
-    public IContractDetails<IDataWord> getContractDetails(AionAddress addr) {
+    public IContractDetails getContractDetails(AionAddress addr) {
 
         return detailsDB.get(addr.toByteArrayWrapper());
     }
@@ -235,7 +234,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         AccountState accountState = new AccountState();
         worldState.put(addr.toByteArrayWrapper(), accountState);
 
-        IContractDetails<IDataWord> contractDetails = this.cfg.contractDetailsImpl();
+        IContractDetails contractDetails = this.cfg.contractDetailsImpl();
         detailsDB.put(addr.toByteArrayWrapper(), contractDetails);
 
         return accountState;
@@ -252,10 +251,10 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
     public void loadAccount(
             AionAddress addr,
             HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
-            HashMap<ByteArrayWrapper, IContractDetails<IDataWord>> cacheDetails) {
+            HashMap<ByteArrayWrapper, IContractDetails> cacheDetails) {
 
         AccountState account = getAccountState(addr);
-        IContractDetails<IDataWord> details = getContractDetails(addr);
+        IContractDetails details = getContractDetails(addr);
 
         if (account == null) {
             account = new AccountState();

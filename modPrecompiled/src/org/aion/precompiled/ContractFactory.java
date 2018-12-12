@@ -52,8 +52,7 @@ public class ContractFactory implements IContractFactory {
      */
     @Override
     public IPrecompiledContract getPrecompiledContract(
-            TransactionContext context,
-            KernelInterfaceForFastVM track) {
+            TransactionContext context, KernelInterfaceForFastVM track) {
 
         CfgFork cfg = new CfgFork();
         String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
@@ -70,7 +69,8 @@ public class ContractFactory implements IContractFactory {
                                 AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
                                 AionAddress.wrap(ADDR_TOKEN_BRIDGE));
 
-                if (!context.getOriginAddress().equals(AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
+                if (!context.getOriginAddress()
+                                .equals(AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
                         && !contract.isInitialized()) {
                     return null;
                 }
@@ -86,7 +86,9 @@ public class ContractFactory implements IContractFactory {
                 return fork_032
                         ? null
                         : new TotalCurrencyContract(
-                                track.getRepositoryCache(), context.getSenderAddress(), AionAddress.wrap(ADDR_OWNER));
+                                track.getRepositoryCache(),
+                                context.getSenderAddress(),
+                                AionAddress.wrap(ADDR_OWNER));
             default:
                 return null;
         }

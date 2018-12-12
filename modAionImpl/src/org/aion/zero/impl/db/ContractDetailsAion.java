@@ -2,7 +2,6 @@ package org.aion.zero.impl.db;
 
 import org.aion.base.db.DetailsProvider;
 import org.aion.base.db.IContractDetails;
-import org.aion.base.vm.IDataWord;
 import org.aion.zero.db.AionContractDetailsImpl;
 
 /**
@@ -55,7 +54,7 @@ public class ContractDetailsAion implements DetailsProvider {
     }
 
     @Override
-    public IContractDetails<IDataWord> getDetails() {
+    public IContractDetails getDetails() {
         return new AionContractDetailsImpl(this.prune, this.memStorageLimit);
     }
 }

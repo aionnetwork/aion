@@ -1,6 +1,7 @@
 package org.aion.base.vm;
 
 import java.math.BigInteger;
+import org.aion.base.util.ByteArrayWrapper;
 
 public interface IDataWord {
 
@@ -14,4 +15,5 @@ public interface IDataWord {
 
     boolean isZero();
 
+    ByteArrayWrapper toWrapper();
 }
