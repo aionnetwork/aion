@@ -6,18 +6,17 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.vm.api.interfaces.Address;
-import org.aion.base.vm.IDataWord;
 
 /** Contract details cache implementation. */
-public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord> {
+public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
-    private Map<IDataWord, IDataWord> storage = new HashMap<>();
+    private Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
 
-    public IContractDetails<IDataWord> origContract;
+    public IContractDetails origContract;
 
-    public ContractDetailsCacheImpl(IContractDetails<IDataWord> origContract) {
+    public ContractDetailsCacheImpl(IContractDetails origContract) {
         this.origContract = origContract;
         if (origContract != null) {
             if (origContract instanceof AbstractContractDetails) {
@@ -47,7 +46,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @param value The value.
      */
     @Override
-    public void put(IDataWord key, IDataWord value) {
+    public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
         storage.put(key, value);
         setDirty(true);
     }
@@ -59,8 +58,8 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @return the associated value or null.
      */
     @Override
-    public IDataWord get(IDataWord key) {
-        IDataWord value = storage.get(key);
+    public ByteArrayWrapper get(ByteArrayWrapper key) {
+        ByteArrayWrapper value = storage.get(key);
         if (value != null) {
             value = value.copy();
         } else {
@@ -68,8 +67,9 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
                 return null;
             }
             value = origContract.get(key);
-            value = (value == null) ? DataWord.ZERO : value;
-            storage.put(key.copy(), value.isZero() ? DataWord.ZERO.copy() : value.copy());
+            // TODO: the VM must pad the given ZERO value if expecting a fixed size byte array
+            value = (value == null) ? ByteArrayWrapper.ZERO : value;
+            storage.put(key.copy(), value.isZero() ? ByteArrayWrapper.ZERO.copy() : value.copy());
         }
 
         if (value == null || value.isZero()) {
@@ -108,13 +108,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @return The associated mappings.
      */
     @Override
-    public Map<IDataWord, IDataWord> getStorage(Collection<IDataWord> keys) {
-        Map<IDataWord, IDataWord> storage = new HashMap<>();
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
+        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
         if (keys == null) {
             throw new IllegalArgumentException("Input keys can't be null");
         } else {
-            for (IDataWord key : keys) {
-                IDataWord value = get(key);
+            for (ByteArrayWrapper key : keys) {
+                ByteArrayWrapper value = get(key);
 
                 // we check if the value is not null,
                 // cause we keep all historical keys
@@ -136,12 +136,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @param storageValues The values.
      */
     @Override
-    public void setStorage(List<IDataWord> storageKeys, List<IDataWord> storageValues) {
+    public void setStorage(
+            List<ByteArrayWrapper> storageKeys, List<ByteArrayWrapper> storageValues) {
 
         for (int i = 0; i < storageKeys.size(); ++i) {
 
-            IDataWord key = storageKeys.get(i);
-            IDataWord value = storageValues.get(i);
+            ByteArrayWrapper key = storageKeys.get(i);
+            ByteArrayWrapper value = storageValues.get(i);
 
             put(key, value);
         }
@@ -153,8 +154,8 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @param storage The specified mappings.
      */
     @Override
-    public void setStorage(Map<IDataWord, IDataWord> storage) {
-        for (Map.Entry<IDataWord, IDataWord> entry : storage.entrySet()) {
+    public void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
+        for (Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry : storage.entrySet()) {
             put(entry.getKey(), entry.getValue());
         }
     }
@@ -200,7 +201,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
             return;
         }
 
-        for (IDataWord key : storage.keySet()) {
+        for (ByteArrayWrapper key : storage.keySet()) {
             origContract.put(key, storage.get(key));
         }
 
@@ -214,7 +215,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
     /** This method is not supported. */
     @Override
-    public IContractDetails<IDataWord> getSnapshotTo(byte[] hash) {
+    public IContractDetails getSnapshotTo(byte[] hash) {
         throw new UnsupportedOperationException("No snapshot option during cache state");
     }
 

@@ -2,7 +2,7 @@ package org.aion.vm;
 
 import java.math.BigInteger;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.valid.TxNrgRule;
@@ -11,11 +11,11 @@ import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.KernelInterface;
 
 public class KernelInterfaceForFastVM implements KernelInterface {
-    private IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repositoryCache;
+    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
 
     public KernelInterfaceForFastVM(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repositoryCache,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
             boolean allowNonceIncrement,
             boolean isLocalCall) {
 
@@ -42,7 +42,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         this.repositoryCache.rollback();
     }
 
-    public IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?,?>> getRepositoryCache() {
+    public IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> getRepositoryCache() {
         return this.repositoryCache;
     }
     // The above 4 methods are temporary. See comment just above.
@@ -69,15 +69,15 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public void putStorage(Address address, byte[] key, byte[] value) {
-        DataWord storageKey = new DataWord(key);
-        DataWord storageValue = new DataWord(value);
+        ByteArrayWrapper storageKey = new DataWord(key).toWrapper();
+        ByteArrayWrapper storageValue = new DataWord(value).toWrapper();
         this.repositoryCache.addStorageRow(address, storageKey, storageValue);
     }
 
     @Override
     public byte[] getStorage(Address address, byte[] key) {
-        DataWord storageKey = new DataWord(key);
-        IDataWord value = this.repositoryCache.getStorageValue(address, storageKey);
+        ByteArrayWrapper storageKey = new DataWord(key).toWrapper();
+        ByteArrayWrapper value = this.repositoryCache.getStorageValue(address, storageKey);
         return (value == null) ? DataWord.ZERO.getData() : value.getData();
     }
 
