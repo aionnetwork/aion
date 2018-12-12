@@ -190,14 +190,14 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public IRepository<?, ?, ?> getPendingState() {
+    public IRepository<?, ?> getPendingState() {
         return aionHub.getPendingState().getRepository();
     }
 
     @Override
-    public IRepository<?, ?, ?> getSnapshotTo(byte[] root) {
-        IRepository<?, ?, ?> repository = aionHub.getRepository();
-        IRepository<?, ?, ?> snapshot = repository.getSnapshotTo(root);
+    public IRepository<?, ?> getSnapshotTo(byte[] root) {
+        IRepository<?, ?> repository = aionHub.getRepository();
+        IRepository<?, ?> snapshot = repository.getSnapshotTo(root);
 
         return snapshot;
     }

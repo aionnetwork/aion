@@ -332,8 +332,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
                 track.addStorageRow(
                         ContractFactory.getTotalCurrencyContractAddress(),
-                        new DataWord(key.getKey()),
-                        new DataWord(key.getValue()));
+                        new DataWord(key.getKey()).toWrapper(),
+                        new DataWord(key.getValue()).toWrapper());
             }
 
             for (AionAddress key : genesis.getPremine().keySet()) {

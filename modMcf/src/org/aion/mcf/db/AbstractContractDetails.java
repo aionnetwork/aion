@@ -33,7 +33,7 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 
 /** Abstract contract details. */
-public abstract class AbstractContractDetails<DW> implements IContractDetails<DW> {
+public abstract class AbstractContractDetails implements IContractDetails {
 
     private boolean dirty = false;
     private boolean deleted = false;

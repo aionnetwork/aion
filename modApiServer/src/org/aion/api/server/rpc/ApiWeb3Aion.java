@@ -91,7 +91,6 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
-import org.aion.base.vm.IDataWord;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -493,8 +492,7 @@ public class ApiWeb3Aion extends ApiAion {
                             + "State may have been pruned; please check your db pruning settings in the configuration file.");
         }
 
-        @SuppressWarnings("unchecked")
-        IDataWord storageValue = (IDataWord) repo.getStorageValue(address, key);
+        ByteArrayWrapper storageValue = repo.getStorageValue(address, key.toWrapper());
         if (storageValue != null) {
             return new RpcMsg(TypeConverter.toJsonHex(storageValue.getData()));
         } else {
@@ -2383,7 +2381,8 @@ public class ApiWeb3Aion extends ApiAion {
 
         Function<AionTransaction, JSONObject> extractTxReceipt =
                 t -> {
-                    AionTxInfo info = chain.getTransactionInfoLite(t.getTransactionHash(), b.getHash());
+                    AionTxInfo info =
+                            chain.getTransactionInfoLite(t.getTransactionHash(), b.getHash());
                     info.setTransaction(t);
                     return ((new TxRecpt(b, info, 0L, true)).toJson());
                 };

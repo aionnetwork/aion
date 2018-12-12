@@ -23,19 +23,19 @@
 package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
-import org.aion.base.type.AionAddress;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.BIUtil;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.vm.api.interfaces.Address;
-import org.aion.base.vm.IDataWord;
 
 /** A pre-compiled contract for retrieving and updating the total amount of currency. */
 public class TotalCurrencyContract extends StatefulPrecompiledContract {
@@ -53,7 +53,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      * @param ownerAddress
      */
     public TotalCurrencyContract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             Address address,
             Address ownerAddress) {
         super(track);
@@ -118,8 +118,10 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
             return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
         }
 
-        IDataWord balanceData = this.track.getStorageValue(this.address, new DataWord(input));
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - COST, balanceData.getData());
+        ByteArrayWrapper balanceData =
+                this.track.getStorageValue(this.address, new DataWord(input).toWrapper());
+        return new FastVmTransactionResult(
+                FastVmResultCode.SUCCESS, nrg - COST, balanceData.getData());
     }
 
     private FastVmTransactionResult executeUpdateTotalBalance(byte[] input, long nrg) {
@@ -167,7 +169,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
 
         // payload processing
-        IDataWord totalCurr = this.track.getStorageValue(this.address, chainId);
+        ByteArrayWrapper totalCurr = this.track.getStorageValue(this.address, chainId.toWrapper());
         BigInteger totalCurrBI =
                 totalCurr == null ? BigInteger.ZERO : BIUtil.toBI(totalCurr.getData());
         BigInteger value = BIUtil.toBI(amount);
@@ -190,7 +192,10 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
 
         // store result and successful exit
-        this.track.addStorageRow(this.address, chainId, new DataWord(finalValue.toByteArray()));
+        this.track.addStorageRow(
+                this.address,
+                chainId.toWrapper(),
+                new DataWord(finalValue.toByteArray()).toWrapper());
         return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - COST);
     }
 }

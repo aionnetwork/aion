@@ -26,7 +26,6 @@ import org.aion.base.db.IRepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.vm.IPrecompiledContract;
-import org.aion.base.vm.IDataWord;
 
 /**
  * A pre-compiled contract that is capable of modifying state.
@@ -37,7 +36,7 @@ import org.aion.base.vm.IDataWord;
 public abstract class StatefulPrecompiledContract implements IPrecompiledContract {
     public static final long TX_NRG_MIN = 20_999;
     public static final long TX_NRG_MAX = 2_000_001;
-    protected final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
+    protected final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
 
     /**
      * Constructs a new StatefulPrecompiledContract.
@@ -45,7 +44,7 @@ public abstract class StatefulPrecompiledContract implements IPrecompiledContrac
      * @param track
      */
     public StatefulPrecompiledContract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track) {
 
         if (track == null) {
             throw new IllegalArgumentException("Null track.");

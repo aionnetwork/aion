@@ -38,10 +38,10 @@ package org.aion.base.db;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.vm.api.interfaces.Address;
 
-public interface IContractDetails<DW> {
+public interface IContractDetails {
 
     /**
      * Inserts key and value as a key-value pair. If the underlying byte array of value consists
@@ -51,7 +51,7 @@ public interface IContractDetails<DW> {
      * @param key The key.
      * @param value The value.
      */
-    void put(DW key, DW value);
+    void put(ByteArrayWrapper key, ByteArrayWrapper value);
 
     /**
      * Returns the value associated with key.
@@ -61,7 +61,7 @@ public interface IContractDetails<DW> {
      * @return The associated value or some non-value indicator in the case of no such key-value
      *     pair.
      */
-    DW get(DW key);
+    ByteArrayWrapper get(ByteArrayWrapper key);
 
     /**
      * Returns the code of the address associated with this IContractDetails class. This is for
@@ -143,7 +143,7 @@ public interface IContractDetails<DW> {
      * @param keys The keys to query for.
      * @return The associated mappings.
      */
-    Map<DW, DW> getStorage(Collection<DW> keys);
+    Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys);
 
     /**
      * Sets the storage to contain the specified keys and values. This method creates pairings of
@@ -153,14 +153,14 @@ public interface IContractDetails<DW> {
      * @param storageKeys The keys.
      * @param storageValues The values.
      */
-    void setStorage(List<DW> storageKeys, List<DW> storageValues);
+    void setStorage(List<ByteArrayWrapper> storageKeys, List<ByteArrayWrapper> storageValues);
 
     /**
      * Sets the storage to contain the specified key-value mappings.
      *
      * @param storage The specified mappings.
      */
-    void setStorage(Map<DW, DW> storage);
+    void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage);
 
     /**
      * Get the address associated with this IContractDetails.
@@ -194,7 +194,7 @@ public interface IContractDetails<DW> {
      * @param hash The root hash to search for.
      * @return the specified IContractDetails.
      */
-    IContractDetails<DW> getSnapshotTo(byte[] hash);
+    IContractDetails getSnapshotTo(byte[] hash);
 
     /**
      * Sets the data source to dataSource.

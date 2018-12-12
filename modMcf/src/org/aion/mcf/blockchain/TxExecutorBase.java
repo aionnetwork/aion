@@ -42,9 +42,9 @@ public abstract class TxExecutorBase<
 
     protected TX tx;
 
-    protected IRepositoryCache<?, ?, ?> track;
+    protected IRepositoryCache<?, ?> track;
 
-    protected IRepositoryCache<?, ?, ?> cacheTrack;
+    protected IRepositoryCache<?, ?> cacheTrack;
 
     protected BS blockStore;
 

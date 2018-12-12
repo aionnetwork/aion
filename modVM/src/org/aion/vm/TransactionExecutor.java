@@ -25,15 +25,14 @@ package org.aion.vm;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.base.type.AionAddress;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.api.interfaces.Address;
-import org.aion.base.vm.IDataWord;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.api.interfaces.TransactionContext;
@@ -87,7 +86,10 @@ public class TransactionExecutor extends AbstractExecutor {
          * transaction info
          */
         byte[] txHash = tx.getTransactionHash();
-        Address address = tx.isContractCreationTransaction() ? tx.getContractAddress() : tx.getDestinationAddress();
+        Address address =
+                tx.isContractCreationTransaction()
+                        ? tx.getContractAddress()
+                        : tx.getDestinationAddress();
         Address origin = tx.getSenderAddress();
         Address caller = tx.getSenderAddress();
 
@@ -106,7 +108,10 @@ public class TransactionExecutor extends AbstractExecutor {
          * execution info
          */
         int depth = 0;
-        int kind = tx.isContractCreationTransaction() ? ExecutionContext.CREATE : ExecutionContext.CALL;
+        int kind =
+                tx.isContractCreationTransaction()
+                        ? ExecutionContext.CREATE
+                        : ExecutionContext.CALL;
         int flags = 0;
 
         /*
@@ -153,7 +158,7 @@ public class TransactionExecutor extends AbstractExecutor {
     public TransactionExecutor(
             AionTransaction tx,
             IAionBlock block,
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo,
             boolean isLocalCall,
             Logger logger) {
         this(tx, block, repo, isLocalCall, block.getNrgLimit(), logger);
@@ -163,7 +168,7 @@ public class TransactionExecutor extends AbstractExecutor {
     public TransactionExecutor(
             AionTransaction tx,
             IAionBlock block,
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo,
             Logger logger) {
         this(tx, block, repo, false, block.getNrgLimit(), logger);
     }
@@ -179,7 +184,8 @@ public class TransactionExecutor extends AbstractExecutor {
 
     /** Prepares contract call. */
     protected void call() {
-        KernelInterfaceForFastVM kernel = new KernelInterfaceForFastVM(repoTrack, askNonce, isLocalCall);
+        KernelInterfaceForFastVM kernel =
+                new KernelInterfaceForFastVM(repoTrack, askNonce, isLocalCall);
 
         IPrecompiledContract pc = this.provider.getPrecompiledContract(this.ctx, kernel);
         if (pc != null) {
@@ -214,7 +220,8 @@ public class TransactionExecutor extends AbstractExecutor {
         // execute contract deployer
         if (!ArrayUtils.isEmpty(tx.getData())) {
             VirtualMachine fvm = this.provider.getVM();
-            KernelInterfaceForFastVM kernel = new KernelInterfaceForFastVM(repoTrack, askNonce, isLocalCall);
+            KernelInterfaceForFastVM kernel =
+                    new KernelInterfaceForFastVM(repoTrack, askNonce, isLocalCall);
             exeResult = fvm.run(tx.getData(), ctx, kernel);
 
             if (exeResult.getResultCode().toInt() == FastVmResultCode.SUCCESS.toInt()) {

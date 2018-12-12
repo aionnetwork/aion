@@ -76,11 +76,11 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     }
 
     public DataWord(BigInteger num) {
-        // NOTE: DataWord.value() produces a signed positive BigInteger. The byte array representation
-        // of such a number must prepend a zero byte so that this can be decoded correctly. This means
-        // that a 16-byte array with a non-zero starting bit will become 17 bytes when
-        // BigInteger::toByteArray is called, and therefore we must remove any leading zero bytes
-        // from this representation for full compatibility.
+        // NOTE: DataWord.value() produces a signed positive BigInteger. The byte array
+        // representation of such a number must prepend a zero byte so that this can be decoded
+        // correctly. This means that a 16-byte array with a non-zero starting bit will become 17
+        // bytes when BigInteger::toByteArray is called, and therefore we must remove any leading
+        // zero bytes from this representation for full compatibility.
         this(removeLargeBigIntegerLeadingZeroByte(num));
     }
 
@@ -88,18 +88,19 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
      * Similar to {@code stripLeadingZeroes} but more specialized to be more efficient in a specific
      * necessary situation.
      *
-     * Essentially this method will always return {@code number.toByteArray()} UNLESS this byte
+     * <p>Essentially this method will always return {@code number.toByteArray()} UNLESS this byte
      * array is length {@value BYTES} + 1 (that is, 17), and its initial byte is a zero byte. In
      * this single case, the leading zero byte will be stripped.
      *
-     * @param number The {@link BigInteger} whose byte array representation is to be possibly truncated.
+     * @param number The {@link BigInteger} whose byte array representation is to be possibly
+     *     truncated.
      * @return The re-formatted {@link BigInteger#toByteArray()} representation as here specified.
      */
     private static byte[] removeLargeBigIntegerLeadingZeroByte(BigInteger number) {
         byte[] bytes = number.toByteArray();
         return ((bytes.length == (DataWord.BYTES + 1)) && (bytes[0] == 0x0))
-            ? Arrays.copyOfRange(bytes, 1, bytes.length)
-            : bytes;
+                ? Arrays.copyOfRange(bytes, 1, bytes.length)
+                : bytes;
     }
 
     public DataWord(String data) {
@@ -191,5 +192,10 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     @Override
     public String toString() {
         return Hex.toHexString(data);
+    }
+
+    @Override
+    public ByteArrayWrapper toWrapper() {
+        return ByteArrayWrapper.wrap(data);
     }
 }

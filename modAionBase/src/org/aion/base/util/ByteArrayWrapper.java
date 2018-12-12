@@ -96,4 +96,32 @@ public class ByteArrayWrapper
     public static ByteArrayWrapper wrap(byte[] data) {
         return new ByteArrayWrapper(data);
     }
+
+    /**
+     * Checks if every byte in the array has the value 0.
+     *
+     * @return {@code true} if every byte in the array has the value 0, {@code false} otherwise
+     */
+    public boolean isZero() {
+        int length = data.length;
+        for (int i = 0; i < length; i++) {
+            if (data[length - 1 - i] != 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public ByteArrayWrapper copy() {
+        int length = data.length;
+        byte[] bs = new byte[length];
+        System.arraycopy(data, 0, bs, 0, length);
+        return new ByteArrayWrapper(bs);
+    }
+
+    public static final ByteArrayWrapper ZERO = ByteArrayWrapper.wrap(new byte[] {0});
+
+    public byte[] getNoLeadZeroesData() {
+        return ByteUtil.stripLeadingZeroes(data);
+    }
 }

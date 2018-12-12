@@ -32,10 +32,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.aion.base.type.AionAddress;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -46,7 +44,8 @@ import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.base.vm.IDataWord;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -107,7 +106,7 @@ public class AionNameServiceContractTest {
     private AionAddress newAddress8 =
             AionAddress.wrap("0000000100000000000000000000000000000000000000000000000010000000");
 
-    private IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo;
+    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
     private ECKey defaultKey;
     private ECKey defaultKey2;
     private ECKey k;
@@ -747,19 +746,26 @@ public class AionNameServiceContractTest {
 
         byte[] combined =
                 setupInputs(
-                        "cion.bion.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
+                        "cion.bion.aion",
+                        AionAddress.wrap(k.getAddress()),
+                        amount.toByteArray(),
+                        k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         FastVmTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
         AionAddress addr = AionAddress.wrap(result.getOutput());
 
         byte[] combined2 =
-                setupInputs("aaaa.aion", AionAddress.wrap(k.getAddress()), amount2.toByteArray(), k);
+                setupInputs(
+                        "aaaa.aion", AionAddress.wrap(k.getAddress()), amount2.toByteArray(), k);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         aac2.execute(combined2, DEFAULT_INPUT_NRG);
 
         byte[] combined3 =
                 setupInputs(
-                        "bbbb.aaaa.aion", AionAddress.wrap(k2.getAddress()), amount3.toByteArray(), k2);
+                        "bbbb.aaaa.aion",
+                        AionAddress.wrap(k2.getAddress()),
+                        amount3.toByteArray(),
+                        k2);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
         aac3.execute(combined3, DEFAULT_INPUT_NRG);
 
@@ -788,13 +794,19 @@ public class AionNameServiceContractTest {
 
         byte[] combined4 =
                 setupInputs(
-                        "cccc.aaaa.aion", AionAddress.wrap(k.getAddress()), amount3.toByteArray(), k);
+                        "cccc.aaaa.aion",
+                        AionAddress.wrap(k.getAddress()),
+                        amount3.toByteArray(),
+                        k);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
         aac4.execute(combined4, DEFAULT_INPUT_NRG);
 
         byte[] combined5 =
                 setupInputs(
-                        "cccc.aaaa.aion", AionAddress.wrap(k2.getAddress()), amount2.toByteArray(), k2);
+                        "cccc.aaaa.aion",
+                        AionAddress.wrap(k2.getAddress()),
+                        amount2.toByteArray(),
+                        k2);
         AionAuctionContract aac5 = new AionAuctionContract(repo, AION, blockchain);
         aac5.execute(combined5, DEFAULT_INPUT_NRG);
 
@@ -926,7 +938,11 @@ public class AionNameServiceContractTest {
     }
 
     private void storeValueToRepo(
-            DummyRepo repo, AionAddress domainAddress, byte[] hash1, byte[] hash2, AionAddress value) {
+            DummyRepo repo,
+            AionAddress domainAddress,
+            byte[] hash1,
+            byte[] hash2,
+            AionAddress value) {
         byte[] combined = value.toBytes();
         byte[] value1 = new byte[16];
         byte[] value2 = new byte[16];
@@ -942,15 +958,18 @@ public class AionNameServiceContractTest {
             byte[] hash2,
             byte[] value1,
             byte[] value2) {
-        repo.addStorageRow(domainAddress, new DataWord(hash1), new DataWord(value1));
-        repo.addStorageRow(domainAddress, new DataWord(hash2), new DataWord(value2));
+        repo.addStorageRow(
+                domainAddress, new DataWord(hash1).toWrapper(), new DataWord(value1).toWrapper());
+        repo.addStorageRow(
+                domainAddress, new DataWord(hash2).toWrapper(), new DataWord(value2).toWrapper());
     }
 
     private void createAccounts(DummyRepo repository, ECKey[] accountList) {
         for (ECKey key : accountList) repository.createAccount(AionAddress.wrap(key.getAddress()));
     }
 
-    private byte[] setupInputs(String domainName, AionAddress ownerAddress, byte[] amount, ECKey k) {
+    private byte[] setupInputs(
+            String domainName, AionAddress ownerAddress, byte[] amount, ECKey k) {
         int domainLength = domainName.length();
         int amountLength = amount.length;
         int offset = 0;

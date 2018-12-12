@@ -44,17 +44,18 @@ public interface IAionChain extends IChainInstancePOW, QueryInterface {
 
     void close();
 
-    AionTransaction createTransaction(BigInteger nonce, AionAddress to, BigInteger value, byte[] data);
+    AionTransaction createTransaction(
+            BigInteger nonce, AionAddress to, BigInteger value, byte[] data);
 
     void broadcastTransaction(AionTransaction transaction);
 
     AionTxReceipt callConstant(AionTransaction tx, IAionBlock block);
 
-    IRepository<?, ?, ?> getRepository();
+    IRepository<?, ?> getRepository();
 
-    IRepository<?, ?, ?> getPendingState();
+    IRepository<?, ?> getPendingState();
 
-    IRepository<?, ?, ?> getSnapshotTo(byte[] root);
+    IRepository<?, ?> getSnapshotTo(byte[] root);
 
     List<AionTransaction> getWireTransactions();
 

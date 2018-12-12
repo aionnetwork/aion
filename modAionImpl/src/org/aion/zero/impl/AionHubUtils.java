@@ -43,8 +43,8 @@ public class AionHubUtils {
         for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
             track.addStorageRow(
                     networkBalanceAddress,
-                    new DataWord(addr.getKey()),
-                    new DataWord(addr.getValue()));
+                    new DataWord(addr.getKey()).toWrapper(),
+                    new DataWord(addr.getValue()).toWrapper());
         }
 
         for (AionAddress addr : genesis.getPremine().keySet()) {

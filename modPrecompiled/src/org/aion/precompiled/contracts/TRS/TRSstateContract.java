@@ -26,15 +26,14 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import org.aion.base.type.AionAddress;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.base.vm.IDataWord;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 
 /**
  * The TRSstateContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -67,7 +66,7 @@ public final class TRSstateContract extends AbstractTRS {
      * @throws NullPointerException if track or caller are null.
      */
     public TRSstateContract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             AionAddress caller,
             IBlockchain blockchain) {
 
@@ -264,7 +263,8 @@ public final class TRSstateContract extends AbstractTRS {
         AionAddress contract = new AionAddress(trsAddr);
 
         saveNewContract(contract, isTestContract, isDirectDeposit, periods, percent, precision);
-        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrgLimit - COST, contract.toBytes());
+        return new FastVmTransactionResult(
+                FastVmResultCode.SUCCESS, nrgLimit - COST, contract.toBytes());
     }
 
     /**

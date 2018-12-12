@@ -44,7 +44,7 @@ import org.aion.vm.api.interfaces.Address;
  *
  * @apiNote Allows only batch operations on data.
  */
-public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
+public interface IRepository<AS, BSB> extends IRepositoryQuery<AS> {
 
     /**
      * Creates a tracker repository for caching future changes.
@@ -63,7 +63,7 @@ public interface IRepository<AS, DW, BSB> extends IRepositoryQuery<AS, DW> {
      * @param contractDetails cached contract details
      */
     void updateBatch(
-            Map<Address, AS> accountStates, Map<Address, IContractDetails<DW>> contractDetails);
+            Map<Address, AS> accountStates, Map<Address, IContractDetails> contractDetails);
 
     /** Reverts all the changes performed by this repository. */
     void rollback();

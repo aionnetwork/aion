@@ -114,8 +114,8 @@ public class AionContractDetailsTest {
                         1000000 // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit()
                         );
         contractDetails.setCode(code);
-        contractDetails.put(new DataWord(key_1), new DataWord(val_1));
-        contractDetails.put(new DataWord(key_2), new DataWord(val_2));
+        contractDetails.put(new DataWord(key_1).toWrapper(), new DataWord(val_1).toWrapper());
+        contractDetails.put(new DataWord(key_2).toWrapper(), new DataWord(val_2).toWrapper());
 
         byte[] data = contractDetails.getEncoded();
 
@@ -126,12 +126,16 @@ public class AionContractDetailsTest {
         assertEquals(
                 ByteUtil.toHexString(val_1),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_1)).getNoLeadZeroesData()));
+                        contractDetails_
+                                .get(new DataWord(key_1).toWrapper())
+                                .getNoLeadZeroesData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_2),
                 ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_2)).getNoLeadZeroesData()));
+                        contractDetails_
+                                .get(new DataWord(key_2).toWrapper())
+                                .getNoLeadZeroesData()));
     }
 
     @Test
@@ -187,20 +191,20 @@ public class AionContractDetailsTest {
         AionContractDetailsImpl contractDetails = new AionContractDetailsImpl();
         contractDetails.setCode(code);
         contractDetails.setAddress(address);
-        contractDetails.put(new DataWord(key_0), new DataWord(val_0));
-        contractDetails.put(new DataWord(key_1), new DataWord(val_1));
-        contractDetails.put(new DataWord(key_2), new DataWord(val_2));
-        contractDetails.put(new DataWord(key_3), new DataWord(val_3));
-        contractDetails.put(new DataWord(key_4), new DataWord(val_4));
-        contractDetails.put(new DataWord(key_5), new DataWord(val_5));
-        contractDetails.put(new DataWord(key_6), new DataWord(val_6));
-        contractDetails.put(new DataWord(key_7), new DataWord(val_7));
-        contractDetails.put(new DataWord(key_8), new DataWord(val_8));
-        contractDetails.put(new DataWord(key_9), new DataWord(val_9));
-        contractDetails.put(new DataWord(key_10), new DataWord(val_10));
-        contractDetails.put(new DataWord(key_11), new DataWord(val_11));
-        contractDetails.put(new DataWord(key_12), new DataWord(val_12));
-        contractDetails.put(new DataWord(key_13), new DataWord(val_13));
+        contractDetails.put(new DataWord(key_0).toWrapper(), new DataWord(val_0).toWrapper());
+        contractDetails.put(new DataWord(key_1).toWrapper(), new DataWord(val_1).toWrapper());
+        contractDetails.put(new DataWord(key_2).toWrapper(), new DataWord(val_2).toWrapper());
+        contractDetails.put(new DataWord(key_3).toWrapper(), new DataWord(val_3).toWrapper());
+        contractDetails.put(new DataWord(key_4).toWrapper(), new DataWord(val_4).toWrapper());
+        contractDetails.put(new DataWord(key_5).toWrapper(), new DataWord(val_5).toWrapper());
+        contractDetails.put(new DataWord(key_6).toWrapper(), new DataWord(val_6).toWrapper());
+        contractDetails.put(new DataWord(key_7).toWrapper(), new DataWord(val_7).toWrapper());
+        contractDetails.put(new DataWord(key_8).toWrapper(), new DataWord(val_8).toWrapper());
+        contractDetails.put(new DataWord(key_9).toWrapper(), new DataWord(val_9).toWrapper());
+        contractDetails.put(new DataWord(key_10).toWrapper(), new DataWord(val_10).toWrapper());
+        contractDetails.put(new DataWord(key_11).toWrapper(), new DataWord(val_11).toWrapper());
+        contractDetails.put(new DataWord(key_12).toWrapper(), new DataWord(val_12).toWrapper());
+        contractDetails.put(new DataWord(key_13).toWrapper(), new DataWord(val_13).toWrapper());
 
         byte[] data = contractDetails.getEncoded();
 
@@ -212,55 +216,68 @@ public class AionContractDetailsTest {
 
         assertEquals(
                 ByteUtil.toHexString(val_1),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_1)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_1).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_2),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_2)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_2).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_3),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_3)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_3).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_4),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_4)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_4).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_5),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_5)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_5).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_6),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_6)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_6).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_7),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_7)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_7).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_8),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_8)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_8).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_9),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_9)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_9).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_10),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_10)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_10).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_11),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_11)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_11).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_12),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_12)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_12).toWrapper()).getData()));
 
         assertEquals(
                 ByteUtil.toHexString(val_13),
-                ByteUtil.toHexString(contractDetails_.get(new DataWord(key_13)).getData()));
+                ByteUtil.toHexString(
+                        contractDetails_.get(new DataWord(key_13).toWrapper()).getData()));
     }
 
     @Test
@@ -284,7 +301,7 @@ public class AionContractDetailsTest {
             DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
             elements.put(key, value);
-            original.put(key, value);
+            original.put(key.toWrapper(), value.toWrapper());
         }
 
         original.syncStorage();
@@ -300,13 +317,14 @@ public class AionContractDetailsTest {
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
 
         for (DataWord key : elements.keySet()) {
-            assertEquals(elements.get(key), deserialized.get(key));
+            assertEquals(elements.get(key).toWrapper(), deserialized.get(key.toWrapper()));
         }
 
         DataWord deletedKey = elements.keySet().iterator().next();
 
-        deserialized.put(deletedKey, DataWord.ZERO);
-        deserialized.put(new DataWord(RandomUtils.nextBytes(16)), DataWord.ZERO);
+        deserialized.put(deletedKey.toWrapper(), DataWord.ZERO.toWrapper());
+        deserialized.put(
+                new DataWord(RandomUtils.nextBytes(16)).toWrapper(), DataWord.ZERO.toWrapper());
     }
 
     @Test
@@ -328,7 +346,7 @@ public class AionContractDetailsTest {
             DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
             elements.put(key, value);
-            original.put(key, value);
+            original.put(key.toWrapper(), value.toWrapper());
         }
 
         original.syncStorage();
@@ -343,7 +361,7 @@ public class AionContractDetailsTest {
 
             elements.put(key, value);
 
-            deserialized.put(key, value);
+            deserialized.put(key.toWrapper(), value.toWrapper());
         }
 
         deserialized.syncStorage();
@@ -352,7 +370,7 @@ public class AionContractDetailsTest {
         deserialized = deserialize(deserialized.getEncoded(), externalStorage);
 
         for (DataWord key : elements.keySet()) {
-            assertEquals(elements.get(key), deserialized.get(key));
+            assertEquals(elements.get(key).toWrapper(), deserialized.get(key.toWrapper()));
         }
     }
 }

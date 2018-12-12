@@ -24,14 +24,13 @@ package org.aion.precompiled.contracts.TRS;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.base.type.AionAddress;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.base.vm.IDataWord;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 
 /**
  * The TRSuseContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -67,7 +66,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @param caller The calling address.
      */
     public TRSuseContract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo,
             AionAddress caller,
             IBlockchain blockchain) {
 
@@ -275,7 +274,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, indexAmount));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
@@ -396,8 +396,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = AionAddress
-            .wrap(Arrays.copyOfRange(input, indexContract, indexEntries));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexEntries));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
@@ -434,7 +434,8 @@ public final class TRSuseContract extends AbstractTRS {
                 return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
             }
 
-            beneficiaries[i] = AionAddress.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
+            beneficiaries[i] =
+                    AionAddress.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
             index += 32 + 128;
         }
 
@@ -546,8 +547,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = AionAddress
-            .wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
@@ -567,7 +568,8 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         // Ensure the account exists (ie. has a positive deposit balance for the contract).
-        AionAddress account = AionAddress.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+        AionAddress account =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
         BigInteger accountBalance = getDepositBalance(contract, account);
         if (accountBalance.equals(BigInteger.ZERO)) {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
@@ -634,8 +636,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = AionAddress
-            .wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
@@ -669,7 +671,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
-        AionAddress account = AionAddress.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+        AionAddress account =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
         FastVmTransactionResult result = makeDeposit(contract, account, amount, nrgLimit);
         if (result.getResultCode().equals(FastVmResultCode.SUCCESS)) {
             track.flush();
@@ -703,7 +706,8 @@ public final class TRSuseContract extends AbstractTRS {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexAmount));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);

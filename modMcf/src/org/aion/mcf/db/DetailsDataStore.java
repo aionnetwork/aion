@@ -48,7 +48,6 @@ import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.types.AbstractBlock;
 import org.aion.vm.api.interfaces.Address;
@@ -89,7 +88,7 @@ public class DetailsDataStore<
      * @param key
      * @return
      */
-    public synchronized IContractDetails<IDataWord> get(byte[] key) {
+    public synchronized IContractDetails get(byte[] key) {
 
         ByteArrayWrapper wrappedKey = wrap(key);
         Optional<byte[]> rawDetails = detailsSrc.get(key);
@@ -106,7 +105,7 @@ public class DetailsDataStore<
         }
 
         // Found something from cache or database, return it by decoding it.
-        IContractDetails<IDataWord> detailsImpl = repoConfig.contractDetailsImpl();
+        IContractDetails detailsImpl = repoConfig.contractDetailsImpl();
         detailsImpl.setDataSource(storageDSPrune);
         detailsImpl.decode(rawDetails.get()); // We can safely get as we checked
         // if it is present.
@@ -114,7 +113,7 @@ public class DetailsDataStore<
         return detailsImpl;
     }
 
-    public synchronized void update(Address key, IContractDetails<IDataWord> contractDetails) {
+    public synchronized void update(Address key, IContractDetails contractDetails) {
 
         contractDetails.setAddress(key);
         ByteArrayWrapper wrappedKey = wrap(key.toBytes());
@@ -176,7 +175,7 @@ public class DetailsDataStore<
             }
 
             // Decode the details.
-            IContractDetails<IDataWord> detailsImpl = repoConfig.contractDetailsImpl();
+            IContractDetails detailsImpl = repoConfig.contractDetailsImpl();
             detailsImpl.setDataSource(storageDSPrune);
             detailsImpl.decode(rawDetails.get()); // We can safely get as we
             // checked if it is present.

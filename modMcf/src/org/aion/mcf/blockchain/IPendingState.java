@@ -34,7 +34,7 @@ public interface IPendingState<TX extends ITransaction> {
 
     TxResponse addPendingTransaction(TX tx);
 
-    IRepositoryCache<?, ?, ?> getRepository();
+    IRepositoryCache<?, ?> getRepository();
 
     List<TX> getPendingTransactions();
 

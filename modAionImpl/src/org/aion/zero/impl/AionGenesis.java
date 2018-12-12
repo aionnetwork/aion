@@ -370,7 +370,8 @@ public class AionGenesis extends AionBlock {
 
             for (Map.Entry<Integer, BigInteger> entry : this.networkBalance.entrySet()) {
                 networkBalanceStorage.put(
-                        new DataWord(entry.getKey()), new DataWord(entry.getValue()));
+                        new DataWord(entry.getKey()).toWrapper(),
+                        new DataWord(entry.getValue()).toWrapper());
             }
             byte[] networkBalanceStorageHash = networkBalanceStorage.getStorageHash();
 

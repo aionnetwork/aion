@@ -36,6 +36,7 @@
 package org.aion.base.db;
 
 import java.math.BigInteger;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.vm.api.interfaces.Address;
 
 /**
@@ -43,7 +44,7 @@ import org.aion.vm.api.interfaces.Address;
  *
  * @implNote Tracking a repository should be done through implementing this interface.
  */
-public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> {
+public interface IRepositoryCache<AS, BSB> extends IRepository<AS, BSB> {
 
     // setters relating to user accounts
     // -------------------------------------------------------------------------------
@@ -113,5 +114,5 @@ public interface IRepositoryCache<AS, DW, BSB> extends IRepository<AS, DW, BSB> 
      * @param key the key at which the date will be stored
      * @param value the data to be stored
      */
-    void addStorageRow(Address address, DW key, DW value);
+    void addStorageRow(Address address, ByteArrayWrapper key, ByteArrayWrapper value);
 }

@@ -29,10 +29,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.aion.base.type.AionAddress;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
@@ -42,7 +41,8 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.base.vm.IDataWord;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 
 /**
  * An N of M implementation of a multi-signature pre-compiled contract.
@@ -80,8 +80,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @throws IllegalArgumentException if track or caller are null.
      */
     public MultiSignatureContract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
-            AionAddress caller) {
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track, AionAddress caller) {
 
         super(track);
         if (caller == null) {
@@ -193,7 +192,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return the transaction message that was signed.
      */
     public static byte[] constructMsg(
-            AionAddress walletId, BigInteger nonce, AionAddress to, BigInteger amount, long nrgPrice) {
+            AionAddress walletId,
+            BigInteger nonce,
+            AionAddress to,
+            BigInteger amount,
+            long nrgPrice) {
 
         byte[] nonceBytes = nonce.toByteArray();
         byte[] toBytes = to.toBytes();
@@ -351,7 +354,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         if (!isValidTxNrg(nrg)) {
             return new FastVmTransactionResult(FastVmResultCode.INVALID_NRG_LIMIT, nrg);
         }
-        if (track.getStorageValue(wallet, new DataWord(getMetaDataKey())) == null) {
+        if (track.getStorageValue(wallet, new DataWord(getMetaDataKey()).toWrapper()) == null) {
             // Then wallet is not the address of a multi-sig wallet.
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
@@ -408,7 +411,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             if (result.contains(addr)) {
                 return null;
             }
-            if (track.getStorageValue(addr, new DataWord(getMetaDataKey())) != null) {
+            if (track.getStorageValue(addr, new DataWord(getMetaDataKey()).toWrapper()) != null) {
                 return null;
             }
             if (addr.equals(this.caller)) {
@@ -518,7 +521,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         data.putLong(numOwners);
         System.arraycopy(data.array(), 0, metaValue, Long.BYTES, Long.BYTES);
 
-        track.addStorageRow(walletId, new DataWord(metaKey), new DataWord(metaValue));
+        track.addStorageRow(
+                walletId, new DataWord(metaKey).toWrapper(), new DataWord(metaValue).toWrapper());
     }
 
     /**
@@ -549,8 +553,14 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             System.arraycopy(owner.toBytes(), 0, firstValue, 0, DataWord.BYTES);
             System.arraycopy(owner.toBytes(), DataWord.BYTES, secondValue, 0, DataWord.BYTES);
 
-            track.addStorageRow(walletId, new DataWord(firstKey), new DataWord(firstValue));
-            track.addStorageRow(walletId, new DataWord(secondKey), new DataWord(secondValue));
+            track.addStorageRow(
+                    walletId,
+                    new DataWord(firstKey).toWrapper(),
+                    new DataWord(firstValue).toWrapper());
+            track.addStorageRow(
+                    walletId,
+                    new DataWord(secondKey).toWrapper(),
+                    new DataWord(secondValue).toWrapper());
             count++;
         }
     }
@@ -591,7 +601,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             txSigners.add(signer);
         }
 
-        IDataWord metaValue = track.getStorageValue(wallet, new DataWord(getMetaDataKey()));
+        ByteArrayWrapper metaValue =
+                track.getStorageValue(wallet, new DataWord(getMetaDataKey()).toWrapper());
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(Arrays.copyOfRange(metaValue.getData(), 0, Long.BYTES));
         buffer.flip();
@@ -624,7 +635,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private Set<AionAddress> getOwners(AionAddress walletId) {
         Set<AionAddress> owners = new HashSet<>();
 
-        IDataWord metaValue = track.getStorageValue(walletId, new DataWord(getMetaDataKey()));
+        ByteArrayWrapper metaValue =
+                track.getStorageValue(walletId, new DataWord(getMetaDataKey()).toWrapper());
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(Arrays.copyOfRange(metaValue.getData(), Long.BYTES, DataWord.BYTES));
         buffer.flip();
@@ -651,11 +663,12 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         byte[] address = new byte[ADDR_LEN];
 
         byte[] ownerDataKey1 = getOwnerDataKey(true, ownerId);
-        IDataWord addrPortion = track.getStorageValue(walletId, new DataWord(ownerDataKey1));
+        ByteArrayWrapper addrPortion =
+                track.getStorageValue(walletId, new DataWord(ownerDataKey1).toWrapper());
         System.arraycopy(addrPortion.getData(), 0, address, 0, DataWord.BYTES);
 
         byte[] ownerDataKey2 = getOwnerDataKey(false, ownerId);
-        addrPortion = track.getStorageValue(walletId, new DataWord(ownerDataKey2));
+        addrPortion = track.getStorageValue(walletId, new DataWord(ownerDataKey2).toWrapper());
         System.arraycopy(addrPortion.getData(), 0, address, DataWord.BYTES, DataWord.BYTES);
 
         return new AionAddress(address);

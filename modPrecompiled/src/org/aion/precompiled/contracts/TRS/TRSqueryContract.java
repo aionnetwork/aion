@@ -27,15 +27,14 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import org.aion.base.type.AionAddress;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.IBlock;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.base.vm.IDataWord;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 
 /**
  * The TRSqueryContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -70,7 +69,7 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param caller The calling address.
      */
     public TRSqueryContract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo,
             AionAddress caller,
             IBlockchain blockchain) {
 
@@ -379,8 +378,8 @@ public final class TRSqueryContract extends AbstractTRS {
         }
 
         // Grab the contract address and block number and determine the period.
-        AionAddress contract = AionAddress
-            .wrap(Arrays.copyOfRange(input, indexAddress, indexBlockNum));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, indexBlockNum));
 
         ByteBuffer blockBuf = ByteBuffer.allocate(Long.BYTES);
         blockBuf.put(Arrays.copyOfRange(input, indexBlockNum, len));
@@ -424,8 +423,8 @@ public final class TRSqueryContract extends AbstractTRS {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = AionAddress
-            .wrap(Arrays.copyOfRange(input, indexContract, indexTimestamp));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexTimestamp));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
@@ -508,7 +507,8 @@ public final class TRSqueryContract extends AbstractTRS {
         // If contract is not yet live we are in period 0.
         if (!isContractLive(contract)) {
             output.putInt(0);
-            return new FastVmTransactionResult(FastVmResultCode.SUCCESS, COST - nrg, output.array());
+            return new FastVmTransactionResult(
+                    FastVmResultCode.SUCCESS, COST - nrg, output.array());
         }
 
         // Grab the timestamp of block number blockNum and calculate the period the contract is in.

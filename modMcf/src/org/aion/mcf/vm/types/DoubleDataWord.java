@@ -182,4 +182,9 @@ public class DoubleDataWord implements Comparable<DoubleDataWord>, IDataWord {
     public String toString() {
         return Hex.toHexString(data);
     }
+
+    @Override
+    public ByteArrayWrapper toWrapper() {
+        return ByteArrayWrapper.wrap(data);
+    }
 }

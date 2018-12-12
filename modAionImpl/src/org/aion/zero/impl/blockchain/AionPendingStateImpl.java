@@ -275,7 +275,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     private static AionPendingStateImpl initializeAionPendingState(
-            CfgAion _cfgAion, AionRepositoryImpl _repository, AionBlockchainImpl _blockchain, boolean test) {
+            CfgAion _cfgAion,
+            AionRepositoryImpl _repository,
+            AionBlockchainImpl _blockchain,
+            boolean test) {
         AionPendingStateImpl ps = new AionPendingStateImpl(_cfgAion, _repository);
         ps.init(_blockchain, test);
         return ps;
@@ -285,7 +288,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         static final AionPendingStateImpl INSTANCE =
                 initializeAionPendingState(
-                        CfgAion.inst(), AionRepositoryImpl.inst(), AionBlockchainImpl.inst(), false);
+                        CfgAion.inst(),
+                        AionRepositoryImpl.inst(),
+                        AionBlockchainImpl.inst(),
+                        false);
     }
 
     public static AionPendingStateImpl inst() {
@@ -416,7 +422,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     @Override
-    public synchronized IRepositoryCache<?, ?, ?> getRepository() {
+    public synchronized IRepositoryCache<?, ?> getRepository() {
         // Todo : no class use this method.
         return pendingState;
     }
@@ -658,7 +664,11 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                             "PendingTransactionUpdate: (Tot: %3s) %12s : %s %8s %s [%s]",
                             getPendingTxSize(),
                             state,
-                            txReceipt.getTransaction().getSenderAddress().toString().substring(0, 8),
+                            txReceipt
+                                    .getTransaction()
+                                    .getSenderAddress()
+                                    .toString()
+                                    .substring(0, 8),
                             ByteUtil.byteArrayToLong(txReceipt.getTransaction().getNonce()),
                             block.getShortDescr(),
                             txReceipt.getError()));
@@ -972,7 +982,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             int cnt = 0;
             for (AionTransaction tx : block.getTransactionsList()) {
                 accountNonce.computeIfAbsent(
-                        tx.getSenderAddress(), k -> this.repository.getNonce(tx.getSenderAddress()));
+                        tx.getSenderAddress(),
+                        k -> this.repository.getNonce(tx.getSenderAddress()));
 
                 if (LOGGER_TX.isTraceEnabled()) {
                     LOGGER_TX.trace(

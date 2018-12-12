@@ -47,7 +47,6 @@ import org.aion.mcf.ds.ArchivedDataSource;
 import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlock;
-import org.aion.base.vm.IDataWord;
 import org.slf4j.Logger;
 
 // import org.aion.dbmgr.exception.DriverManagerNoSuitableDriverRegisteredException;
@@ -57,7 +56,7 @@ public abstract class AbstractRepository<
                 BLK extends AbstractBlock<BH, ? extends ITransaction>,
                 BH extends IBlockHeader,
                 BSB extends IBlockStoreBase<?, ?>>
-        implements IRepository<AccountState, IDataWord, BSB> {
+        implements IRepository<AccountState, BSB> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());

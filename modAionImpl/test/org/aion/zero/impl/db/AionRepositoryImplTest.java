@@ -47,6 +47,7 @@ import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
@@ -147,12 +148,15 @@ public class AionRepositoryImplTest {
         byte[] originalRoot = repository.getRoot();
         byte[] key = HashUtil.blake128("hello".getBytes());
         byte[] value = HashUtil.blake128("world".getBytes());
-        track.addStorageRow(defaultAccount, new DataWord(key), new DataWord(value));
+        track.addStorageRow(
+                defaultAccount, new DataWord(key).toWrapper(), new DataWord(value).toWrapper());
 
         track.flush();
 
         byte[] retrievedValue =
-                repository.getStorageValue(defaultAccount, new DataWord(key)).getNoLeadZeroesData();
+                repository
+                        .getStorageValue(defaultAccount, new DataWord(key).toWrapper())
+                        .getNoLeadZeroesData();
         assertThat(retrievedValue).isEqualTo(value);
 
         byte[] newRoot = repository.getRoot();
@@ -173,7 +177,8 @@ public class AionRepositoryImplTest {
         byte[] originalRoot = repository.getRoot();
         byte[] key = HashUtil.blake128("hello".getBytes());
         byte[] value = HashUtil.blake128("world".getBytes());
-        track.addStorageRow(defaultAccount, new DataWord(key), new DataWord(value));
+        track.addStorageRow(
+                defaultAccount, new DataWord(key).toWrapper(), new DataWord(value).toWrapper());
 
         // does not call parent's flush
         track.flush();
@@ -188,7 +193,8 @@ public class AionRepositoryImplTest {
 
         AionContractDetailsImpl details = new AionContractDetailsImpl(0, 1000000);
         details.decode(serializedDetails.get());
-        assertThat(details.get(new DataWord(key))).isEqualTo(new DataWord(value));
+        assertThat(details.get(new DataWord(key).toWrapper()))
+                .isEqualTo(new DataWord(value).toWrapper());
     }
 
     /** Repo track test suite */
@@ -200,7 +206,7 @@ public class AionRepositoryImplTest {
     @Test
     public void testRepoTrackUpdateStorageRow() {
         final AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
-        final IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repoTrack =
+        final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repoTrack =
                 repository.startTracking();
         final AionAddress defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
         final byte[] key = HashUtil.blake128("hello".getBytes());
@@ -210,16 +216,17 @@ public class AionRepositoryImplTest {
 
         final byte[] originalRoot = repository.getRoot();
 
-        repoTrack.addStorageRow(defaultAccount, new DataWord(key), new DataWord(value));
+        repoTrack.addStorageRow(
+                defaultAccount, new DataWord(key).toWrapper(), new DataWord(value).toWrapper());
 
-        DataWord retrievedStorageValue =
-                (DataWord) repoTrack.getStorageValue(defaultAccount, new DataWord(key));
-        assertThat(retrievedStorageValue).isEqualTo(new DataWord(value));
+        ByteArrayWrapper retrievedStorageValue =
+                repoTrack.getStorageValue(defaultAccount, new DataWord(key).toWrapper());
+        assertThat(retrievedStorageValue).isEqualTo(new DataWord(value).toWrapper());
 
         // commit changes, then check that the root has updated
         repoTrack.flush();
 
-        assertThat(repository.getStorageValue(defaultAccount, new DataWord(key)))
+        assertThat(repository.getStorageValue(defaultAccount, new DataWord(key).toWrapper()))
                 .isEqualTo(retrievedStorageValue);
 
         final byte[] newRoot = repository.getRoot();
@@ -313,7 +320,8 @@ public class AionRepositoryImplTest {
         // not that it matters since things are going to be hashed, but at least
         // the root node should point to a node that contains references to both
         final AionAddress DOG_ACC = AionAddress.wrap("00000000000000000000000000000dog".getBytes());
-        final AionAddress DOGE_ACC = AionAddress.wrap("0000000000000000000000000000doge".getBytes());
+        final AionAddress DOGE_ACC =
+                AionAddress.wrap("0000000000000000000000000000doge".getBytes());
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         IRepositoryCache track = repository.startTracking();

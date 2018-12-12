@@ -35,16 +35,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
-import org.aion.base.type.AionAddress;
-import org.aion.vm.FastVmResultCode;
-import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -156,7 +157,11 @@ public class MultiSignatureContractTest {
     // Returns a properly formatted byte array for these input params for send-tx logic. We want to
     // allow null values so we can simulate missing elements in the input array.
     private byte[] toValidSendInput(
-            AionAddress wallet, List<ISignature> signatures, BigInteger amount, long nrg, AionAddress to) {
+            AionAddress wallet,
+            List<ISignature> signatures,
+            BigInteger amount,
+            long nrg,
+            AionAddress to) {
 
         int walletLen = (wallet == null) ? 0 : AionAddress.SIZE;
         int sigsLen = (signatures == null) ? 0 : (signatures.size() * SIG_SIZE);
@@ -211,7 +216,8 @@ public class MultiSignatureContractTest {
         List<Long> values = new ArrayList<>();
         byte[] metaKey = new byte[DataWord.BYTES];
         metaKey[0] = (byte) 0x80;
-        DataWord metaData = (DataWord) repo.getStorageValue(walletId, new DataWord(metaKey));
+        ByteArrayWrapper metaData =
+                repo.getStorageValue(walletId, new DataWord(metaKey).toWrapper());
         if (metaData == null) {
             fail();
         }
@@ -232,7 +238,7 @@ public class MultiSignatureContractTest {
     private Set<AionAddress> getWalletOwners(AionAddress walletId, long numOwners) {
         Set<AionAddress> owners = new HashSet<>();
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-        DataWord portion;
+        ByteArrayWrapper portion;
 
         for (long i = 0; i < numOwners; i++) {
             byte[] account = new byte[AionAddress.SIZE];
@@ -240,14 +246,14 @@ public class MultiSignatureContractTest {
             buffer.flip();
             byte[] request = new byte[DataWord.BYTES];
             buffer.get(request, DataWord.BYTES - Long.BYTES, Long.BYTES);
-            portion = (DataWord) repo.getStorageValue(walletId, new DataWord(request));
+            portion = repo.getStorageValue(walletId, new DataWord(request).toWrapper());
             if (portion == null) {
                 fail();
             }
             System.arraycopy(portion.getData(), 0, account, 0, DataWord.BYTES);
 
             request[0] = (byte) 0x40;
-            portion = (DataWord) repo.getStorageValue(walletId, new DataWord(request));
+            portion = repo.getStorageValue(walletId, new DataWord(request).toWrapper());
             if (portion == null) {
                 fail();
             }
@@ -319,7 +325,8 @@ public class MultiSignatureContractTest {
 
     // Verifies that the result of a create-wallet operation, res, saves a wallet with threshold
     // threshold and consists of all the owners in owners and no more.
-    private void checkCreateResult(FastVmTransactionResult res, long threshold, List<AionAddress> owners) {
+    private void checkCreateResult(
+            FastVmTransactionResult res, long threshold, List<AionAddress> owners) {
         AionAddress walletId = new AionAddress(res.getOutput());
         addrsToClean.add(walletId);
         assertEquals(BigInteger.ZERO, repo.getBalance(walletId));
@@ -445,7 +452,12 @@ public class MultiSignatureContractTest {
         // Test with max illegal cost.
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, Long.MAX_VALUE, FastVmResultCode.INVALID_NRG_LIMIT, Long.MAX_VALUE);
+        execute(
+                sendCaller,
+                input,
+                Long.MAX_VALUE,
+                FastVmResultCode.INVALID_NRG_LIMIT,
+                Long.MAX_VALUE);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1001,8 +1013,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
         byte[] noNrgInput = new byte[input.length - Long.BYTES];
-        System.arraycopy(
-                input, 0, noNrgInput, 0, input.length - AionAddress.SIZE - Long.BYTES - 1);
+        System.arraycopy(input, 0, noNrgInput, 0, input.length - AionAddress.SIZE - Long.BYTES - 1);
         System.arraycopy(
                 input,
                 input.length - AionAddress.SIZE,

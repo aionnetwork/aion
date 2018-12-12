@@ -40,6 +40,7 @@ import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
@@ -48,7 +49,6 @@ import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.vm.api.interfaces.Address;
-import org.aion.base.vm.IDataWord;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.types.AionBlock;
@@ -138,15 +138,14 @@ public class AionRepositoryImpl
 
     @Override
     public void updateBatch(
-            Map<Address, AccountState> stateCache,
-            Map<Address, IContractDetails<IDataWord>> detailsCache) {
+            Map<Address, AccountState> stateCache, Map<Address, IContractDetails> detailsCache) {
         rwLock.writeLock().lock();
 
         try {
             for (Map.Entry<Address, AccountState> entry : stateCache.entrySet()) {
                 Address address = entry.getKey();
                 AccountState accountState = entry.getValue();
-                IContractDetails<IDataWord> contractDetails = detailsCache.get(address);
+                IContractDetails contractDetails = detailsCache.get(address);
 
                 if (accountState.isDeleted()) {
                     // TODO-A: batch operations here
@@ -225,7 +224,7 @@ public class AionRepositoryImpl
 
     /** @implNote The method calling this method must handle the locking. */
     private void updateContractDetails(
-            final Address address, final IContractDetails<IDataWord> contractDetails) {
+            final Address address, final IContractDetails contractDetails) {
         // locked by calling method
         detailsDS.update(address, contractDetails);
     }
@@ -317,9 +316,9 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public IDataWord getStorageValue(Address address, IDataWord key) {
-        IContractDetails<IDataWord> details = getContractDetails(address);
-        IDataWord value = (details == null) ? null : details.get(key);
+    public ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key) {
+        IContractDetails details = getContractDetails(address);
+        ByteArrayWrapper value = (details == null) ? null : details.get(key);
         if (value == null) {
             return null;
         }
@@ -365,8 +364,9 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public Map<IDataWord, IDataWord> getStorage(Address address, Collection<IDataWord> keys) {
-        IContractDetails<IDataWord> details = getContractDetails(address);
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(
+            Address address, Collection<ByteArrayWrapper> keys) {
+        IContractDetails details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
 
@@ -380,7 +380,7 @@ public class AionRepositoryImpl
 
         byte[] codeHash = accountState.getCodeHash();
 
-        IContractDetails<IDataWord> details = getContractDetails(address);
+        IContractDetails details = getContractDetails(address);
         return (details == null) ? EMPTY_BYTE_ARRAY : details.getCode(codeHash);
     }
 
@@ -404,11 +404,11 @@ public class AionRepositoryImpl
      *     or synchronized</b>, depending on the specific use case.
      */
     @Override
-    public IContractDetails<IDataWord> getContractDetails(Address address) {
+    public IContractDetails getContractDetails(Address address) {
         rwLock.readLock().lock();
 
         try {
-            IContractDetails<IDataWord> details;
+            IContractDetails details;
 
             // That part is important cause if we have
             // to sync details storage according the trie root
@@ -479,10 +479,10 @@ public class AionRepositoryImpl
     public void loadAccountState(
             Address address,
             Map<Address, AccountState> cacheAccounts,
-            Map<Address, IContractDetails<IDataWord>> cacheDetails) {
+            Map<Address, IContractDetails> cacheDetails) {
 
         AccountState account = getAccountState(address);
-        IContractDetails<IDataWord> details = getContractDetails(address);
+        IContractDetails details = getContractDetails(address);
 
         account = (account == null) ? new AccountState() : new AccountState(account);
         details = new ContractDetailsCacheImpl(details);
