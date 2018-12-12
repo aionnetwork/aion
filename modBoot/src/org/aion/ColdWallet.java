@@ -9,7 +9,9 @@ import org.aion.mcf.account.Keystore;
 import org.aion.zero.types.AionTransaction;
 
 import java.io.Console;
+import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -66,7 +68,7 @@ public class ColdWallet {
     }
 
     static Config processInput(String[] args) {
-        System.out.println("ColdWallet [v0.0.3] offline transaction creation utility");
+        System.out.println("ColdWallet [v0.0.4] offline transaction creation utility");
         // setup
         Config config = new Config();
         Scanner sc = new Scanner(System.in);
@@ -111,12 +113,19 @@ public class ColdWallet {
 
         {
             System.out.print("Value (AION): ");
-            BigInteger in = sc.nextBigInteger();
+            BigDecimal in = sc.nextBigDecimal();
+
+            if (in.scale() > 18) {
+                System.out.println("precision of value greater than 18, there is a typo somewhere");
+                return null;
+            }
+
             sc.nextLine();
             if (in.signum() < 0) {
                 return null;
             }
-            config.value = in.multiply(BigInteger.TEN.pow(18));
+
+            config.value = in.setScale(18, RoundingMode.DOWN).unscaledValue();
         }
 
         {
