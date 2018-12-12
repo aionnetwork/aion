@@ -33,8 +33,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -129,8 +129,8 @@ public class EDVerifyContractTest {
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
-        TransactionResult result = contract.execute(input, 21000L);
-        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
+        FastVmTransactionResult result = contract.execute(input, 21000L);
+        assertThat(result.getResultCode()).isEqualTo(FastVmResultCode.SUCCESS);
         assertThat(Arrays.equals(result.getOutput(), pubKey));
     }
 
@@ -159,8 +159,8 @@ public class EDVerifyContractTest {
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
-        TransactionResult result = contract.execute(input, 21000L);
-        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
+        FastVmTransactionResult result = contract.execute(input, 21000L);
+        assertThat(result.getResultCode()).isEqualTo(FastVmResultCode.SUCCESS);
         assertThat(Arrays.equals(result.getOutput(), pubKey));
     }
 
@@ -193,8 +193,8 @@ public class EDVerifyContractTest {
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
-        TransactionResult result = contract.execute(input, 21000L);
-        assertThat(result.getResultCode()).isEqualTo(ResultCode.SUCCESS);
+        FastVmTransactionResult result = contract.execute(input, 21000L);
+        assertThat(result.getResultCode()).isEqualTo(FastVmResultCode.SUCCESS);
         assertThat(Arrays.equals(result.getOutput(), AionAddress.ZERO_ADDRESS().toBytes()));
     }
 
@@ -223,8 +223,8 @@ public class EDVerifyContractTest {
                         blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
-        TransactionResult result = contract.execute(input, 2999L);
-        assertThat(result.getResultCode()).isEqualTo(ResultCode.OUT_OF_ENERGY);
+        FastVmTransactionResult result = contract.execute(input, 2999L);
+        assertThat(result.getResultCode()).isEqualTo(FastVmResultCode.OUT_OF_NRG);
     }
 
     @Test
@@ -252,9 +252,9 @@ public class EDVerifyContractTest {
                         blockDifficulty);
         IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
-        TransactionResult result = contract.execute(input, 21000L);
+        FastVmTransactionResult result = contract.execute(input, 21000L);
 
-        assertThat(result.getResultCode()).isEqualTo(ResultCode.FAILURE);
+        assertThat(result.getResultCode()).isEqualTo(FastVmResultCode.FAILURE);
     }
 
     private byte[] setupInput() {

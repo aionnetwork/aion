@@ -28,9 +28,6 @@ import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.ITransaction;
@@ -46,7 +43,7 @@ public abstract class AbstractExecutor {
     protected IRepository repo;
     protected IRepositoryCache repoTrack;
     private boolean isLocalCall;
-    protected TransactionResult exeResult;
+    protected FastVmTransactionResult exeResult;
     private long blockRemainingNrg;
     private boolean askNonce = true;
 
@@ -120,18 +117,18 @@ public abstract class AbstractExecutor {
 
         if (tx.isContractCreationTransaction()) {
             if (!isValidNrgContractCreate(txNrgLimit)) {
-                exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_ENERGY_LIMIT, txNrgLimit);
+                exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INVALID_NRG_LIMIT, txNrgLimit);
                 return false;
             }
         } else {
             if (!isValidNrgTx(txNrgLimit)) {
-                exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_ENERGY_LIMIT, txNrgLimit);
+                exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INVALID_NRG_LIMIT, txNrgLimit);
                 return false;
             }
         }
 
         if (txNrgLimit > blockRemainingNrg || contextNrgLmit < 0) {
-            exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_ENERGY_LIMIT, 0);
+            exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INVALID_NRG_LIMIT, 0);
             return false;
         }
 
@@ -141,7 +138,7 @@ public abstract class AbstractExecutor {
             BigInteger nonce = repo.getNonce(tx.getSenderAddress());
 
             if (!txNonce.equals(nonce)) {
-                exeResult.setResultCodeAndEnergyRemaining(ResultCode.INVALID_NONCE, 0);
+                exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INVALID_NONCE, 0);
                 return false;
             }
         }
@@ -151,7 +148,7 @@ public abstract class AbstractExecutor {
         BigInteger txTotal = txNrgPrice.multiply(BigInteger.valueOf(txNrgLimit)).add(txValue);
         BigInteger balance = repo.getBalance(tx.getSenderAddress());
         if (txTotal.compareTo(balance) > 0) {
-            exeResult.setResultCodeAndEnergyRemaining(ResultCode.INSUFFICIENT_BALANCE, 0);
+            exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.INSUFFICIENT_BALANCE, 0);
             return false;
         }
 
@@ -211,7 +208,7 @@ public abstract class AbstractExecutor {
         receipt.setNrgUsed(getNrgUsed(tx.getEnergyLimit())); // amount of energy used to execute tx
         receipt.setExecutionResult(exeResult.getOutput()); // misnomer -> output is named result
         receipt.setError(
-                exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()
+                exeResult.getResultCode().toInt() == FastVmResultCode.SUCCESS.toInt()
                         ? ""
                         : exeResult.getResultCode().name());
 
@@ -242,8 +239,8 @@ public abstract class AbstractExecutor {
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache track = repo.startTracking();
             // refund nrg left
-            if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()
-                    || exeResult.getResultCode().toInt() == ResultCode.REVERT.toInt()) {
+            if (exeResult.getResultCode().toInt() == FastVmResultCode.SUCCESS.toInt()
+                    || exeResult.getResultCode().toInt() == FastVmResultCode.REVERT.toInt()) {
                 track.addBalance(tx.getSenderAddress(), summary.getRefund());
             }
 
@@ -252,7 +249,7 @@ public abstract class AbstractExecutor {
             // Transfer fees to miner
             track.addBalance(coinbase, summary.getFee());
 
-            if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()) {
+            if (exeResult.getResultCode().toInt() == FastVmResultCode.SUCCESS.toInt()) {
                 // Delete accounts
                 for (Address addr : deleteAccounts) {
                     track.deleteAccount(addr);
@@ -267,7 +264,7 @@ public abstract class AbstractExecutor {
         }
     }
 
-    protected void setTransactionResult(TransactionResult result) {
+    protected void setTransactionResult(FastVmTransactionResult result) {
         exeResult = result;
     }
 

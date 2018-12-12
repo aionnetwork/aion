@@ -39,8 +39,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -107,8 +107,8 @@ class TRShelpers {
 
         byte[] input = getCreateInput(isTest, isDirectDeposit, periods, percent, precision);
         TRSstateContract trs = new TRSstateContract(repo, owner, blockchain);
-        TransactionResult res = trs.execute(input, COST);
-        if (!res.getResultCode().equals(ResultCode.SUCCESS)) {
+        FastVmTransactionResult res = trs.execute(input, COST);
+        if (!res.getResultCode().equals(FastVmResultCode.SUCCESS)) {
             fail("Unable to create contract!");
         }
         AionAddress contract = new AionAddress(res.getOutput());
@@ -134,7 +134,7 @@ class TRShelpers {
         if (!newTRSuseContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(FastVmResultCode.SUCCESS)) {
             fail(
                     "Owner failed to deposit 1 token into contract! Owner balance is: "
                             + repo.getBalance(owner));
@@ -143,7 +143,7 @@ class TRShelpers {
         if (!newTRSstateContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(FastVmResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
         return contract;
@@ -166,7 +166,7 @@ class TRShelpers {
         if (!newTRSuseContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(FastVmResultCode.SUCCESS)) {
             fail(
                     "Owner failed to deposit 1 token into contract! Owner balance is: "
                             + repo.getBalance(owner));
@@ -175,14 +175,14 @@ class TRShelpers {
         if (!newTRSstateContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(FastVmResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
         input = getStartInput(contract);
         if (!newTRSstateContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(FastVmResultCode.SUCCESS)) {
             fail("Failed to start contract!");
         }
         return contract;
@@ -192,11 +192,11 @@ class TRShelpers {
     void lockAndStartContract(AionAddress contract, AionAddress owner) {
         byte[] input = getLockInput(contract);
         AbstractTRS trs = newTRSstateContract(owner);
-        if (!trs.execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
+        if (!trs.execute(input, COST).getResultCode().equals(FastVmResultCode.SUCCESS)) {
             Assert.fail("Unable to lock contract!");
         }
         input = getStartInput(contract);
-        if (!trs.execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
+        if (!trs.execute(input, COST).getResultCode().equals(FastVmResultCode.SUCCESS)) {
             Assert.fail("Unable to start contract!");
         }
     }
@@ -221,7 +221,7 @@ class TRShelpers {
             if (!newTRSuseContract(acct)
                     .execute(input, COST)
                     .getResultCode()
-                    .equals(ResultCode.SUCCESS)) {
+                    .equals(FastVmResultCode.SUCCESS)) {
                 Assert.fail("Depositor #" + i + " failed to deposit!");
             }
         }
@@ -244,7 +244,7 @@ class TRShelpers {
         for (int i = 0; i < numDepositors; i++) {
             AionAddress acct = getNewExistentAccount(BigInteger.ZERO);
             byte[] input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
-            if (!trs.execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
+            if (!trs.execute(input, COST).getResultCode().equals(FastVmResultCode.SUCCESS)) {
                 Assert.fail("Depositor #" + i + " failed to deposit!");
             }
         }
@@ -503,7 +503,7 @@ class TRShelpers {
         for (int i = 0; i < numDepositors; i++) {
             AionAddress acc = getNewExistentAccount(deposits);
             assertEquals(
-                    ResultCode.SUCCESS,
+                    FastVmResultCode.SUCCESS,
                     newTRSuseContract(acc).execute(input, COST).getResultCode());
         }
         repo.addBalance(contract, bonus);
@@ -851,7 +851,7 @@ class TRShelpers {
 
             byte[] input = getWithdrawInput(contract);
             assertEquals(
-                    ResultCode.SUCCESS,
+                    FastVmResultCode.SUCCESS,
                     newTRSuseContract(acc).execute(input, COST).getResultCode());
             assertEquals(amt.add(extraShare), repo.getBalance(acc));
         }
@@ -879,7 +879,7 @@ class TRShelpers {
         for (AionAddress acc : contributors) {
             byte[] input = getWithdrawInput(contract);
             assertEquals(
-                    ResultCode.SUCCESS,
+                    FastVmResultCode.SUCCESS,
                     newTRSuseContract(acc).execute(input, COST).getResultCode());
             assertEquals(collected, repo.getBalance(acc));
         }
@@ -915,8 +915,8 @@ class TRShelpers {
         byte[] input = getAvailableForWithdrawalAtInput(contract, timestamp);
         Set<AionAddress> contributors = getAllDepositors(trs, contract);
         for (AionAddress acc : contributors) {
-            TransactionResult res = newTRSqueryContract(acc).execute(input, COST);
-            assertEquals(ResultCode.SUCCESS, res.getResultCode());
+            FastVmTransactionResult res = newTRSqueryContract(acc).execute(input, COST);
+            assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
             BigDecimal frac = new BigDecimal(new BigInteger(res.getOutput())).movePointLeft(18);
             assertEquals(expectedFraction, frac);
         }

@@ -24,8 +24,8 @@ package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.util.BIUtil;
 import org.aion.crypto.ed25519.ECKeyEd25519;
@@ -103,7 +103,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      * }</pre>
      */
     @Override
-    public TransactionResult execute(byte[] input, long nrg) {
+    public FastVmTransactionResult execute(byte[] input, long nrg) {
         // query portion (pure)
         if (input.length == 1) {
             return queryNetworkBalance(input[0], nrg);
@@ -112,24 +112,24 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
     }
 
-    private TransactionResult queryNetworkBalance(int input, long nrg) {
+    private FastVmTransactionResult queryNetworkBalance(int input, long nrg) {
         if (nrg < COST) {
             // TODO: should this cost be the same as updating state (probably not?)
-            return new TransactionResult(ResultCode.OUT_OF_ENERGY, 0);
+            return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
         }
 
         IDataWord balanceData = this.track.getStorageValue(this.address, new DataWord(input));
-        return new TransactionResult(ResultCode.SUCCESS, nrg - COST, balanceData.getData());
+        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - COST, balanceData.getData());
     }
 
-    private TransactionResult executeUpdateTotalBalance(byte[] input, long nrg) {
+    private FastVmTransactionResult executeUpdateTotalBalance(byte[] input, long nrg) {
         // update total portion
         if (nrg < COST) {
-            return new TransactionResult(ResultCode.OUT_OF_ENERGY, 0);
+            return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
         }
 
         if (input.length < 114) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         // process input data
@@ -150,7 +150,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         // verify signature is correct
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
         if (sig == null) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         byte[] payload = new byte[18];
@@ -158,12 +158,12 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         boolean b = ECKeyEd25519.verify(payload, sig.getSignature(), sig.getPubkey(null));
 
         if (!b) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         // verify public key matches owner
         if (!this.ownerAddress.equals(AionAddress.wrap(sig.getAddress()))) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         // payload processing
@@ -173,7 +173,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         BigInteger value = BIUtil.toBI(amount);
 
         if (signum != 0x0 && signum != 0x1) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         BigInteger finalValue;
@@ -183,7 +183,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         } else {
             // subtraction
             if (value.compareTo(totalCurrBI) > 0) {
-                return new TransactionResult(ResultCode.FAILURE, 0);
+                return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
             }
 
             finalValue = totalCurrBI.subtract(value);
@@ -191,6 +191,6 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
 
         // store result and successful exit
         this.track.addStorageRow(this.address, chainId, new DataWord(finalValue.toByteArray()));
-        return new TransactionResult(ResultCode.SUCCESS, nrg - COST);
+        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - COST);
     }
 }

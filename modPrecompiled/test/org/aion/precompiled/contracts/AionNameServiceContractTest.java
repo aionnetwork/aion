@@ -33,8 +33,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -159,7 +159,7 @@ public class AionNameServiceContractTest {
                         amount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
-        TransactionResult result = aac.execute(combined, 24000);
+        FastVmTransactionResult result = aac.execute(combined, 24000);
 
         try {
             Thread.sleep(1000L);
@@ -175,7 +175,7 @@ public class AionNameServiceContractTest {
                         amount2.toByteArray(),
                         defaultKey2);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
-        TransactionResult result2 = aac2.execute(combined2, 24000);
+        FastVmTransactionResult result2 = aac2.execute(combined2, 24000);
 
         // wait for the domain to become active,
         try {
@@ -228,13 +228,13 @@ public class AionNameServiceContractTest {
                         "aion.aion");
 
         // trying to access domain with wrong address
-        TransactionResult res = ansc.execute(combined, inputEnergy);
-        TransactionResult res2 = ansc2.execute(combined2, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res2 = ansc2.execute(combined2, inputEnergy);
 
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(3000L, res.getEnergyRemaining());
 
-        assertEquals(ResultCode.FAILURE, res2.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res2.getResultCode());
         assertEquals(0, res2.getEnergyRemaining());
     }
 
@@ -326,10 +326,10 @@ public class AionNameServiceContractTest {
                         domainName2,
                         domainName6);
         // change subdomain owner address
-        TransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
 
         // check for success and failure
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
     }
 
@@ -354,11 +354,11 @@ public class AionNameServiceContractTest {
                         defaultKey);
 
         // execute ANS contract
-        TransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
         AionAddress actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
         assertEquals(newAddress1, actualReturnedAddress);
     }
@@ -384,11 +384,11 @@ public class AionNameServiceContractTest {
                         defaultKey);
 
         // execute ANS contract
-        TransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
         AionAddress actualReturnedAddress = ansc.getTTL();
 
         // check for success and failure
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
         assertEquals(newAddress1, actualReturnedAddress);
     }
@@ -414,10 +414,10 @@ public class AionNameServiceContractTest {
                         domainAddress2,
                         domainName2,
                         notSubdomain);
-        TransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
 
         // check for success and failure
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
     }
 
@@ -443,11 +443,11 @@ public class AionNameServiceContractTest {
         System.arraycopy(combined, 0, wrongLength, 0, 130 - 1);
 
         // execute ANS contract
-        TransactionResult res = ansc.execute(wrongLength, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(wrongLength, inputEnergy);
         AionAddress actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
         assertEquals(emptyAddress, actualReturnedAddress);
     }
@@ -479,11 +479,11 @@ public class AionNameServiceContractTest {
         }
 
         // execute ANS contract
-        TransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
         AionAddress actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
         // since the signature is incorrect, contract is not modified
         assertEquals(emptyAddress, actualReturnedAddress);
@@ -509,11 +509,11 @@ public class AionNameServiceContractTest {
                         defaultKey); // put (byte) 6 into input as the invalid
 
         // execute ANS contract
-        TransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
         AionAddress actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
         assertEquals(emptyAddress, actualReturnedAddress);
     }
@@ -544,11 +544,11 @@ public class AionNameServiceContractTest {
                         notk);
 
         // execute ANS contract
-        TransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
         AionAddress actualReturnedAddress = ansc.getResolverAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
         // since the signature is incorrect, contract is not modified
         assertEquals(emptyAddress, actualReturnedAddress);
@@ -583,18 +583,18 @@ public class AionNameServiceContractTest {
                         defaultKey);
 
         // execute ANS contract
-        TransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
         AionAddress actualReturnedAddress = ansc.getOwnerAddress();
-        TransactionResult res2 = ansc.execute(combined2, inputEnergy);
+        FastVmTransactionResult res2 = ansc.execute(combined2, inputEnergy);
         AionAddress actualReturnedAddress2 = ansc.getOwnerAddress();
 
         // check for success and failure for execute with valid new address
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
         assertEquals(newAddress1, actualReturnedAddress);
 
         // check for success and failure for execute with invalid new address
-        assertEquals(ResultCode.FAILURE, res2.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res2.getResultCode());
         assertEquals(inputEnergy, res2.getEnergyRemaining());
         assertEquals(newAddress1, actualReturnedAddress2);
     }
@@ -644,38 +644,38 @@ public class AionNameServiceContractTest {
                         domainName2);
 
         // execute ANS contract
-        TransactionResult res = ansc.execute(combined, inputEnergy);
-        TransactionResult res2 = ansc.execute(combined2, inputEnergy);
-        TransactionResult res3 = ansc.execute(combined3, inputEnergy);
-        TransactionResult res4 = ansc.execute(combined4, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res2 = ansc.execute(combined2, inputEnergy);
+        FastVmTransactionResult res3 = ansc.execute(combined3, inputEnergy);
+        FastVmTransactionResult res4 = ansc.execute(combined4, inputEnergy);
 
         AionAddress actualReturnedAddress = ansc.getResolverAddress();
         AionAddress actualReturnedAddress2 = ansc.getTTL();
         AionAddress actualReturnedAddress3 = ansc.getOwnerAddress();
 
         // check for success and failure
-        assertEquals(ResultCode.OUT_OF_ENERGY, res.getResultCode());
+        assertEquals(FastVmResultCode.OUT_OF_NRG, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
         // since there is not enough energy, the contract failed to execute, resolverAddress is
         // unchanged
         assertEquals(emptyAddress, actualReturnedAddress);
 
         // check for success and failure
-        assertEquals(ResultCode.OUT_OF_ENERGY, res2.getResultCode());
+        assertEquals(FastVmResultCode.OUT_OF_NRG, res2.getResultCode());
         assertEquals(expectedEnergyLeft, res2.getEnergyRemaining());
         // since there is not enough energy, the contract failed to execute, resolverAddress is
         // unchanged
         assertEquals(emptyAddress, actualReturnedAddress2);
 
         // check for success and failure
-        assertEquals(ResultCode.OUT_OF_ENERGY, res3.getResultCode());
+        assertEquals(FastVmResultCode.OUT_OF_NRG, res3.getResultCode());
         assertEquals(expectedEnergyLeft, res3.getEnergyRemaining());
         // since there is not enough energy, the contract failed to execute, resolverAddress is
         // unchanged
         assertEquals(emptyAddress, actualReturnedAddress3);
 
         // check for success and failure
-        assertEquals(ResultCode.OUT_OF_ENERGY, res4.getResultCode());
+        assertEquals(FastVmResultCode.OUT_OF_NRG, res4.getResultCode());
         assertEquals(expectedEnergyLeft, res4.getEnergyRemaining());
         // since there is not enough energy, the contract failed to execute, resolverAddress is
         // unchanged
@@ -719,13 +719,13 @@ public class AionNameServiceContractTest {
                         domainName2,
                         notSubdomain);
 
-        TransactionResult res = ansc.execute(combined, inputEnergy);
-        TransactionResult res2 = ansc.execute(combined2, inputEnergy);
+        FastVmTransactionResult res = ansc.execute(combined, inputEnergy);
+        FastVmTransactionResult res2 = ansc.execute(combined2, inputEnergy);
 
         // check for success and failure
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(expectedEnergyLeft, res.getEnergyRemaining());
-        assertEquals(ResultCode.FAILURE, res2.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res2.getResultCode());
         assertEquals(expectedEnergyLeft2, res2.getEnergyRemaining());
     }
 
@@ -749,7 +749,7 @@ public class AionNameServiceContractTest {
                 setupInputs(
                         "cion.bion.aion", AionAddress.wrap(k.getAddress()), amount.toByteArray(), k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
-        TransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
+        FastVmTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
         AionAddress addr = AionAddress.wrap(result.getOutput());
 
         byte[] combined2 =

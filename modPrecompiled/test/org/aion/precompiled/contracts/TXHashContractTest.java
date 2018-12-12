@@ -31,8 +31,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.mcf.config.CfgFork;
 import org.aion.precompiled.ContractFactory;
 import org.aion.vm.ExecutionContext;
@@ -88,7 +88,7 @@ public class TXHashContractTest {
 
     @Test
     public void testgetTxHash() {
-        TransactionResult res = tXHashContract.execute(null, INPUT_NRG);
+        FastVmTransactionResult res = tXHashContract.execute(null, INPUT_NRG);
 
         System.out.println(res.toString());
         assertTrue(Arrays.equals(txHash, res.getOutput()));
@@ -96,9 +96,9 @@ public class TXHashContractTest {
 
     @Test
     public void testgetTxHashOutofNrg() {
-        TransactionResult res = tXHashContract.execute(null, COST - 1);
+        FastVmTransactionResult res = tXHashContract.execute(null, COST - 1);
 
         System.out.println(res.toString());
-        assertEquals(ResultCode.OUT_OF_ENERGY.toInt(), res.getResultCode().toInt());
+        assertEquals(FastVmResultCode.OUT_OF_NRG.toInt(), res.getResultCode().toInt());
     }
 }

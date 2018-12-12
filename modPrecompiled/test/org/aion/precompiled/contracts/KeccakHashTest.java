@@ -26,8 +26,8 @@ package org.aion.precompiled.contracts;
 import static junit.framework.TestCase.assertEquals;
 
 import java.nio.charset.StandardCharsets;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,10 +45,10 @@ public class KeccakHashTest {
 
     @Test
     public void testKeccak256() {
-        TransactionResult res = keccakHasher.execute(byteArray1, INPUT_NRG);
+        FastVmTransactionResult res = keccakHasher.execute(byteArray1, INPUT_NRG);
         byte[] output = res.getOutput();
 
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
 
         System.out.println(
@@ -64,13 +64,13 @@ public class KeccakHashTest {
 
     @Test
     public void invalidInputLength() {
-        TransactionResult res2 = keccakHasher.execute(shortByteArray, INPUT_NRG);
-        assertEquals(ResultCode.FAILURE, res2.getResultCode());
+        FastVmTransactionResult res2 = keccakHasher.execute(shortByteArray, INPUT_NRG);
+        assertEquals(FastVmResultCode.FAILURE, res2.getResultCode());
     }
 
     @Test
     public void insufficientNRG() {
-        TransactionResult res2 = keccakHasher.execute(byteArray1, 30);
-        assertEquals(ResultCode.OUT_OF_ENERGY, res2.getResultCode());
+        FastVmTransactionResult res2 = keccakHasher.execute(byteArray1, 30);
+        assertEquals(FastVmResultCode.OUT_OF_NRG, res2.getResultCode());
     }
 }

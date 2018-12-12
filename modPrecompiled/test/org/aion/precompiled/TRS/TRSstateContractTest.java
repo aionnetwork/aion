@@ -36,8 +36,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.contracts.DummyRepo;
@@ -80,16 +80,16 @@ public class TRSstateContractTest extends TRShelpers {
     @Test
     public void testCreateNullInput() {
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
-        TransactionResult res = trs.execute(null, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(null, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
     @Test
     public void testCreateEmptyInput() {
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
-        TransactionResult res = trs.execute(ByteUtil.EMPTY_BYTE_ARRAY, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(ByteUtil.EMPTY_BYTE_ARRAY, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -97,8 +97,8 @@ public class TRSstateContractTest extends TRShelpers {
     public void testCreateInsufficientNrg() {
         byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
-        TransactionResult res = trs.execute(input, COST - 1);
-        assertEquals(ResultCode.OUT_OF_ENERGY, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST - 1);
+        assertEquals(FastVmResultCode.OUT_OF_NRG, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -106,8 +106,8 @@ public class TRSstateContractTest extends TRShelpers {
     public void testCreateTooMuchNrg() {
         byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
-        TransactionResult res = trs.execute(input, StatefulPrecompiledContract.TX_NRG_MAX + 1);
-        assertEquals(ResultCode.INVALID_ENERGY_LIMIT, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, StatefulPrecompiledContract.TX_NRG_MAX + 1);
+        assertEquals(FastVmResultCode.INVALID_NRG_LIMIT, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -119,7 +119,7 @@ public class TRSstateContractTest extends TRShelpers {
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
             if ((i < 0) || (i > MAX_OP)) {
                 input[0] = (byte) i;
-                assertEquals(ResultCode.FAILURE, trs.execute(input, COST).getResultCode());
+                assertEquals(FastVmResultCode.FAILURE, trs.execute(input, COST).getResultCode());
             }
         }
     }
@@ -131,14 +131,14 @@ public class TRSstateContractTest extends TRShelpers {
         // Test isDirectDeposit false
         byte[] input = getCreateInput(true, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test isDirectDeposit true
         input = getCreateInput(true, true, 1, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -146,8 +146,8 @@ public class TRSstateContractTest extends TRShelpers {
     public void testCreateZeroPeriods() {
         byte[] input = getCreateInput(false, false, 0, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -156,14 +156,14 @@ public class TRSstateContractTest extends TRShelpers {
         // Smallest too-large period: 1201
         byte[] input = getCreateInput(false, false, 1201, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Largest too-large period: 65,535
         input = getCreateInput(false, false, 65_535, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -172,14 +172,14 @@ public class TRSstateContractTest extends TRShelpers {
         // Smallest too-large precision: 19
         byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 19);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Largest too-large precision: 255
         input = getCreateInput(false, false, 1, BigInteger.ZERO, 255);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -188,9 +188,9 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 0);
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = new AionAddress(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(caller, getOwner(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -202,9 +202,9 @@ public class TRSstateContractTest extends TRShelpers {
     public void testCreateTestModeCorrectOwner() {
         byte[] input = getCreateInput(true, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(AION);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertFalse(isContractLocked(trs, contract));
         assertFalse(isContractLive(trs, contract));
@@ -218,9 +218,9 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getCreateInput(false, false, periods, BigInteger.ZERO, 0);
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(periods, getPeriods(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -235,7 +235,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getCreateInput(false, false, periods, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(periods, getPeriods(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -249,9 +249,9 @@ public class TRSstateContractTest extends TRShelpers {
         int periods = 1;
         byte[] input = getCreateInput(true, false, periods, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(AION);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(periods, getPeriods(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -266,7 +266,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getCreateInput(true, false, periods, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(periods, getPeriods(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -285,9 +285,9 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getCreateInput(false, false, periods, BigInteger.ZERO, 0);
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(periods, getPeriods(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -300,7 +300,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getCreateInput(false, false, periods2, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(periods2, getPeriods(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -313,7 +313,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getCreateInput(false, false, periods3, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(periods3, getPeriods(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -327,9 +327,9 @@ public class TRSstateContractTest extends TRShelpers {
         boolean isTest = false;
         byte[] input = getCreateInput(isTest, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(isTest, isTestContract(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -342,7 +342,7 @@ public class TRSstateContractTest extends TRShelpers {
         trs = newTRSstateContract(AION);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(isTest, isTestContract(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -357,9 +357,9 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         byte[] input = getCreateInput(false, isDirectDeposit, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(isDirectDeposit, isDirectDepositEnabled(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -374,7 +374,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getCreateInput(false, isDirectDeposit, 1, BigInteger.ZERO, 0);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(isDirectDeposit, isDirectDepositEnabled(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -388,9 +388,9 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(BigDecimal.ZERO, getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -404,7 +404,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getCreateInput(false, false, 1, BigInteger.ZERO, 18);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(BigDecimal.ZERO.movePointLeft(18), getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -419,9 +419,9 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         byte[] input = getCreateInput(false, false, 1, raw, 0);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(new BigDecimal(raw), getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -436,7 +436,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getCreateInput(false, false, 1, raw, 18);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(new BigDecimal(raw).movePointLeft(18), getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -451,15 +451,15 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         byte[] input = getCreateInput(false, false, 1, raw, 0);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test 18 shifts.
         raw = new BigInteger("100000000000000000001");
         input = getCreateInput(false, false, 1, raw, 18);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test all 9 bytes of percent as 1's using zero shifts.
@@ -479,13 +479,13 @@ public class TRSstateContractTest extends TRShelpers {
         raw = new BigInteger(rawBytes);
         input = getCreateInput(false, false, 1, raw, 0);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test all 9 bytes of percent as 1's using 18 shifts -> 4722.36% still no good.
         input = getCreateInput(false, false, 1, raw, 18);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -496,9 +496,9 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         byte[] input = getCreateInput(false, false, 1, raw, 18);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(new BigDecimal(raw).movePointLeft(18), getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -514,7 +514,7 @@ public class TRSstateContractTest extends TRShelpers {
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(new BigDecimal(raw).movePointLeft(18), getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -530,7 +530,7 @@ public class TRSstateContractTest extends TRShelpers {
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(new BigDecimal(raw).movePointLeft(18), getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -546,8 +546,8 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         byte[] input = getCreateInput(false, false, 1, raw, shifts);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // With 12 shifts we have: 872.743562198734% -> no good
@@ -555,7 +555,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getCreateInput(false, false, 1, raw, shifts);
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // With 13 shifts we have: 87.2743562198734% -> good
@@ -564,7 +564,7 @@ public class TRSstateContractTest extends TRShelpers {
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(new BigDecimal(raw).movePointLeft(shifts), getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -580,7 +580,7 @@ public class TRSstateContractTest extends TRShelpers {
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(new BigDecimal(raw).movePointLeft(shifts), getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -596,7 +596,7 @@ public class TRSstateContractTest extends TRShelpers {
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(new BigDecimal(raw).movePointLeft(shifts), getPercentage(trs, contract));
         assertFalse(isContractLocked(trs, contract));
@@ -610,9 +610,9 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         tempAddrs.add(contract);
 
@@ -623,7 +623,7 @@ public class TRSstateContractTest extends TRShelpers {
         trs = newTRSstateContract(getNewExistentAccount(BigInteger.ZERO));
         res = trs.execute(input, COST);
 
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertNotEquals(contract, AionAddress.wrap(res.getOutput()));
         tempAddrs.add(AionAddress.wrap(res.getOutput()));
@@ -636,7 +636,7 @@ public class TRSstateContractTest extends TRShelpers {
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
         contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertEquals(contract, AionAddress.wrap(res.getOutput()));
 
@@ -648,7 +648,7 @@ public class TRSstateContractTest extends TRShelpers {
         repo.flush();
         trs = newTRSstateContract(caller);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertNotEquals(contract, AionAddress.wrap(res.getOutput()));
         tempAddrs.add(AionAddress.wrap(res.getOutput()));
@@ -664,9 +664,9 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress caller = getNewExistentAccount(BigInteger.ZERO);
         byte[] input = getCreateInput(false, false, 1, BigInteger.ZERO, 0);
         TRSstateContract trs = newTRSstateContract(caller);
-        TransactionResult res = trs.execute(input, COST + diff);
+        FastVmTransactionResult res = trs.execute(input, COST + diff);
         AionAddress contract = AionAddress.wrap(res.getOutput());
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(diff, res.getEnergyRemaining());
         tempAddrs.add(contract);
 
@@ -681,10 +681,10 @@ public class TRSstateContractTest extends TRShelpers {
         TRSstateContract trs = newTRSstateContract(caller);
 
         long before = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
-        TransactionResult res = trs.execute(input, COST);
+        FastVmTransactionResult res = trs.execute(input, COST);
         long after = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis());
 
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         AionAddress contract = AionAddress.wrap(res.getOutput());
         long timestamp = getContractTimestamp(trs, contract);
 
@@ -702,8 +702,8 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = new byte[1];
         input[0] = (byte) 0x1;
         TRSstateContract trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test on address size 31.
@@ -711,7 +711,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[0] = (byte) 0x1;
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -723,8 +723,8 @@ public class TRSstateContractTest extends TRShelpers {
         input[0] = (byte) 0x1;
         System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
         TRSstateContract trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -735,8 +735,8 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress contract = createTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
         byte[] input = getLockInput(acct);
         TRSstateContract trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test attempt to lock what looks like a TRS address (proper prefix).
@@ -744,7 +744,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[input.length - 1] = (byte) ~input[input.length - 1];
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -755,8 +755,8 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress contract = createTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
         byte[] input = getLockInput(contract);
         TRSstateContract trs = newTRSstateContract(AION);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test in test mode: owner is AION, caller is acct.
@@ -764,7 +764,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -781,12 +781,12 @@ public class TRSstateContractTest extends TRShelpers {
         // Deposit into contract so we can lock it.
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
 
         input = getLockInput(contract);
         trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLocked(trs, contract)); // lock worked.
@@ -794,7 +794,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         // attempt to lock the contract again...
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test in test mode.
@@ -803,7 +803,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Deposit into contract so we can lock it.
         input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getResultCode());
 
         assertFalse(isContractLocked(trs, contract));
         assertFalse(isContractLive(trs, contract));
@@ -811,7 +811,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(AION);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLocked(trs, contract)); // lock worked.
@@ -819,7 +819,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         // attempt to lock the contract again...
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -836,12 +836,12 @@ public class TRSstateContractTest extends TRShelpers {
         // Deposit into contract so we can lock it.
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
 
         input = getLockInput(contract);
         trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLocked(trs, contract)); // lock worked.
@@ -853,7 +853,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Deposit into contract so we can lock it.
         input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(AION).execute(input, COST).getResultCode());
 
         assertFalse(isContractLocked(trs, contract));
         assertFalse(isContractLive(trs, contract));
@@ -861,7 +861,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(AION);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLocked(trs, contract)); // lock worked.
@@ -876,8 +876,8 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getStartInput(contract);
         TRSstateContract trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLive(trs, contract));
@@ -886,7 +886,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test in test mode.
@@ -895,7 +895,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getStartInput(contract);
         trs = newTRSstateContract(AION);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLive(trs, contract));
@@ -904,7 +904,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(AION);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -913,23 +913,23 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress owner = getNewExistentAccount(BigInteger.ONE);
         AionAddress contract = createTRScontract(owner, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getLockInput(contract);
-        TransactionResult res = newTRSstateContract(owner).execute(input, COST);
+        FastVmTransactionResult res = newTRSstateContract(owner).execute(input, COST);
         AbstractTRS trs = newTRSstateContract(owner);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertFalse(isContractLocked(trs, contract));
 
         // Now deposit into contract and refund it so we are back at zero and try again.
         input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(owner).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(owner).execute(input, COST).getResultCode());
         input = getRefundInput(contract, owner, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(owner).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(owner).execute(input, COST).getResultCode());
 
         input = getLockInput(contract);
         res = newTRSstateContract(owner).execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
         assertFalse(isContractLocked(trs, contract));
     }
@@ -944,8 +944,8 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = new byte[1];
         input[0] = (byte) 0x1;
         TRSstateContract trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test on address size 31.
@@ -953,7 +953,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[0] = (byte) 0x1;
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -965,8 +965,8 @@ public class TRSstateContractTest extends TRShelpers {
         input[0] = (byte) 0x1;
         System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
         TRSstateContract trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -979,8 +979,8 @@ public class TRSstateContractTest extends TRShelpers {
         input[0] = (byte) 0x1;
         System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
         TRSstateContract trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         repo.incrementNonce(acct);
@@ -990,7 +990,7 @@ public class TRSstateContractTest extends TRShelpers {
         input[input.length - 1] = (byte) ~input[input.length - 1]; // flip a bit
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -1001,8 +1001,8 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress contract = createAndLockTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
         byte[] input = getLockInput(contract);
         TRSstateContract trs = newTRSstateContract(AION);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test in test mode: owner is AION, caller is acct.
@@ -1010,7 +1010,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getLockInput(contract);
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -1022,8 +1022,8 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getStartInput(contract);
         TRSstateContract trs = newTRSstateContract(acct);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLocked(trs, contract));
@@ -1031,7 +1031,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         // Try to start contract again.
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test in test mode.
@@ -1040,7 +1040,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getStartInput(contract);
         trs = newTRSstateContract(AION);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLocked(trs, contract));
@@ -1048,7 +1048,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         // Try to start contract again.
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -1062,8 +1062,8 @@ public class TRSstateContractTest extends TRShelpers {
         assertFalse(isContractLocked(trs, contract));
 
         byte[] input = getStartInput(contract);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         // Test in test mode.
@@ -1074,7 +1074,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getStartInput(contract);
         trs = newTRSstateContract(acct);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.FAILURE, res.getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
     }
 
@@ -1089,8 +1089,8 @@ public class TRSstateContractTest extends TRShelpers {
         assertFalse(isContractLive(trs, contract));
 
         byte[] input = getStartInput(contract);
-        TransactionResult res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        FastVmTransactionResult res = trs.execute(input, COST);
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLocked(trs, contract));
@@ -1105,7 +1105,7 @@ public class TRSstateContractTest extends TRShelpers {
         input = getStartInput(contract);
         trs = newTRSstateContract(AION);
         res = trs.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
 
         assertTrue(isContractLocked(trs, contract));
@@ -1131,10 +1131,10 @@ public class TRSstateContractTest extends TRShelpers {
         // Now deposit regularly and lock the contract. Again we should still not see the bonus yet.
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
         input = getLockInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.ZERO, getBonusBalance(newTRSstateContract(acct), contract));
     }
 
@@ -1146,13 +1146,13 @@ public class TRSstateContractTest extends TRShelpers {
         // Deposit regularly and lock contract. We have no bonus deposits in. Start contract.
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
         input = getLockInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
         input = getStartInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
 
         assertEquals(BigInteger.ZERO, getBonusBalance(newTRSstateContract(acct), contract));
     }
@@ -1171,16 +1171,16 @@ public class TRSstateContractTest extends TRShelpers {
         // Deposit regularly and lock contract. We have no bonus deposits in. Start contract.
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
         input = getLockInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
 
         repo.addBalance(contract, bonus2); // make a bonus deposit.
 
         input = getStartInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
 
         repo.addBalance(contract, bonus3); // this deposit should be ignored.
 
@@ -1199,16 +1199,16 @@ public class TRSstateContractTest extends TRShelpers {
         // Deposit regularly and lock contract. We have no bonus deposits in. Start contract.
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
         input = getLockInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
 
         repo.addBalance(contract, bonus); // make a bonus deposit.
 
         input = getStartInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
 
         repo.addBalance(contract, bonus); // this deposit should be ignored.
 
@@ -1227,7 +1227,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, deposit);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
         repo.addBalance(contract, bonus);
 
         lockAndStartContract(contract, acct);
@@ -1276,7 +1276,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] input = getOpenFundsInput(contract);
         byte[] shortInput = Arrays.copyOf(input, input.length - 1);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSstateContract(acct).execute(shortInput, COST).getResultCode());
     }
 
@@ -1289,7 +1289,7 @@ public class TRSstateContractTest extends TRShelpers {
         byte[] longInput = new byte[input.length + 1];
         System.arraycopy(input, 0, longInput, 0, input.length);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSstateContract(acct).execute(longInput, COST).getResultCode());
     }
 
@@ -1301,7 +1301,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getOpenFundsInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSstateContract(other).execute(input, COST).getResultCode());
     }
 
@@ -1312,7 +1312,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getOpenFundsInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1321,7 +1321,7 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress acct = getNewExistentAccount(BigInteger.TEN);
         byte[] input = getOpenFundsInput(acct);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1332,7 +1332,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(acct);
         byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
     }
 
@@ -1347,7 +1347,7 @@ public class TRSstateContractTest extends TRShelpers {
         assertFalse(isContractLive(trs, contract));
 
         byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
         assertFalse(isContractLocked(trs, contract));
         assertFalse(isContractLive(trs, contract));
@@ -1360,12 +1360,12 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getOpenFundsInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1383,13 +1383,13 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, bal1);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
         input = getDepositInput(contract, bal2);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
         input = getDepositInput(contract, bal3);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
         repo.addBalance(contract, bonus);
         assertEquals(BigInteger.ZERO, repo.getBalance(acct1));
         assertEquals(BigInteger.ZERO, repo.getBalance(acct2));
@@ -1398,7 +1398,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now open the funds.
         AbstractTRS trs = newTRSstateContract(acct1);
         input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         // Now each account should make 1 withdrawal and receive their total owings.
@@ -1408,24 +1408,24 @@ public class TRSstateContractTest extends TRShelpers {
         BigInteger owings3 = grabOwings(new BigDecimal(bal3), total, new BigDecimal(bonus));
         input = getWithdrawInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
         assertEquals(owings1, repo.getBalance(acct1));
         assertEquals(owings2, repo.getBalance(acct2));
         assertEquals(owings3, repo.getBalance(acct3));
 
         // A subsequent withdraw operation should not withdraw anything now.
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSuseContract(acct1).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSuseContract(acct2).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSuseContract(acct3).execute(input, COST).getResultCode());
         assertEquals(owings1, repo.getBalance(acct1));
         assertEquals(owings2, repo.getBalance(acct2));
@@ -1446,13 +1446,13 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, bal1);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
         input = getDepositInput(contract, bal2);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
         input = getDepositInput(contract, bal3);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
         repo.addBalance(contract, bonus);
         assertEquals(BigInteger.ZERO, repo.getBalance(acct1));
         assertEquals(BigInteger.ZERO, repo.getBalance(acct2));
@@ -1461,7 +1461,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now open the funds.
         AbstractTRS trs = newTRSstateContract(acct1);
         input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         // A bulk withdraw will withdraw all funds for all contributors.
@@ -1471,14 +1471,14 @@ public class TRSstateContractTest extends TRShelpers {
         BigInteger owings3 = grabOwings(new BigDecimal(bal3), total, new BigDecimal(bonus));
         input = getBulkWithdrawInput(contract);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
         assertEquals(owings1, repo.getBalance(acct1));
         assertEquals(owings2, repo.getBalance(acct2));
         assertEquals(owings3, repo.getBalance(acct3));
 
         // A subsequent withdraw operation should not withdraw anything now.
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
         assertEquals(owings1, repo.getBalance(acct1));
         assertEquals(owings2, repo.getBalance(acct2));
         assertEquals(owings3, repo.getBalance(acct3));
@@ -1491,12 +1491,12 @@ public class TRSstateContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(acct);
         byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         input = getLockInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1507,12 +1507,12 @@ public class TRSstateContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(acct);
         byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         input = getStartInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
@@ -1523,17 +1523,17 @@ public class TRSstateContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(acct);
         byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         input = getIsLockedInput(contract);
-        TransactionResult res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        FastVmTransactionResult res = newTRSqueryContract(acct).execute(input, COST);
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertArrayEquals(getFalseContractOutput(), res.getOutput());
 
         input = getIsLiveInput(contract);
         res = newTRSqueryContract(acct).execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         assertArrayEquals(getFalseContractOutput(), res.getOutput());
     }
 
@@ -1544,13 +1544,13 @@ public class TRSstateContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(acct);
         byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         // Now try to withdraw.
         input = getWithdrawInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
     }
@@ -1562,13 +1562,13 @@ public class TRSstateContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(acct);
         byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         // Now try to deposit.
         input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
         assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct));
@@ -1582,13 +1582,13 @@ public class TRSstateContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(acct);
         byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         // Now try to deposit.
         input = getDepositForInput(contract, other, BigInteger.ONE);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
         assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, other));
@@ -1602,7 +1602,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Open all funds.
         byte[] input = getOpenFundsInput(contract);
         assertEquals(
-                ResultCode.SUCCESS,
+                FastVmResultCode.SUCCESS,
                 newTRSstateContract(owner).execute(input, COST).getResultCode());
 
         // Now attempt to do a bulk deposit.
@@ -1619,7 +1619,7 @@ public class TRSstateContractTest extends TRShelpers {
         BigInteger total = deposit.multiply(BigInteger.valueOf(numBeneficiaries));
         repo.addBalance(owner, total);
         input = getBulkDepositForInput(contract, beneficiaries, amounts);
-        assertEquals(ResultCode.FAILURE, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.FAILURE, trs.execute(input, COST).getResultCode());
         for (AionAddress acc : beneficiaries) {
             assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acc));
         }
@@ -1634,18 +1634,18 @@ public class TRSstateContractTest extends TRShelpers {
         AbstractTRS trs = newTRSstateContract(acct);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(other).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(other).execute(input, COST).getResultCode());
         assertEquals(BigInteger.ONE, getDepositBalance(trs, contract, other));
         assertEquals(BigInteger.ZERO, repo.getBalance(other));
 
         input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         // Now try to refund.
         input = getRefundInput(contract, other, BigInteger.ONE);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.ONE, getDepositBalance(trs, contract, other));
         assertEquals(BigInteger.ZERO, repo.getBalance(other));
@@ -1658,7 +1658,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         AbstractTRS trs = newTRSstateContract(acct);
         byte[] input = getOpenFundsInput(contract);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(FastVmResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertTrue(getAreContractFundsOpen(trs, contract));
 
         // Now try to add some extra funds.
@@ -1666,7 +1666,7 @@ public class TRSstateContractTest extends TRShelpers {
         repo.addBalance(acct, extra);
         input = getAddExtraInput(contract, extra);
         assertEquals(
-                ResultCode.FAILURE,
+                FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.ZERO, getExtraFunds(trs, contract));
     }
@@ -1690,10 +1690,10 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, deposit1);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
         input = getDepositInput(contract, deposit2);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
         repo.addBalance(contract, bonus);
 
         lockAndStartContract(contract, acct1);
@@ -1796,13 +1796,13 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, deposit);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
         input = getDepositInput(contract, deposit1);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct1).execute(input, COST).getResultCode());
         input = getDepositInput(contract, deposit2);
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+                FastVmResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
         repo.addBalance(contract, bonus);
 
         lockAndStartContract(contract, acct);

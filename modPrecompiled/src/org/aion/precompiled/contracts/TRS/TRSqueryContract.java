@@ -28,8 +28,8 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.IBlock;
 import org.aion.mcf.core.AccountState;
@@ -178,18 +178,18 @@ public final class TRSqueryContract extends AbstractTRS {
      * @return the result of calling execute on the specified input.
      */
     @Override
-    public TransactionResult execute(byte[] input, long nrgLimit) {
+    public FastVmTransactionResult execute(byte[] input, long nrgLimit) {
         if (input == null) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
         if (input.length == 0) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
         if (nrgLimit < COST) {
-            return new TransactionResult(ResultCode.OUT_OF_ENERGY, 0);
+            return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0);
         }
         if (!isValidTxNrg(nrgLimit)) {
-            return new TransactionResult(ResultCode.INVALID_ENERGY_LIMIT, 0);
+            return new FastVmTransactionResult(FastVmResultCode.INVALID_NRG_LIMIT, 0);
         }
 
         int operation = input[0];
@@ -207,7 +207,7 @@ public final class TRSqueryContract extends AbstractTRS {
             case 5:
                 return availableForWithdrawalAt(input, nrgLimit);
             default:
-                return new TransactionResult(ResultCode.FAILURE, 0);
+                return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
     }
 
@@ -226,13 +226,13 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private TransactionResult isStarted(byte[] input, long nrgLimit) {
+    private FastVmTransactionResult isStarted(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddress = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         byte[] result = new byte[1];
@@ -240,7 +240,7 @@ public final class TRSqueryContract extends AbstractTRS {
         if (!isOpenFunds(contract) && isContractLive(contract)) {
             result[0] = 0x1;
         }
-        return new TransactionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
+        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, COST - nrgLimit, result);
     }
 
     /**
@@ -258,13 +258,13 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private TransactionResult isLocked(byte[] input, long nrgLimit) {
+    private FastVmTransactionResult isLocked(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddress = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         byte[] result = new byte[1];
@@ -272,7 +272,7 @@ public final class TRSqueryContract extends AbstractTRS {
         if (!isOpenFunds(contract) && isContractLocked(contract)) {
             result[0] = 0x1;
         }
-        return new TransactionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
+        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, COST - nrgLimit, result);
     }
 
     /**
@@ -291,13 +291,13 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private TransactionResult isDirectDepositEnabled(byte[] input, long nrgLimit) {
+    private FastVmTransactionResult isDirectDepositEnabled(byte[] input, long nrgLimit) {
         // Some "constants"
         final int indexAddress = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         byte[] result = new byte[1];
@@ -305,7 +305,7 @@ public final class TRSqueryContract extends AbstractTRS {
         if (!isOpenFunds(contract) && isDirDepositsEnabled(contract)) {
             result[0] = 0x1;
         }
-        return new TransactionResult(ResultCode.SUCCESS, COST - nrgLimit, result);
+        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, COST - nrgLimit, result);
     }
 
     /**
@@ -331,13 +331,13 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private TransactionResult period(byte[] input, long nrgLimit) {
+    private FastVmTransactionResult period(byte[] input, long nrgLimit) {
         // Some "constants"
         final int indexAddress = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         // Grab the contract address and block number and determine the period.
@@ -368,14 +368,14 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private TransactionResult periodAt(byte[] input, long nrgLimit) {
+    private FastVmTransactionResult periodAt(byte[] input, long nrgLimit) {
         // Some "constants"
         final int indexAddress = 1;
         final int indexBlockNum = 33;
         final int len = 41;
 
         if (input.length != len) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         // Grab the contract address and block number and determine the period.
@@ -388,7 +388,7 @@ public final class TRSqueryContract extends AbstractTRS {
         long blockNum = blockBuf.getLong();
 
         if (blockNum <= 0) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         return determinePeriod(contract, blockchain.getBlockByNumber(blockNum), nrgLimit);
@@ -414,27 +414,27 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private TransactionResult availableForWithdrawalAt(byte[] input, long nrgLimit) {
+    private FastVmTransactionResult availableForWithdrawalAt(byte[] input, long nrgLimit) {
         // Some "constants"
         final int indexContract = 1;
         final int indexTimestamp = 33;
         final int len = 41;
 
         if (input.length != len) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         AionAddress contract = AionAddress
             .wrap(Arrays.copyOfRange(input, indexContract, indexTimestamp));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         // If a contract has its funds open then the fraction is always 1.
         if (isOpenFunds(contract)) {
-            return new TransactionResult(
-                    ResultCode.SUCCESS,
+            return new FastVmTransactionResult(
+                    FastVmResultCode.SUCCESS,
                     COST - nrgLimit,
                     (BigDecimal.ONE.movePointRight(18)).toBigInteger().toByteArray());
         }
@@ -442,7 +442,7 @@ public final class TRSqueryContract extends AbstractTRS {
         // This operation is only well-defined when the contract has a start time. Thus the contract
         // must be in the following state: live.
         if (!isContractLive(contract)) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
@@ -452,15 +452,15 @@ public final class TRSqueryContract extends AbstractTRS {
 
         int period = calculatePeriod(contract, getContractSpecs(contract), timestamp);
         if (period >= getPeriods(getContractSpecs(contract))) {
-            return new TransactionResult(
-                    ResultCode.SUCCESS,
+            return new FastVmTransactionResult(
+                    FastVmResultCode.SUCCESS,
                     COST - nrgLimit,
                     (BigDecimal.ONE.movePointRight(18)).toBigInteger().toByteArray());
         }
 
         if (timestamp < getTimestamp(contract)) {
-            return new TransactionResult(
-                    ResultCode.SUCCESS,
+            return new FastVmTransactionResult(
+                    FastVmResultCode.SUCCESS,
                     COST - nrgLimit,
                     (BigDecimal.ZERO.movePointRight(18)).toBigInteger().toByteArray());
         }
@@ -475,8 +475,8 @@ public final class TRSqueryContract extends AbstractTRS {
                         .divide(new BigDecimal(owings), 18, RoundingMode.HALF_DOWN);
 
         fraction = fraction.movePointRight(18);
-        return new TransactionResult(
-                ResultCode.SUCCESS, COST - nrgLimit, fraction.toBigInteger().toByteArray());
+        return new FastVmTransactionResult(
+                FastVmResultCode.SUCCESS, COST - nrgLimit, fraction.toBigInteger().toByteArray());
     }
 
     // <---------------------------------------HELPERS--------------------------------------------->
@@ -496,30 +496,30 @@ public final class TRSqueryContract extends AbstractTRS {
      * @param nrg The energy.
      * @return the period the contract is in at time given by block's timestamp.
      */
-    private TransactionResult determinePeriod(AionAddress contract, IBlock block, long nrg) {
+    private FastVmTransactionResult determinePeriod(AionAddress contract, IBlock block, long nrg) {
         // If contract doesn't exist, return an error.
         ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
 
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         // If contract is not yet live we are in period 0.
         if (!isContractLive(contract)) {
             output.putInt(0);
-            return new TransactionResult(ResultCode.SUCCESS, COST - nrg, output.array());
+            return new FastVmTransactionResult(FastVmResultCode.SUCCESS, COST - nrg, output.array());
         }
 
         // Grab the timestamp of block number blockNum and calculate the period the contract is in.
         if (block == null) {
-            return new TransactionResult(ResultCode.FAILURE, 0);
+            return new FastVmTransactionResult(FastVmResultCode.FAILURE, 0);
         }
 
         long blockTime = block.getTimestamp();
         int period = calculatePeriod(contract, specs, blockTime);
         output.putInt(period);
 
-        return new TransactionResult(ResultCode.SUCCESS, COST - nrg, output.array());
+        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, COST - nrg, output.array());
     }
 }

@@ -30,7 +30,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
@@ -135,7 +135,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     // The execute method for subclasses to implement.
-    public abstract TransactionResult execute(byte[] input, long nrgLimit);
+    public abstract FastVmTransactionResult execute(byte[] input, long nrgLimit);
 
     // <-------------------------------------HELPER METHODS---------------------------------------->
 

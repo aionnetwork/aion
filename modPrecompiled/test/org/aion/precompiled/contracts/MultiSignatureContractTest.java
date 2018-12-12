@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
@@ -86,11 +86,11 @@ public class MultiSignatureContractTest {
 
     // Executes a MSC with input and NRG_LIMIT args, calls it with address caller, and expects
     // code and nrg as results of the execution. Returns the result.
-    private TransactionResult execute(
-            AionAddress caller, byte[] input, long nrgLimit, ResultCode code, long nrg) {
+    private FastVmTransactionResult execute(
+            AionAddress caller, byte[] input, long nrgLimit, FastVmResultCode code, long nrg) {
 
         MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
-        TransactionResult res = msc.execute(input, nrgLimit);
+        FastVmTransactionResult res = msc.execute(input, nrgLimit);
         assertEquals(code, res.getResultCode());
         assertEquals(nrg, res.getEnergyRemaining());
         return res;
@@ -291,8 +291,8 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, ownerAddrs);
         MultiSignatureContract msc = new MultiSignatureContract(repo, ownerAddrs.get(0));
-        TransactionResult res = msc.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
+        FastVmTransactionResult res = msc.execute(input, COST);
+        assertEquals(FastVmResultCode.SUCCESS, res.getResultCode());
         AionAddress wallet = new AionAddress(res.getOutput());
         repo.addBalance(wallet, balance);
         addrsToClean.add(wallet);
@@ -319,7 +319,7 @@ public class MultiSignatureContractTest {
 
     // Verifies that the result of a create-wallet operation, res, saves a wallet with threshold
     // threshold and consists of all the owners in owners and no more.
-    private void checkCreateResult(TransactionResult res, long threshold, List<AionAddress> owners) {
+    private void checkCreateResult(FastVmTransactionResult res, long threshold, List<AionAddress> owners) {
         AionAddress walletId = new AionAddress(res.getOutput());
         addrsToClean.add(walletId);
         assertEquals(BigInteger.ZERO, repo.getBalance(walletId));
@@ -364,10 +364,10 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, Long.MIN_VALUE, ResultCode.OUT_OF_ENERGY, 0);
+        execute(caller, input, Long.MIN_VALUE, FastVmResultCode.OUT_OF_NRG, 0);
 
         // Test with max illegal cost.
-        execute(caller, input, COST - 1, ResultCode.OUT_OF_ENERGY, 0);
+        execute(caller, input, COST - 1, FastVmResultCode.OUT_OF_NRG, 0);
 
         // Second test send-tx logic.
         // Test with min illegal cost.
@@ -387,7 +387,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, Long.MIN_VALUE, ResultCode.OUT_OF_ENERGY, 0);
+        execute(sendCaller, input, Long.MIN_VALUE, FastVmResultCode.OUT_OF_NRG, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
 
@@ -398,7 +398,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, COST - 1, ResultCode.OUT_OF_ENERGY, 0);
+        execute(sendCaller, input, COST - 1, FastVmResultCode.OUT_OF_NRG, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -415,10 +415,10 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, nrgLimit, ResultCode.INVALID_ENERGY_LIMIT, nrgLimit);
+        execute(caller, input, nrgLimit, FastVmResultCode.INVALID_NRG_LIMIT, nrgLimit);
 
         // Test with max illegal cost.
-        execute(caller, input, Long.MAX_VALUE, ResultCode.INVALID_ENERGY_LIMIT, Long.MAX_VALUE);
+        execute(caller, input, Long.MAX_VALUE, FastVmResultCode.INVALID_NRG_LIMIT, Long.MAX_VALUE);
 
         // Second test send-tx logic.
         // Test with min illegal cost.
@@ -438,14 +438,14 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, nrgLimit, ResultCode.INVALID_ENERGY_LIMIT, nrgLimit);
+        execute(sendCaller, input, nrgLimit, FastVmResultCode.INVALID_NRG_LIMIT, nrgLimit);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
 
         // Test with max illegal cost.
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, Long.MAX_VALUE, ResultCode.INVALID_ENERGY_LIMIT, Long.MAX_VALUE);
+        execute(sendCaller, input, Long.MAX_VALUE, FastVmResultCode.INVALID_NRG_LIMIT, Long.MAX_VALUE);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -453,20 +453,20 @@ public class MultiSignatureContractTest {
     @Test
     public void testNullInput() {
         AionAddress caller = getExistentAddress(BigInteger.ZERO);
-        execute(caller, null, COST, ResultCode.FAILURE, 0);
+        execute(caller, null, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
     public void testEmptyInput() {
         AionAddress caller = getExistentAddress(BigInteger.ZERO);
-        execute(caller, ByteUtil.EMPTY_BYTE_ARRAY, COST, ResultCode.FAILURE, 0);
+        execute(caller, ByteUtil.EMPTY_BYTE_ARRAY, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
     public void testInputWithOperationOnly() {
         AionAddress caller = getExistentAddress(BigInteger.ZERO);
-        execute(caller, new byte[] {(byte) 0x0}, COST, ResultCode.FAILURE, 0);
-        execute(caller, new byte[] {(byte) 0x1}, COST, ResultCode.FAILURE, 0);
+        execute(caller, new byte[] {(byte) 0x0}, COST, FastVmResultCode.FAILURE, 0);
+        execute(caller, new byte[] {(byte) 0x1}, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -481,7 +481,7 @@ public class MultiSignatureContractTest {
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
             if ((i != 0) && (i != 1)) {
                 input[0] = (byte) i;
-                execute(caller, input, COST, ResultCode.FAILURE, 0);
+                execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
             }
         }
     }
@@ -495,13 +495,13 @@ public class MultiSignatureContractTest {
         AionAddress caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MIN_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
 
         // Test with max illegal value.
         input =
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH - 1, owners);
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -511,11 +511,11 @@ public class MultiSignatureContractTest {
         AionAddress caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
 
         // Test with smallest illegal value.
         input = MultiSignatureContract.constructCreateWalletInput(owners.size() + 1, owners);
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -526,7 +526,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -535,7 +535,7 @@ public class MultiSignatureContractTest {
         List<AionAddress> owners = getExistentAddresses(1, BigInteger.ZERO);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -545,7 +545,7 @@ public class MultiSignatureContractTest {
         AionAddress caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -559,7 +559,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
 
         // Test with min amount of owners
         owners = getExistentAddresses(MultiSignatureContract.MIN_OWNERS - 1, BigInteger.ZERO);
@@ -568,7 +568,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
 
         // Test all owners same
         owners.clear();
@@ -579,7 +579,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -591,7 +591,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -612,7 +612,7 @@ public class MultiSignatureContractTest {
         System.arraycopy(in, 0, input, 0, in.length);
         System.arraycopy(partialAddr, 0, input, in.length, partialAddr.length);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
 
         // Test on max legal number of owners.
         owners = getExistentAddresses(MultiSignatureContract.MAX_OWNERS - 2, BigInteger.ZERO);
@@ -624,7 +624,7 @@ public class MultiSignatureContractTest {
         System.arraycopy(in, 0, input, 0, in.length);
         System.arraycopy(partialAddr, 0, input, in.length, partialAddr.length);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -637,8 +637,8 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        TransactionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        FastVmTransactionResult res =
+                execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
 
         AionAddress walletCaller = new AionAddress(res.getOutput());
         addrsToClean.add(walletCaller);
@@ -652,7 +652,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(walletCaller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(walletCaller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -665,8 +665,8 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        TransactionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        FastVmTransactionResult res =
+                execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
 
         AionAddress wallet = new AionAddress(res.getOutput());
         addrsToClean.add(wallet);
@@ -682,7 +682,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
     }
 
     @Test
@@ -695,8 +695,8 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        TransactionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        FastVmTransactionResult res =
+                execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
         checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
 
@@ -707,7 +707,7 @@ public class MultiSignatureContractTest {
         threshold = owners.size();
         input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        res = execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
         checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -721,11 +721,11 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        TransactionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        FastVmTransactionResult res =
+                execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         AionAddress wallet1 = new AionAddress(res.getOutput());
 
-        res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        res = execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         AionAddress wallet2 = new AionAddress(res.getOutput());
 
         assertEquals(wallet1, wallet2);
@@ -740,8 +740,8 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        TransactionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        FastVmTransactionResult res =
+                execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         AionAddress wallet = new AionAddress(res.getOutput());
         assertTrue(wallet.toString().startsWith("a0"));
     }
@@ -756,8 +756,8 @@ public class MultiSignatureContractTest {
         long threshold = MultiSignatureContract.MIN_THRESH;
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        TransactionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        FastVmTransactionResult res =
+                execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
         checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
 
@@ -768,7 +768,7 @@ public class MultiSignatureContractTest {
         threshold = owners.size();
         input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        res = execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
         checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -791,7 +791,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -817,7 +817,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -843,7 +843,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -866,7 +866,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -889,7 +889,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -913,7 +913,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(phonyWallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(phonyWallet, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(phonyWallet, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(phonyWallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -935,7 +935,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -957,7 +957,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -979,7 +979,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1012,7 +1012,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, noNrgInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, noNrgInput, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1043,7 +1043,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1078,7 +1078,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1108,7 +1108,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1141,7 +1141,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1171,7 +1171,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1198,7 +1198,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1224,7 +1224,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1251,7 +1251,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1277,7 +1277,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1301,7 +1301,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INSUFFICIENT_BALANCE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.INSUFFICIENT_BALANCE, 0);
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1329,7 +1329,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet1, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(wallet2, BigInteger.ZERO, DEFAULT_BALANCE);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet1, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(wallet2, BigInteger.ZERO, DEFAULT_BALANCE.add(AMOUNT));
     }
@@ -1354,7 +1354,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1379,7 +1379,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1403,7 +1403,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1427,7 +1427,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1452,7 +1452,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1476,7 +1476,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1502,7 +1502,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1529,7 +1529,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1555,7 +1555,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, FastVmResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1583,7 +1583,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(new AionAddress(phony.getAddress()), input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(new AionAddress(phony.getAddress()), input, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1611,7 +1611,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1639,7 +1639,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1667,7 +1667,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1695,7 +1695,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1723,7 +1723,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, FastVmResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }

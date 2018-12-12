@@ -26,8 +26,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.util.ByteUtil;
@@ -37,6 +35,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.base.vm.IDataWord;
 import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -147,7 +146,7 @@ public class TransactionExecutor extends AbstractExecutor {
                         blockNrgLimit,
                         blockDifficulty);
 
-        exeResult = new TransactionResult(ResultCode.SUCCESS, nrgLimit, null);
+        exeResult = new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrgLimit, null);
     }
 
     /** Creates a transaction executor (use block nrg limit). */
@@ -203,7 +202,7 @@ public class TransactionExecutor extends AbstractExecutor {
         AionAddress contractAddress = tx.getContractAddress();
 
         if (repoTrack.hasAccountState(contractAddress)) {
-            exeResult.setResultCodeAndEnergyRemaining(ResultCode.FAILURE, 0);
+            exeResult.setResultCodeAndEnergyRemaining(FastVmResultCode.FAILURE, 0);
             return;
         }
 
@@ -215,7 +214,7 @@ public class TransactionExecutor extends AbstractExecutor {
             VirtualMachine fvm = this.provider.getVM();
             exeResult = fvm.run(tx.getData(), ctx, repoTrack);
 
-            if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()) {
+            if (exeResult.getResultCode().toInt() == FastVmResultCode.SUCCESS.toInt()) {
                 repoTrack.saveCode(contractAddress, exeResult.getOutput());
             }
         }
@@ -230,7 +229,7 @@ public class TransactionExecutor extends AbstractExecutor {
     protected AionTxExecSummary finish() {
 
         SideEffects rootHelper = new SideEffects();
-        if (exeResult.getResultCode().toInt() == ResultCode.SUCCESS.toInt()) {
+        if (exeResult.getResultCode().toInt() == FastVmResultCode.SUCCESS.toInt()) {
             rootHelper.merge(ctx.getSideEffects());
         } else {
             rootHelper.addInternalTransactions(ctx.getSideEffects().getInternalTransactions());
@@ -243,32 +242,14 @@ public class TransactionExecutor extends AbstractExecutor {
                         .internalTransactions(rootHelper.getInternalTransactions()) //
                         .result(exeResult.getOutput());
 
-        switch (exeResult.getResultCode()) {
-            case SUCCESS:
-                repoTrack.flush();
-                break;
-            case INVALID_NONCE:
-            case INVALID_ENERGY_LIMIT:
-            case INSUFFICIENT_BALANCE:
-                builder.markAsRejected();
-                break;
-            case FAILURE:
-            case OUT_OF_ENERGY:
-            case BAD_INSTRUCTION:
-            case BAD_JUMP_DESTINATION:
-            case STACK_OVERFLOW:
-            case STACK_UNDERFLOW:
-            case REVERT:
-            case STATIC_MODE_ERROR:
-            case FAILED_INVALID_DATA:
-            case UNCAUGHT_EXCEPTION:
-            case ABORT:
-                builder.markAsFailed();
-                break;
-            case VM_REJECTED:
-            case VM_INTERNAL_ERROR:
-            default:
-                throw new RuntimeException("invalid code path, should not ever default");
+        ResultCode resultCode = exeResult.getResultCode();
+
+        if (resultCode.isSuccess()) {
+            repoTrack.flush();
+        } else if (resultCode.isRejected()) {
+            builder.markAsRejected();
+        } else if (resultCode.isFailed()) {
+            builder.markAsFailed();
         }
 
         AionTxExecSummary summary = builder.build();
@@ -297,7 +278,7 @@ public class TransactionExecutor extends AbstractExecutor {
         return ctx;
     }
 
-    public TransactionResult getResult() {
+    public FastVmTransactionResult getResult() {
         return exeResult;
     }
 }

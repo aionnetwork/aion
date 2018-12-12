@@ -38,8 +38,8 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import org.aion.base.type.AionAddress;
-import org.aion.vm.api.ResultCode;
-import org.aion.vm.api.TransactionResult;
+import org.aion.vm.FastVmResultCode;
+import org.aion.vm.FastVmTransactionResult;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
@@ -156,31 +156,31 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * <p>1 + m + 32 + 96 + 1 = 130 + m
      */
     @Override
-    public TransactionResult execute(byte[] input, long nrg) {
+    public FastVmTransactionResult execute(byte[] input, long nrg) {
         if (nrg < COST)
-            return new TransactionResult(ResultCode.OUT_OF_ENERGY, 0, "insufficient energy".getBytes());
+            return new FastVmTransactionResult(FastVmResultCode.OUT_OF_NRG, 0, "insufficient energy".getBytes());
 
         // check length for both operations
         if (input.length < 131) {
-            return new TransactionResult(
-                    ResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
         }
 
         int domainNameLength = input[0];
         if (domainNameLength < 0)
-            return new TransactionResult(
-                    ResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
 
         // check if input is too short for extension function
         if (input.length < 130 + domainNameLength)
-            return new TransactionResult(
-                    ResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
         int balanceLength = input[129 + domainNameLength];
 
         if (balanceLength > 0) {
             if (input.length < 130 + domainNameLength + balanceLength) {
-                return new TransactionResult(
-                        ResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
+                return new FastVmTransactionResult(
+                        FastVmResultCode.FAILURE, nrg - COST, "incorrect input length".getBytes());
             }
         }
 
@@ -205,15 +205,15 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // check if the domain name already has active parent domain
         if (hasActiveParentDomain(domainNameRaw))
-            return new TransactionResult(
-                    ResultCode.FAILURE,
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE,
                     nrg - COST,
                     "the given domain name has a parent that is already active".getBytes());
 
         // check if the domain name is valid to register
         if (!isValidDomainName(domainNameRaw))
-            return new TransactionResult(
-                    ResultCode.FAILURE, nrg - COST, "domain name is invalid".getBytes());
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE, nrg - COST, "domain name is invalid".getBytes());
 
         // add zeros for storing
         byte[] domainNameInBytesWithZeros = addLeadingZeros(domainNameInBytes);
@@ -231,13 +231,13 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // verify public key matches owner
         if (!b) {
-            return new TransactionResult(
-                    ResultCode.FAILURE, nrg - COST, "incorrect signature".getBytes());
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE, nrg - COST, "incorrect signature".getBytes());
         }
 
         if (!bidderAddress.equals(AionAddress.wrap(sig.getAddress()))) {
-            return new TransactionResult(
-                    ResultCode.FAILURE, nrg - COST, "incorrect key".getBytes());
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE, nrg - COST, "incorrect key".getBytes());
         }
 
         // if this domain name does not have an callerAddress
@@ -262,25 +262,25 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         // check if bidValue is valid (greater than 0)
         if (bidValue.compareTo(new BigInteger("0")) < 0)
-            return new TransactionResult(
-                    ResultCode.FAILURE, nrg - COST, "negative bid value".getBytes());
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE, nrg - COST, "negative bid value".getBytes());
 
         // check bidder addr and its balance
         if (this.track.hasAccountState(bidderAddress)) {
             if (this.track.getAccountState(bidderAddress).getBalance().compareTo(bidValue) < 0) {
-                return new TransactionResult(
-                        ResultCode.FAILURE, nrg - COST, "insufficient balance".getBytes());
+                return new FastVmTransactionResult(
+                        FastVmResultCode.FAILURE, nrg - COST, "insufficient balance".getBytes());
             }
         } else
-            return new TransactionResult(
-                    ResultCode.FAILURE,
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE,
                     nrg - COST,
                     "bidder account does not exist".getBytes());
 
         // if this domain is already active
         if (isActiveDomain(domainAddress)) {
-            return new TransactionResult(
-                    ResultCode.FAILURE,
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE,
                     nrg - COST,
                     "requested domain is already active".getBytes());
         }
@@ -288,7 +288,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         // if this domain is already in auction state
         else if (isAuctionDomain(domainAddress)) {
             processBid(domainNameRaw, domainAddress, bidderAddress, bidValue);
-            return new TransactionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
+            return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
         }
 
         // start the auction for the given domain
@@ -296,7 +296,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
             storeNewAddress(domainAddress);
             addToAuctionDomain(domainAddress, domainName, domainNameRaw);
             processBid(domainNameRaw, domainAddress, bidderAddress, bidValue);
-            return new TransactionResult(ResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
+            return new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrg - COST, domainAddress.toBytes());
         }
     }
 
@@ -330,7 +330,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     // record to data base, change stuff, so when its time for task to execute, it will first check
     // database
     // to see if it has been extended, if it has, schedule new task.
-    private TransactionResult extensionRequest(AionAddress domainAddress, long nrg) {
+    private FastVmTransactionResult extensionRequest(AionAddress domainAddress, long nrg) {
         Date expireDateFromStorage = getDateFromStorage(activeDomainsAddressTime, domainAddress);
         // Date currentDate = new Date(blockchain.getBestBlock().getTimestamp());
         Date currentDate = new Date();
@@ -340,8 +340,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         // check if domain is currently active, but have not been extended
         if (expireDateFromStorage.getTime() < currentDate.getTime()
                 || difference > ACTIVE_TIME.intValue()) {
-            return new TransactionResult(
-                    ResultCode.FAILURE, COST - nrg, "already been extended".getBytes());
+            return new FastVmTransactionResult(
+                    FastVmResultCode.FAILURE, COST - nrg, "already been extended".getBytes());
         }
 
         // add the new expire date
@@ -350,7 +350,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
                         expireDateFromStorage.getTime()
                                 + ACTIVE_TIME.intValue()); // extend for 1 period
         addDateToStorage(activeDomainsAddressTime, domainAddress, finishDate);
-        return new TransactionResult(ResultCode.SUCCESS, COST - nrg);
+        return new FastVmTransactionResult(FastVmResultCode.SUCCESS, COST - nrg);
     }
 
     /**
