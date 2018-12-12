@@ -46,6 +46,7 @@
 		<show-status>false</show-status>
 		<!--requires show-status=true; comma separated list of options: [all, peer_states, requests, seeds, leeches, responses, none]-->
 		<show-statistics>none</show-statistics>
+		<compact enabled="false" slow-import="1000" frequency="600000"></compact>
 	</sync>
 	<consensus>
 		<mining>false</mining>

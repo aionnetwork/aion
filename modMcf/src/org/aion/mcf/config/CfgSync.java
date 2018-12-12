@@ -43,13 +43,23 @@ public final class CfgSync {
     private boolean showStatus;
     private Set<StatsType> showStatistics;
 
-    private static int BLOCKS_QUEUE_MAX = 32;
+    private boolean enabled;
+    private long slowImport;
+    private long frequency;
+
+    private static final int BLOCKS_QUEUE_MAX = 32;
+    private static final long SLOW_IMPORT = 1000;
+    private static final long FREQUENCY = 600_000;
+
 
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
         this.showStatus = false;
         this.showStatistics = new HashSet<>();
         this.showStatistics.add(StatsType.NONE);
+        this.enabled = false;
+        this.slowImport = SLOW_IMPORT;
+        this.frequency = FREQUENCY;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -68,6 +78,9 @@ public final class CfgSync {
                             break;
                         case "show-statistics":
                             parseSelectedStats(showStatistics, Cfg.readValue(sr));
+                            break;
+                        case "compact":
+                            parseCompact(sr);
                             break;
                         default:
                             Cfg.skipElement(sr);
@@ -109,6 +122,40 @@ public final class CfgSync {
         }
     }
 
+    private void parseCompact(final XMLStreamReader sr) {
+        if (sr.getAttributeCount() != 3) {
+            throw new IllegalArgumentException(
+                    "Compact expecting enabled, slow-import, frequency ATTRIBUTE");
+        }
+
+        long val;
+        for (int i = 0; i < 3; ++i) {
+            String name = sr.getAttributeLocalName(i);
+
+            switch (name) {
+                case "enabled":
+                    this.enabled = Boolean.parseBoolean(sr.getAttributeValue(i));
+                    break;
+                case "slow-import":
+                    val = Long.parseLong(sr.getAttributeValue(i));
+                    if (val < 0) {
+                        throw new IllegalArgumentException("slow-import value must be positive");
+                }
+                    this.slowImport = val;
+                    break;
+                case "frequency":
+                    val = Long.parseLong(sr.getAttributeValue(i));
+                    if (val < 0) {
+                        throw new IllegalArgumentException("frequency value must be positive");
+                    }
+                    this.frequency = val;
+                    break;
+                default:
+                    throw new IllegalArgumentException("unexpected entry");
+            }
+        }
+    }
+
     public String toXML() {
         final XMLOutputFactory output = XMLOutputFactory.newInstance();
         XMLStreamWriter xmlWriter;
@@ -141,6 +188,15 @@ public final class CfgSync {
             xmlWriter.writeCharacters("\r\n\t\t");
             xmlWriter.writeStartElement("show-statistics");
             xmlWriter.writeCharacters(printSelectedStats().toLowerCase());
+            xmlWriter.writeEndElement();
+
+            // sub-element compact
+            xmlWriter.writeCharacters("\r\n\t\t");
+            // <compact enabled="false" slow-import="1000" frequency="6000000"></compact>
+            xmlWriter.writeStartElement("compact");
+            xmlWriter.writeAttribute("enabled", this.enabled ? "true" : "false");
+            xmlWriter.writeAttribute("slow-import", this.slowImport + "");
+            xmlWriter.writeAttribute("frequency", this.frequency + "");
             xmlWriter.writeEndElement();
 
             // close element sync
