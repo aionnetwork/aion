@@ -38,7 +38,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.hex.Hex;
+import org.aion.util.conversions.Hex;
 
 /**
  * Class to encapsulate an object and provide utilities for conversion

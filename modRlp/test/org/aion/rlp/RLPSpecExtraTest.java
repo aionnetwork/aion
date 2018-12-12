@@ -37,7 +37,7 @@ import static org.aion.util.bytes.ByteUtil.byteArrayToInt;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.util.hex.Hex;
+import org.aion.util.conversions.Hex;
 import org.junit.Test;
 
 /**

@@ -25,7 +25,7 @@ package org.aion.rlp;
 import static com.google.common.truth.Truth.assertThat;
 
 import java.util.Arrays;
-import org.aion.util.hex.Hex;
+import org.aion.util.conversions.Hex;
 import org.junit.Test;
 
 public class UtilsTest {

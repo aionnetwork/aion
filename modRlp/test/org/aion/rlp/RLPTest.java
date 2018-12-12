@@ -88,7 +88,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Objects;
-import org.aion.util.hex.Hex;
+import org.aion.util.conversions.Hex;
 import org.junit.Test;
 
 public class RLPTest {
