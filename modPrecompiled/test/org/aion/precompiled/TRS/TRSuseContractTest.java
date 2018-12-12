@@ -1607,12 +1607,8 @@ public class TRSuseContractTest extends TRShelpers {
         // Try first with no one in the contract. Caller is owner.
         byte[] input = getBulkWithdrawInput(contract);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
 
         // Now deposit some and try again.
         input = getDepositInput(contract, DEFAULT_BALANCE);
@@ -1620,12 +1616,8 @@ public class TRSuseContractTest extends TRShelpers {
                 FastVmResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
         input = getBulkWithdrawInput(contract);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -1644,12 +1636,8 @@ public class TRSuseContractTest extends TRShelpers {
         // Try to withdraw.
         input = getBulkWithdrawInput(contract);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
     }
 
@@ -2293,12 +2281,8 @@ public class TRSuseContractTest extends TRShelpers {
         // Acct2 is now marked invalid.
         input = getRefundInput(contract, acct2, BigInteger.ZERO);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -2583,12 +2567,8 @@ public class TRSuseContractTest extends TRShelpers {
         AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getAddExtraInput(acct, DEFAULT_BALANCE);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -2597,12 +2577,8 @@ public class TRSuseContractTest extends TRShelpers {
         AionAddress contract = createTRScontract(AION, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getAddExtraInput(contract, DEFAULT_BALANCE);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -2626,12 +2602,8 @@ public class TRSuseContractTest extends TRShelpers {
 
         input = getAddExtraInput(contract, DEFAULT_BALANCE);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -3084,12 +3056,8 @@ public class TRSuseContractTest extends TRShelpers {
         AionAddress acct = getNewExistentAccount(BigInteger.ONE);
         byte[] input = makeBulkDepositForInput(acct, numBeneficiaries, BigInteger.TEN);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -3102,12 +3070,8 @@ public class TRSuseContractTest extends TRShelpers {
                         BigInteger.TEN.multiply(BigInteger.valueOf(numBeneficiaries)));
         byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(whoami).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(whoami).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -3117,12 +3081,8 @@ public class TRSuseContractTest extends TRShelpers {
         AionAddress contract = createAndLockTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
         byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -3133,12 +3093,8 @@ public class TRSuseContractTest extends TRShelpers {
                 createLockedAndLiveTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
         byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
         assertEquals(
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
                 FastVmResultCode.FAILURE,
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
