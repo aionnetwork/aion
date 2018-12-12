@@ -28,6 +28,7 @@ import org.aion.fastvm.FastVM;
 import org.aion.precompiled.ContractFactory;
 import org.aion.vm.ExecutorProvider;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.vm.KernelInterfaceForFastVM;
 import org.aion.vm.VirtualMachine;
 import org.aion.vm.api.interfaces.TransactionContext;
 
@@ -35,7 +36,7 @@ public class AionExecutorProvider implements ExecutorProvider {
 
     @Override
     public IPrecompiledContract getPrecompiledContract(
-            TransactionContext context, IRepositoryCache track) {
+            TransactionContext context, KernelInterfaceForFastVM track) {
         return new ContractFactory().getPrecompiledContract(context, track);
     }
 

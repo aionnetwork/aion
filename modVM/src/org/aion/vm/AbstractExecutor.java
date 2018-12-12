@@ -42,10 +42,10 @@ public abstract class AbstractExecutor {
     protected static Object lock = new Object();
     protected IRepository repo;
     protected IRepositoryCache repoTrack;
-    private boolean isLocalCall;
+    protected boolean isLocalCall;
     protected FastVmTransactionResult exeResult;
     private long blockRemainingNrg;
-    private boolean askNonce = true;
+    protected boolean askNonce = true;
 
     public AbstractExecutor(
             IRepository _repo, boolean _localCall, long _blkRemainingNrg, Logger _logger) {
