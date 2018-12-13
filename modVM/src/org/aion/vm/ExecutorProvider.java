@@ -23,6 +23,7 @@
 
 package org.aion.vm;
 
+import org.aion.base.vm.VirtualMachine;
 import org.aion.vm.api.interfaces.TransactionContext;
 
 public interface ExecutorProvider {

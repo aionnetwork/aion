@@ -33,9 +33,11 @@
  *     Bitcoinj team.
  */
 
-package org.aion.vm;
+package org.aion.base.vm;
 
+import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.TransactionContext;
+import org.aion.vm.api.interfaces.TransactionResult;
 
 /**
  * High-level interface of Aion virtual machine.
@@ -52,5 +54,5 @@ public interface VirtualMachine {
      * @param track state repository track
      * @return the execution result
      */
-    FastVmTransactionResult run(byte[] code, TransactionContext ctx, KernelInterfaceForFastVM track);
+    TransactionResult run(byte[] code, TransactionContext ctx, KernelInterface track);
 }
