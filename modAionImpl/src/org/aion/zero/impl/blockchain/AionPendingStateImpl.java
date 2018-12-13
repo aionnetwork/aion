@@ -75,7 +75,6 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -1079,7 +1078,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         }
 
         TransactionExecutor txExe = new TransactionExecutor(tx, bestBlk, pendingState, LOGGER_VM);
-        txExe.setExecutorProvider(AionExecutorProvider.getInstance());
 
         if (inPool) {
             txExe.setBypassNonce();

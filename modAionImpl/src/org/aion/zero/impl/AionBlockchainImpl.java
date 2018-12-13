@@ -90,7 +90,6 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -1091,7 +1090,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         for (AionTransaction tx : block.getTransactionsList()) {
             TransactionExecutor executor =
                     new TransactionExecutor(tx, block, track, false, energyRemaining, LOGGER_VM);
-            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             AionTxExecSummary summary = executor.execute();
 
             if (!summary.isRejected()) {
@@ -1128,7 +1126,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         for (AionTransaction tx : block.getTransactionsList()) {
             TransactionExecutor executor = new TransactionExecutor(tx, block, track, LOGGER_VM);
-            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             AionTxExecSummary summary = executor.execute();
 
             track.flush();

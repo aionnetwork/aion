@@ -45,7 +45,6 @@ import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -157,7 +156,6 @@ public class AionImpl implements IAionChain {
         try {
             TransactionExecutor executor =
                     new TransactionExecutor(tx, block, repository, true, LOG_VM);
-            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             return executor.execute().getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
@@ -177,7 +175,6 @@ public class AionImpl implements IAionChain {
         try {
             TransactionExecutor executor =
                     new TransactionExecutor(tx, block, repository, true, LOG_VM);
-            executor.setExecutorProvider(AionExecutorProvider.getInstance());
             return executor.execute().getReceipt();
         } finally {
             repository.rollback();
