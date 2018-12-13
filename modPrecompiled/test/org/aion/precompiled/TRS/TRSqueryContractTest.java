@@ -630,16 +630,8 @@ public class TRSqueryContractTest extends TRShelpers {
         AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getAvailableForWithdrawalAtInput(acct, 0);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSqueryContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSqueryContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -648,16 +640,8 @@ public class TRSqueryContractTest extends TRShelpers {
         AionAddress contract = createTRScontract(acct, false, true, 7, BigInteger.ZERO, 0);
         byte[] input = getAvailableForWithdrawalAtInput(contract, 0);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSqueryContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSqueryContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test

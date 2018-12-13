@@ -1289,16 +1289,8 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getOpenFundsInput(contract);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -1306,16 +1298,8 @@ public class TRSstateContractTest extends TRShelpers {
         AionAddress acct = getNewExistentAccount(BigInteger.TEN);
         byte[] input = getOpenFundsInput(acct);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -1355,21 +1339,11 @@ public class TRSstateContractTest extends TRShelpers {
         assertEquals(
                 PrecompiledResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
-        assertEquals(
-                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
         assertEquals(
                 PrecompiledResultCode.FAILURE,
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -1422,18 +1396,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         // A subsequent withdraw operation should not withdraw anything now.
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct1).execute(input, COST).getResultCode());
-        assertEquals(
-                ResultCode.FAILURE, newTRSuseContract(acct2).execute(input, COST).getResultCode());
-        assertEquals(
-                ResultCode.FAILURE, newTRSuseContract(acct3).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSuseContract(acct1).execute(input, COST).getResultCode());
         assertEquals(
                 PrecompiledResultCode.FAILURE,
@@ -1441,7 +1404,6 @@ public class TRSstateContractTest extends TRShelpers {
         assertEquals(
                 PrecompiledResultCode.FAILURE,
                 newTRSuseContract(acct3).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
         assertEquals(owings1, repo.getBalance(acct1));
         assertEquals(owings2, repo.getBalance(acct2));
         assertEquals(owings3, repo.getBalance(acct3));
@@ -1511,16 +1473,8 @@ public class TRSstateContractTest extends TRShelpers {
 
         input = getLockInput(contract);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -1535,16 +1489,8 @@ public class TRSstateContractTest extends TRShelpers {
 
         input = getStartInput(contract);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSstateContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
     }
 
     @Test
@@ -1581,16 +1527,8 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to withdraw.
         input = getWithdrawInput(contract);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
     }
 
@@ -1607,16 +1545,8 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to deposit.
         input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
         assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct));
     }
@@ -1635,16 +1565,8 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to deposit.
         input = getDepositForInput(contract, other, BigInteger.ONE);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
         assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, other));
     }
@@ -1700,16 +1622,8 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to refund.
         input = getRefundInput(contract, other, BigInteger.ONE);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
         assertEquals(BigInteger.ONE, getDepositBalance(trs, contract, other));
         assertEquals(BigInteger.ZERO, repo.getBalance(other));
     }
@@ -1729,16 +1643,8 @@ public class TRSstateContractTest extends TRShelpers {
         repo.addBalance(acct, extra);
         input = getAddExtraInput(contract, extra);
         assertEquals(
-<<<<<<< HEAD
-<<<<<<< HEAD
-                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
-=======
-                FastVmResultCode.FAILURE,
-=======
                 PrecompiledResultCode.FAILURE,
->>>>>>> af3c39e... modPrecompiled has its own ResultCode, TxResult
                 newTRSuseContract(acct).execute(input, COST).getResultCode());
->>>>>>> 446bcbf... Adapting to new ResultCode, TransactionResult
         assertEquals(BigInteger.ZERO, getExtraFunds(trs, contract));
     }
 
