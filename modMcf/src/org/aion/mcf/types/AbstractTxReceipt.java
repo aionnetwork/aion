@@ -1,6 +1,6 @@
 package org.aion.mcf.types;
 
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.ArrayList;
 import java.util.List;
