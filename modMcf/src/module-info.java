@@ -1,4 +1,5 @@
 module aion.mcf {
+    requires aion.util;
     requires aion.crypto;
     requires aion.base;
     requires aion.log;

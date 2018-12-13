@@ -1,7 +1,7 @@
 package org.aion.mcf.trie.scan;
 
-import org.aion.base.util.Hex;
 import org.aion.rlp.Value;
+import org.aion.util.conversions.Hex;
 
 public class TraceAllNodes implements ScanAction {
 
