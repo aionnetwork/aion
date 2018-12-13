@@ -25,7 +25,6 @@ package org.aion.precompiled.type;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.vm.IPrecompiledContract;
 
 /**
  * A pre-compiled contract that is capable of modifying state.
@@ -33,7 +32,7 @@ import org.aion.vm.IPrecompiledContract;
  * <p>StatefulPrecompiledContract objects should be instance-based with an immutable reference to a
  * particular state, this is what distinguishes them from ordinary pre-compiled contracts.
  */
-public abstract class StatefulPrecompiledContract implements IPrecompiledContract {
+public abstract class StatefulPrecompiledContract implements PrecompiledContract {
     public static final long TX_NRG_MIN = 20_999;
     public static final long TX_NRG_MAX = 2_000_001;
     protected final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;

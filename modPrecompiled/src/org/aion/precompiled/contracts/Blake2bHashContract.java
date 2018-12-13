@@ -27,7 +27,7 @@ import static org.aion.crypto.HashUtil.blake256;
 import com.google.common.annotations.VisibleForTesting;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.precompiled.type.PrecompiledContract;
 
 /**
  * @author Jay Tseng
@@ -36,7 +36,7 @@ import org.aion.vm.IPrecompiledContract;
  *     times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3 of the
  *     Ethereum keccak256 precompiled contract charge.
  */
-public class Blake2bHashContract implements IPrecompiledContract {
+public class Blake2bHashContract implements PrecompiledContract {
 
     private static final long COST = 10L;
     private static final int WORD_LENGTH = 4;

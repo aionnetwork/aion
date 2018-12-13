@@ -29,13 +29,12 @@ import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
 import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
-import org.aion.vm.IContractFactory;
-import org.aion.vm.IPrecompiledContract;
-import org.aion.vm.KernelInterfaceForFastVM;
+import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.vm.api.interfaces.TransactionContext;
 
 /** A factory class that produces pre-compiled contract instances. */
-public class ContractFactory implements IContractFactory {
+public class ContractFactory {
 
     private static final String ADDR_OWNER =
             "0000000000000000000000000000000000000000000000000000000000000000";
@@ -54,8 +53,8 @@ public class ContractFactory implements IContractFactory {
     private static final String ADDR_TX_HASH =
             "0000000000000000000000000000000000000000000000000000000000000012";
 
-    private static IPrecompiledContract PC_ED_VERIFY;
-    private static IPrecompiledContract PC_BLAKE2B_HASH;
+    private static PrecompiledContract PC_ED_VERIFY;
+    private static PrecompiledContract PC_BLAKE2B_HASH;
 
     static {
         PC_ED_VERIFY = new EDVerifyContract();
@@ -72,8 +71,7 @@ public class ContractFactory implements IContractFactory {
      * @param track The repo.
      * @return the specified pre-compiled address.
      */
-    @Override
-    public IPrecompiledContract getPrecompiledContract(
+    public PrecompiledContract getPrecompiledContract(
             TransactionContext context, KernelInterfaceForFastVM track) {
 
         CfgFork cfg = new CfgFork();

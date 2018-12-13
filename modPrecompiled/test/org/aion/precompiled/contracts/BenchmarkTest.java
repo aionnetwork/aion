@@ -31,8 +31,8 @@ import org.aion.base.type.AionAddress;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.ExecutionContext;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.fastvm.ExecutionContext;
+import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -122,7 +122,7 @@ public class BenchmarkTest {
                         blockNrgLimit,
                         blockDifficulty);
 
-        IPrecompiledContract ct;
+        PrecompiledContract ct;
         // warm up
         for (int i = 0; i < WARMUP; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
@@ -159,7 +159,7 @@ public class BenchmarkTest {
         //                blockNrgLimit,
         //                blockDifficulty);
         //
-        //        IPrecompiledContract ct;
+        //        PrecompiledContract ct;
         //        // warm up
         //        for (int i = 0; i < WARMUP; i++) {
         //            ct = cf.getPrecompiledContract(ctx, null);

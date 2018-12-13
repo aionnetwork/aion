@@ -28,9 +28,9 @@ import org.aion.base.type.AionAddress;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.precompiled.type.PrecompiledContract;
 
-public class EDVerifyContract implements IPrecompiledContract {
+public class EDVerifyContract implements PrecompiledContract {
 
     // set to a default cost for now, this will need to be adjusted
     private static final long COST = 3000L;

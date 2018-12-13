@@ -31,7 +31,7 @@ import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.contracts.DummyRepo;
-import org.aion.vm.ExecutionContext;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.TransactionSideEffects;
 import org.junit.Before;

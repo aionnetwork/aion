@@ -26,9 +26,9 @@ import static org.aion.crypto.HashUtil.keccak256;
 
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.precompiled.type.PrecompiledContract;
 
-public class KeccakHash implements IPrecompiledContract {
+public class KeccakHash implements PrecompiledContract {
     private static final long DEFAULT_COST = 100L;
 
     public KeccakHash() {}

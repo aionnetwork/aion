@@ -35,7 +35,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.PrecompiledUtilities;
-import org.aion.vm.ExecutionContext;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.junit.Before;
 import org.junit.Test;

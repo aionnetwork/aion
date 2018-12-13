@@ -40,8 +40,8 @@ import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.PrecompiledResultCode;
-import org.aion.vm.ExecutionContext;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.fastvm.ExecutionContext;
+import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
@@ -125,7 +125,7 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
         TransactionResult result = contract.execute(input, 21000L);
@@ -155,7 +155,7 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
         TransactionResult result = contract.execute(input, 21000L);
@@ -189,7 +189,7 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
         TransactionResult result = contract.execute(input, 21000L);
@@ -220,7 +220,7 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         TransactionResult result = contract.execute(input, 2999L);
         assertThat(result.getResultCode().toInt()).isEqualTo(PrecompiledResultCode.OUT_OF_NRG.toInt());
@@ -249,7 +249,7 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         TransactionResult result = contract.execute(input, 21000L);
 

@@ -27,7 +27,7 @@ import org.aion.base.type.AionAddress;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.ExecutionContext;
+import org.aion.fastvm.ExecutionContext;
 
 public class BridgeTestUtils {
     static ExecutionContext dummyContext() {

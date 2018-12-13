@@ -45,7 +45,7 @@ import org.aion.precompiled.encoding.AbiEncoder;
 import org.aion.precompiled.encoding.AddressFVM;
 import org.aion.precompiled.encoding.ListFVM;
 import org.aion.precompiled.encoding.Uint128FVM;
-import org.aion.vm.ExecutionContext;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.junit.Before;

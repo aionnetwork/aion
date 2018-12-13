@@ -20,16 +20,20 @@
  * Contributors:
  *     Aion foundation.
  */
+package org.aion.precompiled.type;
 
-package org.aion.vm;
+import org.aion.vm.api.interfaces.TransactionResult;
 
-import org.aion.vm.api.interfaces.TransactionContext;
+/** A pre-compiled contract interface. */
+public interface PrecompiledContract {
 
-public interface IContractFactory {
-
-    // Using FastVM interface for now... until full solution in place.
-
-    IPrecompiledContract getPrecompiledContract(
-            TransactionContext context,
-            KernelInterfaceForFastVM track);
+    /**
+     * Returns the result of executing the pre-compiled contract. The contract will be executed
+     * using the input arguments input and the energy limit nrgLimit.
+     *
+     * @param input The input arguments for the contract.
+     * @param nrgLimit The energy limit.
+     * @return the contract execution result.
+     */
+    TransactionResult execute(byte[] input, long nrgLimit);
 }

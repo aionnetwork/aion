@@ -34,8 +34,8 @@ import java.util.Arrays;
 import org.aion.mcf.config.CfgFork;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.PrecompiledResultCode;
-import org.aion.vm.ExecutionContext;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.fastvm.ExecutionContext;
+import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
@@ -46,7 +46,7 @@ import org.junit.Test;
 public class TXHashContractTest {
 
     private static final long INPUT_NRG = 1000;
-    private IPrecompiledContract tXHashContract;
+    private PrecompiledContract tXHashContract;
     private byte[] txHash = RandomUtils.nextBytes(32);
     private File forkFile;
 
