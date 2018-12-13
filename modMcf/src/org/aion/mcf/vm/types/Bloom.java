@@ -23,8 +23,8 @@
 package org.aion.mcf.vm.types;
 
 import java.util.Arrays;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.api.interfaces.IBloomFilter;
 
 /** Utility class for creating/operating bloom. */

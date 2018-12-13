@@ -22,15 +22,15 @@
  */
 package org.aion.mcf.db;
 
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
+import org.aion.util.conversions.Hex;
 
 /** Abstract contract details. */
 public abstract class AbstractContractDetails implements IContractDetails {

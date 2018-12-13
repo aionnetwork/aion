@@ -42,7 +42,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
+import org.aion.util.bytes.ByteUtil;
 
 public class XorDataSource implements IByteArrayKeyValueStore {
     IByteArrayKeyValueStore source;

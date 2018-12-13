@@ -23,9 +23,9 @@
 package org.aion.mcf.account;
 
 import java.io.UnsupportedEncodingException;
-import org.aion.base.util.ByteUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.util.bytes.ByteUtil;
 
 /** keystore item class. */
 public class KeystoreItem {

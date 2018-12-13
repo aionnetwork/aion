@@ -22,13 +22,13 @@
  */
 package org.aion.mcf.types;
 
-import static org.aion.base.util.ByteUtil.byteArrayToLong;
+import static org.aion.util.bytes.ByteUtil.byteArrayToLong;
 
 import java.math.BigInteger;
 import org.aion.base.type.IBlockIdentifier;
-import org.aion.base.util.Hex;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.util.conversions.Hex;
 
 /** Block identifier holds block hash and number <br> */
 public class BlockIdentifier implements IBlockIdentifier {

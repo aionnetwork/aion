@@ -25,8 +25,8 @@ package org.aion.mcf.ds;
 import java.io.Closeable;
 import java.util.Optional;
 import org.aion.base.db.Flushable;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 
 /**
  * DataSource Array.

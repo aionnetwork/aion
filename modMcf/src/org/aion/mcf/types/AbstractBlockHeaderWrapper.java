@@ -24,8 +24,8 @@ package org.aion.mcf.types;
 
 import java.util.Arrays;
 import org.aion.base.type.IBlockHeader;
-import org.aion.base.util.Hex;
 import org.aion.rlp.RLP;
+import org.aion.util.conversions.Hex;
 
 /** AbstractBlockHeaderWrapper */
 public abstract class AbstractBlockHeaderWrapper<BH extends IBlockHeader> {

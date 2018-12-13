@@ -24,8 +24,8 @@
 package org.aion.trie;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.base.util.ByteUtil.intToBytes;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.util.bytes.ByteUtil.intToBytes;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;

@@ -59,13 +59,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.slf4j.Logger;
 
 /** key store class. */
@@ -131,7 +131,8 @@ public class Keystore {
         }
     }
 
-    public static Map<AionAddress, ByteArrayWrapper> exportAccount(Map<AionAddress, String> account) {
+    public static Map<AionAddress, ByteArrayWrapper> exportAccount(
+            Map<AionAddress, String> account) {
         if (account == null) {
             throw new NullPointerException();
         }
@@ -147,7 +148,8 @@ public class Keystore {
         return res;
     }
 
-    public static Map<AionAddress, ByteArrayWrapper> backupAccount(Map<AionAddress, String> account) {
+    public static Map<AionAddress, ByteArrayWrapper> backupAccount(
+            Map<AionAddress, String> account) {
         if (account == null) {
             throw new NullPointerException();
         }

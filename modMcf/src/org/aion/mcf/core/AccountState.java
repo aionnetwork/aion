@@ -27,9 +27,9 @@ import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
 import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.Hex;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.util.conversions.Hex;
 
 /** Account state. */
 public class AccountState extends AbstractState {

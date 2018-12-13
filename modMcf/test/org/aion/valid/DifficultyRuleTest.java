@@ -32,10 +32,10 @@ import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
 import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteUtil;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.blockchain.valid.IValidRule.RuleError;
 import org.aion.mcf.core.IDifficultyCalculator;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
@@ -118,8 +118,7 @@ public class DifficultyRuleTest {
         // generate output
         boolean actual =
                 new AionDifficultyRule(mockChainCfg)
-                        .validate(
-                            grandParentHeader, parentHeader, currentHeader, errors);
+                        .validate(grandParentHeader, parentHeader, currentHeader, errors);
 
         // test output
         assertThat(actual).isFalse();
@@ -156,8 +155,7 @@ public class DifficultyRuleTest {
         // generate output
         boolean actual =
                 new AionDifficultyRule(mockChainCfg)
-                        .validate(
-                            grandParentHeader, parentHeader, currentHeader, errors);
+                        .validate(grandParentHeader, parentHeader, currentHeader, errors);
 
         // test output
         assertThat(actual).isTrue();

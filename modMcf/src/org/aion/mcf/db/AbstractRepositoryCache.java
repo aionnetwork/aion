@@ -22,8 +22,8 @@
  */
 package org.aion.mcf.db;
 
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.h256;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.math.BigInteger;
 import java.util.Collection;

@@ -37,14 +37,14 @@ package org.aion.mcf.trie;
 
 import static java.util.Arrays.copyOfRange;
 import static org.aion.base.util.ByteArrayWrapper.wrap;
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.base.util.ByteUtil.matchingNibbleLength;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.rlp.CompactEncoder.binToNibbles;
 import static org.aion.rlp.CompactEncoder.hasTerminator;
 import static org.aion.rlp.CompactEncoder.packNibbles;
 import static org.aion.rlp.CompactEncoder.unpackToNibbles;
 import static org.aion.rlp.RLP.calcElementPrefixSize;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.aion.util.bytes.ByteUtil.matchingNibbleLength;
 import static org.spongycastle.util.Arrays.concatenate;
 
 import java.io.ByteArrayInputStream;
@@ -62,7 +62,6 @@ import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.trie.scan.CollectFullSetOfNodes;
 import org.aion.mcf.trie.scan.CountNodes;
@@ -73,6 +72,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
 import org.aion.rlp.Value;
+import org.aion.util.conversions.Hex;
 
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure to map between

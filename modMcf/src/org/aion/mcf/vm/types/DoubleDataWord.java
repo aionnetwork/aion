@@ -26,9 +26,9 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 
 /**
  * DoubleDataWord is double the size of the basic unit data (DataWord) used by the VM. A
