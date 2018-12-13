@@ -76,6 +76,7 @@ import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
 import org.aion.fastvm.TransactionExecutor;
+import org.aion.vm.BulkExecutor;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -1088,9 +1089,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         long energyRemaining = block.getNrgLimit();
         for (AionTransaction tx : block.getTransactionsList()) {
-            TransactionExecutor executor =
-                    new TransactionExecutor(tx, block, track, false, energyRemaining, LOGGER_VM);
-            AionTxExecSummary summary = executor.execute();
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            Collections.singletonList(tx),
+                            block,
+                            track,
+                            false,
+                            energyRemaining,
+                            LOGGER_VM);
+            AionTxExecSummary summary = executor.execute().get(0);
 
             if (!summary.isRejected()) {
                 track.flush();
@@ -1125,8 +1132,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         for (AionTransaction tx : block.getTransactionsList()) {
-            TransactionExecutor executor = new TransactionExecutor(tx, block, track, LOGGER_VM);
-            AionTxExecSummary summary = executor.execute();
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            Collections.singletonList(tx),
+                            block,
+                            track,
+                            false,
+                            block.getNrgLimit(),
+                            LOGGER_VM);
+            AionTxExecSummary summary = executor.execute().get(0);
 
             track.flush();
             AionTxReceipt receipt = summary.getReceipt();

@@ -24,6 +24,7 @@
 package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.aion.base.db.IRepository;
@@ -41,12 +42,14 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.fastvm.TransactionExecutor;
+import org.aion.vm.BulkExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
@@ -154,9 +157,15 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            TransactionExecutor executor =
-                    new TransactionExecutor(tx, block, repository, true, LOG_VM);
-            return executor.execute().getReceipt().getEnergyUsed();
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            Collections.singletonList(tx),
+                            block,
+                            repository,
+                            true,
+                            block.getNrgLimit(),
+                            LOG_VM);
+            return executor.execute().get(0).getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
         }
@@ -173,9 +182,15 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            TransactionExecutor executor =
-                    new TransactionExecutor(tx, block, repository, true, LOG_VM);
-            return executor.execute().getReceipt();
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            Collections.singletonList(tx),
+                            block,
+                            repository,
+                            true,
+                            block.getNrgLimit(),
+                            LOG_VM);
+            return executor.execute().get(0).getReceipt();
         } finally {
             repository.rollback();
         }
