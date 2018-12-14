@@ -505,6 +505,9 @@ public class Cli {
         // the command line output has some styling characters in addition to the actual string
         // making the use of a regular expression necessary here
         usage = usage.replaceFirst(" \\[[^ ]*<hostname> <ip>.*]", "]");
+        usage =
+                usage.replaceFirst(
+                        "(?<=<enabled> )([\\s\\S]*?)]+", "| <slow_import> <frequency>");
 
         System.out.println(usage);
     }
