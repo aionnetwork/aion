@@ -3,9 +3,7 @@ package org.aion.vm;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.db.IRepository;
-import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
-import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
 import org.aion.fastvm.TransactionExecutor;
 
@@ -20,8 +18,7 @@ public class BulkExecutor {
     private TransactionExecutor executor;
 
     public BulkExecutor(
-            List<AionTransaction> tx,
-            IAionBlock block,
+            BlockDetails details,
             IRepository repo,
             boolean isLocalCall,
             long blockRemainingNrg,
@@ -29,7 +26,12 @@ public class BulkExecutor {
 
         executor =
                 new TransactionExecutor(
-                        tx.get(0), block, repo, isLocalCall, blockRemainingNrg, logger);
+                        details.getTransactions().get(0),
+                        details.getBlock(),
+                        repo,
+                        isLocalCall,
+                        blockRemainingNrg,
+                        logger);
     }
 
     public List<AionTxExecSummary> execute() {
