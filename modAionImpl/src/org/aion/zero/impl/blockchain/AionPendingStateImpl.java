@@ -1081,11 +1081,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         BlockDetails details = new BlockDetails(bestBlk, Collections.singletonList(tx));
         BulkExecutor txExe =
-                new BulkExecutor(details, pendingState, false, bestBlk.getNrgLimit(), LOGGER_VM);
-
-        if (inPool) {
-            txExe.setBypassNonce();
-        }
+                new BulkExecutor(
+                        details, pendingState, false, false, bestBlk.getNrgLimit(), LOGGER_VM);
 
         return txExe.execute().get(0);
     }

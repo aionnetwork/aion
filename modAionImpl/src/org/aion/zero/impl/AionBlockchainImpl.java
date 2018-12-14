@@ -1099,7 +1099,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         for (AionTransaction tx : block.getTransactionsList()) {
             BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(details, track, false, energyRemaining, LOGGER_VM);
+                    new BulkExecutor(details, track, false, true, energyRemaining, LOGGER_VM);
             AionTxExecSummary summary = executor.execute().get(0);
 
             if (!summary.isRejected()) {
@@ -1137,7 +1137,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         for (AionTransaction tx : block.getTransactionsList()) {
             BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(details, track, false, block.getNrgLimit(), LOGGER_VM);
+                    new BulkExecutor(details, track, false, true, block.getNrgLimit(), LOGGER_VM);
             AionTxExecSummary summary = executor.execute().get(0);
 
             track.flush();
