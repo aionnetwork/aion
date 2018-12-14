@@ -352,44 +352,41 @@ public class MongoDB extends AbstractDB {
     }
 
     @Override
-    public void put(byte[] key, byte[] value) {
-        check();
-        check(key);
-
+    public void putInternal(byte[] key, byte[] value) {
         // Write this single edit in as a batch
         WriteBatch edits = new WriteBatch().addEdit(key, value);
         doBulkWrite(edits);
     }
 
     @Override
-    public void delete(byte[] key) {
-        check();
-        check(key);
-
+    public void deleteInternal(byte[] key) {
         // Write this single edit in as a batch
         WriteBatch edits = new WriteBatch().addEdit(key, null);
         doBulkWrite(edits);
     }
 
     @Override
-    public void putBatch(Map<byte[], byte[]> inputMap) {
-        check();
-        check(inputMap.keySet());
-
+    public void putBatchInternal(Map<byte[], byte[]> inputMap) {
         WriteBatch edits = new WriteBatch().addEdits(inputMap);
         doBulkWrite(edits);
     }
 
     @Override
-    public void putToBatch(byte[] key, byte[] value) {
-        check();
-        check(key);
-
+    public void putToBatchInternal(byte[] key, byte[] value) {
         if (this.batch == null) {
             this.batch = new WriteBatch();
         }
 
         batch.addEdit(key, value);
+    }
+
+    @Override
+    public void deleteInBatchInternal(byte[] key) {
+        if (this.batch == null) {
+            this.batch = new WriteBatch();
+        }
+
+        batch.addEdit(key, null);
     }
 
     @Override
@@ -407,10 +404,7 @@ public class MongoDB extends AbstractDB {
     }
 
     @Override
-    public void deleteBatch(Collection<byte[]> keys) {
-        check();
-        check(keys);
-
+    public void deleteBatchInternal(Collection<byte[]> keys) {
         if (!keys.isEmpty()) {
             Map<byte[], byte[]> batch = new HashMap();
             keys.forEach(key -> batch.put(key, null));
