@@ -50,14 +50,14 @@ pipeline {
         	cleanWs()
 	}
 	success {
-		slackSend channel: '#ci',
-			  color: 'good',
-			  message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. Grab the generated builds at ${env.BUILD_URL}"
+		//slackSend channel: '#ci',
+		//	  color: 'good',
+		//	  message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. Grab the generated builds at ${env.BUILD_URL}"
 	} 
 	failure {
-		slackSend channel: '#ci',
-			  color: 'danger', 
-			  message: "The pipeline ${currentBuild.fullDisplayName} failed at ${env.BUILD_URL}"
+		//slackSend channel: '#ci',
+		//	  color: 'danger', 
+		//	  message: "The pipeline ${currentBuild.fullDisplayName} failed at ${env.BUILD_URL}"
 	}
 
     }
