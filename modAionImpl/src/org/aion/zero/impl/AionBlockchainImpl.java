@@ -53,7 +53,6 @@ import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
-import org.aion.fastvm.TransactionExecutor;
 import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
 import org.aion.zero.exceptions.HeaderStructureException;
@@ -1077,7 +1076,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
         for (AionTransaction tx : block.getTransactionsList()) {
             BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(details, track, false, true, energyRemaining, LOGGER_VM);
+                    new BulkExecutor(
+                            details,
+                            track,
+                            false,
+                            true,
+                            energyRemaining,
+                            LOGGER_VM,
+                            (k, s, t, b) -> {
+                                return 0L;
+                            });
+
             AionTxExecSummary summary = executor.execute().get(0);
 
             if (!summary.isRejected()) {
@@ -1115,7 +1124,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
         for (AionTransaction tx : block.getTransactionsList()) {
             BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(details, track, false, true, block.getNrgLimit(), LOGGER_VM);
+                    new BulkExecutor(
+                            details,
+                            track,
+                            false,
+                            true,
+                            block.getNrgLimit(),
+                            LOGGER_VM,
+                            (k, s, t, b) -> {
+                                return 0L;
+                            });
+
             AionTxExecSummary summary = executor.execute().get(0);
 
             track.flush();
