@@ -614,12 +614,12 @@ public class PendingBlockStore implements Flushable, Closeable {
                 // delete imported blocks
                 for (AionBlock b : blocks.get(q)) {
                     // delete index
-                    indexSource.putToBatch(b.getHash(), null);
+                    indexSource.deleteInBatch(b.getHash());
                     currentQ.remove(b);
                 }
 
                 // delete queue
-                queueSource.putToBatch(q.getData(), null);
+                queueSource.deleteInBatch(q.getData());
 
                 // the queue has been updated since the import read
                 if (!currentQ.isEmpty()) {
@@ -670,7 +670,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
                 if (updatedLevelData.isEmpty()) {
                     // delete level
-                    levelSource.putToBatch(levelKey, null);
+                    levelSource.deleteInBatch(levelKey);
                 } else {
                     // update level
                     levelSource.putToBatch(levelKey, updatedLevelData);

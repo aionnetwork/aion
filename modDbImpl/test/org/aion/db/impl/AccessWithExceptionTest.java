@@ -56,6 +56,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class AccessWithExceptionTest {
+    private static final boolean VERBOSE = false;
 
     @BeforeClass
     public static void setup() {
@@ -94,6 +95,10 @@ public class AccessWithExceptionTest {
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
         // attempt isEmpty on closed db
         db.isEmpty();
     }
@@ -105,6 +110,10 @@ public class AccessWithExceptionTest {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
 
         // attempt keys on closed db
         db.keys();
@@ -118,6 +127,10 @@ public class AccessWithExceptionTest {
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
         // attempt get on closed db
         db.get(DatabaseTestUtils.randomBytes(32));
     }
@@ -129,6 +142,10 @@ public class AccessWithExceptionTest {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
 
         // attempt put on closed db
         db.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
@@ -142,8 +159,44 @@ public class AccessWithExceptionTest {
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
         // attempt delete on closed db
         db.delete(DatabaseTestUtils.randomBytes(32));
+    }
+
+    @Test(expected = RuntimeException.class)
+    @Parameters(method = "databaseInstanceDefinitions")
+    public void testPutToBatchWithClosedDatabase(Properties dbDef) {
+        // create database
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        assertThat(db.isOpen()).isFalse();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
+        // attempt put on closed db
+        db.putToBatch(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+    }
+
+    @Test(expected = RuntimeException.class)
+    @Parameters(method = "databaseInstanceDefinitions")
+    public void testDeleteInBatchWithClosedDatabase(Properties dbDef) {
+        // create database
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        assertThat(db.isOpen()).isFalse();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
+        // attempt delete on closed db
+        db.deleteInBatch(DatabaseTestUtils.randomBytes(32));
     }
 
     @Test(expected = RuntimeException.class)
@@ -158,6 +211,10 @@ public class AccessWithExceptionTest {
         map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
         map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
         map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
 
         // attempt putBatch on closed db
         db.putBatch(map);
@@ -176,6 +233,10 @@ public class AccessWithExceptionTest {
         list.add(DatabaseTestUtils.randomBytes(32));
         list.add(DatabaseTestUtils.randomBytes(32));
 
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
         // attempt deleteBatch on closed db
         db.deleteBatch(list);
     }
@@ -187,6 +248,10 @@ public class AccessWithExceptionTest {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
 
         // TODO: differentiate between not supported and closed
         // attempt commit on closed db
@@ -201,6 +266,10 @@ public class AccessWithExceptionTest {
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.isOpen()).isFalse();
 
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
         // attempt approximateSize on closed db
         db.approximateSize();
     }
@@ -212,6 +281,10 @@ public class AccessWithExceptionTest {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
 
         // attempt get with null key
         db.get(null);
@@ -225,8 +298,60 @@ public class AccessWithExceptionTest {
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
         // attempt put with null key
         db.put(null, DatabaseTestUtils.randomBytes(32));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    @Parameters(method = "databaseInstanceDefinitions")
+    public void testPutWithNullValue(Properties dbDef) {
+        // create database
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        assertThat(db.open()).isTrue();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
+        // attempt put with null key
+        db.put(DatabaseTestUtils.randomBytes(32), null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    @Parameters(method = "databaseInstanceDefinitions")
+    public void testPutToBatchWithNullKey(Properties dbDef) {
+        // create database
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        assertThat(db.open()).isTrue();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
+        // attempt put with null key
+        db.putToBatch(null, DatabaseTestUtils.randomBytes(32));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    @Parameters(method = "databaseInstanceDefinitions")
+    public void testPutToBatchWithNullValue(Properties dbDef) {
+        // create database
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        assertThat(db.open()).isTrue();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
+        // attempt put with null key
+        db.putToBatch(DatabaseTestUtils.randomBytes(32), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -237,8 +362,28 @@ public class AccessWithExceptionTest {
         IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
         // attempt delete with null key
         db.delete(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    @Parameters(method = "databaseInstanceDefinitions")
+    public void testDeleteInBatchWithNullKey(Properties dbDef) {
+        // create database
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        assertThat(db.open()).isTrue();
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
+        // attempt delete with null key
+        db.deleteInBatch(null);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -253,6 +398,31 @@ public class AccessWithExceptionTest {
         map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
         map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
         map.put(null, DatabaseTestUtils.randomBytes(32));
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
+
+        // attempt putBatch on closed db
+        db.putBatch(map);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    @Parameters(method = "databaseInstanceDefinitions")
+    public void testPutBatchWithNullValue(Properties dbDef) {
+        // create database
+        dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + DatabaseTestUtils.getNext());
+        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        assertThat(db.open()).isTrue();
+
+        Map<byte[], byte[]> map = new HashMap<>();
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), DatabaseTestUtils.randomBytes(32));
+        map.put(DatabaseTestUtils.randomBytes(32), null);
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
 
         // attempt putBatch on closed db
         db.putBatch(map);
@@ -270,6 +440,10 @@ public class AccessWithExceptionTest {
         list.add(DatabaseTestUtils.randomBytes(32));
         list.add(DatabaseTestUtils.randomBytes(32));
         list.add(null);
+
+        if (VERBOSE) {
+            System.out.println(db.toString());
+        }
 
         // attempt deleteBatch on closed db
         db.deleteBatch(list);

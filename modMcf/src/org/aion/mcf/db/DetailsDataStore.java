@@ -130,7 +130,7 @@ public class DetailsDataStore<
 
     public synchronized void remove(byte[] key) {
         ByteArrayWrapper wrappedKey = wrap(key);
-        detailsSrc.put(key, null);
+        detailsSrc.delete(key);
 
         removes.add(wrappedKey);
     }

@@ -37,10 +37,12 @@ package org.aion.mcf.trie;
 import static org.aion.base.util.ByteArrayWrapper.wrap;
 import static org.aion.rlp.Value.fromRlpEncoded;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -141,6 +143,7 @@ public class Cache {
         // long start = System.nanoTime();
         // int batchMemorySize = 0;
         Map<byte[], byte[]> batch = new HashMap<>();
+        List<byte[]> deleteBatch = new ArrayList<>();
         for (ByteArrayWrapper nodeKey : this.nodes.keySet()) {
             Node node = this.nodes.get(nodeKey);
 
@@ -160,10 +163,11 @@ public class Cache {
             }
         }
         for (ByteArrayWrapper removedNode : removedNodes) {
-            batch.put(removedNode.getData(), null);
+            deleteBatch.add(removedNode.getData());
         }
 
         this.dataSource.putBatch(batch);
+        this.dataSource.deleteBatch(deleteBatch);
         this.isDirty = false;
         if (flushCache) {
             this.nodes.clear();

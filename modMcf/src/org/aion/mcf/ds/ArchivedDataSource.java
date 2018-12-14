@@ -61,12 +61,9 @@ public class ArchivedDataSource implements IByteArrayKeyValueStore {
 
     @Override
     public void put(byte[] key, byte[] value) {
-        if (value != null) {
-            data.put(key, value);
-        } else {
-            // internal delete will check if archived
-            delete(key);
-        }
+        // the data store will check for nulls
+        // null value will trigger exceptions
+        data.put(key, value);
     }
 
     @Override
@@ -79,22 +76,23 @@ public class ArchivedDataSource implements IByteArrayKeyValueStore {
 
     @Override
     public void putBatch(Map<byte[], byte[]> batch) {
-        for (Map.Entry<byte[], byte[]> entry : batch.entrySet()) {
-            // will check if archived
-            putToBatch(entry.getKey(), entry.getValue());
-        }
-        commitBatch();
+        // the data store will check for nulls
+        // null values will trigger exceptions
+        data.putBatch(batch);
     }
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {
-        if (value != null) {
-            data.putToBatch(key, value);
-        } else {
-            // deleted key only if not archived
-            if (!archive.get(key).isPresent()) {
-                data.putToBatch(key, null);
-            }
+        // the data store will check for nulls
+        // null value will trigger exceptions
+        data.putToBatch(key, value);
+    }
+
+    @Override
+    public void deleteInBatch(byte[] key) {
+        // deleted key only if not archived
+        if (!archive.get(key).isPresent()) {
+            data.deleteInBatch(key);
         }
     }
 
@@ -107,7 +105,7 @@ public class ArchivedDataSource implements IByteArrayKeyValueStore {
     public void deleteBatch(Collection<byte[]> keys) {
         for (byte[] key : keys) {
             // will check if archived
-            putToBatch(key, null);
+            deleteInBatch(key);
         }
         commitBatch();
     }

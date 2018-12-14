@@ -116,6 +116,7 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     public void put(byte[] key, byte[] value) {
         checkNotNull(key);
+        checkNotNull(value);
 
         lock.writeLock().lock();
 
@@ -186,6 +187,7 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
     @Override
     public void putBatch(Map<byte[], byte[]> inputMap) {
         checkNotNull(inputMap.keySet());
+        checkNotNull(inputMap.values());
 
         lock.writeLock().lock();
 
@@ -375,6 +377,11 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void deleteInBatch(byte[] key) {
         throw new UnsupportedOperationException();
     }
 

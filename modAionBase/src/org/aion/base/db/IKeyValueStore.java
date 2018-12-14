@@ -41,57 +41,52 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Functionality for a key-value cache allowing itemized updates.
+ * Functionality for a key-value store allowing itemized updates.
  *
- * @param <K> the data type of the keys
- * @param <V> the data type of the values
+ * @param <KEY> the data type of the keys
+ * @param <VALUE> the data type of the values
  * @author Alexandra Roatis
- * @implNote For the underlying DB connection, if [isClosed() == true], then all function calls
- *     which are documented to throw RuntimeException, will throw a RuntimeException.
+ * @implNote For the underlying database connection, if {@code isClosed() == true}, then all
+ *     function calls which require the database connection will throw a {@link RuntimeException},
+ *     as documented by this interface.
  */
-public interface IKeyValueStore<K, V> extends AutoCloseable {
-
-    // Querying
-    // --------------------------------------------------------------------------------------------------------
+public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
 
     /**
-     * Returns if the DB is empty or not.
+     * Returns {@code true} if this data store contains no elements.
      *
-     * @return True if number of keys > 0, false otherwise
+     * @return {@code true} if this data store contains no elements
      * @throws RuntimeException if the data store is closed
      */
     boolean isEmpty();
 
     /**
-     * Returns the set of keys for the database.
+     * Returns the set of keys stored in the database.
      *
-     * @return Set of keys
+     * @return a set containing all the stored keys
      * @throws RuntimeException if the data store is closed
      * @apiNote Returns an empty set if the database keys could not be retrieved.
      */
-    Set<K> keys();
+    Set<KEY> keys();
 
     /**
-     * get retrieves a value from the database, returning an optional, it is fulfilled if a value
-     * was able to be retrieved from the DB, otherwise the optional is empty
+     * Retrieves a value from the data store, wrapped in an {@link Optional} object. It is fulfilled
+     * if a value was retrieved from the data store, otherwise the optional is empty.
      *
-     * @param k
+     * @param key the key for the new entry
      * @throws RuntimeException if the data store is closed
-     * @throws IllegalArgumentException if the key is null
+     * @throws IllegalArgumentException if the key is {@code null}
      */
-    Optional<V> get(K k);
-
-    // Updates for individual keys
-    // -------------------------------------------------------------------------------------
+    Optional<VALUE> get(KEY key);
 
     /**
-     * Places or updates a value into the cache at the corresponding key. Makes no guarantees about
-     * when the value is actually inserted into the underlying data store.
+     * Stores or updates a value at the corresponding key. Makes no guarantees about when the value
+     * is actually inserted into the underlying data store.
      *
-     * @param k the key for the new entry
-     * @param v the value for the new entry
+     * @param key the key for the new entry
+     * @param value the value for the new entry
      * @throws RuntimeException if the underlying data store is closed
-     * @throws IllegalArgumentException if the key is null
+     * @throws IllegalArgumentException if either the key or the value is {@code null}
      * @implNote The choice of when to push the changes to the data store is left up to the
      *     implementation.
      * @apiNote Put must have the following properties:
@@ -99,25 +94,66 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      *       <li>Creates a new entry in the cache, if the key-value pair does not exist in the cache
      *           or underlying data store.
      *       <li>Updates the entry in the cache when the key-value pair already exists.
-     *       <li>Deletes the entry when given a {@code null} value.
      *     </ol>
+     *     To delete a key one must explicitly call {@link #delete(Object)}.
      */
-    void put(K k, V v);
+    void put(KEY key, VALUE value);
 
     /**
-     * Delete an entry from the cache, marking it for deletion inside the data store. Makes no
-     * guarantees about when the value is actually deleted from the underlying data store.
+     * Deletes a key from the data store. Makes no guarantees about when the value is actually
+     * deleted from the underlying data store.
      *
-     * @param k the key of the entry to be deleted
+     * @param key the key of the entry to be deleted
      * @throws RuntimeException if the underlying data store is closed
-     * @throws IllegalArgumentException if the key is null
+     * @throws IllegalArgumentException if the key is {@code null}
      * @implNote The choice of when to push the changes to the data store is left up to the
      *     implementation.
      */
-    void delete(K k);
+    void delete(KEY key);
 
-    // Batch Updates
-    // ---------------------------------------------------------------------------------------------------
+    /**
+     * Stores or updates a value at the corresponding key. The changes are cached until {@link
+     * #commitBatch()} is called.
+     *
+     * <p>May delegate to calling {@link #put(Object, Object)} if batch functionality fails or is
+     * not implemented.
+     *
+     * @param key the key for the new entry
+     * @param value the value for the new entry
+     * @throws RuntimeException if the underlying data store is closed
+     * @throws IllegalArgumentException if either the key or the value is {@code null}
+     * @implNote The choice of when to push the changes to the data store is left up to the
+     *     implementation.
+     * @apiNote Put must have the following properties:
+     *     <ol>
+     *       <li>Creates a new entry in the cache, if the key-value pair does not exist in the cache
+     *           or underlying data store.
+     *       <li>Updates the entry in the cache when the key-value pair already exists.
+     *     </ol>
+     *     To delete a key one must explicitly call {@link #deleteInBatch(Object)}.
+     */
+    void putToBatch(KEY key, VALUE value);
+
+    /**
+     * Deletes a key from the data store. The changes are cached until {@link #commitBatch()} is
+     * called.
+     *
+     * <p>May delegate to calling {@link #delete(Object)} if batch functionality fails or is not
+     * implemented.
+     *
+     * @param key the key of the entry to be deleted
+     * @throws RuntimeException if the underlying data store is closed
+     * @throws IllegalArgumentException if the key is {@code null}
+     * @implNote The choice of when to push the changes to the data store is left up to the
+     *     implementation.
+     */
+    void deleteInBatch(KEY key);
+
+    /**
+     * Pushes updates made using {@link #putToBatch(Object, Object)} and {@link
+     * #deleteInBatch(Object)} to the underlying data source.
+     */
+    void commitBatch();
 
     /**
      * Puts or updates the data store with the given <i>key-value</i> pairs, as follows:
@@ -126,32 +162,28 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
      *   <li>if the <i>key</i> is present in the data store, the stored <i>value</i> is overwritten
      *   <li>if the <i>key</i> is not present in the data store, the new <i>key-value</i> pair is
      *       stored
-     *   <li>if the <i>value</i> is null, the matching stored <i>key</i> will be deleted from the
-     *       data store, or
      * </ul>
      *
-     * @param inputMap a {@link Map} of key-value pairs to be updated in the database
+     * @param input a {@link Map} of key-value pairs to be updated in the database
      * @throws RuntimeException if the data store is closed
-     * @throws IllegalArgumentException if the map contains a null key
+     * @throws IllegalArgumentException if the map contains a {@code null} key
+     * @apiNote To delete a set of keys one must explicitly call {@link #deleteBatch(Collection)}.
      */
-    void putBatch(Map<K, V> inputMap);
-
-    void putToBatch(K key, V value);
-
-    void commitBatch();
+    void putBatch(Map<KEY, VALUE> input);
 
     /**
-     * Similar to delete, except operates on a list of keys
+     * Deletes the given keys from the data store. Makes no guarantees about when the entries are
+     * actually deleted from the underlying data store.
      *
-     * @param keys
+     * @param keys a {@link Collection} of keys to be deleted form storage
      * @throws RuntimeException if the data store is closed
-     * @throws IllegalArgumentException if the collection contains a null key
+     * @throws IllegalArgumentException if the collection contains a {@code null} key
      */
-    void deleteBatch(Collection<K> keys);
+    void deleteBatch(Collection<KEY> keys);
 
     /**
-     * Checks that the data store connection is open. Throws a {@link RuntimeException} if the data
-     * store connection is closed.
+     * Checks that the data source connection is open. Throws a {@link RuntimeException} if the data
+     * source connection is closed.
      *
      * @implNote Always do this check after acquiring a lock on the class/data. Otherwise it might
      *     produce inconsistent results due to lack of synchronization.

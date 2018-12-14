@@ -178,7 +178,11 @@ public class LevelDB extends AbstractDB {
             try {
                 db = JniDBFactory.factory.open(f, options);
             } catch (Exception e2) {
-                LOG.error("Failed second attempt to open the database " + this.toString() + " due to: ", e2);
+                LOG.error(
+                        "Failed second attempt to open the database "
+                                + this.toString()
+                                + " due to: ",
+                        e2);
                 // close the connection and cleanup if needed
                 close();
             }
@@ -315,73 +319,31 @@ public class LevelDB extends AbstractDB {
     }
 
     @Override
-    public void put(byte[] k, byte[] v) {
-        check(k);
-
-        check();
-
-        if (v == null) {
-            db.delete(k);
-        } else {
-            db.put(k, v);
-        }
+    public void putInternal(byte[] key, byte[] value) {
+        db.put(key, value);
     }
 
     @Override
-    public void delete(byte[] k) {
-        check(k);
-
-        check();
-        db.delete(k);
+    public void deleteInternal(byte[] key) {
+        db.delete(key);
     }
 
     @Override
-    public void putBatch(Map<byte[], byte[]> inputMap) {
-        check(inputMap.keySet());
-
-        check();
-
-        // try-with-resources will automatically close the batch object
-        try (WriteBatch batch = db.createWriteBatch()) {
-            // add put and delete operations to batch
-            for (Map.Entry<byte[], byte[]> e : inputMap.entrySet()) {
-                byte[] key = e.getKey();
-                byte[] value = e.getValue();
-
-                if (value == null) {
-                    batch.delete(key);
-                } else {
-                    batch.put(key, value);
-                }
-            }
-
-            // bulk atomic update
-            db.write(batch);
-        } catch (DBException e) {
-            LOG.error(
-                    "Unable to execute batch put/update operation on " + this.toString() + ".", e);
-        } catch (IOException e) {
-            LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
-        }
-    }
-
-    WriteBatch batch = null;
-
-    @Override
-    public void putToBatch(byte[] key, byte[] value) {
-        check(key);
-
-        check();
-
+    public void putToBatchInternal(byte[] key, byte[] value) {
         if (batch == null) {
             batch = db.createWriteBatch();
         }
 
-        if (value == null) {
-            batch.delete(key);
-        } else {
-            batch.put(key, value);
+        batch.put(key, value);
+    }
+
+    @Override
+    public void deleteInBatchInternal(byte[] key) {
+        if (batch == null) {
+            batch = db.createWriteBatch();
         }
+
+        batch.delete(key);
     }
 
     @Override
@@ -404,11 +366,31 @@ public class LevelDB extends AbstractDB {
     }
 
     @Override
-    public void deleteBatch(Collection<byte[]> keys) {
-        check(keys);
+    public void putBatchInternal(Map<byte[], byte[]> input) {
+        // try-with-resources will automatically close the batch object
+        try (WriteBatch batch = db.createWriteBatch()) {
+            // add put and delete operations to batch
+            for (Map.Entry<byte[], byte[]> e : input.entrySet()) {
+                byte[] key = e.getKey();
+                byte[] value = e.getValue();
 
-        check();
+                batch.put(key, value);
+            }
 
+            // bulk atomic update
+            db.write(batch);
+        } catch (DBException e) {
+            LOG.error(
+                    "Unable to execute batch put/update operation on " + this.toString() + ".", e);
+        } catch (IOException e) {
+            LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
+        }
+    }
+
+    private WriteBatch batch = null;
+
+    @Override
+    public void deleteBatchInternal(Collection<byte[]> keys) {
         try (WriteBatch batch = db.createWriteBatch()) {
             // add delete operations to batch
             for (byte[] k : keys) {
