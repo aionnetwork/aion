@@ -42,6 +42,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.fastvm.TransactionExecutor;
+import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
@@ -157,14 +158,9 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
+            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(
-                            Collections.singletonList(tx),
-                            block,
-                            repository,
-                            true,
-                            block.getNrgLimit(),
-                            LOG_VM);
+                    new BulkExecutor(details, repository, true, block.getNrgLimit(), LOG_VM);
             return executor.execute().get(0).getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
@@ -182,14 +178,9 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
+            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(
-                            Collections.singletonList(tx),
-                            block,
-                            repository,
-                            true,
-                            block.getNrgLimit(),
-                            LOG_VM);
+                    new BulkExecutor(details, repository, true, block.getNrgLimit(), LOG_VM);
             return executor.execute().get(0).getReceipt();
         } finally {
             repository.rollback();
