@@ -137,7 +137,7 @@ public class AionImpl implements IAionChain {
         try {
             BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(details, repository, true, block.getNrgLimit(), LOG_VM);
+                    new BulkExecutor(details, repository, true, true, block.getNrgLimit(), LOG_VM);
             return executor.execute().get(0).getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
@@ -157,7 +157,7 @@ public class AionImpl implements IAionChain {
         try {
             BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(details, repository, true, block.getNrgLimit(), LOG_VM);
+                    new BulkExecutor(details, repository, true, true, block.getNrgLimit(), LOG_VM);
             return executor.execute().get(0).getReceipt();
         } finally {
             repository.rollback();

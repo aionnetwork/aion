@@ -2,7 +2,10 @@ package org.aion.vm;
 
 import java.util.Collections;
 import java.util.List;
-import org.aion.base.db.IRepository;
+import org.aion.base.db.IRepositoryCache;
+import org.aion.mcf.core.AccountState;
+import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.zero.types.AionTxExecSummary;
 import org.slf4j.Logger;
 import org.aion.fastvm.TransactionExecutor;
@@ -19,8 +22,9 @@ public class BulkExecutor {
 
     public BulkExecutor(
             BlockDetails details,
-            IRepository repo,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo,
             boolean isLocalCall,
+            boolean allowNonceIncrement,
             long blockRemainingNrg,
             Logger logger) {
 
@@ -28,7 +32,7 @@ public class BulkExecutor {
                 new TransactionExecutor(
                         details.getTransactions().get(0),
                         details.getBlock(),
-                        repo,
+                        new KernelInterfaceForFastVM(repo, allowNonceIncrement, isLocalCall),
                         isLocalCall,
                         blockRemainingNrg,
                         logger);
@@ -36,9 +40,5 @@ public class BulkExecutor {
 
     public List<AionTxExecSummary> execute() {
         return Collections.singletonList(this.executor.execute());
-    }
-
-    public void setBypassNonce() {
-        this.executor.setBypassNonce();
     }
 }
