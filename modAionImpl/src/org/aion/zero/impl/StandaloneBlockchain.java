@@ -55,10 +55,12 @@ import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.types.A0BlockHeader;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Used mainly for debugging and testing purposes, provides codepaths for easy setup, into standard
@@ -386,6 +388,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             assert (getCacheTD().equals(tdForHash));
         }
         return result;
+    }
+
+    // TEMPORARY: here to support the ConsensusTest
+    public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(AionBlock block) {
+        return tryToConnectAndFetchSummary(block, System.currentTimeMillis() / 1000);
     }
 
     /**

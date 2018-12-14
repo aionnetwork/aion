@@ -96,6 +96,7 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.aion.vm.api.interfaces.Address;
@@ -549,21 +550,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
         repository.compactState();
     }
 
-    /**
-     * Processes a new block and potentially appends it to the blockchain, thereby changing the
-     * state of the world. Decoupled from wrapper function {@link #tryToConnect(AionBlock)} so we
-     * can feed timestamps manually
-     */
-    ImportResult tryToConnectInternal(final AionBlock block, long currTimeSeconds) {
+    // TEMPORARY: here to support the ConsensusTest
+    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(AionBlock block, long currTimeSeconds) {
         // Check block exists before processing more rules
         if (getBlockStore().getMaxNumber() >= block.getNumber()
-                && getBlockStore().isBlockExist(block.getHash())) {
+            && getBlockStore().isBlockExist(block.getHash())) {
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
-                        "Block already exists hash: {}, number: {}",
-                        block.getShortHash(),
-                        block.getNumber());
+                    "Block already exists hash: {}, number: {}",
+                    block.getShortHash(),
+                    block.getNumber());
             }
 
             if (!repository.isValidRoot(block.getStateRoot())) {
@@ -577,26 +574,26 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             // retry of well known block
-            return EXIST;
+            return Pair.of(EXIST, null);
         }
 
         if (block.getTimestamp()
-                > (currTimeSeconds
-                        + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
+            > (currTimeSeconds
+            + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
-                        "Block {} invalid due to timestamp {}.",
-                        Hex.toHexString(block.getHash()),
-                        block.getTimestamp());
+                    "Block {} invalid due to timestamp {}.",
+                    Hex.toHexString(block.getHash()),
+                    block.getTimestamp());
             }
-            return INVALID_BLOCK;
+            return Pair.of(INVALID_BLOCK, null);
         }
 
         if (LOG.isDebugEnabled()) {
             LOG.debug(
-                    "Try connect block hash: {}, number: {}",
-                    block.getShortHash(),
-                    block.getNumber());
+                "Try connect block hash: {}, number: {}",
+                block.getShortHash(),
+                block.getNumber());
         }
 
         final ImportResult ret;
@@ -613,11 +610,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 BigInteger oldTotalDiff = getInternalTD();
                 summary = tryConnectAndFork(block);
                 ret =
-                        summary == null
-                                ? INVALID_BLOCK
-                                : (isMoreThan(getInternalTD(), oldTotalDiff)
-                                        ? IMPORTED_BEST
-                                        : IMPORTED_NOT_BEST);
+                    summary == null
+                        ? INVALID_BLOCK
+                        : (isMoreThan(getInternalTD(), oldTotalDiff)
+                            ? IMPORTED_BEST
+                            : IMPORTED_NOT_BEST);
             } else {
                 summary = null;
                 ret = NO_PARENT;
@@ -653,7 +650,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
-        return ret;
+        return Pair.of(ret, summary);
+    }
+
+    /**
+     * Processes a new block and potentially appends it to the blockchain, thereby changing the
+     * state of the world. Decoupled from wrapper function {@link #tryToConnect(AionBlock)} so we
+     * can feed timestamps manually
+     */
+    ImportResult tryToConnectInternal(final AionBlock block, long currTimeSeconds) {
+        return tryToConnectAndFetchSummary(block, currTimeSeconds).getLeft();
     }
 
     /**
