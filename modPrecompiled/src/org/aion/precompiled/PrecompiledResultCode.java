@@ -29,7 +29,7 @@ public enum PrecompiledResultCode implements ResultCode {
 
     STACK_UNDERFLOW(6, ResultCategory.FAILED),
 
-    REVERT(7, ResultCategory.FAILED),
+    REVERT(7, ResultCategory.REVERT),
 
     STATIC_MODE_ERROR(8, ResultCategory.FAILED),
 
@@ -39,7 +39,7 @@ public enum PrecompiledResultCode implements ResultCode {
 
     VM_INTERNAL_ERROR(-2, ResultCategory.FATAL);
 
-    private enum ResultCategory {SUCCESS, REJECTED, FAILED, FATAL }
+    private enum ResultCategory {SUCCESS, REJECTED, FAILED, FATAL, REVERT }
 
     private static Map<Integer, PrecompiledResultCode> integerMapping = new HashMap<>();
     private ResultCategory category;
@@ -68,12 +68,17 @@ public enum PrecompiledResultCode implements ResultCode {
 
     @Override
     public boolean isFailed() {
-        return this.category == ResultCategory.FAILED;
+        return ((this.category == ResultCategory.FAILED) || (this.category == ResultCategory.REVERT));
     }
 
     @Override
     public boolean isFatal() {
         return this.category == ResultCategory.FATAL;
+    }
+
+    @Override
+    public boolean isRevert() {
+        return this.category == ResultCategory.REVERT;
     }
 
     @Override
