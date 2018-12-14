@@ -7,9 +7,11 @@ import com.google.common.truth.Truth;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.PersistenceMethod;
@@ -555,8 +557,11 @@ public class DriverBaseTest {
             map.clear();
             map.put(k1, v2);
             map.put(k2, v3);
-            map.put(k3, null);
             db.putBatch(map);
+
+            List<byte[]> del = new ArrayList<>();
+            del.add(k3);
+            db.deleteBatch(del);
 
             assertThat(db.isLocked()).isFalse();
 
@@ -648,11 +653,6 @@ public class DriverBaseTest {
 
         assertThat(v2).isEqualTo(db.get(k1).get());
 
-        // check after indirect delete
-        db.put(k1, null);
-
-        assertThat(db.get(k1).isPresent()).isFalse();
-
         // check after direct delete
         db.delete(k1);
 
@@ -676,10 +676,13 @@ public class DriverBaseTest {
 
         // check after update
         Map<byte[], byte[]> ops = new HashMap<>();
-        ops.put(k1, null);
         ops.put(k2, v1);
         ops.put(k3, v3);
         db.putBatch(ops);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k1);
+        db.deleteBatch(del);
 
         assertThat(db.get(k1).isPresent()).isFalse();
         assertThat(v1).isEqualTo(db.get(k2).get());
@@ -711,8 +714,11 @@ public class DriverBaseTest {
         Map<byte[], byte[]> map = new HashMap<>();
         map.put(k1, v1);
         map.put(k2, v2);
-        map.put(k3, null);
         db.putBatch(map);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k3);
+        db.deleteBatch(del);
 
         assertThat(db.get(k1).isPresent()).isTrue();
         assertThat(db.get(k2).isPresent()).isTrue();
@@ -735,8 +741,11 @@ public class DriverBaseTest {
         Map<byte[], byte[]> map = new HashMap<>();
         map.put(k1, v1);
         map.put(k2, v2);
-        map.put(k3, null);
         db.putBatch(map);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k3);
+        db.deleteBatch(del);
 
         assertThat(db.get(k1).isPresent()).isTrue();
         assertThat(db.get(k2).isPresent()).isTrue();
@@ -826,10 +835,13 @@ public class DriverBaseTest {
 
         // checking after putBatch
         Map<byte[], byte[]> ops = new HashMap<>();
-        ops.put(k1, null);
         ops.put(k2, v2);
         ops.put(k3, v3);
         db.putBatch(ops);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k1);
+        db.deleteBatch(del);
 
         keys = db.keys();
         assertThat(db.isLocked()).isFalse();
@@ -883,10 +895,13 @@ public class DriverBaseTest {
 
         // checking after putBatch
         Map<byte[], byte[]> ops = new HashMap<>();
-        ops.put(k1, null);
         ops.put(k2, v2);
         ops.put(k3, v3);
         db.putBatch(ops);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k1);
+        db.deleteBatch(del);
 
         assertThat(db.isEmpty()).isFalse();
         assertThat(db.isLocked()).isFalse();
@@ -944,18 +959,26 @@ public class DriverBaseTest {
             // batch update
             // --------------------------------------------------------------------------------------------
             Map<byte[], byte[]> map = new HashMap<>();
-            map.put(k1, null);
             map.put(k2, v2);
             map.put(k3, v3);
             db.putBatch(map);
+
+            List<byte[]> del = new ArrayList<>();
+            del.add(k1);
+            db.deleteBatch(del);
+
             db.commit();
             assertThat(db.isLocked()).isFalse();
 
             map.clear();
             map.put(k1, v2);
             map.put(k2, v3);
-            map.put(k3, null);
             db.putBatch(map);
+
+            del = new ArrayList<>();
+            del.add(k3);
+            db.deleteBatch(del);
+
             assertThat(db.isLocked()).isFalse();
 
             db.close();

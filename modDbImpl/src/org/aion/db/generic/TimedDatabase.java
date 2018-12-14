@@ -242,6 +242,21 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
+    public void deleteInBatch(byte[] key) {
+        long t1 = System.nanoTime();
+        database.deleteInBatch(key);
+        long t2 = System.nanoTime();
+
+        LOG.debug(
+                database.toString()
+                        + " deleteInBatch(key,value) in "
+                        + (t2 - t1)
+                        + " ns."
+                        + "\n\t\t\t\t\tkey = "
+                        + Hex.toHexString(key));
+    }
+
+    @Override
     public void commitBatch() {
         long t1 = System.nanoTime();
         database.commitBatch();

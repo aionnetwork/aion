@@ -116,11 +116,6 @@ public class JournalPruneDataSourceTest {
         assertThat(db.get(k1).get()).isEqualTo(v2);
         assertThat(source_db.get(k1).get()).isEqualTo(v2);
 
-        // indirect delete
-        db.put(k1, null);
-        assertThat(db.get(k1).isPresent()).isTrue();
-        assertThat(source_db.get(k1).isPresent()).isTrue();
-
         // direct delete
         db.put(k2, v2);
         assertThat(db.get(k2).get()).isEqualTo(v2);
@@ -150,10 +145,13 @@ public class JournalPruneDataSourceTest {
 
         // check after update
         Map<byte[], byte[]> ops = new HashMap<>();
-        ops.put(k1, null);
         ops.put(k2, v1);
         ops.put(k3, v3);
         db.putBatch(ops);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k1);
+        db.deleteBatch(del);
 
         assertThat(db.get(k1).isPresent()).isTrue();
         assertThat(db.get(k2).get()).isEqualTo(v1);
@@ -194,8 +192,11 @@ public class JournalPruneDataSourceTest {
         Map<byte[], byte[]> map = new HashMap<>();
         map.put(k1, v1);
         map.put(k2, v2);
-        map.put(k3, null);
         db.putBatch(map);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k3);
+        db.deleteBatch(del);
 
         assertThat(db.get(k1).isPresent()).isTrue();
         assertThat(db.get(k2).isPresent()).isTrue();
@@ -238,7 +239,6 @@ public class JournalPruneDataSourceTest {
 
         // checking after putBatch
         Map<byte[], byte[]> ops = new HashMap<>();
-        ops.put(k1, null);
         ops.put(k2, v2);
         ops.put(k3, v3);
         db.putBatch(ops);
@@ -291,10 +291,14 @@ public class JournalPruneDataSourceTest {
 
         // checking after putBatch
         Map<byte[], byte[]> ops = new HashMap<>();
-        ops.put(k1, null);
         ops.put(k2, v2);
         ops.put(k3, v3);
         db.putBatch(ops);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k1);
+        db.deleteBatch(del);
+
         assertThat(db.isEmpty()).isFalse();
 
         // checking after deleteBatch
@@ -375,11 +379,6 @@ public class JournalPruneDataSourceTest {
         assertThat(db.get(k1).get()).isEqualTo(v2);
         assertThat(source_db.get(k1).get()).isEqualTo(v2);
 
-        // indirect delete
-        db.put(k1, null);
-        assertThat(db.get(k1).isPresent()).isTrue();
-        assertThat(source_db.get(k1).isPresent()).isTrue();
-
         // direct delete
         db.put(k2, v2);
         assertThat(db.get(k2).get()).isEqualTo(v2);
@@ -389,7 +388,7 @@ public class JournalPruneDataSourceTest {
         assertThat(source_db.get(k2).isPresent()).isTrue();
 
         // ensure cached values
-        assertThat(db.getDeletedKeysCount()).isEqualTo(2);
+        assertThat(db.getDeletedKeysCount()).isEqualTo(1);
         assertThat(db.getInsertedKeysCount()).isEqualTo(2);
 
         // check store block
@@ -414,10 +413,13 @@ public class JournalPruneDataSourceTest {
 
         // check after update
         Map<byte[], byte[]> ops = new HashMap<>();
-        ops.put(k1, null);
         ops.put(k2, v1);
         ops.put(k3, v3);
         db.putBatch(ops);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k1);
+        db.deleteBatch(del);
 
         assertThat(db.get(k1).isPresent()).isTrue();
         assertThat(db.get(k2).get()).isEqualTo(v1);
@@ -468,8 +470,11 @@ public class JournalPruneDataSourceTest {
         Map<byte[], byte[]> map = new HashMap<>();
         map.put(k1, v1);
         map.put(k2, v2);
-        map.put(k3, null);
         db.putBatch(map);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k3);
+        db.deleteBatch(del);
 
         assertThat(db.get(k1).isPresent()).isTrue();
         assertThat(db.get(k2).isPresent()).isTrue();
@@ -519,7 +524,6 @@ public class JournalPruneDataSourceTest {
 
         // checking after putBatch
         Map<byte[], byte[]> ops = new HashMap<>();
-        ops.put(k1, null);
         ops.put(k2, v2);
         ops.put(k3, v3);
         db.putBatch(ops);
@@ -568,10 +572,14 @@ public class JournalPruneDataSourceTest {
 
         // checking after putBatch
         Map<byte[], byte[]> ops = new HashMap<>();
-        ops.put(k1, null);
         ops.put(k2, v2);
         ops.put(k3, v3);
         db.putBatch(ops);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k1);
+        db.deleteBatch(del);
+
         assertThat(db.isEmpty()).isFalse();
 
         // checking after deleteBatch
@@ -729,6 +737,14 @@ public class JournalPruneDataSourceTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void testPut_wNullValue() {
+        assertThat(source_db.open()).isTrue();
+
+        // attempt put with null key
+        db.put(randomBytes(32), null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void testDelete_wNullKey() {
         assertThat(source_db.open()).isTrue();
 
@@ -744,6 +760,19 @@ public class JournalPruneDataSourceTest {
         map.put(randomBytes(32), randomBytes(32));
         map.put(randomBytes(32), randomBytes(32));
         map.put(null, randomBytes(32));
+
+        // attempt putBatch on closed db
+        db.putBatch(map);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testPutBatch_wNullValue() {
+        assertThat(source_db.open()).isTrue();
+
+        Map<byte[], byte[]> map = new HashMap<>();
+        map.put(randomBytes(32), randomBytes(32));
+        map.put(randomBytes(32), randomBytes(32));
+        map.put(randomBytes(32), null);
 
         // attempt putBatch on closed db
         db.putBatch(map);
@@ -1239,8 +1268,11 @@ public class JournalPruneDataSourceTest {
         // block 1
         map.clear();
         map.put(k4, v4);
-        map.put(k2, null);
         db.putBatch(map);
+
+        List<byte[]> del = new ArrayList<>();
+        del.add(k2);
+        db.deleteBatch(del);
 
         assertThat(db.getInsertedKeysCount()).isEqualTo(1);
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
@@ -1253,8 +1285,11 @@ public class JournalPruneDataSourceTest {
         // block 2
         map.clear();
         map.put(k2, v3);
-        map.put(k3, null);
         db.putBatch(map);
+
+        del.clear();
+        del.add(k3);
+        db.deleteBatch(del);
 
         assertThat(db.getInsertedKeysCount()).isEqualTo(1);
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
@@ -1268,8 +1303,11 @@ public class JournalPruneDataSourceTest {
         map.clear();
         map.put(k5, v5);
         map.put(k6, v6);
-        map.put(k2, null);
         db.putBatch(map);
+
+        del.clear();
+        del.add(k2);
+        db.deleteBatch(del);
 
         assertThat(db.getInsertedKeysCount()).isEqualTo(2);
         assertThat(db.getDeletedKeysCount()).isEqualTo(1);
