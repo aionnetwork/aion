@@ -33,7 +33,7 @@ public class MongoConnectionManager {
     private Map<String, MongoClient> mongoUriToClientMap = new ConcurrentHashMap<>();
     private Map<String, AtomicInteger> activeClientCountMap = new ConcurrentHashMap<>();
 
-    public MongoClient getMongoClientInstance(String mongoClientUri) {
+    public synchronized MongoClient getMongoClientInstance(String mongoClientUri) {
         MongoClient mongoClient;
         if (!this.mongoUriToClientMap.containsKey(mongoClientUri)) {
             LOG.info("Creating new mongo client to connect to {}", mongoClientUri);
@@ -49,7 +49,7 @@ public class MongoConnectionManager {
         return mongoClient;
     }
 
-    public void closeMongoClientInstance(String mongoClientUri) {
+    public synchronized void closeMongoClientInstance(String mongoClientUri) {
         if (!this.mongoUriToClientMap.containsKey(mongoClientUri) || !this.activeClientCountMap.containsKey(mongoClientUri)) {
             throw new IllegalArgumentException(String.format("Unopened client uri %s", mongoClientUri));
         }
