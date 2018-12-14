@@ -32,16 +32,17 @@ import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.Bytesable;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.Log;
+import org.aion.vm.api.interfaces.IExecutionLog;
 
 public abstract class AbstractTxReceipt<TX extends ITransaction>
-        implements Bytesable<Object>, ITxReceipt<TX, Log> {
+        implements Bytesable<Object>, ITxReceipt<TX, IExecutionLog> {
 
     protected TX transaction;
 
     protected byte[] postTxState = EMPTY_BYTE_ARRAY;
 
     protected Bloom bloomFilter = new Bloom();
-    protected List<Log> logInfoList = new ArrayList<>();
+    protected List<IExecutionLog> logInfoList = new ArrayList<>();
 
     protected byte[] executionResult = EMPTY_BYTE_ARRAY;
     protected String error = "";
@@ -60,7 +61,7 @@ public abstract class AbstractTxReceipt<TX extends ITransaction>
         return bloomFilter;
     }
 
-    public List<Log> getLogInfoList() {
+    public List<IExecutionLog> getLogInfoList() {
         return logInfoList;
     }
 
@@ -95,13 +96,13 @@ public abstract class AbstractTxReceipt<TX extends ITransaction>
         this.error = error;
     }
 
-    public void setLogs(List<Log> logInfoList) {
+    public void setLogs(List<IExecutionLog> logInfoList) {
         if (logInfoList == null) {
             return;
         }
         this.logInfoList = logInfoList;
 
-        for (Log loginfo : logInfoList) {
+        for (IExecutionLog loginfo : logInfoList) {
             bloomFilter.or(loginfo.getBloomFilterForLog());
         }
         rlpEncoded = null;

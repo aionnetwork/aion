@@ -33,6 +33,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
                 this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall);
     }
 
+    @Override
     public void flush() {
         this.repositoryCache.flush();
     }
@@ -107,8 +108,15 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public void incrementNonce(Address address) {
-        if (this.allowNonceIncrement) {
+        if (!this.isLocalCall && this.allowNonceIncrement) {
             this.repositoryCache.incrementNonce(address);
+        }
+    }
+
+    @Override
+    public void deductEnergyCost(Address address, BigInteger energyCost) {
+        if (!this.isLocalCall) {
+            this.repositoryCache.addBalance(address, energyCost.negate());
         }
     }
 

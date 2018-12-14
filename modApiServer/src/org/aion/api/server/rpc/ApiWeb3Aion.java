@@ -91,6 +91,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -2164,7 +2165,7 @@ public class ApiWeb3Aion extends ApiAion {
         result.put("transactionIndex", txInfo.getIndex());
 
         JSONArray logs = new JSONArray();
-        for (Log l : txInfo.getReceipt().getLogInfoList()) {
+        for (IExecutionLog l : txInfo.getReceipt().getLogInfoList()) {
             JSONObject log = new JSONObject();
             log.put("address", l.getLogSourceAddress().toString());
             log.put("data", TypeConverter.toJsonHex(l.getLogData()));

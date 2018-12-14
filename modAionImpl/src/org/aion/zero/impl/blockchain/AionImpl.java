@@ -41,16 +41,15 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
-import org.aion.fastvm.TransactionExecutor;
 import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.PostExecutionWork;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
@@ -160,7 +159,14 @@ public class AionImpl implements IAionChain {
         try {
             BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(details, repository, true, true, block.getNrgLimit(), LOG_VM);
+                new BulkExecutor(
+                    details,
+                    repository,
+                    true,
+                    true,
+                    block.getNrgLimit(),
+                    LOG_VM,
+                    getPostExecutionWork());
             return executor.execute().get(0).getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
@@ -180,11 +186,27 @@ public class AionImpl implements IAionChain {
         try {
             BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                    new BulkExecutor(details, repository, true, true, block.getNrgLimit(), LOG_VM);
+                new BulkExecutor(
+                    details,
+                    repository,
+                    true,
+                    true,
+                    block.getNrgLimit(),
+                    LOG_VM,
+                    getPostExecutionWork());
             return executor.execute().get(0).getReceipt();
         } finally {
             repository.rollback();
         }
+    }
+
+    /**
+     * There is no post-execution work to do for any calls in this class.
+     */
+    private PostExecutionWork getPostExecutionWork() {
+        return (k, s, t, b) -> {
+            return 0L;
+        };
     }
 
     @Override

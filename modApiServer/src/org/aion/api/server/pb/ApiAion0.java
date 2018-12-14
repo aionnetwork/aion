@@ -82,6 +82,7 @@ import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
 import org.aion.solidity.Abi;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.Version;
@@ -2569,7 +2570,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private Message.t_TxDetail getTxDetailsObj(
-            AionTransaction t, List<Log> _logs, int txIndex, long nrgConsumed, String error) {
+            AionTransaction t, List<IExecutionLog> _logs, int txIndex, long nrgConsumed, String error) {
 
         List<Message.t_LgEle> tles =
                 _logs.parallelStream()
@@ -2698,9 +2699,9 @@ public class ApiAion0 extends ApiAion implements IApiAion {
     }
 
     private String generateTransactionSqlStatement(
-            AionBlock b, AionTransaction t, List<Log> _logs, int txIndex, long nrgConsumed) {
+            AionBlock b, AionTransaction t, List<IExecutionLog> _logs, int txIndex, long nrgConsumed) {
         JSONArray logs = new JSONArray();
-        for (Log l : _logs) {
+        for (IExecutionLog l : _logs) {
             JSONArray log = new JSONArray();
             log.put(l.getLogSourceAddress().toString()); // address
             log.put(ByteUtil.toHexString(l.getLogData())); // data

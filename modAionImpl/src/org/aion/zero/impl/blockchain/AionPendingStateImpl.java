@@ -66,9 +66,9 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
-import org.aion.fastvm.TransactionExecutor;
 import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -1081,10 +1081,27 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         BlockDetails details = new BlockDetails(bestBlk, Collections.singletonList(tx));
         BulkExecutor txExe =
-                new BulkExecutor(
-                        details, pendingState, false, false, bestBlk.getNrgLimit(), LOGGER_VM);
-
+            new BulkExecutor(
+                details,
+                pendingState,
+                false,
+                !inPool,
+                bestBlk.getNrgLimit(),
+                LOGGER_VM,
+                getPostExecutionWork());
         return txExe.execute().get(0);
+    }
+
+    /**
+     * Currently there is no post-execution work to do.
+     *
+     * In the future we may choose to be more ambitious and to use the {@link BulkExecutor} properly,
+     * in which case we will have to give this method real functionality.
+     */
+    private PostExecutionWork getPostExecutionWork() {
+        return (k, s, t, b) -> {
+            return 0L;
+        };
     }
 
     @Override

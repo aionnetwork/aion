@@ -34,6 +34,7 @@ import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.mcf.vm.types.Log;
 import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -108,7 +109,7 @@ public final class TxRecpt {
             this.txRoot = block.getReceiptsRoot();
             this.logs = new TxRecptLg[receipt.getLogInfoList().size()];
             for (int i = 0; i < this.logs.length; i++) {
-                Log logInfo = receipt.getLogInfoList().get(i);
+                IExecutionLog logInfo = receipt.getLogInfoList().get(i);
                 this.logs[i] =
                         new TxRecptLg(
                                 logInfo,
@@ -167,7 +168,7 @@ public final class TxRecpt {
 
         this.logs = new TxRecptLg[receipt.getLogInfoList().size()];
         for (int i = 0; i < this.logs.length; i++) {
-            Log logInfo = receipt.getLogInfoList().get(i);
+            IExecutionLog logInfo = receipt.getLogInfoList().get(i);
             this.logs[i] =
                     new TxRecptLg(
                             logInfo, block, txIndex, receipt.getTransaction(), i, isMainchain);

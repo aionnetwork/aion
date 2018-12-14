@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Log;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.Test;
 
@@ -56,7 +57,7 @@ public class AionTxReceiptTest {
         receipt.setError("");
         receipt.setExecutionResult(HashUtil.h256(EMPTY_BYTE_ARRAY));
 
-        List<Log> infos = new ArrayList<>();
+        List<IExecutionLog> infos = new ArrayList<>();
         receipt.setLogs(infos);
         receipt.setPostTxState(HashUtil.h256(EMPTY_BYTE_ARRAY));
 
