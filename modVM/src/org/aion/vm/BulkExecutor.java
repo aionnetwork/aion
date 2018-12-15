@@ -83,8 +83,10 @@ public class BulkExecutor {
                 result.setOutput(new byte[0]);
             }
 
-            // 2. In the case of failure, nonce still increments and energy cost is still deducted.
+            // 2. In the case of failure, nonce still increments and energy cost is still deducted,
+            // but all other updates done by the executor should be dropped.
             if (result.getResultCode().isFailed()) {
+                this.kernel.rollback(); // better to avoid this in KernelInterface, use repo directly here.
                 BigInteger energyCost =
                         BigInteger.valueOf(
                                 this.transaction.getEnergyLimit()
@@ -195,6 +197,7 @@ public class BulkExecutor {
     }
 
     private long computeEnergyUsed(long limit, TransactionResult result) {
+        System.out.println("---> " + (limit - result.getEnergyRemaining()));
         return limit - result.getEnergyRemaining();
     }
 }
