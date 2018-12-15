@@ -2,6 +2,14 @@ ext.moduleName = 'aion.zero.impl'
 test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
+sourceSets {
+    test {
+        resources {
+            srcDirs = ['test']
+        }
+    }
+}
+
 dependencies {
     compile project(':modAionBase')
     compile project(':modAion')
