@@ -1,6 +1,5 @@
 package org.aion.vm;
 
-import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import org.aion.base.db.IRepositoryCache;
@@ -32,13 +31,13 @@ import org.aion.fastvm.TransactionExecutor;
 public class BulkExecutor {
     private static final Object LOCK = new Object();
 
+    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository;
+    private PostExecutionWork postExecutionWork;
     private AionTransaction transaction;
     private KernelTransactionContext context;
     private IAionBlock block;
-    private KernelInterfaceForFastVM kernel;
     private Logger logger;
-    private PostExecutionWork postExecutionWork;
-    private boolean isLocalCall;
+    private boolean isLocalCall, allowNonceIncrement;
     private long blockRemainingEnergy;
 
     public BulkExecutor(
@@ -50,11 +49,12 @@ public class BulkExecutor {
             Logger logger,
             PostExecutionWork work) {
 
-        this.kernel = new KernelInterfaceForFastVM(repo, allowNonceIncrement, isLocalCall);
+        this.repository = repo;
         this.transaction = details.getTransactions().get(0);
         this.context = details.getExecutionContexts().get(0);
         this.block = details.getBlock();
         this.isLocalCall = isLocalCall;
+        this.allowNonceIncrement = allowNonceIncrement;
         this.blockRemainingEnergy = blockRemainingNrg;
         this.logger = logger;
         this.postExecutionWork = work;
@@ -62,13 +62,13 @@ public class BulkExecutor {
 
     public List<AionTxExecSummary> execute() {
         synchronized (LOCK) {
+            KernelInterfaceForFastVM kernel =
+                    new KernelInterfaceForFastVM(
+                            this.repository, this.allowNonceIncrement, this.isLocalCall);
+
             TransactionExecutor executor =
                     new TransactionExecutor(
-                            this.transaction,
-                            this.context,
-                            this.block,
-                            this.kernel,
-                            logger);
+                            this.transaction, this.context, this.block, kernel, logger);
             TransactionResult result = executor.execute();
 
             KernelInterface kernelFromVM = result.getKernelInterface();
@@ -81,28 +81,15 @@ public class BulkExecutor {
                 result.setOutput(new byte[0]);
             }
 
-            // 2. In the case of failure, nonce still increments and energy cost is still deducted,
-            // but all other updates done by the executor should be dropped.
-            if (result.getResultCode().isFailed()) {
-                this.kernel.rollback(); // better to avoid this in KernelInterface, use repo directly here.
-                BigInteger energyCost =
-                        BigInteger.valueOf(
-                                this.transaction.getEnergyLimit()
-                                        * this.transaction.getEnergyPrice());
-
-                KernelInterfaceForFastVM track = this.kernel.startTracking();
-                track.incrementNonce(this.transaction.getSenderAddress());
-                track.deductEnergyCost(this.transaction.getSenderAddress(), energyCost);
-                track.flush();
-            }
-
-            // 3. build the tx summary && update the repo.
+            // 2. build the transaction summary and update the repository (the one backing
+            // this.kernel)
+            // with the contents of kernelFromVM accordingly.
             AionTxExecSummary summary = buildSummaryAndUpdateRepository(kernelFromVM, result);
 
-            // 4. do the execution-specific work.
+            // 2. Do any post execution work and update the remaining block energy.
             this.blockRemainingEnergy -=
                     this.postExecutionWork.doExecutionWork(
-                            this.kernel, summary, this.transaction, this.blockRemainingEnergy);
+                            this.repository, summary, this.transaction, this.blockRemainingEnergy);
 
             // 5. return the summary.
             return Collections.singletonList(summary);
@@ -111,19 +98,20 @@ public class BulkExecutor {
 
     private AionTxExecSummary buildSummaryAndUpdateRepository(
             KernelInterface kernelFromVM, TransactionResult result) {
-        SideEffects rootHelper = new SideEffects();
+
+        SideEffects sideEffects = new SideEffects();
         if (result.getResultCode().isSuccess()) {
-            rootHelper.merge(this.context.getSideEffects());
+            sideEffects.merge(this.context.getSideEffects());
         } else {
-            rootHelper.addInternalTransactions(
+            sideEffects.addInternalTransactions(
                     this.context.getSideEffects().getInternalTransactions());
         }
 
         AionTxExecSummary.Builder builder =
-                AionTxExecSummary.builderFor(makeReceipt(rootHelper.getExecutionLogs(), result))
-                        .logs(rootHelper.getExecutionLogs())
-                        .deletedAccounts(rootHelper.getAddressesToBeDeleted())
-                        .internalTransactions(rootHelper.getInternalTransactions())
+                AionTxExecSummary.builderFor(makeReceipt(sideEffects.getExecutionLogs(), result))
+                        .logs(sideEffects.getExecutionLogs())
+                        .deletedAccounts(sideEffects.getAddressesToBeDeleted())
+                        .internalTransactions(sideEffects.getInternalTransactions())
                         .result(result.getOutput());
 
         ResultCode resultCode = result.getResultCode();
@@ -142,7 +130,7 @@ public class BulkExecutor {
                 summary,
                 this.transaction,
                 this.block.getCoinbase(),
-                rootHelper.getAddressesToBeDeleted(),
+                sideEffects.getAddressesToBeDeleted(),
                 result);
 
         return summary;
@@ -167,17 +155,18 @@ public class BulkExecutor {
             TransactionResult result) {
 
         if (!isLocalCall && !summary.isRejected()) {
-            KernelInterfaceForFastVM track = this.kernel.startTracking();
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track =
+                    this.repository.startTracking();
 
             // Refund energy if transaction was successfully or reverted.
             if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
-                track.adjustBalance(tx.getSenderAddress(), summary.getRefund());
+                track.addBalance(tx.getSenderAddress(), summary.getRefund());
             }
 
             tx.setNrgConsume(computeEnergyUsed(tx.getEnergyLimit(), result));
 
             // Pay the miner.
-            track.adjustBalance(coinbase, summary.getFee());
+            track.addBalance(coinbase, summary.getFee());
 
             // Delete any accounts marked for deletion.
             if (result.getResultCode().isSuccess()) {
