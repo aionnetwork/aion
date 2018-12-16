@@ -139,4 +139,11 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     public boolean isValidEnergyLimitForNonCreate(long energyLimit) {
         return (this.isLocalCall) ? true : TxNrgRule.isValidNrgTx(energyLimit);
     }
+
+    @Override
+    public boolean destinationAddressIsSafeForThisVM(Address address) {
+        //TODO: replace with actual logic that prevents the FastVM from calling an Avm contract.
+        return true;
+    }
+
 }
