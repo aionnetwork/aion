@@ -36,10 +36,10 @@ public class BulkExecutor {
     private KernelTransactionContext context;
     private IAionBlock block;
     private KernelInterfaceForFastVM kernel;
-    private boolean isLocalCall, allowNonceIncrement;
-    private long blockRemainingNrg;
     private Logger logger;
     private PostExecutionWork postExecutionWork;
+    private boolean isLocalCall;
+    private long blockRemainingEnergy;
 
     public BulkExecutor(
             BlockDetails details,
@@ -55,8 +55,7 @@ public class BulkExecutor {
         this.context = details.getExecutionContexts().get(0);
         this.block = details.getBlock();
         this.isLocalCall = isLocalCall;
-        this.allowNonceIncrement = allowNonceIncrement;
-        this.blockRemainingNrg = blockRemainingNrg;
+        this.blockRemainingEnergy = blockRemainingNrg;
         this.logger = logger;
         this.postExecutionWork = work;
     }
@@ -69,15 +68,14 @@ public class BulkExecutor {
                             this.context,
                             this.block,
                             this.kernel,
-                            logger,
-                            blockRemainingNrg);
-            TransactionResult result = executor.executeAndFetchResultOnly();
+                            logger);
+            TransactionResult result = executor.execute();
 
             KernelInterface kernelFromVM = result.getKernelInterface();
 
             // 1. Check the block energy limit & reject if necessary.
             if (computeEnergyUsed(this.transaction.getEnergyLimit(), result)
-                    > this.blockRemainingNrg) {
+                    > this.blockRemainingEnergy) {
                 result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
                 result.setEnergyRemaining(0);
                 result.setOutput(new byte[0]);
@@ -102,9 +100,9 @@ public class BulkExecutor {
             AionTxExecSummary summary = buildSummaryAndUpdateRepository(kernelFromVM, result);
 
             // 4. do the execution-specific work.
-            this.blockRemainingNrg -=
+            this.blockRemainingEnergy -=
                     this.postExecutionWork.doExecutionWork(
-                            this.kernel, summary, this.transaction, this.blockRemainingNrg);
+                            this.kernel, summary, this.transaction, this.blockRemainingEnergy);
 
             // 5. return the summary.
             return Collections.singletonList(summary);
