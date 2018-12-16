@@ -70,7 +70,7 @@ public class TXHashContractTest {
         out.close();
 
         CfgAion.inst();
-        ExecutionContext ctx = new ExecutionContext(txHash,
+        ExecutionContext ctx = new ExecutionContext(null, txHash,
             ContractFactory.getTxHashContractAddress(), null, null, null,
             0L, null, null, 0, 0, 0, null,
             2000001L, 0L, 0L,

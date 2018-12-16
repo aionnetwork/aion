@@ -252,13 +252,13 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     }
 
     private PrecompiledTransactionResult success() {
-        long energyRemaining = this.context.getTransactionEnergyLimit() - ENERGY_CONSUME;
+        long energyRemaining = this.context.getTransactionEnergy() - ENERGY_CONSUME;
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, energyRemaining);
     }
 
     private PrecompiledTransactionResult success(@Nonnull final byte[] response) {
         // should always be positive
-        long energyRemaining = this.context.getTransactionEnergyLimit() - ENERGY_CONSUME;
+        long energyRemaining = this.context.getTransactionEnergy() - ENERGY_CONSUME;
         assert energyRemaining >= 0;
         return new PrecompiledTransactionResult(
                 PrecompiledResultCode.SUCCESS, energyRemaining, response);

@@ -105,6 +105,7 @@ public class BenchmarkTest {
 
         ctx =
                 new ExecutionContext(
+                    null,
                         txHash,
                         ContractFactory.getBlake2bHashContractAddress(),
                         origin,
@@ -126,13 +127,13 @@ public class BenchmarkTest {
         // warm up
         for (int i = 0; i < WARMUP; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.getTransactionEnergyLimit());
+            ct.execute(txHash, ctx.getTransactionEnergy());
         }
 
         long t1 = System.currentTimeMillis();
         for (int i = 0; i < BENCH; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.getTransactionEnergyLimit());
+            ct.execute(txHash, ctx.getTransactionEnergy());
         }
         System.out.println(
                 "Bench blake2b: " + String.valueOf(System.currentTimeMillis() - t1) + "ms");

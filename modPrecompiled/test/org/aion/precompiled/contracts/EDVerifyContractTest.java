@@ -109,6 +109,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         ExecutionContext ctx =
                 new ExecutionContext(
+                    null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -139,6 +140,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
+                    null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -173,6 +175,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
+                    null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -204,6 +207,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         ExecutionContext ctx =
                 new ExecutionContext(
+                    null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -233,6 +237,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
+                    null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,

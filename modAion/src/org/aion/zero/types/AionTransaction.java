@@ -521,6 +521,11 @@ public class AionTransaction extends AbstractTransaction {
         return new DataWord(this.nrg).longValue();
     }
 
+    @Override
+    public long getTransactionCost() {
+        return transactionCost(0);
+    }
+
     public long transactionCost(long blockNumber) {
         long nonZeroes = nonZeroBytesInData();
         long zeroes = zeroBytesInData();

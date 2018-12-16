@@ -116,7 +116,8 @@ public final class BlockDetails {
         Address caller = transaction.getSenderAddress();
 
         DataWord nrgPrice = transaction.nrgPrice();
-        long nrgLimit = transaction.nrgLimit() - transaction.transactionCost(block.getNumber());
+        long energyLimit = transaction.nrgLimit();
+        long nrg = transaction.nrgLimit() - transaction.transactionCost(block.getNumber());
         DataWord callValue = new DataWord(ArrayUtils.nullToEmpty(transaction.getValue()));
         byte[] callData =
             transaction.isContractCreationTransaction()
@@ -143,12 +144,13 @@ public final class BlockDetails {
         DataWord blockDifficulty = new DataWord(diff);
 
         return new KernelTransactionContext(
+                transaction,
                 txHash,
                 address,
                 origin,
                 caller,
                 nrgPrice,
-                nrgLimit,
+                nrg,
                 callValue,
                 callData,
                 depth,

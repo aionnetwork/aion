@@ -11,6 +11,7 @@ import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.vm.api.interfaces.TransactionSideEffects;
+import org.aion.zero.types.AionTransaction;
 
 public class KernelTransactionContext implements TransactionContext {
     private static final int ENCODE_BASE_LEN =
@@ -27,6 +28,8 @@ public class KernelTransactionContext implements TransactionContext {
     private Address origin;
     private byte[] originalTxHash;
 
+    private AionTransaction transaction;
+
     public Address address;
     public Address sender;
     private Address blockCoinbase;
@@ -35,7 +38,7 @@ public class KernelTransactionContext implements TransactionContext {
     private IDataWord blockDifficulty;
     private byte[] callData;
     private byte[] txHash;
-    private long nrgLimit; // NOTE: nrg_limit = tx_nrg_limit - tx_basic_cost
+    private long nrg; // NOTE: nrg = tx_nrg_limit - tx_basic_cost
     private long blockNumber;
     private long blockTimestamp;
     private long blockNrgLimit;
@@ -51,7 +54,7 @@ public class KernelTransactionContext implements TransactionContext {
      * @param origin The sender of the original transaction.
      * @param sender The transaction caller.
      * @param nrgPrice The nrg price in current environment.
-     * @param nrgLimit The nrg limit in current environment.
+     * @param nrg The nrg limit in current environment.
      * @param callValue The deposited value by instruction/trannsaction.
      * @param callData The call data.
      * @param depth The execution stack depth.
@@ -66,12 +69,13 @@ public class KernelTransactionContext implements TransactionContext {
      *     length 32.
      */
     public KernelTransactionContext(
+        AionTransaction transaction,
         byte[] txHash,
         Address destination,
         Address origin,
         Address sender,
         IDataWord nrgPrice,
-        long nrgLimit,
+        long nrg,
         IDataWord callValue,
         byte[] callData,
         int depth,
@@ -83,14 +87,13 @@ public class KernelTransactionContext implements TransactionContext {
         long blockNrgLimit,
         IDataWord blockDifficulty) {
 
-        super();
-
+        this.transaction = transaction;
         this.address = destination;
         this.origin = origin;
         this.sender = sender;
         this.nrgPrice = nrgPrice;
         this.blockDifficulty = blockDifficulty;
-        this.nrgLimit = nrgLimit;
+        this.nrg = nrg;
         this.callValue = callValue;
         this.callData = callData;
         this.depth = depth;
@@ -125,7 +128,7 @@ public class KernelTransactionContext implements TransactionContext {
         buffer.put(origin.toBytes());
         buffer.put(sender.toBytes());
         buffer.put(nrgPrice.getData());
-        buffer.putLong(nrgLimit);
+        buffer.putLong(nrg);
         buffer.put(callValue.getData());
         buffer.putInt(callData.length); // length of the call data
         buffer.put(callData);
@@ -180,8 +183,8 @@ public class KernelTransactionContext implements TransactionContext {
     }
 
     /** @return the nrg limit in current environment. */
-    public long getTransactionEnergyLimit() {
-        return nrgLimit;
+    public long getTransactionEnergy() {
+        return nrg;
     }
 
     /** @return the deposited value by instruction/transaction. */
@@ -278,4 +281,10 @@ public class KernelTransactionContext implements TransactionContext {
     public byte[] getHashOfOriginTransaction() {
         return originalTxHash;
     }
+
+    @Override
+    public AionTransaction getTransaction() {
+        return this.transaction;
+    }
+
 }
