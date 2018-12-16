@@ -31,6 +31,7 @@ public class BridgeTestUtils {
         DataWord blockDifficulty = DataWord.ZERO;
 
         return new ExecutionContext(
+            null,
                 transactionHash,
                 address,
                 origin,

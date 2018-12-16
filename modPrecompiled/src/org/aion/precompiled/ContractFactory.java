@@ -9,6 +9,7 @@ import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
+import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.TransactionContext;
 
 /** A factory class that produces pre-compiled contract instances. */
@@ -50,7 +51,7 @@ public class ContractFactory {
      * @return the specified pre-compiled address.
      */
     public PrecompiledContract getPrecompiledContract(
-            TransactionContext context, KernelInterfaceForFastVM track) {
+            TransactionContext context, KernelInterface track) {
 
         CfgFork cfg = new CfgFork();
         String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
@@ -58,12 +59,14 @@ public class ContractFactory {
         boolean fork_032 =
                 (forkProperty != null) && (context.getBlockNumber() >= Long.valueOf(forkProperty));
 
+        //TODO: need to provide a real solution for the repository here ....
+
         switch (context.getDestinationAddress().toString()) {
             case ADDR_TOKEN_BRIDGE:
                 TokenBridgeContract contract =
                         new TokenBridgeContract(
                                 context,
-                                track.getRepositoryCache(),
+                                ((KernelInterfaceForFastVM) track).getRepositoryCache(),
                                 AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
                                 AionAddress.wrap(ADDR_TOKEN_BRIDGE));
 
@@ -84,7 +87,7 @@ public class ContractFactory {
                 return fork_032
                         ? null
                         : new TotalCurrencyContract(
-                                track.getRepositoryCache(),
+                                ((KernelInterfaceForFastVM) track).getRepositoryCache(),
                                 context.getSenderAddress(),
                                 AionAddress.wrap(ADDR_OWNER));
             default:

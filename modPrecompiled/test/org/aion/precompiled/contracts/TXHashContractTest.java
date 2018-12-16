@@ -45,6 +45,7 @@ public class TXHashContractTest {
         out.close();
 
         CfgAion.inst();
+<<<<<<< HEAD
         ExecutionContext ctx =
                 new ExecutionContext(
                         txHash,
@@ -63,6 +64,13 @@ public class TXHashContractTest {
                         0L,
                         0L,
                         null);
+=======
+        ExecutionContext ctx = new ExecutionContext(null, txHash,
+            ContractFactory.getTxHashContractAddress(), null, null, null,
+            0L, null, null, 0, 0, 0, null,
+            2000001L, 0L, 0L,
+            null);
+>>>>>>> 795ef66... Fastvm implements VirtualMachine
 
         tXHashContract = new ContractFactory().getPrecompiledContract(ctx, null);
     }

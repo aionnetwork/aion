@@ -68,7 +68,7 @@ public class BulkExecutor {
 
             TransactionExecutor executor =
                     new TransactionExecutor(
-                            this.transaction, this.context, this.block, kernel, logger);
+                            this.transaction, this.context, kernel);
             TransactionResult result = executor.execute();
 
             KernelInterface kernelFromVM = result.getKernelInterface();
