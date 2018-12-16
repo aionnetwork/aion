@@ -34,8 +34,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.base.type.AionAddress;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
@@ -44,8 +44,8 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.vm.Constants;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.zero.impl.BlockContext;
@@ -118,14 +118,23 @@ public class ContractIntegTest {
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
 
-        BlockDetails details = new BlockDetails(context.block, Collections.singletonList(tx));
-        BulkExecutor exec = new BulkExecutor(details, repo, false, true, context.block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
+        BulkExecutor exec =
+                new BulkExecutor(
+                        details,
+                        repo,
+                        false,
+                        true,
+                        context.block.getNrgLimit(),
+                        LOGGER_VM,
+                        getPostExecutionWork());
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
         assertEquals(tx.getNrgConsume(), summary.getReceipt().getEnergyUsed());
 
         AionAddress contract = tx.getContractAddress();
-        checkStateOfNewContract(repo, contractName, contract, summary.getResult(), FastVmResultCode.SUCCESS, value);
+        checkStateOfNewContract(
+                repo, contractName, contract, summary.getResult(), FastVmResultCode.SUCCESS, value);
         nonce = nonce.add(BigInteger.ONE);
         checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
     }
@@ -237,7 +246,13 @@ public class ContractIntegTest {
         assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
         AionAddress contract = tx.getContractAddress();
-        checkStateOfNewContract(repo, contractName, contract, summary.getResult(), FastVmResultCode.REVERT, BigInteger.ZERO);
+        checkStateOfNewContract(
+                repo,
+                contractName,
+                contract,
+                summary.getResult(),
+                FastVmResultCode.REVERT,
+                BigInteger.ZERO);
         nonce = nonce.add(BigInteger.ONE);
         checkStateOfDeployer(repo, summary, nrgPrice, BigInteger.ZERO, nonce);
     }
@@ -272,7 +287,8 @@ public class ContractIntegTest {
         assertNotEquals(nrg, tx.getNrgConsume()); // all energy is not used up.
 
         AionAddress contract = tx.getContractAddress();
-        checkStateOfNewContract(repo, contractName, contract, summary.getResult(), FastVmResultCode.SUCCESS, value);
+        checkStateOfNewContract(
+                repo, contractName, contract, summary.getResult(), FastVmResultCode.SUCCESS, value);
         nonce = nonce.add(BigInteger.ONE);
         checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
     }
@@ -304,10 +320,16 @@ public class ContractIntegTest {
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("INSUFFICIENT_BALANCE", summary.getReceipt().getError());
         assertEquals(0, tx.getNrgConsume());
-//        assertEquals(0, summary.getNrgUsed().longValue());    //FIXME: confirm above
+        //        assertEquals(0, summary.getNrgUsed().longValue());    //FIXME: confirm above
 
         AionAddress contract = tx.getContractAddress();
-        checkStateOfNewContract(repo, contractName, contract, summary.getResult(), FastVmResultCode.INSUFFICIENT_BALANCE, BigInteger.ZERO);
+        checkStateOfNewContract(
+                repo,
+                contractName,
+                contract,
+                summary.getResult(),
+                FastVmResultCode.INSUFFICIENT_BALANCE,
+                BigInteger.ZERO);
         checkStateOfDeployerOnBadDeploy(repo);
     }
 
@@ -808,50 +830,52 @@ public class ContractIntegTest {
         assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
     }
 
-    //TODO: find a better way of testing a mocked up Precompiled contract..
+    // TODO: find a better way of testing a mocked up Precompiled contract..
     @Test
     @Ignore
     public void testCallPrecompiledContract() {
-//        String tagToSend = "Soo cool!";
-//        long nrg = Constants.NRG_TRANSACTION_MAX;
-//        long nrgPrice = 1;
-//        BigInteger value = BigInteger.ZERO;
-//        BigInteger nonce = BigInteger.ZERO;
-//        AionTransaction tx =
-//                new AionTransaction(
-//                        nonce.toByteArray(),
-//                        AionAddress.wrap(ContractFactoryMock.CALL_ME),
-//                        value.toByteArray(),
-//                        tagToSend.getBytes(),
-//                        nrg,
-//                        nrgPrice);
-//        IRepositoryCache repo = blockchain.getRepository().startTracking();
-//
-//        tx.sign(deployerKey);
-//        assertFalse(tx.isContractCreationTransaction());
-//
-//        assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
-//        assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
-//
-//        assertFalse(CallMePrecompiledContract.youCalledMe);
-//        BlockContext context =
-//                blockchain.createNewBlockContext(
-//                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-//
-//        TransactionExecutor exec = new TransactionExecutor(tx, context.block, repo, LOGGER_VM);
-////        ExecutorProvider provider = new TestVMProvider();
-////        ((TestVMProvider) provider).setFactory(new ContractFactoryMock());
-//        exec.execute();
-//        FastVmTransactionResult result = (FastVmTransactionResult) exec.getResult();
-//        assertEquals(FastVmResultCode.SUCCESS, result.getResultCode());
-//        assertEquals(nrg - tx.getNrgConsume(), result.getEnergyRemaining());
-//        assertNotEquals(nrg, tx.getNrgConsume());
-//
-//        // Check that we actually did call the contract and received its output.
-//        String expectedMsg = CallMePrecompiledContract.head + tagToSend;
-//        byte[] output = result.getOutput();
-//        assertArrayEquals(expectedMsg.getBytes(), output);
-//        assertTrue(CallMePrecompiledContract.youCalledMe);
+        //        String tagToSend = "Soo cool!";
+        //        long nrg = Constants.NRG_TRANSACTION_MAX;
+        //        long nrgPrice = 1;
+        //        BigInteger value = BigInteger.ZERO;
+        //        BigInteger nonce = BigInteger.ZERO;
+        //        AionTransaction tx =
+        //                new AionTransaction(
+        //                        nonce.toByteArray(),
+        //                        AionAddress.wrap(ContractFactoryMock.CALL_ME),
+        //                        value.toByteArray(),
+        //                        tagToSend.getBytes(),
+        //                        nrg,
+        //                        nrgPrice);
+        //        IRepositoryCache repo = blockchain.getRepository().startTracking();
+        //
+        //        tx.sign(deployerKey);
+        //        assertFalse(tx.isContractCreationTransaction());
+        //
+        //        assertEquals(Builder.DEFAULT_BALANCE,
+        // blockchain.getRepository().getBalance(deployer));
+        //        assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
+        //
+        //        assertFalse(CallMePrecompiledContract.youCalledMe);
+        //        BlockContext context =
+        //                blockchain.createNewBlockContext(
+        //                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
+        //
+        //        TransactionExecutor exec = new TransactionExecutor(tx, context.block, repo,
+        // LOGGER_VM);
+        ////        ExecutorProvider provider = new TestVMProvider();
+        ////        ((TestVMProvider) provider).setFactory(new ContractFactoryMock());
+        //        exec.execute();
+        //        FastVmTransactionResult result = (FastVmTransactionResult) exec.getResult();
+        //        assertEquals(FastVmResultCode.SUCCESS, result.getResultCode());
+        //        assertEquals(nrg - tx.getNrgConsume(), result.getEnergyRemaining());
+        //        assertNotEquals(nrg, tx.getNrgConsume());
+        //
+        //        // Check that we actually did call the contract and received its output.
+        //        String expectedMsg = CallMePrecompiledContract.head + tagToSend;
+        //        byte[] output = result.getOutput();
+        //        assertArrayEquals(expectedMsg.getBytes(), output);
+        //        assertTrue(CallMePrecompiledContract.youCalledMe);
     }
 
     @Test
@@ -893,64 +917,67 @@ public class ContractIntegTest {
     @Test
     @Ignore
     public void testCallPrecompiledViaSmartContract() throws IOException {
-//        // First deploy the contract we will use to call the precompiled contract.
-//        String contractName = "MultiFeatureCaller";
-//        byte[] deployCode = getDeployCode(contractName);
-//        long nrg = 1_000_000;
-//        long nrgPrice = 1;
-//        BigInteger value = BigInteger.ZERO;
-//        BigInteger nonce = BigInteger.ZERO;
-//        AionTransaction tx =
-//                new AionTransaction(
-//                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
-//        IRepositoryCache repo = blockchain.getRepository().startTracking();
-//        nonce = nonce.add(BigInteger.ONE);
-//        AionAddress contract =
-//                deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
-//
-//        deployerBalance = repo.getBalance(deployer);
-//        deployerNonce = repo.getNonce(deployer);
-//        byte[] body = getBodyCode("MultiFeatureCaller");
-//        assertArrayEquals(body, repo.getCode(contract));
-//
-//        // Now call the deployed smart contract to call the precompiled contract.
-//        assertFalse(CallMePrecompiledContract.youCalledMe);
-//        String msg = "I called the contract!";
-//        byte[] input =
-//                ByteUtil.merge(
-//                        Hex.decode("783efb98"),
-//                        AionAddress.wrap(ContractFactoryMock.CALL_ME).toBytes());
-//        input = ByteUtil.merge(input, msg.getBytes());
-//
-//        tx =
-//                new AionTransaction(
-//                        nonce.toByteArray(),
-//                        contract,
-//                        BigInteger.ZERO.toByteArray(),
-//                        input,
-//                        nrg,
-//                        nrgPrice);
-//        tx.sign(deployerKey);
-//        assertFalse(tx.isContractCreationTransaction());
-//
-//        BlockContext context =
-//                blockchain.createNewBlockContext(
-//                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-//
-//        TransactionExecutor exec = new TransactionExecutor(tx, context.block, repo, LOGGER_VM);
-////        ExecutorProvider provider = new TestVMProvider();
-////        ((TestVMProvider) provider).setFactory(new ContractFactoryMock());
-//        exec.execute();
-//        FastVmTransactionResult result = (FastVmTransactionResult) exec.getResult();
-//
-//        assertEquals(FastVmResultCode.SUCCESS, result.getResultCode());
-//        assertEquals(nrg - tx.getNrgConsume(), result.getEnergyRemaining());
-//        assertNotEquals(nrg, tx.getNrgConsume());
-//
-//        BigInteger txCost =
-//                BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
-//        assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
-//        assertTrue(CallMePrecompiledContract.youCalledMe);
+        //        // First deploy the contract we will use to call the precompiled contract.
+        //        String contractName = "MultiFeatureCaller";
+        //        byte[] deployCode = getDeployCode(contractName);
+        //        long nrg = 1_000_000;
+        //        long nrgPrice = 1;
+        //        BigInteger value = BigInteger.ZERO;
+        //        BigInteger nonce = BigInteger.ZERO;
+        //        AionTransaction tx =
+        //                new AionTransaction(
+        //                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg,
+        // nrgPrice);
+        //        IRepositoryCache repo = blockchain.getRepository().startTracking();
+        //        nonce = nonce.add(BigInteger.ONE);
+        //        AionAddress contract =
+        //                deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
+        //
+        //        deployerBalance = repo.getBalance(deployer);
+        //        deployerNonce = repo.getNonce(deployer);
+        //        byte[] body = getBodyCode("MultiFeatureCaller");
+        //        assertArrayEquals(body, repo.getCode(contract));
+        //
+        //        // Now call the deployed smart contract to call the precompiled contract.
+        //        assertFalse(CallMePrecompiledContract.youCalledMe);
+        //        String msg = "I called the contract!";
+        //        byte[] input =
+        //                ByteUtil.merge(
+        //                        Hex.decode("783efb98"),
+        //                        AionAddress.wrap(ContractFactoryMock.CALL_ME).toBytes());
+        //        input = ByteUtil.merge(input, msg.getBytes());
+        //
+        //        tx =
+        //                new AionTransaction(
+        //                        nonce.toByteArray(),
+        //                        contract,
+        //                        BigInteger.ZERO.toByteArray(),
+        //                        input,
+        //                        nrg,
+        //                        nrgPrice);
+        //        tx.sign(deployerKey);
+        //        assertFalse(tx.isContractCreationTransaction());
+        //
+        //        BlockContext context =
+        //                blockchain.createNewBlockContext(
+        //                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
+        //
+        //        TransactionExecutor exec = new TransactionExecutor(tx, context.block, repo,
+        // LOGGER_VM);
+        ////        ExecutorProvider provider = new TestVMProvider();
+        ////        ((TestVMProvider) provider).setFactory(new ContractFactoryMock());
+        //        exec.execute();
+        //        FastVmTransactionResult result = (FastVmTransactionResult) exec.getResult();
+        //
+        //        assertEquals(FastVmResultCode.SUCCESS, result.getResultCode());
+        //        assertEquals(nrg - tx.getNrgConsume(), result.getEnergyRemaining());
+        //        assertNotEquals(nrg, tx.getNrgConsume());
+        //
+        //        BigInteger txCost =
+        //
+        // BigInteger.valueOf(tx.getNrgConsume()).multiply(BigInteger.valueOf(nrgPrice));
+        //        assertEquals(deployerBalance.subtract(txCost), repo.getBalance(deployer));
+        //        assertTrue(CallMePrecompiledContract.youCalledMe);
     }
 
     // <------------------------------------------HELPERS------------------------------------------->
@@ -988,9 +1015,22 @@ public class ContractIntegTest {
 
         AionAddress contract = tx.getContractAddress();
         if (contractFilename == null) {
-            checkStateOfNewContract(repo, contractName, contract, summary.getResult(), FastVmResultCode.SUCCESS, value);
+            checkStateOfNewContract(
+                    repo,
+                    contractName,
+                    contract,
+                    summary.getResult(),
+                    FastVmResultCode.SUCCESS,
+                    value);
         } else {
-            checkStateOfNewContract(repo, contractName, contractFilename, contract, summary.getResult(), FastVmResultCode.SUCCESS, value);
+            checkStateOfNewContract(
+                    repo,
+                    contractName,
+                    contractFilename,
+                    contract,
+                    summary.getResult(),
+                    FastVmResultCode.SUCCESS,
+                    value);
         }
         checkStateOfDeployer(repo, summary, nrgPrice, value, nonce);
         return contract;
@@ -1113,13 +1153,15 @@ public class ContractIntegTest {
         return output;
     }
 
-    private BulkExecutor getNewExecutor(AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
-        BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
-        return new BulkExecutor(details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+    private BulkExecutor getNewExecutor(
+            AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
+        return new BulkExecutor(
+                details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, c, s, t, b) -> {
             return 0L;
         };
     }

@@ -1,10 +1,11 @@
 package org.aion.vm;
 
-import java.math.BigInteger;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.ITxExecSummary;
+import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
 import org.aion.mcf.core.AccountState;
@@ -14,13 +15,14 @@ import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.ResultCode;
+import org.aion.vm.api.interfaces.SimpleFuture;
+import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.vm.api.interfaces.TransactionResult;
+import org.aion.vm.api.interfaces.VirtualMachine;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
-import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
-import org.aion.fastvm.TransactionExecutor;
 
 /**
  * One day this will actually be in the proper shape!
@@ -32,17 +34,43 @@ import org.aion.fastvm.TransactionExecutor;
 public class BulkExecutor {
     private static final Object LOCK = new Object();
 
-    private AionTransaction transaction;
-    private KernelTransactionContext context;
-    private IAionBlock block;
-    private KernelInterfaceForFastVM kernel;
-    private boolean isLocalCall, allowNonceIncrement;
-    private long blockRemainingNrg;
-    private Logger logger;
+    private IRepository repository;
+    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild;
     private PostExecutionWork postExecutionWork;
+    private ExecutionBatch executionBlock;
+    private Logger logger;
+    private FastVirtualMachine fastVirtualMachine;
+    private boolean isLocalCall;
+    private long blockRemainingEnergy;
 
     public BulkExecutor(
-            BlockDetails details,
+            ExecutionBatch executionBlock,
+            IRepository repository,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
+            boolean isLocalCall,
+            boolean allowNonceIncrement,
+            long blockRemainingNrg,
+            Logger logger,
+            PostExecutionWork work) {
+
+        this.executionBlock = executionBlock;
+        this.repository = repository;
+        this.repositoryChild = repositoryChild;
+        this.isLocalCall = isLocalCall;
+        this.blockRemainingEnergy = blockRemainingNrg;
+        this.logger = logger;
+        this.postExecutionWork = work;
+
+        // Create and initialize the FastVirtualMachine.
+        KernelInterfaceForFastVM kernel =
+                new KernelInterfaceForFastVM(
+                        this.repositoryChild, allowNonceIncrement, this.isLocalCall);
+        this.fastVirtualMachine = new FastVirtualMachine();
+        this.fastVirtualMachine.setKernelInterface(kernel);
+    }
+
+    public BulkExecutor(
+            ExecutionBatch executionBlock,
             IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo,
             boolean isLocalCall,
             boolean allowNonceIncrement,
@@ -50,82 +78,114 @@ public class BulkExecutor {
             Logger logger,
             PostExecutionWork work) {
 
-        this.kernel = new KernelInterfaceForFastVM(repo, allowNonceIncrement, isLocalCall);
-        this.transaction = details.getTransactions().get(0);
-        this.context = details.getExecutionContexts().get(0);
-        this.block = details.getBlock();
-        this.isLocalCall = isLocalCall;
-        this.allowNonceIncrement = allowNonceIncrement;
-        this.blockRemainingNrg = blockRemainingNrg;
-        this.logger = logger;
-        this.postExecutionWork = work;
+        this(
+                executionBlock,
+                null,
+                repo,
+                isLocalCall,
+                allowNonceIncrement,
+                blockRemainingNrg,
+                logger,
+                work);
     }
 
     public List<AionTxExecSummary> execute() {
         synchronized (LOCK) {
-            TransactionExecutor executor =
-                    new TransactionExecutor(
-                            this.transaction,
-                            this.context,
-                            this.block,
-                            this.kernel,
-                            logger,
-                            blockRemainingNrg);
-            TransactionResult result = executor.executeAndFetchResultOnly();
+            List<AionTxExecSummary> summaries = new ArrayList<>();
 
+            VirtualMachine virtualMachineForNextBatch = null;
+            ExecutionBatch nextBatchToExecute = null;
+
+            int currentIndex = 0;
+            while (currentIndex < this.executionBlock.size()) {
+                AionTransaction firstTransactionInNextBatch =
+                        this.executionBlock.getTransactions().get(currentIndex);
+
+                if (transactionIsForFastVirtualMachine(firstTransactionInNextBatch)) {
+                    virtualMachineForNextBatch = this.fastVirtualMachine;
+                    nextBatchToExecute =
+                            fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
+                } else {
+                    // You never get here yet.
+                }
+
+                // Execute the next batch of transactions using the specified virtual machine.
+                summaries.addAll(
+                        executeTransactions(virtualMachineForNextBatch, nextBatchToExecute));
+                currentIndex += nextBatchToExecute.size();
+            }
+
+            return summaries;
+        }
+    }
+
+    private List<AionTxExecSummary> executeTransactions(
+            VirtualMachine virtualMachine, ExecutionBatch details) {
+        List<AionTxExecSummary> summaries = new ArrayList<>();
+
+        // Run the transactions.
+        SimpleFuture<TransactionResult>[] resultsAsFutures =
+                virtualMachine.run(details.getExecutionContexts());
+
+        // Process the results of the transactions.
+        List<AionTransaction> transactions = details.getTransactions();
+        TransactionContext[] contexts = details.getExecutionContexts();
+
+        int length = resultsAsFutures.length;
+        for (int i = 0; i < length; i++) {
+            TransactionResult result = resultsAsFutures[i].get();
             KernelInterface kernelFromVM = result.getKernelInterface();
 
+            AionTransaction transaction = transactions.get(i);
+            TransactionContext context = contexts[i];
+
             // 1. Check the block energy limit & reject if necessary.
-            if (computeEnergyUsed(this.transaction.getEnergyLimit(), result)
-                    > this.blockRemainingNrg) {
+            long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
+            if (energyUsed > this.blockRemainingEnergy) {
                 result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
                 result.setEnergyRemaining(0);
                 result.setOutput(new byte[0]);
             }
 
-            // 2. In the case of failure, nonce still increments and energy cost is still deducted,
-            // but all other updates done by the executor should be dropped.
-            if (result.getResultCode().isFailed()) {
-                this.kernel.rollback(); // better to avoid this in KernelInterface, use repo directly here.
-                BigInteger energyCost =
-                        BigInteger.valueOf(
-                                this.transaction.getEnergyLimit()
-                                        * this.transaction.getEnergyPrice());
+            // 2. build the transaction summary and update the repository (the one backing
+            // this.kernel) with the contents of kernelFromVM accordingly.
+            AionTxExecSummary summary =
+                    buildSummaryAndUpdateRepository(transaction, context, kernelFromVM, result);
 
-                KernelInterfaceForFastVM track = this.kernel.startTracking();
-                track.incrementNonce(this.transaction.getSenderAddress());
-                track.deductEnergyCost(this.transaction.getSenderAddress(), energyCost);
-                track.flush();
-            }
-
-            // 3. build the tx summary && update the repo.
-            AionTxExecSummary summary = buildSummaryAndUpdateRepository(kernelFromVM, result);
-
-            // 4. do the execution-specific work.
-            this.blockRemainingNrg -=
+            // 3. Do any post execution work and update the remaining block energy.
+            this.blockRemainingEnergy -=
                     this.postExecutionWork.doExecutionWork(
-                            this.kernel, summary, this.transaction, this.blockRemainingNrg);
+                            this.repository,
+                            this.repositoryChild,
+                            summary,
+                            transaction,
+                            this.blockRemainingEnergy);
 
-            // 5. return the summary.
-            return Collections.singletonList(summary);
+            summaries.add(summary);
         }
+
+        return summaries;
     }
 
     private AionTxExecSummary buildSummaryAndUpdateRepository(
-            KernelInterface kernelFromVM, TransactionResult result) {
-        SideEffects rootHelper = new SideEffects();
+            AionTransaction transaction,
+            TransactionContext context,
+            KernelInterface kernelFromVM,
+            TransactionResult result) {
+
+        SideEffects sideEffects = new SideEffects();
         if (result.getResultCode().isSuccess()) {
-            rootHelper.merge(this.context.getSideEffects());
+            sideEffects.merge(context.getSideEffects());
         } else {
-            rootHelper.addInternalTransactions(
-                    this.context.getSideEffects().getInternalTransactions());
+            sideEffects.addInternalTransactions(context.getSideEffects().getInternalTransactions());
         }
 
         AionTxExecSummary.Builder builder =
-                AionTxExecSummary.builderFor(makeReceipt(rootHelper.getExecutionLogs(), result))
-                        .logs(rootHelper.getExecutionLogs())
-                        .deletedAccounts(rootHelper.getAddressesToBeDeleted())
-                        .internalTransactions(rootHelper.getInternalTransactions())
+                AionTxExecSummary.builderFor(
+                                makeReceipt(transaction, sideEffects.getExecutionLogs(), result))
+                        .logs(sideEffects.getExecutionLogs())
+                        .deletedAccounts(sideEffects.getAddressesToBeDeleted())
+                        .internalTransactions(sideEffects.getInternalTransactions())
                         .result(result.getOutput());
 
         ResultCode resultCode = result.getResultCode();
@@ -142,19 +202,20 @@ public class BulkExecutor {
 
         updateRepository(
                 summary,
-                this.transaction,
-                this.block.getCoinbase(),
-                rootHelper.getAddressesToBeDeleted(),
+                transaction,
+                this.executionBlock.getBlock().getCoinbase(),
+                sideEffects.getAddressesToBeDeleted(),
                 result);
 
         return summary;
     }
 
-    private AionTxReceipt makeReceipt(List<IExecutionLog> logs, TransactionResult result) {
+    private AionTxReceipt makeReceipt(
+            AionTransaction transaction, List<IExecutionLog> logs, TransactionResult result) {
         AionTxReceipt receipt = new AionTxReceipt();
-        receipt.setTransaction(this.transaction);
+        receipt.setTransaction(transaction);
         receipt.setLogs(logs);
-        receipt.setNrgUsed(computeEnergyUsed(this.transaction.getEnergyLimit(), result));
+        receipt.setNrgUsed(computeEnergyUsed(transaction.getEnergyLimit(), result));
         receipt.setExecutionResult(result.getOutput());
         receipt.setError(result.getResultCode().isSuccess() ? "" : result.getResultCode().name());
 
@@ -169,17 +230,18 @@ public class BulkExecutor {
             TransactionResult result) {
 
         if (!isLocalCall && !summary.isRejected()) {
-            KernelInterfaceForFastVM track = this.kernel.startTracking();
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track =
+                    this.repositoryChild.startTracking();
 
             // Refund energy if transaction was successfully or reverted.
             if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
-                track.adjustBalance(tx.getSenderAddress(), summary.getRefund());
+                track.addBalance(tx.getSenderAddress(), summary.getRefund());
             }
 
             tx.setNrgConsume(computeEnergyUsed(tx.getEnergyLimit(), result));
 
             // Pay the miner.
-            track.adjustBalance(coinbase, summary.getFee());
+            track.addBalance(coinbase, summary.getFee());
 
             // Delete any accounts marked for deletion.
             if (result.getResultCode().isSuccess()) {
@@ -197,7 +259,25 @@ public class BulkExecutor {
     }
 
     private long computeEnergyUsed(long limit, TransactionResult result) {
-        System.out.println("---> " + (limit - result.getEnergyRemaining()));
         return limit - result.getEnergyRemaining();
+    }
+
+    private ExecutionBatch fetchNextBatchOfTransactionsForFastVirtualMachine(int startIndex) {
+        int endIndexExclusive = this.executionBlock.size();
+
+        // Find the index of the next transaction that is not fvm-bound.
+        List<AionTransaction> transactions = this.executionBlock.getTransactions();
+        for (int i = startIndex; i < endIndexExclusive; i++) {
+            if (!transactionIsForFastVirtualMachine(transactions.get(i))) {
+                endIndexExclusive = i;
+            }
+        }
+
+        return this.executionBlock.slice(startIndex, endIndexExclusive);
+    }
+
+    private boolean transactionIsForFastVirtualMachine(AionTransaction transaction) {
+        // TODO: to eventually be replaced with real logic.
+        return true;
     }
 }

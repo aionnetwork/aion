@@ -53,8 +53,10 @@ import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
-import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
+import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -77,7 +79,6 @@ import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.aion.vm.api.interfaces.Address;
 
 // TODO: clean and clarify best block
 // bestKnownBlock - block with the highest block number
@@ -1074,7 +1075,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         long energyRemaining = block.getNrgLimit();
         for (AionTransaction tx : block.getTransactionsList()) {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
                     new BulkExecutor(
                             details,
@@ -1083,8 +1084,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             true,
                             energyRemaining,
                             LOGGER_VM,
-                            (k, s, t, b) -> {
-                                return 0L;
+                            (r, c, s, t, b) -> {
+                                return 0;
                             });
 
             AionTxExecSummary summary = executor.execute().get(0);
@@ -1115,6 +1116,26 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return new RetValidPreBlock(transactions, rewards, receipts, summaries);
     }
 
+    private static PostExecutionWork getPostExecutionWorkForGeneratePreBlock() {
+        return (topRepository,
+                childRepository,
+                transactionSummary,
+                transaction,
+                blockEnergyLeft) -> {
+            if (!transactionSummary.isRejected()) {
+                childRepository.flush();
+
+                AionTxReceipt receipt = transactionSummary.getReceipt();
+                receipt.setPostTxState(topRepository.getRoot());
+                receipt.setTransaction(transaction);
+
+                return receipt.getEnergyUsed();
+            } else {
+                return 0;
+            }
+        };
+    }
+
     private AionBlockSummary applyBlock(IAionBlock block) {
         long saveTime = System.nanoTime();
 
@@ -1122,7 +1143,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         for (AionTransaction tx : block.getTransactionsList()) {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
                     new BulkExecutor(
                             details,
@@ -1131,7 +1152,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             true,
                             block.getNrgLimit(),
                             LOGGER_VM,
-                            (k, s, t, b) -> {
+                            (r, c, s, t, b) -> {
                                 return 0L;
                             });
 
