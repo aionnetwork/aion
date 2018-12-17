@@ -37,7 +37,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.BlockDetails;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
@@ -271,7 +271,7 @@ public class InternalTransactionTest {
         tx2.sign(deployerAccount);
 
         context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx2), false);
-        BlockDetails details = new BlockDetails(context.block, Collections.singletonList(tx2));
+        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx2));
         BulkExecutor exec =
                 new BulkExecutor(
                         details,
@@ -339,7 +339,7 @@ public class InternalTransactionTest {
         tx1.sign(deployerAccount);
 
         BlockContext context = bc.createNewBlockContext(bc.getBestBlock(), List.of(tx1), false);
-        BlockDetails details = new BlockDetails(context.block, Collections.singletonList(tx1));
+        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx1));
         BulkExecutor exec =
                 new BulkExecutor(
                         details,
@@ -361,7 +361,7 @@ public class InternalTransactionTest {
     public void teardown() {}
 
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, s, t, b) -> {
             return 0L;
         };
     }

@@ -42,7 +42,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.solidity.Compiler.Options;
-import org.aion.vm.BlockDetails;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionWork;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -115,7 +115,7 @@ public class OldTxExecutorTest {
         cache.saveCode(to, Hex.decode(contract));
         cache.flush();
 
-        BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec = new BulkExecutor(details, repo.startTracking(), false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
@@ -154,7 +154,7 @@ public class OldTxExecutorTest {
         IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = repoTop.startTracking();
         repo.addBalance(from, BigInteger.valueOf(500_000L).multiply(tx.nrgPrice().value()));
 
-        BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec = new BulkExecutor(details, repo.startTracking(), false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
@@ -202,7 +202,7 @@ public class OldTxExecutorTest {
         long t1 = System.nanoTime();
         long repeat = 1000;
         for (int i = 0; i < repeat; i++) {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor exec = new BulkExecutor(details, repo.startTracking(), false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
             exec.execute();
         }
@@ -234,7 +234,7 @@ public class OldTxExecutorTest {
         repo.addBalance(from, BigInteger.valueOf(1_000_000_000L));
         repo.flush();
 
-        BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec = new BulkExecutor(details, repo.startTracking(), false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
         AionTxReceipt receipt = exec.execute().get(0).getReceipt();
         System.out.println(receipt);
@@ -277,7 +277,7 @@ public class OldTxExecutorTest {
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, s, t, b) -> {
             return 0L;
         };
     }

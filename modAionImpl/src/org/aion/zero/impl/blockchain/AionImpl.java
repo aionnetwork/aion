@@ -18,7 +18,7 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
-import org.aion.vm.BlockDetails;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionWork;
 import org.aion.zero.impl.AionHub;
@@ -134,7 +134,7 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
                 new BulkExecutor(
                     details,
@@ -161,7 +161,7 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
                 new BulkExecutor(
                     details,

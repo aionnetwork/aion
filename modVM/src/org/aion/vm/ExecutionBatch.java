@@ -32,12 +32,12 @@ import org.apache.commons.lang3.ArrayUtils;
  *     - The transactions are ordered in their list in the same order in which they must be logically
  *       processed, where index 0 indicates the first transaction to be processed.
  */
-public final class BlockDetails {
+public final class ExecutionBatch {
     private List<AionTransaction> transactions;
     private List<KernelTransactionContext> contexts;
     private IAionBlock block;
 
-    public BlockDetails(IAionBlock block, List<AionTransaction> transactions) {
+    public ExecutionBatch(IAionBlock block, List<AionTransaction> transactions) {
         if (block == null) {
             throw new NullPointerException("Cannot construct BlockDetails with null block.");
         }
@@ -50,7 +50,7 @@ public final class BlockDetails {
         this.contexts = constructTransactionContexts(this.transactions, this.block);
     }
 
-    private BlockDetails(IAionBlock block, List<AionTransaction> transactions, List<KernelTransactionContext> contexts) {
+    private ExecutionBatch(IAionBlock block, List<AionTransaction> transactions, List<KernelTransactionContext> contexts) {
         this.block = block;
         this.transactions = transactions;
         this.contexts = contexts;
@@ -66,10 +66,10 @@ public final class BlockDetails {
      * @param stop The index of the last transaction in the slice, exclusive.
      * @return The sliced version of this BlockDetails object.
      */
-    public BlockDetails slice(int start, int stop) {
+    public ExecutionBatch slice(int start, int stop) {
         List<AionTransaction> transactions = this.transactions.subList(start, stop);
         List<KernelTransactionContext> contexts = this.contexts.subList(start, stop);
-        return new BlockDetails(this.block, transactions, contexts);
+        return new ExecutionBatch(this.block, transactions, contexts);
     }
 
     /**
@@ -95,8 +95,14 @@ public final class BlockDetails {
      *
      * @return The contexts.
      */
-    public List<KernelTransactionContext> getExecutionContexts() {
-        return this.contexts;
+    public KernelTransactionContext[] getExecutionContexts() {
+        KernelTransactionContext[] contextsAsArray = new KernelTransactionContext[this.contexts.size()];
+        this.contexts.toArray(contextsAsArray);
+        return contextsAsArray;
+    }
+
+    public int size() {
+        return this.transactions.size();
     }
 
     private List<KernelTransactionContext> constructTransactionContexts(List<AionTransaction> transactions, IAionBlock block) {
