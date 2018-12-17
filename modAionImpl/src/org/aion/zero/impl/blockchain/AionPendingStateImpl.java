@@ -1099,7 +1099,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      * in which case we will have to give this method real functionality.
      */
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, c, s, t, b) -> {
             return 0L;
         };
     }

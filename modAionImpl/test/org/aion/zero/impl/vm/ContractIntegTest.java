@@ -1119,7 +1119,7 @@ public class ContractIntegTest {
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (r, s, t, b) -> {
+        return (r, c, s, t, b) -> {
             return 0L;
         };
     }

@@ -77,6 +77,7 @@ import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.PostExecutionWork;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -1105,8 +1106,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             true,
                             energyRemaining,
                             LOGGER_VM,
-                            (k, s, t, b) -> {
-                                return 0L;
+                            (r, c, s, t, b) -> {
+                                return 0;
                             });
 
             AionTxExecSummary summary = executor.execute().get(0);
@@ -1137,6 +1138,27 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return new RetValidPreBlock(transactions, rewards, receipts, summaries);
     }
 
+    private static PostExecutionWork getPostExecutionWorkForGeneratePreBlock() {
+        return (topRepository,
+                childRepository,
+                transactionSummary,
+                transaction,
+                blockEnergyLeft) -> {
+
+            if (!transactionSummary.isRejected()) {
+                childRepository.flush();
+
+                AionTxReceipt receipt = transactionSummary.getReceipt();
+                receipt.setPostTxState(topRepository.getRoot());
+                receipt.setTransaction(transaction);
+
+                return receipt.getEnergyUsed();
+            } else {
+                return 0;
+            }
+        };
+    }
+
     private AionBlockSummary applyBlock(IAionBlock block) {
         long saveTime = System.nanoTime();
 
@@ -1153,7 +1175,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             true,
                             block.getNrgLimit(),
                             LOGGER_VM,
-                            (k, s, t, b) -> {
+                            (r, c, s, t, b) -> {
                                 return 0L;
                             });
 
