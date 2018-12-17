@@ -50,7 +50,7 @@ import org.aion.solidity.SolidityType.DynamicArrayType;
 import org.aion.solidity.SolidityType.IntType;
 import org.aion.solidity.SolidityType.StaticArrayType;
 import org.aion.solidity.SolidityType.StringType;
-import org.aion.vm.BlockDetails;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionWork;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -404,7 +404,7 @@ public class SolidityTypeTest {
     }
 
     private BulkExecutor getNewExecutor(AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
-        BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         return new BulkExecutor(details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
     }
 
@@ -443,7 +443,7 @@ public class SolidityTypeTest {
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, s, t, b) -> {
             return 0L;
         };
     }

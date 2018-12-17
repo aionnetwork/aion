@@ -75,7 +75,7 @@ import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
-import org.aion.vm.BlockDetails;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -1096,7 +1096,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         long energyRemaining = block.getNrgLimit();
         for (AionTransaction tx : block.getTransactionsList()) {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
                     new BulkExecutor(
                             details,
@@ -1144,7 +1144,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         for (AionTransaction tx : block.getTransactionsList()) {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
                     new BulkExecutor(
                             details,

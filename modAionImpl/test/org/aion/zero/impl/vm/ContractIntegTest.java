@@ -44,7 +44,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.vm.Constants;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.BlockDetails;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.ResultCode;
@@ -118,7 +118,7 @@ public class ContractIntegTest {
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
 
-        BlockDetails details = new BlockDetails(context.block, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec = new BulkExecutor(details, repo, false, true, context.block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
@@ -1114,12 +1114,12 @@ public class ContractIntegTest {
     }
 
     private BulkExecutor getNewExecutor(AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
-        BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         return new BulkExecutor(details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, s, t, b) -> {
             return 0L;
         };
     }

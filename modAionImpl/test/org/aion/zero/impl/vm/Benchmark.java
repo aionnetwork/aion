@@ -45,7 +45,7 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.BlockDetails;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionWork;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -102,7 +102,7 @@ public class Benchmark {
         contract = tx.getContractAddress();
 
         // deploy contract
-        BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec =
                 new BulkExecutor(
                         details,
@@ -183,7 +183,7 @@ public class Benchmark {
         List<AionTxReceipt> list = new ArrayList<>();
 
         for (AionTransaction tx : txs) {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor exec =
                     new BulkExecutor(
                             details,
@@ -230,7 +230,7 @@ public class Benchmark {
             long nrgPrice = 1L;
             AionTransaction tx = new AionTransaction(nonce, from, to, value, data, nrg, nrgPrice);
 
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor exec =
                     new BulkExecutor(
                             details,
@@ -301,7 +301,7 @@ public class Benchmark {
     }
 
     private static PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, s, t, b) -> {
             return 0L;
         };
     }

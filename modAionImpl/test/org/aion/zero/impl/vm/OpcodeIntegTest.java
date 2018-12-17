@@ -41,7 +41,7 @@ import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.BlockDetails;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.IExecutionLog;
@@ -808,13 +808,13 @@ public class OpcodeIntegTest {
 
     private BulkExecutor getNewExecutor(
             AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
-        BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         return new BulkExecutor(
                 details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, s, t, b) -> {
             return 0L;
         };
     }

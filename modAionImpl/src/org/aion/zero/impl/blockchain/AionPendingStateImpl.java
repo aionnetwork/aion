@@ -66,7 +66,7 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
-import org.aion.vm.BlockDetails;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.Address;
@@ -1079,7 +1079,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             LOGGER_TX.trace("executeTx: {}", Hex.toHexString(tx.getTransactionHash()));
         }
 
-        BlockDetails details = new BlockDetails(bestBlk, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(bestBlk, Collections.singletonList(tx));
         BulkExecutor txExe =
             new BulkExecutor(
                 details,
