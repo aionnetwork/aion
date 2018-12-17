@@ -256,6 +256,30 @@ public final class CfgSync {
         return showStatistics;
     }
 
+    public boolean getEnabled() {
+        return this.enabled;
+    }
+
+    public long getSlowImport() {
+        return this.slowImport;
+    }
+
+    public long getFrequency() {
+        return this.frequency;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public void setSlowImport(long slowImport) {
+        this.slowImport = slowImport;
+    }
+
+    public void setFrequency(long frequency) {
+        this.frequency = frequency;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

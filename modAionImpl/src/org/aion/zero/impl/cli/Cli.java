@@ -47,6 +47,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
+import org.aion.mcf.config.CfgSync;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.RecoveryUtils;
@@ -192,6 +193,7 @@ public class Cli {
             boolean overwrite = cfg.fromXML(configFile);
 
             // determine the port configuration, can be combined with the -n, -d, -c, -i arguments
+
             if (options.getPort() != null) {
 
                 int currentPort = cfg.getNet().getP2p().getPort();
@@ -202,7 +204,7 @@ public class Cli {
                     portNumber = Integer.parseInt(options.getPort());
                 } catch (NumberFormatException e) {
                     validPort = false;
-                    System.out.println("Port must be an integer value");
+                    System.out.println("Port must be a positive integer value");
                 }
 
                 if (portNumber < 0 || portNumber > 0xFFFF) {
@@ -221,7 +223,76 @@ public class Cli {
                 // no return, allow for other parameters combined with -p
             }
 
-            // 4. can be influenced by the -n, -d, -p arguments above
+            // determine the sync compact configuration, can be combined with the -n, -d, -c, -p, -i
+            // arguments
+
+            if (options.getCompact() != null) {
+
+                CfgSync cfgSync = cfg.getSync();
+                String[] parameters = options.getCompact();
+
+                if (parameters.length == 1) {
+
+                    if (!parameters[0].equalsIgnoreCase("true")
+                            && !parameters[0].equalsIgnoreCase("false")) {
+                        System.out.println("enabled value must be boolean");
+                        return ERROR;
+                    }
+                    boolean enabled = Boolean.parseBoolean(parameters[0]);
+                    if (enabled != cfgSync.getEnabled()) {
+                        cfgSync.setEnabled(enabled);
+                        overwrite = true;
+                    }
+                    System.out.println("Compact enabled is set to: " + enabled);
+
+                } else if (options.getCompact().length == 2) {
+
+                    long slowImport = cfgSync.getSlowImport();
+                    long frequency = cfgSync.getFrequency();
+                    boolean validCompact = true;
+
+                    try {
+                        slowImport = Long.parseLong(parameters[0]);
+                        frequency = Long.parseLong(parameters[1]);
+                    } catch (NumberFormatException e) {
+                        validCompact = false;
+                        System.out.println(
+                                "slow_import and frequency values must be positive long");
+                    }
+                    if (slowImport < 0 || frequency < 0) {
+                        validCompact = false;
+                        System.out.println("slow_import and frequency values must be positive");
+                    }
+
+                    if (validCompact
+                            && (slowImport != cfgSync.getSlowImport()
+                                    || frequency != cfgSync.getFrequency())) {
+                        cfgSync.setEnabled(true);
+                        cfgSync.setSlowImport(slowImport);
+                        cfgSync.setFrequency(frequency);
+                        overwrite = true;
+                        System.out.println(
+                                "Compact enabled using the provided configuration: slow_import="
+                                        + slowImport
+                                        + " frequency="
+                                        + frequency);
+                    } else {
+                        System.out.println(
+                                "Compact enabled using the current configuration: slow_import="
+                                        + cfgSync.getSlowImport()
+                                        + " frequency="
+                                        + cfgSync.getFrequency());
+
+                        if (!cfgSync.getEnabled()) {
+                            cfgSync.setEnabled(true);
+                            overwrite = true;
+                        }
+                    }
+                }
+                // no return, allow for other parameters combined with --compact
+            }
+
+            // 4. can be influenced by the -n, -d, -p, --compact arguments above
 
             if (options.getConfig() != null) {
                 // network was already set above
@@ -259,7 +330,7 @@ public class Cli {
                 return ReturnType.EXIT;
             }
 
-            // 5. options that can be influenced by the -d, -n and -p arguments
+            // 5. options that can be influenced by the -d, -n, -p and --compact arguments
 
             if (options.isInfo()) {
                 System.out.println(
@@ -505,9 +576,7 @@ public class Cli {
         // the command line output has some styling characters in addition to the actual string
         // making the use of a regular expression necessary here
         usage = usage.replaceFirst(" \\[[^ ]*<hostname> <ip>.*]", "]");
-        usage =
-                usage.replaceFirst(
-                        "(?<=<enabled> )([\\s\\S]*?)]+", "| <slow_import> <frequency>");
+        usage = usage.replaceFirst("(?<=<enabled> )([\\s\\S]*?)]+", "| <slow_import> <frequency>");
 
         System.out.println(usage);
     }
@@ -896,6 +965,9 @@ public class Cli {
             }
             if (options.getPort() != null) {
                 skippedTasks.add("--port");
+            }
+            if (options.getCompact() != null) {
+                skippedTasks.add("--compact");
             }
             if (options.getConfig() != null) {
                 skippedTasks.add("--config");
