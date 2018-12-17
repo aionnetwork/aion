@@ -1,4 +1,31 @@
+<<<<<<< HEAD:modMcf/test/org/aion/trie/TrieTestWithRootHashValues.java
 package org.aion.trie;
+=======
+/*
+ * Copyright (c) 2017-2018 Aion foundation.
+ *
+ *     This file is part of the aion network project.
+ *
+ *     The aion network project is free software: you can redistribute it
+ *     and/or modify it under the terms of the GNU General Public License
+ *     as published by the Free Software Foundation, either version 3 of
+ *     the License, or any later version.
+ *
+ *     The aion network project is distributed in the hope that it will
+ *     be useful, but WITHOUT ANY WARRANTY; without even the implied
+ *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *     See the GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with the aion network project source files.
+ *     If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contributors:
+ *     Aion foundation.
+ */
+
+package org.aion.mcf.trie;
+>>>>>>> c7a85d2... separating insert and delete functionality inside the trie implementation:modMcf/test/org/aion/mcf/trie/TrieTestWithRootHashValues.java
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.junit.Assert.assertEquals;
@@ -6,9 +33,6 @@ import static org.junit.Assert.assertEquals;
 import junitparams.JUnitParamsRunner;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.mockdb.MockDB;
-import org.aion.mcf.trie.SecureTrie;
-import org.aion.mcf.trie.Trie;
-import org.aion.mcf.trie.TrieImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -65,9 +89,9 @@ public class TrieTestWithRootHashValues {
         trie.update("horse", "stallion");
         trie.update("shaman", "horse");
         trie.update("doge", "coin");
-        trie.update("ether", "");
+        trie.delete("ether");
         trie.update("dog", "puppy");
-        trie.update("shaman", "");
+        trie.delete("shaman");
 
         assertEquals(
                 "5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84",
@@ -391,22 +415,20 @@ public class TrieTestWithRootHashValues {
         byte[] v5 = "coin".getBytes();
 
         byte[] k6 = "ether".getBytes();
-        byte[] v6 = "".getBytes();
 
         byte[] k7 = "dog".getBytes();
         byte[] v7 = "puppy".getBytes();
 
         byte[] k8 = "shaman".getBytes();
-        byte[] v8 = "".getBytes();
 
         trie.update(k1, v1);
         trie.update(k2, v2);
         trie.update(k3, v3);
         trie.update(k4, v4);
         trie.update(k5, v5);
-        trie.update(k6, v6);
+        trie.delete(k6);
         trie.update(k7, v7);
-        trie.update(k8, v8);
+        trie.delete(k8);
 
         byte[] root = trie.getRootHash();
 
