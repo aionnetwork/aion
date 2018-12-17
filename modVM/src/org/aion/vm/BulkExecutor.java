@@ -2,6 +2,7 @@ package org.aion.vm;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.ITxExecSummary;
 import org.aion.fastvm.FastVirtualMachine;
@@ -33,13 +34,40 @@ import org.slf4j.Logger;
 public class BulkExecutor {
     private static final Object LOCK = new Object();
 
-    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository;
+    private IRepository repository;
+    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild;
     private PostExecutionWork postExecutionWork;
     private ExecutionBatch executionBlock;
     private Logger logger;
     private FastVirtualMachine fastVirtualMachine;
-    private boolean isLocalCall, allowNonceIncrement;
+    private boolean isLocalCall;
     private long blockRemainingEnergy;
+
+    public BulkExecutor(
+            ExecutionBatch executionBlock,
+            IRepository repository,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
+            boolean isLocalCall,
+            boolean allowNonceIncrement,
+            long blockRemainingNrg,
+            Logger logger,
+            PostExecutionWork work) {
+
+        this.executionBlock = executionBlock;
+        this.repository = repository;
+        this.repositoryChild = repositoryChild;
+        this.isLocalCall = isLocalCall;
+        this.blockRemainingEnergy = blockRemainingNrg;
+        this.logger = logger;
+        this.postExecutionWork = work;
+
+        // Create and initialize the FastVirtualMachine.
+        KernelInterfaceForFastVM kernel =
+                new KernelInterfaceForFastVM(
+                        this.repositoryChild, allowNonceIncrement, this.isLocalCall);
+        this.fastVirtualMachine = new FastVirtualMachine();
+        this.fastVirtualMachine.setKernelInterface(kernel);
+    }
 
     public BulkExecutor(
             ExecutionBatch executionBlock,
@@ -50,18 +78,15 @@ public class BulkExecutor {
             Logger logger,
             PostExecutionWork work) {
 
-        this.executionBlock = executionBlock;
-        this.repository = repo;
-        this.isLocalCall = isLocalCall;
-        this.allowNonceIncrement = allowNonceIncrement;
-        this.blockRemainingEnergy = blockRemainingNrg;
-        this.logger = logger;
-        this.postExecutionWork = work;
-
-        // Create and initialize the FastVirtualMachine.
-        KernelInterfaceForFastVM kernel = new KernelInterfaceForFastVM(this.repository, this.allowNonceIncrement, this.isLocalCall);
-        this.fastVirtualMachine = new FastVirtualMachine();
-        this.fastVirtualMachine.setKernelInterface(kernel);
+        this(
+                executionBlock,
+                null,
+                repo,
+                isLocalCall,
+                allowNonceIncrement,
+                blockRemainingNrg,
+                logger,
+                work);
     }
 
     public List<AionTxExecSummary> execute() {
@@ -73,17 +98,20 @@ public class BulkExecutor {
 
             int currentIndex = 0;
             while (currentIndex < this.executionBlock.size()) {
-                AionTransaction firstTransactionInNextBatch = this.executionBlock.getTransactions().get(currentIndex);
+                AionTransaction firstTransactionInNextBatch =
+                        this.executionBlock.getTransactions().get(currentIndex);
 
                 if (transactionIsForFastVirtualMachine(firstTransactionInNextBatch)) {
                     virtualMachineForNextBatch = this.fastVirtualMachine;
-                    nextBatchToExecute = fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
+                    nextBatchToExecute =
+                            fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
                 } else {
                     // You never get here yet.
                 }
 
                 // Execute the next batch of transactions using the specified virtual machine.
-                summaries.addAll(executeTransactions(virtualMachineForNextBatch, nextBatchToExecute));
+                summaries.addAll(
+                        executeTransactions(virtualMachineForNextBatch, nextBatchToExecute));
                 currentIndex += nextBatchToExecute.size();
             }
 
@@ -91,11 +119,13 @@ public class BulkExecutor {
         }
     }
 
-    private List<AionTxExecSummary> executeTransactions(VirtualMachine virtualMachine, ExecutionBatch details) {
+    private List<AionTxExecSummary> executeTransactions(
+            VirtualMachine virtualMachine, ExecutionBatch details) {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         // Run the transactions.
-        SimpleFuture<TransactionResult>[] resultsAsFutures = virtualMachine.run(details.getExecutionContexts());
+        SimpleFuture<TransactionResult>[] resultsAsFutures =
+                virtualMachine.run(details.getExecutionContexts());
 
         // Process the results of the transactions.
         List<AionTransaction> transactions = details.getTransactions();
@@ -120,12 +150,16 @@ public class BulkExecutor {
             // 2. build the transaction summary and update the repository (the one backing
             // this.kernel) with the contents of kernelFromVM accordingly.
             AionTxExecSummary summary =
-                buildSummaryAndUpdateRepository(transaction, context, kernelFromVM, result);
+                    buildSummaryAndUpdateRepository(transaction, context, kernelFromVM, result);
 
             // 3. Do any post execution work and update the remaining block energy.
             this.blockRemainingEnergy -=
-                this.postExecutionWork.doExecutionWork(
-                    this.repository, summary, transaction, this.blockRemainingEnergy);
+                    this.postExecutionWork.doExecutionWork(
+                            this.repository,
+                            this.repositoryChild,
+                            summary,
+                            transaction,
+                            this.blockRemainingEnergy);
 
             summaries.add(summary);
         }
@@ -197,7 +231,7 @@ public class BulkExecutor {
 
         if (!isLocalCall && !summary.isRejected()) {
             IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track =
-                    this.repository.startTracking();
+                    this.repositoryChild.startTracking();
 
             // Refund energy if transaction was successfully or reverted.
             if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
@@ -225,7 +259,6 @@ public class BulkExecutor {
     }
 
     private long computeEnergyUsed(long limit, TransactionResult result) {
-        System.out.println("---> " + (limit - result.getEnergyRemaining()));
         return limit - result.getEnergyRemaining();
     }
 
@@ -244,8 +277,7 @@ public class BulkExecutor {
     }
 
     private boolean transactionIsForFastVirtualMachine(AionTransaction transaction) {
-        //TODO: to eventually be replaced with real logic.
+        // TODO: to eventually be replaced with real logic.
         return true;
     }
-
 }

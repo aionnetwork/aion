@@ -1,9 +1,10 @@
 package org.aion.vm;
 
+import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.vm.api.interfaces.TransactionInterface;
+import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 
 /**
@@ -24,7 +25,8 @@ public interface PostExecutionWork {
      * be relevant to the component of the kernel that wants this work done, and so it is also able
      * to return 0 in that case.
      *
-     * @param repository The upper layer of the database.
+     * @param repository The top-most level of the repository.
+     * @param repositoryChild The child repository of repository.
      * @param summary The transaction execution summary.
      * @param transaction The transaction.
      * @param blockEnergyRemaining The amount of energy remaining in the block <b>prior</b> to
@@ -32,8 +34,9 @@ public interface PostExecutionWork {
      * @return The amount of energy that this transaction uses in its block.
      */
     long doExecutionWork(
-            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repository,
+            IRepository repository,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
             AionTxExecSummary summary,
-            TransactionInterface transaction,
+            AionTransaction transaction,
             long blockEnergyRemaining);
 }
