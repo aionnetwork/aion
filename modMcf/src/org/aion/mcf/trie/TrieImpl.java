@@ -43,10 +43,10 @@ import static org.aion.rlp.CompactEncoder.hasTerminator;
 import static org.aion.rlp.CompactEncoder.packNibbles;
 import static org.aion.rlp.CompactEncoder.unpackToNibbles;
 import static org.aion.rlp.RLP.calcElementPrefixSize;
-import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.bytes.ByteUtil.matchingNibbleLength;
 import static org.spongycastle.util.Arrays.concatenate;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -189,15 +189,23 @@ public class TrieImpl implements Trie {
     }
 
     /** Insert key/value pair into trie. */
-    public void update(String key, String value) {
+    @VisibleForTesting
+    void update(String key, String value) {
         this.update(key.getBytes(), value.getBytes());
     }
 
     @Override
     public void update(byte[] key, byte[] value) {
-
         if (key == null) {
-            throw new NullPointerException("key should not be null");
+            throw new NullPointerException("The key should not be null.");
+        }
+        // value checks are added to enforce separation of insert and delete
+        if (value == null) {
+            throw new NullPointerException("The value should not be null.");
+        }
+        // note: this can be removed if a VM will want to allow empty additions
+        if (value.length == 0) {
+            throw new IllegalArgumentException("The value should not be empty.");
         }
         synchronized (cache) {
             byte[] k = binToNibbles(key);
@@ -206,7 +214,7 @@ public class TrieImpl implements Trie {
                 cache.markRemoved(getRootHash());
             }
 
-            this.root = this.insertOrDelete(this.root, k, value);
+            this.root = this.insert(this.root, k, value);
         }
     }
 
@@ -216,14 +224,21 @@ public class TrieImpl implements Trie {
     }
 
     /** Delete a key/value pair from the trie. */
-    public void delete(String key) {
-        this.update(key.getBytes(), EMPTY_BYTE_ARRAY);
+    @VisibleForTesting
+    void delete(String key) {
+        this.delete(key.getBytes());
     }
 
     @Override
     public void delete(byte[] key) {
         synchronized (cache) {
-            this.update(key, EMPTY_BYTE_ARRAY);
+            byte[] k = binToNibbles(key);
+
+            if (isEmptyNode(root)) {
+                cache.markRemoved(getRootHash());
+            }
+
+            this.root = this.delete(this.root, k);
         }
     }
 
@@ -270,14 +285,6 @@ public class TrieImpl implements Trie {
                 }
             }
             return node;
-        }
-    }
-
-    private Object insertOrDelete(Object node, byte[] key, byte[] value) {
-        if (value.length != 0) {
-            return this.insert(node, key, value);
-        } else {
-            return this.delete(node, key);
         }
     }
 
