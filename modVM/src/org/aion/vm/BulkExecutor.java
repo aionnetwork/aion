@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.type.ITxExecSummary;
+import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
 import org.aion.mcf.core.AccountState;
@@ -13,13 +14,15 @@ import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.ResultCode;
+import org.aion.vm.api.interfaces.SimpleFuture;
+import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.vm.api.interfaces.TransactionResult;
+import org.aion.vm.api.interfaces.VirtualMachine;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
-import org.aion.fastvm.TransactionExecutor;
 
 /**
  * One day this will actually be in the proper shape!
@@ -66,10 +69,12 @@ public class BulkExecutor {
                     new KernelInterfaceForFastVM(
                             this.repository, this.allowNonceIncrement, this.isLocalCall);
 
-            TransactionExecutor executor =
-                    new TransactionExecutor(
-                            this.transaction, this.context, kernel);
-            TransactionResult result = executor.execute();
+            VirtualMachine fvm = new FastVirtualMachine();
+            fvm.setKernelInterface(kernel);
+
+            TransactionContext[] contexts = new TransactionContext[] { this.context };
+            SimpleFuture<TransactionResult>[] results = fvm.run(contexts);
+            TransactionResult result = results[0].get();
 
             KernelInterface kernelFromVM = result.getKernelInterface();
 
@@ -82,8 +87,7 @@ public class BulkExecutor {
             }
 
             // 2. build the transaction summary and update the repository (the one backing
-            // this.kernel)
-            // with the contents of kernelFromVM accordingly.
+            // this.kernel) with the contents of kernelFromVM accordingly.
             AionTxExecSummary summary = buildSummaryAndUpdateRepository(kernelFromVM, result);
 
             // 2. Do any post execution work and update the remaining block energy.
