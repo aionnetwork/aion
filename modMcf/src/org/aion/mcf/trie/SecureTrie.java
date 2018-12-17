@@ -1,7 +1,6 @@
 package org.aion.mcf.trie;
 
 import static org.aion.crypto.HashUtil.h256;
-import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import org.aion.base.db.IByteArrayKeyValueStore;
 
@@ -27,6 +26,6 @@ public class SecureTrie extends TrieImpl implements Trie {
 
     @Override
     public void delete(byte[] key) {
-        this.update(key, EMPTY_BYTE_ARRAY);
+        super.delete(h256(key));
     }
 }
