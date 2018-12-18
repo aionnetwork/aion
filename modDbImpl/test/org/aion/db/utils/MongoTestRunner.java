@@ -1,9 +1,17 @@
 package org.aion.db.utils;
 
+import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.LogStream;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ExecCreation;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.PortBinding;
 import java.io.File;
-import java.io.IOException;
-import java.lang.ProcessBuilder.Redirect;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.aion.db.impl.DatabaseTestUtils;
 
 
@@ -18,6 +26,10 @@ public class MongoTestRunner implements AutoCloseable {
     private Process runningMongoServer;
     private File databaseFilesDir;
 
+    private DockerClient dockerClient;
+    private String runningDockerContainerId;
+    private static final String MONGO_IMAGE = "library/mongo:3.6.9";
+
     private static class Holder {
         static final MongoTestRunner INSTANCE = new MongoTestRunner();
     }
@@ -27,74 +39,54 @@ public class MongoTestRunner implements AutoCloseable {
     }
 
     private MongoTestRunner() {
-        this.port = DatabaseTestUtils.findOpenPort();
-
-        // Create a temp directory to store our db files in
-        this.databaseFilesDir = FileUtils.createTempDir("mongodb");
-        this.databaseFilesDir.mkdirs();
-
-        // Find the path to the actual mongo db executable
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource("mongo/bin/mongod").getFile());
-        String mongodPath = file.getAbsolutePath();
-
-
         try {
-            // First we need to just start the mongo database
-            List<String> commands = List.of(
-                mongodPath,
-                "--port",
-                Integer.toString(this.port),
-                "--dbpath",
-                databaseFilesDir.getAbsolutePath(),
-                "--replSet",
-                String.format("rs%d", System.currentTimeMillis()),
-                "--noauth",
-                "--nojournal",
-                "--quiet",
-                "--logpath",
-                new File(databaseFilesDir, "log.log").getAbsolutePath()
-            );
+            // Start by getting a connection to the docker service running on the machine
+            dockerClient = DefaultDockerClient.fromEnv().build();
 
-            this.runningMongoServer = new ProcessBuilder(commands)
-                .redirectError(Redirect.INHERIT)
-                .start();
+            // Pull the docker image, this will be very quick if it already exists on the machine
+            dockerClient.pull(MONGO_IMAGE, message -> System.out.println("Docker pull: " + message.status()));
 
-            this.runningMongoServer.onExit().thenAccept(p -> {
-                System.err.println("Unexpected mongo database shutdown with code " + p.exitValue());
-                fail("Mongo database crashed");
-            });
+            // Bind container port 27017 to an automatically allocated available host port.
+            this.port = DatabaseTestUtils.findOpenPort();
+            final Map<String, List<PortBinding>> portBindings =
+                Map.of("27017", Arrays.asList(PortBinding.of("0.0.0.0", Integer.toString(this.port))));
+            final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings).build();
+
+            // Configure how we want the image to run
+            ContainerConfig containerConfig = ContainerConfig.builder()
+                .attachStderr(true)
+                .hostConfig(hostConfig)
+                .exposedPorts("27017")
+                .image(MONGO_IMAGE)
+                .cmd("--replSet", "rs0", "--noauth", "--nojournal", "--quiet")
+                .build();
+
+            // Actually start the container
+            ContainerCreation creation = dockerClient.createContainer(containerConfig);
+            dockerClient.startContainer(creation.id());
+            this.runningDockerContainerId = creation.id();
 
             // Next we run a command to initialize the mongo server's replicas set and admin accounts
-            List<String> initializationCommands = List.of(
-                new File(classLoader.getResource("mongo/bin/mongo").getFile()).getAbsolutePath(),
-                "--host",
-                "localhost",
-                "--port",
-                Integer.toString(this.port),
-                new File(classLoader.getResource("mongo/initScript.js").getFile()).getAbsolutePath()
-            );
-
+            String[] initializationCommands = {"mongo", "--eval", "rs.initiate()"};
             tryInitializeDb(initializationCommands, 30, 100);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail("Exception thrown while starting Mongo");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            fail("Exception thrown while starting Mongo");
-        }
+            // Finally, add a shutdown hook to kill the Mongo server when the process dies
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    fail("Failed to close MongoDB connection");
+                }
+            }));
 
-        // Add a shutdown hook to kill the Mongo server when the process dies
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                fail("Failed to close MongoDB connection");
-            }
-        }));
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail("Error encountered when initializing mongo docker image. Make sure docker service is running");
+        }
     }
+
+
 
     /**
      * Helper method to run some initialization command on Mongo with some retry logic if the command fails. Since it's
@@ -104,21 +96,25 @@ public class MongoTestRunner implements AutoCloseable {
      * @param pauseTimeMillis How long to pause between retries
      * @throws InterruptedException Thrown when the thread gets interrupted trying to sleep.
      */
-    private void tryInitializeDb(List<String> initializationCommands, int retriesRemaining, long pauseTimeMillis)
+    private void tryInitializeDb(String[] initializationCommands, int retriesRemaining, long pauseTimeMillis)
         throws InterruptedException {
 
-        int exitCode = -1;
         Exception exception = null;
+        String execOutput = "";
         try {
-            exitCode = new ProcessBuilder(initializationCommands)
-                .redirectError(Redirect.INHERIT)
-                .start()
-                .waitFor();
-        } catch (Exception e) {
+            final ExecCreation execCreation = dockerClient.execCreate(
+                this.runningDockerContainerId, initializationCommands,
+                DockerClient.ExecCreateParam.attachStdout(),
+                DockerClient.ExecCreateParam.attachStderr(),
+                DockerClient.ExecCreateParam.detach(false));
+            final LogStream output = dockerClient.execStart(execCreation.id());
+            execOutput = output.readFully();
+        }  catch (Exception e) {
             exception = e;
         }
 
-        if (exception != null || exitCode != 0) {
+        // We can't get the exit code, but look for an expected message in the output to determine success
+        if (exception != null || !execOutput.contains("Using a default configuration for the set")) {
             // This is the case that the command didn't work
             if (retriesRemaining == 0) {
                 // We're out of retries, we should fail
@@ -126,7 +122,7 @@ public class MongoTestRunner implements AutoCloseable {
                     exception.printStackTrace();
                 }
 
-                fail("Failed to initialize MongoDB, no retries remaining. Exit code was: " + Integer.toString(exitCode));
+                fail("Failed to initialize MongoDB, no retries remaining. Output was: " + execOutput);
             } else {
                 Thread.sleep(pauseTimeMillis);
                 tryInitializeDb(initializationCommands, retriesRemaining - 1, pauseTimeMillis);
@@ -144,11 +140,13 @@ public class MongoTestRunner implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        if (this.runningMongoServer != null) {
-            this.runningMongoServer.destroy();
-            FileUtils.deleteRecursively(this.databaseFilesDir);
+        if (this.dockerClient != null && this.runningDockerContainerId != null) {
+            System.out.println("Killing mongo docker container");
+            this.dockerClient.killContainer(this.runningDockerContainerId);
+            this.dockerClient.removeContainer(this.runningDockerContainerId);
+            this.dockerClient.close();
+            this.dockerClient = null;
+            this.runningDockerContainerId = null;
         }
-
-        this.runningMongoServer = null;
     }
 }

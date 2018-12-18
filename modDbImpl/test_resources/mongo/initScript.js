@@ -1,3 +1,0 @@
-rs.initiate();
-rs.isMaster();
-
