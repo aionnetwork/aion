@@ -49,13 +49,8 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
         return new AionRepositoryCache(this);
     }
 
-    /**
-     * @implNote To maintain intended functionality this method does not call the parent's {@code
-     *     flush()} method. The changes are propagated to the parent through calling the parent's
-     *     {@code updateBatch()} method.
-     */
     @Override
-    public void flush() {
+    public void flushTo(IRepository other, boolean clearStateAfterFlush) {
         fullyWriteLock();
         try {
             // determine which accounts should get stored
@@ -79,7 +74,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                     contractDetailsCache.commit();
 
                     if (contractDetailsCache.origContract == null
-                            && repository.hasContractDetails(entry.getKey())) {
+                        && other.hasContractDetails(entry.getKey())) {
                         // in forked block the contract account might not exist thus
                         // it is created without
                         // origin, but on the main chain details can contain data
@@ -87,18 +82,30 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                         // into a single storage trie so both branches with
                         // different stateRoots are valid
                         contractDetailsCache.origContract =
-                                repository.getContractDetails(entry.getKey());
+                            other.getContractDetails(entry.getKey());
                         contractDetailsCache.commit();
                     }
                 }
             }
 
-            repository.updateBatch(cleanedCacheAccounts, cachedDetails);
-            cachedAccounts.clear();
-            cachedDetails.clear();
+            other.updateBatch(cleanedCacheAccounts, cachedDetails);
+            if (clearStateAfterFlush) {
+                cachedAccounts.clear();
+                cachedDetails.clear();
+            }
         } finally {
             fullyWriteUnlock();
         }
+    }
+
+    /**
+     * @implNote To maintain intended functionality this method does not call the parent's {@code
+     *     flush()} method. The changes are propagated to the parent through calling the parent's
+     *     {@code updateBatch()} method.
+     */
+    @Override
+    public void flush() {
+        flushTo(repository, true);
     }
 
     @Override

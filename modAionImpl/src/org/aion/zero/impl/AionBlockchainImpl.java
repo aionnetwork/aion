@@ -1095,37 +1095,24 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
         List<AionTransaction> transactions = new ArrayList<>();
 
-        long energyRemaining = block.getNrgLimit();
-        for (AionTransaction tx : block.getTransactionsList()) {
-            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-            BulkExecutor executor =
-                    new BulkExecutor(
-                            details,
-                            track,
-                            false,
-                            true,
-                            energyRemaining,
-                            LOGGER_VM,
-                            (r, c, s, t, b) -> {
-                                return 0;
-                            });
+        ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
+        BulkExecutor executor =
+            new BulkExecutor(
+                batch,
+                repository,
+                track,
+                false,
+                true,
+                block.getNrgLimit(),
+                LOGGER_VM,
+                getPostExecutionWorkForGeneratePreBlock());
+        List<AionTxExecSummary> executionSummaries = executor.execute();
 
-            AionTxExecSummary summary = executor.execute().get(0);
-
+        for (AionTxExecSummary summary : executionSummaries) {
             if (!summary.isRejected()) {
-                track.flush();
-
-                AionTxReceipt receipt = summary.getReceipt();
-                receipt.setPostTxState(repository.getRoot());
-                receipt.setTransaction(tx);
-
-                // otherwise, assuming we don't have timeouts, add the
-                // transaction
-                transactions.add(tx);
-
-                receipts.add(receipt);
+                transactions.add(summary.getTransaction());
+                receipts.add(summary.getReceipt());
                 summaries.add(summary);
-                energyRemaining -= receipt.getEnergyUsed();
             }
         }
 
@@ -1138,6 +1125,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return new RetValidPreBlock(transactions, rewards, receipts, summaries);
     }
 
+    /**
+     * Returns a {@link PostExecutionWork} object whose {@code doPostExecutionWork()} method will run
+     * the provided logic defined in this method. This work is to be applied after each transaction
+     * has been run.
+     *
+     * This "work" is specific to the {@link AionBlockchainImpl#generatePreBlock(IAionBlock)} method.
+     */
     private static PostExecutionWork getPostExecutionWorkForGeneratePreBlock() {
         return (topRepository,
                 childRepository,
@@ -1165,35 +1159,51 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxReceipt> receipts = new ArrayList<>();
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
-        for (AionTransaction tx : block.getTransactionsList()) {
-            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-            BulkExecutor executor =
-                    new BulkExecutor(
-                            details,
-                            track,
-                            false,
-                            true,
-                            block.getNrgLimit(),
-                            LOGGER_VM,
-                            (r, c, s, t, b) -> {
-                                return 0L;
-                            });
+        ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
+        BulkExecutor executor =
+            new BulkExecutor(
+                batch,
+                repository,
+                track,
+                false,
+                true,
+                block.getNrgLimit(),
+                LOGGER_VM,
+                getPostExecutionWorkForApplyBlock());
+        List<AionTxExecSummary> executionSummaries = executor.execute();
 
-            AionTxExecSummary summary = executor.execute().get(0);
-
-            track.flush();
-            AionTxReceipt receipt = summary.getReceipt();
-            receipt.setPostTxState(repository.getRoot());
-            receipts.add(receipt);
-
+        for (AionTxExecSummary summary : executionSummaries) {
+            receipts.add(summary.getReceipt());
             summaries.add(summary);
         }
+
         Map<AionAddress, BigInteger> rewards = addReward(block, summaries);
 
         long totalTime = System.nanoTime() - saveTime;
         chainStats.addBlockExecTime(totalTime);
 
         return new AionBlockSummary(block, rewards, receipts, summaries);
+    }
+
+    /**
+     * Returns a {@link PostExecutionWork} object whose {@code doPostExecutionWork()} method will run
+     * the provided logic defined in this method. This work is to be applied after each transaction
+     * has been run.
+     *
+     * This "work" is specific to the {@link AionBlockchainImpl#applyBlock(IAionBlock)} method.
+     */
+    private static PostExecutionWork getPostExecutionWorkForApplyBlock() {
+        return (topRepository,
+            childRepository,
+            transactionSummary,
+            transaction,
+            blockEnergyLeft) -> {
+
+            childRepository.flush();
+            AionTxReceipt receipt = transactionSummary.getReceipt();
+            receipt.setPostTxState(topRepository.getRoot());
+            return 0;
+        };
     }
 
     /**

@@ -1093,12 +1093,15 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     /**
-     * Currently there is no post-execution work to do.
+     * Currently there is no post-execution work to do because this class actually uses the
+     * {@link BulkExecutor} to execute transactions sequentially instead of in bulk.
      *
      * In the future we may choose to be more ambitious and to use the {@link BulkExecutor} properly,
-     * in which case we will have to give this method real functionality.
+     * in which case we will have to give this method real functionality. Likely, we will need
+     * several methods that will capture the different post-execution work logic that the different
+     * methods in this class expect to have done when they call into the executor.
      */
-    private PostExecutionWork getPostExecutionWork() {
+    private static PostExecutionWork getPostExecutionWork() {
         return (r, c, s, t, b) -> {
             return 0L;
         };

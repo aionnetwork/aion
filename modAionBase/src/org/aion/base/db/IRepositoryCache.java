@@ -115,4 +115,6 @@ public interface IRepositoryCache<AS, BSB> extends IRepository<AS, BSB> {
      * @param value the data to be stored
      */
     void addStorageRow(Address address, ByteArrayWrapper key, ByteArrayWrapper value);
+
+    void flushTo(IRepository repo, boolean clearStateAfterFlush);
 }

@@ -84,7 +84,9 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public void deleteAccount(Address address) {
-        this.repositoryCache.deleteAccount(address);
+        if (!this.isLocalCall) {
+            this.repositoryCache.deleteAccount(address);
+        }
     }
 
     @Override
@@ -118,6 +120,20 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     public void deductEnergyCost(Address address, BigInteger energyCost) {
         if (!this.isLocalCall) {
             this.repositoryCache.addBalance(address, energyCost.negate());
+        }
+    }
+
+    @Override
+    public void refundAccount(Address address, BigInteger amount) {
+        if (!this.isLocalCall) {
+            this.repositoryCache.addBalance(address, amount);
+        }
+    }
+
+    @Override
+    public void payMiningFee(Address miner, BigInteger fee) {
+        if (!this.isLocalCall) {
+            this.repositoryCache.addBalance(miner, fee);
         }
     }
 
