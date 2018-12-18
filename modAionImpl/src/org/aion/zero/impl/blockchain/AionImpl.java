@@ -178,10 +178,13 @@ public class AionImpl implements IAionChain {
         }
     }
 
-    /** There is no post-execution work to do for any calls in this class. */
-    private PostExecutionWork getPostExecutionWork() {
+    /**
+     * There is no post-execution work to do for any calls in this class to do. In accordance with
+     * the specs, we return zero since we have no meaningful value to return here.
+     */
+    private static PostExecutionWork getPostExecutionWork() {
         return (r, c, s, t, b) -> {
-            return 0L;
+            return 0;
         };
     }
 
