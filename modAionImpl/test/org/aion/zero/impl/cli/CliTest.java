@@ -1372,7 +1372,7 @@ public class CliTest {
         for (String op : options) {
             // test port number as parameter
             parameters.add(
-                new Object[] {new String[] {op, "--compact", "invalid"}, EXIT, expOnError});
+                    new Object[] {new String[] {op, "--compact", "invalid"}, EXIT, expOnError});
             parameters.add(new Object[] {new String[] {op, "--compact", "true"}, EXIT, expected});
             parameters.add(
                     new Object[] {new String[] {op, "--compact", "123", "456"}, EXIT, expected});

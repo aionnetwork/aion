@@ -51,7 +51,6 @@ public final class CfgSync {
     private static final long SLOW_IMPORT = 1000;
     private static final long FREQUENCY = 600_000;
 
-
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
         this.showStatus = false;
@@ -140,7 +139,7 @@ public final class CfgSync {
                     val = Long.parseLong(sr.getAttributeValue(i));
                     if (val < 0) {
                         throw new IllegalArgumentException("slow-import value must be positive");
-                }
+                    }
                     this.slowImport = val;
                     break;
                 case "frequency":
