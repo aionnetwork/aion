@@ -23,9 +23,6 @@ import static org.junit.Assert.fail;
 public class MongoTestRunner implements AutoCloseable {
 
     private int port;
-    private Process runningMongoServer;
-    private File databaseFilesDir;
-
     private DockerClient dockerClient;
     private String runningDockerContainerId;
     private static final String MONGO_IMAGE = "library/mongo:3.6.9";
@@ -85,8 +82,6 @@ public class MongoTestRunner implements AutoCloseable {
             fail("Error encountered when initializing mongo docker image. Make sure docker service is running");
         }
     }
-
-
 
     /**
      * Helper method to run some initialization command on Mongo with some retry logic if the command fails. Since it's
