@@ -41,6 +41,7 @@
 		<blocks-queue-max>32</blocks-queue-max>
 		<!-- Display syncing status -->
 		<show-status>false</show-status>
+		<compact enabled="false" slow-import="1000" frequency="600000"></compact>
 	</sync>
 	<consensus>
 		<mining>false</mining>

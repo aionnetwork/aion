@@ -236,7 +236,6 @@ public class Cli {
                     if (!parameters[0].equalsIgnoreCase("true")
                             && !parameters[0].equalsIgnoreCase("false")) {
                         System.out.println("enabled value must be boolean");
-                        return ERROR;
                     }
                     boolean enabled = Boolean.parseBoolean(parameters[0]);
                     if (enabled != cfgSync.getEnabled()) {
