@@ -43,22 +43,24 @@ public final class CfgSync {
     private boolean showStatus;
     private Set<StatsType> showStatistics;
 
-    private boolean enabled;
-    private long slowImport;
-    private long frequency;
+    private boolean compactEnabled;
+    private int slowImportTime;
+    private int compactFrequency;
 
     private static final int BLOCKS_QUEUE_MAX = 32;
-    private static final long SLOW_IMPORT = 1000;
-    private static final long FREQUENCY = 600_000;
+
+    private static final int SLOW_IMPORT_TIME = 1_000; // 1 sec
+    private static final int COMPACT_FREQUENCY = 600_000; // 10 min
+
 
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
         this.showStatus = false;
         this.showStatistics = new HashSet<>();
         this.showStatistics.add(StatsType.NONE);
-        this.enabled = false;
-        this.slowImport = SLOW_IMPORT;
-        this.frequency = FREQUENCY;
+        this.compactEnabled = false;
+        this.slowImportTime = SLOW_IMPORT_TIME;
+        this.compactFrequency = COMPACT_FREQUENCY;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -127,27 +129,27 @@ public final class CfgSync {
                     "Compact expecting enabled, slow-import, frequency ATTRIBUTE");
         }
 
-        long val;
+        int val;
         for (int i = 0; i < 3; ++i) {
             String name = sr.getAttributeLocalName(i);
 
             switch (name) {
                 case "enabled":
-                    this.enabled = Boolean.parseBoolean(sr.getAttributeValue(i));
+                    this.compactEnabled = Boolean.parseBoolean(sr.getAttributeValue(i));
                     break;
                 case "slow-import":
-                    val = Long.parseLong(sr.getAttributeValue(i));
+                    val = Integer.parseInt(sr.getAttributeValue(i));
                     if (val < 0) {
                         throw new IllegalArgumentException("slow-import value must be positive");
                     }
-                    this.slowImport = val;
+                    this.slowImportTime = val;
                     break;
                 case "frequency":
-                    val = Long.parseLong(sr.getAttributeValue(i));
+                    val = Integer.parseInt(sr.getAttributeValue(i));
                     if (val < 0) {
                         throw new IllegalArgumentException("frequency value must be positive");
                     }
-                    this.frequency = val;
+                    this.compactFrequency = val;
                     break;
                 default:
                     throw new IllegalArgumentException("unexpected entry");
@@ -193,9 +195,9 @@ public final class CfgSync {
             xmlWriter.writeCharacters("\r\n\t\t");
             // <compact enabled="false" slow-import="1000" frequency="6000000"></compact>
             xmlWriter.writeStartElement("compact");
-            xmlWriter.writeAttribute("enabled", this.enabled ? "true" : "false");
-            xmlWriter.writeAttribute("slow-import", this.slowImport + "");
-            xmlWriter.writeAttribute("frequency", this.frequency + "");
+            xmlWriter.writeAttribute("enabled", this.compactEnabled ? "true" : "false");
+            xmlWriter.writeAttribute("slow-import", this.slowImportTime + "");
+            xmlWriter.writeAttribute("frequency", this.compactFrequency + "");
             xmlWriter.writeEndElement();
 
             // close element sync
@@ -255,28 +257,28 @@ public final class CfgSync {
         return showStatistics;
     }
 
-    public boolean getEnabled() {
-        return this.enabled;
+    public boolean getCompactEnabled() {
+        return this.compactEnabled;
     }
 
-    public long getSlowImport() {
-        return this.slowImport;
+    public int getSlowImportTime() {
+        return this.slowImportTime;
     }
 
-    public long getFrequency() {
-        return this.frequency;
+    public int getCompactFrequency() {
+        return this.compactFrequency;
     }
 
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
+    public void setCompactEnabled(boolean enabled) {
+        this.compactEnabled = enabled;
     }
 
-    public void setSlowImport(long slowImport) {
-        this.slowImport = slowImport;
+    public void setSlowImportTime(int slowImport) {
+        this.slowImportTime = slowImport;
     }
 
-    public void setFrequency(long frequency) {
-        this.frequency = frequency;
+    public void setCompactFrequency(int frequency) {
+        this.compactFrequency = frequency;
     }
 
     @Override

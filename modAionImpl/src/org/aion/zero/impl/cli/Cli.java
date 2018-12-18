@@ -237,53 +237,53 @@ public class Cli {
                             && !parameters[0].equalsIgnoreCase("false")) {
                         System.out.println("enabled value must be boolean");
                     }
-                    boolean enabled = Boolean.parseBoolean(parameters[0]);
-                    if (enabled != cfgSync.getEnabled()) {
-                        cfgSync.setEnabled(enabled);
+                    boolean compactEnabled = Boolean.parseBoolean(parameters[0]);
+                    if (compactEnabled != cfgSync.getCompactEnabled()) {
+                        cfgSync.setCompactEnabled(compactEnabled);
                         overwrite = true;
                     }
-                    System.out.println("Compact enabled is set to: " + enabled);
+                    System.out.println("Compact enabled is set to: " + compactEnabled);
 
                 } else if (options.getCompact().length == 2) {
 
-                    long slowImport = cfgSync.getSlowImport();
-                    long frequency = cfgSync.getFrequency();
+                    int slowImportTime = cfgSync.getSlowImportTime();
+                    int compactFrequency = cfgSync.getCompactFrequency();
                     boolean validCompact = true;
 
                     try {
-                        slowImport = Long.parseLong(parameters[0]);
-                        frequency = Long.parseLong(parameters[1]);
+                        slowImportTime = Integer.parseInt(parameters[0]);
+                        compactFrequency = Integer.parseInt(parameters[1]);
                     } catch (NumberFormatException e) {
                         validCompact = false;
                         System.out.println(
-                                "slow_import and frequency values must be positive long");
+                                "slow_import and frequency values must be positive integers");
                     }
-                    if (slowImport < 0 || frequency < 0) {
+                    if (slowImportTime < 0 || compactFrequency < 0) {
                         validCompact = false;
                         System.out.println("slow_import and frequency values must be positive");
                     }
 
                     if (validCompact
-                            && (slowImport != cfgSync.getSlowImport()
-                                    || frequency != cfgSync.getFrequency())) {
-                        cfgSync.setEnabled(true);
-                        cfgSync.setSlowImport(slowImport);
-                        cfgSync.setFrequency(frequency);
+                            && (slowImportTime != cfgSync.getSlowImportTime()
+                                    || compactFrequency != cfgSync.getCompactFrequency())) {
+                        cfgSync.setCompactEnabled(true);
+                        cfgSync.setSlowImportTime(slowImportTime);
+                        cfgSync.setCompactFrequency(compactFrequency);
                         overwrite = true;
                         System.out.println(
                                 "Compact enabled using the provided configuration: slow_import="
-                                        + slowImport
+                                        + slowImportTime
                                         + " frequency="
-                                        + frequency);
+                                        + compactFrequency);
                     } else {
                         System.out.println(
                                 "Compact enabled using the current configuration: slow_import="
-                                        + cfgSync.getSlowImport()
+                                        + cfgSync.getSlowImportTime()
                                         + " frequency="
-                                        + cfgSync.getFrequency());
+                                        + cfgSync.getCompactFrequency());
 
-                        if (!cfgSync.getEnabled()) {
-                            cfgSync.setEnabled(true);
+                        if (!cfgSync.getCompactEnabled()) {
+                            cfgSync.setCompactEnabled(true);
                             overwrite = true;
                         }
                     }

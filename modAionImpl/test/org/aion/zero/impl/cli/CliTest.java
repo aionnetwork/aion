@@ -111,8 +111,8 @@ public class CliTest {
     private static final String TEST_PORT = "12345";
     private static final String INVALID_PORT = "123450";
 
-    private static final long SLOW_IMPORT = 1000;
-    private static final long FREQUENCY = 600_000;
+    private static final int SLOW_IMPORT_TIME = 1_000; // 1 sec
+    private static final int COMPACT_FREQUENCY = 600_000; // 10 min
     /** @implNote set this to true to enable printing */
     private static final boolean verbose = false;
 
@@ -919,8 +919,7 @@ public class CliTest {
     }
 
     /**
-     * Parameters for testing {@link #testCompact(String[], ReturnType, String, boolean, long,
-     * long)}.
+     * Parameters for testing {@link #testCompact(String[], ReturnType, String, boolean, int, int)}.
      */
     @SuppressWarnings("unused")
     private Object parametersWithCompact() {
@@ -934,7 +933,12 @@ public class CliTest {
         // without parameter
         parameters.add(
                 new Object[] {
-                    new String[] {opCompact}, ERROR, expPathOnError, false, SLOW_IMPORT, FREQUENCY
+                    new String[] {opCompact},
+                    ERROR,
+                    expPathOnError,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         // with one parameter
         parameters.add(
@@ -943,8 +947,8 @@ public class CliTest {
                     RUN,
                     expPathOnError,
                     false,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
@@ -952,8 +956,8 @@ public class CliTest {
                     RUN,
                     expPathOnError,
                     false,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
@@ -961,8 +965,8 @@ public class CliTest {
                     RUN,
                     expectedPath,
                     true,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
@@ -970,8 +974,8 @@ public class CliTest {
                     RUN,
                     expectedPath,
                     false,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         // with two parameters
         parameters.add(
@@ -980,8 +984,8 @@ public class CliTest {
                     RUN,
                     expectedPath,
                     true,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
@@ -989,8 +993,8 @@ public class CliTest {
                     RUN,
                     expectedPath,
                     true,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
@@ -1003,8 +1007,8 @@ public class CliTest {
                     ERROR,
                     expectedPath,
                     false,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
 
         // compact with help and version
@@ -1014,8 +1018,8 @@ public class CliTest {
                     EXIT,
                     expectedPath,
                     false,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
@@ -1023,8 +1027,8 @@ public class CliTest {
                     EXIT,
                     expectedPath,
                     false,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
 
         // compact with network
@@ -1037,8 +1041,8 @@ public class CliTest {
                         ERROR,
                         expectedPath,
                         false,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             // with invalid compact parameter
             parameters.add(
@@ -1047,8 +1051,8 @@ public class CliTest {
                         RUN,
                         expectedPath,
                         true,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             parameters.add(
                     new Object[] {
@@ -1056,8 +1060,8 @@ public class CliTest {
                         RUN,
                         expectedPath,
                         true,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             // with valid compact parameter
             parameters.add(
@@ -1068,8 +1072,8 @@ public class CliTest {
                         RUN,
                         expectedPath,
                         true,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             parameters.add(
                     new Object[] {
@@ -1093,8 +1097,8 @@ public class CliTest {
                         RUN,
                         expectedPath,
                         true,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             parameters.add(
                     new Object[] {
@@ -1117,8 +1121,8 @@ public class CliTest {
                         ERROR,
                         expPathOnError,
                         false,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             // with invalid compact parameter
             parameters.add(
@@ -1127,8 +1131,8 @@ public class CliTest {
                         RUN,
                         expectedPath,
                         false,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             parameters.add(
                     new Object[] {
@@ -1136,8 +1140,8 @@ public class CliTest {
                         RUN,
                         expectedPath,
                         false,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             parameters.add(
                     new Object[] {
@@ -1145,8 +1149,8 @@ public class CliTest {
                         RUN,
                         expectedPath,
                         true,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             // with valid compact parameter
             parameters.add(
@@ -1155,8 +1159,8 @@ public class CliTest {
                         RUN,
                         expectedPath,
                         true,
-                        SLOW_IMPORT,
-                        FREQUENCY
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
                     });
             parameters.add(
                     new Object[] {
@@ -1177,8 +1181,8 @@ public class CliTest {
                     RUN,
                     expectedPath,
                     false,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
@@ -1186,8 +1190,8 @@ public class CliTest {
                     RUN,
                     expectedPath,
                     true,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
@@ -1195,8 +1199,8 @@ public class CliTest {
                     RUN,
                     expectedPath,
                     true,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
@@ -1221,8 +1225,8 @@ public class CliTest {
                             RUN,
                             expectedPath,
                             true,
-                            SLOW_IMPORT,
-                            FREQUENCY
+                            SLOW_IMPORT_TIME,
+                            COMPACT_FREQUENCY
                         });
                 parameters.add(
                         new Object[] {
@@ -1249,8 +1253,8 @@ public class CliTest {
                     EXIT,
                     expectedPath,
                     true,
-                    SLOW_IMPORT,
-                    FREQUENCY
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
                 });
         // with absolute path
         parameters.add(
@@ -1282,9 +1286,9 @@ public class CliTest {
             String[] input,
             ReturnType expectedReturn,
             String expectedPath,
-            boolean expectedEnabled,
-            long expectedSlowImport,
-            long expectedFrequency) {
+            boolean expectedCompactEnabled,
+            int expectedSlowImportTime,
+            int expectedCompactFrequency) {
 
         assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
         assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
@@ -1296,15 +1300,15 @@ public class CliTest {
                 .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
         assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
         // check compact configurations in exec config are updated
-        assertThat(cfg.getSync().getEnabled()).isEqualTo(expectedEnabled);
-        assertThat(cfg.getSync().getSlowImport()).isEqualTo(expectedSlowImport);
-        assertThat(cfg.getSync().getFrequency()).isEqualTo(expectedFrequency);
+        assertThat(cfg.getSync().getCompactEnabled()).isEqualTo(expectedCompactEnabled);
+        assertThat(cfg.getSync().getSlowImportTime()).isEqualTo(expectedSlowImportTime);
+        assertThat(cfg.getSync().getCompactFrequency()).isEqualTo(expectedCompactFrequency);
         // check compact configurations in initial config are unchanged
         cfg.resetInternal();
         cfg.fromXML();
-        assertThat(cfg.getSync().getEnabled()).isEqualTo(false);
-        assertThat(cfg.getSync().getSlowImport()).isEqualTo(SLOW_IMPORT);
-        assertThat(cfg.getSync().getFrequency()).isEqualTo(FREQUENCY);
+        assertThat(cfg.getSync().getCompactEnabled()).isEqualTo(false);
+        assertThat(cfg.getSync().getSlowImportTime()).isEqualTo(SLOW_IMPORT_TIME);
+        assertThat(cfg.getSync().getCompactFrequency()).isEqualTo(COMPACT_FREQUENCY);
     }
 
     /** Parameters for testing {@link #testInfo(String[], ReturnType, String)}. */
