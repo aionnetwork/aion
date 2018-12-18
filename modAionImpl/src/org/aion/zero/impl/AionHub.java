@@ -188,7 +188,9 @@ public class AionHub {
                 eventMgr,
                 cfg.getSync().getBlocksQueueMax(),
                 cfg.getSync().getShowStatus(),
-                cfg.getSync().getShowStatistics());
+                cfg.getSync().getShowStatistics(),
+                cfg.getSync().getSlowImportTime(),
+                cfg.getSync().getCompactFrequency());
 
         ChainConfiguration chainConfig = new ChainConfiguration();
         this.propHandler =
