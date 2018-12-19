@@ -38,7 +38,9 @@ public class MongoTestRunner implements AutoCloseable {
     private MongoTestRunner() {
         try {
             // Start by getting a connection to the docker service running on the machine
-            dockerClient = DefaultDockerClient.fromEnv().build();
+            DefaultDockerClient.Builder clientBuilder = DefaultDockerClient.fromEnv();
+            System.out.println("Connecting to docker daemon at " + clientBuilder.uri().toString());
+            dockerClient = clientBuilder.build();
 
             // Pull the docker image, this will be very quick if it already exists on the machine
             dockerClient.pull(MONGO_IMAGE, message -> System.out.println("Docker pull: " + message.status()));
