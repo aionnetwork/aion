@@ -10,7 +10,7 @@ module aion.apiserver {
     requires aion.evtmgr;
     requires aion.evtmgr.impl;
     requires aion.fastvm;
-    requires libJson;
+    requires org.json;
     requires commons.collections4;
     requires nanohttpd;
     requires undertow.core;

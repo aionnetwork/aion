@@ -20,10 +20,10 @@
                 </ant>
                 <move file="${dir.workspace}/3rdParty/libnzmq/libnzmq.jar" tofile="${dir.workspace}/lib/libnzmq.jar" overwrite="true" />
 
-                <ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libJson/build.xml" target="build">
+                <!--<ant inheritAll="false" antfile="${dir.workspace}/3rdParty/libJson/build.xml" target="build">
                         <property name="compile.debug" value="${compile.debug}" />
-                </ant>
-                <move file="${dir.workspace}/3rdParty/libJson/libJson.jar" tofile="${dir.workspace}/lib/libJson.jar" overwrite="true" />
+                </ant> 
+                <move file="${dir.workspace}/3rdParty/libJson/libJson.jar" tofile="${dir.workspace}/lib/libJson.jar" overwrite="true" /> -->
         </target>
 
         <target name="sourcebuild">
@@ -46,8 +46,8 @@
 
 
 	<target name="3rd_clean">
-        <delete dir="${dir.libfile}/libJson.jar" />
-        <delete dir="${dir.libfile}/libnsc.jar" />
+        <!--<delete dir="${dir.libfile}/libJson.jar" />-->
+        <!--<delete dir="${dir.libfile}/libnsc.jar" />-->
         <delete dir="${dir.libfile}/libnzmq.jar" />
 	</target>
 </project>

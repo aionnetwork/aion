@@ -7,7 +7,8 @@ dependencies {
     compile project(':modRlp')
     compile project(':modCrypto')
     compile project(':modMcf')
-    compile files('../lib/libJson.jar')
+    //compile files('../lib/libJson.jar')
+    compile 'org.json:json:20180813'
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
 
