@@ -50,9 +50,10 @@ import org.aion.solidity.SolidityType.DynamicArrayType;
 import org.aion.solidity.SolidityType.IntType;
 import org.aion.solidity.SolidityType.StaticArrayType;
 import org.aion.solidity.SolidityType.StringType;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -73,10 +74,10 @@ public class SolidityTypeTest {
     @Before
     public void setup() {
         StandaloneBlockchain.Bundle bundle =
-            new StandaloneBlockchain.Builder()
-                .withDefaultAccounts()
-                .withValidatorConfiguration("simple")
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withDefaultAccounts()
+                        .withValidatorConfiguration("simple")
+                        .build();
         blockchain = bundle.bc;
     }
 
@@ -87,11 +88,11 @@ public class SolidityTypeTest {
 
     private AionTransaction createTransaction(byte[] callData) {
         byte[] txNonce = DataWord.ZERO.getData();
-        AionAddress from =
+        Address from =
                 AionAddress.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
-        AionAddress to =
+        Address to =
                 AionAddress.wrap(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
@@ -112,7 +113,9 @@ public class SolidityTypeTest {
 
         AionRepositoryImpl repo = blockchain.getRepository();
         IRepositoryCache track = repo.startTracking();
-        track.addBalance(tx.getSenderAddress(), tx.nrgPrice().value().multiply(BigInteger.valueOf(500_000L)));
+        track.addBalance(
+                tx.getSenderAddress(),
+                tx.nrgPrice().value().multiply(BigInteger.valueOf(500_000L)));
         track.createAccount(tx.getDestinationAddress());
         track.saveCode(tx.getDestinationAddress(), Hex.decode(contract));
         track.flush();
@@ -403,14 +406,16 @@ public class SolidityTypeTest {
         }
     }
 
-    private BulkExecutor getNewExecutor(AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
+    private BulkExecutor getNewExecutor(
+            AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
-        return new BulkExecutor(details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+        return new BulkExecutor(
+                details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
     }
 
     private static AionBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
-        byte[] coinbase = RandomUtils.nextBytes(AionAddress.SIZE);
+        byte[] coinbase = RandomUtils.nextBytes(Address.SIZE);
         byte[] logsBloom = new byte[0];
         byte[] difficulty = new DataWord(0x1000000L).getData();
         long number = 1;
@@ -425,21 +430,21 @@ public class SolidityTypeTest {
 
         // TODO: set a dummy limit of 5000000 for now
         return new AionBlock(
-            parentHash,
-            AionAddress.wrap(coinbase),
-            logsBloom,
-            difficulty,
-            number,
-            timestamp,
-            extraData,
-            nonce,
-            receiptsRoot,
-            transactionsRoot,
-            stateRoot,
-            transactionsList,
-            solutions,
-            0,
-            5000000);
+                parentHash,
+                AionAddress.wrap(coinbase),
+                logsBloom,
+                difficulty,
+                number,
+                timestamp,
+                extraData,
+                nonce,
+                receiptsRoot,
+                transactionsRoot,
+                stateRoot,
+                transactionsList,
+                solutions,
+                0,
+                5000000);
     }
 
     private PostExecutionWork getPostExecutionWork() {
@@ -447,5 +452,4 @@ public class SolidityTypeTest {
             return 0L;
         };
     }
-
 }

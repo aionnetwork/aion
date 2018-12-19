@@ -18,9 +18,10 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
@@ -100,7 +101,7 @@ public class AionImpl implements IAionChain {
 
     @Override
     public AionTransaction createTransaction(
-            BigInteger nonce, AionAddress to, BigInteger value, byte[] data) {
+            BigInteger nonce, Address to, BigInteger value, byte[] data) {
         byte[] nonceBytes = ByteUtil.bigIntegerToBytes(nonce);
         byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
         return new AionTransaction(nonceBytes, to, valueBytes, data);
@@ -136,14 +137,14 @@ public class AionImpl implements IAionChain {
         try {
             ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                new BulkExecutor(
-                    details,
-                    repository,
-                    true,
-                    true,
-                    block.getNrgLimit(),
-                    LOG_VM,
-                    getPostExecutionWork());
+                    new BulkExecutor(
+                            details,
+                            repository,
+                            true,
+                            true,
+                            block.getNrgLimit(),
+                            LOG_VM,
+                            getPostExecutionWork());
             return executor.execute().get(0).getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
@@ -163,14 +164,14 @@ public class AionImpl implements IAionChain {
         try {
             ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                new BulkExecutor(
-                    details,
-                    repository,
-                    true,
-                    true,
-                    block.getNrgLimit(),
-                    LOG_VM,
-                    getPostExecutionWork());
+                    new BulkExecutor(
+                            details,
+                            repository,
+                            true,
+                            true,
+                            block.getNrgLimit(),
+                            LOG_VM,
+                            getPostExecutionWork());
             return executor.execute().get(0).getReceipt();
         } finally {
             repository.rollback();
@@ -288,7 +289,7 @@ public class AionImpl implements IAionChain {
 
     // assumes a correctly formatted block number
     @Override
-    public Optional<AccountState> getAccountState(AionAddress address, long blockNumber) {
+    public Optional<AccountState> getAccountState(Address address, long blockNumber) {
         try {
             byte[] stateRoot =
                     this.aionHub.getBlockStore().getChainBlockByNumber(blockNumber).getStateRoot();
@@ -310,7 +311,7 @@ public class AionImpl implements IAionChain {
 
     // assumes a correctly formatted blockHash
     @Override
-    public Optional<AccountState> getAccountState(AionAddress address, byte[] blockHash) {
+    public Optional<AccountState> getAccountState(Address address, byte[] blockHash) {
         try {
             byte[] stateRoot =
                     this.aionHub.getBlockchain().getBlockByHash(blockHash).getStateRoot();
@@ -331,7 +332,7 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public Optional<AccountState> getAccountState(AionAddress address) {
+    public Optional<AccountState> getAccountState(Address address) {
         try {
             byte[] stateRoot = this.aionHub.getBlockchain().getBestBlock().getStateRoot();
             AccountState account =
@@ -351,7 +352,7 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public Optional<ByteArrayWrapper> getCode(AionAddress address) {
+    public Optional<ByteArrayWrapper> getCode(Address address) {
         byte[] code = this.aionHub.getRepository().getCode(address);
         if (code == null) return Optional.empty();
         return Optional.of(new ByteArrayWrapper(code));

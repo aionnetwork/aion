@@ -7,14 +7,15 @@ import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.api.interfaces.Address;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
 /** @author chris */
 public final class ArgTxCall {
 
-    private final AionAddress from;
-    private final AionAddress to;
+    private final Address from;
+    private final Address to;
     private final byte[] data;
     private final BigInteger nonce;
     private final BigInteger value;
@@ -27,8 +28,8 @@ public final class ArgTxCall {
     // TODO: create a builder class for create this class
 
     public ArgTxCall(
-            final AionAddress _from,
-            final AionAddress _to,
+            final Address _from,
+            final Address _to,
             final byte[] _data,
             final BigInteger _nonce,
             final BigInteger _value,
@@ -46,9 +47,8 @@ public final class ArgTxCall {
     public static ArgTxCall fromJSON(
             final JSONObject _jsonObj, NrgOracle oracle, long defaultNrgLimit) {
         try {
-            AionAddress from = AionAddress
-                .wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
-            AionAddress to = AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
+            Address from = AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
+            Address to = AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
             byte[] data = ByteUtil.hexStringToBytes(_jsonObj.optString("data", ""));
 
             String nonceStr = _jsonObj.optString("nonce", "0x0");
@@ -87,11 +87,11 @@ public final class ArgTxCall {
         }
     }
 
-    public AionAddress getFrom() {
+    public Address getFrom() {
         return this.from;
     }
 
-    public AionAddress getTo() {
+    public Address getTo() {
         return this.to;
     }
 

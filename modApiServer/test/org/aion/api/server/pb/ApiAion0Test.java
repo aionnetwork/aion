@@ -22,6 +22,7 @@ import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.equihash.EquihashMiner;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -190,7 +191,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessAccountsValue() throws Exception {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         rsp = sendRequest(Message.Servs.s_wallet_VALUE, Message.Funcs.f_accounts_VALUE);
 
@@ -225,7 +226,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessUnlockAccount() {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_unlockAccount reqBody =
@@ -255,7 +256,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessGetBalance() throws Exception {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -287,7 +288,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessGetNonce() throws Exception {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -397,7 +398,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessGetCode() throws Exception {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -474,7 +475,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessCall() throws Exception {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -850,7 +851,10 @@ public class ApiAion0Test {
                         .setBlocknumber(blk.getNumber())
                         .setAddress(
                                 ByteString.copyFrom(
-                                        blk.getTransactionsList().get(0).getSenderAddress().toBytes()))
+                                        blk.getTransactionsList()
+                                                .get(0)
+                                                .getSenderAddress()
+                                                .toBytes()))
                         .build();
 
         rsp =
@@ -974,11 +978,14 @@ public class ApiAion0Test {
         assertEquals(3, rslt.getAddressCount());
         ByteString addr = rslt.getAddress(0);
         assertTrue(
-                api.unlockAccount(AionAddress.wrap(rslt.getAddress(0).toByteArray()), "passwd0", 500));
+                api.unlockAccount(
+                        AionAddress.wrap(rslt.getAddress(0).toByteArray()), "passwd0", 500));
         assertTrue(
-                api.unlockAccount(AionAddress.wrap(rslt.getAddress(1).toByteArray()), "passwd1", 500));
+                api.unlockAccount(
+                        AionAddress.wrap(rslt.getAddress(1).toByteArray()), "passwd1", 500));
         assertTrue(
-                api.unlockAccount(AionAddress.wrap(rslt.getAddress(2).toByteArray()), "passwd2", 500));
+                api.unlockAccount(
+                        AionAddress.wrap(rslt.getAddress(2).toByteArray()), "passwd2", 500));
 
         rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_accountCreate_VALUE);
 
@@ -1057,7 +1064,9 @@ public class ApiAion0Test {
 
         AionTransaction tx =
                 new AionTransaction(
-                        AionRepositoryImpl.inst().getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
+                        AionRepositoryImpl.inst()
+                                .getNonce(AionAddress.ZERO_ADDRESS())
+                                .toByteArray(),
                         AionAddress.ZERO_ADDRESS(),
                         AionAddress.ZERO_ADDRESS(),
                         val,
@@ -1075,10 +1084,10 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessExportAccounts() throws Exception {
-        AionAddress addr1 = new AionAddress(Keystore.create("testPwd1"));
+        Address addr1 = new AionAddress(Keystore.create("testPwd1"));
         AccountManager.inst().unlockAccount(addr1, "testPwd1", 50000);
 
-        AionAddress addr2 = new AionAddress(Keystore.create("testPwd2"));
+        Address addr2 = new AionAddress(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
 
         Message.t_Key tkey1 =
@@ -1155,10 +1164,10 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessEventRegister() throws Exception {
-        AionAddress addr1 = new AionAddress(Keystore.create("testPwd1"));
+        Address addr1 = new AionAddress(Keystore.create("testPwd1"));
         AccountManager.inst().unlockAccount(addr1, "testPwd1", 50000);
 
-        AionAddress addr2 = new AionAddress(Keystore.create("testPwd2"));
+        Address addr2 = new AionAddress(Keystore.create("testPwd2"));
         AccountManager.inst().unlockAccount(addr2, "testPwd12", 50000);
 
         Message.t_FilterCt fil1 =
@@ -1356,7 +1365,7 @@ public class ApiAion0Test {
 
     @Test
     public void testProcessAccountDetails() throws Exception {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         Message.req_getAccountDetailsByAddressList reqBody =

@@ -1,6 +1,3 @@
-<<<<<<< HEAD:modMcf/test/org/aion/trie/TrieTestWithRootHashValues.java
-package org.aion.trie;
-=======
 /*
  * Copyright (c) 2017-2018 Aion foundation.
  *
@@ -25,7 +22,6 @@ package org.aion.trie;
  */
 
 package org.aion.mcf.trie;
->>>>>>> c7a85d2... separating insert and delete functionality inside the trie implementation:modMcf/test/org/aion/mcf/trie/TrieTestWithRootHashValues.java
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.junit.Assert.assertEquals;

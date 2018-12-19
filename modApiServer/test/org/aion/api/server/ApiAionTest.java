@@ -26,6 +26,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.TxResponse;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -278,7 +279,7 @@ public class ApiAionTest {
     public void testDoCall() {
         byte[] msg = "test message".getBytes();
 
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         AionTransaction tx =
@@ -310,7 +311,7 @@ public class ApiAionTest {
     public void testEstimates() {
         byte[] msg = "test message".getBytes();
 
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
@@ -377,7 +378,7 @@ public class ApiAionTest {
 
         // locked account should throw INVALID_ACCOUNT
 
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         txcall =
                 new ArgTxCall(
@@ -395,8 +396,11 @@ public class ApiAionTest {
     @Test
     public void testAccountGetters() {
         assertEquals(
-                repo.getBalance(AionAddress.ZERO_ADDRESS()), api.getBalance(AionAddress.ZERO_ADDRESS()));
-        assertEquals(repo.getNonce(AionAddress.ZERO_ADDRESS()), api.getNonce(AionAddress.ZERO_ADDRESS()));
+                repo.getBalance(AionAddress.ZERO_ADDRESS()),
+                api.getBalance(AionAddress.ZERO_ADDRESS()));
+        assertEquals(
+                repo.getNonce(AionAddress.ZERO_ADDRESS()),
+                api.getNonce(AionAddress.ZERO_ADDRESS()));
         assertEquals(
                 repo.getBalance(AionAddress.ZERO_ADDRESS()),
                 api.getBalance(AionAddress.ZERO_ADDRESS().toString()));
@@ -444,7 +448,7 @@ public class ApiAionTest {
 
         // locked account should throw INVALID_ACCOUNT
 
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         txcall =
                 new ArgTxCall(
@@ -468,7 +472,8 @@ public class ApiAionTest {
         assertEquals(api.getNrgOracle().getNrgPrice(), api.getRecommendedNrgPrice());
 
         assertNotNull(api.getCoinbase());
-        assertEquals(repo.getCode(AionAddress.ZERO_ADDRESS()), api.getCode(AionAddress.ZERO_ADDRESS()));
+        assertEquals(
+                repo.getCode(AionAddress.ZERO_ADDRESS()), api.getCode(AionAddress.ZERO_ADDRESS()));
         assertEquals(impl.getBlockMiner().isMining(), api.isMining());
         assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
         assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());

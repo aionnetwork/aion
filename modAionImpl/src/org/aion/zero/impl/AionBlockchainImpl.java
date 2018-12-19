@@ -53,9 +53,10 @@ import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -78,7 +79,6 @@ import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.aion.vm.api.interfaces.Address;
 
 // TODO: clean and clarify best block
 // bestKnownBlock - block with the highest block number
@@ -134,7 +134,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private boolean fork = false;
 
-    private AionAddress minerCoinbase;
+    private Address minerCoinbase;
     private byte[] minerExtraData;
 
     private Stack<State> stateStack = new Stack<>();
@@ -160,7 +160,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         ChainConfiguration config = new ChainConfiguration();
         return new A0BCConfig() {
             @Override
-            public AionAddress getCoinbase() {
+            public Address getCoinbase() {
                 return cfgAion.getGenesis().getCoinbase();
             }
 
@@ -176,7 +176,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             @Override
-            public AionAddress getMinerCoinbase() {
+            public Address getMinerCoinbase() {
                 return AionAddress.wrap(cfgAion.getConsensus().getMinerAddress());
             }
 
@@ -1053,7 +1053,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         } else {
             return new AionBlockSummary(
                     block,
-                    new HashMap<AionAddress, BigInteger>(),
+                    new HashMap<Address, BigInteger>(),
                     new ArrayList<AionTxReceipt>(),
                     new ArrayList<AionTxExecSummary>());
         }
@@ -1075,15 +1075,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
         BulkExecutor executor =
-            new BulkExecutor(
-                batch,
-                repository,
-                track,
-                false,
-                true,
-                block.getNrgLimit(),
-                LOGGER_VM,
-                getPostExecutionWorkForGeneratePreBlock());
+                new BulkExecutor(
+                        batch,
+                        repository,
+                        track,
+                        false,
+                        true,
+                        block.getNrgLimit(),
+                        LOGGER_VM,
+                        getPostExecutionWorkForGeneratePreBlock());
         List<AionTxExecSummary> executionSummaries = executor.execute();
 
         for (AionTxExecSummary summary : executionSummaries) {
@@ -1094,7 +1094,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
-        Map<AionAddress, BigInteger> rewards = addReward(block, summaries);
+        Map<Address, BigInteger> rewards = addReward(block, summaries);
 
         track.flush();
 
@@ -1104,11 +1104,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /**
-     * Returns a {@link PostExecutionWork} object whose {@code doPostExecutionWork()} method will run
-     * the provided logic defined in this method. This work is to be applied after each transaction
-     * has been run.
+     * Returns a {@link PostExecutionWork} object whose {@code doPostExecutionWork()} method will
+     * run the provided logic defined in this method. This work is to be applied after each
+     * transaction has been run.
      *
-     * This "work" is specific to the {@link AionBlockchainImpl#generatePreBlock(IAionBlock)} method.
+     * <p>This "work" is specific to the {@link AionBlockchainImpl#generatePreBlock(IAionBlock)}
+     * method.
      */
     private static PostExecutionWork getPostExecutionWorkForGeneratePreBlock() {
         return (topRepository,
@@ -1116,7 +1117,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 transactionSummary,
                 transaction,
                 blockEnergyLeft) -> {
-
             if (!transactionSummary.isRejected()) {
                 childRepository.flush();
 
@@ -1139,15 +1139,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
         BulkExecutor executor =
-            new BulkExecutor(
-                batch,
-                repository,
-                track,
-                false,
-                true,
-                block.getNrgLimit(),
-                LOGGER_VM,
-                getPostExecutionWorkForApplyBlock());
+                new BulkExecutor(
+                        batch,
+                        repository,
+                        track,
+                        false,
+                        true,
+                        block.getNrgLimit(),
+                        LOGGER_VM,
+                        getPostExecutionWorkForApplyBlock());
         List<AionTxExecSummary> executionSummaries = executor.execute();
 
         for (AionTxExecSummary summary : executionSummaries) {
@@ -1155,7 +1155,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             summaries.add(summary);
         }
 
-        Map<AionAddress, BigInteger> rewards = addReward(block, summaries);
+        Map<Address, BigInteger> rewards = addReward(block, summaries);
 
         long totalTime = System.nanoTime() - saveTime;
         chainStats.addBlockExecTime(totalTime);
@@ -1164,19 +1164,18 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     /**
-     * Returns a {@link PostExecutionWork} object whose {@code doPostExecutionWork()} method will run
-     * the provided logic defined in this method. This work is to be applied after each transaction
-     * has been run.
+     * Returns a {@link PostExecutionWork} object whose {@code doPostExecutionWork()} method will
+     * run the provided logic defined in this method. This work is to be applied after each
+     * transaction has been run.
      *
-     * This "work" is specific to the {@link AionBlockchainImpl#applyBlock(IAionBlock)} method.
+     * <p>This "work" is specific to the {@link AionBlockchainImpl#applyBlock(IAionBlock)} method.
      */
     private static PostExecutionWork getPostExecutionWorkForApplyBlock() {
         return (topRepository,
-            childRepository,
-            transactionSummary,
-            transaction,
-            blockEnergyLeft) -> {
-
+                childRepository,
+                transactionSummary,
+                transaction,
+                blockEnergyLeft) -> {
             childRepository.flush();
             AionTxReceipt receipt = transactionSummary.getReceipt();
             receipt.setPostTxState(topRepository.getRoot());
@@ -1189,10 +1188,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param block object containing the header and uncles
      */
-    private Map<AionAddress, BigInteger> addReward(
+    private Map<Address, BigInteger> addReward(
             IAionBlock block, List<AionTxExecSummary> summaries) {
 
-        Map<AionAddress, BigInteger> rewards = new HashMap<>();
+        Map<Address, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
                 this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
         rewards.put(block.getCoinbase(), minerReward);
@@ -1366,7 +1365,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public AionAddress getMinerCoinbase() {
+    public Address getMinerCoinbase() {
         return minerCoinbase;
     }
 

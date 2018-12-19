@@ -1,7 +1,7 @@
 package org.aion.api.server;
 
-import org.aion.base.type.AionAddress;
 import org.aion.mcf.blockchain.TxResponse;
+import org.aion.vm.api.interfaces.Address;
 
 public class ApiTxResponse {
 
@@ -9,7 +9,7 @@ public class ApiTxResponse {
 
     private byte[] txHash;
 
-    private AionAddress contractAddress;
+    private Address contractAddress;
 
     // Could just store the exception message string
     private Exception ex;
@@ -23,7 +23,7 @@ public class ApiTxResponse {
         this.txHash = txHash;
     }
 
-    ApiTxResponse(TxResponse rsp, byte[] txHash, AionAddress contractAddress) {
+    ApiTxResponse(TxResponse rsp, byte[] txHash, Address contractAddress) {
         this.rsp = rsp;
         this.txHash = txHash;
         this.contractAddress = contractAddress;
@@ -82,7 +82,7 @@ public class ApiTxResponse {
         return txHash;
     }
 
-    public AionAddress getContractAddress() {
+    public Address getContractAddress() {
         return contractAddress;
     }
 }

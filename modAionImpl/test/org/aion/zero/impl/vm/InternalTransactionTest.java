@@ -30,16 +30,16 @@ import static org.junit.Assert.assertEquals;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
-import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -126,9 +126,9 @@ public class InternalTransactionTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        AionAddress addressA = tx1.getContractAddress();
+        Address addressA = tx1.getContractAddress();
         System.out.println("contract A = " + addressA);
-        AionAddress addressB = tx2.getContractAddress();
+        Address addressB = tx2.getContractAddress();
         System.out.println("contract B = " + addressB);
         Thread.sleep(1000);
 
@@ -251,7 +251,7 @@ public class InternalTransactionTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
 
-        AionAddress addressA = tx1.getContractAddress();
+        Address addressA = tx1.getContractAddress();
         System.out.println("contract A = " + addressA);
         Thread.sleep(1000);
 

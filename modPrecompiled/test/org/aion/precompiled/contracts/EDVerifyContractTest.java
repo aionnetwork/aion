@@ -16,12 +16,13 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.PrecompiledResultCode;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
@@ -33,10 +34,10 @@ import org.spongycastle.util.encoders.Hex;
 public class EDVerifyContractTest {
 
     private byte[] txHash = RandomUtils.nextBytes(32);
-    private AionAddress origin = AionAddress.wrap(RandomUtils.nextBytes(32));
-    private AionAddress caller = origin;
+    private Address origin = AionAddress.wrap(RandomUtils.nextBytes(32));
+    private Address caller = origin;
 
-    private AionAddress blockCoinbase = AionAddress.wrap(RandomUtils.nextBytes(32));
+    private Address blockCoinbase = AionAddress.wrap(RandomUtils.nextBytes(32));
     private long blockNumber = 2000001;
     private long blockTimestamp = System.currentTimeMillis() / 1000;
     private long blockNrgLimit = 5000000;
@@ -89,7 +90,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         ExecutionContext ctx =
                 new ExecutionContext(
-                    null,
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -120,7 +121,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
-                    null,
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -155,7 +156,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
-                    null,
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -187,7 +188,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         ExecutionContext ctx =
                 new ExecutionContext(
-                    null,
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -207,7 +208,8 @@ public class EDVerifyContractTest {
         PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         TransactionResult result = contract.execute(input, 2999L);
-        assertThat(result.getResultCode().toInt()).isEqualTo(PrecompiledResultCode.OUT_OF_NRG.toInt());
+        assertThat(result.getResultCode().toInt())
+                .isEqualTo(PrecompiledResultCode.OUT_OF_NRG.toInt());
     }
 
     @Test
@@ -217,7 +219,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
-                    null,
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
