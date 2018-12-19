@@ -12,6 +12,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -56,7 +57,7 @@ public class BlockchainTestUtils {
                 BigInteger accountNonce = nonces.get(key);
 
                 // generate a random address
-                AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
+                Address destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
                 AionTransaction newTx =
                         new AionTransaction(
                                 accountNonce.toByteArray(),

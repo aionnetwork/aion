@@ -10,6 +10,7 @@ import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.junit.Test;
 
@@ -44,11 +45,11 @@ public class GenesisSpecificationTest {
                 .isEqualTo(new BigInteger(1, AionGenesis.GENESIS_DIFFICULTY));
         assertThat(genesis.getTransactionsList().isEmpty()).isEqualTo(true);
 
-        Map<AionAddress, AccountState> premined = genesis.getPremine();
-        Set<AionAddress> keySet = premined.keySet();
+        Map<Address, AccountState> premined = genesis.getPremine();
+        Set<Address> keySet = premined.keySet();
 
         // default set
-        Set<AionAddress> defaultKeySet = AionGenesis.GENESIS_PREMINE.keySet();
+        Set<Address> defaultKeySet = AionGenesis.GENESIS_PREMINE.keySet();
         assertThat(defaultKeySet.equals(keySet)).isEqualTo(true);
     }
 
@@ -70,7 +71,7 @@ public class GenesisSpecificationTest {
         BigInteger overrideValue = BigInteger.valueOf(1337);
         AccountState defaultAccountState = new AccountState(overrideValue, overrideValue);
 
-        HashSet<AionAddress> accountStateSet = new HashSet<>();
+        HashSet<Address> accountStateSet = new HashSet<>();
         accountStateSet.add(AionAddress.wrap(overrideHash));
 
         genesisBuilder

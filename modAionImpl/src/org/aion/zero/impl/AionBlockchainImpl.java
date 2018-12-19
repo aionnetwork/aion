@@ -134,7 +134,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private boolean fork = false;
 
-    private AionAddress minerCoinbase;
+    private Address minerCoinbase;
     private byte[] minerExtraData;
 
     private Stack<State> stateStack = new Stack<>();
@@ -160,7 +160,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         ChainConfiguration config = new ChainConfiguration();
         return new A0BCConfig() {
             @Override
-            public AionAddress getCoinbase() {
+            public Address getCoinbase() {
                 return cfgAion.getGenesis().getCoinbase();
             }
 
@@ -176,7 +176,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             @Override
-            public AionAddress getMinerCoinbase() {
+            public Address getMinerCoinbase() {
                 return AionAddress.wrap(cfgAion.getConsensus().getMinerAddress());
             }
 
@@ -1053,7 +1053,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         } else {
             return new AionBlockSummary(
                     block,
-                    new HashMap<AionAddress, BigInteger>(),
+                    new HashMap<Address, BigInteger>(),
                     new ArrayList<AionTxReceipt>(),
                     new ArrayList<AionTxExecSummary>());
         }
@@ -1107,7 +1107,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
-        Map<AionAddress, BigInteger> rewards = addReward(block, summaries);
+        Map<Address, BigInteger> rewards = addReward(block, summaries);
 
         track.flush();
 
@@ -1165,7 +1165,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             summaries.add(summary);
         }
-        Map<AionAddress, BigInteger> rewards = addReward(block, summaries);
+        Map<Address, BigInteger> rewards = addReward(block, summaries);
 
         long totalTime = System.nanoTime() - saveTime;
         chainStats.addBlockExecTime(totalTime);
@@ -1178,10 +1178,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param block object containing the header and uncles
      */
-    private Map<AionAddress, BigInteger> addReward(
+    private Map<Address, BigInteger> addReward(
             IAionBlock block, List<AionTxExecSummary> summaries) {
 
-        Map<AionAddress, BigInteger> rewards = new HashMap<>();
+        Map<Address, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
                 this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
         rewards.put(block.getCoinbase(), minerReward);
@@ -1355,7 +1355,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public AionAddress getMinerCoinbase() {
+    public Address getMinerCoinbase() {
         return minerCoinbase;
     }
 

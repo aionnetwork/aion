@@ -8,6 +8,7 @@ import static org.junit.Assert.assertNull;
 import org.aion.base.type.AionAddress;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.json.JSONArray;
@@ -28,11 +29,11 @@ public class ApiWeb3AionTest {
 
     @Test
     public void testEthSignTransaction() {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        AionAddress toAddr = new AionAddress(Keystore.create("testPwd"));
+        Address toAddr = new AionAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
         tx.put("from", "0x" + addr.toString());
@@ -77,11 +78,11 @@ public class ApiWeb3AionTest {
 
     @Test
     public void testEthSignTransactionAddressParamIsNull() {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        AionAddress toAddr = new AionAddress(Keystore.create("testPwd"));
+        Address toAddr = new AionAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
         tx.put("from", addr.toString());
@@ -105,9 +106,9 @@ public class ApiWeb3AionTest {
 
     @Test
     public void testEthSignTransactionAccountNotUnlocked() {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
-        AionAddress toAddr = new AionAddress(Keystore.create("testPwd"));
+        Address toAddr = new AionAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
         tx.put("from", addr.toString());
@@ -131,9 +132,9 @@ public class ApiWeb3AionTest {
 
     @Test
     public void testEthSendTransactionAccountNotUnlocked() {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
-        AionAddress toAddr = new AionAddress(Keystore.create("testPwd"));
+        Address toAddr = new AionAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
         tx.put("from", addr.toString());
@@ -165,8 +166,8 @@ public class ApiWeb3AionTest {
         assertNull(rsp.getError());
 
         assertEquals(
-            impl.getPendingState().getNonce(AionAddress.ZERO_ADDRESS()),
-            StringHexToBigInteger(rsp.getResult().toString()));
+                impl.getPendingState().getNonce(AionAddress.ZERO_ADDRESS()),
+                StringHexToBigInteger(rsp.getResult().toString()));
     }
 
     @Test
@@ -179,8 +180,8 @@ public class ApiWeb3AionTest {
         assertNull(rsp.getError());
 
         assertEquals(
-            impl.getPendingState().getBalance(AionAddress.ZERO_ADDRESS()),
-            StringHexToBigInteger(rsp.getResult().toString()));
+                impl.getPendingState().getBalance(AionAddress.ZERO_ADDRESS()),
+                StringHexToBigInteger(rsp.getResult().toString()));
     }
 
     @Test

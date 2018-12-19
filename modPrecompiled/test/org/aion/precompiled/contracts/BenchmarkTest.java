@@ -10,6 +10,7 @@ import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -22,7 +23,7 @@ public class BenchmarkTest {
     private ExecutionContext ctx;
 
     private byte[] txHash, callData;
-    private AionAddress origin, caller, blockCoinbase;
+    private Address origin, caller, blockCoinbase;
     private long blockNumber, blockTimestamp, blockNrgLimit, nrgLimit;
     private DataWord blockDifficulty, nrgPrice, callValue;
     private int depth, kind, flags;

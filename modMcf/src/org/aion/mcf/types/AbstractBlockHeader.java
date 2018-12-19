@@ -3,6 +3,7 @@ package org.aion.mcf.types;
 import java.math.BigInteger;
 import org.aion.base.type.AionAddress;
 import org.aion.log.AionLoggerFactory;
+import org.aion.vm.api.interfaces.Address;
 import org.spongycastle.util.BigIntegers;
 
 /** Abstract BlockHeader. */
@@ -101,12 +102,12 @@ public abstract class AbstractBlockHeader {
         return parentHash;
     }
 
-    public AionAddress getCoinbase() {
+    public Address getCoinbase() {
         return coinbase;
     }
 
-    public void setCoinbase(AionAddress coinbase) {
-        this.coinbase = coinbase;
+    public void setCoinbase(Address coinbase) {
+        this.coinbase = (AionAddress) coinbase;
     }
 
     public byte[] getStateRoot() {

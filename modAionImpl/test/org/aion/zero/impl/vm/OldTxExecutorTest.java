@@ -45,6 +45,7 @@ import org.aion.solidity.Compiler.Options;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -92,11 +93,11 @@ public class OldTxExecutorTest {
         String contract = deployer.substring(deployer.indexOf("60506040", 1)); // contract
 
         byte[] txNonce = DataWord.ZERO.getData();
-        AionAddress from =
+        Address from =
                 AionAddress.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
-        AionAddress to =
+        Address to =
                 AionAddress.wrap(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
@@ -143,11 +144,11 @@ public class OldTxExecutorTest {
         System.out.println(deployer);
 
         byte[] txNonce = DataWord.ZERO.getData();
-        AionAddress from =
+        Address from =
                 AionAddress.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
-        AionAddress to = AionAddress.EMPTY_ADDRESS();
+        Address to = AionAddress.EMPTY_ADDRESS();
         byte[] value = DataWord.ZERO.getData();
         byte[] data = Hex.decode(deployer);
         long nrg = 500_000L;
@@ -189,11 +190,11 @@ public class OldTxExecutorTest {
         String contract = deployer.substring(deployer.indexOf("60506040", 1)); // contract
 
         byte[] txNonce = DataWord.ZERO.getData();
-        AionAddress from =
+        Address from =
                 AionAddress.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
-        AionAddress to =
+        Address to =
                 AionAddress.wrap(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
@@ -235,11 +236,11 @@ public class OldTxExecutorTest {
     @Test
     public void testBasicTransactionCost() {
         byte[] txNonce = DataWord.ZERO.getData();
-        AionAddress from =
+        Address from =
                 AionAddress.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
-        AionAddress to =
+        Address to =
                 AionAddress.wrap(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
@@ -274,7 +275,7 @@ public class OldTxExecutorTest {
 
     private static AionBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
-        byte[] coinbase = RandomUtils.nextBytes(AionAddress.SIZE);
+        byte[] coinbase = RandomUtils.nextBytes(Address.SIZE);
         byte[] logsBloom = new byte[0];
         byte[] difficulty = new DataWord(0x1000000L).getData();
         long number = 1;

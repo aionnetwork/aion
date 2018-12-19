@@ -11,6 +11,7 @@ import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -70,7 +71,7 @@ public class BlockchainIntegrationTest {
     @Test
     public void testSimpleFailedTransactionInsufficientBalance() {
         // generate a recipient
-        final AionAddress receiverAddress =
+        final Address receiverAddress =
                 AionAddress.wrap(
                         ByteUtil.hexStringToBytes(
                                 "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
@@ -105,7 +106,7 @@ public class BlockchainIntegrationTest {
     @Test
     public void testSimpleOneTokenBalanceTransfer() {
         // generate a recipient
-        final AionAddress receiverAddress =
+        final Address receiverAddress =
                 AionAddress.wrap(
                         ByteUtil.hexStringToBytes(
                                 "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
@@ -169,7 +170,7 @@ public class BlockchainIntegrationTest {
     @Test
     public void testPruningEnabledBalanceTransfer() {
         // generate a recipient
-        final AionAddress receiverAddress =
+        final Address receiverAddress =
                 AionAddress.wrap(
                         ByteUtil.hexStringToBytes(
                                 "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE"));
@@ -304,7 +305,7 @@ public class BlockchainIntegrationTest {
 
         // no transaction so fee should be zero
         assertThat(context.transactionFee).isEqualTo(BigInteger.ZERO);
-        AionAddress beneficiary = context.block.getCoinbase();
+        Address beneficiary = context.block.getCoinbase();
 
         ImportResult result = bc.tryToConnect(context.block);
         // check that the correct amount was stored
