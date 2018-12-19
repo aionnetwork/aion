@@ -1,9 +1,16 @@
 Aion foundation
-<ether.camp> team through the ethereumJ library.
-Ether.Camp Inc. (US) team through Ethereum Harmony.
-John Tromp through the Equihash solver.
-Samuel Neves through the BLAKE2 implementation.
-Zcash project team.
-Bitcoinj team.
-
-/* others */
+EthereumJ community:
+    Roman Mandeleil
+    Anton Nashatyrev
+    Nick Savers
+Equihash solver:
+    John Tromp
+BLAKE2 implementation:
+    Samuel Neves
+Ethereum Harmony community
+Zcash project community
+Bitcoinj community
+H2 Group
+Centrys.
+Santiago Gonzalez Toral
+Timur Badretdinov
