@@ -16,7 +16,6 @@ module aion.apiserver {
     requires undertow.core;
     requires protobuf.java;
     requires commons.lang3;
-    requires libnzmq;
     requires com.github.benmanes.caffeine;
     requires com.google.common;
     requires jdk.unsupported;
