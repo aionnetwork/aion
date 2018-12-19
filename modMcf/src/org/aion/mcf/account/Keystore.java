@@ -66,6 +66,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.api.interfaces.Address;
 import org.slf4j.Logger;
 
 /** key store class. */
@@ -131,14 +132,13 @@ public class Keystore {
         }
     }
 
-    public static Map<AionAddress, ByteArrayWrapper> exportAccount(
-            Map<AionAddress, String> account) {
+    public static Map<Address, ByteArrayWrapper> exportAccount(Map<Address, String> account) {
         if (account == null) {
             throw new NullPointerException();
         }
 
-        Map<AionAddress, ByteArrayWrapper> res = new HashMap<>();
-        for (Map.Entry<AionAddress, String> entry : account.entrySet()) {
+        Map<Address, ByteArrayWrapper> res = new HashMap<>();
+        for (Map.Entry<Address, String> entry : account.entrySet()) {
             ECKey eckey = Keystore.getKey(entry.getKey().toString(), entry.getValue());
             if (eckey != null) {
                 res.put(entry.getKey(), ByteArrayWrapper.wrap(eckey.getPrivKeyBytes()));
@@ -148,8 +148,7 @@ public class Keystore {
         return res;
     }
 
-    public static Map<AionAddress, ByteArrayWrapper> backupAccount(
-            Map<AionAddress, String> account) {
+    public static Map<Address, ByteArrayWrapper> backupAccount(Map<Address, String> account) {
         if (account == null) {
             throw new NullPointerException();
         }
@@ -176,13 +175,13 @@ public class Keystore {
                                                                                         .toString())))
                         .collect(Collectors.toList());
 
-        Map<AionAddress, ByteArrayWrapper> res = new HashMap<>();
+        Map<Address, ByteArrayWrapper> res = new HashMap<>();
         for (File file : matchedFile) {
             try {
                 String[] frags = file.getName().split("--");
                 if (frags.length == 3) {
                     if (frags[2].startsWith(AION_PREFIX)) {
-                        AionAddress addr = AionAddress.wrap(frags[2]);
+                        Address addr = AionAddress.wrap(frags[2]);
                         byte[] content = Files.readAllBytes(file.toPath());
 
                         String pw = account.get(addr);

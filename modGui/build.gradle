@@ -36,6 +36,7 @@ dependencies {
     compile project(':modCrypto')
     compile project(':modAionBase')
     compile project(':aion_api')
+    compile project(':aion_vm_api')
     compile files('../lib/libJson.jar')
     compile files('../lib/libnsc.jar')
     compile 'com.google.guava:guava:25.1-jre'

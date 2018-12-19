@@ -31,7 +31,6 @@ import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
@@ -59,7 +58,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
         storage.putAll(parent.storage);
     }
 
-    void addContract(AionAddress address, byte[] code) {
+    void addContract(Address address, byte[] code) {
         contracts.put(address, code);
     }
 

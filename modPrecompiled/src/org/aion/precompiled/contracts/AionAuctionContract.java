@@ -52,6 +52,7 @@ import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.api.interfaces.Address;
 import org.apache.commons.collections4.map.LRUMap;
 
 /**
@@ -64,27 +65,27 @@ import org.apache.commons.collections4.map.LRUMap;
  * @author William
  */
 public class AionAuctionContract extends StatefulPrecompiledContract {
-    private static final AionAddress AION =
+    private static final Address AION =
             AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
-    private AionAddress activeDomainsAddress =
+    private Address activeDomainsAddress =
             AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000600");
-    private AionAddress activeDomainsAddressTime =
+    private Address activeDomainsAddressTime =
             AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000601");
-    private AionAddress activeDomainsAddressName =
+    private Address activeDomainsAddressName =
             AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000602");
-    private AionAddress activeDomainsAddressValue =
+    private Address activeDomainsAddressValue =
             AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000603");
 
-    private AionAddress auctionDomainsAddress =
+    private Address auctionDomainsAddress =
             AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000700");
-    private AionAddress auctionDomainsAddressName =
+    private Address auctionDomainsAddressName =
             AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000702");
 
-    private AionAddress allAddresses =
+    private Address allAddresses =
             AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000800");
-    private AionAddress domainNameAddressPair =
+    private Address domainNameAddressPair =
             AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000801");
-    private AionAddress domainAddressNamePair =
+    private Address domainAddressNamePair =
             AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000802");
 
     private static final long COST = 20000L;
@@ -105,11 +106,11 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
     private static int LRU_MAP_SIZE = 4; // this should be changed
 
-    private final AionAddress callerAddress;
+    private final Address callerAddress;
     private final IBlockchain blockchain;
     private static Timer timer = new Timer();
     private static LRUMap<String, AuctionDomainsData> auctionsMap = new LRUMap<>(LRU_MAP_SIZE);
-    private static LRUMap<String, Map<AionAddress, BigInteger>> auctionBidsMap =
+    private static LRUMap<String, Map<Address, BigInteger>> auctionBidsMap =
             new LRUMap<>(LRU_MAP_SIZE);
     private static final Set<String> privateAionDomainNames =
             new HashSet<>(Arrays.asList("network.aion", "foundation.aion", "enterprise.aion"));
@@ -122,7 +123,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      */
     public AionAuctionContract(
             IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
-            AionAddress address,
+            Address address,
             IBlockchain blockchain) {
         super(track);
         this.callerAddress = address;
@@ -192,7 +193,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         byte[] sign = new byte[SIG_LEN];
         byte[] domainNameInBytes = new byte[domainNameLength];
         String domainName;
-        AionAddress domainAddress;
+        Address domainAddress;
 
         int offset = 0;
         offset++;
@@ -225,7 +226,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         domainName = domainName.substring(0, 32);
 
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
-        AionAddress bidderAddress = AionAddress.wrap(bidderAddressInByte);
+        Address bidderAddress = AionAddress.wrap(bidderAddressInByte);
 
         // user should have the signature signed with its callerAddress
         byte[] data = new byte[ADDR_LEN];
@@ -315,7 +316,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param domainAddress callerAddress of the domain bid for
      */
     private void addToAuctionDomain(
-            AionAddress domainAddress, String domainName, String domainNameRaw) {
+            Address domainAddress, String domainName, String domainNameRaw) {
         Date currentDate = new Date();
         Date finishDate =
                 new Date(currentDate.getTime() + AUCTION_TIME.intValue()); // 3 days later, 3s
@@ -338,7 +339,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     // record to data base, change stuff, so when its time for task to execute, it will first check
     // database
     // to see if it has been extended, if it has, schedule new task.
-    private PrecompiledTransactionResult extensionRequest(AionAddress domainAddress, long nrg) {
+    private PrecompiledTransactionResult extensionRequest(Address domainAddress, long nrg) {
         Date expireDateFromStorage = getDateFromStorage(activeDomainsAddressTime, domainAddress);
         // Date currentDate = new Date(blockchain.getBestBlock().getTimestamp());
         Date currentDate = new Date();
@@ -369,10 +370,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param ownerAddress new owner of the given domain
      */
     private void addToActiveDomains(
-            AionAddress domainAddress,
-            AionAddress ownerAddress,
-            String domainName,
-            BigInteger value) {
+            Address domainAddress, Address ownerAddress, String domainName, BigInteger value) {
         Date currentDate = new Date();
         Date finishDate =
                 new Date(currentDate.getTime() + ACTIVE_TIME.intValue()); // 1 year later, 5s
@@ -400,10 +398,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param value the bid value
      */
     private void processBid(
-            String domainNameRaw,
-            AionAddress domainAddress,
-            AionAddress bidderAddress,
-            BigInteger value) {
+            String domainNameRaw, Address domainAddress, Address bidderAddress, BigInteger value) {
         this.track.getAccountState(bidderAddress).subFromBalance(value);
         BigInteger numberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
 
@@ -446,7 +441,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         // if domain is not in bids LRUMap
         // create the map and put into bids LRUMap
         else {
-            Map<AionAddress, BigInteger> bids = new HashMap<>();
+            Map<Address, BigInteger> bids = new HashMap<>();
             bids.put(bidderAddress, value);
             auctionBidsMap.put(domainNameRaw, bids);
         }
@@ -459,7 +454,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      *
      * @param domainAddress The domain callerAddress of the auction to be processed
      */
-    private void processAuction(AionAddress domainAddress) {
+    private void processAuction(Address domainAddress) {
         BigInteger numberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
 
         // if there are no bids, cancel the auction, no one wins, this should never happen
@@ -467,11 +462,11 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         if (numberOfBids.intValue() < 1) return;
 
         String domainName;
-        AionAddress winnerAddress = null;
+        Address winnerAddress = null;
         BigInteger highestBid = MINIMUM_AMOUNT;
         BigInteger secondHighestBid = new BigInteger("0");
 
-        AionAddress tempAddress;
+        Address tempAddress;
         BigInteger tempAmount;
 
         for (int i = 0; i < numberOfBids.intValue(); i++) {
@@ -542,7 +537,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param domainAddress a domain callerAddress
      * @return the trimmed byte array
      */
-    private boolean isActiveDomain(AionAddress domainAddress) {
+    private boolean isActiveDomain(Address domainAddress) {
         DataWord key = new DataWord(blake128(domainAddress.toBytes()));
         return !(this.track
                 .getStorageValue(activeDomainsAddress, key.toWrapper())
@@ -554,7 +549,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      *
      * @param domainAddress a domain callerAddress
      */
-    private boolean isAuctionDomain(AionAddress domainAddress) {
+    private boolean isAuctionDomain(Address domainAddress) {
         DataWord key = new DataWord(blake128(domainAddress.toBytes()));
         ByteArrayWrapper ret = this.track.getStorageValue(auctionDomainsAddress, key.toWrapper());
         return !ret.equals(DoubleDataWord.ZERO.toWrapper());
@@ -570,7 +565,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param value the bid value
      */
     private void addBidToRepo(
-            AionAddress domainAddress, int offset, AionAddress bidderAddress, BigInteger value) {
+            Address domainAddress, int offset, Address bidderAddress, BigInteger value) {
         addBigIntegerToStorage(domainAddress, BID_KEY_VALUE + offset, value);
         addAddressToStorage(domainAddress, BID_KEY_ADDR + offset, bidderAddress);
     }
@@ -583,10 +578,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param value the value (second highest) to deposit
      */
     private void printWinner(
-            AionAddress domainAddress,
-            AionAddress winnerAddress,
-            BigInteger value,
-            String domainName) {
+            Address domainAddress, Address winnerAddress, BigInteger value, String domainName) {
         System.out.println("Auction result for domain at: '" + domainAddress + "'");
         System.out.println("    Domain name: " + domainName);
         System.out.println("    New domain owner: " + winnerAddress);
@@ -601,7 +593,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      *
      * @param domainAddress callerAddress of the domain
      */
-    private void printRemoveActiveDomain(AionAddress domainAddress) {
+    private void printRemoveActiveDomain(Address domainAddress) {
         System.out.println("Removing active domain at: " + domainAddress);
         Date terminateDate = new Date();
         System.out.println("    Terminate time at: " + terminateDate.toString());
@@ -613,7 +605,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      *
      * @param domainAddress callerAddress of the domain
      */
-    private void removeActiveDomain(AionAddress domainAddress, long expireTime) {
+    private void removeActiveDomain(Address domainAddress, long expireTime) {
         // retrieve expire time from storage
         Date expireDateFromStorage = getDateFromStorage(activeDomainsAddressTime, domainAddress);
 
@@ -630,7 +622,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         }
 
         // return deposit
-        AionAddress ownerAddress = getAddressFromStorage(activeDomainsAddress, domainAddress);
+        Address ownerAddress = getAddressFromStorage(activeDomainsAddress, domainAddress);
         BigInteger tempValue = getBigIntegerFromStorage(activeDomainsAddressValue, domainAddress);
         this.track.addBalance(ownerAddress, tempValue);
 
@@ -724,9 +716,9 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      * @param domainName name of the domain
      * @return callerAddress generated for the domain
      */
-    private AionAddress createAddressForDomain(String domainName) {
+    private Address createAddressForDomain(String domainName) {
         ECKey domainAddr = ECKeyFac.inst().create();
-        AionAddress domainAddress = AionAddress.wrap(domainAddr.getAddress());
+        Address domainAddress = AionAddress.wrap(domainAddr.getAddress());
 
         // store callerAddress -> name pair & name -> callerAddress pair
         addNameToStorage(domainAddressNamePair, domainAddress, domainName);
@@ -761,7 +753,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
      *
      * @param domainAddress callerAddress of domain
      */
-    private void storeNewAddress(AionAddress domainAddress) {
+    private void storeNewAddress(Address domainAddress) {
         BigInteger counter = getBigIntegerFromStorage(allAddresses, ALL_ADDR_COUNTER_KEY);
         this.track.addStorageRow(
                 allAddresses,
@@ -770,7 +762,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         addAddressToStorage(allAddresses, ALL_ADDR_KEY + counter, domainAddress);
     }
 
-    private AionAddress getAddressFromStorage(AionAddress key, AionAddress key2) {
+    private Address getAddressFromStorage(Address key, Address key2) {
         byte[] addrFirstPart =
                 this.track
                         .getStorageValue(key, new DataWord(blake128(key2.toBytes())).toWrapper())
@@ -783,7 +775,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return AionAddress.wrap(combineTwoBytes(addrFirstPart, addrSecondPart));
     }
 
-    private AionAddress getAddressFromStorage(AionAddress key, String key2) {
+    private Address getAddressFromStorage(Address key, String key2) {
         byte[] addrFirstPart =
                 this.track
                         .getStorageValue(key, new DataWord(blake128(key2.getBytes())).toWrapper())
@@ -796,20 +788,20 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return AionAddress.wrap(combineTwoBytes(addrFirstPart, addrSecondPart));
     }
 
-    private BigInteger getBigIntegerFromStorage(AionAddress key, String key2) {
+    private BigInteger getBigIntegerFromStorage(Address key, String key2) {
         ByteArrayWrapper data =
                 this.track.getStorageValue(
                         key, new DataWord(blake128(key2.getBytes())).toWrapper());
         return new BigInteger(data.getData());
     }
 
-    private BigInteger getBigIntegerFromStorage(AionAddress key, AionAddress key2) {
+    private BigInteger getBigIntegerFromStorage(Address key, Address key2) {
         ByteArrayWrapper data =
                 this.track.getStorageValue(key, new DataWord(blake128(key2.toBytes())).toWrapper());
         return new BigInteger(data.getData());
     }
 
-    private String getNameFromStorage(AionAddress key, AionAddress key2) {
+    private String getNameFromStorage(Address key, Address key2) {
         byte[] domainNameFirstPart =
                 this.track
                         .getStorageValue(key, new DataWord(blake128(key2.toBytes())).toWrapper())
@@ -832,7 +824,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return tempDomainName + ".aion";
     }
 
-    private Date getDateFromStorage(AionAddress key, AionAddress key2) {
+    private Date getDateFromStorage(Address key, Address key2) {
         byte[] expireDateData =
                 this.track
                         .getStorageValue(key, new DataWord(blake128(key2.toBytes())).toWrapper())
@@ -847,7 +839,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return new Date(Long.parseLong(expireDateStr));
     }
 
-    private void addAddressToStorage(AionAddress key, AionAddress key2, AionAddress value) {
+    private void addAddressToStorage(Address key, Address key2, Address value) {
         byte[] addrFirstPart = new byte[16];
         byte[] addrSecondPart = new byte[16];
         System.arraycopy(value.toBytes(), 0, addrFirstPart, 0, 16);
@@ -863,7 +855,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
                 new DataWord(addrSecondPart).toWrapper());
     }
 
-    private void addAddressToStorage(AionAddress key, String key2, AionAddress value) {
+    private void addAddressToStorage(Address key, String key2, Address value) {
         byte[] addrFirstPart = new byte[16];
         byte[] addrSecondPart = new byte[16];
         System.arraycopy(value.toBytes(), 0, addrFirstPart, 0, 16);
@@ -879,7 +871,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
                 new DataWord(addrSecondPart).toWrapper());
     }
 
-    private void addDateToStorage(AionAddress key, AionAddress key2, Date value) {
+    private void addDateToStorage(Address key, Address key2, Date value) {
         long dateInLong = value.getTime();
         String dateString = String.valueOf(dateInLong);
         byte[] date;
@@ -897,7 +889,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
                 new DataWord(fillByteArray(date)).toWrapper());
     }
 
-    private void addNameToStorage(AionAddress key, AionAddress key2, String name) {
+    private void addNameToStorage(Address key, Address key2, String name) {
         byte[] nameFirstPart = name.substring(0, 16).getBytes();
         byte[] nameSecondPart = name.substring(16, 32).getBytes();
         this.track.addStorageRow(
@@ -910,7 +902,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
                 new DataWord(nameSecondPart).toWrapper());
     }
 
-    private void addNameToStorage2(AionAddress key, AionAddress key2, String name) {
+    private void addNameToStorage2(Address key, Address key2, String name) {
         byte[] addZeros = addLeadingZeros(name.getBytes());
         byte[] value1 = new byte[16], value2 = new byte[16];
         System.arraycopy(addZeros, 0, value1, 0, 16);
@@ -925,14 +917,14 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
                 new DataWord(value2).toWrapper());
     }
 
-    private void addBigIntegerToStorage(AionAddress key, String key2, BigInteger value) {
+    private void addBigIntegerToStorage(Address key, String key2, BigInteger value) {
         this.track.addStorageRow(
                 key,
                 new DataWord(blake128(key2.getBytes())).toWrapper(),
                 new DataWord(value).toWrapper());
     }
 
-    private void addBigIntegerToStorage(AionAddress key, AionAddress key2, BigInteger value) {
+    private void addBigIntegerToStorage(Address key, Address key2, BigInteger value) {
         this.track.addStorageRow(
                 key,
                 new DataWord(blake128(key2.toBytes())).toWrapper(),
@@ -942,9 +934,9 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     // tasks
     // ---------------------------------------------------------------------------------------------------------//
     class finishAuction extends TimerTask {
-        AionAddress domainAddress;
+        Address domainAddress;
 
-        finishAuction(AionAddress input) {
+        finishAuction(Address input) {
             domainAddress = input;
         }
 
@@ -957,10 +949,10 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     }
 
     class removeActiveDomain extends TimerTask {
-        AionAddress domainAddress;
+        Address domainAddress;
         long time;
 
-        removeActiveDomain(AionAddress input, long time) {
+        removeActiveDomain(Address input, long time) {
             domainAddress = input;
             this.time = time;
         }
@@ -1032,7 +1024,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         List<AuctionDomainsData> auctions = new ArrayList<>();
         for (int i = 0; i < numberOfDomainsTotal.intValue(); i++) {
-            AionAddress tempDomainAddr = getAddressFromStorage(allAddresses, ALL_ADDR_KEY + i);
+            Address tempDomainAddr = getAddressFromStorage(allAddresses, ALL_ADDR_KEY + i);
 
             // if domain exists
             if (!this.track
@@ -1053,12 +1045,12 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         return auctions;
     }
 
-    private HashMap<AionAddress, BigInteger> getBidsForADomain(AionAddress domainAddress) {
-        HashMap<AionAddress, BigInteger> bids = new HashMap<>();
+    private HashMap<Address, BigInteger> getBidsForADomain(Address domainAddress) {
+        HashMap<Address, BigInteger> bids = new HashMap<>();
         BigInteger numberOfBids = getBigIntegerFromStorage(domainAddress, BID_KEY_COUNTER);
 
         for (int i = 0; i < numberOfBids.intValue(); i++) {
-            AionAddress bidderAddr = getAddressFromStorage(domainAddress, BID_KEY_ADDR + i);
+            Address bidderAddr = getAddressFromStorage(domainAddress, BID_KEY_ADDR + i);
             BigInteger bidAmount = getBigIntegerFromStorage(domainAddress, BID_KEY_VALUE + i);
 
             // check if there is multiple bids from same callerAddress
@@ -1092,7 +1084,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     }
 
     public void displayMyBidsLRU(ECKey key) {
-        AionAddress callerAddress = AionAddress.wrap(key.getAddress());
+        Address callerAddress = AionAddress.wrap(key.getAddress());
         boolean hasNoBids = true;
 
         System.out.println(
@@ -1105,7 +1097,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         List<AuctionDomainsData> auctionDomainsList = getAllAuctionDomains();
         for (AuctionDomainsData domain : auctionDomainsList) {
-            AionAddress tempDomainAddress = domain.domainAddress;
+            Address tempDomainAddress = domain.domainAddress;
             String tempDomainName = domain.domainName;
 
             auctionBidsMap.put(tempDomainName, getBidsForADomain(tempDomainAddress));
@@ -1122,7 +1114,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
     }
 
     public void displayMyBidForDomainLRU(String domainNameRaw, ECKey key) {
-        AionAddress callerAddress = AionAddress.wrap(key.getAddress());
+        Address callerAddress = AionAddress.wrap(key.getAddress());
         System.out.println(
                 "--------------------------AION NAME SERVICE QUERY: displayMyBidForDomainLRU--------------------------");
 
@@ -1136,7 +1128,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
                 domainNameRaw.substring(0, domainNameRaw.length() - 5).getBytes();
         String domainName2 = new String(addLeadingZeros(domainNameInBytes));
         String domainName = domainName2.substring(5, 37);
-        AionAddress domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
+        Address domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
 
         // if the domain is not in auction, print error and return
         if (this.track
@@ -1170,7 +1162,7 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         String domainName2 = new String(addLeadingZeros(domainNameInBytes));
         String domainName = domainName2.substring(5, 37);
 
-        AionAddress domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
+        Address domainAddress = getAddressFromStorage(domainNameAddressPair, domainName);
 
         // if the domain is not in auction, return
         if (this.track
@@ -1212,20 +1204,20 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
                 "    Number of bids for this domain: " + auctionsMap.get(domainName).numberOfBids);
     }
 
-    private void printBid(String domainName, AionAddress bidderAddress) {
+    private void printBid(String domainName, Address bidderAddress) {
         System.out.println("Domain name: " + domainName);
         System.out.println("    Bid value: " + auctionBidsMap.get(domainName).get(bidderAddress));
     }
 
     class AuctionDomainsData {
         String domainName;
-        AionAddress domainAddress;
+        Address domainAddress;
         Date completeDate;
         BigInteger numberOfBids;
 
         AuctionDomainsData(
                 String domainName,
-                AionAddress domainAddress,
+                Address domainAddress,
                 Date completeDate,
                 BigInteger numberOfBids) {
             this.domainName = domainName;

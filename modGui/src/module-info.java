@@ -5,6 +5,7 @@ module aion.gui {
     requires aion.base;
     requires aion.crypto;
     requires aion.api.client;
+    requires aion.vm.api;
 
     uses org.aion.log.AionLoggerFactory;
 

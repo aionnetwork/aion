@@ -44,6 +44,7 @@ import org.aion.mcf.types.AbstractBlock;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.slf4j.Logger;
 
@@ -85,11 +86,11 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     }
 
     public boolean unlockAccount(
-            final AionAddress _address, final String _password, final int _duration) {
+            final Address _address, final String _password, final int _duration) {
         return this.ACCOUNT_MANAGER.unlockAccount(_address, _password, _duration);
     }
 
-    public boolean lockAccount(final AionAddress _addr, final String _password) {
+    public boolean lockAccount(final Address _addr, final String _password) {
         return this.ACCOUNT_MANAGER.lockAccount(_addr, _password);
     }
 

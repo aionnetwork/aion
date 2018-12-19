@@ -29,6 +29,7 @@ import java.math.BigInteger;
 import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.TxResponse;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Test;
@@ -49,7 +50,7 @@ public class PendingStateTest {
 
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), bc, bc.getRepository());
 
-        AionAddress to = new AionAddress(bundle.privateKeys.get(0).getAddress());
+        Address to = new AionAddress(bundle.privateKeys.get(0).getAddress());
         ECKey signer = bundle.privateKeys.get(1);
 
         // Successful transaction
@@ -82,7 +83,7 @@ public class PendingStateTest {
 
         AionHub hub = AionHub.createForTesting(CfgAion.inst(), bc, bc.getRepository());
 
-        AionAddress to = new AionAddress(bundle.privateKeys.get(0).getAddress());
+        Address to = new AionAddress(bundle.privateKeys.get(0).getAddress());
         ECKey signer = bundle.privateKeys.get(1);
 
         // Invalid Nrg Price transaction

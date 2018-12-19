@@ -33,9 +33,10 @@ import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.precompiled.contracts.DummyRepo;
-import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.fastvm.ExecutionContext;
+import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.precompiled.contracts.DummyRepo;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,9 +49,10 @@ public class BridgeTransferTest {
     private TokenBridgeContract contract;
     private ExecutionContext context;
 
-    private static final AionAddress CONTRACT_ADDR =
+    private static final Address CONTRACT_ADDR =
             new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+    private static final Address OWNER_ADDR =
+            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final ECKey members[] =
             new ECKey[] {

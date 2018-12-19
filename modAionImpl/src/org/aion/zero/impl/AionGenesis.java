@@ -35,6 +35,7 @@ import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionContractDetailsImpl;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.AionBlock;
@@ -45,7 +46,7 @@ public class AionGenesis extends AionBlock {
      * Make this value constant for now, in the future we may move this to a more configuration
      * position, this indicates the address at which the storage rows are to be stored
      */
-    protected static final AionAddress NETWORK_BALANCE_ADDRESS =
+    protected static final Address NETWORK_BALANCE_ADDRESS =
             ContractFactory.getTotalCurrencyContractAddress();
 
     /**
@@ -69,7 +70,7 @@ public class AionGenesis extends AionBlock {
      * Corresponds to {@link AbstractBlockHeader#getCoinbase()} that mined the first block. For
      * fairness, the address is set to an address that is not ever to be used
      */
-    protected static final AionAddress GENESIS_COINBASE = AionAddress.ZERO_ADDRESS();
+    protected static final Address GENESIS_COINBASE = AionAddress.ZERO_ADDRESS();
 
     /**
      * Corresponds to {@link AbstractBlockHeader#getLogsBloom()} indicates the logsBloom of the
@@ -126,7 +127,7 @@ public class AionGenesis extends AionBlock {
     protected static final long GENESIS_ENERGY_LIMIT = 10000000;
 
     /** Corresponds to {@link AionGenesis#premine} default premined accounts */
-    protected static final Map<AionAddress, AccountState> GENESIS_PREMINE;
+    protected static final Map<Address, AccountState> GENESIS_PREMINE;
 
     protected static final Map<Integer, BigInteger> GENESIS_NETWORK_BALANCE;
 
@@ -147,14 +148,14 @@ public class AionGenesis extends AionBlock {
      * bridging mechanism, we arbitrarily store all ERC20 token values as coins on an account at
      * address 0x100 (256).
      */
-    private Map<AionAddress, AccountState> premine = new HashMap<>();
+    private Map<Address, AccountState> premine = new HashMap<>();
 
     // TODO: verify whether setting the solution to null is okay
     // TODO: set energyLimit to a correct value (after genesis loader is
     // completed)
     public AionGenesis(
             byte[] parentHash,
-            AionAddress coinbase,
+            Address coinbase,
             byte[] logsBloom,
             byte[] difficulty,
             long number,
@@ -175,11 +176,11 @@ public class AionGenesis extends AionBlock {
                 energyLimit);
     }
 
-    public Map<AionAddress, AccountState> getPremine() {
+    public Map<Address, AccountState> getPremine() {
         return premine;
     }
 
-    public void setPremine(Map<AionAddress, AccountState> premine) {
+    public void setPremine(Map<Address, AccountState> premine) {
         this.premine = premine;
     }
 
@@ -215,7 +216,7 @@ public class AionGenesis extends AionBlock {
      */
     public static class Builder {
         protected byte[] parentHash;
-        protected AionAddress coinbase;
+        protected Address coinbase;
         protected byte[] logsBloom;
         protected byte[] difficulty;
         protected Long number;
@@ -230,14 +231,14 @@ public class AionGenesis extends AionBlock {
         protected int chainId;
 
         protected Map<Integer, BigInteger> networkBalance;
-        protected Map<AionAddress, AccountState> premined;
+        protected Map<Address, AccountState> premined;
 
         public Builder withParentHash(final byte[] parentHash) {
             this.parentHash = parentHash;
             return this;
         }
 
-        public Builder withCoinbase(final AionAddress coinbase) {
+        public Builder withCoinbase(final Address coinbase) {
             this.coinbase = coinbase;
             return this;
         }
@@ -284,7 +285,7 @@ public class AionGenesis extends AionBlock {
             return this;
         }
 
-        public Builder addPreminedAccount(final AionAddress address, final AccountState state) {
+        public Builder addPreminedAccount(final Address address, final AccountState state) {
             if (this.premined == null) this.premined = new HashMap<>();
 
             if (this.premined.get(address) != null)
@@ -381,7 +382,7 @@ public class AionGenesis extends AionBlock {
             worldTrie.update(NETWORK_BALANCE_ADDRESS.toBytes(), networkBalanceAccount.getEncoded());
 
             // update predefined accounts
-            for (Map.Entry<AionAddress, AccountState> preminedEntry : this.premined.entrySet()) {
+            for (Map.Entry<Address, AccountState> preminedEntry : this.premined.entrySet()) {
                 worldTrie.update(
                         preminedEntry.getKey().toBytes(), preminedEntry.getValue().getEncoded());
             }

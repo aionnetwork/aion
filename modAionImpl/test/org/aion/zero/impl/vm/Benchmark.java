@@ -45,9 +45,10 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.ExecutionBatch;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
@@ -64,8 +65,8 @@ public class Benchmark {
     private static IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo = db.startTracking();
 
     private static ECKey key;
-    private static AionAddress owner;
-    private static AionAddress contract;
+    private static Address owner;
+    private static Address contract;
 
     private static List<byte[]> recipients = new ArrayList<>();
 
@@ -91,8 +92,8 @@ public class Benchmark {
         byte[] deployer =
                 ContractUtils.getContractDeployer("BenchmarkERC20.sol", "FixedSupplyToken");
         byte[] nonce = DataWord.ZERO.getData();
-        AionAddress from = owner;
-        AionAddress to = null;
+        Address from = owner;
+        Address to = null;
         byte[] value = DataWord.ZERO.getData();
         long nrg = 1_000_000L;
         long nrgPrice = 1L;
@@ -131,8 +132,8 @@ public class Benchmark {
 
             // transfer token to random people
             byte[] nonce = new DataWord(ownerNonce + i).getData();
-            AionAddress from = owner;
-            AionAddress to = contract;
+            Address from = owner;
+            Address to = contract;
             byte[] value = DataWord.ZERO.getData();
             byte[] data =
                     ByteUtil.merge(
@@ -220,8 +221,8 @@ public class Benchmark {
 
         for (int i = 0; i < recipients.size(); i++) {
             byte[] nonce = new DataWord(ownerNonce + i).getData();
-            AionAddress from = owner;
-            AionAddress to = contract;
+            Address from = owner;
+            Address to = contract;
             byte[] value = DataWord.ZERO.getData();
             byte[] data =
                     ByteUtil.merge(
@@ -268,7 +269,7 @@ public class Benchmark {
 
     private static AionBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
-        byte[] coinbase = RandomUtils.nextBytes(AionAddress.SIZE);
+        byte[] coinbase = RandomUtils.nextBytes(Address.SIZE);
         byte[] logsBloom = new byte[0];
         byte[] difficulty = new DataWord(0x1000000L).getData();
         long number = 1;

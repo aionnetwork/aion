@@ -37,6 +37,7 @@ import org.aion.log.LogEnum;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
 import org.slf4j.Logger;
 
 /** AbstractBlockSummary */
@@ -47,7 +48,7 @@ public class AbstractBlockSummary<
         TXES extends ITxExecSummary> {
 
     protected BLK block;
-    protected Map<AionAddress, BigInteger> rewards;
+    protected Map<Address, BigInteger> rewards;
     protected List<TXR> receipts;
     protected List<TXES> summaries;
     protected BigInteger totalDifficulty = BigInteger.ZERO;
@@ -66,12 +67,12 @@ public class AbstractBlockSummary<
         return summaries;
     }
 
-    protected static byte[] encodeRewards(Map<AionAddress, BigInteger> rewards) {
+    protected static byte[] encodeRewards(Map<Address, BigInteger> rewards) {
         return encodeMap(
                 rewards,
-                new Functional.Function<AionAddress, byte[]>() {
+                new Functional.Function<Address, byte[]>() {
                     @Override
-                    public byte[] apply(AionAddress address) {
+                    public byte[] apply(Address address) {
                         return RLP.encodeElement(address.toBytes());
                     }
                 },
@@ -83,12 +84,12 @@ public class AbstractBlockSummary<
                 });
     }
 
-    protected static Map<AionAddress, BigInteger> decodeRewards(RLPList rewards) {
+    protected static Map<Address, BigInteger> decodeRewards(RLPList rewards) {
         return decodeMap(
                 rewards,
-                new Functional.Function<byte[], AionAddress>() {
+                new Functional.Function<byte[], Address>() {
                     @Override
-                    public AionAddress apply(byte[] bytes) {
+                    public Address apply(byte[] bytes) {
                         return AionAddress.wrap(bytes);
                     }
                 },
@@ -106,7 +107,7 @@ public class AbstractBlockSummary<
      * All the mining rewards paid out for this block, including the main block rewards, uncle
      * rewards, and transaction fees.
      */
-    public Map<AionAddress, BigInteger> getRewards() {
+    public Map<Address, BigInteger> getRewards() {
         return rewards;
     }
 

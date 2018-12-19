@@ -31,6 +31,7 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.contracts.DummyRepo;
+import org.aion.vm.api.interfaces.Address;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,9 +39,9 @@ public class BridgeControllerRingTest {
 
     private BridgeStorageConnector connector;
     private BridgeController controller;
-    private static final AionAddress CONTRACT_ADDR =
+    private static final Address CONTRACT_ADDR =
             new AionAddress(HashUtil.h256("contractAddress".getBytes()));
-    private static final AionAddress OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+    private static final Address OWNER_ADDR = new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final ECKey members[] =
             new ECKey[] {
@@ -64,7 +65,8 @@ public class BridgeControllerRingTest {
         DummyRepo repo = new DummyRepo();
         this.connector = new BridgeStorageConnector(repo, CONTRACT_ADDR);
         this.controller =
-                new BridgeController(connector, dummyContext().getSideEffects(), CONTRACT_ADDR, OWNER_ADDR);
+                new BridgeController(
+                        connector, dummyContext().getSideEffects(), CONTRACT_ADDR, OWNER_ADDR);
         this.controller.initialize();
 
         byte[][] memberList = new byte[members.length][];

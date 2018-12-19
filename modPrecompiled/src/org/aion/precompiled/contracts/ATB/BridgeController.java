@@ -33,7 +33,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
@@ -41,6 +40,7 @@ import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.TransactionSideEffects;
 
 /**
@@ -51,15 +51,15 @@ public class BridgeController {
 
     private final BridgeStorageConnector connector;
     private final TransactionSideEffects result;
-    private final AionAddress contractAddress;
-    private final AionAddress ownerAddress;
+    private final Address contractAddress;
+    private final Address ownerAddress;
     private Transferable transferable;
 
     public BridgeController(
             @Nonnull final BridgeStorageConnector storageConnector,
             @Nonnull final TransactionSideEffects helper,
-            @Nonnull final AionAddress contractAddress,
-            @Nonnull final AionAddress ownerAddress) {
+            @Nonnull final Address contractAddress,
+            @Nonnull final Address ownerAddress) {
         this.connector = storageConnector;
         this.result = helper;
         this.contractAddress = contractAddress;

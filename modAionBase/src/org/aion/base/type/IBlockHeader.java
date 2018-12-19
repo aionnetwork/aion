@@ -35,6 +35,8 @@
 
 package org.aion.base.type;
 
+import org.aion.vm.api.interfaces.Address;
+
 /** @author jay */
 public interface IBlockHeader {
 
@@ -57,14 +59,14 @@ public interface IBlockHeader {
 
     byte[] getEncoded();
 
-    AionAddress getCoinbase();
+    Address getCoinbase();
 
     long getTimestamp();
 
     long getNumber();
 
     // Setter
-    void setCoinbase(AionAddress _cb);
+    void setCoinbase(Address _cb);
 
     void setStateRoot(byte[] _strt);
 

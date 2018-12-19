@@ -141,7 +141,8 @@ public class AddressTest {
         for (int b = 3; b < 6; b++) {
             try {
                 int temp = AionAddress.wrap(addrHex[b]).compareTo(AionAddress.wrap(addrHex[b + 1]));
-                boolean same = AionAddress.wrap(addrHex[b]).equals(AionAddress.wrap(addrHex[b + 1]));
+                boolean same =
+                        AionAddress.wrap(addrHex[b]).equals(AionAddress.wrap(addrHex[b + 1]));
                 boolean negative = temp < 0;
                 System.out.println("Test " + b + " & " + (b + 1) + " >> " + temp);
                 assertFalse(same);
@@ -153,7 +154,8 @@ public class AddressTest {
         for (int b = 6; b > 3; b--) {
             try {
                 int temp = AionAddress.wrap(addrHex[b]).compareTo(AionAddress.wrap(addrHex[b - 1]));
-                boolean same = AionAddress.wrap(addrHex[b]).equals(AionAddress.wrap(addrHex[b - 1]));
+                boolean same =
+                        AionAddress.wrap(addrHex[b]).equals(AionAddress.wrap(addrHex[b - 1]));
                 boolean positive = temp > 0;
                 System.out.println("Test " + b + " & " + (b - 1) + " >> " + temp);
                 assertFalse(same);
@@ -167,7 +169,8 @@ public class AddressTest {
         for (int b = 3; b < 6; b++) {
             try {
                 int temp = AionAddress.wrap(addrByte[b]).compareTo(addrByte[b + 1]);
-                boolean same = AionAddress.wrap(addrByte[b]).equals(AionAddress.wrap(addrByte[b + 1]));
+                boolean same =
+                        AionAddress.wrap(addrByte[b]).equals(AionAddress.wrap(addrByte[b + 1]));
                 boolean negative = temp < 0;
                 System.out.println("Test " + b + " & " + (b + 1) + " >> " + temp);
                 assertFalse(same);
@@ -179,7 +182,8 @@ public class AddressTest {
         for (int b = 6; b > 3; b--) {
             try {
                 int temp = AionAddress.wrap(addrByte[b]).compareTo(addrByte[b - 1]);
-                boolean same = AionAddress.wrap(addrByte[b]).equals(AionAddress.wrap(addrByte[b - 1]));
+                boolean same =
+                        AionAddress.wrap(addrByte[b]).equals(AionAddress.wrap(addrByte[b - 1]));
                 boolean positive = temp > 0;
                 System.out.println("Test " + b + " & " + (b - 1) + " >> " + temp);
                 assertFalse(same);
@@ -192,8 +196,11 @@ public class AddressTest {
         System.out.println("\nArray address test:");
         for (int b = 3; b < 6; b++) {
             try {
-                int temp = AionAddress.wrap(addrArray[b]).compareTo(AionAddress.wrap(addrArray[b + 1]));
-                boolean same = AionAddress.wrap(addrArray[b]).equals(AionAddress.wrap(addrArray[b + 1]));
+                int temp =
+                        AionAddress.wrap(addrArray[b])
+                                .compareTo(AionAddress.wrap(addrArray[b + 1]));
+                boolean same =
+                        AionAddress.wrap(addrArray[b]).equals(AionAddress.wrap(addrArray[b + 1]));
                 boolean negative = temp < 0;
                 System.out.println("Test " + b + " & " + (b + 1) + " >> " + temp);
                 assertFalse(same);
@@ -204,8 +211,11 @@ public class AddressTest {
         }
         for (int b = 6; b > 3; b--) {
             try {
-                int temp = AionAddress.wrap(addrArray[b]).compareTo(AionAddress.wrap(addrArray[b - 1]));
-                boolean same = AionAddress.wrap(addrArray[b]).equals(AionAddress.wrap(addrArray[b - 1]));
+                int temp =
+                        AionAddress.wrap(addrArray[b])
+                                .compareTo(AionAddress.wrap(addrArray[b - 1]));
+                boolean same =
+                        AionAddress.wrap(addrArray[b]).equals(AionAddress.wrap(addrArray[b - 1]));
                 boolean positive = temp > 0;
                 System.out.println("Test " + b + " & " + (b - 1) + " >> " + temp);
                 assertFalse(same);

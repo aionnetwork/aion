@@ -25,6 +25,7 @@ package org.aion.mcf.types;
 import java.math.BigInteger;
 import org.aion.base.type.AionAddress;
 import org.aion.log.AionLoggerFactory;
+import org.aion.vm.api.interfaces.Address;
 import org.spongycastle.util.BigIntegers;
 
 /** Abstract BlockHeader. */
@@ -123,12 +124,12 @@ public abstract class AbstractBlockHeader {
         return parentHash;
     }
 
-    public AionAddress getCoinbase() {
+    public Address getCoinbase() {
         return coinbase;
     }
 
-    public void setCoinbase(AionAddress coinbase) {
-        this.coinbase = coinbase;
+    public void setCoinbase(Address coinbase) {
+        this.coinbase = (AionAddress) coinbase;
     }
 
     public byte[] getStateRoot() {
@@ -169,8 +170,8 @@ public abstract class AbstractBlockHeader {
 
     /**
      * @implNote when the difficulty data field exceed the system limit(16 bytes), this method will
-     *     return BigInteger.ZERO for the letting the validate() in the AionDifficultyRule return false.
-     *     The difficulty in the PoW blockchain should be always a positive value.
+     *     return BigInteger.ZERO for the letting the validate() in the AionDifficultyRule return
+     *     false. The difficulty in the PoW blockchain should be always a positive value.
      * @see org.aion.zero.impl.valid.AionDifficultyRule.validate;
      * @return the difficulty as the BigInteger format.
      */

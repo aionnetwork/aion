@@ -40,6 +40,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -53,9 +54,9 @@ import org.junit.Test;
 @Ignore
 public class AionAuctionContractTest {
     // use this addr for test to trigger test time periods
-    private static final AionAddress AION =
+    private static final Address AION =
             AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
-    private AionAddress domainAddress1 =
+    private Address domainAddress1 =
             AionAddress.wrap("a011111111111111111111111111111101010101010101010101010101010101");
     private String domainName1 = "bion.aion";
     private String domainName2 = "cion.aion.aion";
@@ -828,8 +829,7 @@ public class AionAuctionContractTest {
         assertEquals(32, result2.getOutput().length); // check that an address was returned
     }
 
-    private byte[] setupInputs(
-            String domainName, AionAddress ownerAddress, byte[] amount, ECKey k) {
+    private byte[] setupInputs(String domainName, Address ownerAddress, byte[] amount, ECKey k) {
         int domainLength = domainName.length();
         int amountLength = amount.length;
         int offset = 0;
@@ -852,7 +852,7 @@ public class AionAuctionContractTest {
         return ret;
     }
 
-    private byte[] setupForExtension(String domainName, AionAddress ownerAddress) {
+    private byte[] setupForExtension(String domainName, Address ownerAddress) {
         int domainLength = domainName.length();
         int offset = 0;
         byte[] ret = new byte[1 + domainLength + 32 + 96 + 1];
@@ -904,7 +904,7 @@ public class AionAuctionContractTest {
 
         // create 100 transactions per bundle
         for (int i = 0; i < 100; i++) {
-            AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
+            Address destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),

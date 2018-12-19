@@ -22,7 +22,7 @@
  */
 // package org.aion.equihash.benchmark;
 //
-// import org.aion.base.type.Address;
+// import org.aion.base.type.AionAddress;
 // import org.aion.base.util.ByteUtil;
 // import org.aion.equihash.EquiUtils;
 // import org.aion.equihash.OptimizedEquiValidator;

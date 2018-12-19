@@ -23,12 +23,12 @@
 
 package org.aion.zero.impl.core;
 
-import org.aion.base.type.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
+import org.aion.vm.api.interfaces.Address;
 
 public class BloomFilter {
-    public static boolean containsAddress(Bloom bloom, AionAddress address) {
+    public static boolean containsAddress(Bloom bloom, Address address) {
         Bloom targetBloom = Bloom.create(HashUtil.h256(address.toBytes()));
         return bloom.contains(targetBloom);
     }

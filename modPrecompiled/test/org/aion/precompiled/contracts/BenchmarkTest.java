@@ -28,11 +28,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import org.aion.base.type.AionAddress;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -45,7 +46,7 @@ public class BenchmarkTest {
     private ExecutionContext ctx;
 
     private byte[] txHash, callData;
-    private AionAddress origin, caller, blockCoinbase;
+    private Address origin, caller, blockCoinbase;
     private long blockNumber, blockTimestamp, blockNrgLimit, nrgLimit;
     private DataWord blockDifficulty, nrgPrice, callValue;
     private int depth, kind, flags;
@@ -59,18 +60,16 @@ public class BenchmarkTest {
 
         new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
         forkFile =
-            new File(
-                System.getProperty("user.dir")
-                    + "/mainnet/config"
-                    + CfgFork.FORK_PROPERTIES_PATH);
+                new File(
+                        System.getProperty("user.dir")
+                                + "/mainnet/config"
+                                + CfgFork.FORK_PROPERTIES_PATH);
         forkFile.createNewFile();
 
         // Open given file in append mode.
-        BufferedWriter out = new BufferedWriter(
-            new FileWriter(forkFile, true));
+        BufferedWriter out = new BufferedWriter(new FileWriter(forkFile, true));
         out.write("fork0.3.2=2000000");
         out.close();
-
 
         cf = new ContractFactory();
         CfgAion.inst();
@@ -105,7 +104,7 @@ public class BenchmarkTest {
 
         ctx =
                 new ExecutionContext(
-                    null,
+                        null,
                         txHash,
                         ContractFactory.getBlake2bHashContractAddress(),
                         origin,

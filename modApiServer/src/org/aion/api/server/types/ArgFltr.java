@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
+import org.aion.vm.api.interfaces.Address;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

@@ -42,6 +42,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.zero.types.AionInternalTx;
 
@@ -56,7 +57,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
 
     private final BridgeStorageConnector connector;
     private final BridgeController controller;
-    private final AionAddress contractAddress;
+    private final Address contractAddress;
 
     // some useful defaults
     // TODO: add passing returns (need more though on gas consumption)
@@ -64,8 +65,8 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
     public TokenBridgeContract(
             @Nonnull final TransactionContext context,
             @Nonnull final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
-            @Nonnull final AionAddress ownerAddress,
-            @Nonnull final AionAddress contractAddress) {
+            @Nonnull final Address ownerAddress,
+            @Nonnull final Address contractAddress) {
         super(track);
         this.context = context;
         this.track = track;
@@ -288,8 +289,8 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
 
         // assemble an internal transaction
-        AionAddress from = this.contractAddress;
-        AionAddress recipient = new AionAddress(to);
+        Address from = this.contractAddress;
+        Address recipient = new AionAddress(to);
         BigInteger nonce = this.track.getNonce(from);
         DataWord valueToSend = new DataWord(value);
         byte[] dataToSend = new byte[0];
@@ -313,12 +314,7 @@ public class TokenBridgeContract extends StatefulPrecompiledContract implements 
      * <p>NOTE: copied from {@code Callback}
      */
     private AionInternalTx newInternalTx(
-            AionAddress from,
-            AionAddress to,
-            BigInteger nonce,
-            DataWord value,
-            byte[] data,
-            String note) {
+            Address from, Address to, BigInteger nonce, DataWord value, byte[] data, String note) {
         byte[] parentHash = context.getTransactionHash();
         int depth = context.getTransactionStackDepth();
         int index = context.getSideEffects().getInternalTransactions().size();

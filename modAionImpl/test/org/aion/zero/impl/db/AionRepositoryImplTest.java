@@ -56,6 +56,7 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionContractDetailsImpl;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -102,7 +103,7 @@ public class AionRepositoryImplTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         byte[] originalRoot = repository.getRoot();
 
-        AionAddress defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
+        Address defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
 
         IRepositoryCache track = repository.startTracking();
         track.addBalance(defaultAccount, BigInteger.valueOf(1));
@@ -120,7 +121,7 @@ public class AionRepositoryImplTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         IRepositoryCache track = repository.startTracking();
 
-        AionAddress defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
+        Address defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
         track.addBalance(defaultAccount, BigInteger.valueOf(1));
 
         byte[] originalRoot = repository.getRoot();
@@ -141,7 +142,7 @@ public class AionRepositoryImplTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         IRepositoryCache track = repository.startTracking();
 
-        AionAddress defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
+        Address defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
         track.addBalance(defaultAccount, BigInteger.valueOf(1));
 
         // Consider the original root the one after an account has been added
@@ -170,7 +171,7 @@ public class AionRepositoryImplTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         IRepositoryCache track = repository.startTracking();
 
-        AionAddress defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
+        Address defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
         track.addBalance(defaultAccount, BigInteger.valueOf(1));
 
         // Consider the original root the one after an account has been added
@@ -208,7 +209,7 @@ public class AionRepositoryImplTest {
         final AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repoTrack =
                 repository.startTracking();
-        final AionAddress defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
+        final Address defaultAccount = AionAddress.wrap(ByteUtil.hexStringToBytes(value1));
         final byte[] key = HashUtil.blake128("hello".getBytes());
         final byte[] value = HashUtil.blake128("world".getBytes());
 
@@ -235,8 +236,8 @@ public class AionRepositoryImplTest {
 
     @Test
     public void testSyncToPreviousRootNoFlush() {
-        final AionAddress FIRST_ACC = AionAddress.wrap(value2);
-        final AionAddress SECOND_ACC = AionAddress.wrap(value3);
+        final Address FIRST_ACC = AionAddress.wrap(value2);
+        final Address SECOND_ACC = AionAddress.wrap(value3);
 
         final AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         byte[] originalRoot = repository.getRoot();
@@ -281,7 +282,7 @@ public class AionRepositoryImplTest {
 
     @Test
     public void testSyncToPreviousRootWithFlush() {
-        final AionAddress FIRST_ACC = AionAddress.wrap(value2);
+        final Address FIRST_ACC = AionAddress.wrap(value2);
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
 
         byte[] originalRoot = repository.getRoot();
@@ -319,9 +320,8 @@ public class AionRepositoryImplTest {
     public void test17NodePreviousRootTest() {
         // not that it matters since things are going to be hashed, but at least
         // the root node should point to a node that contains references to both
-        final AionAddress DOG_ACC = AionAddress.wrap("00000000000000000000000000000dog".getBytes());
-        final AionAddress DOGE_ACC =
-                AionAddress.wrap("0000000000000000000000000000doge".getBytes());
+        final Address DOG_ACC = AionAddress.wrap("00000000000000000000000000000dog".getBytes());
+        final Address DOGE_ACC = AionAddress.wrap("0000000000000000000000000000doge".getBytes());
 
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
         IRepositoryCache track = repository.startTracking();
@@ -352,9 +352,9 @@ public class AionRepositoryImplTest {
         AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
 
         // make some changes to the repository
-        final AionAddress account1 = AionAddress.wrap(value1);
-        final AionAddress account2 = AionAddress.wrap(value2);
-        final AionAddress account3 = AionAddress.wrap(value3);
+        final Address account1 = AionAddress.wrap(value1);
+        final Address account2 = AionAddress.wrap(value2);
+        final Address account3 = AionAddress.wrap(value3);
         IRepositoryCache track = repository.startTracking();
         track.addBalance(account1, BigInteger.ONE);
         track.addBalance(account2, BigInteger.TWO);

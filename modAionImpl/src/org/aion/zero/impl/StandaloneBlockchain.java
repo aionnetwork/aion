@@ -48,6 +48,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
@@ -238,7 +239,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                     this.a0Config == null
                             ? new A0BCConfig() {
                                 @Override
-                                public AionAddress getCoinbase() {
+                                public Address getCoinbase() {
                                     return AionAddress.ZERO_ADDRESS();
                                 }
 
@@ -253,7 +254,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 }
 
                                 @Override
-                                public AionAddress getMinerCoinbase() {
+                                public Address getMinerCoinbase() {
                                     return AionAddress.ZERO_ADDRESS();
                                 }
 
@@ -338,7 +339,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                         new DataWord(key.getValue()).toWrapper());
             }
 
-            for (AionAddress key : genesis.getPremine().keySet()) {
+            for (Address key : genesis.getPremine().keySet()) {
                 track.createAccount(key);
                 track.addBalance(key, genesis.getPremine().get(key).getBalance());
             }
@@ -391,7 +392,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     }
 
     // TEMPORARY: here to support the ConsensusTest
-    public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(AionBlock block) {
+    public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(
+            AionBlock block) {
         return tryToConnectAndFetchSummary(block, System.currentTimeMillis() / 1000);
     }
 

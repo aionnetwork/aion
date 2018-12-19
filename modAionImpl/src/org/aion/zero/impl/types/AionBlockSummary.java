@@ -25,9 +25,9 @@ package org.aion.zero.impl.types;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.AionAddress;
 import org.aion.base.type.IBlockSummary;
 import org.aion.mcf.types.AbstractBlockSummary;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -44,7 +44,7 @@ public class AionBlockSummary
 
     public AionBlockSummary(
             IAionBlock block,
-            Map<AionAddress, BigInteger> rewards,
+            Map<Address, BigInteger> rewards,
             List<AionTxReceipt> receipts,
             List<AionTxExecSummary> summaries) {
         this.block = block;

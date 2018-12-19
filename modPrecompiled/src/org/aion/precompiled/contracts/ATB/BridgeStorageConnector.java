@@ -27,7 +27,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
@@ -36,6 +35,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * Storage layout mapping as the following:
@@ -90,11 +90,11 @@ public class BridgeStorageConnector {
     }
 
     private final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
-    private final AionAddress contractAddress;
+    private final Address contractAddress;
 
     public BridgeStorageConnector(
             @Nonnull final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
-            @Nonnull final AionAddress contractAddress) {
+            @Nonnull final Address contractAddress) {
         this.track = track;
         this.contractAddress = contractAddress;
     }

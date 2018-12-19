@@ -34,6 +34,7 @@ import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * The TRSstateContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -67,7 +68,7 @@ public final class TRSstateContract extends AbstractTRS {
      */
     public TRSstateContract(
             IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
-            AionAddress caller,
+            Address caller,
             IBlockchain blockchain) {
 
         super(track, caller, blockchain);
@@ -255,12 +256,12 @@ public final class TRSstateContract extends AbstractTRS {
 
         // All checks OK. Generate contract address, save the new contract & return to caller.
         byte[] ownerNonce = track.getNonce(caller).toByteArray();
-        byte[] hashInfo = new byte[ownerNonce.length + AionAddress.SIZE];
+        byte[] hashInfo = new byte[ownerNonce.length + Address.SIZE];
         System.arraycopy(ownerNonce, 0, hashInfo, 0, ownerNonce.length);
-        System.arraycopy(caller.toBytes(), 0, hashInfo, ownerNonce.length, AionAddress.SIZE);
+        System.arraycopy(caller.toBytes(), 0, hashInfo, ownerNonce.length, Address.SIZE);
         byte[] trsAddr = HashUtil.h256(hashInfo);
         trsAddr[0] = TRS_PREFIX;
-        AionAddress contract = new AionAddress(trsAddr);
+        Address contract = new AionAddress(trsAddr);
 
         saveNewContract(contract, isTestContract, isDirectDeposit, periods, percent, precision);
         return new PrecompiledTransactionResult(
@@ -294,8 +295,8 @@ public final class TRSstateContract extends AbstractTRS {
         }
 
         // The caller must also be the owner of this contract.
-        AionAddress contract =
-                new AionAddress(Arrays.copyOfRange(input, indexAddr, indexAddr + AionAddress.SIZE));
+        Address contract =
+                new AionAddress(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.SIZE));
         if (!caller.equals(getContractOwner(contract))) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
@@ -349,8 +350,8 @@ public final class TRSstateContract extends AbstractTRS {
         }
 
         // The caller must also be the owner of this contract.
-        AionAddress contract =
-                new AionAddress(Arrays.copyOfRange(input, indexAddr, indexAddr + AionAddress.SIZE));
+        Address contract =
+                new AionAddress(Arrays.copyOfRange(input, indexAddr, indexAddr + Address.SIZE));
         if (!caller.equals(getContractOwner(contract))) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
@@ -400,7 +401,7 @@ public final class TRSstateContract extends AbstractTRS {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexContract, len));
+        Address contract = AionAddress.wrap(Arrays.copyOfRange(input, indexContract, len));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
@@ -453,7 +454,7 @@ public final class TRSstateContract extends AbstractTRS {
      * @param precision The number of decimal places to put the decimal point in percent.
      */
     private void saveNewContract(
-            AionAddress contract,
+            Address contract,
             boolean isTest,
             boolean isDirectDeposit,
             int periods,

@@ -288,7 +288,7 @@ public class AionTransaction extends AbstractTransaction {
         return signature;
     }
 
-    public AionAddress getContractAddress() {
+    public Address getContractAddress() {
         if (!this.isContractCreationTransaction()) {
             return null;
         }

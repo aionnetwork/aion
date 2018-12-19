@@ -3,7 +3,6 @@ package org.aion.vm;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
 import org.aion.fastvm.SideEffects;
 import org.aion.mcf.vm.types.DataWord;
@@ -15,10 +14,7 @@ import org.aion.zero.types.AionTransaction;
 
 public class KernelTransactionContext implements TransactionContext {
     private static final int ENCODE_BASE_LEN =
-        (AionAddress.SIZE * 4)
-            + (DataWord.BYTES * 3)
-            + (Long.BYTES * 4)
-            + (Integer.BYTES * 4);
+            (Address.SIZE * 4) + (DataWord.BYTES * 3) + (Long.BYTES * 4) + (Integer.BYTES * 4);
     public static int CALL = 0;
     public static int DELEGATECALL = 1;
     public static int CALLCODE = 2;
@@ -69,23 +65,23 @@ public class KernelTransactionContext implements TransactionContext {
      *     length 32.
      */
     public KernelTransactionContext(
-        AionTransaction transaction,
-        byte[] txHash,
-        Address destination,
-        Address origin,
-        Address sender,
-        IDataWord nrgPrice,
-        long nrg,
-        IDataWord callValue,
-        byte[] callData,
-        int depth,
-        int kind,
-        int flags,
-        Address blockCoinbase,
-        long blockNumber,
-        long blockTimestamp,
-        long blockNrgLimit,
-        IDataWord blockDifficulty) {
+            AionTransaction transaction,
+            byte[] txHash,
+            Address destination,
+            Address origin,
+            Address sender,
+            IDataWord nrgPrice,
+            long nrg,
+            IDataWord callValue,
+            byte[] callData,
+            int depth,
+            int kind,
+            int flags,
+            Address blockCoinbase,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            IDataWord blockDifficulty) {
 
         this.transaction = transaction;
         this.address = destination;
@@ -286,5 +282,4 @@ public class KernelTransactionContext implements TransactionContext {
     public AionTransaction getTransaction() {
         return this.transaction;
     }
-
 }

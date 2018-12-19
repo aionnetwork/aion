@@ -32,6 +32,7 @@ import java.util.Map;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -68,10 +69,10 @@ public class GenesisTestNetJsonTest {
     public void testNetJsonLoad() throws Exception {
         if (genesis == null) throw new Exception("did not properly load genesis file");
 
-        Map<AionAddress, AccountState> premineAccounts = genesis.getPremine();
+        Map<Address, AccountState> premineAccounts = genesis.getPremine();
 
-        AionAddress[] accString =
-                new AionAddress[] {
+        Address[] accString =
+                new Address[] {
                     AionAddress.wrap(
                             "0xa0483412e8c8e769df037231d336e96f7f6d843cf7224c3d8fbe0ec7cdc12ac6"),
                     AionAddress.wrap(
@@ -96,10 +97,11 @@ public class GenesisTestNetJsonTest {
                             "0xa0f3defb01b531c5a28680eb928e79ea18bc155f1060e1d923d660d74883518b")
                 };
 
-        AionAddress tokenAddress =
-                new AionAddress("0xa02198c9192bb89e9b2e8536d96cbf287fde80625afcf1a5e5632e23c1260d61");
+        Address tokenAddress =
+                new AionAddress(
+                        "0xa02198c9192bb89e9b2e8536d96cbf287fde80625afcf1a5e5632e23c1260d61");
 
-        for (AionAddress a : accString) {
+        for (Address a : accString) {
             assertThat(premineAccounts.containsKey(a)).isTrue();
             AccountState acc = premineAccounts.get(a);
 

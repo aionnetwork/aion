@@ -376,7 +376,7 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    public byte[] getCode(AionAddress addr) {
+    public byte[] getCode(Address addr) {
         return this.ac.getRepository().getCode(addr);
     }
 
@@ -460,7 +460,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        AionAddress fromAddr =
+        Address fromAddr =
                 (params.getFrom().isEmptyAddress()) ? AionAddress.ZERO_ADDRESS() : params.getFrom();
         AionTransaction tx =
                 new AionTransaction(
@@ -483,7 +483,7 @@ public abstract class ApiAion extends Api {
             return (new ApiTxResponse(TxResponse.INVALID_TX));
         }
 
-        AionAddress from = _params.getFrom();
+        Address from = _params.getFrom();
 
         if (from == null || from.isEmptyAddress()) {
             LOG.error("<create-contract msg=invalid-from-address>");
@@ -532,7 +532,7 @@ public abstract class ApiAion extends Api {
         return this.ac.getRepository().getBalance(AionAddress.wrap(_address));
     }
 
-    public BigInteger getBalance(AionAddress _address) {
+    public BigInteger getBalance(Address _address) {
         return this.ac.getRepository().getBalance(_address);
     }
 
@@ -540,7 +540,7 @@ public abstract class ApiAion extends Api {
         return this.ac.getRepository().getNonce(AionAddress.wrap(_address));
     }
 
-    public BigInteger getNonce(AionAddress _address) {
+    public BigInteger getNonce(Address _address) {
         return this.ac.getRepository().getNonce(_address);
     }
 
@@ -550,7 +550,7 @@ public abstract class ApiAion extends Api {
             return (new ApiTxResponse(TxResponse.INVALID_TX));
         }
 
-        AionAddress from = _params.getFrom();
+        Address from = _params.getFrom();
 
         if (from == null || from.isEmptyAddress()) {
             LOG.error("<send-transaction msg=invalid-from-address>");
@@ -583,7 +583,8 @@ public abstract class ApiAion extends Api {
                                 _params.getNrgPrice());
                 tx.sign(key);
 
-                return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
+                return (new ApiTxResponse(
+                        pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.sendTransaction exception: [{}]", ex.getMessage());
@@ -598,7 +599,8 @@ public abstract class ApiAion extends Api {
 
         AionTransaction tx = new AionTransaction(signedTx);
         try {
-            return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
+            return (new ApiTxResponse(
+                    pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
         } catch (Exception ex) {
             LOG.error("<send-transaction exception>", ex);
             return (new ApiTxResponse(TxResponse.EXCEPTION, ex));
@@ -606,7 +608,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected AionTransaction signTransaction(ArgTxCall _params, String _address) {
-        AionAddress address;
+        Address address;
         if (_address == null || _address.isEmpty()) {
             LOG.error("<sign-transaction msg=invalid-signing-address>");
             return null;
@@ -664,8 +666,8 @@ public abstract class ApiAion extends Api {
     //    }
 
     //    private synchronized BigInteger getTxNonce(ECKey key, boolean add) {
-    //        return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) :
-    // nm.getNonce(Address.wrap(key.getAddress()));
+    //        return add ? nm.getNonceAndAdd(AionAddress.wrap(key.getAddress())) :
+    // nm.getNonce(AionAddress.wrap(key.getAddress()));
     //    }
 
     public boolean isMining() {

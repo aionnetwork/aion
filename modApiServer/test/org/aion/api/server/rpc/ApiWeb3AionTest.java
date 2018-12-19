@@ -31,6 +31,7 @@ import static org.junit.Assert.assertNull;
 import org.aion.base.type.AionAddress;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.json.JSONArray;
@@ -51,11 +52,11 @@ public class ApiWeb3AionTest {
 
     @Test
     public void testEthSignTransaction() {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        AionAddress toAddr = new AionAddress(Keystore.create("testPwd"));
+        Address toAddr = new AionAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
         tx.put("from", "0x" + addr.toString());
@@ -82,13 +83,13 @@ public class ApiWeb3AionTest {
 
         assertEquals(tx.get("to"), outTx.get("to"));
         assertEquals(
-            tx.get("value"), StringHexToBigInteger(outTx.get("value").toString()).toString());
+                tx.get("value"), StringHexToBigInteger(outTx.get("value").toString()).toString());
         assertEquals(
-            tx.get("gasPrice"),
-            StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
+                tx.get("gasPrice"),
+                StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
         assertEquals(
-            tx.get("gasPrice"),
-            StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
+                tx.get("gasPrice"),
+                StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
         assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("gas").toString()).toString());
         assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("nrg").toString()).toString());
         assertEquals("0x", outTx.get("input").toString());
@@ -100,11 +101,11 @@ public class ApiWeb3AionTest {
 
     @Test
     public void testEthSignTransactionAddressParamIsNull() {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
-        AionAddress toAddr = new AionAddress(Keystore.create("testPwd"));
+        Address toAddr = new AionAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
         tx.put("from", addr.toString());
@@ -128,9 +129,9 @@ public class ApiWeb3AionTest {
 
     @Test
     public void testEthSignTransactionAccountNotUnlocked() {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
-        AionAddress toAddr = new AionAddress(Keystore.create("testPwd"));
+        Address toAddr = new AionAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
         tx.put("from", addr.toString());
@@ -154,9 +155,9 @@ public class ApiWeb3AionTest {
 
     @Test
     public void testEthSendTransactionAccountNotUnlocked() {
-        AionAddress addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new AionAddress(Keystore.create("testPwd"));
 
-        AionAddress toAddr = new AionAddress(Keystore.create("testPwd"));
+        Address toAddr = new AionAddress(Keystore.create("testPwd"));
 
         JSONObject tx = new JSONObject();
         tx.put("from", addr.toString());
@@ -188,8 +189,8 @@ public class ApiWeb3AionTest {
         assertNull(rsp.getError());
 
         assertEquals(
-            impl.getPendingState().getNonce(AionAddress.ZERO_ADDRESS()),
-            StringHexToBigInteger(rsp.getResult().toString()));
+                impl.getPendingState().getNonce(AionAddress.ZERO_ADDRESS()),
+                StringHexToBigInteger(rsp.getResult().toString()));
     }
 
     @Test
@@ -202,8 +203,8 @@ public class ApiWeb3AionTest {
         assertNull(rsp.getError());
 
         assertEquals(
-            impl.getPendingState().getBalance(AionAddress.ZERO_ADDRESS()),
-            StringHexToBigInteger(rsp.getResult().toString()));
+                impl.getPendingState().getBalance(AionAddress.ZERO_ADDRESS()),
+                StringHexToBigInteger(rsp.getResult().toString()));
     }
 
     @Test
@@ -216,9 +217,7 @@ public class ApiWeb3AionTest {
 
         long rspNum = rsp.toJson().getJSONObject("result").getLong("number");
 
-        assertEquals(
-            AionPendingStateImpl.inst().getBestBlock().getNumber(),
-            rspNum);
+        assertEquals(AionPendingStateImpl.inst().getBestBlock().getNumber(), rspNum);
     }
 
     @Test
@@ -229,6 +228,5 @@ public class ApiWeb3AionTest {
 
         RpcMsg rsp = web3Api.eth_getTransactionByBlockNumberAndIndex(req);
         assertEquals(JSONObject.NULL, rsp.getResult());
-
     }
 }

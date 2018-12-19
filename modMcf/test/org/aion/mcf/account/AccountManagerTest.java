@@ -36,6 +36,7 @@ import java.util.List;
 import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.vm.api.interfaces.Address;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -43,7 +44,7 @@ import org.junit.Test;
 
 public class AccountManagerTest {
     private static AccountManager accountManager = AccountManager.inst();
-    private AionAddress notRegistered =
+    private Address notRegistered =
             AionAddress.wrap("a011111111111111111111111111111101010101010101010101010101010101");
     private final int DEFAULT_TEST_TIMEOUT = 10;
 

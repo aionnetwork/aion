@@ -26,7 +26,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
@@ -37,6 +36,7 @@ import org.aion.mcf.types.AbstractBlock;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
@@ -98,7 +98,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
 
     public AionBlock(
             byte[] parentHash,
-            AionAddress coinbase,
+            Address coinbase,
             byte[] logsBloom,
             byte[] difficulty,
             long number,
@@ -147,7 +147,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
      */
     protected AionBlock(
             byte[] parentHash,
-            AionAddress coinbase,
+            Address coinbase,
             byte[] logsBloom,
             byte[] difficulty,
             long number,
@@ -212,7 +212,7 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         return this.header.getParentHash();
     }
 
-    public AionAddress getCoinbase() {
+    public Address getCoinbase() {
         parseRLP();
         return this.header.getCoinbase();
     }

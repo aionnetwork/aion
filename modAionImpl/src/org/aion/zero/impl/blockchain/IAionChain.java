@@ -26,9 +26,9 @@ package org.aion.zero.impl.blockchain;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.db.IRepository;
-import org.aion.base.type.AionAddress;
 import org.aion.mcf.blockchain.IChainInstancePOW;
 import org.aion.mcf.blockchain.IPowChain;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.query.QueryInterface;
 import org.aion.zero.impl.types.AionBlock;
@@ -44,8 +44,7 @@ public interface IAionChain extends IChainInstancePOW, QueryInterface {
 
     void close();
 
-    AionTransaction createTransaction(
-            BigInteger nonce, AionAddress to, BigInteger value, byte[] data);
+    AionTransaction createTransaction(BigInteger nonce, Address to, BigInteger value, byte[] data);
 
     void broadcastTransaction(AionTransaction transaction);
 

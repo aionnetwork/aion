@@ -40,10 +40,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.api.interfaces.Address;
 import org.slf4j.Logger;
 
 /** Account Manger Class */
@@ -53,7 +53,7 @@ public class AccountManager {
     public static final int UNLOCK_MAX = 86400, // sec
             UNLOCK_DEFAULT = 60; // sec
 
-    private Map<AionAddress, Account> accounts;
+    private Map<Address, Account> accounts;
 
     private AccountManager() {
         LOGGER.debug("<account-manager init>");
@@ -71,7 +71,7 @@ public class AccountManager {
     // Retrieve ECKey from active accounts list from manager perspective
     // !important method. use in careful
     // Can use this method as check if unlocked
-    public ECKey getKey(final AionAddress _address) {
+    public ECKey getKey(final Address _address) {
 
         Account acc = this.accounts.get(_address);
 
@@ -90,7 +90,7 @@ public class AccountManager {
         return new ArrayList<>(this.accounts.values());
     }
 
-    public boolean unlockAccount(AionAddress _address, String _password, int _timeout) {
+    public boolean unlockAccount(Address _address, String _password, int _timeout) {
 
         ECKey key = Keystore.getKey(_address.toString(), _password);
 
@@ -124,7 +124,7 @@ public class AccountManager {
         }
     }
 
-    public boolean lockAccount(AionAddress _address, String _password) {
+    public boolean lockAccount(Address _address, String _password) {
 
         ECKey key = Keystore.getKey(_address.toString(), _password);
 

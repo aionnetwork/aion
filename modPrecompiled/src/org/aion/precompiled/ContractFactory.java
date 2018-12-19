@@ -24,13 +24,14 @@ package org.aion.precompiled;
 
 import org.aion.base.type.AionAddress;
 import org.aion.mcf.config.CfgFork;
+import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
 import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
 import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
 import org.aion.precompiled.type.PrecompiledContract;
-import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.KernelInterface;
 import org.aion.vm.api.interfaces.TransactionContext;
 
@@ -81,7 +82,7 @@ public class ContractFactory {
         boolean fork_032 =
                 (forkProperty != null) && (context.getBlockNumber() >= Long.valueOf(forkProperty));
 
-        //TODO: need to provide a real solution for the repository here ....
+        // TODO: need to provide a real solution for the repository here ....
 
         switch (context.getDestinationAddress().toString()) {
             case ADDR_TOKEN_BRIDGE:
@@ -123,7 +124,7 @@ public class ContractFactory {
      * @param address The address to check.
      * @return true iff address is address of a pre-compiled contract.
      */
-    public static boolean isPrecompiledContract(AionAddress address) {
+    public static boolean isPrecompiledContract(Address address) {
         switch (address.toString()) {
             case ADDR_TOKEN_BRIDGE:
             case ADDR_ED_VERIFY:
@@ -141,7 +142,7 @@ public class ContractFactory {
      *
      * @return the contract address.
      */
-    public static AionAddress getTotalCurrencyContractAddress() {
+    public static Address getTotalCurrencyContractAddress() {
         return AionAddress.wrap(ADDR_TOTAL_CURRENCY);
     }
 
@@ -150,7 +151,7 @@ public class ContractFactory {
      *
      * @return the contract address
      */
-    public static AionAddress getEdVerifyContractAddress() {
+    public static Address getEdVerifyContractAddress() {
         return AionAddress.wrap(ADDR_ED_VERIFY);
     }
 
@@ -159,7 +160,7 @@ public class ContractFactory {
      *
      * @return the contract address
      */
-    public static AionAddress getTxHashContractAddress() {
+    public static Address getTxHashContractAddress() {
         return AionAddress.wrap(ADDR_TX_HASH);
     }
 
@@ -168,7 +169,7 @@ public class ContractFactory {
      *
      * @return the contract address
      */
-    public static AionAddress getBlake2bHashContractAddress() {
+    public static Address getBlake2bHashContractAddress() {
         return AionAddress.wrap(ADDR_BLAKE2B_HASH);
     }
 }

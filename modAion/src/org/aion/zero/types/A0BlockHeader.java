@@ -39,6 +39,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONObject;
 
@@ -228,7 +229,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             byte version,
             long number,
             byte[] parentHash,
-            AionAddress coinbase,
+            Address coinbase,
             byte[] logsBloom,
             byte[] difficulty,
             byte[] extraData,
@@ -238,7 +239,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             byte[] nonce,
             byte[] solution) {
         this.version = version;
-        this.coinbase = coinbase;
+        this.coinbase = (AionAddress) coinbase;
         this.parentHash = parentHash;
         this.logsBloom = logsBloom;
         this.difficulty = difficulty;
@@ -581,11 +582,11 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
          * Some constants for fallbacks, these are not rigorously defined this;
          * TODO: define these with explanations in the future
          */
-        protected AionAddress EMPTY_ADDRESS = AionAddress.EMPTY_ADDRESS();
+        protected Address EMPTY_ADDRESS = AionAddress.EMPTY_ADDRESS();
 
         protected byte version;
         protected byte[] parentHash;
-        protected AionAddress coinbase;
+        protected Address coinbase;
         protected byte[] stateRoot;
         protected byte[] txTrieRoot;
         protected byte[] receiptTrieRoot;
@@ -643,7 +644,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             return this;
         }
 
-        public Builder withCoinbase(AionAddress coinbase) throws HeaderStructureException {
+        public Builder withCoinbase(Address coinbase) throws HeaderStructureException {
             if (isFromUnsafeSource) {
                 if (coinbase == null)
                     throw new HeaderStructureException(

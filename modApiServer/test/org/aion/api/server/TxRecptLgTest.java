@@ -30,14 +30,13 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.api.server.types.TxRecptLg;
-import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.vm.types.Log;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -111,9 +110,9 @@ public class TxRecptLgTest {
         ImportResult result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 
-        AionAddress addressA = tx1.getContractAddress();
+        Address addressA = tx1.getContractAddress();
         System.out.println("contract A address = " + addressA);
-        AionAddress addressB = tx2.getContractAddress();
+        Address addressB = tx2.getContractAddress();
         System.out.println("contract B address = " + addressB);
         Thread.sleep(1000);
 

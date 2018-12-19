@@ -28,14 +28,15 @@ import static org.junit.Assert.assertEquals;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import org.aion.base.type.AionAddress;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.vm.api.interfaces.Address;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -43,7 +44,7 @@ import org.junit.Test;
 
 @Ignore
 public class TotalCurrencyContractTest {
-    private static final AionAddress ADDR = ContractFactory.getTotalCurrencyContractAddress();
+    private static final Address ADDR = ContractFactory.getTotalCurrencyContractAddress();
     private static final long COST = 21000L;
     private static final BigInteger AMT = BigInteger.valueOf(1000);
     private TotalCurrencyContract tcc;
@@ -297,7 +298,8 @@ public class TotalCurrencyContractTest {
         tcc.execute(input2, COST);
         tcc.execute(input2, COST);
 
-        PrecompiledTransactionResult res = tcc.execute(new byte[] {(byte) 0x0}, COST); // get chain 0.
+        PrecompiledTransactionResult res =
+                tcc.execute(new byte[] {(byte) 0x0}, COST); // get chain 0.
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(AMT, new BigInteger(res.getOutput()));
 

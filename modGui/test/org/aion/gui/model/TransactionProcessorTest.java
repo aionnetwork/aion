@@ -159,7 +159,7 @@ public class TransactionProcessorTest {
                 .thenReturn(
                         latestSafeBlockN
                                 - 1); // why are the ones with a lower block number considered
-                                      // 'newer'?
+        // 'newer'?
         when(tOld.getBlockNumber()).thenReturn(latestSafeBlockN + 1);
         when(accountManager.getTransactions(addressToProcess))
                 .thenReturn(
@@ -210,42 +210,35 @@ public class TransactionProcessorTest {
                                         .timestamp(724892l /*not used*/)
                                         .number(12l /*not used*/)
                                         .txDetails(
-                                                Arrays
-                                                        .asList( // we'll use a unique number for
-                                                                 // value for verification later
-                                                                tdBuilder
-                                                                        .from(
-                                                                                new AionAddress(
-                                                                                        addressToProcess)) // should get added
-                                                                        .to(
-                                                                                new AionAddress(
-                                                                                        irrelevantAddress1))
-                                                                        .value(
-                                                                                new BigInteger(
-                                                                                        "10000001"))
-                                                                        .createTxDetails(),
-                                                                tdBuilder
-                                                                        .from(
-                                                                                new AionAddress(
-                                                                                        irrelevantAddress1)) // should get
-                                                                        .to(
-                                                                                new AionAddress(
-                                                                                        addressToProcess))
-                                                                        .value(
-                                                                                new BigInteger(
-                                                                                        "20000001"))
-                                                                        .createTxDetails(),
-                                                                tdBuilder
-                                                                        .from(
-                                                                                new AionAddress(
-                                                                                        irrelevantAddress1))
-                                                                        .to(
-                                                                                new AionAddress(
-                                                                                        irrelevantAddress2))
-                                                                        .value(
-                                                                                new BigInteger(
-                                                                                        "30000001"))
-                                                                        .createTxDetails()))
+                                                Arrays.asList( // we'll use a unique number for
+                                                        // value for verification later
+                                                        tdBuilder
+                                                                .from(
+                                                                        new AionAddress(
+                                                                                addressToProcess)) // should get added
+                                                                .to(
+                                                                        new AionAddress(
+                                                                                irrelevantAddress1))
+                                                                .value(new BigInteger("10000001"))
+                                                                .createTxDetails(),
+                                                        tdBuilder
+                                                                .from(
+                                                                        new AionAddress(
+                                                                                irrelevantAddress1)) // should get
+                                                                .to(
+                                                                        new AionAddress(
+                                                                                addressToProcess))
+                                                                .value(new BigInteger("20000001"))
+                                                                .createTxDetails(),
+                                                        tdBuilder
+                                                                .from(
+                                                                        new AionAddress(
+                                                                                irrelevantAddress1))
+                                                                .to(
+                                                                        new AionAddress(
+                                                                                irrelevantAddress2))
+                                                                .value(new BigInteger("30000001"))
+                                                                .createTxDetails()))
                                         .createBlockDetails());
                     }
                 };
@@ -382,7 +375,8 @@ public class TransactionProcessorTest {
 
         // mock getting latest transaction nonce
         ApiMsg latestNonceApiMsg = mock(ApiMsg.class);
-        when(api.getChain().getNonce(AionAddress.wrap(senderAddress))).thenReturn(latestNonceApiMsg);
+        when(api.getChain().getNonce(AionAddress.wrap(senderAddress)))
+                .thenReturn(latestNonceApiMsg);
         when(latestNonceApiMsg.getObject()).thenReturn(latestNonce);
 
         // mock responding to the send request

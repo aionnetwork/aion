@@ -42,6 +42,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -55,7 +56,7 @@ public class DoubleDataWordTest {
     private IRepository repo;
     private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
     private Random rand;
-    private AionAddress addr;
+    private Address addr;
 
     @Before
     public void setup() {

@@ -30,12 +30,13 @@ import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.precompiled.contracts.DummyRepo;
+import org.aion.vm.api.interfaces.Address;
 import org.junit.Before;
 import org.junit.Test;
 
 public class BridgeStorageConnectorTest {
     private BridgeStorageConnector connector;
-    private static final AionAddress contractAddress = AionAddress.ZERO_ADDRESS();
+    private static final Address contractAddress = AionAddress.ZERO_ADDRESS();
 
     @Before
     public void beforeEach() {

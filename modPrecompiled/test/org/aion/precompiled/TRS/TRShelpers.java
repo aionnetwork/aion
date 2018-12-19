@@ -53,6 +53,7 @@ import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -63,16 +64,16 @@ class TRShelpers {
     private static final byte[] OUT = new byte[1];
     static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;
     private IAionBlockchain blockchain = StandaloneBlockchain.inst();
-    AionAddress AION =
+    Address AION =
             AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
-    List<AionAddress> tempAddrs;
+    List<Address> tempAddrs;
     ECKey senderKey;
     long COST = 21000L;
 
     // Returns a new account with initial balance balance that exists in the repo.
-    AionAddress getNewExistentAccount(BigInteger balance) {
-        AionAddress acct = AionAddress.wrap(ECKeyFac.inst().create().getAddress());
+    Address getNewExistentAccount(BigInteger balance) {
+        Address acct = AionAddress.wrap(ECKeyFac.inst().create().getAddress());
         acct.toBytes()[0] = (byte) 0xA0;
         repo.createAccount(acct);
         repo.addBalance(acct, balance);
@@ -82,23 +83,23 @@ class TRShelpers {
     }
 
     // Returns a new TRSstateContract that calls the contract using caller.
-    TRSstateContract newTRSstateContract(AionAddress caller) {
+    TRSstateContract newTRSstateContract(Address caller) {
         return new TRSstateContract(repo, caller, blockchain);
     }
 
     // Returns a new TRSuseContract that calls the contract using caller.
-    TRSuseContract newTRSuseContract(AionAddress caller) {
+    TRSuseContract newTRSuseContract(Address caller) {
         return new TRSuseContract(repo, caller, blockchain);
     }
 
     // Returns a new TRSqueryContract that calls the contract using caller.
-    TRSqueryContract newTRSqueryContract(AionAddress caller) {
+    TRSqueryContract newTRSqueryContract(Address caller) {
         return new TRSqueryContract(repo, caller, blockchain);
     }
 
     // Returns the address of a newly created TRS contract, assumes all params are valid.
-    AionAddress createTRScontract(
-            AionAddress owner,
+    Address createTRScontract(
+            Address owner,
             boolean isTest,
             boolean isDirectDeposit,
             int periods,
@@ -111,7 +112,7 @@ class TRShelpers {
         if (!res.getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
             fail("Unable to create contract!");
         }
-        AionAddress contract = new AionAddress(res.getOutput());
+        Address contract = new AionAddress(res.getOutput());
         tempAddrs.add(contract);
         repo.incrementNonce(owner);
         repo.flush();
@@ -120,15 +121,15 @@ class TRShelpers {
 
     // Returns the address of a newly created TRS contract and locks it; assumes all params valid.
     // The owner deposits 1 token so that the contract can be locked.
-    AionAddress createAndLockTRScontract(
-            AionAddress owner,
+    Address createAndLockTRScontract(
+            Address owner,
             boolean isTest,
             boolean isDirectDeposit,
             int periods,
             BigInteger percent,
             int precision) {
 
-        AionAddress contract =
+        Address contract =
                 createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         if (!newTRSuseContract(owner)
@@ -152,15 +153,15 @@ class TRShelpers {
     // Returns the address of a newly created TRS contract that is locked and live. The owner
     // deposits
     //  token so that the contract can be locked.
-    AionAddress createLockedAndLiveTRScontract(
-            AionAddress owner,
+    Address createLockedAndLiveTRScontract(
+            Address owner,
             boolean isTest,
             boolean isDirectDeposit,
             int periods,
             BigInteger percent,
             int precision) {
 
-        AionAddress contract =
+        Address contract =
                 createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         if (!newTRSuseContract(owner)
@@ -189,7 +190,7 @@ class TRShelpers {
     }
 
     // Locks and makes contract live, where owner is owner of the contract.
-    void lockAndStartContract(AionAddress contract, AionAddress owner) {
+    void lockAndStartContract(Address contract, Address owner) {
         byte[] input = getLockInput(contract);
         AbstractTRS trs = newTRSstateContract(owner);
         if (!trs.execute(input, COST).getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
@@ -204,20 +205,20 @@ class TRShelpers {
     // Returns a TRS contract address that has numDepositors depositors in it (owner does not
     // deposit)
     // each with DEFAULT_BALANCE deposit balance.
-    AionAddress getContractMultipleDepositors(
+    Address getContractMultipleDepositors(
             int numDepositors,
-            AionAddress owner,
+            Address owner,
             boolean isTest,
             boolean isDirectDeposit,
             int periods,
             BigInteger percent,
             int precision) {
 
-        AionAddress contract =
+        Address contract =
                 createTRScontract(owner, isTest, isDirectDeposit, periods, percent, precision);
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         for (int i = 0; i < numDepositors; i++) {
-            AionAddress acct = getNewExistentAccount(DEFAULT_BALANCE);
+            Address acct = getNewExistentAccount(DEFAULT_BALANCE);
             if (!newTRSuseContract(acct)
                     .execute(input, COST)
                     .getResultCode()
@@ -231,18 +232,18 @@ class TRShelpers {
     // Returns a TRS contract address that has numDepositors depositors in it (owner does not
     // deposit)
     // each with DEFAULT_BALANCE deposit balance. Owner uses depositFor to deposit for depositors.
-    AionAddress getContractMultipleDepositorsUsingDepositFor(
+    Address getContractMultipleDepositorsUsingDepositFor(
             int numDepositors,
-            AionAddress owner,
+            Address owner,
             boolean isTest,
             int periods,
             BigInteger percent,
             int precision) {
 
-        AionAddress contract = createTRScontract(owner, isTest, false, periods, percent, precision);
+        Address contract = createTRScontract(owner, isTest, false, periods, percent, precision);
         AbstractTRS trs = newTRSuseContract(owner);
         for (int i = 0; i < numDepositors; i++) {
-            AionAddress acct = getNewExistentAccount(BigInteger.ZERO);
+            Address acct = getNewExistentAccount(BigInteger.ZERO);
             byte[] input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
             if (!trs.execute(input, COST).getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
                 Assert.fail("Depositor #" + i + " failed to deposit!");
@@ -277,49 +278,49 @@ class TRShelpers {
     }
 
     // Returns the amount of extra funds that the TRS contract contract has.
-    BigInteger getExtraFunds(AbstractTRS trs, AionAddress contract) {
+    BigInteger getExtraFunds(AbstractTRS trs, Address contract) {
         return trs.getExtraFunds(contract);
     }
 
     // Returns the period the contract is in at the block number blockNum.
-    BigInteger getPeriodAt(AbstractTRS trs, AionAddress contract, long blockNum) {
+    BigInteger getPeriodAt(AbstractTRS trs, Address contract, long blockNum) {
         long timestamp = blockchain.getBlockByNumber(blockNum).getTimestamp();
         return BigInteger.valueOf(
                 trs.calculatePeriod(contract, getContractSpecs(trs, contract), timestamp));
     }
 
     // Returns the percentage configured for the TRS contract.
-    BigDecimal getPercentage(AbstractTRS trs, AionAddress contract) {
+    BigDecimal getPercentage(AbstractTRS trs, Address contract) {
         return AbstractTRS.getPercentage(trs.getContractSpecs(contract));
     }
 
     // Returns the periods configured for the TRS contract.
-    int getPeriods(AbstractTRS trs, AionAddress contract) {
+    int getPeriods(AbstractTRS trs, Address contract) {
         return AbstractTRS.getPeriods(trs.getContractSpecs(contract));
     }
 
     // Returns the deposit balance of account in the TRS contract contract.
-    BigInteger getDepositBalance(AbstractTRS trs, AionAddress contract, AionAddress account) {
+    BigInteger getDepositBalance(AbstractTRS trs, Address contract, Address account) {
         return trs.getDepositBalance(contract, account);
     }
 
     // Returns the balance of bonus tokens in the TRS contract contract.
-    BigInteger getBonusBalance(AbstractTRS trs, AionAddress contract) {
+    BigInteger getBonusBalance(AbstractTRS trs, Address contract) {
         return trs.getBonusBalance(contract);
     }
 
     // Returns true only if the TRS contract has its funds open.
-    boolean getAreContractFundsOpen(AbstractTRS trs, AionAddress contract) {
+    boolean getAreContractFundsOpen(AbstractTRS trs, Address contract) {
         return trs.isOpenFunds(contract);
     }
 
     // Returns the total deposit balance for the TRS contract contract.
-    BigInteger getTotalBalance(AbstractTRS trs, AionAddress contract) {
+    BigInteger getTotalBalance(AbstractTRS trs, Address contract) {
         return trs.getTotalBalance(contract);
     }
 
     // Returns true only if account is a valid account in contract.
-    boolean accountIsValid(AbstractTRS trs, AionAddress contract, AionAddress account) {
+    boolean accountIsValid(AbstractTRS trs, Address contract, Address account) {
         try {
             return AbstractTRS.accountIsValid(trs.getListNextBytes(contract, account));
         } catch (Exception e) {
@@ -329,63 +330,62 @@ class TRShelpers {
     }
 
     // Returns the address of the owner of the TRS contract given by the address contract.
-    AionAddress getOwner(AbstractTRS trs, AionAddress contract) {
+    Address getOwner(AbstractTRS trs, Address contract) {
         return trs.getContractOwner(contract);
     }
 
     // Returns true only if the TRS contract is in Test Mode.
-    boolean isTestContract(AbstractTRS trs, AionAddress contract) {
+    boolean isTestContract(AbstractTRS trs, Address contract) {
         return AbstractTRS.isTestContract(trs.getContractSpecs(contract));
     }
 
     // Returns true only if the TRS contract has direct deposit enabled.
-    boolean isDirectDepositEnabled(AbstractTRS trs, AionAddress contract) {
+    boolean isDirectDepositEnabled(AbstractTRS trs, Address contract) {
         return trs.isDirDepositsEnabled(contract);
     }
 
     // Returns true only if the TRS contract whose contract specs are given by specsData is locked.
-    boolean isContractLocked(AbstractTRS trs, AionAddress contract) {
+    boolean isContractLocked(AbstractTRS trs, Address contract) {
         return trs.isContractLocked(contract);
     }
 
     // Returns true only if the TRS contract whose contract specs are given by specsData is live.
-    boolean isContractLive(AbstractTRS trs, AionAddress contract) {
+    boolean isContractLive(AbstractTRS trs, Address contract) {
         return trs.isContractLive(contract);
     }
 
     // Returns the timestamp for this contract.
-    long getContractTimestamp(AbstractTRS trs, AionAddress contract) {
+    long getContractTimestamp(AbstractTRS trs, Address contract) {
         return trs.getTimestamp(contract);
     }
 
     // Returns true only if account is eligible to use the special one-off withdrawal event.
-    boolean accountIsEligibleForSpecial(
-            TRSuseContract trs, AionAddress contract, AionAddress account) {
+    boolean accountIsEligibleForSpecial(TRSuseContract trs, Address contract, Address account) {
         return trs.accountIsEligibleForSpecial(contract, account);
     }
 
     // Returns the last period in which account made a withdrawal or -1 if bad contract or account.
-    int getAccountLastWithdrawalPeriod(AbstractTRS trs, AionAddress contract, AionAddress account) {
+    int getAccountLastWithdrawalPeriod(AbstractTRS trs, Address contract, Address account) {
         return trs.getAccountLastWithdrawalPeriod(contract, account);
     }
 
     // Returns the share of the bonus tokens account is entitled to withdraw over life of contract.
-    BigInteger getBonusShare(AbstractTRS trs, AionAddress contract, AionAddress account) {
+    BigInteger getBonusShare(AbstractTRS trs, Address contract, Address account) {
         return trs.computeBonusShare(contract, account);
     }
 
     // Returns the amount of extras account is able to withdraw in the current period.
     BigInteger getExtraShare(
             AbstractTRS trs,
-            AionAddress contract,
-            AionAddress account,
+            Address contract,
+            Address account,
             BigDecimal fraction,
             int currPeriod) {
         return trs.computeExtraFundsToWithdraw(contract, account, fraction, currPeriod);
     }
 
     // Grabs the current period contract is in as a BigInteger.
-    BigInteger getCurrentPeriod(AbstractTRS trs, AionAddress contract) {
+    BigInteger getCurrentPeriod(AbstractTRS trs, Address contract) {
         return BigInteger.valueOf(getContractCurrentPeriod(trs, contract));
     }
 
@@ -410,7 +410,7 @@ class TRShelpers {
     }
 
     // Returns the period that contract is currently in.
-    int getContractCurrentPeriod(AbstractTRS trs, AionAddress contract) {
+    int getContractCurrentPeriod(AbstractTRS trs, Address contract) {
         long currTime = blockchain.getBestBlock().getTimestamp();
         return trs.calculatePeriod(contract, trs.getContractSpecs(contract), currTime);
     }
@@ -423,7 +423,7 @@ class TRShelpers {
     }
 
     // Returns the total amount of tokens account can withdraw over the lifetime of the contract.
-    BigInteger getTotalOwed(AbstractTRS trs, AionAddress contract, AionAddress account) {
+    BigInteger getTotalOwed(AbstractTRS trs, Address contract, Address account) {
         return trs.computeTotalOwed(contract, account);
     }
 
@@ -448,7 +448,7 @@ class TRShelpers {
      */
     BigInteger expectedAmtFirstWithdraw(
             AbstractTRS trs,
-            AionAddress contract,
+            Address contract,
             BigInteger deposits,
             BigInteger total,
             BigInteger bonus,
@@ -486,7 +486,7 @@ class TRShelpers {
      * @param percentage The percent of total owings that can be claimed in special event.
      * @return the address of the contract.
      */
-    AionAddress setupContract(
+    Address setupContract(
             int numDepositors,
             BigInteger deposits,
             BigInteger bonus,
@@ -495,14 +495,14 @@ class TRShelpers {
 
         int precision = percentage.scale();
         BigInteger percent = percentage.movePointRight(precision).toBigInteger();
-        AionAddress contract = createTRScontract(AION, true, true, periods, percent, precision);
+        Address contract = createTRScontract(AION, true, true, periods, percent, precision);
 
         assertEquals(percentage, getPercentage(newTRSstateContract(AION), contract));
         assertEquals(periods, getPeriods(newTRSstateContract(AION), contract));
 
         byte[] input = getDepositInput(contract, deposits);
         for (int i = 0; i < numDepositors; i++) {
-            AionAddress acc = getNewExistentAccount(deposits);
+            Address acc = getNewExistentAccount(deposits);
             assertEquals(
                     PrecompiledResultCode.SUCCESS,
                     newTRSuseContract(acc).execute(input, COST).getResultCode());
@@ -540,106 +540,106 @@ class TRShelpers {
     }
 
     // Returns an input byte array for the lock operation using the provided parameters.
-    byte[] getLockInput(AionAddress contract) {
+    byte[] getLockInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = (byte) 0x1;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
     // Returns an input byte array for the start operation using the provided parameters.
-    byte[] getStartInput(AionAddress contract) {
+    byte[] getStartInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = (byte) 0x2;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the deposit operation.
-    byte[] getDepositInput(AionAddress contract, BigInteger amount) {
+    byte[] getDepositInput(Address contract, BigInteger amount) {
         byte[] amtBytes = amount.toByteArray();
         if (amtBytes.length > 128) {
             fail();
         }
         byte[] input = new byte[161];
         input[0] = 0x0;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length, amtBytes.length);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the deposit-for operation.
-    byte[] getDepositForInput(AionAddress contract, AionAddress beneficiary, BigInteger amount) {
+    byte[] getDepositForInput(Address contract, Address beneficiary, BigInteger amount) {
         byte[] amtBytes = amount.toByteArray();
         if (amtBytes.length > 128) {
             fail();
         }
         byte[] input = new byte[193];
         input[0] = 0x5;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
-        System.arraycopy(beneficiary.toBytes(), 0, input, 33, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
+        System.arraycopy(beneficiary.toBytes(), 0, input, 33, Address.SIZE);
         System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the withdraw operation.
-    byte[] getWithdrawInput(AionAddress contract) {
+    byte[] getWithdrawInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = (byte) 0x1;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the refund operation.
-    byte[] getRefundInput(AionAddress contract, AionAddress account, BigInteger amount) {
+    byte[] getRefundInput(Address contract, Address account, BigInteger amount) {
         byte[] amtBytes = amount.toByteArray();
         if (amtBytes.length > 128) {
             Assert.fail();
         }
         byte[] input = new byte[193];
         input[0] = 0x4;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
-        System.arraycopy(account.toBytes(), 0, input, 33, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
+        System.arraycopy(account.toBytes(), 0, input, 33, Address.SIZE);
         System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the isLive (or isStarted)
     // operation.
-    byte[] getIsLiveInput(AionAddress contract) {
+    byte[] getIsLiveInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x0;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the isLocked operation.
-    byte[] getIsLockedInput(AionAddress contract) {
+    byte[] getIsLockedInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x1;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the isDirectDepositEnabled
     // op.
-    byte[] getIsDirDepoEnabledInput(AionAddress contract) {
+    byte[] getIsDirDepoEnabledInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x2;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the period operation.
-    byte[] getPeriodInput(AionAddress contract) {
+    byte[] getPeriodInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x3;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the periodsAt operation.
-    byte[] getPeriodAtInput(AionAddress contract, long blockNum) {
+    byte[] getPeriodAtInput(Address contract, long blockNum) {
         ByteBuffer buffer = ByteBuffer.allocate(41);
         buffer.put((byte) 0x4);
         buffer.put(contract.toBytes());
@@ -648,27 +648,27 @@ class TRShelpers {
     }
 
     // Returns a properly formatted byte array to be used as input for the bulk-withdraw operation.
-    byte[] getBulkWithdrawInput(AionAddress contract) {
+    byte[] getBulkWithdrawInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x3;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the open-funds operation.
-    byte[] getOpenFundsInput(AionAddress contract) {
+    byte[] getOpenFundsInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x3;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
     // Returns a properly formatted byte array to be used as input for the available-for-..
     // operation.
-    byte[] getAvailableForWithdrawalAtInput(AionAddress contract, long timestamp) {
+    byte[] getAvailableForWithdrawalAtInput(Address contract, long timestamp) {
         byte[] input = new byte[41];
         input[0] = 0x5;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(timestamp);
         byte[] buf = buffer.array();
@@ -677,10 +677,10 @@ class TRShelpers {
     }
 
     // Returns a properly formatted byte array to be used as input for the addExtraFunds operation.
-    byte[] getAddExtraInput(AionAddress contract, BigInteger amount) {
+    byte[] getAddExtraInput(Address contract, BigInteger amount) {
         byte[] input = new byte[161];
         input[0] = 0x6;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         byte[] amtBytes = amount.toByteArray();
         if (amtBytes.length > 128) {
             fail();
@@ -690,10 +690,10 @@ class TRShelpers {
     }
 
     // Returns a properly formatted byte array to add the max extra funds in one operation.
-    byte[] getAddExtraMaxInput(AionAddress contract) {
+    byte[] getAddExtraMaxInput(Address contract) {
         byte[] input = new byte[161];
         input[0] = 0x6;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         for (int i = 33; i < 161; i++) {
             input[i] = (byte) 0xFF;
         }
@@ -702,8 +702,7 @@ class TRShelpers {
 
     // Returns a properly formatted byte array to bulk deposit for each account in beneficiaries.
     // This method does: deposit amounts[i] on behalf of beneficiaries[i]
-    byte[] getBulkDepositForInput(
-            AionAddress contract, AionAddress[] beneficiaries, BigInteger[] amounts) {
+    byte[] getBulkDepositForInput(Address contract, Address[] beneficiaries, BigInteger[] amounts) {
         int len = beneficiaries.length;
         if ((len < 1) || (len > 100)) {
             fail("Imporper length: " + len);
@@ -715,10 +714,10 @@ class TRShelpers {
 
         byte[] input = new byte[arrLen];
         input[0] = 0x2;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         int index = 33;
         for (int i = 0; i < len; i++) {
-            System.arraycopy(beneficiaries[i].toBytes(), 0, input, index, AionAddress.SIZE);
+            System.arraycopy(beneficiaries[i].toBytes(), 0, input, index, Address.SIZE);
             index += 32 + 128;
             byte[] amtBytes = amounts[i].toByteArray();
             if (amtBytes.length > 128) {
@@ -731,11 +730,11 @@ class TRShelpers {
 
     // Returns a properly formatted byte array to be used as input for the refund operation, to
     // refund the maximum allowable amount.
-    byte[] getMaxRefundInput(AionAddress contract, AionAddress account) {
+    byte[] getMaxRefundInput(Address contract, Address account) {
         byte[] input = new byte[193];
         input[0] = 0x4;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
-        System.arraycopy(account.toBytes(), 0, input, 33, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
+        System.arraycopy(account.toBytes(), 0, input, 33, Address.SIZE);
         for (int i = 65; i < 193; i++) {
             input[i] = (byte) 0xFF;
         }
@@ -744,10 +743,10 @@ class TRShelpers {
 
     // Returns a properly formatted byte array to be used as input for the deposit operation, to
     // deposit the maximum allowable amount.
-    byte[] getMaxDepositInput(AionAddress contract) {
+    byte[] getMaxDepositInput(Address contract) {
         byte[] input = new byte[161];
         input[0] = 0x0;
-        System.arraycopy(contract.toBytes(), 0, input, 1, AionAddress.SIZE);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         for (int i = 33; i < 161; i++) {
             input[i] = (byte) 0xFF;
         }
@@ -755,9 +754,8 @@ class TRShelpers {
     }
 
     // Makes input for numBeneficiaries beneficiaries who each receive a deposit amount deposits.
-    byte[] makeBulkDepositForInput(
-            AionAddress contract, int numBeneficiaries, BigInteger deposits) {
-        AionAddress[] beneficiaries = new AionAddress[numBeneficiaries];
+    byte[] makeBulkDepositForInput(Address contract, int numBeneficiaries, BigInteger deposits) {
+        Address[] beneficiaries = new AionAddress[numBeneficiaries];
         BigInteger[] amounts = new BigInteger[numBeneficiaries];
         for (int i = 0; i < numBeneficiaries; i++) {
             beneficiaries[i] = getNewExistentAccount(BigInteger.ZERO);
@@ -768,9 +766,9 @@ class TRShelpers {
 
     // Makes input for numOthers beneficiaries and self who each receive a deposit amount deposits.
     byte[] makeBulkDepositForInputwithSelf(
-            AionAddress contract, AionAddress self, int numOthers, BigInteger deposits) {
+            Address contract, Address self, int numOthers, BigInteger deposits) {
 
-        AionAddress[] beneficiaries = new AionAddress[numOthers + 1];
+        Address[] beneficiaries = new AionAddress[numOthers + 1];
         BigInteger[] amounts = new BigInteger[numOthers + 1];
         for (int i = 0; i < numOthers; i++) {
             beneficiaries[i] = getNewExistentAccount(BigInteger.ZERO);
@@ -788,9 +786,9 @@ class TRShelpers {
      * @param contract The TRS contract to query.
      * @return the set of all depositors.
      */
-    Set<AionAddress> getAllDepositors(AbstractTRS trs, AionAddress contract) {
-        Set<AionAddress> depositors = new HashSet<>();
-        AionAddress curr = getLinkedListHead(trs, contract);
+    Set<Address> getAllDepositors(AbstractTRS trs, Address contract) {
+        Set<Address> depositors = new HashSet<>();
+        Address curr = getLinkedListHead(trs, contract);
         while (curr != null) {
             assertFalse(depositors.contains(curr));
             depositors.add(curr);
@@ -800,7 +798,7 @@ class TRShelpers {
     }
 
     // Returns the head of the list for contract or null if no head.
-    AionAddress getLinkedListHead(AbstractTRS trs, AionAddress contract) {
+    Address getLinkedListHead(AbstractTRS trs, Address contract) {
         byte[] head = trs.getListHead(contract);
         if (head == null) {
             return null;
@@ -810,7 +808,7 @@ class TRShelpers {
     }
 
     // Returns the next account in the linked list after current, or null if no next.
-    AionAddress getLinkedListNext(AbstractTRS trs, AionAddress contract, AionAddress current) {
+    Address getLinkedListNext(AbstractTRS trs, Address contract, Address current) {
         byte[] next = trs.getListNextBytes(contract, current);
         boolean noNext = (((next[0] & 0x80) == 0x80) || ((next[0] & 0x40) == 0x00));
         if (noNext) {
@@ -821,7 +819,7 @@ class TRShelpers {
     }
 
     // Returns the previous account in the linked list prior to current, or null if no previous.
-    AionAddress getLinkedListPrev(AbstractTRS trs, AionAddress contract, AionAddress current) {
+    Address getLinkedListPrev(AbstractTRS trs, Address contract, Address current) {
         byte[] prev = trs.getListPrev(contract, current);
         if (prev == null) {
             return null;
@@ -833,7 +831,7 @@ class TRShelpers {
     // Checks that each account is paid out correctly when they withdraw in a non-final period.
     void checkPayoutsNonFinal(
             AbstractTRS trs,
-            AionAddress contract,
+            Address contract,
             int numDepositors,
             BigInteger deposits,
             BigInteger bonus,
@@ -841,12 +839,12 @@ class TRShelpers {
             int periods,
             int currPeriod) {
 
-        Set<AionAddress> contributors = getAllDepositors(trs, contract);
+        Set<Address> contributors = getAllDepositors(trs, contract);
         BigInteger total = deposits.multiply(BigInteger.valueOf(numDepositors));
         BigDecimal fraction =
                 BigDecimal.ONE.divide(new BigDecimal(numDepositors), 18, RoundingMode.HALF_DOWN);
 
-        for (AionAddress acc : contributors) {
+        for (Address acc : contributors) {
             BigInteger extraShare = getExtraShare(trs, contract, acc, fraction, currPeriod);
             BigInteger amt =
                     expectedAmtFirstWithdraw(
@@ -863,13 +861,13 @@ class TRShelpers {
     // Checks that each account is paid out correctly when they withdraw in a final period.
     void checkPayoutsFinal(
             AbstractTRS trs,
-            AionAddress contract,
+            Address contract,
             int numDepositors,
             BigInteger deposits,
             BigInteger bonus,
             BigInteger extra) {
 
-        Set<AionAddress> contributors = getAllDepositors(trs, contract);
+        Set<Address> contributors = getAllDepositors(trs, contract);
         BigDecimal fraction =
                 BigDecimal.ONE.divide(new BigDecimal(numDepositors), 18, RoundingMode.HALF_DOWN);
         BigInteger extraShare = fraction.multiply(new BigDecimal(extra)).toBigInteger();
@@ -879,7 +877,7 @@ class TRShelpers {
                         .toBigInteger();
         BigInteger collected = amt.add(extraShare);
 
-        for (AionAddress acc : contributors) {
+        for (Address acc : contributors) {
             byte[] input = getWithdrawInput(contract);
             assertEquals(
                     PrecompiledResultCode.SUCCESS,
@@ -898,7 +896,7 @@ class TRShelpers {
     // Checks that availableForWithdrawalAt returns expected results for the specified query.
     void checkAvailableForResults(
             AbstractTRS trs,
-            AionAddress contract,
+            Address contract,
             long timestamp,
             int numDepositors,
             BigInteger deposits,
@@ -916,8 +914,8 @@ class TRShelpers {
                 new BigDecimal(amt).divide(new BigDecimal(owings), 18, RoundingMode.HALF_DOWN);
 
         byte[] input = getAvailableForWithdrawalAtInput(contract, timestamp);
-        Set<AionAddress> contributors = getAllDepositors(trs, contract);
-        for (AionAddress acc : contributors) {
+        Set<Address> contributors = getAllDepositors(trs, contract);
+        for (Address acc : contributors) {
             PrecompiledTransactionResult res = newTRSqueryContract(acc).execute(input, COST);
             assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
             BigDecimal frac = new BigDecimal(new BigInteger(res.getOutput())).movePointLeft(18);
@@ -985,7 +983,7 @@ class TRShelpers {
      */
     private BigInteger expectedAmtFirstWithdraw(
             AbstractTRS trs,
-            AionAddress contract,
+            Address contract,
             BigInteger deposits,
             BigInteger total,
             BigInteger bonus,
@@ -1011,7 +1009,7 @@ class TRShelpers {
     }
 
     // Returns the contract specifications byte array associated with contract.
-    private byte[] getContractSpecs(AbstractTRS trs, AionAddress contract) {
+    private byte[] getContractSpecs(AbstractTRS trs, Address contract) {
         return trs.getContractSpecs(contract);
     }
 }

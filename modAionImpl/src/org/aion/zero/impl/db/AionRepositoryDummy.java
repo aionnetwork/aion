@@ -32,11 +32,11 @@ import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
@@ -128,7 +128,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
 
     public void dumpState(IAionBlock block, long nrgUsed, int txNumber, byte[] txHash) {}
 
-    public Set<AionAddress> getAccountsKeys() {
+    public Set<Address> getAccountsKeys() {
         return null;
     }
 
@@ -136,7 +136,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return worldState.keySet();
     }
 
-    public BigInteger addBalance(AionAddress addr, BigInteger value) {
+    public BigInteger addBalance(Address addr, BigInteger value) {
         AccountState account = getAccountState(addr);
 
         if (account == null) {
@@ -144,12 +144,12 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         }
 
         BigInteger result = account.addToBalance(value);
-        worldState.put(addr.toByteArrayWrapper(), account);
+        worldState.put(ByteArrayWrapper.wrap(addr.toBytes()), account);
 
         return result;
     }
 
-    public BigInteger getBalance(AionAddress addr) {
+    public BigInteger getBalance(Address addr) {
         AccountState account = getAccountState(addr);
 
         if (account == null) {
@@ -159,7 +159,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return account.getBalance();
     }
 
-    public ByteArrayWrapper getStorageValue(AionAddress addr, ByteArrayWrapper key) {
+    public ByteArrayWrapper getStorageValue(Address addr, ByteArrayWrapper key) {
         IContractDetails details = getContractDetails(addr);
         ByteArrayWrapper value = (details == null) ? null : details.get(key);
 
@@ -172,7 +172,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return value;
     }
 
-    public void addStorageRow(AionAddress addr, ByteArrayWrapper key, ByteArrayWrapper value) {
+    public void addStorageRow(Address addr, ByteArrayWrapper key, ByteArrayWrapper value) {
         IContractDetails details = getContractDetails(addr);
 
         if (details == null) {
@@ -180,10 +180,10 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
             details = getContractDetails(addr);
         }
         details.put(key, value);
-        detailsDB.put(addr.toByteArrayWrapper(), details);
+        detailsDB.put(ByteArrayWrapper.wrap(addr.toBytes()), details);
     }
 
-    public byte[] getCode(AionAddress addr) {
+    public byte[] getCode(Address addr) {
         IContractDetails details = getContractDetails(addr);
 
         if (details == null) {
@@ -193,7 +193,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return details.getCode();
     }
 
-    public void saveCode(AionAddress addr, byte[] code) {
+    public void saveCode(Address addr, byte[] code) {
         IContractDetails details = getContractDetails(addr);
 
         if (details == null) {
@@ -202,10 +202,10 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         }
 
         details.setCode(code);
-        detailsDB.put(addr.toByteArrayWrapper(), details);
+        detailsDB.put(ByteArrayWrapper.wrap(addr.toBytes()), details);
     }
 
-    public BigInteger getNonce(AionAddress addr) {
+    public BigInteger getNonce(Address addr) {
         AccountState account = getAccountState(addr);
 
         if (account == null) {
@@ -215,7 +215,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         return account.getNonce();
     }
 
-    public BigInteger increaseNonce(AionAddress addr) {
+    public BigInteger increaseNonce(Address addr) {
         AccountState account = getAccountState(addr);
 
         if (account == null) {
@@ -223,12 +223,12 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         }
 
         account.incrementNonce();
-        worldState.put(addr.toByteArrayWrapper(), account);
+        worldState.put(ByteArrayWrapper.wrap(addr.toBytes()), account);
 
         return account.getNonce();
     }
 
-    public BigInteger setNonce(AionAddress addr, BigInteger nonce) {
+    public BigInteger setNonce(Address addr, BigInteger nonce) {
 
         AccountState account = getAccountState(addr);
 
@@ -237,36 +237,36 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
         }
 
         account.setNonce(nonce);
-        worldState.put(addr.toByteArrayWrapper(), account);
+        worldState.put(ByteArrayWrapper.wrap(addr.toBytes()), account);
 
         return account.getNonce();
     }
 
-    public void delete(AionAddress addr) {
-        worldState.remove(addr.toByteArrayWrapper());
-        detailsDB.remove(addr.toByteArrayWrapper());
+    public void delete(Address addr) {
+        worldState.remove(ByteArrayWrapper.wrap(addr.toBytes()));
+        detailsDB.remove(ByteArrayWrapper.wrap(addr.toBytes()));
     }
 
-    public IContractDetails getContractDetails(AionAddress addr) {
+    public IContractDetails getContractDetails(Address addr) {
 
-        return detailsDB.get(addr.toByteArrayWrapper());
+        return detailsDB.get(ByteArrayWrapper.wrap(addr.toBytes()));
     }
 
-    public AccountState getAccountState(AionAddress addr) {
-        return worldState.get((addr.toByteArrayWrapper()));
+    public AccountState getAccountState(Address addr) {
+        return worldState.get((ByteArrayWrapper.wrap(addr.toBytes())));
     }
 
-    public AccountState createAccount(AionAddress addr) {
+    public AccountState createAccount(Address addr) {
         AccountState accountState = new AccountState();
-        worldState.put(addr.toByteArrayWrapper(), accountState);
+        worldState.put(ByteArrayWrapper.wrap(addr.toBytes()), accountState);
 
         IContractDetails contractDetails = this.cfg.contractDetailsImpl();
-        detailsDB.put(addr.toByteArrayWrapper(), contractDetails);
+        detailsDB.put(ByteArrayWrapper.wrap(addr.toBytes()), contractDetails);
 
         return accountState;
     }
 
-    public boolean isExist(AionAddress addr) {
+    public boolean isExist(Address addr) {
         return getAccountState(addr) != null;
     }
 
@@ -275,7 +275,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
     }
 
     public void loadAccount(
-            AionAddress addr,
+            Address addr,
             HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
             HashMap<ByteArrayWrapper, IContractDetails> cacheDetails) {
 
@@ -294,7 +294,7 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
             details = new ContractDetailsCacheImpl(details);
         }
 
-        cacheAccounts.put(addr.toByteArrayWrapper(), account);
-        cacheDetails.put(addr.toByteArrayWrapper(), details);
+        cacheAccounts.put(ByteArrayWrapper.wrap(addr.toBytes()), account);
+        cacheDetails.put(ByteArrayWrapper.wrap(addr.toBytes()), details);
     }
 }
