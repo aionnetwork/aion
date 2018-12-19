@@ -25,9 +25,9 @@ dependencies {
     compile project(':modEvtMgr')
     compile project(':modEvtMgrImpl')
     compile project(':modCrypto')
-    compile files('../lib/libnsc.jar')
     compile files('../lib/libnzmq.jar')
-    //compile files('../lib/libJson.jar')
+    compile 'com.madgag.spongycastle:prov:1.58.0.0'
+    compile 'com.madgag.spongycastle:core:1.58.0.0'
     compile 'org.json:json:20180813'
     compile group: 'com.google.protobuf', name: 'protobuf-java', version: '3.5.0'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
