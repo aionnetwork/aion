@@ -76,6 +76,12 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
+    public void removeStorage(Address address, byte[] key) {
+        ByteArrayWrapper storageKey = new DataWord(key).toWrapper();
+        this.repositoryCache.removeStorageRow(address, storageKey);
+    }
+
+    @Override
     public byte[] getStorage(Address address, byte[] key) {
         ByteArrayWrapper storageKey = new DataWord(key).toWrapper();
         ByteArrayWrapper value = this.repositoryCache.getStorageValue(address, storageKey);
@@ -159,8 +165,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public boolean destinationAddressIsSafeForThisVM(Address address) {
-        //TODO: replace with actual logic that prevents the FastVM from calling an Avm contract.
+        // TODO: replace with actual logic that prevents the FastVM from calling an Avm contract.
         return true;
     }
-
 }

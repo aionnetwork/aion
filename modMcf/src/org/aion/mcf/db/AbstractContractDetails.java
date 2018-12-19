@@ -26,7 +26,10 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
+import com.google.common.annotations.VisibleForTesting;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.util.ByteArrayWrapper;
@@ -122,5 +125,63 @@ public abstract class AbstractContractDetails implements IContractDetails {
                         + "\n";
         ret += "  Storage: " + getStorageHash();
         return ret;
+    }
+
+    @VisibleForTesting
+    @Override
+    public void setStorage(
+            List<ByteArrayWrapper> storageKeys, List<ByteArrayWrapper> storageValues) {
+        for (int i = 0; i < storageKeys.size(); ++i) {
+            ByteArrayWrapper key = storageKeys.get(i);
+            ByteArrayWrapper value = storageValues.get(i);
+
+            if (value != null) {
+                put(key, value);
+            } else {
+                delete(key);
+            }
+        }
+    }
+
+    @VisibleForTesting
+    @Override
+    public void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
+        for (Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry : storage.entrySet()) {
+            ByteArrayWrapper key = entry.getKey();
+            ByteArrayWrapper value = entry.getValue();
+
+            if (value != null) {
+                put(key, value);
+            } else {
+                delete(key);
+            }
+        }
+    }
+
+    @Override
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
+        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
+
+        if (keys == null) {
+            throw new IllegalArgumentException("Input keys can't be null");
+        } else {
+            for (ByteArrayWrapper key : keys) {
+                ByteArrayWrapper value = get(key);
+
+                // we check if the value is not null,
+                // cause we keep all historical keys
+                if (value != null) {
+                    if (value.isZero()) {
+                        // TODO: remove when integrating the AVM
+                        // used to ensure FVM correctness
+                        throw new IllegalArgumentException(
+                                "Put with zero values is not allowed for the FVM. Explicit call to delete is necessary.");
+                    }
+                    storage.put(key, value);
+                }
+            }
+        }
+
+        return storage;
     }
 }

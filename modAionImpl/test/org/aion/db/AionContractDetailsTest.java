@@ -36,6 +36,7 @@
 package org.aion.db;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -153,13 +154,11 @@ public class AionContractDetailsTest {
         byte[] val_1 = ByteUtil.hexStringToBytes("0000000000000000000000000000000c");
 
         byte[] key_2 = ByteUtil.hexStringToBytes("5a448d1967513482947d1d3f6104316f");
-        byte[] val_2 = ByteUtil.hexStringToBytes("00000000000000000000000000000000");
 
         byte[] key_3 = ByteUtil.hexStringToBytes("5a448d1967513482947d1d3f61043171");
         byte[] val_3 = ByteUtil.hexStringToBytes("00000000000000000000000000000014");
 
         byte[] key_4 = ByteUtil.hexStringToBytes("18d63b70aa690ad37cb50908746c9a54");
-        byte[] val_4 = ByteUtil.hexStringToBytes("00000000000000000000000000000000");
 
         byte[] key_5 = ByteUtil.hexStringToBytes("5a448d1967513482947d1d3f61043170");
         byte[] val_5 = ByteUtil.hexStringToBytes("00000000000000000000000000000078");
@@ -193,9 +192,9 @@ public class AionContractDetailsTest {
         contractDetails.setAddress(address);
         contractDetails.put(new DataWord(key_0).toWrapper(), new DataWord(val_0).toWrapper());
         contractDetails.put(new DataWord(key_1).toWrapper(), new DataWord(val_1).toWrapper());
-        contractDetails.put(new DataWord(key_2).toWrapper(), new DataWord(val_2).toWrapper());
+        contractDetails.delete(new DataWord(key_2).toWrapper());
         contractDetails.put(new DataWord(key_3).toWrapper(), new DataWord(val_3).toWrapper());
-        contractDetails.put(new DataWord(key_4).toWrapper(), new DataWord(val_4).toWrapper());
+        contractDetails.delete(new DataWord(key_4).toWrapper());
         contractDetails.put(new DataWord(key_5).toWrapper(), new DataWord(val_5).toWrapper());
         contractDetails.put(new DataWord(key_6).toWrapper(), new DataWord(val_6).toWrapper());
         contractDetails.put(new DataWord(key_7).toWrapper(), new DataWord(val_7).toWrapper());
@@ -219,20 +218,14 @@ public class AionContractDetailsTest {
                 ByteUtil.toHexString(
                         contractDetails_.get(new DataWord(key_1).toWrapper()).getData()));
 
-        assertEquals(
-                ByteUtil.toHexString(val_2),
-                ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_2).toWrapper()).getData()));
+        assertNull(contractDetails_.get(new DataWord(key_2).toWrapper()));
 
         assertEquals(
                 ByteUtil.toHexString(val_3),
                 ByteUtil.toHexString(
                         contractDetails_.get(new DataWord(key_3).toWrapper()).getData()));
 
-        assertEquals(
-                ByteUtil.toHexString(val_4),
-                ByteUtil.toHexString(
-                        contractDetails_.get(new DataWord(key_4).toWrapper()).getData()));
+        assertNull(contractDetails_.get(new DataWord(key_4).toWrapper()));
 
         assertEquals(
                 ByteUtil.toHexString(val_5),
@@ -322,9 +315,8 @@ public class AionContractDetailsTest {
 
         DataWord deletedKey = elements.keySet().iterator().next();
 
-        deserialized.put(deletedKey.toWrapper(), DataWord.ZERO.toWrapper());
-        deserialized.put(
-                new DataWord(RandomUtils.nextBytes(16)).toWrapper(), DataWord.ZERO.toWrapper());
+        deserialized.delete(deletedKey.toWrapper());
+        deserialized.delete(new DataWord(RandomUtils.nextBytes(16)).toWrapper());
     }
 
     @Test

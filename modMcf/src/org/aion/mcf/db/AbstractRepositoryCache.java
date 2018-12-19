@@ -332,12 +332,26 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
+    public void removeStorageRow(Address address, ByteArrayWrapper key) {
+        lockDetails.writeLock().lock();
+        try {
+            getContractDetails(address).delete(key);
+        } finally {
+            lockDetails.writeLock().unlock();
+        }
+    }
+
+    @Override
     public ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key) {
         ByteArrayWrapper value = getContractDetails(address).get(key);
-        if (value == null) {
-            return null;
+
+        if (value != null && value.isZero()) {
+            // TODO: remove when integrating the AVM
+            // used to ensure FVM correctness
+            throw new IllegalStateException("Zero values should not be returned by contract.");
         }
-        return (value.isZero()) ? null : value;
+
+        return value;
     }
 
     @Override

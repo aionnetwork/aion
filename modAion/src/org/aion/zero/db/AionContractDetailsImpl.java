@@ -29,10 +29,8 @@ import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.AionAddress;
@@ -95,17 +93,31 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
         // we can differentiate between the two.
 
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+
         if (value.isZero()) {
-            storageTrie.delete(key.getData());
-        } else {
-            // TODO: VM must handle padding
-            boolean isDouble = value.getData().length == DoubleDataWord.BYTES;
-            byte[] data =
-                    (isDouble)
-                            ? RLP.encodeElement(value.getData())
-                            : RLP.encodeElement(value.getNoLeadZeroesData());
-            storageTrie.update(key.getData(), data);
+            // TODO: remove when integrating the AVM
+            // used to ensure FVM correctness
+            throw new IllegalArgumentException(
+                    "Put with zero values is not allowed for the FVM. Explicit call to delete is necessary.");
         }
+
+        // TODO: VM must handle padding
+        boolean isDouble = value.getData().length == DoubleDataWord.BYTES;
+        byte[] data =
+                (isDouble)
+                        ? RLP.encodeElement(value.getData())
+                        : RLP.encodeElement(value.getNoLeadZeroesData());
+        storageTrie.update(key.getData(), data);
+
+        this.setDirty(true);
+        this.rlpEncoded = null;
+    }
+
+    @Override
+    public void delete(ByteArrayWrapper key) {
+        storageTrie.delete(key.getData());
 
         this.setDirty(true);
         this.rlpEncoded = null;
@@ -120,9 +132,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      */
     @Override
     public ByteArrayWrapper get(ByteArrayWrapper key) {
-        ByteArrayWrapper result = DataWord.ZERO.toWrapper();
+        ByteArrayWrapper result = null;
 
         byte[] data = storageTrie.get(key.getData());
+
         // TODO: VM must handle padding
         if (data.length >= DoubleDataWord.BYTES) {
             result = new DoubleDataWord(RLP.decode2(data).get(0).getRLPData()).toWrapper();
@@ -220,60 +233,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         }
 
         return rlpEncoded;
-    }
-
-    /**
-     * Returns a mapping of all the key-value pairs who have keys in the collection keys.
-     *
-     * @param keys The keys to query for.
-     * @return The associated mappings.
-     */
-    @Override
-    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
-        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
-        if (keys == null) {
-            throw new IllegalArgumentException("Input keys can't be null");
-        } else {
-            for (ByteArrayWrapper key : keys) {
-                ByteArrayWrapper value = get(key);
-
-                // we check if the value is not null,
-                // cause we keep all historical keys
-                if ((value != null) && (!value.isZero())) {
-                    storage.put(key, value);
-                }
-            }
-        }
-
-        return storage;
-    }
-
-    /**
-     * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
-     * storageValues.
-     *
-     * @param storageKeys The keys.
-     * @param storageValues The values.
-     */
-    @Override
-    public void setStorage(
-            List<ByteArrayWrapper> storageKeys, List<ByteArrayWrapper> storageValues) {
-        for (int i = 0; i < storageKeys.size(); ++i) {
-            put(storageKeys.get(i), storageValues.get(i));
-        }
-    }
-
-    /**
-     * Sets the storage to contain the specified key-value mappings.
-     *
-     * @param storage The specified mappings.
-     */
-    @Override
-    public void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
-        for (ByteArrayWrapper key : storage.keySet()) {
-            put(key, storage.get(key));
-        }
     }
 
     /**

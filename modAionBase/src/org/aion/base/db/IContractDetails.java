@@ -44,14 +44,19 @@ import org.aion.vm.api.interfaces.Address;
 public interface IContractDetails {
 
     /**
-     * Inserts key and value as a key-value pair. If the underlying byte array of value consists
-     * only of zero bytes then ay existing key-value pair that has the same key as key will be
-     * deleted.
+     * Inserts a key-value pair containing the given key and the given value.
      *
-     * @param key The key.
-     * @param value The value.
+     * @param key the key to be inserted
+     * @param value the value to be inserted
      */
     void put(ByteArrayWrapper key, ByteArrayWrapper value);
+
+    /**
+     * Deletes any key-value pair that matches the given key.
+     *
+     * @param key the key to be deleted
+     */
+    void delete(ByteArrayWrapper key);
 
     /**
      * Returns the value associated with key.
@@ -138,10 +143,10 @@ public interface IContractDetails {
     byte[] getEncoded();
 
     /**
-     * Returns a mapping of all the key-value pairs who have keys in the collection keys.
+     * Returns a mapping of all the key-value pairs that have keys in the given collection keys.
      *
-     * @param keys The keys to query for.
-     * @return The associated mappings.
+     * @param keys the keys to query for
+     * @return the associated mappings
      */
     Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys);
 
@@ -150,15 +155,17 @@ public interface IContractDetails {
      * the keys and values by mapping the i'th key in storageKeys to the i'th value in
      * storageValues.
      *
-     * @param storageKeys The keys.
-     * @param storageValues The values.
+     * @implNote A {@code null} value is interpreted as deletion.
+     * @param storageKeys the list of keys
+     * @param storageValues the list of values
      */
     void setStorage(List<ByteArrayWrapper> storageKeys, List<ByteArrayWrapper> storageValues);
 
     /**
      * Sets the storage to contain the specified key-value mappings.
      *
-     * @param storage The specified mappings.
+     * @implNote A {@code null} value is interpreted as deletion.
+     * @param storage the specified mappings
      */
     void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage);
 

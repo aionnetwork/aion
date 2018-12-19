@@ -162,10 +162,14 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
     public ByteArrayWrapper getStorageValue(AionAddress addr, ByteArrayWrapper key) {
         IContractDetails details = getContractDetails(addr);
         ByteArrayWrapper value = (details == null) ? null : details.get(key);
-        if (value == null) {
-            return null;
+
+        if (value != null && value.isZero()) {
+            // TODO: remove when integrating the AVM
+            // used to ensure FVM correctness
+            throw new IllegalStateException("Zero values should not be returned by contract.");
         }
-        return (value.isZero()) ? null : value;
+
+        return value;
     }
 
     public void addStorageRow(AionAddress addr, ByteArrayWrapper key, ByteArrayWrapper value) {
@@ -175,7 +179,6 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
             createAccount(addr);
             details = getContractDetails(addr);
         }
-
         details.put(key, value);
         detailsDB.put(addr.toByteArrayWrapper(), details);
     }

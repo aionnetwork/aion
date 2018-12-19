@@ -111,10 +111,18 @@ public interface IRepositoryCache<AS, BSB> extends IRepository<AS, BSB> {
      * Store the given data at the given key in the account associated with the given address.
      *
      * @param address the address of the account of interest
-     * @param key the key at which the date will be stored
+     * @param key the key at which the data will be stored
      * @param value the data to be stored
      */
     void addStorageRow(Address address, ByteArrayWrapper key, ByteArrayWrapper value);
+
+    /**
+     * Remove the given storage key from the account associated with the given address.
+     *
+     * @param address the address of the account of interest
+     * @param key the key for which the data will be removed
+     */
+    void removeStorageRow(Address address, ByteArrayWrapper key);
 
     void flushTo(IRepository repo, boolean clearStateAfterFlush);
 }
