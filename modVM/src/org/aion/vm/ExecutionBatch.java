@@ -127,10 +127,13 @@ public final class ExecutionBatch {
         long energyLimit = transaction.nrgLimit();
         long nrg = transaction.nrgLimit() - transaction.transactionCost(block.getNumber());
         DataWord callValue = new DataWord(ArrayUtils.nullToEmpty(transaction.getValue()));
-        byte[] callData =
-                transaction.isContractCreationTransaction()
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
-                        : ArrayUtils.nullToEmpty(transaction.getData());
+
+        byte[] callData = ArrayUtils.nullToEmpty(transaction.getData());
+
+//        byte[] callData =
+//                transaction.isContractCreationTransaction()
+//                        ? ByteUtil.EMPTY_BYTE_ARRAY
+//                        : ArrayUtils.nullToEmpty(transaction.getData());
 
         int depth = 0;
         int kind =

@@ -77,12 +77,11 @@ public abstract class AbstractTransaction implements ITransaction {
             byte[] data,
             long nrg,
             long nrgPrice,
-            byte type)
-            throws Exception {
+            byte type) {
         this(nonce, receiveAddress, value, data, nrg, nrgPrice);
 
         if (type == 0x00) {
-            throw new Exception("Incorrect tx type!");
+            throw new IllegalArgumentException("Incorrect tx type!");
         }
 
         this.type = type;

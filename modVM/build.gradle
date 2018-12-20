@@ -7,6 +7,13 @@ dependencies {
     compile project(':modCrypto')
     compile project(':aion_vm_api')
     compile project(':aion_fastvm')
+    compile files('../lib/org-aion-avm-core.jar')
+    compile files('../lib/org-aion-avm-rt.jar')
+    compile files('../lib/asm-6.2.1.jar')
+    compile files('../lib/asm-analysis-6.2.1.jar')
+    compile files('../lib/asm-commons-6.2.1.jar')
+    compile files('../lib/asm-tree-6.2.1.jar')
+    compile files('../lib/asm-util-6.2.1.jar')
     compile 'com.google.code.findbugs:jsr305:3.0.2'
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'

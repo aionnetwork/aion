@@ -24,12 +24,13 @@ public class TXValidator {
             Collections.synchronizedMap(new LRUMap<>(128 * 1024));
 
     public static boolean isValid(AionTransaction tx) {
-        Boolean valid = cache.get(ByteArrayWrapper.wrap(tx.getTransactionHash()));
+        ByteArrayWrapper transactionHash = (tx.getTransactionHash() == null) ? null : ByteArrayWrapper.wrap(tx.getTransactionHash());
+        Boolean valid = cache.get(transactionHash);
         if (valid != null) {
             return valid;
         } else {
             valid = isValid0(tx);
-            cache.put(ByteArrayWrapper.wrap(tx.getTransactionHash()), valid);
+            cache.put(transactionHash, valid);
             return valid;
         }
     }

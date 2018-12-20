@@ -3,6 +3,7 @@ package org.aion.zero.impl;
 import java.math.BigInteger;
 import java.util.Map;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.vm.api.interfaces.Address;
@@ -22,7 +23,7 @@ public class AionHubUtils {
             track.addStorageRow(
                     networkBalanceAddress,
                     new DataWord(addr.getKey()).toWrapper(),
-                    new DataWord(addr.getValue()).toWrapper());
+                    new ByteArrayWrapper(new DataWord(addr.getValue()).getNoLeadZeroesData()));
         }
 
         for (Address addr : genesis.getPremine().keySet()) {

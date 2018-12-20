@@ -12,6 +12,7 @@ import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.util.ByteUtil;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
@@ -80,12 +81,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
                     "Put with zero values is not allowed for the FVM. Explicit call to delete is necessary.");
         }
 
-        // TODO: VM must handle padding
-        boolean isDouble = value.getData().length == DoubleDataWord.BYTES;
-        byte[] data =
-                (isDouble)
-                        ? RLP.encodeElement(value.getData())
-                        : RLP.encodeElement(value.getNoLeadZeroesData());
+        byte[] data = RLP.encodeElement(value.getData());
         storageTrie.update(key.getData(), data);
 
         this.setDirty(true);
@@ -109,18 +105,13 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      */
     @Override
     public ByteArrayWrapper get(ByteArrayWrapper key) {
-        ByteArrayWrapper result = null;
-
         byte[] data = storageTrie.get(key.getData());
 
-        // TODO: VM must handle padding
-        if (data.length >= DoubleDataWord.BYTES) {
-            result = new DoubleDataWord(RLP.decode2(data).get(0).getRLPData()).toWrapper();
-        } else if (data.length > 0) {
-            result = new DataWord(RLP.decode2(data).get(0).getRLPData()).toWrapper();
+        if (RLP.decode2(data).size() == 0) {
+            return null;
+        } else {
+            return new ByteArrayWrapper(RLP.decode2(data).get(0).getRLPData());
         }
-
-        return result;
     }
 
     /**

@@ -3,7 +3,10 @@ package org.aion.vm;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import org.aion.avm.core.NodeEnvironment;
+import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
+import org.aion.base.vm.VirtualMachineSpecs;
 import org.aion.fastvm.SideEffects;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
@@ -156,9 +159,14 @@ public class KernelTransactionContext implements TransactionContext {
         return address;
     }
 
+    //TODO: fix this hack to generate avm addresses.
     @Override
     public Address getContractAddress() {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        byte[] bytes = this.transaction.getContractAddress().toBytes();
+        if (this.transaction.getTargetVM() == VirtualMachineSpecs.AVM_VM_CODE) {
+            bytes[0] = NodeEnvironment.CONTRACT_PREFIX;
+        }
+        return AionAddress.wrap(bytes);
     }
 
     /** @return the origination address, which is the sender of original transaction. */

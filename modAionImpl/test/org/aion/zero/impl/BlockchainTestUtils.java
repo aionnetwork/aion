@@ -58,6 +58,9 @@ public class BlockchainTestUtils {
 
                 // generate a random address
                 Address destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
+                byte[] destBytes = destAddr.toBytes();
+                destBytes[0] = (byte) 0xa0;
+                destAddr = AionAddress.wrap(destBytes);
                 AionTransaction newTx =
                         new AionTransaction(
                                 accountNonce.toByteArray(),
