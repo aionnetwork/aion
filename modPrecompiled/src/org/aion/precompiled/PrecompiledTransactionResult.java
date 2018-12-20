@@ -123,8 +123,8 @@ public class PrecompiledTransactionResult implements TransactionResult {
     }
 
     @Override
-    public void setOutput(byte[] output) {
-        this.output = (output == null) ? new byte[0] : output;
+    public void setReturnData(byte[] returnData) {
+        this.output = (returnData == null) ? new byte[0] : returnData;
     }
 
     @Override
@@ -138,7 +138,7 @@ public class PrecompiledTransactionResult implements TransactionResult {
     }
 
     @Override
-    public byte[] getOutput() {
+    public byte[] getReturnData() {
         return this.output;
     }
 

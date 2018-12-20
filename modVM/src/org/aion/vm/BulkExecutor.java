@@ -144,7 +144,7 @@ public class BulkExecutor {
             if (energyUsed > this.blockRemainingEnergy) {
                 result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
                 result.setEnergyRemaining(0);
-                result.setOutput(new byte[0]);
+                result.setReturnData(new byte[0]);
             }
 
             // 2. build the transaction summary and update the repository (the one backing
@@ -186,7 +186,7 @@ public class BulkExecutor {
                         .logs(sideEffects.getExecutionLogs())
                         .deletedAccounts(sideEffects.getAddressesToBeDeleted())
                         .internalTransactions(sideEffects.getInternalTransactions())
-                        .result(result.getOutput());
+                        .result(result.getReturnData());
 
         ResultCode resultCode = result.getResultCode();
 
@@ -217,7 +217,7 @@ public class BulkExecutor {
         receipt.setTransaction(transaction);
         receipt.setLogs(logs);
         receipt.setNrgUsed(computeEnergyUsed(transaction.getEnergyLimit(), result));
-        receipt.setExecutionResult(result.getOutput());
+        receipt.setExecutionResult(result.getReturnData());
         receipt.setError(result.getResultCode().isSuccess() ? "" : result.getResultCode().name());
 
         return receipt;

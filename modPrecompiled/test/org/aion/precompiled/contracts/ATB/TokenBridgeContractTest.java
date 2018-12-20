@@ -77,7 +77,7 @@ public class TokenBridgeContractTest {
         assertThat(this.connector.getInitialized()).isFalse();
         PrecompiledTransactionResult result =
                 this.contract.execute(BridgeFuncSig.PURE_OWNER.getBytes(), DEFAULT_NRG);
-        assertThat(result.getOutput()).isEqualTo(OWNER_ADDR.toBytes());
+        assertThat(result.getReturnData()).isEqualTo(OWNER_ADDR.toBytes());
         assertThat(result.getEnergyRemaining()).isEqualTo(0L);
         assertThat(this.connector.getInitialized()).isTrue();
     }
@@ -109,7 +109,7 @@ public class TokenBridgeContractTest {
 
         PrecompiledTransactionResult result =
                 this.contract.execute(BridgeFuncSig.PURE_NEW_OWNER.getBytes(), DEFAULT_NRG);
-        assertThat(result.getOutput()).isEqualTo(newOwner);
+        assertThat(result.getReturnData()).isEqualTo(newOwner);
         assertThat(result.getEnergyRemaining()).isEqualTo(0L);
     }
 
@@ -269,7 +269,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(ByteUtil.EMPTY_WORD);
 
         byte[][] signatures = new byte[members.length][];
@@ -326,7 +326,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(submitBundleContext.getTransactionHash());
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
@@ -368,22 +368,22 @@ public class TokenBridgeContractTest {
         i = 0;
         for (IExecutionLog l : submitBundleContext.getSideEffects().getExecutionLogs()) {
             // verify address is correct
-            assertThat(l.getLogSourceAddress()).isEqualTo(CONTRACT_ADDR);
+            assertThat(l.getSourceAddress()).isEqualTo(CONTRACT_ADDR);
 
             // on the 11th log, it should be the processed bundle event
             if (i == 10) {
-                assertThat(l.getLogTopics().get(0))
+                assertThat(l.getTopics().get(0))
                         .isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
-                assertThat(l.getLogTopics().get(1)).isEqualTo(blockHash);
-                assertThat(l.getLogTopics().get(2)).isEqualTo(payloadHash);
+                assertThat(l.getTopics().get(1)).isEqualTo(blockHash);
+                assertThat(l.getTopics().get(2)).isEqualTo(payloadHash);
                 continue;
             }
 
             // otherwise we expect a Distributed event
-            assertThat(l.getLogTopics().get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
-            assertThat(l.getLogTopics().get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
-            assertThat(l.getLogTopics().get(2)).isEqualTo(transfers[i].getRecipient());
-            assertThat(new BigInteger(1, l.getLogTopics().get(3)))
+            assertThat(l.getTopics().get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
+            assertThat(l.getTopics().get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
+            assertThat(l.getTopics().get(2)).isEqualTo(transfers[i].getRecipient());
+            assertThat(new BigInteger(1, l.getTopics().get(3)))
                     .isEqualTo(transfers[i].getTransferValue());
             i++;
         }
@@ -462,7 +462,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(ByteUtil.EMPTY_WORD);
 
         byte[][] signatures = new byte[members.length][];
@@ -519,7 +519,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(submitBundleContext.getTransactionHash());
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
@@ -561,22 +561,22 @@ public class TokenBridgeContractTest {
         i = 0;
         for (IExecutionLog l : submitBundleContext.getSideEffects().getExecutionLogs()) {
             // verify address is correct
-            assertThat(l.getLogSourceAddress()).isEqualTo(CONTRACT_ADDR);
+            assertThat(l.getSourceAddress()).isEqualTo(CONTRACT_ADDR);
 
             // on the 11th log, it should be the processed bundle event
             if (i == 10) {
-                assertThat(l.getLogTopics().get(0))
+                assertThat(l.getTopics().get(0))
                         .isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
-                assertThat(l.getLogTopics().get(1)).isEqualTo(blockHash);
-                assertThat(l.getLogTopics().get(2)).isEqualTo(payloadHash);
+                assertThat(l.getTopics().get(1)).isEqualTo(blockHash);
+                assertThat(l.getTopics().get(2)).isEqualTo(payloadHash);
                 continue;
             }
 
             // otherwise we expect a Distributed event
-            assertThat(l.getLogTopics().get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
-            assertThat(l.getLogTopics().get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
-            assertThat(l.getLogTopics().get(2)).isEqualTo(transfers[i].getRecipient());
-            assertThat(new BigInteger(1, l.getLogTopics().get(3)))
+            assertThat(l.getTopics().get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
+            assertThat(l.getTopics().get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
+            assertThat(l.getTopics().get(2)).isEqualTo(transfers[i].getRecipient());
+            assertThat(new BigInteger(1, l.getTopics().get(3)))
                     .isEqualTo(transfers[i].getTransferValue());
             i++;
         }
@@ -655,7 +655,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(ByteUtil.EMPTY_WORD);
 
         byte[][] signatures = new byte[members.length][];
@@ -958,7 +958,7 @@ public class TokenBridgeContractTest {
                                 .getSideEffects()
                                 .getExecutionLogs()
                                 .get(0)
-                                .getLogTopics()
+                                .getTopics()
                                 .get(0))
                 .isEqualTo(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed());
 
@@ -967,7 +967,7 @@ public class TokenBridgeContractTest {
                                 .getSideEffects()
                                 .getExecutionLogs()
                                 .get(0)
-                                .getLogTopics()
+                                .getTopics()
                                 .get(1))
                 .isEqualTo(submitBundleContext.getTransactionHash());
     }
@@ -1043,7 +1043,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(ByteUtil.EMPTY_WORD);
 
         byte[][] signatures = new byte[members.length][];
@@ -1098,7 +1098,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.FAILURE);
@@ -1178,7 +1178,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(ByteUtil.EMPTY_WORD);
 
         byte[][] signatures = new byte[members.length][];
@@ -1233,7 +1233,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.FAILURE);
@@ -1322,7 +1322,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(ByteUtil.EMPTY_WORD);
 
         // only give 2/5 signatures
@@ -1376,7 +1376,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.FAILURE);
@@ -1465,7 +1465,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(ByteUtil.EMPTY_WORD);
 
         // only give 3/5 signatures
@@ -1521,7 +1521,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.FAILURE);
@@ -1611,7 +1611,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(ByteUtil.EMPTY_WORD);
 
         byte[][] signatures = new byte[members.length][];
@@ -1670,7 +1670,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.FAILURE);
@@ -1771,22 +1771,22 @@ public class TokenBridgeContractTest {
         i = 0;
         for (IExecutionLog l : submitBundleContext.getSideEffects().getExecutionLogs()) {
             // verify address is correct
-            assertThat(l.getLogSourceAddress()).isEqualTo(CONTRACT_ADDR);
+            assertThat(l.getSourceAddress()).isEqualTo(CONTRACT_ADDR);
 
             // on the 11th log, it should be the processed bundle event
             if (i == 10) {
-                assertThat(l.getLogTopics().get(0))
+                assertThat(l.getTopics().get(0))
                         .isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
-                assertThat(l.getLogTopics().get(1)).isEqualTo(blockHash);
-                assertThat(l.getLogTopics().get(2)).isEqualTo(payloadHash);
+                assertThat(l.getTopics().get(1)).isEqualTo(blockHash);
+                assertThat(l.getTopics().get(2)).isEqualTo(payloadHash);
                 continue;
             }
 
             // otherwise we expect a Distributed event
-            assertThat(l.getLogTopics().get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
-            assertThat(l.getLogTopics().get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
-            assertThat(l.getLogTopics().get(2)).isEqualTo(transfers[i].getRecipient());
-            assertThat(new BigInteger(1, l.getLogTopics().get(3)))
+            assertThat(l.getTopics().get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
+            assertThat(l.getTopics().get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
+            assertThat(l.getTopics().get(2)).isEqualTo(transfers[i].getRecipient());
+            assertThat(new BigInteger(1, l.getTopics().get(3)))
                     .isEqualTo(transfers[i].getTransferValue());
             i++;
         }
@@ -1827,7 +1827,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.FAILURE);
@@ -1877,7 +1877,7 @@ public class TokenBridgeContractTest {
                                                 BridgeFuncSig.PURE_ACTION_MAP.getBytes(),
                                                 payloadHash),
                                         21000L)
-                                .getOutput())
+                                .getReturnData())
                 .isEqualTo(new byte[32]);
 
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.FAILURE);
@@ -2120,7 +2120,7 @@ public class TokenBridgeContractTest {
         PrecompiledTransactionResult transferResult =
                 this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
-        assertThat(transferResult.getOutput()).isEqualTo(DataWord.ONE.getData());
+        assertThat(transferResult.getReturnData()).isEqualTo(DataWord.ONE.getData());
 
         // lock the ring
         this.connector.setRingLocked(false);
@@ -2132,7 +2132,7 @@ public class TokenBridgeContractTest {
         PrecompiledTransactionResult transferResult2 =
                 this.contract.execute(callPayload2, DEFAULT_NRG);
         assertThat(transferResult2.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
-        assertThat(transferResult2.getOutput()).isEqualTo(DataWord.ZERO.getData());
+        assertThat(transferResult2.getReturnData()).isEqualTo(DataWord.ZERO.getData());
     }
 
     @Test
@@ -2165,7 +2165,7 @@ public class TokenBridgeContractTest {
         PrecompiledTransactionResult transferResult =
                 this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
-        assertThat(transferResult.getOutput())
+        assertThat(transferResult.getReturnData())
                 .isEqualTo(new DataWord(new BigInteger("3")).getData());
 
         // explicitly set the min threshold to 5
@@ -2178,7 +2178,7 @@ public class TokenBridgeContractTest {
         PrecompiledTransactionResult transferResult2 =
                 this.contract.execute(callPayload2, DEFAULT_NRG);
         assertThat(transferResult2.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
-        assertThat(transferResult2.getOutput())
+        assertThat(transferResult2.getReturnData())
                 .isEqualTo(new DataWord(new BigInteger("5")).getData());
 
         // try setting threshold greater than number of validator members
@@ -2191,7 +2191,7 @@ public class TokenBridgeContractTest {
         PrecompiledTransactionResult transferResult3 =
                 this.contract.execute(callPayload3, DEFAULT_NRG);
         assertThat(transferResult3.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
-        assertThat(transferResult3.getOutput())
+        assertThat(transferResult3.getReturnData())
                 .isEqualTo(new DataWord(new BigInteger("10")).getData());
     }
 
@@ -2225,7 +2225,7 @@ public class TokenBridgeContractTest {
         PrecompiledTransactionResult transferResult =
                 this.contract.execute(callPayload, DEFAULT_NRG);
         assertThat(transferResult.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
-        assertThat(transferResult.getOutput())
+        assertThat(transferResult.getReturnData())
                 .isEqualTo(new DataWord(new BigInteger("5")).getData());
 
         // explicitly set the member count to 10
@@ -2238,7 +2238,7 @@ public class TokenBridgeContractTest {
         PrecompiledTransactionResult transferResult2 =
                 this.contract.execute(callPayload2, DEFAULT_NRG);
         assertThat(transferResult2.getResultCode()).isEqualTo(PrecompiledResultCode.SUCCESS);
-        assertThat(transferResult2.getOutput())
+        assertThat(transferResult2.getReturnData())
                 .isEqualTo(new DataWord(new BigInteger("10")).getData());
     }
 
