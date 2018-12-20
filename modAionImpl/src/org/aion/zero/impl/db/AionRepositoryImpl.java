@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,10 +86,11 @@ public class AionRepositoryImpl
 
         // repository singleton instance
         private static final AionRepositoryImpl inst =
-                new AionRepositoryImpl(new RepositoryConfig(
-                    config.getDatabasePath(),
-                    ContractDetailsAion.getInstance(),
-                    config.getDb()));
+                new AionRepositoryImpl(
+                        new RepositoryConfig(
+                                config.getDatabasePath(),
+                                ContractDetailsAion.getInstance(),
+                                config.getDb()));
     }
 
     public static AionRepositoryImpl inst() {
@@ -332,8 +334,9 @@ public class AionRepositoryImpl
         List<byte[]> rtn = new ArrayList<>();
         rwLock.readLock().lock();
         try {
-            Set<byte[]> keySet = txPoolDatabase.keys();
-            for (byte[] b : keySet) {
+            Iterator<byte[]> iterator = txPoolDatabase.keys();
+            while (iterator.hasNext()) {
+                byte[] b = iterator.next();
                 if (txPoolDatabase.get(b).isPresent()) {
                     rtn.add(txPoolDatabase.get(b).get());
                 }
@@ -351,8 +354,9 @@ public class AionRepositoryImpl
         List<byte[]> rtn = new ArrayList<>();
         rwLock.readLock().lock();
         try {
-            Set<byte[]> keySet = pendingTxCacheDatabase.keys();
-            for (byte[] b : keySet) {
+            Iterator<byte[]> iterator = pendingTxCacheDatabase.keys();
+            while (iterator.hasNext()) {
+                byte[] b = iterator.next();
                 if (pendingTxCacheDatabase.get(b).isPresent()) {
                     rtn.add(pendingTxCacheDatabase.get(b).get());
                 }

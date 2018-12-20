@@ -36,10 +36,9 @@ package org.aion.db.impl.h2;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.h2.mvstore.FileStore;
@@ -238,15 +237,10 @@ public class H2MVMap extends AbstractDB {
     }
 
     @Override
-    public Set<byte[]> keys() {
-
-        Set<byte[]> keys = new HashSet<>();
-
+    public Iterator<byte[]> keys() {
         check();
 
-        keys.addAll(map.keySet());
-
-        return keys;
+        return map.keySet().iterator();
     }
 
     @Override

@@ -24,9 +24,9 @@
 package org.aion.db.generic;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -221,7 +221,7 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public Set<byte[]> keys() {
+    public Iterator<byte[]> keys() {
         // acquire read lock
         lock.readLock().lock();
 

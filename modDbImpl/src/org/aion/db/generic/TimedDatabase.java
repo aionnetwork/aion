@@ -24,9 +24,9 @@
 package org.aion.db.generic;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.Hex;
@@ -175,9 +175,9 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public Set<byte[]> keys() {
+    public Iterator<byte[]> keys() {
         long t1 = System.nanoTime();
-        Set<byte[]> result = database.keys();
+        Iterator<byte[]> result = database.keys();
         long t2 = System.nanoTime();
 
         LOG.debug(database.toString() + " keys() in " + (t2 - t1) + " ns.");

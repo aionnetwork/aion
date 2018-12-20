@@ -29,10 +29,10 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,7 +49,7 @@ import org.junit.Test;
 public class JournalPruneDataSourceTest {
 
     private static final String dbName = "TestDB";
-    private static IByteArrayKeyValueDatabase source_db = DatabaseFactory.connect(dbName);
+    private static final IByteArrayKeyValueDatabase source_db = DatabaseFactory.connect(dbName);
     private static JournalPruneDataSource db;
 
     private static final byte[] k1 = "key1".getBytes();
@@ -240,10 +240,10 @@ public class JournalPruneDataSourceTest {
         db.setPruneEnabled(false);
 
         // keys shouldn't be null even when empty
-        Set<byte[]> keys = db.keys();
+        Iterator<byte[]> keys = db.keys();
         assertThat(db.isEmpty()).isTrue();
         assertThat(keys).isNotNull();
-        assertThat(keys.size()).isEqualTo(0);
+        assertThat(count(keys)).isEqualTo(0);
 
         // checking after put
         db.put(k1, v1);
@@ -251,15 +251,13 @@ public class JournalPruneDataSourceTest {
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(db.get(k2).get()).isEqualTo(v2);
 
-        keys = db.keys();
-        assertThat(keys.size()).isEqualTo(2);
+        assertThat(count(db.keys())).isEqualTo(2);
 
         // checking after delete
         db.delete(k2);
         assertThat(db.get(k2).isPresent()).isTrue();
 
-        keys = db.keys();
-        assertThat(keys.size()).isEqualTo(2);
+        assertThat(count(db.keys())).isEqualTo(2);
 
         // checking after putBatch
         Map<byte[], byte[]> ops = new HashMap<>();
@@ -268,18 +266,29 @@ public class JournalPruneDataSourceTest {
         ops.put(k3, v3);
         db.putBatch(ops);
 
-        keys = db.keys();
-        assertThat(keys.size()).isEqualTo(3);
+        List<byte[]> del = new ArrayList<>();
+        del.add(k1);
+        db.deleteBatch(del);
+
+        assertThat(count(db.keys())).isEqualTo(3);
 
         // checking after deleteBatch
         db.deleteBatch(ops.keySet());
 
-        keys = db.keys();
-        assertThat(keys.size()).isEqualTo(3);
+        assertThat(count(db.keys())).isEqualTo(3);
 
         // ensure no cached values
         assertThat(db.getInsertedKeysCount()).isEqualTo(0);
         assertThat(db.getDeletedKeysCount()).isEqualTo(0);
+    }
+
+    private static int count(Iterator<byte[]> keys) {
+        int size = 0;
+        while (keys.hasNext()) {
+            size++;
+            keys.next();
+        }
+        return size;
     }
 
     @Test
@@ -512,10 +521,10 @@ public class JournalPruneDataSourceTest {
         db.setPruneEnabled(true);
 
         // keys shouldn't be null even when empty
-        Set<byte[]> keys = db.keys();
+        Iterator<byte[]> keys = db.keys();
         assertThat(db.isEmpty()).isTrue();
         assertThat(keys).isNotNull();
-        assertThat(keys.size()).isEqualTo(0);
+        assertThat(count(keys)).isEqualTo(0);
 
         // checking after put
         db.put(k1, v1);
@@ -523,15 +532,13 @@ public class JournalPruneDataSourceTest {
         assertThat(db.get(k1).get()).isEqualTo(v1);
         assertThat(db.get(k2).get()).isEqualTo(v2);
 
-        keys = db.keys();
-        assertThat(keys.size()).isEqualTo(2);
+        assertThat(count(db.keys())).isEqualTo(2);
 
         // checking after delete
         db.delete(k2);
         assertThat(db.get(k2).isPresent()).isTrue();
 
-        keys = db.keys();
-        assertThat(keys.size()).isEqualTo(2);
+        assertThat(count(db.keys())).isEqualTo(2);
 
         // checking after putBatch
         Map<byte[], byte[]> ops = new HashMap<>();
@@ -540,14 +547,16 @@ public class JournalPruneDataSourceTest {
         ops.put(k3, v3);
         db.putBatch(ops);
 
-        keys = db.keys();
-        assertThat(keys.size()).isEqualTo(3);
+        List<byte[]> del = new ArrayList<>();
+        del.add(k1);
+        db.deleteBatch(del);
+
+        assertThat(count(db.keys())).isEqualTo(3);
 
         // checking after deleteBatch
         db.deleteBatch(ops.keySet());
 
-        keys = db.keys();
-        assertThat(keys.size()).isEqualTo(3);
+        assertThat(count(db.keys())).isEqualTo(3);
 
         // ensure no cached values
         assertThat(db.getInsertedKeysCount()).isEqualTo(3);
@@ -776,7 +785,7 @@ public class JournalPruneDataSourceTest {
         db.deleteBatch(list);
     }
 
-    public static byte[] randomBytes(int length) {
+    private static byte[] randomBytes(int length) {
         byte[] result = new byte[length];
         new Random().nextBytes(result);
         return result;
@@ -804,10 +813,10 @@ public class JournalPruneDataSourceTest {
     private void addThread_Keys(List<Runnable> threads, JournalPruneDataSource db) {
         threads.add(
                 () -> {
-                    Set<byte[]> keys = db.keys();
+                    Iterator<byte[]> keys = db.keys();
                     if (DISPLAY_MESSAGES) {
                         System.out.println(
-                                Thread.currentThread().getName() + ": #keys = " + keys.size());
+                                Thread.currentThread().getName() + ": #keys = " + count(keys));
                     }
                 });
     }
@@ -1000,7 +1009,7 @@ public class JournalPruneDataSourceTest {
         assertConcurrent("Testing put(...) ", threads, TIME_OUT);
 
         // check that all values were added
-        assertThat(db.keys().size()).isEqualTo(CONCURRENT_THREADS);
+        assertThat(count(db.keys())).isEqualTo(CONCURRENT_THREADS);
 
         // ensuring close
         db.close();
@@ -1023,7 +1032,7 @@ public class JournalPruneDataSourceTest {
         assertConcurrent("Testing putBatch(...) ", threads, TIME_OUT);
 
         // check that all values were added
-        assertThat(db.keys().size()).isEqualTo(3 * CONCURRENT_THREADS);
+        assertThat(count(db.keys())).isEqualTo(3 * CONCURRENT_THREADS);
 
         // ensuring close
         db.close();
@@ -1082,7 +1091,7 @@ public class JournalPruneDataSourceTest {
      * href="https://github.com/junit-team/junit4/wiki/multithreaded-code-and-concurrency">JUnit
      * Wiki on multithreaded code and concurrency</a>
      */
-    public static void assertConcurrent(
+    private static void assertConcurrent(
             final String message,
             final List<? extends Runnable> runnables,
             final int maxTimeoutSeconds)
@@ -1397,7 +1406,7 @@ public class JournalPruneDataSourceTest {
         db.storeBlockChanges(b0, 0);
         assertThat(db.getBlockUpdates().size()).isEqualTo(1);
 
-        assertThat(source_db.keys().size()).isEqualTo(3);
+        assertThat(count(source_db.keys())).isEqualTo(3);
         assertThat(source_db.get(k1).get()).isEqualTo(v1);
         assertThat(source_db.get(k2).get()).isEqualTo(v2);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
@@ -1409,7 +1418,7 @@ public class JournalPruneDataSourceTest {
         db.storeBlockChanges(b1, 1);
         assertThat(db.getBlockUpdates().size()).isEqualTo(2);
 
-        assertThat(source_db.keys().size()).isEqualTo(4);
+        assertThat(count(source_db.keys())).isEqualTo(4);
         assertThat(source_db.get(k1).get()).isEqualTo(v2);
         assertThat(source_db.get(k2).get()).isEqualTo(v2);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
@@ -1424,7 +1433,7 @@ public class JournalPruneDataSourceTest {
         db.storeBlockChanges(b2, 2);
         assertThat(db.getBlockUpdates().size()).isEqualTo(3);
 
-        assertThat(source_db.keys().size()).isEqualTo(5);
+        assertThat(count(source_db.keys())).isEqualTo(5);
         assertThat(source_db.get(k1).get()).isEqualTo(v4);
         assertThat(source_db.get(k2).get()).isEqualTo(v3);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
@@ -1439,7 +1448,7 @@ public class JournalPruneDataSourceTest {
         db.storeBlockChanges(b3, 2);
         assertThat(db.getBlockUpdates().size()).isEqualTo(4);
 
-        assertThat(source_db.keys().size()).isEqualTo(6);
+        assertThat(count(source_db.keys())).isEqualTo(6);
         assertThat(source_db.get(k1).get()).isEqualTo(v3);
         assertThat(source_db.get(k2).get()).isEqualTo(v4);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
@@ -1450,19 +1459,19 @@ public class JournalPruneDataSourceTest {
         // prune block b0
         db.prune(b0, 0);
         assertThat(db.getBlockUpdates().size()).isEqualTo(3);
-        assertThat(source_db.keys().size()).isEqualTo(6);
+        assertThat(count(source_db.keys())).isEqualTo(6);
 
         // prune block b1
         db.prune(b1, 1);
         assertThat(db.getBlockUpdates().size()).isEqualTo(2);
-        assertThat(source_db.keys().size()).isEqualTo(6);
+        assertThat(count(source_db.keys())).isEqualTo(6);
 
         // prune block b3 at level 2 (should be called for main chain block)
         db.prune(b3, 2);
         // also removed the updates for block b2
         assertThat(db.getBlockUpdates().size()).isEqualTo(0);
 
-        assertThat(source_db.keys().size()).isEqualTo(4);
+        assertThat(count(source_db.keys())).isEqualTo(4);
         assertThat(source_db.get(k1).get()).isEqualTo(v3);
         assertThat(source_db.get(k2).get()).isEqualTo(v4);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
@@ -1482,7 +1491,7 @@ public class JournalPruneDataSourceTest {
         db.storeBlockChanges(b0, 0);
         assertThat(db.getBlockUpdates().size()).isEqualTo(1);
 
-        assertThat(source_db.keys().size()).isEqualTo(3);
+        assertThat(count(source_db.keys())).isEqualTo(3);
         assertThat(source_db.get(k1).get()).isEqualTo(v1);
         assertThat(source_db.get(k2).get()).isEqualTo(v2);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
@@ -1494,7 +1503,7 @@ public class JournalPruneDataSourceTest {
         db.storeBlockChanges(b1, 1);
         assertThat(db.getBlockUpdates().size()).isEqualTo(2);
 
-        assertThat(source_db.keys().size()).isEqualTo(4);
+        assertThat(count(source_db.keys())).isEqualTo(4);
         assertThat(source_db.get(k1).get()).isEqualTo(v2);
         assertThat(source_db.get(k2).get()).isEqualTo(v2);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
@@ -1508,7 +1517,7 @@ public class JournalPruneDataSourceTest {
         db.storeBlockChanges(b2, 1);
         assertThat(db.getBlockUpdates().size()).isEqualTo(3);
 
-        assertThat(source_db.keys().size()).isEqualTo(5);
+        assertThat(count(source_db.keys())).isEqualTo(5);
         assertThat(source_db.get(k1).get()).isEqualTo(v4);
         assertThat(source_db.get(k2).get()).isEqualTo(v3);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
@@ -1522,7 +1531,7 @@ public class JournalPruneDataSourceTest {
         db.storeBlockChanges(b3, 2);
         assertThat(db.getBlockUpdates().size()).isEqualTo(4);
 
-        assertThat(source_db.keys().size()).isEqualTo(6);
+        assertThat(count(source_db.keys())).isEqualTo(6);
         assertThat(source_db.get(k1).get()).isEqualTo(v3);
         assertThat(source_db.get(k2).get()).isEqualTo(v4);
         assertThat(source_db.get(k3).get()).isEqualTo(v3);
@@ -1533,12 +1542,12 @@ public class JournalPruneDataSourceTest {
         // prune block b0
         db.prune(b0, 0);
         assertThat(db.getBlockUpdates().size()).isEqualTo(3);
-        assertThat(source_db.keys().size()).isEqualTo(6);
+        assertThat(count(source_db.keys())).isEqualTo(6);
 
         // prune block b2 at level 1 : (should be called for main chain block)
         db.prune(b2, 1);
         assertThat(db.getBlockUpdates().size()).isEqualTo(1);
-        assertThat(source_db.keys().size()).isEqualTo(4);
+        assertThat(count(source_db.keys())).isEqualTo(4);
         assertThat(source_db.get(k1).get()).isEqualTo(v3);
         assertThat(source_db.get(k2).get()).isEqualTo(v4);
         assertThat(source_db.get(k3).isPresent()).isFalse();
@@ -1551,7 +1560,7 @@ public class JournalPruneDataSourceTest {
         // also removed the updates for block b2
         assertThat(db.getBlockUpdates().size()).isEqualTo(0);
 
-        assertThat(source_db.keys().size()).isEqualTo(4);
+        assertThat(count(source_db.keys())).isEqualTo(4);
         assertThat(source_db.get(k1).get()).isEqualTo(v3);
         assertThat(source_db.get(k2).get()).isEqualTo(v4);
         assertThat(source_db.get(k3).isPresent()).isFalse();

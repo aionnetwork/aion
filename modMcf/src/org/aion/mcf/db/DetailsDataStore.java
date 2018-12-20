@@ -36,10 +36,8 @@ package org.aion.mcf.db;
 
 import static org.aion.base.util.ByteArrayWrapper.wrap;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -146,8 +144,9 @@ public class DetailsDataStore<
         syncLargeStorage();
 
         // Get everything from the cache and calculate the size.
-        Set<byte[]> keysFromSource = detailsSrc.keys();
-        for (byte[] keyInSource : keysFromSource) {
+        Iterator<byte[]> keysFromSource = detailsSrc.keys();
+        while (keysFromSource.hasNext()) {
+            byte[] keyInSource = keysFromSource.next();
             // Fetch the value given the keys.
             Optional<byte[]> valFromKey = detailsSrc.get(keyInSource);
 
@@ -164,8 +163,9 @@ public class DetailsDataStore<
 
     public void syncLargeStorage() {
 
-        Set<byte[]> keysFromSource = detailsSrc.keys();
-        for (byte[] keyInSource : keysFromSource) {
+        Iterator<byte[]> keysFromSource = detailsSrc.keys();
+        while (keysFromSource.hasNext()) {
+            byte[] keyInSource = keysFromSource.next();
 
             // Fetch the value given the keys.
             Optional<byte[]> rawDetails = detailsSrc.get(keyInSource);
@@ -190,13 +190,32 @@ public class DetailsDataStore<
         return storageDSPrune;
     }
 
-    public synchronized Set<ByteArrayWrapper> keys() {
-        // TODO - @yao do we wanted a sorted set?
-        Set<ByteArrayWrapper> keys = new HashSet<>();
-        for (byte[] key : detailsSrc.keys()) {
-            keys.add(wrap(key));
+    public synchronized Iterator<ByteArrayWrapper> keys() {
+        return new DetailsIteratorWrapper(detailsSrc.keys());
+    }
+
+    /**
+     * A wrapper for the iterator needed by {@link DetailsDataStore} conforming to the {@link
+     * Iterator<byte[]>} interface.
+     *
+     * @author Alexandra Roatis
+     */
+    public class DetailsIteratorWrapper implements Iterator<ByteArrayWrapper> {
+        Iterator<byte[]> sourceIterator;
+
+        public DetailsIteratorWrapper(Iterator<byte[]> sourceIterator) {
+            this.sourceIterator = sourceIterator;
         }
-        return keys;
+
+        @Override
+        public boolean hasNext() {
+            return sourceIterator.hasNext();
+        }
+
+        @Override
+        public ByteArrayWrapper next() {
+            return wrap(sourceIterator.next());
+        }
     }
 
     public synchronized void close() {
@@ -206,16 +225,5 @@ public class DetailsDataStore<
         } catch (Exception e) {
             throw new RuntimeException("error closing db");
         }
-    }
-
-    public static List<ByteArrayWrapper> dumpKeys(IByteArrayKeyValueDatabase ds) {
-        ArrayList<ByteArrayWrapper> keys = new ArrayList<>();
-
-        for (byte[] key : ds.keys()) {
-            keys.add(wrap(key));
-        }
-
-        Collections.sort(keys);
-        return keys;
     }
 }
