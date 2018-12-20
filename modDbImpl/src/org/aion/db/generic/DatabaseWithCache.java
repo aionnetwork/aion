@@ -41,10 +41,9 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.primitives.Longs;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
@@ -378,26 +377,9 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public Set<byte[]> keys() {
-
-        Set<byte[]> keys = new HashSet<>();
-
+    public Iterator<byte[]> keys() {
         check();
-
-        // add all database keys
-        keys.addAll(database.keys());
-
-        // add updated cached keys
-        dirtyEntries.forEach(
-                (k, v) -> {
-                    if (v == null) {
-                        keys.remove(k.getData());
-                    } else {
-                        keys.add(k.getData());
-                    }
-                });
-
-        return keys;
+        return new CacheIteratorWrapper(database.keys(), dirtyEntries);
     }
 
     /**

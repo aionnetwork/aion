@@ -26,6 +26,7 @@ package org.aion.db.impl.mockdb;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import org.aion.base.util.ByteArrayWrapper;
@@ -105,7 +106,7 @@ public class MockDB extends AbstractDB {
     }
 
     @Override
-    public Set<byte[]> keys() {
+    public Iterator<byte[]> keys() {
         Set<byte[]> set = new HashSet<>();
 
         check();
@@ -113,7 +114,7 @@ public class MockDB extends AbstractDB {
         kv.keySet().forEach(k -> set.add(k.getData()));
 
         // empty when retrieval failed
-        return set;
+        return set.iterator();
     }
 
     @Override

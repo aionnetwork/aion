@@ -38,8 +38,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.fusesource.leveldbjni.JniDBFactory;
@@ -285,22 +285,61 @@ public class LevelDB extends AbstractDB {
     }
 
     @Override
-    public Set<byte[]> keys() {
-        Set<byte[]> set = new HashSet<>();
-
+    public Iterator<byte[]> keys() {
         check();
 
-        try (DBIterator itr = db.iterator()) {
-            // extract keys
-            for (itr.seekToFirst(); itr.hasNext(); itr.next()) {
-                set.add(itr.peekNext().getKey());
-            }
+        try {
+            return new LevelDBIteratorWrapper(db.iterator());
         } catch (Exception e) {
             LOG.error("Unable to extract keys from database " + this.toString() + ".", e);
         }
 
         // empty when retrieval failed
-        return set;
+        return new HashSet<byte[]>().iterator();
+    }
+
+    /**
+     * A wrapper for the {@link DBIterator} conforming to the {@link Iterator<byte[]>} interface.
+     *
+     * @author Alexandra Roatis
+     */
+    public static class LevelDBIteratorWrapper implements Iterator<byte[]> {
+        private final DBIterator iterator;
+        private boolean closed;
+
+        public LevelDBIteratorWrapper(DBIterator iterator) {
+            this.iterator = iterator;
+            iterator.seekToFirst();
+            closed = false;
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (!closed) {
+                boolean hasNext = iterator.hasNext();
+
+                // close iterator after last entry
+                if (!hasNext) {
+                    try {
+                        iterator.close();
+                    } catch (IOException e) {
+                        LOG.error("Unable to close iterator object.", e);
+                    }
+                    closed = true;
+                }
+
+                return hasNext;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public byte[] next() {
+            byte[] key = iterator.peekNext().getKey();
+            iterator.next();
+            return key;
+        }
     }
 
     @Override

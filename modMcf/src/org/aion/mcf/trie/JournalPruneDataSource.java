@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -348,7 +349,7 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
         }
     }
 
-    public Set<byte[]> keys() {
+    public Iterator<byte[]> keys() {
         lock.readLock().lock();
         try {
             return src.keys();

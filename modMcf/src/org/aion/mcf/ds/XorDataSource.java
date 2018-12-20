@@ -36,10 +36,9 @@ package org.aion.mcf.ds;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
@@ -73,13 +72,32 @@ public class XorDataSource implements IByteArrayKeyValueStore {
     }
 
     @Override
-    public Set<byte[]> keys() {
-        Set<byte[]> keys = source.keys();
-        Set<byte[]> ret = new HashSet<>(keys.size());
-        for (byte[] key : keys) {
-            ret.add(convertKey(key));
+    public Iterator<byte[]> keys() {
+        return new XorDSIteratorWrapper(source.keys());
+    }
+
+    /**
+     * A wrapper for the iterator needed by {@link XorDataSource} conforming to the {@link
+     * Iterator<byte[]>} interface.
+     *
+     * @author Alexandra Roatis
+     */
+    public class XorDSIteratorWrapper implements Iterator<byte[]> {
+        Iterator<byte[]> sourceIterator;
+
+        public XorDSIteratorWrapper(Iterator<byte[]> sourceIterator) {
+            this.sourceIterator = sourceIterator;
         }
-        return ret;
+
+        @Override
+        public boolean hasNext() {
+            return sourceIterator.hasNext();
+        }
+
+        @Override
+        public byte[] next() {
+            return convertKey(sourceIterator.next());
+        }
     }
 
     @Override
