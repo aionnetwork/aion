@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aion>
+	<mode>aion</mode>
+	<id>1e8bec09-4f6b-4dc7-aba0-45642226c75e</id>
+	<api>
+		<!--rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs-->
+		<rpc active="false" ip="127.0.0.1" port="8545">
+			<cors-enabled>false</cors-enabled>
+			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
+			<apis-enabled>web3,eth,personal,stratum,ops</apis-enabled>
+		</rpc>
+		<java active="false" ip="127.0.0.1" port="8547">
+			<secure-connect>true</secure-connect>
+		</java>
+		<nrg-recommendation>
+			<!--default NRG price used by api if oracle disabled, minimum price recommended by oracle-->
+			<default>10000000000</default>
+			<!--max NRG price recommended by oracle-->
+			<max>100000000000</max>
+			<!--enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice-->
+			<oracle-enabled>false</oracle-enabled>
+		</nrg-recommendation>
+	</api>
+	<net>
+		<id>31</id>
+		<nodes>
+			<node>p2p://c33d1066-8c7e-496c-9c4e-c89318280274@13.92.155.115:30303</node>
+			<node>p2p://c33d2207-729a-4584-86f1-e19ab97cf9ce@51.144.42.220:30303</node>
+			<node>p2p://c33d302f-216b-47d4-ac44-5d8181b56e7e@52.231.187.227:30303</node>
+			<node>p2p://c33d4c07-6a29-4ca6-8b06-b2781ba7f9bf@191.232.164.119:30303</node>
+			<node>p2p://c33d5a94-20d8-49d9-97d6-284f88da5c21@13.89.244.125:30303</node>
+			<node>p2p://741b979e-6a06-493a-a1f2-693cafd37083@66.207.217.190:30303</node>
+		</nodes>
+		<p2p>
+			<ip>0.0.0.0</ip>
+			<port>30303</port>
+			<discover>false</discover>
+			<max-temp-nodes>128</max-temp-nodes>
+			<max-active-nodes>128</max-active-nodes>
+		</p2p>
+	</net>
+	<sync>
+		<blocks-queue-max>32</blocks-queue-max>
+		<show-status>false</show-status>
+		<!--requires show-status=true; comma separated list of options: [all, peer_states, requests, seeds, leeches, responses, none]-->
+		<show-statistics>none</show-statistics>
+	</sync>
+	<consensus>
+		<mining>false</mining>
+		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
+		<cpu-mine-threads>2</cpu-mine-threads>
+		<extra-data>AION</extra-data>
+		<nrg-strategy>
+			<clamped-decay upper-bound="20000000" lower-bound="15000000"></clamped-decay>
+		</nrg-strategy>
+	</consensus>
+	<db>
+		<!--Sets the physical location on disk where data will be stored.-->
+		<path>database</path>
+		<!--Boolean value. Enable/disable database integrity check run at startup.-->
+		<check_integrity>true</check_integrity>
+		<!--Data pruning behavior for the state database. Options: FULL, TOP, SPREAD.-->
+		<!--FULL: the state is not pruned-->
+		<!--TOP: the state is kept only for the top K blocks; limits sync to branching only within the stored blocks-->
+		<!--SPREAD: the state is kept for the top K blocks and at regular block intervals-->
+		<state-storage>FULL</state-storage>
+		<!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->
+		<!--Caution: changing implementation requires re-syncing from genesis!-->
+		<vendor>leveldb</vendor>
+		<!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
+		<enable_db_compression>false</enable_db_compression>
+	</db>
+	<log>
+		<!--Enable/Disable logback service; if disabled, output will not be logged.-->
+		<log-file>true</log-file>
+		<!--Sets the physical location on disk where log files will be stored.-->
+		<log-path>log</log-path>
+		<GEN>INFO</GEN>
+		<ROOT>WARN</ROOT>
+		<VM>ERROR</VM>
+		<GUI>INFO</GUI>
+		<API>INFO</API>
+		<SYNC>INFO</SYNC>
+		<DB>WARN</DB>
+		<CONS>INFO</CONS>
+		<P2P>INFO</P2P>
+	</log>
+	<tx>
+		<cacheMax>256</cacheMax>
+	</tx>
+</aion>
