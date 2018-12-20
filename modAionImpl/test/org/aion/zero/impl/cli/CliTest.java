@@ -74,11 +74,13 @@ public class CliTest {
     private static final String BASE_PATH = System.getProperty("user.dir");
     private static final File MAIN_BASE_PATH = new File(BASE_PATH, "mainnet");
     private static final File TEST_BASE_PATH = new File(BASE_PATH, "mastery");
+    private static final File AVM_TEST_BASE_PATH = new File(BASE_PATH, "avmtestnet");
 
     // config paths
     private static final File CONFIG_PATH = new File(BASE_PATH, "config");
     private static final File MAIN_CONFIG_PATH = new File(CONFIG_PATH, "mainnet");
     private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, "mastery");
+    private static final File AVM_TEST_CONFIG_PATH = new File(CONFIG_PATH, "avmtestnet");
 
     private static final String module = "modAionImpl";
 
@@ -96,16 +98,19 @@ public class CliTest {
     private static final File oldConfig = new File(CONFIG_PATH, configFileName);
     private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
     private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
+    private static final File avmtestnetConfig = new File(AVM_TEST_CONFIG_PATH, configFileName);
 
     private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
     private static final File oldGenesis = new File(CONFIG_PATH, genesisFileName);
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
+    private static final File avmtestnetGenesis = new File(AVM_TEST_CONFIG_PATH, genesisFileName);
 
     private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
 
     private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
     private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
+    private static final File avmtestnetFork = new File(AVM_TEST_CONFIG_PATH, forkFileName);
 
     private static final String DEFAULT_PORT = "30303";
     private static final String TEST_PORT = "12345";
@@ -139,6 +144,15 @@ public class CliTest {
             Cli.copyRecursively(fork, testnetFork);
         }
 
+        if (BASE_PATH.contains(module) && !avmtestnetConfig.exists()) {
+            // save config to disk at expected location for new kernel
+            if (!AVM_TEST_CONFIG_PATH.exists()) {
+                assertThat(AVM_TEST_CONFIG_PATH.mkdir()).isTrue();
+            }
+            Cli.copyRecursively(config, avmtestnetConfig);
+            Cli.copyRecursively(genesis, avmtestnetGenesis);
+            Cli.copyRecursively(fork, avmtestnetFork);
+        }
         cfg.resetInternal();
 
         doReturn("password").when(mockCli).readPassword(any(), any());
@@ -162,6 +176,7 @@ public class CliTest {
 
         deleteRecursively(MAIN_BASE_PATH);
         deleteRecursively(TEST_BASE_PATH);
+        deleteRecursively(AVM_TEST_BASE_PATH);
     }
 
     /**
@@ -248,6 +263,13 @@ public class CliTest {
                 // mastery as parameter
                 parameters.add(new Object[] {new String[] {op, netVal}, RUN, expected});
             }
+        }
+
+        // network alone with avmtestnet
+        expected = AVM_TEST_BASE_PATH.getAbsolutePath();
+        for (String op : net_options) {
+            //avmtestnet as parameter
+            parameters.add(new Object[] {new String[] {op, "avmtestnet"}, RUN, expected});
         }
 
         // network and directory with testnet
@@ -401,6 +423,13 @@ public class CliTest {
             parameters.add(new Object[] {new String[] {op, "mastery"}, testnetConfig, expected});
             // testnet as parameter
             parameters.add(new Object[] {new String[] {op, "testnet"}, testnetConfig, expected});
+        }
+
+        expected = AVM_TEST_BASE_PATH.getAbsolutePath();
+
+        for (String op : options) {
+            // avmtestnet as parameter
+            parameters.add(new Object[] {new String[] {op, "avmtestnet"}, avmtestnetConfig, expected});
         }
 
         // config and directory

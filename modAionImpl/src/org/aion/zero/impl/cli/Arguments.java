@@ -72,7 +72,7 @@ public class Arguments {
             arity = "0..1",
             paramLabel = "<network>",
             description =
-                    "create config for the selected network\noptions: mainnet, conquest, mastery")
+                    "create config for the selected network\noptions: mainnet, conquest, mastery, avmtestnet")
     private String config = null;
 
     // get information and version
