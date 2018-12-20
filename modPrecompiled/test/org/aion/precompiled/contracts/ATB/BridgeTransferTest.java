@@ -341,9 +341,9 @@ public class BridgeTransferTest {
         // check status of result
         assertThat(tuple.results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.context.getSideEffects().getExecutionLogs().size()).isEqualTo(1);
-        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getLogTopics().get(0))
+        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getTopics().get(0))
                 .isEqualTo(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed());
-        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getLogTopics().get(1))
+        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getTopics().get(1))
                 .isEqualTo(aionTransactionHash);
 
         // one transfer should have gone through, second shouldn't
@@ -385,7 +385,7 @@ public class BridgeTransferTest {
 
         List<IExecutionLog> logs = this.context.getSideEffects().getExecutionLogs();
         for (int i = 0; i < 511; i++) {
-            List<byte[]> topics = logs.get(i).getLogTopics();
+            List<byte[]> topics = logs.get(i).getTopics();
             assertThat(topics.get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());
             assertThat(topics.get(1)).isEqualTo(transfers[i].getSourceTransactionHash());
             assertThat(topics.get(2)).isEqualTo(transfers[i].getRecipient());
@@ -396,7 +396,7 @@ public class BridgeTransferTest {
 
         // for the last element
         {
-            List<byte[]> topics = logs.get(511).getLogTopics();
+            List<byte[]> topics = logs.get(511).getTopics();
             assertThat(topics.get(0)).isEqualTo(BridgeEventSig.PROCESSED_BUNDLE.getHashed());
             assertThat(topics.get(1)).isEqualTo(blockHash);
             assertThat(topics.get(2)).isEqualTo(tuple.bundleHash);

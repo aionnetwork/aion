@@ -26,7 +26,6 @@ package org.aion.api.server.types;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.TypeConverter;
-import org.aion.mcf.vm.types.Log;
 import org.aion.vm.api.interfaces.IExecutionLog;
 
 public class TxRecptLg {
@@ -58,13 +57,13 @@ public class TxRecptLg {
         this.transactionIndex =
                 (b == null || txIndex == null) ? null : TypeConverter.toJsonHex(txIndex);
         this.transactionHash = TypeConverter.toJsonHex(tx.getTransactionHash());
-        this.address = TypeConverter.toJsonHex(logInfo.getLogSourceAddress().toString());
-        this.data = TypeConverter.toJsonHex(logInfo.getLogData());
+        this.address = TypeConverter.toJsonHex(logInfo.getSourceAddress().toString());
+        this.data = TypeConverter.toJsonHex(logInfo.getData());
         this.removed = !isMainchain;
 
-        this.topics = new String[logInfo.getLogTopics().size()];
+        this.topics = new String[logInfo.getTopics().size()];
         for (int i = 0, m = this.topics.length; i < m; i++) {
-            this.topics[i] = TypeConverter.toJsonHex(logInfo.getLogTopics().get(i));
+            this.topics[i] = TypeConverter.toJsonHex(logInfo.getTopics().get(i));
         }
     }
 }

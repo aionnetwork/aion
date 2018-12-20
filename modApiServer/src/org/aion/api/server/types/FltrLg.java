@@ -29,7 +29,6 @@ import org.aion.base.type.IBlock;
 import org.aion.base.type.IBlockSummary;
 import org.aion.base.type.ITransaction;
 import org.aion.mcf.vm.types.Bloom;
-import org.aion.mcf.vm.types.Log;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.core.BloomFilter;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -181,8 +180,8 @@ public final class FltrLg extends Fltr {
 
     public boolean matchesExactly(IExecutionLog logInfo) {
         initBlooms();
-        if (!matchesContractAddress(logInfo.getLogSourceAddress().toBytes())) return false;
-        List<byte[]> logTopics = logInfo.getLogTopics();
+        if (!matchesContractAddress(logInfo.getSourceAddress().toBytes())) return false;
+        List<byte[]> logTopics = logInfo.getTopics();
         for (int i = 0; i < this.topics.size(); i++) {
             if (i >= logTopics.size()) return false;
             byte[][] orTopics = topics.get(i);

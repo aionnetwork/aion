@@ -82,9 +82,9 @@ public class BridgeControllerOwnerTest {
         assertThat(logs.size()).isEqualTo(1);
 
         IExecutionLog changedOwnerLog = logs.get(0);
-        assertThat(changedOwnerLog.getLogData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
-        assertThat(changedOwnerLog.getLogTopics().get(0)).isEqualTo(transferOwnership);
-        assertThat(changedOwnerLog.getLogTopics().get(1)).isEqualTo(newOwner);
+        assertThat(changedOwnerLog.getData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
+        assertThat(changedOwnerLog.getTopics().get(0)).isEqualTo(transferOwnership);
+        assertThat(changedOwnerLog.getTopics().get(1)).isEqualTo(newOwner);
     }
 
     @Test

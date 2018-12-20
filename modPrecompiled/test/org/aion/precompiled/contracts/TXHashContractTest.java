@@ -91,7 +91,7 @@ public class TXHashContractTest {
         TransactionResult res = tXHashContract.execute(null, INPUT_NRG);
 
         System.out.println(res.toString());
-        assertTrue(Arrays.equals(txHash, res.getOutput()));
+        assertTrue(Arrays.equals(txHash, res.getReturnData()));
     }
 
     @Test

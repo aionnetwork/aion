@@ -178,7 +178,7 @@ public class AionAuctionContractTest {
         AionNameServiceContract ansc2 =
                 new AionNameServiceContract(
                         repo,
-                        AionAddress.wrap(result.getOutput()),
+                        AionAddress.wrap(result.getReturnData()),
                         AionAddress.wrap(k4.getAddress()));
         assertEquals(PrecompiledResultCode.SUCCESS, result.getResultCode());
     }
@@ -427,7 +427,7 @@ public class AionAuctionContractTest {
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
 
         assertEquals(PrecompiledResultCode.FAILURE, res2.getResultCode());
-        Assert.assertArrayEquals("already been extended".getBytes(), res2.getOutput());
+        Assert.assertArrayEquals("already been extended".getBytes(), res2.getReturnData());
 
         // uncomment to see extension output
         //        try {
@@ -562,7 +562,7 @@ public class AionAuctionContractTest {
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         PrecompiledTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
         assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
-        Assert.assertArrayEquals("bidder account does not exist".getBytes(), result.getOutput());
+        Assert.assertArrayEquals("bidder account does not exist".getBytes(), result.getReturnData());
     }
 
     @Test
@@ -579,7 +579,7 @@ public class AionAuctionContractTest {
                         poorKey);
         PrecompiledTransactionResult result = testAAC.execute(combined3, DEFAULT_INPUT_NRG);
         assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
-        Assert.assertArrayEquals("insufficient balance".getBytes(), result.getOutput());
+        Assert.assertArrayEquals("insufficient balance".getBytes(), result.getReturnData());
     }
 
     @Test
@@ -604,7 +604,7 @@ public class AionAuctionContractTest {
 
         assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 4000);
-        Assert.assertArrayEquals("incorrect input length".getBytes(), result.getOutput());
+        Assert.assertArrayEquals("incorrect input length".getBytes(), result.getReturnData());
 
         wrongInput3[0] = -1;
         System.arraycopy(input, 0, wrongInput4, 0, input.length - 2);
@@ -626,7 +626,7 @@ public class AionAuctionContractTest {
 
         assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 4000);
-        Assert.assertArrayEquals("incorrect signature".getBytes(), result.getOutput());
+        Assert.assertArrayEquals("incorrect signature".getBytes(), result.getReturnData());
     }
 
     @Test
@@ -643,7 +643,7 @@ public class AionAuctionContractTest {
 
         assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 4000);
-        Assert.assertArrayEquals("incorrect key".getBytes(), result.getOutput());
+        Assert.assertArrayEquals("incorrect key".getBytes(), result.getReturnData());
     }
 
     @Test
@@ -658,7 +658,7 @@ public class AionAuctionContractTest {
 
         assertEquals(PrecompiledResultCode.OUT_OF_NRG, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 0);
-        Assert.assertArrayEquals("insufficient energy".getBytes(), result.getOutput());
+        Assert.assertArrayEquals("insufficient energy".getBytes(), result.getReturnData());
     }
 
     @Test
@@ -674,7 +674,7 @@ public class AionAuctionContractTest {
 
         assertEquals(PrecompiledResultCode.FAILURE, result.getResultCode());
         assertEquals(result.getEnergyRemaining(), 4000);
-        Assert.assertArrayEquals("negative bid value".getBytes(), result.getOutput());
+        Assert.assertArrayEquals("negative bid value".getBytes(), result.getReturnData());
     }
 
     @Test
@@ -709,7 +709,7 @@ public class AionAuctionContractTest {
         assertEquals(PrecompiledResultCode.FAILURE, result2.getResultCode());
         assertEquals(result2.getEnergyRemaining(), 4000);
         Assert.assertArrayEquals(
-                "requested domain is already active".getBytes(), result2.getOutput());
+                "requested domain is already active".getBytes(), result2.getReturnData());
     }
 
     @Test
@@ -826,7 +826,7 @@ public class AionAuctionContractTest {
 
         assertEquals(PrecompiledResultCode.SUCCESS, result2.getResultCode());
         assertEquals(result2.getEnergyRemaining(), 4000);
-        assertEquals(32, result2.getOutput().length); // check that an address was returned
+        assertEquals(32, result2.getReturnData().length); // check that an address was returned
     }
 
     private byte[] setupInputs(String domainName, Address ownerAddress, byte[] amount, ECKey k) {

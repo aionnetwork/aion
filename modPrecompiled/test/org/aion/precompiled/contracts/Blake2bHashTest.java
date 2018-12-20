@@ -82,7 +82,7 @@ public class Blake2bHashTest {
     @Test
     public void testBlake256() {
         PrecompiledTransactionResult res = blake2bHasher.execute(byteArray1, INPUT_NRG);
-        byte[] output = res.getOutput();
+        byte[] output = res.getReturnData();
 
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
@@ -93,7 +93,7 @@ public class Blake2bHashTest {
     @Test
     public void testBlake256_2() {
         PrecompiledTransactionResult res = blake2bHasher.execute(byteArray2, INPUT_NRG);
-        byte[] output = res.getOutput();
+        byte[] output = res.getReturnData();
 
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
@@ -105,7 +105,7 @@ public class Blake2bHashTest {
     @Test
     public void testBlake256_3() {
         PrecompiledTransactionResult res = blake2bHasher.execute(bigByteArray, 2_000_000L);
-        byte[] output = res.getOutput();
+        byte[] output = res.getReturnData();
 
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);
@@ -153,8 +153,8 @@ public class Blake2bHashTest {
         PrecompiledTransactionResult res1Copy = blake2bHasher.execute(input1Copy, INPUT_NRG);
         PrecompiledTransactionResult res2 = blake2bHasher.execute(input2, INPUT_NRG);
 
-        assertThat(res1.getOutput()).isEqualTo(res1Copy.getOutput());
-        assertThat(res1.getOutput()).isNotEqualTo(res2.getOutput());
+        assertThat(res1.getReturnData()).isEqualTo(res1Copy.getReturnData());
+        assertThat(res1.getReturnData()).isNotEqualTo(res2.getReturnData());
     }
 
     @Test

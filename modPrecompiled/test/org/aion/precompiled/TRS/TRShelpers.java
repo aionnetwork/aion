@@ -112,7 +112,7 @@ class TRShelpers {
         if (!res.getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
             fail("Unable to create contract!");
         }
-        Address contract = new AionAddress(res.getOutput());
+        Address contract = new AionAddress(res.getReturnData());
         tempAddrs.add(contract);
         repo.incrementNonce(owner);
         repo.flush();
@@ -918,7 +918,7 @@ class TRShelpers {
         for (Address acc : contributors) {
             PrecompiledTransactionResult res = newTRSqueryContract(acc).execute(input, COST);
             assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-            BigDecimal frac = new BigDecimal(new BigInteger(res.getOutput())).movePointLeft(18);
+            BigDecimal frac = new BigDecimal(new BigInteger(res.getReturnData())).movePointLeft(18);
             assertEquals(expectedFraction, frac);
         }
     }

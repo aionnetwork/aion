@@ -65,17 +65,17 @@ public class Log implements IExecutionLog {
     }
 
     @Override
-    public org.aion.vm.api.interfaces.Address getLogSourceAddress() {
+    public org.aion.vm.api.interfaces.Address getSourceAddress() {
         return addr;
     }
 
     @Override
-    public List<byte[]> getLogTopics() {
+    public List<byte[]> getTopics() {
         return topics;
     }
 
     @Override
-    public byte[] getLogData() {
+    public byte[] getData() {
         return data;
     }
 

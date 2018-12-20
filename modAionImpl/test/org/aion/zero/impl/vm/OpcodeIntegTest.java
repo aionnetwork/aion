@@ -121,18 +121,18 @@ public class OpcodeIntegTest {
         // Check that the logs from our internal transactions are as we expect.
         List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
         assertEquals(12, logs.size());
-        assertArrayEquals(new DataWord(0).getData(), logs.get(0).getLogData());
-        assertArrayEquals(new DataWord(6).getData(), logs.get(1).getLogData());
-        assertArrayEquals(new DataWord(5).getData(), logs.get(2).getLogData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(3).getLogData());
-        assertArrayEquals(new DataWord(3).getData(), logs.get(4).getLogData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(5).getLogData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(6).getLogData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(7).getLogData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(8).getLogData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(9).getLogData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(10).getLogData());
-        assertArrayEquals(new DataWord(1).getData(), logs.get(11).getLogData());
+        assertArrayEquals(new DataWord(0).getData(), logs.get(0).getData());
+        assertArrayEquals(new DataWord(6).getData(), logs.get(1).getData());
+        assertArrayEquals(new DataWord(5).getData(), logs.get(2).getData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(3).getData());
+        assertArrayEquals(new DataWord(3).getData(), logs.get(4).getData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(5).getData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(6).getData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(7).getData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(8).getData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(9).getData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(10).getData());
+        assertArrayEquals(new DataWord(1).getData(), logs.get(11).getData());
     }
 
     @Test
@@ -166,14 +166,14 @@ public class OpcodeIntegTest {
         // Check that the logs from our internal transactions are as we expect.
         List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
         assertEquals(8, logs.size());
-        assertArrayEquals(new DataWord(0).getData(), logs.get(0).getLogData());
-        assertArrayEquals(new DataWord(5).getData(), logs.get(1).getLogData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(2).getLogData());
-        assertArrayEquals(new DataWord(3).getData(), logs.get(3).getLogData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(4).getLogData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(5).getLogData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(6).getLogData());
-        assertArrayEquals(new DataWord(2).getData(), logs.get(7).getLogData());
+        assertArrayEquals(new DataWord(0).getData(), logs.get(0).getData());
+        assertArrayEquals(new DataWord(5).getData(), logs.get(1).getData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(2).getData());
+        assertArrayEquals(new DataWord(3).getData(), logs.get(3).getData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(4).getData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(5).getData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(6).getData());
+        assertArrayEquals(new DataWord(2).getData(), logs.get(7).getData());
     }
 
     @Test
@@ -207,14 +207,14 @@ public class OpcodeIntegTest {
         // Check that the logs from our internal transactions are as we expect.
         List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
         assertEquals(8, logs.size());
-        assertArrayEquals(new DataWord(0).getData(), logs.get(0).getLogData());
-        assertArrayEquals(new DataWord(7).getData(), logs.get(1).getLogData());
-        assertArrayEquals(new DataWord(6).getData(), logs.get(2).getLogData());
-        assertArrayEquals(new DataWord(5).getData(), logs.get(3).getLogData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(4).getLogData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(5).getLogData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(6).getLogData());
-        assertArrayEquals(new DataWord(4).getData(), logs.get(7).getLogData());
+        assertArrayEquals(new DataWord(0).getData(), logs.get(0).getData());
+        assertArrayEquals(new DataWord(7).getData(), logs.get(1).getData());
+        assertArrayEquals(new DataWord(6).getData(), logs.get(2).getData());
+        assertArrayEquals(new DataWord(5).getData(), logs.get(3).getData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(4).getData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(5).getData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(6).getData());
+        assertArrayEquals(new DataWord(4).getData(), logs.get(7).getData());
     }
 
     // ======================================= test CALLCODE =======================================
@@ -583,9 +583,9 @@ public class OpcodeIntegTest {
         // DELEGATECALL     -->     CALLER-DEPLOYER-DEPLOYER-ZERO
         List<IExecutionLog> logs = summary.getReceipt().getLogInfoList();
         assertEquals(3, logs.size());
-        verifyLogData(logs.get(0).getLogData(), calleeContract, callerContract, deployer);
-        verifyLogData(logs.get(1).getLogData(), callerContract, callerContract, deployer);
-        verifyLogData(logs.get(2).getLogData(), callerContract, deployer, deployer);
+        verifyLogData(logs.get(0).getData(), calleeContract, callerContract, deployer);
+        verifyLogData(logs.get(1).getData(), callerContract, callerContract, deployer);
+        verifyLogData(logs.get(2).getData(), callerContract, deployer, deployer);
     }
 
     // ======================================= test SUICIDE ========================================

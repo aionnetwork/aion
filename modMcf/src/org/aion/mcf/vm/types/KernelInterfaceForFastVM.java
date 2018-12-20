@@ -29,14 +29,19 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     // These 4 methods are temporary. Really any of this type of functionality should be moved out
     // into the kernel.
     @Override
-    public KernelInterfaceForFastVM startTracking() {
+    public KernelInterfaceForFastVM makeChildKernelInterface() {
         return new KernelInterfaceForFastVM(
                 this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall);
     }
 
     @Override
-    public void flush() {
+    public void commit() {
         this.repositoryCache.flush();
+    }
+
+    @Override
+    public void commitTo(KernelInterface target) {
+        this.repositoryCache.flushTo(((KernelInterfaceForFastVM) target).repositoryCache, false);
     }
 
     public void rollback() {

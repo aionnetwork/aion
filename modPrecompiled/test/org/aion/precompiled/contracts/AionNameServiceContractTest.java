@@ -184,8 +184,8 @@ public class AionNameServiceContractTest {
             e.printStackTrace();
         }
 
-        defaultAddress = AionAddress.wrap(result.getOutput());
-        defaultAddress2 = AionAddress.wrap(result2.getOutput());
+        defaultAddress = AionAddress.wrap(result.getReturnData());
+        defaultAddress2 = AionAddress.wrap(result2.getReturnData());
     }
 
     @After
@@ -753,7 +753,7 @@ public class AionNameServiceContractTest {
                         k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         PrecompiledTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
-        Address addr = AionAddress.wrap(result.getOutput());
+        Address addr = AionAddress.wrap(result.getReturnData());
 
         byte[] combined2 =
                 setupInputs(

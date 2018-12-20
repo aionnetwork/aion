@@ -274,7 +274,7 @@ public class AionTransaction extends AbstractTransaction {
     }
 
     @Override
-    public byte getTransactionType() {
+    public byte getTargetVM() {
         if (!parsed) {
             rlpParse();
         }

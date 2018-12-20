@@ -55,7 +55,7 @@ public class AionTransactionTest {
         assertArrayEquals(tx.getData(), tx2.getData());
         assertEquals(tx.getEnergyLimit(), tx2.getEnergyLimit());
         assertEquals(tx.getEnergyPrice(), tx2.getEnergyPrice());
-        assertEquals(tx.getTransactionType(), tx2.getTransactionType());
+        assertEquals(tx.getTargetVM(), tx2.getTargetVM());
 
         assertArrayEquals(tx.getTimeStamp(), tx2.getTimeStamp());
         assertArrayEquals(tx.getSignature().toBytes(), tx2.getSignature().toBytes());

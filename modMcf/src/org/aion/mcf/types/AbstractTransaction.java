@@ -128,7 +128,7 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public abstract void setNrgConsume(long consume);
 
-    public abstract byte getTransactionType();
+    public abstract byte getTargetVM();
 
     public abstract BigInteger getNonceBI();
 
