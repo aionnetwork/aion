@@ -118,7 +118,7 @@ public class Arguments {
     @Option(
             names = {"-n", "--network"},
             description =
-                    "execute kernel with selected network\noptions: mainnet, conquest, mastery")
+                    "execute kernel with selected network\noptions: mainnet, conquest, mastery, avmtestnet")
     private String network = null;
 
     @Option(
