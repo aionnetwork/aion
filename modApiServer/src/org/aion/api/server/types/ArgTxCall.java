@@ -17,6 +17,7 @@ public final class ArgTxCall {
     private final Address from;
     private final Address to;
     private final byte[] data;
+    private byte type;
     private final BigInteger nonce;
     private final BigInteger value;
     private final long nrg;
@@ -42,6 +43,27 @@ public final class ArgTxCall {
         this.value = _value == null ? BigInteger.ZERO : _value;
         this.nrg = _nrg;
         this.nrgPrice = _nrgPrice;
+        this.type = 0x1;
+    }
+
+    public ArgTxCall(
+        final Address _from,
+        final Address _to,
+        final byte[] _data,
+        final BigInteger _nonce,
+        final BigInteger _value,
+        final long _nrg,
+        final long _nrgPrice,
+        byte _type) {
+
+        this.from = _from;
+        this.to = _to;
+        this.data = _data == null ? ByteUtil.EMPTY_BYTE_ARRAY : _data;
+        this.nonce = _nonce == null ? BigInteger.ZERO : _nonce;
+        this.value = _value == null ? BigInteger.ZERO : _value;
+        this.nrg = _nrg;
+        this.nrgPrice = _nrgPrice;
+        this.type = _type;
     }
 
     public static ArgTxCall fromJSON(
@@ -50,6 +72,7 @@ public final class ArgTxCall {
             Address from = AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
             Address to = AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
             byte[] data = ByteUtil.hexStringToBytes(_jsonObj.optString("data", ""));
+            byte type = ByteUtil.hexStringToBytes(_jsonObj.optString("type", "0x1"))[0];
 
             String nonceStr = _jsonObj.optString("nonce", "0x0");
             String valueStr = _jsonObj.optString("value", "0x0");
@@ -80,7 +103,7 @@ public final class ArgTxCall {
                                 : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
             else nrgPrice = oracle.getNrgPrice();
 
-            return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice);
+            return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice, type);
         } catch (Exception e) {
             LOG.debug("Failed to parse transaction call object from input parameters", e);
             return null;
@@ -113,5 +136,9 @@ public final class ArgTxCall {
 
     public long getNrgPrice() {
         return nrgPrice;
+    }
+
+    public byte getType() {
+        return type;
     }
 }

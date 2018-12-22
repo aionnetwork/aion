@@ -557,7 +557,8 @@ public abstract class ApiAion extends Api {
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
-                                _params.getNrgPrice());
+                                _params.getNrgPrice(),
+                                _params.getType());
                 tx.sign(key);
 
                 return (new ApiTxResponse(
