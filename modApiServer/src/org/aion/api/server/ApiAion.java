@@ -57,6 +57,7 @@ import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.TxResponse;
+import org.aion.mcf.vm.Constants;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -461,6 +462,12 @@ public abstract class ApiAion extends Api {
     protected long estimateNrg(ArgTxCall params) {
         Address fromAddr =
                 (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
+
+        long nrg =
+                (params.getTo().isEmptyAddress())
+                        ? Constants.NRG_TX_CREATE_MAX
+                        : Constants.NRG_TRANSACTION_MAX;
+
         AionTransaction tx =
                 new AionTransaction(
                         params.getNonce().toByteArray(),
@@ -468,7 +475,7 @@ public abstract class ApiAion extends Api {
                         params.getTo(),
                         params.getValue().toByteArray(),
                         params.getData(),
-                        params.getNrg(),
+                        nrg,
                         params.getNrgPrice());
 
         AionTxReceipt receipt =
