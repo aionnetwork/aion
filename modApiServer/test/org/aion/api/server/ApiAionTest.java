@@ -162,15 +162,6 @@ public class ApiAionTest {
     }
 
     @Test
-    public void testInitNrgOracle() {
-        api.initNrgOracle(impl);
-        assertNotNull(api.getNrgOracle());
-        // Initing a second time should not create a new NrgOracle
-        api.initNrgOracle(impl);
-        assertNotNull(api.getNrgOracle());
-    }
-
-    @Test
     public void testStartES() throws Exception {
         api.startES("thName");
         api.addEvents();
@@ -465,7 +456,6 @@ public class ApiAionTest {
                 CfgAion.inst().getApi().getNrg().getNrgPriceDefault(),
                 api.getRecommendedNrgPrice());
         api.initNrgOracle(impl);
-        assertEquals(api.getNrgOracle().getNrgPrice(), api.getRecommendedNrgPrice());
 
         assertNotNull(api.getCoinbase());
         assertEquals(repo.getCode(Address.ZERO_ADDRESS()), api.getCode(Address.ZERO_ADDRESS()));
@@ -473,7 +463,9 @@ public class ApiAionTest {
         assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
         assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());
         assertNotNull(api.p2pProtocolVersion());
-        assertNotEquals(0, api.getDefaultNrgLimit());
+        assertNotEquals(0, api.getDefaultContractCreateNrg());
+        assertNotEquals(0, api.getDefaultTxNrg());
+        assertNotEquals(0, api.getRecommendedNrgPrice());
         assertEquals(impl.getAionHub().getP2pMgr().chainId(), Integer.parseInt(api.chainId()));
     }
 

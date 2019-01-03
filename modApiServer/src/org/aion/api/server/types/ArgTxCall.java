@@ -44,7 +44,7 @@ public final class ArgTxCall {
     }
 
     public static ArgTxCall fromJSON(
-            final JSONObject _jsonObj, NrgOracle oracle, long defaultNrgLimit) {
+            final JSONObject _jsonObj, long defaultNrgPrice, long txNrg, long contractCreateNrg) {
         try {
             Address from = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
             Address to = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
@@ -64,20 +64,19 @@ public final class ArgTxCall {
             String nrgStr = _jsonObj.optString("gas", null);
             String nrgPriceStr = _jsonObj.optString("gasPrice", null);
 
-            long nrg = defaultNrgLimit;
+            long nrg = to.isEmptyAddress() ? contractCreateNrg : txNrg;
             if (nrgStr != null)
                 nrg =
                         nrgStr.contains("0x")
                                 ? TypeConverter.StringHexToBigInteger(nrgStr).longValue()
                                 : TypeConverter.StringNumberAsBigInt(nrgStr).longValue();
 
-            long nrgPrice;
+            long nrgPrice = defaultNrgPrice;
             if (nrgPriceStr != null)
                 nrgPrice =
                         nrgPriceStr.contains("0x")
                                 ? TypeConverter.StringHexToBigInteger(nrgPriceStr).longValue()
                                 : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
-            else nrgPrice = oracle.getNrgPrice();
 
             return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice);
         } catch (Exception e) {
