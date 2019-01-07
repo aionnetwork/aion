@@ -254,9 +254,9 @@ public class Cli {
                         slowImportTime = Integer.parseInt(parameters[0]);
                         compactFrequency = Integer.parseInt(parameters[1]);
                     } catch (NumberFormatException e) {
-                        validCompact = false;
                         System.out.println(
                                 "slow_import and frequency values must be positive integers");
+                        return ERROR;
                     }
                     if (slowImportTime < 0 || compactFrequency < 0) {
                         validCompact = false;
