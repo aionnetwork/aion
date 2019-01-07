@@ -3,6 +3,7 @@ package org.aion.vm;
 import java.math.BigInteger;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.util.ByteArrayWrapper;
+import org.aion.base.vm.VirtualMachineSpecs;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.valid.TxNrgRule;
@@ -172,7 +173,6 @@ public class KernelInterfaceForAVM implements KernelInterface {
 
     @Override
     public boolean destinationAddressIsSafeForThisVM(Address address) {
-        // TODO: replace with actual logic that prevents the FastVM from calling an Avm contract.
-        return true;
+        return address.toBytes()[0] == VirtualMachineSpecs.AVM_VM_CODE;
     }
 }
