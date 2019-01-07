@@ -8,6 +8,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.valid.TxNrgRule;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
+import org.aion.precompiled.ContractFactory;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.KernelInterface;
@@ -173,6 +174,17 @@ public class KernelInterfaceForAVM implements KernelInterface {
 
     @Override
     public boolean destinationAddressIsSafeForThisVM(Address address) {
+        // Avm cannot run pre-compiled contracts.
+        if (ContractFactory.isPrecompiledContract(address)) {
+            return false;
+        }
+
+        // If address has no code then it is always safe.
+        if (getCode(address).length == 0) {
+            return true;
+        }
+
+        // Otherwise, it must be an Avm contract address.
         return address.toBytes()[0] == VirtualMachineSpecs.AVM_VM_CODE;
     }
 }
