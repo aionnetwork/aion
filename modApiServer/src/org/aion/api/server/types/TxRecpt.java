@@ -2,7 +2,6 @@ package org.aion.api.server.types;
 
 import static org.aion.base.util.TypeConverter.toJsonHex;
 
-import org.aion.base.type.AionAddress;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.util.ByteUtil;
@@ -10,7 +9,6 @@ import org.aion.base.util.TypeConverter;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
-import org.aion.mcf.vm.types.Log;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.types.AionBlock;
@@ -119,7 +117,7 @@ public final class TxRecpt {
         this.toAddr = receipt.getTransaction().getDestinationAddress();
         this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toBytes());
 
-        this.txTimeStamp = ByteUtil.byteArrayToLong(receipt.getTransaction().getTimeStamp());
+        this.txTimeStamp = ByteUtil.byteArrayToLong(receipt.getTransaction().getTimestamp());
         this.txValue = TypeConverter.toJsonHex(txInfo.getReceipt().getTransaction().getValue());
         this.txNonce = ByteUtil.byteArrayToLong(txInfo.getReceipt().getTransaction().getNonce());
         byte[] _txData = txInfo.getReceipt().getTransaction().getData();
@@ -171,7 +169,7 @@ public final class TxRecpt {
         this.toAddr = tx.getDestinationAddress();
         this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toBytes());
 
-        this.txTimeStamp = ByteUtil.byteArrayToLong(tx.getTimeStamp());
+        this.txTimeStamp = ByteUtil.byteArrayToLong(tx.getTimestamp());
         this.txValue = toJsonHex(tx.getValue());
         this.txNonce = ByteUtil.byteArrayToLong(tx.getNonce());
         this.txData = tx.getData() == null ? "" : toJsonHex(tx.getData());

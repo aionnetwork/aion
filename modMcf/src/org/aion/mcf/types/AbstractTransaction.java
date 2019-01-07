@@ -95,7 +95,7 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public abstract byte[] getNonce();
 
-    public abstract byte[] getTimeStamp();
+    public abstract byte[] getTimestamp();
 
     public abstract Address getContractAddress();
 

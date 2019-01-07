@@ -112,8 +112,10 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
 
-            byte[] to = (this.getDestinationAddress() == null) ? new byte[0] : this
-                .getDestinationAddress().toBytes();
+            byte[] to =
+                    (getDestinationAddress() == null)
+                            ? new byte[0]
+                            : getDestinationAddress().toBytes();
             byte[] nonce = getNonce();
             boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
 
@@ -176,7 +178,10 @@ public class AionInternalTx extends AionTransaction implements InternalTransacti
 
     @Override
     public String toString() {
-        String to = (this.getDestinationAddress() == null) ? "" : this.getDestinationAddress().toString();
+        String to =
+                (this.getDestinationAddress() == null)
+                        ? ""
+                        : this.getDestinationAddress().toString();
         return "TransactionData ["
                 + "  parentHash="
                 + toHexString(getParentTransactionHash())

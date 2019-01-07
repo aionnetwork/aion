@@ -196,11 +196,6 @@ public class AionTransaction extends AbstractTransaction {
 
     @Override
     public byte[] getTimestamp() {
-        return getTimeStamp();
-    }
-
-    @Override
-    public byte[] getTimeStamp() {
         if (!parsed) {
             rlpParse();
         }

@@ -199,7 +199,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     /**
-     * The compliment of the above method for Fvm and precompiled consistency.
+     * The complement of the above method for Fvm and precompiled consistency.
      */
     private byte[] unwrapValue(ByteArrayWrapper wrapper) {
         byte[] bytes = wrapper.toBytes();
