@@ -258,7 +258,7 @@ public class Cli {
                                 "slow_import and frequency values must be positive integers");
                         return ERROR;
                     }
-                    if (slowImportTime < 0 || compactFrequency < 0) {
+                    if (slowImportTime <= 0 || compactFrequency <= 0) {
                         validCompact = false;
                         System.out.println("slow_import and frequency values must be positive");
                     }
