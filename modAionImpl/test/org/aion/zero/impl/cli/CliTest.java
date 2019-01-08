@@ -982,7 +982,7 @@ public class CliTest {
         parameters.add(
                 new Object[] {
                     new String[] {opCompact, "a", "b"},
-                    ERROR,
+                    RUN,
                     expectedPath,
                     false,
                     SLOW_IMPORT_TIME,
@@ -991,7 +991,7 @@ public class CliTest {
         parameters.add(
                 new Object[] {
                     new String[] {opCompact, "-1000", "3.14"},
-                    ERROR,
+                    RUN,
                     expectedPath,
                     false,
                     SLOW_IMPORT_TIME,
@@ -1051,14 +1051,14 @@ public class CliTest {
                         new String[] {"-n", valNet, opCompact, "-123", "456"},
                         RUN,
                         expectedPath,
-                        true,
+                        false,
                         SLOW_IMPORT_TIME,
                         COMPACT_FREQUENCY
                     });
             parameters.add(
                     new Object[] {
                         new String[] {"-n", valNet, opCompact, "invalid", "123"},
-                        ERROR,
+                        RUN,
                         expectedPath,
                         false,
                         SLOW_IMPORT_TIME,
@@ -1147,7 +1147,7 @@ public class CliTest {
             parameters.add(
                     new Object[] {
                         new String[] {opCompact, "-123", "1.234", "-d", valDir},
-                        ERROR,
+                        RUN,
                         expectedPath,
                         false,
                         SLOW_IMPORT_TIME,
@@ -1190,7 +1190,7 @@ public class CliTest {
                     new String[] {opCompact, "-123", "456", "-p", TEST_PORT},
                     RUN,
                     expectedPath,
-                    true,
+                    false,
                     SLOW_IMPORT_TIME,
                     COMPACT_FREQUENCY
                 });

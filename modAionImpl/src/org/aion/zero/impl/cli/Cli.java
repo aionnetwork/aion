@@ -254,18 +254,21 @@ public class Cli {
                         slowImportTime = Integer.parseInt(parameters[0]);
                         compactFrequency = Integer.parseInt(parameters[1]);
                     } catch (NumberFormatException e) {
-                        System.out.println(
-                                "slow_import and frequency values must be positive integers");
-                        return ERROR;
-                    }
-                    if (slowImportTime <= 0 || compactFrequency <= 0) {
                         validCompact = false;
-                        System.out.println("slow_import and frequency values must be positive");
                     }
 
-                    if (validCompact
-                            && (slowImportTime != cfgSync.getSlowImportTime()
-                                    || compactFrequency != cfgSync.getCompactFrequency())) {
+                    if (slowImportTime <= 0 || compactFrequency <= 0) {
+                        validCompact = false;
+                    }
+
+                    if (!validCompact) {
+                        System.out.println(
+                                "slow_import and frequency values must be positive integers, compact disabled");
+                        if (cfgSync.getCompactEnabled()) {
+                            cfgSync.setCompactEnabled(false);
+                            overwrite = true;
+                        }
+                    } else {
                         cfgSync.setCompactEnabled(true);
                         cfgSync.setSlowImportTime(slowImportTime);
                         cfgSync.setCompactFrequency(compactFrequency);
@@ -275,17 +278,6 @@ public class Cli {
                                         + slowImportTime
                                         + " frequency="
                                         + compactFrequency);
-                    } else {
-                        System.out.println(
-                                "Compact enabled using the current configuration: slow_import="
-                                        + cfgSync.getSlowImportTime()
-                                        + " frequency="
-                                        + cfgSync.getCompactFrequency());
-
-                        if (!cfgSync.getCompactEnabled()) {
-                            cfgSync.setCompactEnabled(true);
-                            overwrite = true;
-                        }
                     }
                 }
                 // no return, allow for other parameters combined with --compact

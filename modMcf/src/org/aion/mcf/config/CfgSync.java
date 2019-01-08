@@ -138,14 +138,14 @@ public final class CfgSync {
                     break;
                 case "slow-import":
                     val = Integer.parseInt(sr.getAttributeValue(i));
-                    if (val < 0) {
+                    if (val <= 0) {
                         throw new IllegalArgumentException("slow-import value must be positive");
                     }
                     this.slowImportTime = val;
                     break;
                 case "frequency":
                     val = Integer.parseInt(sr.getAttributeValue(i));
-                    if (val < 0) {
+                    if (val <= 0) {
                         throw new IllegalArgumentException("frequency value must be positive");
                     }
                     this.compactFrequency = val;
