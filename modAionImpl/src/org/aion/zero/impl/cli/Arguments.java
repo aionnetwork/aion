@@ -132,13 +132,13 @@ public class Arguments {
     private String port = null;
 
     @Option(
-            names = {"--compact"},
+            names = {"--force-compact"},
             arity = "1..2",
             paramLabel = "<enabled> <slow_import> <frequency>",
             description =
                     "enable/disable compact during sync when one boolean parameter is given, or "
                             + "enable when two values are provided for slow_import and frequency in milliseconds")
-    private String[] compact = null;
+    private String[] forceCompact = null;
 
     // offline database query and update
     @Option(
@@ -258,8 +258,8 @@ public class Arguments {
         return port;
     }
 
-    public String[] getCompact() {
-        return compact;
+    public String[] getForceCompact() {
+        return forceCompact;
     }
 
     public String getPruneStateOption() {

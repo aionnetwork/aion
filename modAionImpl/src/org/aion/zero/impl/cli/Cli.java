@@ -226,10 +226,10 @@ public class Cli {
             // determine the sync compact configuration, can be combined with the -n, -d, -c, -p, -i
             // arguments
 
-            if (options.getCompact() != null) {
+            if (options.getForceCompact() != null) {
 
                 CfgSync cfgSync = cfg.getSync();
-                String[] parameters = options.getCompact();
+                String[] parameters = options.getForceCompact();
 
                 if (parameters.length == 1) {
 
@@ -244,7 +244,7 @@ public class Cli {
                     }
                     System.out.println("Compact enabled is set to: " + compactEnabled);
 
-                } else if (options.getCompact().length == 2) {
+                } else if (options.getForceCompact().length == 2) {
 
                     int slowImportTime = cfgSync.getSlowImportTime();
                     int compactFrequency = cfgSync.getCompactFrequency();
@@ -577,7 +577,7 @@ public class Cli {
         usage = usage.replaceFirst(" \\[[^ ]*<hostname> <ip>.*]", "]");
         usage =
                 usage.replaceFirst(
-                        "(?<=<enabled> )([\\s\\S]*?)]+", "| <slow_import> <frequency>\u001B[0m");
+                        "<slow_import>([\\s\\S]*?)]+", "| <slow_import> <frequency>\u001B[0m");
         System.out.println(usage);
     }
 
@@ -966,8 +966,8 @@ public class Cli {
             if (options.getPort() != null) {
                 skippedTasks.add("--port");
             }
-            if (options.getCompact() != null) {
-                skippedTasks.add("--compact");
+            if (options.getForceCompact() != null) {
+                skippedTasks.add("--force-compact");
             }
             if (options.getConfig() != null) {
                 skippedTasks.add("--config");

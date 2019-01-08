@@ -919,15 +919,16 @@ public class CliTest {
     }
 
     /**
-     * Parameters for testing {@link #testCompact(String[], ReturnType, String, boolean, int, int)}.
+     * Parameters for testing {@link #testForceCompact(String[], ReturnType, String, boolean, int,
+     * int)}.
      */
     @SuppressWarnings("unused")
-    private Object parametersWithCompact() {
+    private Object parametersWithForceCompact() {
         List<Object> parameters = new ArrayList<>();
 
         String expectedPath = MAIN_BASE_PATH.getAbsolutePath();
         String expPathOnError = MAIN_BASE_PATH.getAbsolutePath();
-        String opCompact = "--compact";
+        String opCompact = "--force-compact";
 
         // Compact alone
         // without parameter
@@ -1281,8 +1282,8 @@ public class CliTest {
     }
 
     @Test
-    @Parameters(method = "parametersWithCompact")
-    public void testCompact(
+    @Parameters(method = "parametersWithForceCompact")
+    public void testForceCompact(
             String[] input,
             ReturnType expectedReturn,
             String expectedPath,
@@ -1376,10 +1377,15 @@ public class CliTest {
         for (String op : options) {
             // test port number as parameter
             parameters.add(
-                    new Object[] {new String[] {op, "--compact", "invalid"}, EXIT, expOnError});
-            parameters.add(new Object[] {new String[] {op, "--compact", "true"}, EXIT, expected});
+                    new Object[] {
+                        new String[] {op, "--force-compact", "invalid"}, EXIT, expOnError
+                    });
             parameters.add(
-                    new Object[] {new String[] {op, "--compact", "123", "456"}, EXIT, expected});
+                    new Object[] {new String[] {op, "--force-compact", "true"}, EXIT, expected});
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "--force-compact", "123", "456"}, EXIT, expected
+                    });
         }
 
         // with port and directory
@@ -1915,9 +1921,9 @@ public class CliTest {
         skippedTasks.add("--port");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
-        input = new String[] {"--help", "--compact", "true"};
+        input = new String[] {"--help", "--force-compact", "true"};
         skippedTasks = new HashSet<>();
-        skippedTasks.add("--compact");
+        skippedTasks.add("--force-compact");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
         input = new String[] {"--help", "--network", "mainnet", "--datadir", dataDirectory};
@@ -1936,10 +1942,10 @@ public class CliTest {
         skippedTasks = new HashSet<>();
         parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
 
-        input = new String[] {"--version", "--port", TEST_PORT, "--compact", "123", "456"};
+        input = new String[] {"--version", "--port", TEST_PORT, "--force-compact", "123", "456"};
         skippedTasks = new HashSet<>();
         skippedTasks.add("--port");
-        skippedTasks.add("--compact");
+        skippedTasks.add("--force-compact");
         parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
 
         input = new String[] {"--dump-blocks", "5", "--dump-state", "5", "--dump-state-size", "5"};
