@@ -1,19 +1,25 @@
 {
   "alloc": {
-    "0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a": {
-      "balance": "465934586660000000000000000"
+    "0xa0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5": {
+      "balance": "314000000000000000000000000"
+    },
+    "0xa027e3441b6283222e3ce56d4c08b95f9cc2146dfe43ca697833ebdf413cd24a": {
+      "balance": "314000000000000000000000000"
+    },
+    "0xa0a49f0298ca87ad01e9256cca8d620d74a253f201a5b5760ba7e626779fd258": {
+      "balance": "314000000000000000000000000"
     }
   },
-  "networkBalanceAlloc": {
+  "networkBalanceAllocs": {
     "0": {
       "balance": "465934586660000000000000000"
     }
   },
   "energyLimit": "15000000",
   "nonce": "0x00",
-  "difficulty": "0x4000",
-  "coinbase": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "timestamp": "1524528000",
-  "parentHash": "0x6a6d99a2ef14ab3b835dfc92fb918d76c37f6578a69825fbe19cd366485604b1",
+  "difficulty": "0x0008",
+  "coinbase": "0xa0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5",
+  "timestamp": "1525924800",
+  "parentHash": "0x10E71BF64DCB8C60766CCB491AB6E3ACEC1AB07D0D5A088FCF533CBFBC801295",
   "chainId": "31"
 }
