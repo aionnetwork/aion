@@ -248,7 +248,7 @@ public class CliTest {
         // network alone with avmtestnet
         expected = AVM_TEST_BASE_PATH.getAbsolutePath();
         for (String op : net_options) {
-            //avmtestnet as parameter
+            // avmtestnet as parameter
             parameters.add(new Object[] {new String[] {op, "avmtestnet"}, RUN, expected});
         }
 
@@ -409,7 +409,8 @@ public class CliTest {
 
         for (String op : options) {
             // avmtestnet as parameter
-            parameters.add(new Object[] {new String[] {op, "avmtestnet"}, avmtestnetConfig, expected});
+            parameters.add(
+                    new Object[] {new String[] {op, "avmtestnet"}, avmtestnetConfig, expected});
         }
 
         // config and directory

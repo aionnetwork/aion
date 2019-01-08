@@ -7,7 +7,6 @@ import org.aion.base.vm.VirtualMachineSpecs;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.valid.TxNrgRule;
-import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.KernelInterface;
 
@@ -177,8 +176,8 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     /**
      * This method is to assure us of the consistency that the Fvm used to put DataWord's into the
-     * storage and its leading zero bytes were truncated, and precompiled contracts were able to
-     * put DoubleDataWords into it.
+     * storage and its leading zero bytes were truncated, and precompiled contracts were able to put
+     * DoubleDataWords into it.
      */
     private ByteArrayWrapper wrapKey(byte[] bytes) {
         return new ByteArrayWrapper(bytes);
@@ -186,8 +185,8 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     /**
      * This method is to assure us of the consistency that the Fvm used to put DataWord's into the
-     * storage and its leading zero bytes were truncated, and precompiled contracts were able to
-     * put DoubleDataWords into it.
+     * storage and its leading zero bytes were truncated, and precompiled contracts were able to put
+     * DoubleDataWords into it.
      */
     private ByteArrayWrapper wrapValue(byte[] bytes) {
         if (bytes.length == DoubleDataWord.BYTES) {
@@ -198,9 +197,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         }
     }
 
-    /**
-     * The complement of the above method for Fvm and precompiled consistency.
-     */
+    /** The complement of the above method for Fvm and precompiled consistency. */
     private byte[] unwrapValue(ByteArrayWrapper wrapper) {
         byte[] bytes = wrapper.toBytes();
         if (bytes.length <= DataWord.BYTES) {
@@ -209,5 +206,4 @@ public class KernelInterfaceForFastVM implements KernelInterface {
             return bytes;
         }
     }
-
 }
