@@ -52,7 +52,6 @@ public final class CfgSync {
     private static final int SLOW_IMPORT_TIME = 1_000; // 1 sec
     private static final int COMPACT_FREQUENCY = 600_000; // 10 min
 
-
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
         this.showStatus = false;

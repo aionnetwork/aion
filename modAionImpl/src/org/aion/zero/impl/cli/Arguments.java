@@ -137,7 +137,7 @@ public class Arguments {
             paramLabel = "<enabled> <slow_import> <frequency>",
             description =
                     "enable/disable compact during sync when one boolean parameter is given, or "
-                        + "enable when two values are provided for slow_import and frequency")
+                            + "enable when two values are provided for slow_import and frequency in milliseconds")
     private String[] compact = null;
 
     // offline database query and update

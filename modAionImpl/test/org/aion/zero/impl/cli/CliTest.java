@@ -981,18 +981,18 @@ public class CliTest {
         parameters.add(
                 new Object[] {
                     new String[] {opCompact, "a", "b"},
-                    RUN,
+                    ERROR,
                     expectedPath,
-                    true,
+                    false,
                     SLOW_IMPORT_TIME,
                     COMPACT_FREQUENCY
                 });
         parameters.add(
                 new Object[] {
                     new String[] {opCompact, "-1000", "3.14"},
-                    RUN,
+                    ERROR,
                     expectedPath,
-                    true,
+                    false,
                     SLOW_IMPORT_TIME,
                     COMPACT_FREQUENCY
                 });
@@ -1057,9 +1057,9 @@ public class CliTest {
             parameters.add(
                     new Object[] {
                         new String[] {"-n", valNet, opCompact, "invalid", "123"},
-                        RUN,
+                        ERROR,
                         expectedPath,
-                        true,
+                        false,
                         SLOW_IMPORT_TIME,
                         COMPACT_FREQUENCY
                     });
@@ -1146,9 +1146,9 @@ public class CliTest {
             parameters.add(
                     new Object[] {
                         new String[] {opCompact, "-123", "1.234", "-d", valDir},
-                        RUN,
+                        ERROR,
                         expectedPath,
-                        true,
+                        false,
                         SLOW_IMPORT_TIME,
                         COMPACT_FREQUENCY
                     });

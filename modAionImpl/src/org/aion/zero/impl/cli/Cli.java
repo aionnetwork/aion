@@ -235,7 +235,7 @@ public class Cli {
 
                     if (!parameters[0].equalsIgnoreCase("true")
                             && !parameters[0].equalsIgnoreCase("false")) {
-                        System.out.println("enabled value must be boolean");
+                        System.out.println("enabled value must be true or false");
                     }
                     boolean compactEnabled = Boolean.parseBoolean(parameters[0]);
                     if (compactEnabled != cfgSync.getCompactEnabled()) {
@@ -575,8 +575,9 @@ public class Cli {
         // the command line output has some styling characters in addition to the actual string
         // making the use of a regular expression necessary here
         usage = usage.replaceFirst(" \\[[^ ]*<hostname> <ip>.*]", "]");
-        usage = usage.replaceFirst("(?<=<enabled> )([\\s\\S]*?)]+", "| <slow_import> <frequency>");
-
+        usage =
+                usage.replaceFirst(
+                        "(?<=<enabled> )([\\s\\S]*?)]+", "| <slow_import> <frequency>\u001B[0m");
         System.out.println(usage);
     }
 
