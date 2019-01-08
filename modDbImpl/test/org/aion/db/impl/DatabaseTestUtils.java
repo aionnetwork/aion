@@ -27,9 +27,7 @@ import static org.aion.db.impl.DatabaseFactory.Props;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-
 import java.io.File;
-import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,9 +39,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import org.aion.db.utils.MongoTestRunner;
 import org.aion.db.impl.leveldb.LevelDBConstants;
+import org.aion.db.utils.MongoTestRunner;
 
 public class DatabaseTestUtils {
 
@@ -51,8 +48,9 @@ public class DatabaseTestUtils {
     static final File testDir = new File(System.getProperty("user.dir"), "tmp");
     private static final String dbPath = testDir.getAbsolutePath();
     private static final Set<String> sizeHeapCache = Set.of("0", "256");
+    // TODO: [Task AJK-169] re-enable MongoDB tests by adding DBVendor.MONGODB
     private static final Set<DBVendor> vendors =
-            Set.of(DBVendor.MOCKDB, DBVendor.H2, DBVendor.LEVELDB, DBVendor.ROCKSDB, DBVendor.MONGODB);
+            Set.of(DBVendor.MOCKDB, DBVendor.H2, DBVendor.LEVELDB, DBVendor.ROCKSDB);
     private static final String enabled = String.valueOf(Boolean.TRUE);
     private static final String disabled = String.valueOf(Boolean.FALSE);
     private static final Set<String> options = Set.of(enabled, disabled);
@@ -142,7 +140,7 @@ public class DatabaseTestUtils {
             DBVendor vendor, Properties sharedProps, List<Object> parameters) {
 
         if (vendor == DBVendor.MONGODB) {
-            sharedProps = (Properties)sharedProps.clone();
+            sharedProps = (Properties) sharedProps.clone();
             sharedProps.setProperty(Props.DB_PATH, MongoTestRunner.inst().getConnectionString());
         }
 
@@ -225,13 +223,14 @@ public class DatabaseTestUtils {
 
     /**
      * Helper method to find an unused port of the local machine
+     *
      * @return An unused port
      */
     public static int findOpenPort() {
-        try (ServerSocket socket = new ServerSocket(0);) {
+        try (ServerSocket socket = new ServerSocket(0); ) {
             return socket.getLocalPort();
         } catch (Exception ex) {
-            fail("Exception thrown finding open port: " + ex  .getMessage());
+            fail("Exception thrown finding open port: " + ex.getMessage());
         }
 
         return -1;

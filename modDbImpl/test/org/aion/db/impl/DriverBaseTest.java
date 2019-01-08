@@ -53,9 +53,7 @@ import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.impl.mockdb.PersistentMockDB;
-import org.aion.db.impl.mongodb.MongoDB;
 import org.aion.db.utils.FileUtils;
-import org.aion.db.utils.MongoTestRunner;
 import org.aion.log.AionLoggerFactory;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -299,33 +297,53 @@ public class DriverBaseTest {
                         MockDB.class.getDeclaredConstructor(String.class),
                         new Object[] {dbNamePrefix}
                     },
-                    // Mongo
-                    { 
-                        "MongoDB",
-                        new boolean[] { false, false, false },
-                        MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
-                    { 
-                        "MongoDB+lock",
-                        new boolean[] { true, false, false },
-                        MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
-                    { 
-                        "MongoDB+heapCache",
-                        new boolean[] { false, true, false },
-                        MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
-                    { 
-                        "MongoDB+heapCache+lock",
-                        new boolean[] { true, true, false },
-                        MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
-                    { 
-                        "MongoDB+heapCache+autocommit",
-                        new boolean[] { false, true, true },
-                        MongoDB.class.getDeclaredConstructor(String.class, String.class),
-                        new Object[] { dbNamePrefix + DatabaseTestUtils.getNext(), MongoTestRunner.inst().getConnectionString()} },
-                    });
+                    // TODO: [Task AJK-169] re-enable MongoDB tests
+                    // {
+                    //     "MongoDB",
+                    //     new boolean[] {false, false, false},
+                    //     MongoDB.class.getDeclaredConstructor(String.class, String.class),
+                    //     new Object[] {
+                    //         dbNamePrefix + DatabaseTestUtils.getNext(),
+                    //         MongoTestRunner.inst().getConnectionString()
+                    //     }
+                    // },
+                    // {
+                    //     "MongoDB+lock",
+                    //     new boolean[] {true, false, false},
+                    //     MongoDB.class.getDeclaredConstructor(String.class, String.class),
+                    //     new Object[] {
+                    //         dbNamePrefix + DatabaseTestUtils.getNext(),
+                    //         MongoTestRunner.inst().getConnectionString()
+                    //     }
+                    // },
+                    // {
+                    //     "MongoDB+heapCache",
+                    //     new boolean[] {false, true, false},
+                    //     MongoDB.class.getDeclaredConstructor(String.class, String.class),
+                    //     new Object[] {
+                    //         dbNamePrefix + DatabaseTestUtils.getNext(),
+                    //         MongoTestRunner.inst().getConnectionString()
+                    //     }
+                    // },
+                    // {
+                    //     "MongoDB+heapCache+lock",
+                    //     new boolean[] {true, true, false},
+                    //     MongoDB.class.getDeclaredConstructor(String.class, String.class),
+                    //     new Object[] {
+                    //         dbNamePrefix + DatabaseTestUtils.getNext(),
+                    //         MongoTestRunner.inst().getConnectionString()
+                    //     }
+                    // },
+                    // {
+                    //     "MongoDB+heapCache+autocommit",
+                    //     new boolean[] {false, true, true},
+                    //     MongoDB.class.getDeclaredConstructor(String.class, String.class),
+                    //     new Object[] {
+                    //         dbNamePrefix + DatabaseTestUtils.getNext(),
+                    //         MongoTestRunner.inst().getConnectionString()
+                    //     }
+                    // },
+                });
     }
 
     private IByteArrayKeyValueDatabase db;
@@ -459,7 +477,8 @@ public class DriverBaseTest {
     public void testOpenSecondInstance()
             throws InstantiationException, IllegalAccessException, IllegalArgumentException,
                     InvocationTargetException {
-        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED && !(db instanceof PersistentMockDB)) {
+        if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED
+                && !(db instanceof PersistentMockDB)) {
             // another connection to same DB should fail on open for all persistent KVDBs
             IByteArrayKeyValueDatabase otherDatabase = this.constructor.newInstance(this.args);
             assertThat(otherDatabase.open()).isFalse();
