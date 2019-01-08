@@ -82,13 +82,13 @@ public class AionRepositoryImpl
     private static class AionRepositoryImplHolder {
         // configuration
         private static CfgAion config = CfgAion.inst();
+
         // repository singleton instance
         private static final AionRepositoryImpl inst =
-                new AionRepositoryImpl(
-                        new RepositoryConfig(
-                                config.getDatabasePath(),
-                                ContractDetailsAion.getInstance(),
-                                config.getDb()));
+                new AionRepositoryImpl(new RepositoryConfig(
+                    config.getDatabasePath(),
+                    ContractDetailsAion.getInstance(),
+                    config.getDb()));
     }
 
     public static AionRepositoryImpl inst() {

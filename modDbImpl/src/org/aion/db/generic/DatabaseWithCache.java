@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.aion.log.AionLoggerFactory;
@@ -291,8 +292,8 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isPersistent() {
-        return database.isPersistent();
+    public PersistenceMethod getPersistenceMethod() {
+        return database.getPersistenceMethod();
     }
 
     @Override
@@ -505,10 +506,11 @@ public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
 
     @Override
     public void drop() {
-        check();
+        if (this.isOpen()) {
+            this.loadingCache.invalidateAll();
+            this.dirtyEntries.clear();
+        }
 
-        this.loadingCache.invalidateAll();
-        this.dirtyEntries.clear();
         this.database.drop();
     }
 

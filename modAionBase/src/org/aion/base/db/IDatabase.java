@@ -146,12 +146,13 @@ public interface IDatabase {
     boolean isAutoCommitEnabled();
 
     /**
-     * Indicates if database persists to disk. Returns a value, regardless of database is opened
-     * (persistence vs in-memory for DB shall be configured upon instantiation of IDatabase)
+     * Indicates the method of persistence this database uses. Whether it's written
+     * to disk, only held in memory, or stored inside a database engine's proprietary
+     * format.
      *
-     * @return {@code true} if data is persistent, {@code false} otherwise
+     * @return The method of persistence this database uses.
      */
-    boolean isPersistent();
+    PersistenceMethod getPersistenceMethod();
 
     /**
      * Used to validate if the DB file(s) has been created on disk. Can be used any time during this

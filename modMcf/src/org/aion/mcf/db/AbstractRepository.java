@@ -144,13 +144,12 @@ public abstract class AbstractRepository<
         //         * TODO: this is hack There should be some information on the
         //         * persistence of the DB so that we do not have to manually check.
         //         * Currently this information exists within
-        //         * {@link DBVendor#getPersistence()}, but is not utilized.
+        //         * {@link DBVendor#getPersistenceMethod()}, but is not utilized.
         //         */
         //        if (this.cfg.getActiveVendor().equals(DBVendor.MOCKDB.toValue())) {
         //            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist");
         //        } else {
 
-        // if persistence is required
         if (Boolean.valueOf(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.PERSISTENT))) {
             // verify user-provided path
             File f = new File(this.cfg.getDbPath());

@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
@@ -168,9 +169,9 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isPersistent() {
+    public PersistenceMethod getPersistenceMethod() {
         // no locks because the persistence flag never changes
-        return database.isPersistent();
+        return database.getPersistenceMethod();
     }
 
     @Override

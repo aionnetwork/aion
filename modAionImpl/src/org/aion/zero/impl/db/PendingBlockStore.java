@@ -129,7 +129,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
         // check for database persistence requirements
         DBVendor vendor = DBVendor.fromString(local.getProperty(Props.DB_TYPE));
-        if (vendor.getPersistence()) {
+        if (vendor.isFileBased()) {
             File pbFolder =
                     new File(local.getProperty(Props.DB_PATH), local.getProperty(Props.DB_NAME));
 

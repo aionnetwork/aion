@@ -33,6 +33,7 @@ import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.leveldb.LevelDBConstants;
 import org.aion.db.impl.mockdb.MockDB;
+import org.aion.db.impl.mongodb.MongoDB;
 import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
@@ -213,6 +214,10 @@ public abstract class DatabaseFactory {
             case H2:
                 {
                     return new H2MVMap(dbName, dbPath, enableDbCache, enableDbCompression);
+                }
+            case MONGODB:
+                {
+                    return new MongoDB(dbName, dbPath);
                 }
             default:
                 break;

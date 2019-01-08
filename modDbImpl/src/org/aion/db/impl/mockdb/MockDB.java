@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 
@@ -80,8 +81,9 @@ public class MockDB extends AbstractDB {
     }
 
     @Override
-    public boolean isPersistent() {
-        return false;
+    public PersistenceMethod getPersistenceMethod() {
+        // MockDB doesn't persist anything to disk, so it's type is IN_MEMORY
+        return PersistenceMethod.IN_MEMORY;
     }
 
     @Override

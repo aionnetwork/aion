@@ -26,7 +26,7 @@ if [ ! -d "$JDK_PATH" ]; then
 fi
 
 module_path=$JDK_PATH/jmods 
-add_modules="java.base,java.xml,java.logging,java.management,jdk.unsupported,jdk.sctp"
+add_modules="java.base,java.xml,java.logging,java.management,jdk.unsupported,jdk.sctp,java.security.sasl"
 # generate aion runtime
 if [ "$useGui" = "true" ]; then
     module_path="$module_path:$JAVAFX_PATH"
