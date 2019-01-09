@@ -33,6 +33,7 @@ import org.aion.db.impl.AbstractDB;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.CompressionType;
 import org.rocksdb.Options;
+import org.rocksdb.ReadOptions;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
@@ -224,7 +225,9 @@ public class RocksDBWrapper extends AbstractDB {
         check();
 
         try {
-            return new RocksDBIteratorWrapper(db.newIterator());
+            ReadOptions readOptions = new ReadOptions();
+            readOptions.setSnapshot(db.getSnapshot());
+            return new RocksDBIteratorWrapper(readOptions, db.newIterator(readOptions));
         } catch (Exception e) {
             LOG.error("Unable to extract keys from database " + this.toString() + ".", e);
         }
@@ -240,9 +243,11 @@ public class RocksDBWrapper extends AbstractDB {
      */
     public static class RocksDBIteratorWrapper implements Iterator<byte[]> {
         private final RocksIterator iterator;
+        private final ReadOptions readOptions;
         private boolean closed;
 
-        public RocksDBIteratorWrapper(RocksIterator iterator) {
+        public RocksDBIteratorWrapper(ReadOptions readOptions, RocksIterator iterator) {
+            this.readOptions = readOptions;
             this.iterator = iterator;
             iterator.seekToFirst();
             closed = false;
@@ -256,6 +261,7 @@ public class RocksDBWrapper extends AbstractDB {
                 // close iterator after last entry
                 if (!isValid) {
                     iterator.close();
+                    readOptions.close();
                     closed = true;
                 }
 
