@@ -7,20 +7,25 @@ import java.util.Map;
 import org.aion.base.util.ByteArrayWrapper;
 
 /**
- * A wrapper for the iterator needed by {@link DatabaseWithCache} conforming to the {@link
- * Iterator<byte[]>} interface.
+ * A wrapper for the iterator needed by {@link DatabaseWithCache} conforming to the {@link Iterator}
+ * interface.
  *
  * @implNote Assumes that the given database iterator does not return duplicate values.
  * @author Alexandra Roatis
  */
 public class CacheIteratorWrapper implements Iterator<byte[]> {
-    Iterator<byte[]> itr;
-    byte[] next;
-    List<ByteArrayWrapper> additions;
-    List<ByteArrayWrapper> removals;
+    private final Iterator<byte[]> iterator;
+    private byte[] next;
+    private final List<ByteArrayWrapper> additions;
+    private final List<ByteArrayWrapper> removals;
 
-    public CacheIteratorWrapper(Iterator<byte[]> itr, Map<ByteArrayWrapper, byte[]> dirtyEntries) {
-        this.itr = itr;
+    /**
+     * @implNote Building two wrappers for the same {@link Iterator} will lead to inconsistent
+     *     behavior.
+     */
+    public CacheIteratorWrapper(
+            final Iterator<byte[]> iterator, Map<ByteArrayWrapper, byte[]> dirtyEntries) {
+        this.iterator = iterator;
         additions = new ArrayList<>();
         removals = new ArrayList<>();
 
@@ -38,8 +43,8 @@ public class CacheIteratorWrapper implements Iterator<byte[]> {
         boolean seek = true;
         ByteArrayWrapper wrapper;
         // check in the database iterator
-        while (seek && itr.hasNext()) {
-            next = itr.next();
+        while (seek && iterator.hasNext()) {
+            next = iterator.next();
             wrapper = ByteArrayWrapper.wrap(next);
             if (removals.contains(wrapper)) {
                 // key deleted, move to next in iterator

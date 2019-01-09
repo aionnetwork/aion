@@ -44,8 +44,8 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 
 public class XorDataSource implements IByteArrayKeyValueStore {
-    IByteArrayKeyValueStore source;
-    byte[] subKey;
+    private final IByteArrayKeyValueStore source;
+    private final byte[] subKey;
 
     public XorDataSource(IByteArrayKeyValueStore source, byte[] subKey) {
         this.source = source;
@@ -77,15 +77,19 @@ public class XorDataSource implements IByteArrayKeyValueStore {
     }
 
     /**
-     * A wrapper for the iterator needed by {@link XorDataSource} conforming to the {@link
-     * Iterator<byte[]>} interface.
+     * A wrapper for the iterator needed by {@link XorDataSource} conforming to the {@link Iterator}
+     * interface.
      *
      * @author Alexandra Roatis
      */
-    public class XorDSIteratorWrapper implements Iterator<byte[]> {
-        Iterator<byte[]> sourceIterator;
+    private class XorDSIteratorWrapper implements Iterator<byte[]> {
+        final Iterator<byte[]> sourceIterator;
 
-        public XorDSIteratorWrapper(Iterator<byte[]> sourceIterator) {
+        /**
+         * @implNote Building two wrappers for the same {@link Iterator} will lead to inconsistent
+         *     behavior.
+         */
+        XorDSIteratorWrapper(final Iterator<byte[]> sourceIterator) {
             this.sourceIterator = sourceIterator;
         }
 

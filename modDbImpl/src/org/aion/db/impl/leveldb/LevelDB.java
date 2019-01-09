@@ -37,7 +37,7 @@ package org.aion.db.impl.leveldb;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import org.aion.base.util.ByteArrayWrapper;
@@ -298,20 +298,24 @@ public class LevelDB extends AbstractDB {
         }
 
         // empty when retrieval failed
-        return new HashSet<byte[]>().iterator();
+        return Collections.emptyIterator();
     }
 
     /**
-     * A wrapper for the {@link DBIterator} conforming to the {@link Iterator<byte[]>} interface.
+     * A wrapper for the {@link DBIterator} conforming to the {@link Iterator} interface.
      *
      * @author Alexandra Roatis
      */
-    public static class LevelDBIteratorWrapper implements Iterator<byte[]> {
+    private static class LevelDBIteratorWrapper implements Iterator<byte[]> {
         private final DBIterator iterator;
         private final ReadOptions readOptions;
         private boolean closed;
 
-        public LevelDBIteratorWrapper(ReadOptions readOptions, DBIterator iterator) {
+        /**
+         * @implNote Building two wrappers for the same {@link DBIterator} will lead to inconsistent
+         *     behavior.
+         */
+        LevelDBIteratorWrapper(final ReadOptions readOptions, final DBIterator iterator) {
             this.readOptions = readOptions;
             this.iterator = iterator;
             iterator.seekToFirst();
@@ -410,7 +414,7 @@ public class LevelDB extends AbstractDB {
         }
     }
 
-    WriteBatch batch = null;
+    private WriteBatch batch = null;
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {
