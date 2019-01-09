@@ -240,7 +240,15 @@ public class H2MVMap extends AbstractDB {
     public Iterator<byte[]> keys() {
         check();
 
-        return map.keySet().iterator();
+        // get current version
+        long version = store.getCurrentVersion();
+        // making the version read-only
+        store.commit();
+
+        // get snapshot of version
+        MVMap<byte[], byte[]> snapshot = map.openVersion(version);
+
+        return snapshot.keySet().iterator();
     }
 
     @Override
