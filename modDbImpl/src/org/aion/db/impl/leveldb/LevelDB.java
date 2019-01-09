@@ -48,6 +48,7 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
+import org.iq80.leveldb.ReadOptions;
 import org.iq80.leveldb.WriteBatch;
 
 /**
@@ -289,7 +290,9 @@ public class LevelDB extends AbstractDB {
         check();
 
         try {
-            return new LevelDBIteratorWrapper(db.iterator());
+            ReadOptions readOptions = new ReadOptions();
+            readOptions.snapshot(db.getSnapshot());
+            return new LevelDBIteratorWrapper(readOptions, db.iterator(readOptions));
         } catch (Exception e) {
             LOG.error("Unable to extract keys from database " + this.toString() + ".", e);
         }
@@ -305,9 +308,11 @@ public class LevelDB extends AbstractDB {
      */
     public static class LevelDBIteratorWrapper implements Iterator<byte[]> {
         private final DBIterator iterator;
+        private final ReadOptions readOptions;
         private boolean closed;
 
-        public LevelDBIteratorWrapper(DBIterator iterator) {
+        public LevelDBIteratorWrapper(ReadOptions readOptions, DBIterator iterator) {
+            this.readOptions = readOptions;
             this.iterator = iterator;
             iterator.seekToFirst();
             closed = false;
@@ -322,6 +327,7 @@ public class LevelDB extends AbstractDB {
                 if (!hasNext) {
                     try {
                         iterator.close();
+                        readOptions.snapshot().close();
                     } catch (IOException e) {
                         LOG.error("Unable to close iterator object.", e);
                     }
