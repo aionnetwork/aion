@@ -15,9 +15,7 @@ def javaHome = System.getProperty('java.home')
 def vmVersion = "0.3.2"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
-
 allprojects { 
-
     apply plugin: 'java'
     apply plugin: 'idea'
 
@@ -33,14 +31,10 @@ allprojects {
     }
 }
 
-// used only for 3rd_build
-ant.importBuild('build.xml') { antTargetName -> 'ant-' + antTargetName }
-
 task compileNative(type:Exec) {
     // seems kinda hacky, but need big reorganization to fix
     dependsOn 'modCrypto:compileNative'
     dependsOn 'modAionImpl:compileJava'
-
 
     doFirst {
         mkdir "${dirBuildFile}"
@@ -53,7 +47,6 @@ task compileNative(type:Exec) {
             fileset(dir: "./modAionImpl/build/native")
         }
     }
-
 
     commandLine "g++", 
         "-fPIC", 
@@ -80,6 +73,16 @@ task compileNative(type:Exec) {
     def stdout = new ByteArrayOutputStream()
     ext.output = {
         return stdout.toString()
+    }
+}
+
+// define a subproject for libnzmq
+project(':3rdParty/libnzmq') {
+    ext.moduleName = 'libnzmq';
+    sourceSets { 
+        main {
+            java.srcDirs = ['src']
+        }
     }
 }
 
@@ -120,10 +123,11 @@ subprojects {
     }
 
     afterEvaluate {
+        if(hasProperty('moduleName')) { 
+            ant.echo('moduleName: ' + moduleName);
+        }
 
-ant.echo('moduleName: ' + moduleName);
-
-        if (moduleName.equals("aion.gui")) { 
+        if (hasProperty('moduleName') && moduleName.equals("aion.gui")) { 
         // Override java plug-in behaviour to make JDK9+ module logic work
         // From: https://guides.gradle.org/building-java-9-modules/#step_2_produce_java_9_modules_for_all_subprojects
         compileJava {
@@ -154,7 +158,7 @@ ant.echo('moduleName: ' + moduleName);
         }
   */      
         // Need to comment this out for now, modules-info.java doesn't have 'require' declarations
-        // used by the test code.  The ant build.xml, similarly, uses module-path for build, but 
+        // used by the test code.  The ant build.xml, similarly, used module-path for build, but 
         // classpath for building the tests (at least in modRlp).  Need to sort out how to properly set the module-path
         // for the tests before using the stuff below.
         /*
@@ -244,7 +248,6 @@ task collectDependentJars(type: Copy) {
 }
 
 build { 
-    dependsOn("ant-3rd_build")
     dependsOn("extractVmDepsGit")
     dependsOn("collectDependentJars")
 }
@@ -315,7 +318,6 @@ task packDevDocker(type: Exec) {
 }
 
 clean { 
-    dependsOn "ant-3rd_clean"
     dependsOn ':aion_api:clean' 
     dependsOn 'cleanJars'
     delete dirPack

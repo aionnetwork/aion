@@ -27,4 +27,4 @@ if (hasProperty('modGuiPath') && !modGuiPath.empty) {
     gradle.ext.useGui = false;
 }
 
-
+include '3rdParty/libnzmq'
