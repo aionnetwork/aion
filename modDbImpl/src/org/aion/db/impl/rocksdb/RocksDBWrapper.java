@@ -25,7 +25,7 @@ package org.aion.db.impl.rocksdb;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import org.aion.base.util.ByteArrayWrapper;
@@ -233,20 +233,24 @@ public class RocksDBWrapper extends AbstractDB {
         }
 
         // empty when retrieval failed
-        return new HashSet<byte[]>().iterator();
+        return Collections.emptyIterator();
     }
 
     /**
-     * A wrapper for the {@link RocksIterator} conforming to the {@link Iterator<byte[]>} interface.
+     * A wrapper for the {@link RocksIterator} conforming to the {@link Iterator} interface.
      *
      * @author Alexandra Roatis
      */
-    public static class RocksDBIteratorWrapper implements Iterator<byte[]> {
+    private static class RocksDBIteratorWrapper implements Iterator<byte[]> {
         private final RocksIterator iterator;
         private final ReadOptions readOptions;
         private boolean closed;
 
-        public RocksDBIteratorWrapper(ReadOptions readOptions, RocksIterator iterator) {
+        /**
+         * @implNote Building two wrappers for the same {@link RocksIterator} will lead to
+         *     inconsistent behavior.
+         */
+        RocksDBIteratorWrapper(final ReadOptions readOptions, final RocksIterator iterator) {
             this.readOptions = readOptions;
             this.iterator = iterator;
             iterator.seekToFirst();
@@ -321,7 +325,7 @@ public class RocksDBWrapper extends AbstractDB {
         }
     }
 
-    WriteBatch batch = null;
+    private WriteBatch batch = null;
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {

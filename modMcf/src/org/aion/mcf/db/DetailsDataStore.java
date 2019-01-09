@@ -196,14 +196,18 @@ public class DetailsDataStore<
 
     /**
      * A wrapper for the iterator needed by {@link DetailsDataStore} conforming to the {@link
-     * Iterator<byte[]>} interface.
+     * Iterator} interface.
      *
      * @author Alexandra Roatis
      */
-    public class DetailsIteratorWrapper implements Iterator<ByteArrayWrapper> {
-        Iterator<byte[]> sourceIterator;
+    private class DetailsIteratorWrapper implements Iterator<ByteArrayWrapper> {
+        private Iterator<byte[]> sourceIterator;
 
-        public DetailsIteratorWrapper(Iterator<byte[]> sourceIterator) {
+        /**
+         * @implNote Building two wrappers for the same {@link Iterator} will lead to inconsistent
+         *     behavior.
+         */
+        DetailsIteratorWrapper(final Iterator<byte[]> sourceIterator) {
             this.sourceIterator = sourceIterator;
         }
 
