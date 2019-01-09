@@ -63,7 +63,9 @@ public interface IKeyValueStore<K, V> extends AutoCloseable {
     boolean isEmpty();
 
     /**
-     * Returns an {@link Iterator} over the set of keys stored in the database.
+     * Returns an {@link Iterator} over the set of keys stored in the database at the time when the
+     * keys were requested. A snapshot can be used to ensure that the entries do not change while
+     * iterating through the keys.
      *
      * @return an iterator over the set of stored keys
      * @throws RuntimeException if the data store is closed
