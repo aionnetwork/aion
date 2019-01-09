@@ -581,7 +581,7 @@ final class TaskImportBlocks implements Runnable {
                 log.info("Compacting state database due to slow IO time.");
             }
             t1 = System.currentTimeMillis();
-            this.chain.compactState();
+            //this.chain.compactState();
             t2 = System.currentTimeMillis();
             if (log.isInfoEnabled()) {
                 log.info("Compacting state completed in {} ms.", t2 - t1);
