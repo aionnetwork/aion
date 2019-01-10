@@ -172,7 +172,9 @@ public final class SyncMgr {
             final IEventMgr _evtMgr,
             final int _blocksQueueMax,
             final boolean _showStatus,
-            final Set<StatsType> showStatistics) {
+            final Set<StatsType> showStatistics,
+            final int _slowImportTime,
+            final int _compactFrequency) {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
@@ -205,7 +207,9 @@ public final class SyncMgr {
                                 downloadedBlocks,
                                 importedBlockHashes,
                                 peerStates,
-                                log),
+                                log,
+                                _slowImportTime,
+                                _compactFrequency),
                         "sync-ib");
         syncIb.start();
         syncGs = new Thread(new TaskGetStatus(start, p2pMgr, stats, log), "sync-gs");

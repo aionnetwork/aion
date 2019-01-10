@@ -131,6 +131,15 @@ public class Arguments {
             description = "execute kernel with selected port")
     private String port = null;
 
+    @Option(
+            names = {"--force-compact"},
+            arity = "1..2",
+            paramLabel = "<enabled> <slow_import> <frequency>",
+            description =
+                    "enable/disable compact during sync when one boolean parameter is given, or "
+                            + "enable when two values are provided for slow_import and frequency in milliseconds")
+    private String[] forceCompact = null;
+
     // offline database query and update
     @Option(
             names = {"ps", "--state"},
@@ -247,6 +256,10 @@ public class Arguments {
 
     public String getPort() {
         return port;
+    }
+
+    public String[] getForceCompact() {
+        return forceCompact;
     }
 
     public String getPruneStateOption() {

@@ -111,6 +111,8 @@ public class CliTest {
     private static final String TEST_PORT = "12345";
     private static final String INVALID_PORT = "123450";
 
+    private static final int SLOW_IMPORT_TIME = 1_000; // 1 sec
+    private static final int COMPACT_FREQUENCY = 600_000; // 10 min
     /** @implNote set this to true to enable printing */
     private static final boolean verbose = false;
 
@@ -612,7 +614,7 @@ public class CliTest {
         Cli.copyRecursively(config, mainnetConfig);
     }
 
-    /** Parameters for testing {@Link #testPort(String[], ReturnType, String, String)}. */
+    /** Parameters for testing {@link #testPort(String[], ReturnType, String, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithPort() {
         List<Object> parameters = new ArrayList<>();
@@ -847,12 +849,7 @@ public class CliTest {
             parameters.add(
                     new Object[] {
                         new String[] {
-                            "--datadir",
-                            path.getAbsolutePath(),
-                            "--config",
-                            "mainnet",
-                            opPort,
-                            TEST_PORT
+                            "--datadir", dataDirectory, "--config", "mainnet", opPort, TEST_PORT
                         },
                         EXIT,
                         expectedPath,
@@ -861,7 +858,7 @@ public class CliTest {
             parameters.add(
                     new Object[] {
                         new String[] {
-                            "-c", "mainnet", opPort, TEST_PORT, "--datadir", path.getAbsolutePath()
+                            "-c", "mainnet", opPort, TEST_PORT, "--datadir", dataDirectory
                         },
                         EXIT,
                         expectedPath,
@@ -919,6 +916,400 @@ public class CliTest {
         if (verbose) {
             printPaths(cfg);
         }
+    }
+
+    /**
+     * Parameters for testing {@link #testForceCompact(String[], ReturnType, String, boolean, int,
+     * int)}.
+     */
+    @SuppressWarnings("unused")
+    private Object parametersWithForceCompact() {
+        List<Object> parameters = new ArrayList<>();
+
+        String expectedPath = MAIN_BASE_PATH.getAbsolutePath();
+        String expPathOnError = MAIN_BASE_PATH.getAbsolutePath();
+        String opCompact = "--force-compact";
+
+        // Compact alone
+        // without parameter
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact},
+                    ERROR,
+                    expPathOnError,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        // with one parameter
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "123"},
+                    RUN,
+                    expPathOnError,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "invalid"},
+                    RUN,
+                    expPathOnError,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "TRUE"},
+                    RUN,
+                    expectedPath,
+                    true,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "false"},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        // with two parameters
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "a", "b"},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "-1000", "3.14"},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "123", "456"}, RUN, expectedPath, true, 123, 456
+                });
+        // with more than two parameters
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "true", "123", "456"},
+                    ERROR,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+
+        // compact with help and version
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "true", "-h"},
+                    EXIT,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "true", "-v"},
+                    EXIT,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+
+        // compact with network
+        String[] netValues = new String[] {"mainnet", "invalid"};
+        for (String valNet : netValues) {
+            // without compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "-n", valNet},
+                        ERROR,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            // with invalid compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", valNet, opCompact, "-123", "456"},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", valNet, opCompact, "invalid", "123"},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            // with valid compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            opCompact, "true", "-n", valNet,
+                        },
+                        RUN,
+                        expectedPath,
+                        true,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", valNet, opCompact, "123", "456"},
+                        RUN,
+                        expectedPath,
+                        true,
+                        123,
+                        456
+                    });
+        }
+        // compact with network testnet
+        netValues = new String[] {"mastery", "testnet"};
+        expectedPath = TEST_BASE_PATH.getAbsolutePath();
+        for (String valNet : netValues) {
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            opCompact, "true", "-n", valNet,
+                        },
+                        RUN,
+                        expectedPath,
+                        true,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", valNet, opCompact, "123", "456"},
+                        RUN,
+                        expectedPath,
+                        true,
+                        123,
+                        456
+                    });
+        }
+        // compact and directory
+        String[] dirValues = new String[] {dataDirectory, path.getAbsolutePath()};
+        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        for (String valDir : dirValues) {
+            // without compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "-d", valDir},
+                        ERROR,
+                        expPathOnError,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            // with invalid compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "invliad", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "123", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "-123", "1.234", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            // with valid compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "true", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        true,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "123", "456", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        true,
+                        123,
+                        456
+                    });
+        }
+
+        // compact and port
+        expectedPath = MAIN_BASE_PATH.getAbsolutePath();
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "invalid", "-p", TEST_PORT},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "-123", "456", "-p", TEST_PORT},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "true", "-p", TEST_PORT},
+                    RUN,
+                    expectedPath,
+                    true,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "123", "456", "-p", TEST_PORT},
+                    RUN,
+                    expectedPath,
+                    true,
+                    123,
+                    456
+                });
+
+        // compact with network, directory and port
+        netValues = new String[] {"mainnet", "mastery"};
+        for (String valNet : netValues) {
+            for (String valDir : dirValues) {
+                expectedPath = new File(path, valNet).getAbsolutePath();
+                parameters.add(
+                        new Object[] {
+                            new String[] {
+                                "-n", valNet, "-d", valDir, "-p", TEST_PORT, opCompact, "true"
+                            },
+                            RUN,
+                            expectedPath,
+                            true,
+                            SLOW_IMPORT_TIME,
+                            COMPACT_FREQUENCY
+                        });
+                parameters.add(
+                        new Object[] {
+                            new String[] {
+                                "-n", valNet, "-d", valDir, "-p", TEST_PORT, opCompact, "123", "456"
+                            },
+                            RUN,
+                            expectedPath,
+                            true,
+                            123,
+                            456
+                        });
+            }
+        }
+
+        // compact with config and directory
+        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        // with relative path
+        parameters.add(
+                new Object[] {
+                    new String[] {
+                        "-d", dataDirectory, "-c", "mainnet", "-p", TEST_PORT, opCompact, "true"
+                    },
+                    EXIT,
+                    expectedPath,
+                    true,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        // with absolute path
+        parameters.add(
+                new Object[] {
+                    new String[] {
+                        "-d",
+                        path.getAbsolutePath(),
+                        "-c",
+                        "mainnet",
+                        "-p",
+                        TEST_PORT,
+                        opCompact,
+                        "123",
+                        "456"
+                    },
+                    EXIT,
+                    expectedPath,
+                    true,
+                    123,
+                    456
+                });
+
+        return parameters.toArray();
+    }
+
+    @Test
+    @Parameters(method = "parametersWithForceCompact")
+    public void testForceCompact(
+            String[] input,
+            ReturnType expectedReturn,
+            String expectedPath,
+            boolean expectedCompactEnabled,
+            int expectedSlowImportTime,
+            int expectedCompactFrequency) {
+
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getExecConfigFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getExecGenesisFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+        assertThat(cfg.getExecForkFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
+        // check compact configurations in exec config are updated
+        assertThat(cfg.getSync().getCompactEnabled()).isEqualTo(expectedCompactEnabled);
+        assertThat(cfg.getSync().getSlowImportTime()).isEqualTo(expectedSlowImportTime);
+        assertThat(cfg.getSync().getCompactFrequency()).isEqualTo(expectedCompactFrequency);
+        // check compact configurations in initial config are unchanged
+        cfg.resetInternal();
+        cfg.fromXML();
+        assertThat(cfg.getSync().getCompactEnabled()).isEqualTo(false);
+        assertThat(cfg.getSync().getSlowImportTime()).isEqualTo(SLOW_IMPORT_TIME);
+        assertThat(cfg.getSync().getCompactFrequency()).isEqualTo(COMPACT_FREQUENCY);
     }
 
     /** Parameters for testing {@link #testInfo(String[], ReturnType, String)}. */
@@ -980,6 +1371,21 @@ public class CliTest {
             parameters.add(new Object[] {new String[] {"-p", TEST_PORT, op}, EXIT, expected});
             // invalid port parameter
             parameters.add(new Object[] {new String[] {op, "-p", INVALID_PORT}, EXIT, expOnError});
+        }
+
+        // with compact
+        for (String op : options) {
+            // test port number as parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "--force-compact", "invalid"}, EXIT, expOnError
+                    });
+            parameters.add(
+                    new Object[] {new String[] {op, "--force-compact", "true"}, EXIT, expected});
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "--force-compact", "123", "456"}, EXIT, expected
+                    });
         }
 
         // with port and directory
@@ -1515,6 +1921,11 @@ public class CliTest {
         skippedTasks.add("--port");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
+        input = new String[] {"--help", "--force-compact", "true"};
+        skippedTasks = new HashSet<>();
+        skippedTasks.add("--force-compact");
+        parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
+
         input = new String[] {"--help", "--network", "mainnet", "--datadir", dataDirectory};
         skippedTasks = new HashSet<>();
         skippedTasks.add("--network");
@@ -1531,9 +1942,10 @@ public class CliTest {
         skippedTasks = new HashSet<>();
         parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
 
-        input = new String[] {"--version", "--port", TEST_PORT};
+        input = new String[] {"--version", "--port", TEST_PORT, "--force-compact", "123", "456"};
         skippedTasks = new HashSet<>();
         skippedTasks.add("--port");
+        skippedTasks.add("--force-compact");
         parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
 
         input = new String[] {"--dump-blocks", "5", "--dump-state", "5", "--dump-state-size", "5"};
