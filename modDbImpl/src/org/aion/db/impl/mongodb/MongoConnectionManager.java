@@ -10,10 +10,10 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
- * This class exists to manage singleton instances to a MongoDB server. It is recommended by the Mongo
- * docs to only have a single instance of the {@link com.mongodb.MongoClient} opened at a time, so this
- * class keeps track of reference counting active instances and will close the connection once all instances
- * are done being used.
+ * This class exists to manage singleton instances to a MongoDB server. It is recommended by the
+ * Mongo docs to only have a single instance of the {@link com.mongodb.MongoClient} opened at a
+ * time, so this class keeps track of reference counting active instances and will close the
+ * connection once all instances are done being used.
  */
 public class MongoConnectionManager {
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -50,8 +50,10 @@ public class MongoConnectionManager {
     }
 
     public synchronized void closeMongoClientInstance(String mongoClientUri) {
-        if (!this.mongoUriToClientMap.containsKey(mongoClientUri) || !this.activeClientCountMap.containsKey(mongoClientUri)) {
-            throw new IllegalArgumentException(String.format("Unopened client uri %s", mongoClientUri));
+        if (!this.mongoUriToClientMap.containsKey(mongoClientUri)
+                || !this.activeClientCountMap.containsKey(mongoClientUri)) {
+            throw new IllegalArgumentException(
+                    String.format("Unopened client uri %s", mongoClientUri));
         }
 
         int newCount = this.activeClientCountMap.get(mongoClientUri).decrementAndGet();

@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.TRS;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -1312,8 +1289,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         byte[] input = getOpenFundsInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSstateContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -1321,8 +1297,7 @@ public class TRSstateContractTest extends TRShelpers {
         Address acct = getNewExistentAccount(BigInteger.TEN);
         byte[] input = getOpenFundsInput(acct);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSstateContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -1362,11 +1337,9 @@ public class TRSstateContractTest extends TRShelpers {
         assertEquals(
                 ResultCode.SUCCESS, newTRSstateContract(acct).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSstateContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSstateContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -1419,14 +1392,11 @@ public class TRSstateContractTest extends TRShelpers {
 
         // A subsequent withdraw operation should not withdraw anything now.
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct1).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct1).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct2).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct2).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct3).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct3).execute(input, COST).getResultCode());
         assertEquals(owings1, repo.getBalance(acct1));
         assertEquals(owings2, repo.getBalance(acct2));
         assertEquals(owings3, repo.getBalance(acct3));
@@ -1496,8 +1466,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         input = getLockInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSstateContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -1512,8 +1481,7 @@ public class TRSstateContractTest extends TRShelpers {
 
         input = getStartInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSstateContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSstateContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -1550,8 +1518,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to withdraw.
         input = getWithdrawInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
     }
 
@@ -1568,8 +1535,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to deposit.
         input = getDepositInput(contract, BigInteger.ONE);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
         assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, acct));
     }
@@ -1588,8 +1554,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to deposit.
         input = getDepositForInput(contract, other, BigInteger.ONE);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.TEN, repo.getBalance(acct));
         assertEquals(BigInteger.ZERO, getDepositBalance(trs, contract, other));
     }
@@ -1645,8 +1610,7 @@ public class TRSstateContractTest extends TRShelpers {
         // Now try to refund.
         input = getRefundInput(contract, other, BigInteger.ONE);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.ONE, getDepositBalance(trs, contract, other));
         assertEquals(BigInteger.ZERO, repo.getBalance(other));
     }
@@ -1666,8 +1630,7 @@ public class TRSstateContractTest extends TRShelpers {
         repo.addBalance(acct, extra);
         input = getAddExtraInput(contract, extra);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.ZERO, getExtraFunds(trs, contract));
     }
 

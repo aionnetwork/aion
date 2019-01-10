@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
@@ -275,7 +252,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     private static AionPendingStateImpl initializeAionPendingState(
-            CfgAion _cfgAion, AionRepositoryImpl _repository, AionBlockchainImpl _blockchain, boolean test) {
+            CfgAion _cfgAion,
+            AionRepositoryImpl _repository,
+            AionBlockchainImpl _blockchain,
+            boolean test) {
         AionPendingStateImpl ps = new AionPendingStateImpl(_cfgAion, _repository);
         ps.init(_blockchain, test);
         return ps;
@@ -285,7 +265,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         static final AionPendingStateImpl INSTANCE =
                 initializeAionPendingState(
-                        CfgAion.inst(), AionRepositoryImpl.inst(), AionBlockchainImpl.inst(), false);
+                        CfgAion.inst(),
+                        AionRepositoryImpl.inst(),
+                        AionBlockchainImpl.inst(),
+                        false);
     }
 
     public static AionPendingStateImpl inst() {

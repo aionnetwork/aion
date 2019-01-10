@@ -8,7 +8,7 @@ module aion.mcf {
     requires slf4j.api;
     requires aion.p2p;
     requires com.google.common;
-    //requires libnsc;
+    // requires libnsc;
     requires commons.collections4;
 
     exports org.aion.mcf.account;
