@@ -141,8 +141,8 @@ public class DetailsDataStore<
             // Decode the details.
             IContractDetails detailsImpl = repoConfig.contractDetailsImpl();
             detailsImpl.setDataSource(storageDSPrune);
-            detailsImpl.decode(rawDetails.get()); // We can safely get as we
-            // checked if it is present.
+            detailsImpl.decode(rawDetails.get(), true);
+            // We can safely get as we checked if it is present.
 
             // IContractDetails details = entry.getValue();
             detailsImpl.syncStorage();
