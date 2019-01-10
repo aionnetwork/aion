@@ -97,9 +97,7 @@ public class DetailsDataStore<
 
             // Check to see if we have to remove it.
             // If it isn't in removes set, we add it to removes set.
-            if (!removes.contains(wrappedKey)) {
-                removes.add(wrappedKey);
-            }
+            removes.add(wrappedKey);
             return null;
         }
 
