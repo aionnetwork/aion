@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,37 +34,39 @@ import org.bson.BsonBinary;
 import org.bson.BsonDocument;
 
 /**
- * This class allows us to connect to a MongoDB instance to write the kernel's data. To test this out locally, you can
- * use the script located at modDbImpl/test_resources/mongo/start_mongo_local.sh to spin up a mongo database using
- * docker, and then modify your config.xml to point to that local database
+ * This class allows us to connect to a MongoDB instance to write the kernel's data. To test this
+ * out locally, you can use the script located at
+ * modDbImpl/test_resources/mongo/start_mongo_local.sh to spin up a mongo database using docker, and
+ * then modify your config.xml to point to that local database
  */
 public class MongoDB extends AbstractDB {
 
     /**
-     * Simple wrapper class to encloses a collection of writes (inserts, edits, or deletes) to the Mongo
-     * database.
+     * Simple wrapper class to encloses a collection of writes (inserts, edits, or deletes) to the
+     * Mongo database.
      */
     private static class WriteBatch {
         private List<WriteModel<BsonDocument>> edits = new ArrayList<>();
 
         /**
          * Adds a new edit to the batch
+         *
          * @param key the key to write
          * @param value the value to write. Null indicates we should delete this key
          * @return this
          */
         public WriteBatch addEdit(byte[] key, byte[] value) {
             if (value == null) {
-                DeleteOneModel deleteModel = new DeleteOneModel<>(
-                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key))
-                );
+                DeleteOneModel deleteModel =
+                        new DeleteOneModel<>(eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key)));
 
                 edits.add(deleteModel);
             } else {
-                UpdateOneModel updateModel = new UpdateOneModel<>(
-                    eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key)),
-                    Updates.set(MongoConstants.VALUE_FIELD_NAME, new BsonBinary(value)),
-                    new UpdateOptions().upsert(true));
+                UpdateOneModel updateModel =
+                        new UpdateOneModel<>(
+                                eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(key)),
+                                Updates.set(MongoConstants.VALUE_FIELD_NAME, new BsonBinary(value)),
+                                new UpdateOptions().upsert(true));
 
                 edits.add(updateModel);
             }
@@ -73,6 +76,7 @@ public class MongoDB extends AbstractDB {
 
         /**
          * Adds a new edit to the batch
+         *
          * @param key the key to write
          * @param value the value to write. Null indicates we should delete this key
          * @return this
@@ -83,6 +87,7 @@ public class MongoDB extends AbstractDB {
 
         /**
          * Adds a collection of edits to the batch
+         *
          * @param kvPairs The collection of key value pairs we want to write in
          * @return this
          */
@@ -96,6 +101,7 @@ public class MongoDB extends AbstractDB {
 
         /**
          * Adds a collection of edits to the batch
+         *
          * @param kvPairs The collection of key value pairs we want to write in
          * @return this
          */
@@ -109,6 +115,7 @@ public class MongoDB extends AbstractDB {
 
         /**
          * Gets the collection of writes which have been collected here
+         *
          * @return The edits which have been added to this instance.
          */
         public List<WriteModel<BsonDocument>> getEdits() {
@@ -117,6 +124,7 @@ public class MongoDB extends AbstractDB {
 
         /**
          * Gets the number of deletes which are in this batch
+         *
          * @return Number of deletes
          */
         public long getDeleteCount() {
@@ -125,6 +133,7 @@ public class MongoDB extends AbstractDB {
 
         /**
          * Gets the number of updates (edits or inserts) in this batch
+         *
          * @return Number of updates
          */
         public long getUpdateCount() {
@@ -132,19 +141,13 @@ public class MongoDB extends AbstractDB {
         }
     }
 
-    /**
-     * Wrapper class holding the result of writing a batch
-     */
+    /** Wrapper class holding the result of writing a batch */
     private static class WriteBatchResult {
 
-        /**
-         * Total number of updates which were committed
-         */
+        /** Total number of updates which were committed */
         public final long totalUpdates;
 
-        /**
-         * Total number of deletes which were committed
-         */
+        /** Total number of deletes which were committed */
         public final long totalDeletes;
 
         /**
@@ -154,16 +157,21 @@ public class MongoDB extends AbstractDB {
 
         /**
          * Creates a new instance of the WriteBatchResult from Mongo's raw BulkWriteResult
+         *
          * @param writeResult The BulkWriteResult returned from Mongo
          */
         public WriteBatchResult(BulkWriteResult writeResult) {
-            this.totalUpdates = writeResult.getInsertedCount() + writeResult.getModifiedCount() + writeResult.getUpserts().size();
+            this.totalUpdates =
+                    writeResult.getInsertedCount()
+                            + writeResult.getModifiedCount()
+                            + writeResult.getUpserts().size();
             this.totalDeletes = writeResult.getDeletedCount();
             this.isReadOnly = false;
         }
 
         /**
          * Overloaded constructor to return a dummy WriteBatchResult if we're ready only.
+         *
          * @param isReadOnly Whether or not our database is read only
          */
         public WriteBatchResult(boolean isReadOnly) {
@@ -173,16 +181,18 @@ public class MongoDB extends AbstractDB {
         }
 
         /**
-         * Returns whether or not the expeced number of updates and deletes where committed in this batch
+         * Returns whether or not the expeced number of updates and deletes where committed in this
+         * batch
+         *
          * @param batch The batch which specified these results
          * @return Whether or not things were written as expected
          */
         public boolean matchedExpectation(WriteBatch batch) {
-            return (batch.getDeleteCount() == this.totalDeletes && batch.getUpdateCount() == this.totalUpdates) ||
-                isReadOnly;
+            return (batch.getDeleteCount() == this.totalDeletes
+                            && batch.getUpdateCount() == this.totalUpdates)
+                    || isReadOnly;
         }
     }
-
 
     private String mongoClientUri;
     private ClientSession clientSession;
@@ -199,6 +209,7 @@ public class MongoDB extends AbstractDB {
 
     /**
      * Private helper method for writing a collection of edits into the database
+     *
      * @param edits The edits to write
      * @return A summary of the write results
      */
@@ -208,15 +219,22 @@ public class MongoDB extends AbstractDB {
             return new WriteBatchResult(true);
         }
 
-        BulkWriteResult writeResult = this.collection.bulkWrite(this.clientSession, edits.getEdits());
+        BulkWriteResult writeResult =
+                this.collection.bulkWrite(this.clientSession, edits.getEdits());
         WriteBatchResult result = new WriteBatchResult(writeResult);
 
         if (result.totalDeletes != edits.getDeleteCount()) {
-            LOG.debug("Expected {} deletes but only deleted {}", edits.getDeleteCount(), result.totalDeletes);
+            LOG.debug(
+                    "Expected {} deletes but only deleted {}",
+                    edits.getDeleteCount(),
+                    result.totalDeletes);
         }
 
         if (result.totalUpdates != edits.getUpdateCount()) {
-            LOG.debug("Expected {} upserts but only got {}", edits.getUpdateCount(), result.totalUpdates);
+            LOG.debug(
+                    "Expected {} upserts but only got {}",
+                    edits.getUpdateCount(),
+                    result.totalUpdates);
         }
 
         LOG.debug("Successfully wrote {} edits", edits.getEdits().size());
@@ -233,21 +251,26 @@ public class MongoDB extends AbstractDB {
         LOG.info("Initializing MongoDB at {}", mongoClientUri);
 
         // Get the client and create a session for this instance
-        MongoClient mongoClient = MongoConnectionManager.inst().getMongoClientInstance(this.mongoClientUri);
-        ClientSessionOptions sessionOptions = ClientSessionOptions.builder()
-            .causallyConsistent(true)
-            .defaultTransactionOptions(TransactionOptions.builder()
-                .readConcern(ReadConcern.DEFAULT)
-                .writeConcern(WriteConcern.MAJORITY)
-                .readPreference(ReadPreference.nearest())
-                .build())
-            .build();
+        MongoClient mongoClient =
+                MongoConnectionManager.inst().getMongoClientInstance(this.mongoClientUri);
+        ClientSessionOptions sessionOptions =
+                ClientSessionOptions.builder()
+                        .causallyConsistent(true)
+                        .defaultTransactionOptions(
+                                TransactionOptions.builder()
+                                        .readConcern(ReadConcern.DEFAULT)
+                                        .writeConcern(WriteConcern.MAJORITY)
+                                        .readPreference(ReadPreference.nearest())
+                                        .build())
+                        .build();
         this.clientSession = mongoClient.startSession(sessionOptions);
 
-        // Get the database and our collection. Mongo takes care of creating these if they don't exist
+        // Get the database and our collection. Mongo takes care of creating these if they don't
+        // exist
         MongoDatabase mongoDb = mongoClient.getDatabase(MongoConstants.AION_DB_NAME);
 
-        // Gets the collection where we will be saving our values. Mongo creates it if it doesn't yet exist
+        // Gets the collection where we will be saving our values. Mongo creates it if it doesn't
+        // yet exist
         this.collection = mongoDb.getCollection(this.name, BsonDocument.class);
 
         LOG.info("Finished opening the Mongo connection");
@@ -269,7 +292,8 @@ public class MongoDB extends AbstractDB {
     public long approximateSize() {
         check();
 
-        // Just return -1 because we don't have a good way of asking the Mongo Server our size in bytes
+        // Just return -1 because we don't have a good way of asking the Mongo Server our size in
+        // bytes
         return -1L;
     }
 
@@ -282,19 +306,23 @@ public class MongoDB extends AbstractDB {
     }
 
     @Override
-    public Set<byte[]> keys() {
+    public Iterator<byte[]> keys() {
         check();
 
         LOG.debug("Getting the collection of keys");
 
-        Set<byte[]> keys = this.collection.find(this.clientSession)
-            .projection(Projections.fields(Projections.include(MongoConstants.ID_FIELD_NAME)))
-            .map(f -> f.getBinary(MongoConstants.ID_FIELD_NAME).getData())
-            .into(new HashSet<>());
+        Set<byte[]> keys =
+                this.collection
+                        .find(this.clientSession)
+                        .projection(
+                                Projections.fields(
+                                        Projections.include(MongoConstants.ID_FIELD_NAME)))
+                        .map(f -> f.getBinary(MongoConstants.ID_FIELD_NAME).getData())
+                        .into(new HashSet<>());
 
         LOG.debug("The database contains {} keys", keys.size());
 
-        return keys;
+        return keys.iterator();
     }
 
     @Override
@@ -310,7 +338,12 @@ public class MongoDB extends AbstractDB {
 
     @Override
     protected byte[] getInternal(byte[] k) {
-        BsonDocument document = this.collection.find(this.clientSession, eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(k))).first();
+        BsonDocument document =
+                this.collection
+                        .find(
+                                this.clientSession,
+                                eq(MongoConstants.ID_FIELD_NAME, new BsonBinary(k)))
+                        .first();
         if (document == null) {
             return null;
         } else {

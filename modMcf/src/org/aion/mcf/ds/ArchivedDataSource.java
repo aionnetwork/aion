@@ -24,9 +24,9 @@
 package org.aion.mcf.ds;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IByteArrayKeyValueStore;
 
@@ -50,7 +50,7 @@ public class ArchivedDataSource implements IByteArrayKeyValueStore {
     }
 
     @Override
-    public Set<byte[]> keys() {
+    public Iterator<byte[]> keys() {
         return data.keys();
     }
 
