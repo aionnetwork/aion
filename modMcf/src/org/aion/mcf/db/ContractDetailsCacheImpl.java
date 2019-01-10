@@ -99,6 +99,12 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     /** This method is not supported. */
     @Override
+    public void decode(byte[] rlpCode, boolean fastCheck) {
+        throw new RuntimeException("Not supported by this implementation.");
+    }
+
+    /** This method is not supported. */
+    @Override
     public byte[] getEncoded() {
         throw new RuntimeException("Not supported by this implementation.");
     }

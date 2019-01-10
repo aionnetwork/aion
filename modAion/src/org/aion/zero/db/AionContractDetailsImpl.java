@@ -5,7 +5,6 @@ import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -128,13 +127,33 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      */
     @Override
     public void decode(byte[] rlpCode) {
+        decode(rlpCode, false);
+    }
+
+    /**
+     * Decodes an AionContractDetailsImpl object from the RLP encoding rlpCode with fast check does
+     * the contractDetails needs external storage.
+     *
+     * @param rlpCode The encoding to decode.
+     * @param fastCheck set fastCheck option.
+     */
+    @Override
+    public void decode(byte[] rlpCode, boolean fastCheck) {
         RLPList data = RLP.decode2(rlpCode);
         RLPList rlpList = (RLPList) data.get(0);
 
-        RLPItem address = (RLPItem) rlpList.get(0);
         RLPItem isExternalStorage = (RLPItem) rlpList.get(1);
-        RLPItem storageRoot = (RLPItem) rlpList.get(2);
         RLPItem storage = (RLPItem) rlpList.get(3);
+        this.externalStorage = isExternalStorage.getRLPData().length > 0;
+        boolean keepStorageInMem = storage.getRLPData().length <= detailsInMemoryStorageLimit;
+
+        // No externalStorage require.
+        if (fastCheck && !externalStorage && keepStorageInMem) {
+            return;
+        }
+
+        RLPItem address = (RLPItem) rlpList.get(0);
+        RLPItem storageRoot = (RLPItem) rlpList.get(2);
         RLPElement code = rlpList.get(4);
 
         if (address.getRLPData() == null) {
@@ -152,7 +171,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         }
 
         // load/deserialize storage trie
-        this.externalStorage = !Arrays.equals(isExternalStorage.getRLPData(), EMPTY_BYTE_ARRAY);
         if (externalStorage) {
             storageTrie = new SecureTrie(getExternalStorageDataSource(), storageRoot.getRLPData());
         } else {
@@ -161,7 +179,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         storageTrie.withPruningEnabled(prune > 0);
 
         // switch from in-memory to external storage
-        if (!externalStorage && storage.getRLPData().length > detailsInMemoryStorageLimit) {
+        if (!externalStorage && !keepStorageInMem) {
             externalStorage = true;
             storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
