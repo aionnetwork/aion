@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.api.server.rpc;
 
 import static org.aion.base.util.TypeConverter.StringHexToBigInteger;
@@ -82,13 +59,13 @@ public class ApiWeb3AionTest {
 
         assertEquals(tx.get("to"), outTx.get("to"));
         assertEquals(
-            tx.get("value"), StringHexToBigInteger(outTx.get("value").toString()).toString());
+                tx.get("value"), StringHexToBigInteger(outTx.get("value").toString()).toString());
         assertEquals(
-            tx.get("gasPrice"),
-            StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
+                tx.get("gasPrice"),
+                StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
         assertEquals(
-            tx.get("gasPrice"),
-            StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
+                tx.get("gasPrice"),
+                StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
         assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("gas").toString()).toString());
         assertEquals(tx.get("gas"), StringHexToBigInteger(outTx.get("nrg").toString()).toString());
         assertEquals("0x", outTx.get("input").toString());
@@ -188,8 +165,8 @@ public class ApiWeb3AionTest {
         assertNull(rsp.getError());
 
         assertEquals(
-            impl.getPendingState().getNonce(Address.ZERO_ADDRESS()),
-            StringHexToBigInteger(rsp.getResult().toString()));
+                impl.getPendingState().getNonce(Address.ZERO_ADDRESS()),
+                StringHexToBigInteger(rsp.getResult().toString()));
     }
 
     @Test
@@ -202,8 +179,8 @@ public class ApiWeb3AionTest {
         assertNull(rsp.getError());
 
         assertEquals(
-            impl.getPendingState().getBalance(Address.ZERO_ADDRESS()),
-            StringHexToBigInteger(rsp.getResult().toString()));
+                impl.getPendingState().getBalance(Address.ZERO_ADDRESS()),
+                StringHexToBigInteger(rsp.getResult().toString()));
     }
 
     @Test
@@ -216,9 +193,7 @@ public class ApiWeb3AionTest {
 
         long rspNum = rsp.toJson().getJSONObject("result").getLong("number");
 
-        assertEquals(
-            AionPendingStateImpl.inst().getBestBlock().getNumber(),
-            rspNum);
+        assertEquals(AionPendingStateImpl.inst().getBestBlock().getNumber(), rspNum);
     }
 
     @Test
@@ -229,6 +204,5 @@ public class ApiWeb3AionTest {
 
         RpcMsg rsp = web3Api.eth_getTransactionByBlockNumberAndIndex(req);
         assertEquals(JSONObject.NULL, rsp.getResult());
-
     }
 }

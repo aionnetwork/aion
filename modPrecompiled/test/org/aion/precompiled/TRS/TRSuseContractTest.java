@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.TRS;
 
 import static org.junit.Assert.assertEquals;
@@ -1630,8 +1607,7 @@ public class TRSuseContractTest extends TRShelpers {
         // Try first with no one in the contract. Caller is owner.
         byte[] input = getBulkWithdrawInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
 
         // Now deposit some and try again.
         input = getDepositInput(contract, DEFAULT_BALANCE);
@@ -1639,8 +1615,7 @@ public class TRSuseContractTest extends TRShelpers {
                 ResultCode.SUCCESS, newTRSuseContract(acct).execute(input, COST).getResultCode());
         input = getBulkWithdrawInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -1659,8 +1634,7 @@ public class TRSuseContractTest extends TRShelpers {
         // Try to withdraw.
         input = getBulkWithdrawInput(contract);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
         assertEquals(BigInteger.ZERO, repo.getBalance(acct));
     }
 
@@ -2304,8 +2278,7 @@ public class TRSuseContractTest extends TRShelpers {
         // Acct2 is now marked invalid.
         input = getRefundInput(contract, acct2, BigInteger.ZERO);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -2590,8 +2563,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address acct = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] input = getAddExtraInput(acct, DEFAULT_BALANCE);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -2600,8 +2572,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address contract = createTRScontract(AION, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getAddExtraInput(contract, DEFAULT_BALANCE);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -2625,8 +2596,7 @@ public class TRSuseContractTest extends TRShelpers {
 
         input = getAddExtraInput(contract, DEFAULT_BALANCE);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -3079,8 +3049,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address acct = getNewExistentAccount(BigInteger.ONE);
         byte[] input = makeBulkDepositForInput(acct, numBeneficiaries, BigInteger.TEN);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -3093,8 +3062,7 @@ public class TRSuseContractTest extends TRShelpers {
                         BigInteger.TEN.multiply(BigInteger.valueOf(numBeneficiaries)));
         byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(whoami).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(whoami).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -3104,8 +3072,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address contract = createAndLockTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
         byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
@@ -3116,8 +3083,7 @@ public class TRSuseContractTest extends TRShelpers {
                 createLockedAndLiveTRScontract(acct, false, false, 1, BigInteger.ZERO, 0);
         byte[] input = makeBulkDepositForInput(contract, numBeneficiaries, BigInteger.TEN);
         assertEquals(
-                ResultCode.FAILURE,
-                newTRSuseContract(acct).execute(input, COST).getResultCode());
+                ResultCode.FAILURE, newTRSuseContract(acct).execute(input, COST).getResultCode());
     }
 
     @Test
