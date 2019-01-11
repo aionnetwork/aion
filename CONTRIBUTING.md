@@ -28,4 +28,4 @@ If you would like to contribute to Aion, please **fork it**, fix bugs or impleme
 
 ## License.
 
-By contributing to Aion, you agree that your contributions will be licensed under the [GPLv3 License](LICENSE).
+By contributing to Aion, you agree that your contributions will be licensed under the [MIT License](LICENSE).
