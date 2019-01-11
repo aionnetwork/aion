@@ -25,14 +25,15 @@ package org.aion.db.impl.rocksdb;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.CompressionType;
 import org.rocksdb.Options;
+import org.rocksdb.ReadOptions;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
@@ -220,24 +221,66 @@ public class RocksDBWrapper extends AbstractDB {
     }
 
     @Override
-    public Set<byte[]> keys() {
-        Set<byte[]> set = new HashSet<>();
-
+    public Iterator<byte[]> keys() {
         check();
 
-        try (RocksIterator itr = db.newIterator()) {
-            itr.seekToFirst();
-            // extract keys
-            while (itr.isValid()) {
-                set.add(itr.key());
-                itr.next();
-            }
+        try {
+            ReadOptions readOptions = new ReadOptions();
+            readOptions.setSnapshot(db.getSnapshot());
+            return new RocksDBIteratorWrapper(readOptions, db.newIterator(readOptions));
         } catch (Exception e) {
             LOG.error("Unable to extract keys from database " + this.toString() + ".", e);
         }
 
         // empty when retrieval failed
-        return set;
+        return Collections.emptyIterator();
+    }
+
+    /**
+     * A wrapper for the {@link RocksIterator} conforming to the {@link Iterator} interface.
+     *
+     * @author Alexandra Roatis
+     */
+    private static class RocksDBIteratorWrapper implements Iterator<byte[]> {
+        private final RocksIterator iterator;
+        private final ReadOptions readOptions;
+        private boolean closed;
+
+        /**
+         * @implNote Building two wrappers for the same {@link RocksIterator} will lead to
+         *     inconsistent behavior.
+         */
+        RocksDBIteratorWrapper(final ReadOptions readOptions, final RocksIterator iterator) {
+            this.readOptions = readOptions;
+            this.iterator = iterator;
+            iterator.seekToFirst();
+            closed = false;
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (!closed) {
+                boolean isValid = iterator.isValid();
+
+                // close iterator after last entry
+                if (!isValid) {
+                    iterator.close();
+                    readOptions.close();
+                    closed = true;
+                }
+
+                return isValid;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public byte[] next() {
+            byte[] key = iterator.key();
+            iterator.next();
+            return key;
+        }
     }
 
     @Override
@@ -282,7 +325,7 @@ public class RocksDBWrapper extends AbstractDB {
         }
     }
 
-    WriteBatch batch = null;
+    private WriteBatch batch = null;
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {

@@ -229,7 +229,9 @@ public class Cache {
                 }
             }
         } else {
-            for (byte[] key : this.dataSource.keys()) {
+            Iterator<byte[]> iterator = dataSource.keys();
+            while (iterator.hasNext()) {
+                byte[] key = iterator.next();
                 rows.put(key, this.dataSource.get(key).get());
             }
 

@@ -31,10 +31,10 @@ import static org.aion.db.impl.DatabaseTestUtils.assertConcurrent;
 import com.google.common.truth.Truth;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -90,6 +90,15 @@ public class ConcurrencyTest {
         return DatabaseTestUtils.unlockedDatabaseInstanceDefinitions();
     }
 
+    private static int count(Iterator<byte[]> keys) {
+        int size = 0;
+        while (keys.hasNext()) {
+            size++;
+            keys.next();
+        }
+        return size;
+    }
+
     private void addThread4IsEmpty(List<Runnable> threads, IByteArrayKeyValueDatabase db) {
         threads.add(
                 () -> {
@@ -106,10 +115,10 @@ public class ConcurrencyTest {
     private void addThread4Keys(List<Runnable> threads, IByteArrayKeyValueDatabase db) {
         threads.add(
                 () -> {
-                    Set<byte[]> keys = db.keys();
+                    Iterator<byte[]> keys = db.keys();
                     if (DISPLAY_MESSAGES) {
                         System.out.println(
-                                Thread.currentThread().getName() + ": #keys = " + keys.size());
+                                Thread.currentThread().getName() + ": #keys = " + count(keys));
                     }
                 });
     }
@@ -304,7 +313,7 @@ public class ConcurrencyTest {
         assertConcurrent("Testing put(...) ", threads, TIME_OUT);
 
         // check that all values were added
-        assertThat(db.keys().size()).isEqualTo(CONCURRENT_THREADS);
+        assertThat(count(db.keys())).isEqualTo(CONCURRENT_THREADS);
 
         // ensuring close
         db.close();
@@ -330,7 +339,7 @@ public class ConcurrencyTest {
         assertConcurrent("Testing putBatch(...) ", threads, TIME_OUT);
 
         // check that all values were added
-        assertThat(db.keys().size()).isEqualTo(3 * CONCURRENT_THREADS);
+        assertThat(count(db.keys())).isEqualTo(3 * CONCURRENT_THREADS);
 
         // ensuring close
         db.close();

@@ -26,6 +26,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
@@ -263,7 +264,10 @@ public class BlockchainDataRecoveryTest {
 
         repo.flush();
         List<byte[]> statesToDelete = new ArrayList<>();
-        statesToDelete.addAll(database.keys());
+        Iterator<byte[]> iterator = database.keys();
+        while (iterator.hasNext()) {
+            statesToDelete.add(iterator.next());
+        }
 
         for (byte[] key : statesToDelete) {
             database.delete(key);
