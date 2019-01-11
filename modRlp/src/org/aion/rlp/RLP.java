@@ -315,15 +315,27 @@ public class RLP {
                 }
             }
         } catch (Exception e) {
+
+            // Only shown first 4K data
+            int length = endPos - startPos;
+            if (length > 4096) {
+                length = 4096;
+            }
+
             throw new RuntimeException(
                     "RLP wrong encoding ("
-                            + Hex.toHexString(msgData, startPos, endPos - startPos)
+                            + Hex.toHexString(msgData, startPos, length)
                             + ")",
                     e);
         } catch (OutOfMemoryError e) {
+            // Only shown first 4K data
+            int length = endPos - startPos;
+            if (length > 4096) {
+                length = 4096;
+            }
             throw new RuntimeException(
                     "Invalid RLP (excessive mem allocation while parsing) ("
-                            + Hex.toHexString(msgData, startPos, endPos - startPos)
+                            + Hex.toHexString(msgData, startPos, length)
                             + ")",
                     e);
         }
