@@ -119,6 +119,12 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
     /** This method is not supported. */
     @Override
+    public void decode(byte[] rlpCode, boolean fastCheck) {
+        throw new RuntimeException("Not supported by this implementation.");
+    }
+
+    /** This method is not supported. */
+    @Override
     public byte[] getEncoded() {
         throw new RuntimeException("Not supported by this implementation.");
     }
@@ -245,4 +251,5 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
     public void setDataSource(IByteArrayKeyValueStore dataSource) {
         throw new UnsupportedOperationException("Can't set datasource in cache implementation.");
     }
+
 }

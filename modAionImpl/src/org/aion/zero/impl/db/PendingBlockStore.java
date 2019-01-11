@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -519,7 +520,7 @@ public class PendingBlockStore implements Flushable, Closeable {
     int getIndexSize() {
         databaseLock.readLock().lock();
         try {
-            return indexSource.keys().size();
+            return countDatabaseKeys(indexSource);
         } finally {
             databaseLock.readLock().unlock();
         }
@@ -533,7 +534,7 @@ public class PendingBlockStore implements Flushable, Closeable {
     int getLevelSize() {
         databaseLock.readLock().lock();
         try {
-            return levelDatabase.keys().size();
+            return countDatabaseKeys(levelDatabase);
         } finally {
             databaseLock.readLock().unlock();
         }
@@ -547,10 +548,20 @@ public class PendingBlockStore implements Flushable, Closeable {
     int getQueueSize() {
         databaseLock.readLock().lock();
         try {
-            return queueDatabase.keys().size();
+            return countDatabaseKeys(queueDatabase);
         } finally {
             databaseLock.readLock().unlock();
         }
+    }
+
+    private static int countDatabaseKeys(IByteArrayKeyValueDatabase db) {
+        int size = 0;
+        Iterator<byte[]> iterator = db.keys();
+        while (iterator.hasNext()) {
+            iterator.next();
+            size++;
+        }
+        return size;
     }
 
     /**
