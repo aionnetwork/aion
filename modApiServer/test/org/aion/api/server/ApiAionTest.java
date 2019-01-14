@@ -463,8 +463,6 @@ public class ApiAionTest {
         assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
         assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());
         assertNotNull(api.p2pProtocolVersion());
-        assertNotEquals(0, api.getDefaultContractCreateNrg());
-        assertNotEquals(0, api.getDefaultTxNrg());
         assertNotEquals(0, api.getRecommendedNrgPrice());
         assertEquals(impl.getAionHub().getP2pMgr().chainId(), Integer.parseInt(api.chainId()));
     }

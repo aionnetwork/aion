@@ -746,14 +746,6 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    protected long getDefaultTxNrg() {
-        return 90_000L;
-    }
-
-    protected long getDefaultContractCreateNrg() {
-        return 300_000L;
-    }
-
     protected void startES(String thName) {
         ees = new EventExecuteService(100_000, thName, Thread.MIN_PRIORITY, LOG);
         ees.setFilter(setEvtfilter());
