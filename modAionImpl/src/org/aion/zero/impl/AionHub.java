@@ -195,6 +195,7 @@ public class AionHub {
                 new BlockPropagationHandler(
                         1024,
                         this.blockchain,
+                        syncMgr,
                         p2pMgr,
                         chainConfig.createBlockHeaderValidator(),
                         cfg.getNet().getP2p().inSyncOnlyMode());

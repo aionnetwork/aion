@@ -49,6 +49,8 @@ import org.junit.Test;
 /** Unit tests for block propagation */
 public class BlockPropagationTest {
 
+    private final SyncMgr syncMgr = new SyncMgr();
+
     private static class NodeMock implements INode {
 
         private final byte[] nodeId;
@@ -321,6 +323,7 @@ public class BlockPropagationTest {
                 new BlockPropagationHandler(
                         1024,
                         anotherBundle.bc, // NOTE: not the same blockchain that generated the block
+                        syncMgr,
                         p2pMock,
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false);
@@ -383,6 +386,7 @@ public class BlockPropagationTest {
                 new BlockPropagationHandler(
                         1024,
                         anotherBundle.bc, // NOTE: not the same blockchain that generated the block
+                        syncMgr,
                         p2pMock,
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false);
@@ -441,6 +445,7 @@ public class BlockPropagationTest {
                 new BlockPropagationHandler(
                         1024,
                         anotherBundle.bc, // NOTE: not the same blockchain that generated the block
+                        syncMgr,
                         p2pMock,
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false);
@@ -493,6 +498,7 @@ public class BlockPropagationTest {
                 new BlockPropagationHandler(
                         1024,
                         anotherBundle.bc, // NOTE: not the same blockchain that generated the block
+                        syncMgr,
                         p2pMock,
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false);

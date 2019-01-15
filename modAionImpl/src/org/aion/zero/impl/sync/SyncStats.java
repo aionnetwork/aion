@@ -53,7 +53,12 @@ public final class SyncStats {
      *
      * @implNote Access to this resource is managed by the {@link #seedsLock}.
      */
+
     private final Map<String, Long> blocksByPeer = new HashMap<>();
+
+    private final Map<String, Long> importedByPeer = new HashMap<>();
+
+    private final Map<String, Long> storedByPeer = new HashMap<>();
 
     private final Lock seedsLock = new ReentrantLock();
 
@@ -216,6 +221,75 @@ public final class SyncStats {
                                     Map.Entry::getValue,
                                     (e1, e2) -> e2,
                                     LinkedHashMap::new));
+        } finally {
+            seedsLock.unlock();
+        }
+    }
+
+    /**
+     * Updates the total number of blocks imported from each seed peer
+     *
+     * @param _nodeId peer node display Id
+     * @param _importedBlocks total number of blocks imported
+     */
+    public void updatePeerImportedBlocks(String _nodeId, int _importedBlocks) {
+        seedsLock.lock();
+        try {
+            long blocks = (long) _importedBlocks;
+            if (importedByPeer.putIfAbsent(_nodeId, blocks) != null) {
+                importedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+            }
+        } finally {
+            seedsLock.unlock();
+
+        }
+    }
+
+    /**
+     * Obtains the total number of blocks imported from the given seed peer
+     *
+     * @return number of total imported blocks by peer
+     */
+    long getImportedBlocksByPeer(String _nodeId) {
+        seedsLock.lock();
+        try {
+            return this.importedByPeer.get(_nodeId);
+        } catch (NullPointerException e) {
+            return 0;
+        } finally {
+            seedsLock.unlock();
+        }
+    }
+
+    /**
+     * Updates the total number of blocks stored from each seed peer
+     *
+     * @param _nodeId peer node display Id
+     * @param _storedBlocks total number of blocks stored
+     */
+    public void updatePeerStoredBlocks(String _nodeId, int _storedBlocks) {
+        seedsLock.lock();
+        try {
+            long blocks = (long) _storedBlocks;
+            if (storedByPeer.putIfAbsent(_nodeId, blocks) != null) {
+                storedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+            }
+        } finally {
+            seedsLock.unlock();
+        }
+    }
+
+    /**
+     * Obtains the total number of blocks stored from the given seed peer
+     *
+     * @return number of total stored blocks by peer
+     */
+    long getStoredBlocksByPeer(String _nodeId) {
+        seedsLock.lock();
+        try {
+            return this.storedByPeer.get(_nodeId);
+        } catch (NullPointerException e) {
+            return 0;
         } finally {
             seedsLock.unlock();
         }

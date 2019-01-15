@@ -275,6 +275,7 @@ final class TaskImportBlocks implements Runnable {
 
                 if (importResult.isStored()) {
                     importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
+                    this.stats.updatePeerImportedBlocks(displayId, 1);
 
                     if (last <= b.getNumber()) {
                         last = b.getNumber() + 1;
@@ -282,6 +283,7 @@ final class TaskImportBlocks implements Runnable {
                 }
             } catch (Exception e) {
                 log.error("<import-block throw> ", e);
+
                 if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
                     log.error("Shutdown due to lack of disk space.");
                     System.exit(0);
@@ -296,7 +298,7 @@ final class TaskImportBlocks implements Runnable {
 
                 // if any block results in NO_PARENT, all subsequent blocks will too
                 if (importResult == ImportResult.NO_PARENT) {
-                    executors.submit(new TaskStorePendingBlocks(chain, batch, displayId, log));
+                    executors.submit(new TaskStorePendingBlocks(chain, batch, displayId, stats, log));
 
                     if (log.isDebugEnabled()) {
                         log.debug(

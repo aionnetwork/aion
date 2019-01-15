@@ -46,6 +46,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.aion.zero.impl.types.AionBlock;
@@ -73,6 +74,8 @@ public class BlockPropagationHandler {
     /** LRU cache map, maintains the latest cacheSize blocks seen (not counting duplicates). */
     private final Map<ByteArrayWrapper, Boolean> cacheMap;
 
+    private final SyncMgr syncMgr;
+
     private final IP2pMgr p2pManager;
 
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
@@ -86,6 +89,7 @@ public class BlockPropagationHandler {
     public BlockPropagationHandler(
             final int cacheSize,
             final IAionBlockchain blockchain,
+            final SyncMgr syncMgr,
             final IP2pMgr p2pManager,
             BlockHeaderValidator<A0BlockHeader> headerValidator,
             final boolean isSyncOnlyNode) {
@@ -102,6 +106,8 @@ public class BlockPropagationHandler {
 
         // the expectation is that we will not have as many peers as we have blocks
         this.blockchain = blockchain;
+
+        this.syncMgr = syncMgr;
 
         // record our own nodeId to cover corner case
         this.p2pManager = p2pManager;
@@ -192,7 +198,10 @@ public class BlockPropagationHandler {
             }
         } else {
             result = this.blockchain.tryToConnect(block);
+
             long t2 = System.currentTimeMillis();
+            this.syncMgr.getSyncStats().updatePeerImportedBlocks(_displayId, 1);
+
             if (log.isInfoEnabled()) {
                 log.info(
                         "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
