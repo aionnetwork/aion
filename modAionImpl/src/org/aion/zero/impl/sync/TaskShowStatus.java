@@ -211,13 +211,23 @@ final class TaskShowStatus implements Runnable {
 
         if (!totalBlocksByPeer.isEmpty()) {
 
-            sb.append("\n========== sync-top-seeds ==========\n");
-            sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
-            sb.append("------------------------------------\n");
-
+            sb.append(
+                    "\n============================= sync-top-seeds ==============================\n");
+            sb.append(
+                    String.format(
+                            "   %9s %20s %19s %19s\n",
+                            "peer", "total blocks", "imported blocks", "stored blocks"));
+            sb.append(
+                    "---------------------------------------------------------------------------\n");
             totalBlocksByPeer.forEach(
                     (nodeId, totalBlocks) ->
-                            sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
+                            sb.append(
+                                    String.format(
+                                            "   id:%6s %20s %19s %19s\n",
+                                            nodeId,
+                                            totalBlocks,
+                                            this.stats.getImportedBlocksByPeer(nodeId),
+                                            this.stats.getStoredBlocksByPeer(nodeId))));
         }
 
         return sb.toString();

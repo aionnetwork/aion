@@ -15,17 +15,19 @@ final class TaskStorePendingBlocks implements Runnable {
     private final AionBlockchainImpl chain;
     private final List<AionBlock> batch;
     private final String displayId;
-
+    private final SyncStats syncStats;
     private final Logger log;
 
     TaskStorePendingBlocks(
             final AionBlockchainImpl _chain,
             final List<AionBlock> _batch,
             final String _displayId,
+            final SyncStats _syncStats,
             final Logger _log) {
         this.chain = _chain;
         this.batch = _batch;
         this.displayId = _displayId;
+        this.syncStats = _syncStats;
         this.log = _log;
     }
 
@@ -36,6 +38,7 @@ final class TaskStorePendingBlocks implements Runnable {
         Thread.currentThread().setName("sync-save:" + first.getNumber());
 
         int stored = chain.storePendingBlockRange(batch);
+        this.syncStats.updatePeerStoredBlocks(displayId, stored);
 
         // log operation
         if (log.isDebugEnabled()) {
