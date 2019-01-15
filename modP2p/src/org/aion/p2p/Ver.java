@@ -8,8 +8,11 @@ public class Ver {
 
     public static final short V0 = 0;
 
-    // for test
+    // new protocol version supporting fast sync
     public static final short V1 = 1;
+
+    // for test
+    public static final short V2 = 1;
 
     public static final short UNKNOWN = Short.MAX_VALUE;
 
@@ -18,6 +21,7 @@ public class Ver {
                 {
                     this.add(V0);
                     this.add(V1);
+                    this.add(V2);
                 }
             };
 
