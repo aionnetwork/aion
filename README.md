@@ -13,10 +13,6 @@ The [Aion White Papers](https://aion.network/developers/#whitepapers) provides m
 
 This repository contains the main (Java) kernel implementation and releases for the Aion Network.
 
-### System Requirements
-
-* **Ubuntu 16.04** or a later version
-
 ## Getting Started
 
 ### Developers
