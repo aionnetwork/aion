@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aion>
+	<mode>aion</mode>
+	<id>e66d1000-16c8-4ea6-a973-078f246b33b1</id>
+	<api>
+		<!-- rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs -->
+		<rpc active="true" ip="127.0.0.1" port="8545">
+			<cors-enabled>false</cors-enabled>
+			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
+			<apis-enabled>web3,eth,personal,stratum,ops</apis-enabled>
+		</rpc>
+    <java active="false" ip="127.0.0.1" port="8547">
+      <secure-connect>true</secure-connect>
+    </java>
+		<nrg-recommendation>
+			<!--default NRG price used by api if oracle disabled, minimum price recommended by oracle-->
+			<default>10E9</default>
+			<!--max NRG price recommended by oracle-->
+			<max>100E9</max>
+			<!--enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice-->
+			<oracle-enabled>false</oracle-enabled>
+		</nrg-recommendation>
+	</api>
+	<net>
+		<id>31</id>
+		<nodes>
+			<node>p2p://e66d1000-16c8-4ea6-a973-078f246b33b1@138.91.123.106:30303</node>
+			<node>p2p://e66d2000-8805-45be-86a3-e170410a2898@23.100.52.181:30303</node>
+			<node>p2p://e66d3000-1581-4979-af8a-5196dbcd29b9@13.91.127.35:30303</node>
+		</nodes>
+		<p2p>
+			<ip>0.0.0.0</ip>
+			<port>30303</port>
+			<discover>false</discover>
+			<max-active-nodes>128</max-active-nodes>
+		</p2p>
+	</net>
+	<sync>
+		<!-- Downloaded blocks queue limit. This affects memory footprint -->
+		<blocks-queue-max>32</blocks-queue-max>
+		<!-- Display syncing status -->
+		<show-status>false</show-status>
+		<!--requires show-status=true; comma separated list of options: [all, peer_states, requests, seeds, leeches, responses, none]-->
+		<show-statistics>none</show-statistics>
+	</sync>
+	<consensus>
+		<mining>true</mining>
+		<miner-address>0xa0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5</miner-address>
+		<cpu-mine-threads>1</cpu-mine-threads>
+		<extra-data>AION</extra-data>
+		<nrg-strategy>
+			<!-- <monotonic-increase></monotonic-increase> -->
+			<!-- <decaying></decaying> -->
+			<!-- <targetted target="10000000"></targetted> -->
+			<clamped-decay upper-bound="20000000" lower-bound="15000000"></clamped-decay>
+		</nrg-strategy>
+	</consensus>
+	<db>
+		<!--Sets the physical location on disk where data will be stored.-->
+		<path>database</path>
+		<!--Boolean value. Enable/disable database integrity check run at startup.-->
+		<check_integrity>true</check_integrity>
+		<!--Data pruning behavior for the state database. Options: FULL, TOP, SPREAD.-->
+		<!--FULL: the state is not pruned-->
+		<!--TOP: the state is kept only for the top K blocks; limits sync to branching only within the stored blocks-->
+		<!--SPREAD: the state is kept for the top K blocks and at regular block intervals-->
+		<state-storage>FULL</state-storage>
+		<!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->
+		<!--Caution: changing implementation requires re-syncing from genesis!-->
+		<vendor>leveldb</vendor>
+		<!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
+		<enable_db_compression>true</enable_db_compression>
+	</db>
+	<log>
+		<!--Enable/Disable logback service; if disabled, output will not be logged -->
+		<log-file>true</log-file>
+		<!--Sets the physical location on disk where log files will be stored.-->
+		<log-path>log</log-path>
+		<ROOT>WARN</ROOT>
+		<GEN>INFO</GEN>
+		<VM>ERROR</VM>
+		<SYNC>INFO</SYNC>
+		<CONS>INFO</CONS>
+		<DB>WARN</DB>
+		<API>INFO</API>
+		<P2P>INFO</P2P>
+		<GUI>INFO</GUI>
+	</log>
+	<gui>
+		<launcher>
+			<!--Whether JVM settings for launching kernel should be autodetected; 'true' or 'false'-->
+			<autodetect>true</autodetect>
+			<!--Path to JAVA_HOME.  This field has no effect if autodetect is true.-->
+			<java-home>aion.sh</java-home>
+			<!--Working directory of kernel process.  This field has no effect if autodetect is true.-->
+			<working-dir>/placeholder/for/aion_root_dir</working-dir>
+			<!--Filename of aion launcher script, relative to working-dir.  This field has no effect if autodetect is true.-->
+			<aion-sh></aion-sh>
+		</launcher>
+	</gui>
+</aion>
+

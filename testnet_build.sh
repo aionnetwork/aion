@@ -4,7 +4,6 @@ date=`date "+%Y-%m-%d"`
 release_name="avmtestnet-$date"
 avm_repo="../AVM/"
 pack_dir="avm_pack"
-aion_repo=""
 
 echo "Building avm testnet release on $date..." \
 && aion_repo="$(pwd)" \
@@ -19,7 +18,11 @@ echo "Building avm testnet release on $date..." \
 && git pull origin master \
 && echo "Building latest Avm jar..." \
 && ant \
-&& cd $aion_repo \
+&& cd "$aion_repo"/lib/ \
+&& rm org-aion-avm-*.jar \
+&& cp ../"$avm_repo"build/main/org-aion-avm-*.jar . \
+&& rm org-aion-avm-userlib.jar \
+&& cd .. \
 && echo "Building latest kernel release..." \
 && ./gradlew clean \
 && ./gradlew pack \
@@ -40,6 +43,7 @@ echo "Building avm testnet release on $date..." \
 && mkdir lib \
 && cd lib \
 && cp ../../../"$avm_repo"dist/lib/* . \
+&& cp ../../../"$avm_repo"dist/avm.jar . \
 && echo "Cleaning up the config directory for a local node..." \
 && cd ../config/avmtestnet/ \
 && rm config-e66d*.xml \
