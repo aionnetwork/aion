@@ -34,7 +34,7 @@ public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
      * @throws RuntimeException if the data store is closed
      * @apiNote Returns an empty iterator if the database keys could not be retrieved.
      */
-    Iterator<K> keys();
+    Iterator<KEY> keys();
 
     /**
      * Retrieves a value from the data store, wrapped in an {@link Optional} object. It is fulfilled

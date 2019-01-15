@@ -348,6 +348,7 @@ public class LevelDB extends AbstractDB {
         if (batch == null) {
             batch = db.createWriteBatch();
         }
+    }
 
     private WriteBatch batch = null;
 
@@ -400,8 +401,6 @@ public class LevelDB extends AbstractDB {
             LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
         }
     }
-
-    private WriteBatch batch = null;
 
     @Override
     public void deleteBatchInternal(Collection<byte[]> keys) {
