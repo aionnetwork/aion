@@ -649,7 +649,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
         if (txParams == null)
             return new RpcMsg(
                     null, RpcError.INVALID_PARAMS, "Please check your transaction object.");
@@ -713,7 +713,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
 
         ApiTxResponse response = sendTransaction(txParams);
 
@@ -754,7 +754,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
 
         if (txParams == null) {
             return new RpcMsg(
@@ -797,7 +797,8 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
+
         NumericalValue estimate = new NumericalValue(estimateNrg(txParams));
 
         return new RpcMsg(estimate.toHexString());

@@ -1,7 +1,9 @@
 package org.aion.api.server.types;
 
+import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
+import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
+
 import java.math.BigInteger;
-import org.aion.api.server.nrgprice.NrgOracle;
 import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
@@ -43,8 +45,7 @@ public final class ArgTxCall {
         this.nrgPrice = _nrgPrice;
     }
 
-    public static ArgTxCall fromJSON(
-            final JSONObject _jsonObj, NrgOracle oracle, long defaultNrgLimit) {
+    public static ArgTxCall fromJSON(final JSONObject _jsonObj, long defaultNrgPrice) {
         try {
             Address from = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
             Address to = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
@@ -64,20 +65,19 @@ public final class ArgTxCall {
             String nrgStr = _jsonObj.optString("gas", null);
             String nrgPriceStr = _jsonObj.optString("gasPrice", null);
 
-            long nrg = defaultNrgLimit;
+            long nrg = to.isEmptyAddress() ? NRG_CREATE_CONTRACT_DEFAULT : NRG_TRANSACTION_DEFAULT;
             if (nrgStr != null)
                 nrg =
                         nrgStr.contains("0x")
                                 ? TypeConverter.StringHexToBigInteger(nrgStr).longValue()
                                 : TypeConverter.StringNumberAsBigInt(nrgStr).longValue();
 
-            long nrgPrice;
+            long nrgPrice = defaultNrgPrice;
             if (nrgPriceStr != null)
                 nrgPrice =
                         nrgPriceStr.contains("0x")
                                 ? TypeConverter.StringHexToBigInteger(nrgPriceStr).longValue()
                                 : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
-            else nrgPrice = oracle.getNrgPrice();
 
             return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice);
         } catch (Exception e) {

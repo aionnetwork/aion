@@ -476,8 +476,8 @@ public class AionTransaction extends AbstractTransaction {
         long nonZeroes = nonZeroBytesInData();
         long zeroes = zeroBytesInData();
 
-        return (isContractCreation() ? Constants.NRG_TX_CREATE : 0)
-                + Constants.NRG_TRANSACTION
+        return (isContractCreation() ? Constants.NRG_CREATE_CONTRACT_MIN : 0)
+                + Constants.NRG_TRANSACTION_MIN
                 + zeroes * Constants.NRG_TX_DATA_ZERO
                 + nonZeroes * Constants.NRG_TX_DATA_NONZERO;
     }
