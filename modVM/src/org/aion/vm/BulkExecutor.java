@@ -14,7 +14,7 @@ import org.aion.kernel.AvmTransactionResult;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
-import org.aion.vm.VirtualMachineFactory.VM;
+import org.aion.vm.VmFactoryImplementation.VM;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
@@ -37,7 +37,6 @@ import org.slf4j.Logger;
  */
 public class BulkExecutor {
     private static final Object LOCK = new Object();
-    private static final VirtualMachineFactory VM_FACTORY = VirtualMachineFactory.getFactorySingleton();
 
     private IRepository repository;
     private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild;
@@ -100,11 +99,11 @@ public class BulkExecutor {
 
                 if (transactionIsForFastVirtualMachine(firstTransactionInNextBatch)) {
                     KernelInterfaceForFastVM fvmKernel = new KernelInterfaceForFastVM(this.repositoryChild.startTracking(), this.allowNonceIncrement, this.isLocalCall);
-                    virtualMachineForNextBatch = VM_FACTORY.getVirtualMachineInstance(VM.FVM, fvmKernel);
+                    virtualMachineForNextBatch = VirtualMachineProvider.getVirtualMachineInstance(VM.FVM, fvmKernel);
                     nextBatchToExecute = fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
                 } else {
                     KernelInterfaceForAVM avmKernel = new KernelInterfaceForAVM(this.repositoryChild.startTracking(), this.allowNonceIncrement, this.isLocalCall);
-                    virtualMachineForNextBatch = VM_FACTORY.getVirtualMachineInstance(VM.AVM, avmKernel);
+                    virtualMachineForNextBatch = VirtualMachineProvider.getVirtualMachineInstance(VM.AVM, avmKernel);
                     nextBatchToExecute = fetchNextBatchOfTransactionsForAionVirtualMachine(currentIndex);
                 }
 

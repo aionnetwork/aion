@@ -13,7 +13,7 @@ import org.aion.base.type.AionAddress;
 import org.aion.base.vm.VirtualMachineSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
-import org.aion.vm.VirtualMachineFactory;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.avm.contracts.AvmHelloWorld;
@@ -34,12 +34,12 @@ public class AvmHelloWorldTest {
 
     @BeforeClass
     public static void setupAvm() {
-        VirtualMachineFactory.getFactorySingleton().initializeAllVirtualMachines();
+        VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @AfterClass
     public static void tearDownAvm() {
-        VirtualMachineFactory.getFactorySingleton().shutdownAllVirtualMachines();
+        VirtualMachineProvider.shutdownAllVirtualMachines();
     }
 
     @Before

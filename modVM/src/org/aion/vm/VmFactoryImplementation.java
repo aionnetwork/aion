@@ -13,21 +13,21 @@ import org.aion.vm.api.interfaces.VirtualMachine;
  * - Returning any requested instances of any supported virtual machines.
  * - Shutting down all the supported virtual machines.
  */
-public final class VirtualMachineFactory {
-    private static final VirtualMachineFactory SINGLETON = new VirtualMachineFactory();
+public final class VmFactoryImplementation implements VirtualMachineManager {
+    private static final VmFactoryImplementation SINGLETON = new VmFactoryImplementation();
     private MachineState state = MachineState.ALL_MACHINES_DEAD;
 
     // All long-lived supported virtual machines.
     private AvmImpl aionVirtualMachine = null;
 
-    private VirtualMachineFactory(){}
+    private VmFactoryImplementation(){}
 
     /**
      * Returns the singleton instance of this factory class.
      *
      * @return This factory class as a singleton.
      */
-    public static VirtualMachineFactory getFactorySingleton() {
+    public static VmFactoryImplementation getFactorySingleton() {
         return SINGLETON;
     }
 
@@ -55,18 +55,9 @@ public final class VirtualMachineFactory {
     private enum MachineState { ALL_MACHINES_DEAD, ALL_MACHINES_LIVE }
 
     /**
-     * Performs any initialization required to run a {@link VirtualMachine}, for all supported
-     * virtual machines.
-     *
-     * It is guaranteed that all instances returned by {@code getVirtualMachineInstance()} will
-     * return a {@link VirtualMachine} that is ready to be used if that method is called <b>after</b>
-     * this method.
-     *
-     * This method can only be called if no virtual machines have been initialized yet, using this
-     * method, without being shutdown.
-     *
-     * @throws IllegalStateException If the virtual machines are already live.
+     * {@inheritDoc}
      */
+    @Override
     public void initializeAllVirtualMachines() {
         if (this.state == MachineState.ALL_MACHINES_LIVE) {
             throw new IllegalStateException("All Virtual Machines are already live. Cannot re-initialize.");
@@ -78,14 +69,9 @@ public final class VirtualMachineFactory {
     }
 
     /**
-     * Performs any shutdown logic required to kill a {@link VirtualMachine}, for all supported
-     * virtual machines.
-     *
-     * This method can only be called if {@code initializeAllVirtualMachines()} has already been
-     * called and the machines have not yet been shutdown using this method.
-     *
-     * @throws IllegalStateException If the virtual machines are already dead.
+     * {@inheritDoc}
      */
+    @Override
     public void shutdownAllVirtualMachines() {
         if (this.state == MachineState.ALL_MACHINES_DEAD) {
             throw new IllegalStateException("All Virtual Machines are already shutdown.");
@@ -97,20 +83,9 @@ public final class VirtualMachineFactory {
     }
 
     /**
-     * Returns an instance of the {@link VirtualMachine} that is requested by the specified VM
-     * request type.
-     *
-     * In the case of long-lived machines, the same instance will be returned each time.
-     *
-     * Also in the case of long-lived machines: this method <b>must</b> be called after
-     * {@code initializeAllVirtualMachines()} and before {@code shutdownAllVirtualMachines()}. In
-     * the case of non-long-lived machines this invariant does not apply.
-     *
-     * @param request The virtual machine to be requested.
-     * @param  kernel The kernel interface to hand off to the requested virtual machine.
-     * @return An instance of the virtual machine.
-     * @throws IllegalStateException If the requested virtual machine is not currently live.
+     * {@inheritDoc}
      */
+    @Override
     public VirtualMachine getVirtualMachineInstance(VM request, KernelInterface kernel) {
         if ((request.isLongLivedVirtualMachine()) && (this.state == MachineState.ALL_MACHINES_DEAD)) {
             throw new IllegalStateException("The requested VM: " + request + " is long-lived and has not yet been initialized.");
