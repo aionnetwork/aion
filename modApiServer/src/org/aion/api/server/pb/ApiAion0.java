@@ -26,6 +26,7 @@ import org.aion.api.server.ApiAion;
 import org.aion.api.server.ApiTxResponse;
 import org.aion.api.server.ApiUtil;
 import org.aion.api.server.IApiAion;
+import org.aion.api.server.pb.Message.Funcs;
 import org.aion.api.server.pb.Message.Retcode;
 import org.aion.api.server.pb.Message.Servs;
 import org.aion.api.server.types.ArgTxCall;
@@ -641,9 +642,8 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                     byte[] data = parseMsgReq(request, msgHash);
                     try {
-                        Message.req_compileSolidity req =
-                                Message.req_compileSolidity.parseFrom(data);
-                        String source = req.getSource();
+                        Message.req_compile req = Message.req_compile.parseFrom(data);
+                        String source = req.getCode();
                         if (source == null) {
                             return ApiUtil.toReturnHeader(
                                     getApiVersion(), Retcode.r_fail_null_compile_source_VALUE);
@@ -651,6 +651,82 @@ public class ApiAion0 extends ApiAion implements IApiAion {
 
                         @SuppressWarnings("unchecked")
                         Map<String, CompiledContr> _contrs = this.contract_compileSolidity(source);
+                        if (_contrs != null && !_contrs.isEmpty()) {
+                            Message.rsp_compile.Builder b = Message.rsp_compile.newBuilder();
+
+                            for (Entry<String, CompiledContr> entry : _contrs.entrySet()) {
+                                if (entry.getKey().contains("compile-error")) {
+                                    byte[] retHeader =
+                                            ApiUtil.toReturnHeader(
+                                                    getApiVersion(),
+                                                    Retcode.r_fail_compile_contract_VALUE);
+                                    Message.t_Contract tc =
+                                            Message.t_Contract
+                                                    .newBuilder()
+                                                    .setError(entry.getValue().error)
+                                                    .build();
+                                    return ApiUtil.combineRetMsg(
+                                            retHeader,
+                                            b.putConstracts(entry.getKey(), tc)
+                                                    .build()
+                                                    .toByteArray());
+                                }
+
+                                CompiledContr _contr = entry.getValue();
+                                JSONArray abi = new JSONArray();
+                                for (Abi.Entry f : _contr.info.abiDefinition) {
+                                    abi.put(f.toJSON());
+                                }
+
+                                Message.t_Contract tc =
+                                        Message.t_Contract
+                                                .newBuilder()
+                                                .setCode(_contr.code)
+                                                .setAbiDef(
+                                                        ByteString.copyFrom(
+                                                                abi.toString().getBytes()))
+                                                .setSource(_contr.info.source)
+                                                .build();
+
+                                b.putConstracts(entry.getKey(), tc);
+                            }
+                            Message.rsp_compile rsp = b.build();
+                            byte[] retHeader =
+                                    ApiUtil.toReturnHeader(
+                                            getApiVersion(), Retcode.r_success_VALUE);
+                            return ApiUtil.combineRetMsg(retHeader, rsp.toByteArray());
+                        } else {
+                            return ApiUtil.toReturnHeader(
+                                    getApiVersion(), Retcode.r_fail_function_exception_VALUE);
+                        }
+
+                    } catch (InvalidProtocolBufferException e) {
+                        LOG.error("ApiAion0.process.compile exception: [{}]", e.getMessage());
+                        return ApiUtil.toReturnHeader(
+                                getApiVersion(), Retcode.r_fail_function_exception_VALUE);
+                    }
+                }
+            case Funcs.f_compileSolidityZip_VALUE:
+                {
+                    if (service != Message.Servs.s_tx_VALUE) {
+                        return ApiUtil.toReturnHeader(
+                                getApiVersion(), Retcode.r_fail_service_call_VALUE);
+                    }
+
+                    byte[] data = parseMsgReq(request, msgHash);
+                    try {
+                        Message.req_compileSolidityZip req =
+                                Message.req_compileSolidityZip.parseFrom(data);
+                        ByteString zipfile = req.getZipfile();
+                        String entryPoint = req.getEntryPoint();
+                        if (zipfile == null) {
+                            return ApiUtil.toReturnHeader(
+                                    getApiVersion(), Retcode.r_fail_null_compile_source_VALUE);
+                        }
+
+                        @SuppressWarnings("unchecked")
+                        Map<String, CompiledContr> _contrs =
+                                this.contract_compileSolidityZip(zipfile.toByteArray(), entryPoint);
                         if (_contrs != null && !_contrs.isEmpty()) {
                             Message.rsp_compile.Builder b = Message.rsp_compile.newBuilder();
 
@@ -2579,8 +2655,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 log -> {
                                     List<String> topics = new ArrayList<>();
                                     for (int i = 0; i < log.getTopics().size(); i++) {
-                                        topics.add(
-                                                TypeConverter.toJsonHex(log.getTopics().get(i)));
+                                        topics.add(TypeConverter.toJsonHex(log.getTopics().get(i)));
                                     }
 
                                     return Message.t_LgEle

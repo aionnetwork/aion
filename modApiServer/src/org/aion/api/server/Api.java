@@ -4,7 +4,6 @@ import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,6 +20,7 @@ import org.aion.mcf.account.Keystore;
 import org.aion.mcf.types.AbstractBlock;
 import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
+import org.aion.solidity.CompilationResult.Contract;
 import org.aion.solidity.Compiler;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
@@ -58,7 +58,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     // }
     // --Commented out by Inspection STOP (02/02/18 6:56 PM)
 
-    public boolean unlockAccount(
+    protected boolean unlockAccount(
             final String _address, final String _password, final int _duration) {
         return this.ACCOUNT_MANAGER.unlockAccount(AionAddress.wrap(_address), _password, _duration);
     }
@@ -68,7 +68,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
         return this.ACCOUNT_MANAGER.unlockAccount(_address, _password, _duration);
     }
 
-    public boolean lockAccount(final Address _addr, final String _password) {
+    protected boolean lockAccount(final Address _addr, final String _password) {
         return this.ACCOUNT_MANAGER.lockAccount(_addr, _password);
     }
 
@@ -76,7 +76,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
         return Keystore.accountsSorted();
     }
 
-    public ECKey getAccountKey(final String _address) {
+    protected ECKey getAccountKey(final String _address) {
         return ACCOUNT_MANAGER.getKey(AionAddress.wrap(_address));
     }
 
@@ -92,45 +92,60 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
 
     public abstract BigInteger getBalance(final String _address) throws Exception;
 
-    public Map<String, CompiledContr> contract_compileSolidity(final String _contract) {
+    protected Map<String, CompiledContr> contract_compileSolidity(final String _contract) {
         try {
-            Map<String, CompiledContr> compiledContracts = new HashMap<String, CompiledContr>();
             Compiler.Result res =
                     solc.compile(_contract.getBytes(), Compiler.Options.ABI, Compiler.Options.BIN);
-            if (res.isFailed()) {
-                LOG.info("contract compile error: [{}]", res.errors);
-
-                /**
-                 * Enhance performance by separating the log threads and kernel TODO: Implement a
-                 * queue for strings TODO: Put every LOG message onto the queue TODO: Use a thread
-                 * service to process these message
-                 */
-                CompiledContr ret = new CompiledContr();
-                ret.error = res.errors;
-                compiledContracts.put("compile-error", ret);
-                return compiledContracts;
-            }
-            CompilationResult result = CompilationResult.parse(res.output);
-            Iterator<Entry<String, CompilationResult.Contract>> entries =
-                    result.contracts.entrySet().iterator();
-            while (entries.hasNext()) {
-                CompiledContr ret = new CompiledContr();
-                Entry<String, CompilationResult.Contract> entry = entries.next();
-                CompilationResult.Contract Contract = entry.getValue();
-                ret.code = TypeConverter.toJsonHex(Contract.bin);
-                ret.info = new CompiContrInfo();
-                ret.info.source = _contract;
-                ret.info.language = "Solidity";
-                ret.info.languageVersion = "0";
-                ret.info.compilerVersion = result.version;
-                ret.info.abiDefinition = Abi.fromJSON(Contract.abi).getEntries();
-                compiledContracts.put(entry.getKey(), ret);
-            }
-            return compiledContracts;
+            return processCompileRsp(res, _contract);
         } catch (IOException | NoSuchElementException ex) {
             LOG.debug("contract compile error");
             return null;
         }
+    }
+
+    protected Map<String, CompiledContr> contract_compileSolidityZip(
+            final byte[] zipfile, String entrypoint) {
+        try {
+            Compiler.Result res =
+                    solc.compileZip(
+                            zipfile, entrypoint, Compiler.Options.ABI, Compiler.Options.BIN);
+            return processCompileRsp(res, entrypoint);
+
+        } catch (IOException | NoSuchElementException ex) {
+            LOG.debug("contract compile error");
+            return null;
+        }
+    }
+
+    private Map<String, CompiledContr> processCompileRsp(Compiler.Result res, String source) {
+        Map<String, CompiledContr> compiledContracts = new HashMap<String, CompiledContr>();
+        if (res.isFailed()) {
+            LOG.info("contract compile error: [{}]", res.errors);
+
+            /*
+             Enhance performance by separating the log threads and kernel TODO: Implement a
+             queue for strings TODO: Put every LOG message onto the queue TODO: Use a thread
+             service to process these message
+            */
+            CompiledContr ret = new CompiledContr();
+            ret.error = res.errors;
+            compiledContracts.put("compile-error", ret);
+            return compiledContracts;
+        }
+        CompilationResult result = CompilationResult.parse(res.output);
+        for (Entry<String, Contract> stringContractEntry : result.contracts.entrySet()) {
+            CompiledContr ret = new CompiledContr();
+            Contract Contract = stringContractEntry.getValue();
+            ret.code = TypeConverter.toJsonHex(Contract.bin);
+            ret.info = new CompiContrInfo();
+            ret.info.source = source;
+            ret.info.language = "Solidity";
+            ret.info.languageVersion = "0";
+            ret.info.compilerVersion = result.version;
+            ret.info.abiDefinition = Abi.fromJSON(Contract.abi).getEntries();
+            compiledContracts.put(stringContractEntry.getKey(), ret);
+        }
+        return compiledContracts;
     }
 
     public String solcVersion() {
