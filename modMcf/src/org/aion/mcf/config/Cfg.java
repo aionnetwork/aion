@@ -39,6 +39,8 @@ public abstract class Cfg {
 
     protected CfgFork fork;
 
+    protected CfgVm vm;
+
     public void setId(final String _id) {
         this.id = _id;
     }
@@ -105,6 +107,10 @@ public abstract class Cfg {
 
     public CfgFork getFork() {
         return this.fork;
+    }
+
+    public CfgVm getVm() {
+        return this.vm;
     }
 
     public String[] getNodes() {
