@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -156,13 +156,13 @@ public class BlockchainAccountStateBenchmark {
 
     private static AionBlock createBundleAndCheck(
             StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
-        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
+        BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
         List<AionTransaction> transactions = new ArrayList<>();
 
         // create 400 transactions per bundle
         // byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice
         for (int i = 0; i < 400; i++) {
-            Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
+            AionAddress destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),
@@ -209,7 +209,7 @@ public class BlockchainAccountStateBenchmark {
             AionTxInfo info = bc.getTransactionInfo(res.getRight());
             assertThat(info.getReceipt().isValid()).isTrue();
 
-            Address contractAddress = info.getReceipt().getTransaction().getContractAddress();
+            AionAddress contractAddress = info.getReceipt().getTransaction().getContractAddress();
 
             byte[] contractCode =
                     bc.getRepository()
@@ -230,13 +230,13 @@ public class BlockchainAccountStateBenchmark {
 
     public static Pair<AionBlock, byte[]> createContract(
             StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
-        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
+        BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
 
         // deploy
         AionTransaction creationTx =
                 new AionTransaction(
                         accountNonce.toByteArray(),
-                        Address.EMPTY_ADDRESS(),
+                        AionAddress.EMPTY_ADDRESS(),
                         BigInteger.ZERO.toByteArray(),
                         ByteUtil.hexStringToBytes(STATE_EXPANSION_BYTECODE),
                         1000000,
@@ -244,15 +244,15 @@ public class BlockchainAccountStateBenchmark {
 
         creationTx.sign(key);
         AionBlock block = bc.createNewBlock(parentBlock, Arrays.asList(creationTx), true);
-        return Pair.of(block, creationTx.getHash());
+        return Pair.of(block, creationTx.getTransactionHash());
     }
 
     private static AionBlock createContractBundle(
             final StandaloneBlockchain bc,
             final ECKey key,
             final AionBlock parentBlock,
-            final Address contractAddress) {
-        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
+            final AionAddress contractAddress) {
+        BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
         List<AionTransaction> transactions = new ArrayList<>();
 
         // command

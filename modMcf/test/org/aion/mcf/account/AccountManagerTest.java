@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.junit.After;
@@ -21,8 +21,8 @@ import org.junit.Test;
 
 public class AccountManagerTest {
     private static AccountManager accountManager = AccountManager.inst();
-    private Address notRegistered =
-            Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
+    private AionAddress notRegistered =
+            AionAddress.wrap("a011111111111111111111111111111101010101010101010101010101010101");
     private final int DEFAULT_TEST_TIMEOUT = 10;
 
     private static ECKey k1;
@@ -76,11 +76,11 @@ public class AccountManagerTest {
         // unlock 2 accounts
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+                        AionAddress.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
         long timeOutTotal1 = Instant.now().getEpochSecond() + DEFAULT_TEST_TIMEOUT;
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k2.getAddress()), p2, DEFAULT_TEST_TIMEOUT));
+                        AionAddress.wrap(k2.getAddress()), p2, DEFAULT_TEST_TIMEOUT));
         long timeOutTotal2 = Instant.now().getEpochSecond() + DEFAULT_TEST_TIMEOUT;
 
         // check account manager
@@ -110,8 +110,8 @@ public class AccountManagerTest {
         // update the timeout from 1s to 2s
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, 20));
+                        AionAddress.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+        assertTrue(accountManager.unlockAccount(AionAddress.wrap(k1.getAddress()), p1, 20));
 
         // check that the timeout is updated
         assertThat(accountManager.getAccounts().get(0).getTimeout())
@@ -132,7 +132,7 @@ public class AccountManagerTest {
     public void testUnlockAccountWithWrongPassword() {
         assertFalse(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), "not p1", DEFAULT_TEST_TIMEOUT));
+                        AionAddress.wrap(k1.getAddress()), "not p1", DEFAULT_TEST_TIMEOUT));
 
         // check that no account has been put into the manager
         assertThat(accountManager.getAccounts().size()).isEqualTo(0);
@@ -143,7 +143,7 @@ public class AccountManagerTest {
         // unlock account with timeout greater than max
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_MAX + 10));
+                        AionAddress.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_MAX + 10));
 
         // check that the recoded timeout is no bigger than max
         assertThat(accountManager.getAccounts().get(0).getTimeout())
@@ -152,13 +152,13 @@ public class AccountManagerTest {
         // now update the timeout back to a small value so it can be cleared easily during @After
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+                        AionAddress.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
     }
 
     @Test
     public void testUnlockAccountWithNegativeTimeout() {
         // try to unlock account with a negative integer as the timeout
-        assertTrue(accountManager.unlockAccount(Address.wrap(k1.getAddress()), p1, -1));
+        assertTrue(accountManager.unlockAccount(AionAddress.wrap(k1.getAddress()), p1, -1));
         int expectedTimeout = (int) Instant.now().getEpochSecond() + AccountManager.UNLOCK_DEFAULT;
 
         // check that the account is created and added to the manager
@@ -175,10 +175,10 @@ public class AccountManagerTest {
         // first unlock an account
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+                        AionAddress.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
 
         // now try to lock it, the timeout will change
-        assertTrue(accountManager.lockAccount(Address.wrap(k1.getAddress()), p1));
+        assertTrue(accountManager.lockAccount(AionAddress.wrap(k1.getAddress()), p1));
 
         // check that the account is now locked
         List<Account> accountList = accountManager.getAccounts();
@@ -192,10 +192,10 @@ public class AccountManagerTest {
         // first unlock an account
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+                        AionAddress.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
 
         // try to lock a different account
-        assertTrue(accountManager.lockAccount(Address.wrap(k2.getAddress()), p2));
+        assertTrue(accountManager.lockAccount(AionAddress.wrap(k2.getAddress()), p2));
 
         // check that there is still only the first account in the manager
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
@@ -214,13 +214,13 @@ public class AccountManagerTest {
         // first unlock an account
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT + 1));
+                        AionAddress.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT + 1));
 
         // check if its there
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
 
         // try to lock with wrong password
-        assertFalse(accountManager.lockAccount(Address.wrap(k1.getAddress()), "not p1"));
+        assertFalse(accountManager.lockAccount(AionAddress.wrap(k1.getAddress()), "not p1"));
     }
 
     @Test
@@ -228,10 +228,10 @@ public class AccountManagerTest {
         // first unlock an account
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+                        AionAddress.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
 
         // retrieve the key
-        ECKey ret = accountManager.getKey(Address.wrap(k1.getAddress()));
+        ECKey ret = accountManager.getKey(AionAddress.wrap(k1.getAddress()));
 
         // check equality
         assertArrayEquals(ret.getAddress(), k1.getAddress());
@@ -242,13 +242,13 @@ public class AccountManagerTest {
         // first unlock an account
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
+                        AionAddress.wrap(k1.getAddress()), p1, DEFAULT_TEST_TIMEOUT));
 
         // lock the account
-        assertTrue(accountManager.lockAccount(Address.wrap(k1.getAddress()), p1));
+        assertTrue(accountManager.lockAccount(AionAddress.wrap(k1.getAddress()), p1));
 
         // retrieve key, but instead it is removed
-        assertNull(accountManager.getKey(Address.wrap(k1.getAddress())));
+        assertNull(accountManager.getKey(AionAddress.wrap(k1.getAddress())));
 
         // check that it was removed
         assertThat(accountManager.getAccounts().size()).isEqualTo(0);
@@ -260,7 +260,7 @@ public class AccountManagerTest {
         assertThat(accountManager.getAccounts().size()).isEqualTo(0);
 
         // try to get a key not in the manager
-        assertNull(accountManager.getKey(Address.wrap(k1.getAddress())));
+        assertNull(accountManager.getKey(AionAddress.wrap(k1.getAddress())));
     }
 
     @Test
@@ -268,11 +268,11 @@ public class AccountManagerTest {
         // first an account
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
+                        AionAddress.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
 
         // lock k1 and check that timeout is changed
-        assertTrue(accountManager.lockAccount(Address.wrap(k1.getAddress()), p1));
+        assertTrue(accountManager.lockAccount(AionAddress.wrap(k1.getAddress()), p1));
         List<Account> accountsList;
         accountsList = accountManager.getAccounts();
         assertThat(accountsList.size()).isEqualTo(1);
@@ -281,7 +281,7 @@ public class AccountManagerTest {
         // now unlock account with k1 again and check that timeout is changed
         assertTrue(
                 accountManager.unlockAccount(
-                        Address.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
+                        AionAddress.wrap(k1.getAddress()), p1, AccountManager.UNLOCK_DEFAULT));
         assertThat(accountManager.getAccounts().size()).isEqualTo(1);
         assertThat(accountsList.get(0).getTimeout())
                 .isEqualTo(Instant.now().getEpochSecond() + AccountManager.UNLOCK_DEFAULT);
@@ -289,14 +289,14 @@ public class AccountManagerTest {
 
     private static void cleanAccountManager() {
         // lock all the accounts, which modifies the timeout
-        accountManager.lockAccount(Address.wrap(k1.getAddress()), p1);
-        accountManager.lockAccount(Address.wrap(k2.getAddress()), p2);
-        accountManager.lockAccount(Address.wrap(k3.getAddress()), p3);
+        accountManager.lockAccount(AionAddress.wrap(k1.getAddress()), p1);
+        accountManager.lockAccount(AionAddress.wrap(k2.getAddress()), p2);
+        accountManager.lockAccount(AionAddress.wrap(k3.getAddress()), p3);
 
         // remove accounts
-        accountManager.getKey(Address.wrap(k1.getAddress()));
-        accountManager.getKey(Address.wrap(k2.getAddress()));
-        accountManager.getKey(Address.wrap(k3.getAddress()));
+        accountManager.getKey(AionAddress.wrap(k1.getAddress()));
+        accountManager.getKey(AionAddress.wrap(k2.getAddress()));
+        accountManager.getKey(AionAddress.wrap(k3.getAddress()));
 
         // check that manager is cleared
         assertThat(accountManager.getAccounts().size()).isEqualTo(0);

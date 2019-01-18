@@ -23,7 +23,7 @@ public class TxWaitingMappingUpdate {
     }
 
     public ByteArrayWrapper getTxResult() {
-        return ByteArrayWrapper.wrap(txReceipt.getExecutionResult());
+        return ByteArrayWrapper.wrap(txReceipt.getTransactionOutput());
     }
 
     public int getState() {

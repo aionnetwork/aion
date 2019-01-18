@@ -1,13 +1,12 @@
 package org.aion.vm;
 
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.vm.IDataWord;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.vm.api.interfaces.TransactionContext;
 
 public interface IContractFactory {
 
+    // Using FastVM interface for now... until full solution in place.
+
     IPrecompiledContract getPrecompiledContract(
-            ExecutionContext context,
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track);
+            TransactionContext context,
+            KernelInterfaceForFastVM track);
 }

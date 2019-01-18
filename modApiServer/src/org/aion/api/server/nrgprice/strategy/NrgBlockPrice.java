@@ -4,9 +4,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.aion.api.server.nrgprice.NrgPriceAdvisor;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.slf4j.Logger;
@@ -86,8 +87,8 @@ public class NrgBlockPrice extends NrgPriceAdvisor<AionBlock, AionTransaction> {
         // there is nothing stopping nrg price to be 0. don't explicitly enforce non-zero nrg.
         Long minNrg = null;
         for (AionTransaction txn : txns) {
-            if (coinbase.compareTo(txn.getFrom()) != 0) {
-                long nrg = txn.getNrgPrice();
+            if (!Arrays.equals(coinbase.toBytes(), txn.getSenderAddress().toBytes())) {
+                long nrg = txn.getEnergyPrice();
                 if (minNrg == null || nrg < minNrg) minNrg = nrg;
             }
         }

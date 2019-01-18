@@ -2,7 +2,7 @@ package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
@@ -44,7 +44,7 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
     protected IRewardsCalculator rewardsCalculatorAdapter;
     protected OptimizedEquiValidator equiValidator;
 
-    protected Address tokenBridgingOwnerAddress;
+    protected AionAddress tokenBridgingOwnerAddress;
 
     public ChainConfiguration() {
         this(new BlockConstants());

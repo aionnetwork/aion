@@ -3,13 +3,12 @@ package org.aion.precompiled.contracts.TRS;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 
 /**
  * The TRSuseContract is 1 of 3 inter-dependent but separate contracts that together make up the
@@ -45,8 +44,8 @@ public final class TRSuseContract extends AbstractTRS {
      * @param caller The calling address.
      */
     public TRSuseContract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo,
-            Address caller,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo,
+            AionAddress caller,
             IBlockchain blockchain) {
 
         super(repo, caller, blockchain);
@@ -188,18 +187,18 @@ public final class TRSuseContract extends AbstractTRS {
      * @return the result of calling execute on the specified input.
      */
     @Override
-    public ExecutionResult execute(byte[] input, long nrgLimit) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrgLimit) {
         if (input == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (input.length == 0) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (nrgLimit < COST) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
         if (!isValidTxNrg(nrgLimit)) {
-            return new ExecutionResult(ResultCode.INVALID_NRG_LIMIT, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INVALID_NRG_LIMIT, 0);
         }
 
         int operation = input[0];
@@ -219,7 +218,7 @@ public final class TRSuseContract extends AbstractTRS {
             case 6:
                 return addExtraFunds(input, nrgLimit);
             default:
-                return new ExecutionResult(ResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
     }
 
@@ -243,33 +242,34 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ExecutionResult deposit(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult deposit(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddress = 1;
         final int indexAmount = 33;
         final int len = 161;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, indexAmount));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A deposit operation can only execute if direct depositing is enabled or caller is owner.
-        Address owner = getContractOwner(contract);
+        AionAddress owner = getContractOwner(contract);
         if (!caller.equals(owner) && !isDirDepositsEnabled(contract)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A deposit operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not
         // open.
         if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
@@ -280,11 +280,11 @@ public final class TRSuseContract extends AbstractTRS {
         // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
         if (fundsAvailable.compareTo(amount) < 0) {
-            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
-        ExecutionResult result = makeDeposit(contract, caller, amount, nrgLimit);
-        if (result.getResultCode().equals(ResultCode.SUCCESS)) {
+        PrecompiledTransactionResult result = makeDeposit(contract, caller, amount, nrgLimit);
+        if (result.getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
             track.flush();
         }
         return result;
@@ -305,34 +305,34 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ExecutionResult withdraw(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult withdraw(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddress = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, len));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A withdraw operation can only execute if the current state of the TRS contract is:
         // contract is live (and obviously locked -- check this for sanity) or contract funds are
         // open.
         if (!isOpenFunds(contract) && (!isContractLocked(contract) || !isContractLive(contract))) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         if (!makeWithdrawal(contract, caller)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         track.flush();
-        return new ExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, COST - nrgLimit);
     }
 
     /**
@@ -357,39 +357,40 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ExecutionResult bulkDepositFor(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult bulkDepositFor(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexContract = 1;
         final int indexEntries = 33;
         final int entryLen = 160;
-        final int entryAddrLen = Address.ADDRESS_LEN;
+        final int entryAddrLen = AionAddress.SIZE;
         final int maxEntries = 100;
 
         // First ensure some basic properties about input hold: its lower and upper size limits and
         // that the entries portion has a length that is a multiple of an entry length.
         int len = input.length;
         if ((len < indexEntries + entryLen) || (len > indexEntries + (entryLen * maxEntries))) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         } else if ((len - indexEntries) % entryLen != 0) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexEntries));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexEntries));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A bulk-deposit-for operation can only execute if the caller is the owner of the contract.
         if (!getContractOwner(contract).equals(caller)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A bulkDepositFor operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not
         // open.
         if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // Iterate over every entry in the entries list and attempt to deposit for them.
@@ -397,7 +398,7 @@ public final class TRSuseContract extends AbstractTRS {
         int amtLen = entryLen - entryAddrLen;
         int index = indexEntries;
         byte[] amountBytes;
-        Address[] beneficiaries = new Address[numEntries];
+        AionAddress[] beneficiaries = new AionAddress[numEntries];
         BigInteger[] amounts = new BigInteger[numEntries];
         for (int i = 0; i < numEntries; i++) {
             // Put amount in a byte array one byte larger with an empty initial byte so it is
@@ -408,10 +409,11 @@ public final class TRSuseContract extends AbstractTRS {
 
             // Verify the account is an Aion address.
             if (input[index] != AION_PREFIX) {
-                return new ExecutionResult(ResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
             }
 
-            beneficiaries[i] = Address.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
+            beneficiaries[i] =
+                    AionAddress.wrap(Arrays.copyOfRange(input, index, index + entryAddrLen));
             index += 32 + 128;
         }
 
@@ -421,7 +423,7 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         if (track.getBalance(caller).compareTo(totalAmounts) < 0) {
-            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         for (int i = 0; i < numEntries; i++) {
@@ -429,7 +431,7 @@ public final class TRSuseContract extends AbstractTRS {
         }
 
         track.flush();
-        return new ExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, COST - nrgLimit);
     }
 
     /**
@@ -448,47 +450,47 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ExecutionResult bulkWithdraw(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult bulkWithdraw(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexAddress = 1;
         final int len = 33;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexAddress, len));
+        AionAddress contract = AionAddress.wrap(Arrays.copyOfRange(input, indexAddress, len));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A bulk-withdraw operation can only execute if the caller is the owner of the contract.
         if (!getContractOwner(contract).equals(caller)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A bulk-withdraw operation can only execute if the current state of the TRS contract is:
         // contract is live (and obviously locked -- check this for sanity) or the funds are open.
         if (!isOpenFunds(contract) && (!isContractLocked(contract) || !isContractLive(contract))) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // Iterate over all depositors and withdraw on their behalf. Once here this is a success.
         byte[] curr = getListHead(contract);
         if (curr == null) {
-            return new ExecutionResult(ResultCode.SUCCESS, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, 0);
         }
 
         while (curr != null) {
             curr[0] = AION_PREFIX;
-            Address currAcct = new Address(curr);
+            AionAddress currAcct = new AionAddress(curr);
             makeWithdrawal(contract, currAcct);
             curr = getListNext(contract, currAcct);
         }
 
         track.flush();
-        return new ExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, COST - nrgLimit);
     }
 
     /**
@@ -512,7 +514,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ExecutionResult refund(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult refund(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexContract = 1;
         final int indexAccount = 33;
@@ -520,33 +522,35 @@ public final class TRSuseContract extends AbstractTRS {
         final int len = 193;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A refund operation can only execute if the caller is the contract owner.
-        Address owner = getContractOwner(contract);
+        AionAddress owner = getContractOwner(contract);
         if (!caller.equals(owner)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A refund operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not
         // open.
         if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // Ensure the account exists (ie. has a positive deposit balance for the contract).
-        Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+        AionAddress account =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
         BigInteger accountBalance = getDepositBalance(contract, account);
         if (accountBalance.equals(BigInteger.ZERO)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
@@ -557,14 +561,14 @@ public final class TRSuseContract extends AbstractTRS {
         // The account must have a deposit balance large enough to make the refund.
         BigInteger newBalance = accountBalance.subtract(amount);
         if (newBalance.compareTo(BigInteger.ZERO) < 0) {
-            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         // If refund amount is larger than zero, update the depositor's current deposit balance and
         // then update the deposit meta-data (linked list, count, etc.) and refund the account.
         if (amount.compareTo(BigInteger.ZERO) > 0) {
             if (!setDepositBalance(contract, account, newBalance)) {
-                return new ExecutionResult(ResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
             }
             setTotalBalance(contract, getTotalBalance(contract).subtract(amount));
 
@@ -576,7 +580,7 @@ public final class TRSuseContract extends AbstractTRS {
             track.addBalance(account, amount);
             track.flush();
         }
-        return new ExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrgLimit - COST);
     }
 
     /**
@@ -599,7 +603,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ExecutionResult depositFor(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult depositFor(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexContract = 1;
         final int indexAccount = 33;
@@ -607,25 +611,26 @@ public final class TRSuseContract extends AbstractTRS {
         final int len = 193;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexAccount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A depositFor operation can only execute if caller is owner.
         if (!caller.equals(getContractOwner(contract))) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A depositFor operation can only execute if the current state of the TRS contract is:
         // contract is unlocked (and obviously not live -- check this for sanity) and funds are not
         // open.
         if (isContractLocked(contract) || isContractLive(contract) || isOpenFunds(contract)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
@@ -636,17 +641,18 @@ public final class TRSuseContract extends AbstractTRS {
         // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
         if (fundsAvailable.compareTo(amount) < 0) {
-            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         // Verify the account is an Aion address.
         if (input[indexAccount] != AION_PREFIX) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address account = Address.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
-        ExecutionResult result = makeDeposit(contract, account, amount, nrgLimit);
-        if (result.getResultCode().equals(ResultCode.SUCCESS)) {
+        AionAddress account =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexAccount, indexAmount));
+        PrecompiledTransactionResult result = makeDeposit(contract, account, amount, nrgLimit);
+        if (result.getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
             track.flush();
         }
         return result;
@@ -668,30 +674,31 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return the result of executing this logic on the specified input.
      */
-    private ExecutionResult addExtraFunds(byte[] input, long nrgLimit) {
+    private PrecompiledTransactionResult addExtraFunds(byte[] input, long nrgLimit) {
         // Some "constants".
         final int indexContract = 1;
         final int indexAmount = 33;
         final int len = 161;
 
         if (input.length != len) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address contract = Address.wrap(Arrays.copyOfRange(input, indexContract, indexAmount));
+        AionAddress contract =
+                AionAddress.wrap(Arrays.copyOfRange(input, indexContract, indexAmount));
         byte[] specs = getContractSpecs(contract);
         if (specs == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // A depositFor operation can only execute if caller is owner.
         if (!caller.equals(getContractOwner(contract))) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // If contract has its funds open then this operation fails.
         if (isOpenFunds(contract)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // Put amount in a byte array one byte larger with an empty initial byte so it is unsigned.
@@ -702,15 +709,15 @@ public final class TRSuseContract extends AbstractTRS {
         // The caller must have adequate funds to make the proposed deposit.
         BigInteger fundsAvailable = track.getBalance(caller);
         if (fundsAvailable.compareTo(amount) < 0) {
-            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         if (amount.compareTo(BigInteger.ZERO) > 0) {
             setExtraFunds(contract, getExtraFunds(contract).add(amount));
             track.addBalance(caller, amount.negate());
-            return new ExecutionResult(ResultCode.SUCCESS, COST - nrgLimit);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, COST - nrgLimit);
         }
-        return new ExecutionResult(ResultCode.FAILURE, 0);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
     }
 
     // <-------------------------------------HELPER METHODS---------------------------------------->
@@ -732,21 +739,21 @@ public final class TRSuseContract extends AbstractTRS {
      * @param nrgLimit The energy limit.
      * @return an execution result of either success or internal error.
      */
-    private ExecutionResult makeDeposit(
-            Address contract, Address account, BigInteger amount, long nrgLimit) {
+    private PrecompiledTransactionResult makeDeposit(
+            AionAddress contract, AionAddress account, BigInteger amount, long nrgLimit) {
 
         // If deposit amount is larger than zero, update the curret deposit balance of the account
         // for which this deposit is on the behalf of, and update the meta-deta etc.
         if (amount.compareTo(BigInteger.ZERO) > 0) {
             BigInteger currAmount = getDepositBalance(contract, account);
             if (!setDepositBalance(contract, account, currAmount.add(amount))) {
-                return new ExecutionResult(ResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
             }
             listAddToHead(contract, account);
             setTotalBalance(contract, getTotalBalance(contract).add(amount));
             track.addBalance(caller, amount.negate());
         }
-        return new ExecutionResult(ResultCode.SUCCESS, nrgLimit - COST);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrgLimit - COST);
     }
 
     /**
@@ -761,7 +768,7 @@ public final class TRSuseContract extends AbstractTRS {
      *
      * @param contract The TRS contract to update.
      */
-    private void listAddCallerToHead(Address contract) {
+    private void listAddCallerToHead(AionAddress contract) {
         listAddToHead(contract, caller);
     }
 
@@ -777,7 +784,7 @@ public final class TRSuseContract extends AbstractTRS {
      *
      * @param contract The TRS contract to update.
      */
-    private void listAddToHead(Address contract, Address account) {
+    private void listAddToHead(AionAddress contract, AionAddress account) {
         byte[] next = getListNextBytes(contract, account);
         if (accountIsValid(next)) {
             return;
@@ -792,12 +799,12 @@ public final class TRSuseContract extends AbstractTRS {
             head[0] = AION_PREFIX;
             setListPrevious(
                     contract,
-                    Address.wrap(head),
-                    Arrays.copyOf(account.toBytes(), Address.ADDRESS_LEN));
+                    AionAddress.wrap(head),
+                    Arrays.copyOf(account.toBytes(), AionAddress.SIZE));
         }
 
         // Set the head of the list to point to account and set account's previous entry to null.
-        setListHead(contract, Arrays.copyOf(account.toBytes(), Address.ADDRESS_LEN));
+        setListHead(contract, Arrays.copyOf(account.toBytes(), AionAddress.SIZE));
         setListPrevious(contract, account, null);
     }
 
@@ -815,7 +822,7 @@ public final class TRSuseContract extends AbstractTRS {
      * @param contract The TRS contract to update.
      * @param account The account to remove from the list.
      */
-    private void listRemoveAccount(Address contract, Address account) {
+    private void listRemoveAccount(AionAddress contract, AionAddress account) {
         byte[] prev = getListPrev(contract, account);
         byte[] next = getListNext(contract, account);
 

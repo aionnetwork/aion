@@ -1,10 +1,9 @@
 package org.aion.precompiled.contracts;
 
-import org.aion.base.type.Address;
-import org.aion.base.type.IExecutionResult;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.ed25519.ECKeyEd25519;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.vm.IPrecompiledContract;
 
 public class EDVerifyContract implements IPrecompiledContract {
@@ -20,16 +19,16 @@ public class EDVerifyContract implements IPrecompiledContract {
      *     address for fail)
      */
     @Override
-    public IExecutionResult execute(byte[] input, long nrgLimit) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrgLimit) {
 
         // check length
         if (input == null || input.length != 128) {
-            return new ExecutionResult(
-                    ResultCode.FAILURE, nrgLimit - COST, INCORRECT_LENGTH.getBytes());
+            return new PrecompiledTransactionResult(
+                    PrecompiledResultCode.FAILURE, nrgLimit - COST, INCORRECT_LENGTH.getBytes());
         }
 
         if (COST > nrgLimit) {
-            return new ExecutionResult(ExecutionResult.ResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
         byte[] msg = new byte[32];
         byte[] sig = new byte[64];
@@ -41,12 +40,12 @@ public class EDVerifyContract implements IPrecompiledContract {
 
         try {
             boolean verify = ECKeyEd25519.verify(msg, sig, pubKey);
-            return new ExecutionResult(
-                    ExecutionResult.ResultCode.SUCCESS,
+            return new PrecompiledTransactionResult(
+                    PrecompiledResultCode.SUCCESS,
                     nrgLimit - COST,
-                    verify ? pubKey : Address.ZERO_ADDRESS().toBytes());
+                    verify ? pubKey : AionAddress.ZERO_ADDRESS().toBytes());
         } catch (Exception e) {
-            return new ExecutionResult(ExecutionResult.ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
     }
 }

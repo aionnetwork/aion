@@ -22,14 +22,14 @@ public interface IBlockHeader {
 
     byte[] getEncoded();
 
-    Address getCoinbase();
+    AionAddress getCoinbase();
 
     long getTimestamp();
 
     long getNumber();
 
     // Setter
-    void setCoinbase(Address _cb);
+    void setCoinbase(AionAddress _cb);
 
     void setStateRoot(byte[] _strt);
 

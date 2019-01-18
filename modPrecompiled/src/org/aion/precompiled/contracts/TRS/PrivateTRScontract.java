@@ -1,12 +1,11 @@
 package org.aion.precompiled.contracts.TRS;
 
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.ExecutionResult;
 
 /**
  * The PrivateTRScontract is a private version of the TRS contract that is used solely by The Aion
@@ -21,7 +20,7 @@ import org.aion.vm.ExecutionResult;
  * in that the latter calls this contract to perform any supported operations it needs.
  */
 public final class PrivateTRScontract extends StatefulPrecompiledContract {
-    private final Address caller;
+    private final AionAddress caller;
 
     /**
      * Constructs a new PrivateTRScontract that will use repo as the database cache to update its
@@ -31,7 +30,7 @@ public final class PrivateTRScontract extends StatefulPrecompiledContract {
      * @param caller The calling address.
      */
     public PrivateTRScontract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo, Address caller) {
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo, AionAddress caller) {
 
         super(repo);
         this.caller = caller;
@@ -43,7 +42,7 @@ public final class PrivateTRScontract extends StatefulPrecompiledContract {
      * @return the result of calling execute on the specified input.
      */
     @Override
-    public ExecutionResult execute(byte[] input, long nrgLimit) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrgLimit) {
         // TODO
         return null;
     }

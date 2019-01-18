@@ -4,11 +4,11 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.Address;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.vm.api.interfaces.Address;
 
 /** Repository interface for information retrieval. */
-public interface IRepositoryQuery<AS, DW> {
+public interface IRepositoryQuery<AS> {
 
     // getters relating to user accounts
     // -------------------------------------------------------------------------------
@@ -28,11 +28,11 @@ public interface IRepositoryQuery<AS, DW> {
      * @param address the address of the account of interest
      * @param accounts a map representing a cache of {@link AS} where the account state will be
      *     loaded
-     * @param details a map representing a cache of {@link IContractDetails<DW>} where the contract
+     * @param details a map representing a cache of {@link IContractDetails>} where the contract
      *     details will be loaded
      */
     void loadAccountState(
-            Address address, Map<Address, AS> accounts, Map<Address, IContractDetails<DW>> details);
+            Address address, Map<Address, AS> accounts, Map<Address, IContractDetails> details);
 
     /**
      * Retrieves the current state of the account associated with the given address.
@@ -75,10 +75,10 @@ public interface IRepositoryQuery<AS, DW> {
      * Retrieves the contract details of the account associated with the given address.
      *
      * @param addr the address of the account of interest
-     * @return a {@link IContractDetails<DW>} object representing the contract details as are stored
-     *     in the database or cache
+     * @return a {@link IContractDetails<ByteArrayWrapper>} object representing the contract details
+     *     as are stored in the database or cache
      */
-    IContractDetails<DW> getContractDetails(Address addr);
+    IContractDetails getContractDetails(Address addr);
 
     /**
      * Retrieves the code for the account associated with the given address.
@@ -101,7 +101,8 @@ public interface IRepositoryQuery<AS, DW> {
      *     is {@code null}
      * @apiNote When called with a null key collection, the method retrieves all the storage keys.
      */
-    Map<DW, DW> getStorage(Address address, Collection<DW> keys);
+    Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(
+            Address address, Collection<ByteArrayWrapper> keys);
 
     //    /**
     //     * Retrieves the storage size the account associated with the given address.
@@ -121,7 +122,7 @@ public interface IRepositoryQuery<AS, DW> {
     //     * @return the set of storage keys, or an empty set if the given account
     //     *         address does not exist
     //     */
-    //    Set<DW> getStorageKeys(Address address);
+    //    Set<ByteArrayWrapper> getStorageKeys(Address address);
 
     /**
      * Retrieves the stored value for the specified key stored at the account associated with the
@@ -129,9 +130,9 @@ public interface IRepositoryQuery<AS, DW> {
      *
      * @param address the address of the account of interest
      * @param key the key of interest
-     * @return a {@link DW} representing the data associated with the given key
+     * @return a {@link ByteArrayWrapper} representing the data associated with the given key
      */
-    IDataWord getStorageValue(Address address, DW key);
+    ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key);
 
     /**
      * Retrieves the stored transactions for recovering pool tx.

@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.blockchain.valid.IValidRule.RuleError;
@@ -43,7 +43,7 @@ public class DifficultyRuleTest {
                         (byte) 0x01,
                         1,
                         new byte[32],
-                        Address.ZERO_ADDRESS(),
+                        AionAddress.ZERO_ADDRESS(),
                         new byte[256],
                         ByteUtil.intToBytes(1),
                         null,
@@ -57,7 +57,7 @@ public class DifficultyRuleTest {
                         (byte) 0x01,
                         2,
                         new byte[32],
-                        Address.ZERO_ADDRESS(),
+                        AionAddress.ZERO_ADDRESS(),
                         new byte[256],
                         ByteUtil.intToBytes(1),
                         null,
@@ -80,7 +80,7 @@ public class DifficultyRuleTest {
                         (byte) 0x01,
                         3,
                         new byte[32],
-                        Address.ZERO_ADDRESS(),
+                        AionAddress.ZERO_ADDRESS(),
                         new byte[256],
                         new byte[17],
                         null,
@@ -113,7 +113,7 @@ public class DifficultyRuleTest {
                         (byte) 0x01,
                         3,
                         new byte[32],
-                        Address.ZERO_ADDRESS(),
+                        AionAddress.ZERO_ADDRESS(),
                         new byte[256],
                         ByteUtil.bigIntegerToBytes(BigInteger.ONE, 16),
                         null,

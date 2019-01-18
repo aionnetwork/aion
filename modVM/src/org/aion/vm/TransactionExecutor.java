@@ -5,14 +5,16 @@ import java.util.Arrays;
 import java.util.List;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
-import org.aion.base.type.IExecutionResult;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.vm.types.Log;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IExecutionLog;
+import org.aion.vm.api.interfaces.ResultCode;
+import org.aion.vm.api.interfaces.TransactionContext;
+import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -29,7 +31,7 @@ import org.slf4j.Logger;
 public class TransactionExecutor extends AbstractExecutor {
     // provider is essential to execute, but it is only set manually with a setter, not good
     // practice
-    private ExecutionContext ctx;
+    private TransactionContext ctx;
     private AionTransaction tx;
     private IAionBlock block;
     private ExecutorProvider provider;
@@ -62,10 +64,13 @@ public class TransactionExecutor extends AbstractExecutor {
         /*
          * transaction info
          */
-        byte[] txHash = tx.getHash();
-        Address address = tx.isContractCreation() ? tx.getContractAddress() : tx.getTo();
-        Address origin = tx.getFrom();
-        Address caller = tx.getFrom();
+        byte[] txHash = tx.getTransactionHash();
+        Address address =
+                tx.isContractCreationTransaction()
+                        ? tx.getContractAddress()
+                        : tx.getDestinationAddress();
+        Address origin = tx.getSenderAddress();
+        Address caller = tx.getSenderAddress();
 
         /*
          * nrg info
@@ -74,7 +79,7 @@ public class TransactionExecutor extends AbstractExecutor {
         long nrgLimit = tx.nrgLimit() - tx.transactionCost(block.getNumber());
         DataWord callValue = new DataWord(ArrayUtils.nullToEmpty(tx.getValue()));
         byte[] callData =
-                tx.isContractCreation()
+                tx.isContractCreationTransaction()
                         ? ByteUtil.EMPTY_BYTE_ARRAY
                         : ArrayUtils.nullToEmpty(tx.getData());
 
@@ -82,13 +87,16 @@ public class TransactionExecutor extends AbstractExecutor {
          * execution info
          */
         int depth = 0;
-        int kind = tx.isContractCreation() ? ExecutionContext.CREATE : ExecutionContext.CALL;
+        int kind =
+                tx.isContractCreationTransaction()
+                        ? ExecutionContext.CREATE
+                        : ExecutionContext.CALL;
         int flags = 0;
 
         /*
          * block info
          */
-        Address blockCoinbase = block.getCoinbase();
+        AionAddress blockCoinbase = block.getCoinbase();
         long blockNumber = block.getNumber();
         long blockTimestamp = block.getTimestamp();
         long blockNrgLimit = block.getNrgLimit();
@@ -122,14 +130,14 @@ public class TransactionExecutor extends AbstractExecutor {
                         blockNrgLimit,
                         blockDifficulty);
 
-        exeResult = new ExecutionResult(ResultCode.SUCCESS, nrgLimit);
+        exeResult = new FastVmTransactionResult(FastVmResultCode.SUCCESS, nrgLimit, null);
     }
 
     /** Creates a transaction executor (use block nrg limit). */
     public TransactionExecutor(
             AionTransaction tx,
             IAionBlock block,
-            IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo,
             boolean isLocalCall,
             Logger logger) {
         this(tx, block, repo, isLocalCall, block.getNrgLimit(), logger);
@@ -139,7 +147,7 @@ public class TransactionExecutor extends AbstractExecutor {
     public TransactionExecutor(
             AionTransaction tx,
             IAionBlock block,
-            IRepositoryCache<AccountState, DataWord, IBlockStoreBase<?, ?>> repo,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo,
             Logger logger) {
         this(tx, block, repo, false, block.getNrgLimit(), logger);
     }
@@ -150,35 +158,39 @@ public class TransactionExecutor extends AbstractExecutor {
 
     /** Execute the transaction */
     public AionTxExecSummary execute() {
-        return (AionTxExecSummary) execute(tx, ctx.nrgLimit());
+        return (AionTxExecSummary) execute(tx, ctx.getTransactionEnergyLimit());
     }
 
     /** Prepares contract call. */
     protected void call() {
-        IPrecompiledContract pc = this.provider.getPrecompiledContract(this.ctx, this.repoTrack);
+        KernelInterfaceForFastVM kernel =
+                new KernelInterfaceForFastVM(repoTrack, askNonce, isLocalCall);
+
+        IPrecompiledContract pc = this.provider.getPrecompiledContract(this.ctx, kernel);
         if (pc != null) {
-            exeResult = pc.execute(tx.getData(), ctx.nrgLimit());
+            exeResult = pc.execute(tx.getData(), ctx.getTransactionEnergyLimit());
         } else {
             // execute code
-            byte[] code = repoTrack.getCode(tx.getTo());
+            byte[] code = repoTrack.getCode(tx.getDestinationAddress());
             if (!ArrayUtils.isEmpty(code)) {
                 VirtualMachine fvm = this.provider.getVM();
-                exeResult = fvm.run(code, ctx, repoTrack);
+                exeResult = fvm.run(code, ctx, kernel);
             }
         }
 
         // transfer value
         BigInteger txValue = new BigInteger(1, tx.getValue());
-        repoTrack.addBalance(tx.getFrom(), txValue.negate());
-        repoTrack.addBalance(tx.getTo(), txValue);
+        repoTrack.addBalance(tx.getSenderAddress(), txValue.negate());
+        repoTrack.addBalance(tx.getDestinationAddress(), txValue);
     }
 
     /** Prepares contract create. */
     protected void create() {
-        Address contractAddress = tx.getContractAddress();
+        AionAddress contractAddress = tx.getContractAddress();
 
         if (repoTrack.hasAccountState(contractAddress)) {
-            exeResult.setCodeAndNrgLeft(ResultCode.FAILURE.toInt(), 0);
+            exeResult.setResultCode(FastVmResultCode.FAILURE);
+            exeResult.setEnergyRemaining(0);
             return;
         }
 
@@ -188,71 +200,62 @@ public class TransactionExecutor extends AbstractExecutor {
         // execute contract deployer
         if (!ArrayUtils.isEmpty(tx.getData())) {
             VirtualMachine fvm = this.provider.getVM();
-            exeResult = fvm.run(tx.getData(), ctx, repoTrack);
+            KernelInterfaceForFastVM kernel =
+                    new KernelInterfaceForFastVM(repoTrack, askNonce, isLocalCall);
+            exeResult = fvm.run(tx.getData(), ctx, kernel);
 
-            if (exeResult.getCode() == ResultCode.SUCCESS.toInt()) {
+            if (exeResult.getResultCode().toInt() == FastVmResultCode.SUCCESS.toInt()) {
                 repoTrack.saveCode(contractAddress, exeResult.getOutput());
             }
         }
 
         // transfer value
         BigInteger txValue = new BigInteger(1, tx.getValue());
-        repoTrack.addBalance(tx.getFrom(), txValue.negate());
+        repoTrack.addBalance(tx.getSenderAddress(), txValue.negate());
         repoTrack.addBalance(contractAddress, txValue);
     }
 
     /** Finalize state changes and returns summary. */
     protected AionTxExecSummary finish() {
 
-        ExecutionHelper rootHelper = new ExecutionHelper();
-        rootHelper.merge(ctx.helper(), exeResult.getCode() == ResultCode.SUCCESS.toInt());
+        SideEffects rootHelper = new SideEffects();
+        if (exeResult.getResultCode().toInt() == FastVmResultCode.SUCCESS.toInt()) {
+            rootHelper.merge(ctx.getSideEffects());
+        } else {
+            rootHelper.addInternalTransactions(ctx.getSideEffects().getInternalTransactions());
+        }
 
         AionTxExecSummary.Builder builder =
-                AionTxExecSummary.builderFor(getReceipt(rootHelper.getLogs())) //
-                        .logs(rootHelper.getLogs()) //
-                        .deletedAccounts(rootHelper.getDeleteAccounts()) //
+                AionTxExecSummary.builderFor(getReceipt(rootHelper.getExecutionLogs())) //
+                        .logs(rootHelper.getExecutionLogs()) //
+                        .deletedAccounts(rootHelper.getAddressesToBeDeleted()) //
                         .internalTransactions(rootHelper.getInternalTransactions()) //
                         .result(exeResult.getOutput());
 
-        switch (((ExecutionResult) exeResult).getResultCode()) {
-            case SUCCESS:
-                repoTrack.flush();
-                break;
-            case INVALID_NONCE:
-            case INVALID_NRG_LIMIT:
-            case INSUFFICIENT_BALANCE:
-                builder.markAsRejected();
-                break;
-            case FAILURE:
-            case OUT_OF_NRG:
-            case BAD_INSTRUCTION:
-            case BAD_JUMP_DESTINATION:
-            case STACK_OVERFLOW:
-            case STACK_UNDERFLOW:
-            case REVERT:
-            case STATIC_MODE_ERROR:
-                builder.markAsFailed();
-                break;
-            case VM_REJECTED:
-            case VM_INTERNAL_ERROR:
-            default:
-                throw new RuntimeException("invalid code path, should not ever default");
+        ResultCode resultCode = exeResult.getResultCode();
+
+        if (resultCode.isSuccess()) {
+            repoTrack.flush();
+        } else if (resultCode.isRejected()) {
+            builder.markAsRejected();
+        } else if (resultCode.isFailed()) {
+            builder.markAsFailed();
         }
 
         AionTxExecSummary summary = builder.build();
 
-        updateRepo(summary, tx, block.getCoinbase(), rootHelper.getDeleteAccounts());
+        updateRepo(summary, tx, block.getCoinbase(), rootHelper.getAddressesToBeDeleted());
 
         return summary;
     }
 
     /** Returns the transaction receipt. */
-    protected AionTxReceipt getReceipt(List<Log> logs) {
+    protected AionTxReceipt getReceipt(List<IExecutionLog> logs) {
         //        AionTxReceipt receipt = new AionTxReceipt();
         //        receipt.setTransaction(tx);
         //        receipt.setLogs(txResult.getLogs());
         //        receipt.setNrgUsed(getNrgUsed(tx.nrgLimit()));
-        //        receipt.setExecutionResult(exeResult.getOutput());
+        //        receipt.setTransactionResult(exeResult.getOutput());
         //        receipt
         //            .setError(exeResult.getCode() == ResultCode.SUCCESS ? "" :
         // exeResult.getCode().name());
@@ -261,11 +264,11 @@ public class TransactionExecutor extends AbstractExecutor {
         return (AionTxReceipt) buildReceipt(new AionTxReceipt(), tx, logs);
     }
 
-    public ExecutionContext getContext() {
+    public TransactionContext getContext() {
         return ctx;
     }
 
-    public IExecutionResult getResult() {
+    public TransactionResult getResult() {
         return exeResult;
     }
 }

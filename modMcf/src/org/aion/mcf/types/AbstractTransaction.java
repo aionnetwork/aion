@@ -1,11 +1,12 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
 import org.aion.crypto.ISignature;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.api.interfaces.Address;
 import org.slf4j.Logger;
 
 public abstract class AbstractTransaction implements ITransaction {
@@ -89,9 +90,9 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public abstract byte[] getEncoded();
 
-    public abstract Address getFrom();
+    public abstract Address getSenderAddress();
 
-    public abstract Address getTo();
+    public abstract Address getDestinationAddress();
 
     public abstract byte[] getNonce();
 
@@ -105,7 +106,7 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public abstract void setNrgConsume(long consume);
 
-    public abstract byte getType();
+    public abstract byte getTransactionType();
 
     public abstract BigInteger getNonceBI();
 

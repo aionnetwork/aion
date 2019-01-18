@@ -3,8 +3,8 @@ package org.aion.precompiled.contracts;
 import static org.aion.crypto.HashUtil.blake256;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.vm.IPrecompiledContract;
 
 /**
@@ -29,12 +29,14 @@ public class Blake2bHashContract implements IPrecompiledContract {
      * @param input data input; must be less or equal than 2 MB
      * @return the returned blake2b 256bits hash is in ExecutionResult.getOutput
      */
-    public ExecutionResult execute(byte[] input, long nrg) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrg) {
 
         // check length
         if (input == null || input.length == 0 || input.length > 2_097_152L) {
-            return new ExecutionResult(
-                    ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
+            return new PrecompiledTransactionResult(
+                    PrecompiledResultCode.FAILURE,
+                    nrg - COST,
+                    INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
         long additionalNRG =
@@ -44,15 +46,15 @@ public class Blake2bHashContract implements IPrecompiledContract {
         long nrgLeft = nrg - (COST + additionalNRG);
 
         if (nrgLeft < 0) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
 
         return blake256Hash(input, nrgLeft);
     }
 
-    private ExecutionResult blake256Hash(byte[] input, long nrg) {
+    private PrecompiledTransactionResult blake256Hash(byte[] input, long nrg) {
         byte[] hash = blake256(input);
-        return new ExecutionResult(ResultCode.SUCCESS, nrg, hash);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg, hash);
     }
 
     @VisibleForTesting

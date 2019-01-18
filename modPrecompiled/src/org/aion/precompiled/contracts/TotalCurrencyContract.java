@@ -2,17 +2,18 @@ package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.BIUtil;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.interfaces.Address;
 
 /** A pre-compiled contract for retrieving and updating the total amount of currency. */
 public class TotalCurrencyContract extends StatefulPrecompiledContract {
@@ -30,7 +31,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      * @param ownerAddress
      */
     public TotalCurrencyContract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             Address address,
             Address ownerAddress) {
         super(track);
@@ -80,7 +81,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
      * }</pre>
      */
     @Override
-    public ExecutionResult execute(byte[] input, long nrg) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrg) {
         // query portion (pure)
         if (input.length == 1) {
             return queryNetworkBalance(input[0], nrg);
@@ -89,24 +90,26 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         }
     }
 
-    private ExecutionResult queryNetworkBalance(int input, long nrg) {
+    private PrecompiledTransactionResult queryNetworkBalance(int input, long nrg) {
         if (nrg < COST) {
             // TODO: should this cost be the same as updating state (probably not?)
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
 
-        IDataWord balanceData = this.track.getStorageValue(this.address, new DataWord(input));
-        return new ExecutionResult(ResultCode.SUCCESS, nrg - COST, balanceData.getData());
+        ByteArrayWrapper balanceData =
+                this.track.getStorageValue(this.address, new DataWord(input).toWrapper());
+        return new PrecompiledTransactionResult(
+                PrecompiledResultCode.SUCCESS, nrg - COST, balanceData.getData());
     }
 
-    private ExecutionResult executeUpdateTotalBalance(byte[] input, long nrg) {
+    private PrecompiledTransactionResult executeUpdateTotalBalance(byte[] input, long nrg) {
         // update total portion
         if (nrg < COST) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
 
         if (input.length < 114) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // process input data
@@ -127,7 +130,7 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         // verify signature is correct
         Ed25519Signature sig = Ed25519Signature.fromBytes(sign);
         if (sig == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         byte[] payload = new byte[18];
@@ -135,22 +138,22 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         boolean b = ECKeyEd25519.verify(payload, sig.getSignature(), sig.getPubkey(null));
 
         if (!b) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // verify public key matches owner
-        if (!this.ownerAddress.equals(Address.wrap(sig.getAddress()))) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+        if (!this.ownerAddress.equals(AionAddress.wrap(sig.getAddress()))) {
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         // payload processing
-        IDataWord totalCurr = this.track.getStorageValue(this.address, chainId);
+        ByteArrayWrapper totalCurr = this.track.getStorageValue(this.address, chainId.toWrapper());
         BigInteger totalCurrBI =
                 totalCurr == null ? BigInteger.ZERO : BIUtil.toBI(totalCurr.getData());
         BigInteger value = BIUtil.toBI(amount);
 
         if (signum != 0x0 && signum != 0x1) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         BigInteger finalValue;
@@ -160,14 +163,17 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         } else {
             // subtraction
             if (value.compareTo(totalCurrBI) > 0) {
-                return new ExecutionResult(ResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
             }
 
             finalValue = totalCurrBI.subtract(value);
         }
 
         // store result and successful exit
-        this.track.addStorageRow(this.address, chainId, new DataWord(finalValue.toByteArray()));
-        return new ExecutionResult(ResultCode.SUCCESS, nrg - COST);
+        this.track.addStorageRow(
+                this.address,
+                chainId.toWrapper(),
+                new DataWord(finalValue.toByteArray()).toWrapper());
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - COST);
     }
 }

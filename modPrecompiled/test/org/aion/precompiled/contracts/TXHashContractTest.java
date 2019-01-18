@@ -11,10 +11,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.aion.mcf.config.CfgFork;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.vm.ExecutionContext;
-import org.aion.vm.ExecutionResult;
 import org.aion.vm.IPrecompiledContract;
+import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -76,7 +76,7 @@ public class TXHashContractTest {
 
     @Test
     public void testgetTxHash() {
-        ExecutionResult res = (ExecutionResult) tXHashContract.execute(null, INPUT_NRG);
+        TransactionResult res = tXHashContract.execute(null, INPUT_NRG);
 
         System.out.println(res.toString());
         assertTrue(Arrays.equals(txHash, res.getOutput()));
@@ -84,9 +84,9 @@ public class TXHashContractTest {
 
     @Test
     public void testgetTxHashOutofNrg() {
-        ExecutionResult res = (ExecutionResult) tXHashContract.execute(null, COST - 1);
+        TransactionResult res = tXHashContract.execute(null, COST - 1);
 
         System.out.println(res.toString());
-        assertEquals(ResultCode.OUT_OF_NRG.toInt(), res.getResultCode().toInt());
+        assertEquals(PrecompiledResultCode.OUT_OF_NRG.toInt(), res.getResultCode().toInt());
     }
 }

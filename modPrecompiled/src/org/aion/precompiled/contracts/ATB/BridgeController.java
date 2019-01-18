@@ -10,14 +10,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
-import org.aion.vm.ExecutionHelper;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.interfaces.TransactionSideEffects;
 
 /**
  * Contains the functional components of the Aion Token Bridge, this class is removed from concerns
@@ -26,16 +27,16 @@ import org.aion.vm.ExecutionResult;
 public class BridgeController {
 
     private final BridgeStorageConnector connector;
-    private final ExecutionHelper result;
-    private final Address contractAddress;
-    private final Address ownerAddress;
+    private final TransactionSideEffects result;
+    private final AionAddress contractAddress;
+    private final AionAddress ownerAddress;
     private Transferable transferable;
 
     public BridgeController(
             @Nonnull final BridgeStorageConnector storageConnector,
-            @Nonnull final ExecutionHelper helper,
-            @Nonnull final Address contractAddress,
-            @Nonnull final Address ownerAddress) {
+            @Nonnull final TransactionSideEffects helper,
+            @Nonnull final AionAddress contractAddress,
+            @Nonnull final AionAddress ownerAddress) {
         this.connector = storageConnector;
         this.result = helper;
         this.contractAddress = contractAddress;
@@ -254,7 +255,7 @@ public class BridgeController {
         if (signed < minThresh) return processError(ErrCode.NOT_ENOUGH_SIGNATURES);
 
         // otherwise, we're clear to proceed with transfers
-        List<ExecutionResult> results = new ArrayList<>();
+        List<PrecompiledTransactionResult> results = new ArrayList<>();
         for (BridgeTransfer b : transfers) {
 
             if (b.getTransferValue().compareTo(BigInteger.ZERO) == 0)
@@ -273,15 +274,15 @@ public class BridgeController {
              * For how this is documented, check the {@code Transferable}
              * interface documentation.
              */
-            ExecutionResult result;
+            PrecompiledTransactionResult result;
             if ((result = transferable.transfer(b.getRecipient(), b.getTransferValue()))
                             .getResultCode()
-                    == ExecutionResult.ResultCode.FAILURE)
+                    == PrecompiledResultCode.FAILURE)
                 // no need to return list of transactions, since they're all being dropped
                 return processError(ErrCode.INVALID_TRANSFER);
 
             // otherwise if transfer was successful
-            if (result.getResultCode() == ExecutionResult.ResultCode.SUCCESS)
+            if (result.getResultCode() == PrecompiledResultCode.SUCCESS)
                 if (!emitDistributed(
                         b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue()))
                     return processError(ErrCode.INVALID_TRANSFER);
@@ -345,9 +346,9 @@ public class BridgeController {
 
     static class ProcessedResults {
         final ErrCode controllerResult;
-        final List<ExecutionResult> internalResults;
+        final List<PrecompiledTransactionResult> internalResults;
 
-        private ProcessedResults(ErrCode code, List<ExecutionResult> internalResults) {
+        private ProcessedResults(ErrCode code, List<PrecompiledTransactionResult> internalResults) {
             this.controllerResult = code;
             this.internalResults = internalResults;
         }
@@ -356,7 +357,7 @@ public class BridgeController {
             return new ProcessedResults(code, null);
         }
 
-        static ProcessedResults processSuccess(List<ExecutionResult> results) {
+        static ProcessedResults processSuccess(List<PrecompiledTransactionResult> results) {
             return new ProcessedResults(ErrCode.NO_ERROR, results);
         }
     }

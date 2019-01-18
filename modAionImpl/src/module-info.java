@@ -17,14 +17,16 @@ module aion.zero.impl {
     requires aion.vm;
     requires aion.precompiled;
     requires aion.fastvm;
-    requires jdk.management;
-    requires java.xml;
     requires slf4j.api;
     requires com.google.common;
     requires info.picocli;
     requires commons.lang3;
     requires commons.collections4;
     requires org.json;
+    requires aion.vm.api;
+    requires java.management;
+    requires jdk.management;
+    requires java.xml;
 
     exports org.aion.equihash;
     exports org.aion.zero.impl.blockchain;

@@ -3,8 +3,8 @@ package org.aion.mcf.blockchain;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
+import org.aion.vm.api.interfaces.Address;
 
 public interface IPendingState<TX extends ITransaction> {
 
@@ -12,7 +12,7 @@ public interface IPendingState<TX extends ITransaction> {
 
     TxResponse addPendingTransaction(TX tx);
 
-    IRepositoryCache<?, ?, ?> getRepository();
+    IRepositoryCache<?, ?> getRepository();
 
     List<TX> getPendingTransactions();
 

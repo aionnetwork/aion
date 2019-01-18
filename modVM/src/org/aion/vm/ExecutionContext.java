@@ -1,18 +1,24 @@
 package org.aion.vm;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.base.vm.IDataWord;
+import org.aion.vm.api.interfaces.TransactionContext;
+import org.aion.vm.api.interfaces.TransactionSideEffects;
 
 /**
  * Execution context, including both transaction and block information.
  *
  * @author yulong
  */
-public class ExecutionContext {
+public class ExecutionContext implements TransactionContext {
     private static final int ENCODE_BASE_LEN =
-            (Address.ADDRESS_LEN * 4)
+            (AionAddress.SIZE * 4)
                     + (DataWord.BYTES * 3)
                     + (Long.BYTES * 4)
                     + (Integer.BYTES * 4);
@@ -21,16 +27,16 @@ public class ExecutionContext {
     public static int CALLCODE = 2;
     public static int CREATE = 3;
 
-    private ExecutionHelper helper;
+    private SideEffects sideEffects;
     private Address origin;
     private byte[] originalTxHash;
 
     public Address address;
     public Address sender;
     private Address blockCoinbase;
-    private DataWord nrgPrice;
-    private DataWord callValue;
-    private DataWord blockDifficulty;
+    private IDataWord nrgPrice;
+    private IDataWord callValue;
+    private IDataWord blockDifficulty;
     private byte[] callData;
     private byte[] txHash;
     private long nrgLimit; // NOTE: nrg_limit = tx_nrg_limit - tx_basic_cost
@@ -68,9 +74,9 @@ public class ExecutionContext {
             Address destination,
             Address origin,
             Address sender,
-            DataWord nrgPrice,
+            IDataWord nrgPrice,
             long nrgLimit,
-            DataWord callValue,
+            IDataWord callValue,
             byte[] callData,
             int depth,
             int kind,
@@ -79,7 +85,7 @@ public class ExecutionContext {
             long blockNumber,
             long blockTimestamp,
             long blockNrgLimit,
-            DataWord blockDifficulty) {
+            IDataWord blockDifficulty) {
 
         super();
 
@@ -87,6 +93,7 @@ public class ExecutionContext {
         this.origin = origin;
         this.sender = sender;
         this.nrgPrice = nrgPrice;
+        this.blockDifficulty = blockDifficulty;
         this.nrgLimit = nrgLimit;
         this.callValue = callValue;
         this.callData = callData;
@@ -97,11 +104,10 @@ public class ExecutionContext {
         this.blockNumber = blockNumber;
         this.blockTimestamp = blockTimestamp;
         this.blockNrgLimit = blockNrgLimit;
-        this.blockDifficulty = blockDifficulty;
         this.txHash = txHash;
         this.originalTxHash = txHash;
 
-        this.helper = new ExecutionHelper();
+        this.sideEffects = new SideEffects();
     }
 
     /**
@@ -115,6 +121,7 @@ public class ExecutionContext {
      *
      * @return a binary encoding of this ExecutionContext.
      */
+    @Override
     public byte[] toBytes() {
         ByteBuffer buffer = ByteBuffer.allocate(getEncodingLength());
         buffer.order(ByteOrder.BIG_ENDIAN);
@@ -138,97 +145,117 @@ public class ExecutionContext {
     }
 
     /** @return the transaction hash. */
-    public byte[] transactionHash() {
+    @Override
+    public byte[] getTransactionHash() {
         return txHash;
     }
 
+    @Override
+    public void setDestinationAddress(Address address) {
+        this.address = address;
+    }
+
     /** @return the transaction address. */
-    public Address address() {
+    @Override
+    public Address getDestinationAddress() {
         return address;
     }
 
     /** @return the origination address, which is the sender of original transaction. */
-    public Address origin() {
+    @Override
+    public Address getOriginAddress() {
         return origin;
     }
 
     /** @return the transaction caller. */
-    public Address sender() {
+    @Override
+    public Address getSenderAddress() {
         return sender;
     }
 
     /** @return the nrg price in current environment. */
-    public DataWord nrgPrice() {
-        return nrgPrice;
+    @Override
+    public long getTransactionEnergyPrice() {
+        if (this.nrgPrice instanceof DataWord) {
+            return ((DataWord) this.nrgPrice).longValue();
+        } else {
+            return ((DoubleDataWord) this.nrgPrice).longValue();
+        }
     }
 
     /** @return the nrg limit in current environment. */
-    public long nrgLimit() {
+    public long getTransactionEnergyLimit() {
         return nrgLimit;
     }
 
-    /** @return the deposited value by instruction/trannsaction. */
-    public DataWord callValue() {
-        return callValue;
+    /** @return the deposited value by instruction/transaction. */
+    @Override
+    public BigInteger getTransferValue() {
+        return callValue.value();
     }
 
     /** @return the call data. */
-    public byte[] callData() {
+    @Override
+    public byte[] getTransactionData() {
         return callData;
     }
 
     /** @return the execution stack depth. */
-    public int depth() {
+    @Override
+    public int getTransactionStackDepth() {
         return depth;
     }
 
     /** @return the transaction kind. */
-    public int kind() {
+    @Override
+    public int getTransactionKind() {
         return kind;
     }
 
     /** @return the transaction flags. */
-    public int flags() {
+    @Override
+    public int getFlags() {
         return flags;
     }
 
     /** @return the block's beneficiary. */
-    public Address blockCoinbase() {
+    @Override
+    public Address getMinerAddress() {
         return blockCoinbase;
     }
 
     /** @return the block number. */
-    public long blockNumber() {
+    @Override
+    public long getBlockNumber() {
         return blockNumber;
     }
 
     /** @return the block timestamp. */
-    public long blockTimestamp() {
+    @Override
+    public long getBlockTimestamp() {
         return blockTimestamp;
     }
 
     /** @return the block energy limit. */
-    public long blockNrgLimit() {
+    @Override
+    public long getBlockEnergyLimit() {
         return blockNrgLimit;
     }
 
     /** @return the block difficulty. */
-    public DataWord blockDifficulty() {
-        return blockDifficulty;
+    @Override
+    public long getBlockDifficulty() {
+        if (blockDifficulty instanceof DataWord) {
+            return ((DataWord) blockDifficulty).longValue();
+        } else {
+            return ((DoubleDataWord) blockDifficulty).longValue();
+        }
     }
 
     /** @return the transaction helper. */
-    public ExecutionHelper helper() {
-        return helper;
-    }
-
-    /**
-     * Sets the transaction address to address.
-     *
-     * @param destination The new address.
-     */
-    public void setDestination(Address destination) {
-        this.address = destination;
+    @Override
+    public TransactionSideEffects getSideEffects() {
+        return sideEffects;
     }
 
     /**
@@ -236,6 +263,7 @@ public class ExecutionContext {
      *
      * @param txHash The new transaction hash.
      */
+    @Override
     public void setTransactionHash(byte[] txHash) {
         this.txHash = txHash;
     }
@@ -250,7 +278,8 @@ public class ExecutionContext {
     }
 
     /** @return the original transaction hash. */
-    public byte[] getOriginalTxHash() {
+    @Override
+    public byte[] getHashOfOriginTransaction() {
         return originalTxHash;
     }
 }

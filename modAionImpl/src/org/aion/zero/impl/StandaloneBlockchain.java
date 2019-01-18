@@ -12,7 +12,7 @@ import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
@@ -214,8 +214,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                     this.a0Config == null
                             ? new A0BCConfig() {
                                 @Override
-                                public Address getCoinbase() {
-                                    return Address.ZERO_ADDRESS();
+                                public AionAddress getCoinbase() {
+                                    return AionAddress.ZERO_ADDRESS();
                                 }
 
                                 @Override
@@ -229,8 +229,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 }
 
                                 @Override
-                                public Address getMinerCoinbase() {
-                                    return Address.ZERO_ADDRESS();
+                                public AionAddress getMinerCoinbase() {
+                                    return AionAddress.ZERO_ADDRESS();
                                 }
 
                                 @Override
@@ -293,7 +293,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
-                genesisBuilder.addPreminedAccount(Address.wrap(acc.getKey()), acc.getValue());
+                genesisBuilder.addPreminedAccount(AionAddress.wrap(acc.getKey()), acc.getValue());
             }
 
             AionGenesis genesis;
@@ -310,11 +310,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
                 track.addStorageRow(
                         ContractFactory.getTotalCurrencyContractAddress(),
-                        new DataWord(key.getKey()),
-                        new DataWord(key.getValue()));
+                        new DataWord(key.getKey()).toWrapper(),
+                        new DataWord(key.getValue()).toWrapper());
             }
 
-            for (Address key : genesis.getPremine().keySet()) {
+            for (AionAddress key : genesis.getPremine().keySet()) {
                 track.createAccount(key);
                 track.addBalance(key, genesis.getPremine().get(key).getBalance());
             }

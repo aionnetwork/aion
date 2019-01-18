@@ -12,9 +12,8 @@ import java.util.List;
 import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
@@ -24,14 +23,15 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
 
-public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> {
+public class AionContractDetailsImpl extends AbstractContractDetails {
 
     private IByteArrayKeyValueStore dataSource;
 
     private byte[] rlpEncoded;
 
-    private Address address = Address.EMPTY_ADDRESS();
+    private Address address = AionAddress.EMPTY_ADDRESS();
 
     private SecureTrie storageTrie = new SecureTrie(null);
 
@@ -60,27 +60,27 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
     }
 
     /**
-     * Adds the key-value pair to the database unless value is an IDataWord whose underlying byte
-     * array consists only of zeros. In this case, if key already exists in the database it will be
-     * deleted.
+     * Adds the key-value pair to the database unless value is an ByteArrayWrapper whose underlying
+     * byte array consists only of zeros. In this case, if key already exists in the database it
+     * will be deleted.
      *
      * @param key The key.
      * @param value The value.
      */
     @Override
-    public void put(IDataWord key, IDataWord value) {
+    public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
         // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
         // we can differentiate between the two.
 
         if (value.isZero()) {
             storageTrie.delete(key.getData());
         } else {
+            // TODO: VM must handle padding
             boolean isDouble = value.getData().length == DoubleDataWord.BYTES;
             byte[] data =
                     (isDouble)
                             ? RLP.encodeElement(value.getData())
                             : RLP.encodeElement(value.getNoLeadZeroesData());
-
             storageTrie.update(key.getData(), data);
         }
 
@@ -96,14 +96,15 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @return the corresponding value or a zero-byte DataWord if no such value.
      */
     @Override
-    public IDataWord get(IDataWord key) {
-        IDataWord result = DataWord.ZERO;
+    public ByteArrayWrapper get(ByteArrayWrapper key) {
+        ByteArrayWrapper result = DataWord.ZERO.toWrapper();
 
         byte[] data = storageTrie.get(key.getData());
+        // TODO: VM must handle padding
         if (data.length >= DoubleDataWord.BYTES) {
-            result = new DoubleDataWord(RLP.decode2(data).get(0).getRLPData());
+            result = new DoubleDataWord(RLP.decode2(data).get(0).getRLPData()).toWrapper();
         } else if (data.length > 0) {
-            result = new DataWord(RLP.decode2(data).get(0).getRLPData());
+            result = new DataWord(RLP.decode2(data).get(0).getRLPData()).toWrapper();
         }
 
         return result;
@@ -136,9 +137,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         RLPElement code = rlpList.get(4);
 
         if (address.getRLPData() == null) {
-            this.address = Address.EMPTY_ADDRESS();
+            this.address = AionAddress.EMPTY_ADDRESS();
         } else {
-            this.address = Address.wrap(address.getRLPData());
+            this.address = AionAddress.wrap(address.getRLPData());
         }
 
         if (code instanceof RLPList) {
@@ -205,13 +206,13 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @return The associated mappings.
      */
     @Override
-    public Map<IDataWord, IDataWord> getStorage(Collection<IDataWord> keys) {
-        Map<IDataWord, IDataWord> storage = new HashMap<>();
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
+        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
         if (keys == null) {
             throw new IllegalArgumentException("Input keys can't be null");
         } else {
-            for (IDataWord key : keys) {
-                IDataWord value = get(key);
+            for (ByteArrayWrapper key : keys) {
+                ByteArrayWrapper value = get(key);
 
                 // we check if the value is not null,
                 // cause we keep all historical keys
@@ -233,7 +234,8 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @param storageValues The values.
      */
     @Override
-    public void setStorage(List<IDataWord> storageKeys, List<IDataWord> storageValues) {
+    public void setStorage(
+            List<ByteArrayWrapper> storageKeys, List<ByteArrayWrapper> storageValues) {
         for (int i = 0; i < storageKeys.size(); ++i) {
             put(storageKeys.get(i), storageValues.get(i));
         }
@@ -245,8 +247,8 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @param storage The specified mappings.
      */
     @Override
-    public void setStorage(Map<IDataWord, IDataWord> storage) {
-        for (IDataWord key : storage.keySet()) {
+    public void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
+        for (ByteArrayWrapper key : storage.keySet()) {
             put(key, storage.get(key));
         }
     }
@@ -322,7 +324,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @return the specified AionContractDetailsImpl.
      */
     @Override
-    public IContractDetails<IDataWord> getSnapshotTo(byte[] hash) {
+    public IContractDetails getSnapshotTo(byte[] hash) {
 
         IByteArrayKeyValueStore keyValueDataSource = this.storageTrie.getCache().getDb();
 

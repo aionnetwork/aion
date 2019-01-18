@@ -16,7 +16,6 @@ import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
-import org.aion.base.vm.IDataWord;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb.Names;
@@ -35,7 +34,7 @@ public abstract class AbstractRepository<
                 BLK extends AbstractBlock<BH, ? extends ITransaction>,
                 BH extends IBlockHeader,
                 BSB extends IBlockStoreBase<?, ?>>
-        implements IRepository<AccountState, IDataWord, BSB> {
+        implements IRepository<AccountState, BSB> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
