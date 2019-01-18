@@ -3,10 +3,10 @@ package org.aion.precompiled.contracts;
 import javax.annotation.Nonnull;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.vm.api.interfaces.TransactionContext;
 
-public class TXHashContract implements IPrecompiledContract {
+public class TXHashContract implements PrecompiledContract {
     public static final long COST = 20L;
 
     private final TransactionContext context;

@@ -43,7 +43,8 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
-import org.aion.vm.TransactionExecutor;
+import org.aion.fastvm.TransactionExecutor;
+import org.aion.vm.BulkExecutor;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -52,7 +53,6 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
-import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -1055,14 +1055,20 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             LOGGER_TX.trace("executeTx: {}", Hex.toHexString(tx.getTransactionHash()));
         }
 
-        TransactionExecutor txExe = new TransactionExecutor(tx, bestBlk, pendingState, LOGGER_VM);
-        txExe.setExecutorProvider(AionExecutorProvider.getInstance());
+        BulkExecutor txExe =
+                new BulkExecutor(
+                        Collections.singletonList(tx),
+                        bestBlk,
+                        pendingState,
+                        false,
+                        bestBlk.getNrgLimit(),
+                        LOGGER_VM);
 
         if (inPool) {
             txExe.setBypassNonce();
         }
 
-        return txExe.execute();
+        return txExe.execute().get(0);
     }
 
     @Override
