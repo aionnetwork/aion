@@ -8,6 +8,7 @@ import org.aion.base.type.IBlockSummary;
 import org.aion.base.type.ITransaction;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.mcf.vm.types.Log;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.core.BloomFilter;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -55,7 +56,7 @@ public final class FltrLg extends Fltr {
                 if (matchesContractAddress(tx.getDestinationAddress().toBytes())) {
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
-                        for (Log logInfo : receipt.getLogInfoList()) {
+                        for (IExecutionLog logInfo : receipt.getLogInfoList()) {
                             if (matchBloom(logInfo.getBloomFilterForLog()) && matchesExactly(logInfo)) {
                                 add(
                                         new EvtLg(
@@ -93,7 +94,7 @@ public final class FltrLg extends Fltr {
                     AionTxReceipt receipt = txInfo.getReceipt();
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
-                        for (Log logInfo : receipt.getLogInfoList()) {
+                        for (IExecutionLog logInfo : receipt.getLogInfoList()) {
                             if (matchBloom(logInfo.getBloomFilterForLog()) && matchesExactly(logInfo)) {
                                 add(
                                         new EvtLg(
@@ -156,7 +157,7 @@ public final class FltrLg extends Fltr {
         return contractAddresses.length == 0;
     }
 
-    public boolean matchesExactly(Log logInfo) {
+    public boolean matchesExactly(IExecutionLog logInfo) {
         initBlooms();
         if (!matchesContractAddress(logInfo.getLogSourceAddress().toBytes())) return false;
         List<byte[]> logTopics = logInfo.getLogTopics();

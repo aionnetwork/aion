@@ -53,7 +53,7 @@ import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
-import org.aion.fastvm.TransactionExecutor;
+import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -529,16 +529,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     // TEMPORARY: here to support the ConsensusTest
-    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(AionBlock block, long currTimeSeconds) {
+    public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(
+            AionBlock block, long currTimeSeconds) {
         // Check block exists before processing more rules
         if (getBlockStore().getMaxNumber() >= block.getNumber()
-            && getBlockStore().isBlockExist(block.getHash())) {
+                && getBlockStore().isBlockExist(block.getHash())) {
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
-                    "Block already exists hash: {}, number: {}",
-                    block.getShortHash(),
-                    block.getNumber());
+                        "Block already exists hash: {}, number: {}",
+                        block.getShortHash(),
+                        block.getNumber());
             }
 
             if (!repository.isValidRoot(block.getStateRoot())) {
@@ -556,22 +557,22 @@ public class AionBlockchainImpl implements IAionBlockchain {
         }
 
         if (block.getTimestamp()
-            > (currTimeSeconds
-            + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
+                > (currTimeSeconds
+                        + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
-                    "Block {} invalid due to timestamp {}.",
-                    Hex.toHexString(block.getHash()),
-                    block.getTimestamp());
+                        "Block {} invalid due to timestamp {}.",
+                        Hex.toHexString(block.getHash()),
+                        block.getTimestamp());
             }
             return Pair.of(INVALID_BLOCK, null);
         }
 
         if (LOG.isDebugEnabled()) {
             LOG.debug(
-                "Try connect block hash: {}, number: {}",
-                block.getShortHash(),
-                block.getNumber());
+                    "Try connect block hash: {}, number: {}",
+                    block.getShortHash(),
+                    block.getNumber());
         }
 
         final ImportResult ret;
@@ -588,11 +589,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 BigInteger oldTotalDiff = getInternalTD();
                 summary = tryConnectAndFork(block);
                 ret =
-                    summary == null
-                        ? INVALID_BLOCK
-                        : (isMoreThan(getInternalTD(), oldTotalDiff)
-                            ? IMPORTED_BEST
-                            : IMPORTED_NOT_BEST);
+                        summary == null
+                                ? INVALID_BLOCK
+                                : (isMoreThan(getInternalTD(), oldTotalDiff)
+                                        ? IMPORTED_BEST
+                                        : IMPORTED_NOT_BEST);
             } else {
                 summary = null;
                 ret = NO_PARENT;
@@ -1073,14 +1074,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         long energyRemaining = block.getNrgLimit();
         for (AionTransaction tx : block.getTransactionsList()) {
+            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
                     new BulkExecutor(
-                            Collections.singletonList(tx),
-                            block,
+                            details,
                             track,
                             false,
+                            true,
                             energyRemaining,
-                            LOGGER_VM);
+                            LOGGER_VM,
+                            (k, s, t, b) -> {
+                                return 0L;
+                            });
+
             AionTxExecSummary summary = executor.execute().get(0);
 
             if (!summary.isRejected()) {
@@ -1116,14 +1122,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         for (AionTransaction tx : block.getTransactionsList()) {
+            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
             BulkExecutor executor =
                     new BulkExecutor(
-                            Collections.singletonList(tx),
-                            block,
+                            details,
                             track,
                             false,
+                            true,
                             block.getNrgLimit(),
-                            LOGGER_VM);
+                            LOGGER_VM,
+                            (k, s, t, b) -> {
+                                return 0L;
+                            });
+
             AionTxExecSummary summary = executor.execute().get(0);
 
             track.flush();

@@ -16,6 +16,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.IExecutionLog;
 
 /** aion transaction receipt class. */
 public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
@@ -55,7 +56,7 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
         rlpEncoded = rlp;
     }
 
-    public AionTxReceipt(byte[] postTxState, Bloom bloomFilter, List<Log> logInfoList) {
+    public AionTxReceipt(byte[] postTxState, Bloom bloomFilter, List<IExecutionLog> logInfoList) {
         this.postTxState = postTxState;
         this.bloomFilter = bloomFilter;
         this.logInfoList = logInfoList;
@@ -112,7 +113,7 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
             byte[][] logInfoListE = new byte[logInfoList.size()][];
 
             int i = 0;
-            for (Log logInfo : logInfoList) {
+            for (IExecutionLog logInfo : logInfoList) {
                 logInfoListE[i] = logInfo.getEncoded();
                 ++i;
             }
