@@ -123,7 +123,7 @@ public final class BroadcastTxHandler extends Handler {
                 AionTransaction tx = new AionTransaction(raw);
                 if (tx.getTransactionHash() != null) {
                     if (!TXValidator.isInCache(ByteArrayWrapper.wrap(tx.getTransactionHash()))) {
-                        if (TXValidator.isValid(tx)) {
+                        if (pendingState.isValid(tx)) {
                             rtn.add(tx);
                         }
                     }

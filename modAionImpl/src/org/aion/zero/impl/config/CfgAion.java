@@ -24,6 +24,7 @@ import org.aion.mcf.config.CfgNet;
 import org.aion.mcf.config.CfgReports;
 import org.aion.mcf.config.CfgSync;
 import org.aion.mcf.config.CfgTx;
+import org.aion.mcf.config.CfgVm;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.GenesisBlockLoader;
@@ -53,6 +54,7 @@ public final class CfgAion extends Cfg {
         this.reports = new CfgReports();
         this.gui = new CfgGui();
         this.fork = new CfgFork();
+        this.vm = new CfgVm();
         initializeConfiguration();
     }
 

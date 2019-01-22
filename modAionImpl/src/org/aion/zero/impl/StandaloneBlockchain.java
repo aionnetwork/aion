@@ -250,6 +250,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                                     .getEnergyDivisorLimitLong(),
                                             10_000_000L);
                                 }
+
+                                @Override
+                                public boolean isAvmEnabled() {
+                                    return false;
+                                }
                             }
                             : this.a0Config;
 

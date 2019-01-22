@@ -54,6 +54,7 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.valid.TXValidator;
+import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -93,6 +94,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     private IAionBlockchain blockchain;
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
+
+    private TransactionTypeValidator vmValidator;
 
     private IRepository repository;
 
@@ -281,6 +284,8 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
+        this.vmValidator = new TransactionTypeValidator(_cfgAion.getVm().isAvmEnabled());
+
         this.repository = _repository;
 
         this.isSeed = _cfgAion.getConsensus().isSeed();
@@ -425,6 +430,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     @Override
     public synchronized TxResponse addPendingTransaction(AionTransaction tx) {
         return addPendingTransactions(Collections.singletonList(tx)).get(0);
+    }
+
+    public boolean isValid(AionTransaction tx) {
+        return TXValidator.isValid(tx) && vmValidator.isValid(tx);
     }
 
     /**
@@ -612,7 +621,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         List<AionTransaction> newTx = new ArrayList<>();
         List<TxResponse> txResponses = new ArrayList<>();
         for (AionTransaction tx : transactions) {
-            if (TXValidator.isValid(tx)) {
+            if (isValid(tx)) {
                 newTx.add(tx);
                 txResponses.add(TxResponse.SUCCESS);
             } else {
@@ -670,7 +679,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
      */
     private TxResponse addPendingTransactionImpl(final AionTransaction tx, BigInteger txNonce) {
 
-        if (!TXValidator.isValid(tx)) {
+        if (!isValid(tx)) {
             LOGGER_TX.error("invalid Tx [{}]", tx.toString());
             fireDroppedTx(tx, "INVALID_TX");
             return TxResponse.INVALID_TX;
