@@ -32,16 +32,16 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.base.type.AionAddress;
 import org.aion.base.db.IRepositoryCache;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -104,8 +104,16 @@ public class TransactionExecutorTest {
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
         IRepositoryCache repo = blockchain.getRepository().startTracking();
-        BlockDetails details = new BlockDetails(context.block, Collections.singletonList(tx));
-        BulkExecutor exec = new BulkExecutor(details, repo, false, true, context.block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
+        BulkExecutor exec =
+                new BulkExecutor(
+                        details,
+                        repo,
+                        false,
+                        true,
+                        context.block.getNrgLimit(),
+                        LOGGER_VM,
+                        getPostExecutionWork());
         AionTxExecSummary summary = exec.execute().get(0);
         BigInteger refund = summary.getRefund();
 
@@ -193,8 +201,16 @@ public class TransactionExecutorTest {
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
-        BlockDetails details = new BlockDetails(context.block, Collections.singletonList(tx));
-        BulkExecutor exec = new BulkExecutor(details, repo, false, true, context.block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
+        BulkExecutor exec =
+                new BulkExecutor(
+                        details,
+                        repo,
+                        false,
+                        true,
+                        context.block.getNrgLimit(),
+                        LOGGER_VM,
+                        getPostExecutionWork());
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         System.out.println(Hex.toHexString(summary.getResult()));
@@ -224,8 +240,16 @@ public class TransactionExecutorTest {
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
-        details = new BlockDetails(context.block, Collections.singletonList(tx));
-        exec = new BulkExecutor(details, repo, false, true, context.block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+        details = new ExecutionBatch(context.block, Collections.singletonList(tx));
+        exec =
+                new BulkExecutor(
+                        details,
+                        repo,
+                        false,
+                        true,
+                        context.block.getNrgLimit(),
+                        LOGGER_VM,
+                        getPostExecutionWork());
         summary = exec.execute().get(0);
 
         System.out.println(Hex.toHexString(summary.getResult()));
@@ -276,8 +300,16 @@ public class TransactionExecutorTest {
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
 
-        BlockDetails details = new BlockDetails(context.block, Collections.singletonList(tx));
-        BulkExecutor exec = new BulkExecutor(details, repo, false, true, context.block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
+        BulkExecutor exec =
+                new BulkExecutor(
+                        details,
+                        repo,
+                        false,
+                        true,
+                        context.block.getNrgLimit(),
+                        LOGGER_VM,
+                        getPostExecutionWork());
         AionTxExecSummary summary = exec.execute().get(0);
         System.out.println(summary.getReceipt());
 
@@ -335,9 +367,8 @@ public class TransactionExecutorTest {
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, c, s, t, b) -> {
             return 0L;
         };
     }
-
 }

@@ -5,10 +5,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import org.aion.base.type.AionAddress;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
@@ -80,6 +80,7 @@ public class BenchmarkTest {
 
         ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getBlake2bHashContractAddress(),
                         origin,
@@ -101,13 +102,13 @@ public class BenchmarkTest {
         // warm up
         for (int i = 0; i < WARMUP; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.getTransactionEnergyLimit());
+            ct.execute(txHash, ctx.getTransactionEnergy());
         }
 
         long t1 = System.currentTimeMillis();
         for (int i = 0; i < BENCH; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.getTransactionEnergyLimit());
+            ct.execute(txHash, ctx.getTransactionEnergy());
         }
         System.out.println(
                 "Bench blake2b: " + String.valueOf(System.currentTimeMillis() - t1) + "ms");

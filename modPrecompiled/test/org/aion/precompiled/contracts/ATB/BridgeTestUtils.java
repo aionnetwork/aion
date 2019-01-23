@@ -3,8 +3,8 @@ package org.aion.precompiled.contracts.ATB;
 import org.aion.base.type.AionAddress;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.fastvm.ExecutionContext;
+import org.aion.mcf.vm.types.DataWord;
 
 public class BridgeTestUtils {
     static ExecutionContext dummyContext() {
@@ -24,13 +24,15 @@ public class BridgeTestUtils {
         final int flag = 0;
         final int kind = 0;
         final AionAddress blockCoinbase =
-                new AionAddress(AddressSpecs.computeA0Address(HashUtil.h256("coinbase".getBytes())));
+                new AionAddress(
+                        AddressSpecs.computeA0Address(HashUtil.h256("coinbase".getBytes())));
         long blockNumber = 0;
         long blockTimestamp = 0;
         long blockNrgLimit = 0;
         DataWord blockDifficulty = DataWord.ZERO;
 
         return new ExecutionContext(
+                null,
                 transactionHash,
                 address,
                 origin,

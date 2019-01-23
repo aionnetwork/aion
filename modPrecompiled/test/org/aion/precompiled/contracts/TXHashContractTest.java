@@ -9,10 +9,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.PrecompiledResultCode;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.impl.config.CfgAion;
@@ -47,6 +47,7 @@ public class TXHashContractTest {
         CfgAion.inst();
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getTxHashContractAddress(),
                         null,

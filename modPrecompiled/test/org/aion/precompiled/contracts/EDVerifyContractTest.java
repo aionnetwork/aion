@@ -16,11 +16,11 @@ import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.PrecompiledResultCode;
-import org.aion.fastvm.ExecutionContext;
 import org.aion.precompiled.type.PrecompiledContract;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.impl.config.CfgAion;
@@ -89,6 +89,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -119,6 +120,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -153,6 +155,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -184,6 +187,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -203,7 +207,8 @@ public class EDVerifyContractTest {
         PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         TransactionResult result = contract.execute(input, 2999L);
-        assertThat(result.getResultCode().toInt()).isEqualTo(PrecompiledResultCode.OUT_OF_NRG.toInt());
+        assertThat(result.getResultCode().toInt())
+                .isEqualTo(PrecompiledResultCode.OUT_OF_NRG.toInt());
     }
 
     @Test
@@ -213,6 +218,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,

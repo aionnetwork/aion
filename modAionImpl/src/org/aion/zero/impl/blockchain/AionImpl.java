@@ -18,8 +18,8 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
-import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
@@ -134,16 +134,16 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                new BulkExecutor(
-                    details,
-                    repository,
-                    true,
-                    true,
-                    block.getNrgLimit(),
-                    LOG_VM,
-                    getPostExecutionWork());
+                    new BulkExecutor(
+                            details,
+                            repository,
+                            true,
+                            true,
+                            block.getNrgLimit(),
+                            LOG_VM,
+                            getPostExecutionWork());
             return executor.execute().get(0).getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
@@ -161,27 +161,25 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
             BulkExecutor executor =
-                new BulkExecutor(
-                    details,
-                    repository,
-                    true,
-                    true,
-                    block.getNrgLimit(),
-                    LOG_VM,
-                    getPostExecutionWork());
+                    new BulkExecutor(
+                            details,
+                            repository,
+                            true,
+                            true,
+                            block.getNrgLimit(),
+                            LOG_VM,
+                            getPostExecutionWork());
             return executor.execute().get(0).getReceipt();
         } finally {
             repository.rollback();
         }
     }
 
-    /**
-     * There is no post-execution work to do for any calls in this class.
-     */
+    /** There is no post-execution work to do for any calls in this class. */
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, c, s, t, b) -> {
             return 0L;
         };
     }

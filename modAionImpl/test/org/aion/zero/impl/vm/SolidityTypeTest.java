@@ -50,8 +50,8 @@ import org.aion.solidity.SolidityType.DynamicArrayType;
 import org.aion.solidity.SolidityType.IntType;
 import org.aion.solidity.SolidityType.StaticArrayType;
 import org.aion.solidity.SolidityType.StringType;
-import org.aion.vm.BlockDetails;
 import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -73,10 +73,10 @@ public class SolidityTypeTest {
     @Before
     public void setup() {
         StandaloneBlockchain.Bundle bundle =
-            new StandaloneBlockchain.Builder()
-                .withDefaultAccounts()
-                .withValidatorConfiguration("simple")
-                .build();
+                new StandaloneBlockchain.Builder()
+                        .withDefaultAccounts()
+                        .withValidatorConfiguration("simple")
+                        .build();
         blockchain = bundle.bc;
     }
 
@@ -112,7 +112,9 @@ public class SolidityTypeTest {
 
         AionRepositoryImpl repo = blockchain.getRepository();
         IRepositoryCache track = repo.startTracking();
-        track.addBalance(tx.getSenderAddress(), tx.nrgPrice().value().multiply(BigInteger.valueOf(500_000L)));
+        track.addBalance(
+                tx.getSenderAddress(),
+                tx.nrgPrice().value().multiply(BigInteger.valueOf(500_000L)));
         track.createAccount(tx.getDestinationAddress());
         track.saveCode(tx.getDestinationAddress(), Hex.decode(contract));
         track.flush();
@@ -403,9 +405,11 @@ public class SolidityTypeTest {
         }
     }
 
-    private BulkExecutor getNewExecutor(AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
-        BlockDetails details = new BlockDetails(block, Collections.singletonList(tx));
-        return new BulkExecutor(details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+    private BulkExecutor getNewExecutor(
+            AionTransaction tx, IAionBlock block, IRepositoryCache repo) {
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
+        return new BulkExecutor(
+                details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
     }
 
     private static AionBlock createDummyBlock() {
@@ -425,27 +429,26 @@ public class SolidityTypeTest {
 
         // TODO: set a dummy limit of 5000000 for now
         return new AionBlock(
-            parentHash,
-            AionAddress.wrap(coinbase),
-            logsBloom,
-            difficulty,
-            number,
-            timestamp,
-            extraData,
-            nonce,
-            receiptsRoot,
-            transactionsRoot,
-            stateRoot,
-            transactionsList,
-            solutions,
-            0,
-            5000000);
+                parentHash,
+                AionAddress.wrap(coinbase),
+                logsBloom,
+                difficulty,
+                number,
+                timestamp,
+                extraData,
+                nonce,
+                receiptsRoot,
+                transactionsRoot,
+                stateRoot,
+                transactionsList,
+                solutions,
+                0,
+                5000000);
     }
 
     private PostExecutionWork getPostExecutionWork() {
-        return (k, s, t, b) -> {
+        return (r, c, s, t, b) -> {
             return 0L;
         };
     }
-
 }
