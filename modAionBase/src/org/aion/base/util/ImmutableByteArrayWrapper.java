@@ -71,8 +71,7 @@ public class ImmutableByteArrayWrapper implements Comparable<ImmutableByteArrayW
         // probably impossible, but be safe
         if (otherData == null) return false;
 
-        return FastByteComparisons.compareTo(data, 0, data.length, otherData, 0, otherData.length)
-                == 0;
+        return Arrays.compare(data, otherData) == 0;
     }
 
     @Override
@@ -88,6 +87,6 @@ public class ImmutableByteArrayWrapper implements Comparable<ImmutableByteArrayW
     /** TODO: what happens when one is null and the other is not? */
     @Override
     public int compareTo(ImmutableByteArrayWrapper o) {
-        return FastByteComparisons.compareTo(data, 0, data.length, o.data, 0, o.data.length);
+        return Arrays.compare(data, o.data);
     }
 }

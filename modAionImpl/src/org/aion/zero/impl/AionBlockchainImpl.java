@@ -32,7 +32,6 @@ import org.aion.base.type.AionAddress;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.Hex;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
@@ -333,7 +332,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 AionBlock mainBlock = getBlockStore().getChainBlockByNumber(block.getNumber());
                 if (mainBlock == null) continue;
 
-                if (FastByteComparisons.equal(info.getBlockHash(), mainBlock.getHash())) {
+                if (Arrays.equals(info.getBlockHash(), mainBlock.getHash())) {
                     txInfo = info;
                     break;
                 }
@@ -1815,7 +1814,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     // checking if the current recovered blocks are a subsection of the main chain
                     AionBlock ancestor = getBlockByNumber(block.getNumber() + 1);
                     if (ancestor != null
-                            && FastByteComparisons.equal(
+                            && Arrays.equals(
                                     ancestor.getParentHash(), block.getHash())) {
                         getBlockStore().correctMainChain(block, LOG);
                         repo.flush();

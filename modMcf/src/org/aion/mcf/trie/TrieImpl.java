@@ -26,7 +26,6 @@ import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.FastByteComparisons;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.trie.scan.CollectFullSetOfNodes;
 import org.aion.mcf.trie.scan.CountNodes;
@@ -341,7 +340,7 @@ public class TrieImpl implements Trie {
                             copyOfRange(key, 1, key.length),
                             value);
 
-            if (!FastByteComparisons.equal(
+            if (!Arrays.equals(
                     HashUtil.h256(getNode(newNode).encode()),
                     HashUtil.h256(currentNode.encode()))) {
                 markRemoved(HashUtil.h256(currentNode.encode()));
@@ -424,7 +423,7 @@ public class TrieImpl implements Trie {
                 newNode = itemList;
             }
 
-            if (!FastByteComparisons.equal(
+            if (!Arrays.equals(
                     HashUtil.h256(getNode(newNode).encode()),
                     HashUtil.h256(currentNode.encode()))) {
                 markRemoved(HashUtil.h256(currentNode.encode()));

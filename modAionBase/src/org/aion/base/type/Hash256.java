@@ -4,7 +4,6 @@ import java.util.Arrays;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Bytesable;
-import org.aion.base.util.FastByteComparisons;
 
 public final class Hash256 implements Comparable<Hash256>, Bytesable<Hash256>, Cloneable {
 
@@ -100,9 +99,7 @@ public final class Hash256 implements Comparable<Hash256>, Bytesable<Hash256>, C
             return false;
         } else {
             byte[] otherAddress = ((Hash256) other).toBytes();
-            return FastByteComparisons.compareTo(
-                            this.hash, 0, BYTES, otherAddress, 0, otherAddress.length)
-                    == 0;
+            return Arrays.compare(this.hash, otherAddress) == 0;
         }
     }
 
@@ -155,8 +152,7 @@ public final class Hash256 implements Comparable<Hash256>, Bytesable<Hash256>, C
      */
     @Override
     public int compareTo(Hash256 o) {
-        return FastByteComparisons.compareTo(
-                this.hash, 0, BYTES, o.toBytes(), 0, o.toBytes().length);
+        return Arrays.compare(this.hash, o.toBytes());
     }
 
     @Override
