@@ -559,7 +559,8 @@ final class TaskImportBlocks implements Runnable {
         } else {
             // not printing this message when the state is in fast mode with no parent result
             // a different message will be printed to indicate the storage of blocks
-            if (!state.isInFastMode() || importResult != ImportResult.NO_PARENT) {
+            if (log.isInfoEnabled()
+                    && (!state.isInFastMode() || importResult != ImportResult.NO_PARENT)) {
                 log.info(
                         "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
                         displayId,
@@ -572,11 +573,15 @@ final class TaskImportBlocks implements Runnable {
         }
         // trigger compact when IO is slow
         if (t2 - t1 > this.slowImportTime && t2 - lastCompactTime > this.compactFrequency) {
-            log.info("Compacting state database due to slow IO time.");
+            if (log.isInfoEnabled()) {
+                log.info("Compacting state database due to slow IO time.");
+            }
             t1 = System.currentTimeMillis();
             this.chain.compactState();
             t2 = System.currentTimeMillis();
-            log.info("Compacting state completed in {} ms.", t2 - t1);
+            if (log.isInfoEnabled()) {
+                log.info("Compacting state completed in {} ms.", t2 - t1);
+            }
             lastCompactTime = t2;
         }
         return importResult;
