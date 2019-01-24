@@ -255,9 +255,8 @@ public class RocksDBWrapper extends AbstractDB {
 
         @Override
         public byte[] next() {
-            byte[] key = iterator.key();
             iterator.next();
-            return key;
+            return iterator.key();
         }
     }
 

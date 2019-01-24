@@ -316,9 +316,7 @@ public class LevelDB extends AbstractDB {
 
         @Override
         public byte[] next() {
-            byte[] key = iterator.peekNext().getKey();
-            iterator.next();
-            return key;
+            return iterator.next().getKey();
         }
     }
 
