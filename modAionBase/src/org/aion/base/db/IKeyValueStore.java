@@ -8,14 +8,14 @@ import java.util.Optional;
 /**
  * Functionality for a key-value store allowing itemized updates.
  *
- * @param <KEY> the data type of the keys
- * @param <VALUE> the data type of the values
+ * @param <KeyT> the data type of the keys
+ * @param <ValueT> the data type of the values
  * @author Alexandra Roatis
  * @implNote For the underlying database connection, if {@code isClosed() == true}, then all
  *     function calls which require the database connection will throw a {@link RuntimeException},
  *     as documented by this interface.
  */
-public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
+public interface IKeyValueStore<KeyT, ValueT> extends AutoCloseable {
 
     /**
      * Returns {@code true} if this data store contains no elements.
@@ -34,7 +34,7 @@ public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
      * @throws RuntimeException if the data store is closed
      * @apiNote Returns an empty iterator if the database keys could not be retrieved.
      */
-    Iterator<KEY> keys();
+    Iterator<KeyT> keys();
 
     /**
      * Retrieves a value from the data store, wrapped in an {@link Optional} object. It is fulfilled
@@ -44,7 +44,7 @@ public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
      * @throws RuntimeException if the data store is closed
      * @throws IllegalArgumentException if the key is {@code null}
      */
-    Optional<VALUE> get(KEY key);
+    Optional<ValueT> get(KeyT key);
 
     /**
      * Stores or updates a value at the corresponding key. Makes no guarantees about when the value
@@ -64,7 +64,7 @@ public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
      *     </ol>
      *     To delete a key one must explicitly call {@link #delete(Object)}.
      */
-    void put(KEY key, VALUE value);
+    void put(KeyT key, ValueT value);
 
     /**
      * Deletes a key from the data store. Makes no guarantees about when the value is actually
@@ -76,7 +76,7 @@ public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
      * @implNote The choice of when to push the changes to the data store is left up to the
      *     implementation.
      */
-    void delete(KEY key);
+    void delete(KeyT key);
 
     /**
      * Stores or updates a value at the corresponding key. The changes are cached until {@link
@@ -99,7 +99,7 @@ public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
      *     </ol>
      *     To delete a key one must explicitly call {@link #deleteInBatch(Object)}.
      */
-    void putToBatch(KEY key, VALUE value);
+    void putToBatch(KeyT key, ValueT value);
 
     /**
      * Deletes a key from the data store. The changes are cached until {@link #commitBatch()} is
@@ -114,7 +114,7 @@ public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
      * @implNote The choice of when to push the changes to the data store is left up to the
      *     implementation.
      */
-    void deleteInBatch(KEY key);
+    void deleteInBatch(KeyT key);
 
     /**
      * Pushes updates made using {@link #putToBatch(Object, Object)} and {@link
@@ -136,7 +136,7 @@ public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
      * @throws IllegalArgumentException if the map contains a {@code null} key
      * @apiNote To delete a set of keys one must explicitly call {@link #deleteBatch(Collection)}.
      */
-    void putBatch(Map<KEY, VALUE> input);
+    void putBatch(Map<KeyT, ValueT> input);
 
     /**
      * Deletes the given keys from the data store. Makes no guarantees about when the entries are
@@ -146,7 +146,7 @@ public interface IKeyValueStore<KEY, VALUE> extends AutoCloseable {
      * @throws RuntimeException if the data store is closed
      * @throws IllegalArgumentException if the collection contains a {@code null} key
      */
-    void deleteBatch(Collection<KEY> keys);
+    void deleteBatch(Collection<KeyT> keys);
 
     /**
      * Checks that the data source connection is open. Throws a {@link RuntimeException} if the data
