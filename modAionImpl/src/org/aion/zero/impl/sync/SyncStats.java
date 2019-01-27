@@ -5,13 +5,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import org.aion.mcf.config.StatsType;
+import org.apache.commons.lang3.tuple.Pair;
+
 
 /** @author chris */
 public final class SyncStats {
@@ -53,16 +53,11 @@ public final class SyncStats {
 
     private final Lock leechesLock = new ReentrantLock();
     private final boolean leechesEnabled;
-
-    /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private final Map<String, List<Long>> statusRequestTimeByPeers = new HashMap<>();
-    /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private final Map<String, List<Long>> statusResponseTimeByPeers = new HashMap<>();
-    /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private double overallAvgPeerResponseTime;
-
-    private final Lock responsesLock = new ReentrantLock();
     private final boolean responsesEnabled;
+
+    private final ResponseMgr statusResponseMgr = new ResponseMgr();
+    private final ResponseMgr headersResponseMgr = new ResponseMgr();
+    private final ResponseMgr bodiesResponseMgr = new ResponseMgr();
 
     /**
      * @param enabled all stats are enabled when {@code true}, all stats are disabled otherwise
@@ -80,7 +75,6 @@ public final class SyncStats {
         this.start = System.currentTimeMillis();
         this.startBlock = _startBlock;
         this.avgBlocksPerSec = 0;
-        this.overallAvgPeerResponseTime = 0L;
 
         this.averageEnabled = averageEnabled;
         requestsEnabled = showStatistics.contains(StatsType.REQUESTS);
