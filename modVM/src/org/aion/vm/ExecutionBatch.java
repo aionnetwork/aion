@@ -3,7 +3,6 @@ package org.aion.vm;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.base.type.AionAddress;
 import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.util.bytes.ByteUtil;
@@ -140,7 +139,7 @@ public final class ExecutionBatch {
                         : ExecutionContext.CALL;
         int flags = 0;
 
-        AionAddress blockCoinbase = block.getCoinbase();
+        Address blockCoinbase = block.getCoinbase();
         long blockNumber = block.getNumber();
         long blockTimestamp = block.getTimestamp();
         long blockNrgLimit = block.getNrgLimit();

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
+import org.aion.util.bytes.ByteUtil;
 
 public class XorDataSource implements IByteArrayKeyValueStore {
     private final IByteArrayKeyValueStore source;
@@ -93,7 +93,6 @@ public class XorDataSource implements IByteArrayKeyValueStore {
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
         // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -109,6 +108,11 @@ public class XorDataSource implements IByteArrayKeyValueStore {
 
     @Override
     public void putToBatch(byte[] key, byte[] value) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void deleteInBatch(byte[] key) {
         throw new UnsupportedOperationException();
     }
 

@@ -7,6 +7,7 @@ import java.util.Collections;
 import org.aion.base.type.AionAddress;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.vm.types.Bloom;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -15,7 +16,7 @@ import org.junit.Test;
 /** Test cases for AionTxExecSummary */
 public class AionTxExecSummaryTest {
 
-    private AionAddress defaultAddress =
+    private Address defaultAddress =
             AionAddress.wrap("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
     @Test

@@ -295,7 +295,26 @@ public class LockedDatabase implements IByteArrayKeyValueDatabase {
             if (e instanceof RuntimeException) {
                 throw e;
             } else {
-                LOG.error("Could not put batch due to ", e);
+                LOG.error("Could not put to batch due to ", e);
+            }
+        } finally {
+            // releasing write lock
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public void deleteInBatch(byte[] key) {
+        // acquire write lock
+        lock.writeLock().lock();
+
+        try {
+            database.deleteInBatch(key);
+        } catch (Exception e) {
+            if (e instanceof RuntimeException) {
+                throw e;
+            } else {
+                LOG.error("Could not delete in batch due to ", e);
             }
         } finally {
             // releasing write lock

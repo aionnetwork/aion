@@ -53,6 +53,7 @@ import org.aion.solidity.SolidityType.StringType;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -87,11 +88,11 @@ public class SolidityTypeTest {
 
     private AionTransaction createTransaction(byte[] callData) {
         byte[] txNonce = DataWord.ZERO.getData();
-        AionAddress from =
+        Address from =
                 AionAddress.wrap(
                         Hex.decode(
                                 "1111111111111111111111111111111111111111111111111111111111111111"));
-        AionAddress to =
+        Address to =
                 AionAddress.wrap(
                         Hex.decode(
                                 "2222222222222222222222222222222222222222222222222222222222222222"));
@@ -414,7 +415,7 @@ public class SolidityTypeTest {
 
     private static AionBlock createDummyBlock() {
         byte[] parentHash = new byte[32];
-        byte[] coinbase = RandomUtils.nextBytes(AionAddress.SIZE);
+        byte[] coinbase = RandomUtils.nextBytes(Address.SIZE);
         byte[] logsBloom = new byte[0];
         byte[] difficulty = new DataWord(0x1000000L).getData();
         long number = 1;

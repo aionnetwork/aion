@@ -110,9 +110,9 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
      * Checks that the given key is not null. Throws a {@link IllegalArgumentException} if the key
      * is null.
      */
-    public static void check(byte[] k) {
-        if (k == null) {
-            throw new IllegalArgumentException("The database does not accept null keys.");
+    public static void check(byte[] keyOrValue) {
+        if (keyOrValue == null) {
+            throw new IllegalArgumentException("The database does not accept null keys or values.");
         }
     }
 
@@ -120,9 +120,9 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
      * Checks that the given collection of keys does not contain null values. Throws a {@link
      * IllegalArgumentException} if a null key is present.
      */
-    public static void check(Collection<byte[]> keys) {
-        if (keys.contains(null)) {
-            throw new IllegalArgumentException("The database does not accept null keys.");
+    public static void check(Collection<byte[]> keysOrValues) {
+        if (keysOrValues.contains(null)) {
+            throw new IllegalArgumentException("The database does not accept null keys or values.");
         }
     }
 
@@ -157,26 +157,122 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     /** Functionality for directly interacting with the heap cache. */
     public abstract boolean commitCache(Map<ByteArrayWrapper, byte[]> cache);
 
-    // IKeyValueStore functionality
-    // ------------------------------------------------------------------------------------
-
     @Override
-    public Optional<byte[]> get(byte[] k) {
-        check(k);
-
+    public Optional<byte[]> get(byte[] key) {
+        check(key);
         check();
 
-        byte[] v = getInternal(k);
-
+        byte[] v = getInternal(key);
         return Optional.ofNullable(v);
     }
 
     /**
-     * Database specific get functionality, without locking required. Locking is applied in {@link
-     * #get(byte[])}.
+     * Database specific get functionality, without locking or integrity checks required. Locking
+     * and checks are applied in {@link #get(byte[])}.
      *
-     * @param k the key for which the method must return the associated value
-     * @return the value stored in the database for the give key.
+     * @param key the key for which the method must return the associated value
+     * @return the value stored in the database for the give key
      */
-    protected abstract byte[] getInternal(byte[] k);
+    protected abstract byte[] getInternal(byte[] key);
+
+    @Override
+    public void put(byte[] key, byte[] value) {
+        check(key);
+        check(value);
+        check();
+
+        putInternal(key, value);
+    }
+
+    /**
+     * Database specific put functionality, without locking or integrity checks required. Locking
+     * and checks are applied in {@link #put(byte[], byte[])}.
+     *
+     * @param key the key for the new entry
+     * @param value the value for the new entry
+     */
+    protected abstract void putInternal(byte[] key, byte[] value);
+
+    @Override
+    public void delete(byte[] key) {
+        check(key);
+        check();
+
+        deleteInternal(key);
+    }
+
+    /**
+     * Database specific delete functionality, without locking or integrity checks required. Locking
+     * and checks are applied in {@link #delete(byte[])}.
+     *
+     * @param key the key for the new entry
+     */
+    protected abstract void deleteInternal(byte[] key);
+
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        check(key);
+        check(value);
+        check();
+
+        putToBatchInternal(key, value);
+    }
+
+    /**
+     * Database specific put to batch functionality, without locking or integrity checks required.
+     * Locking and checks are applied in {@link #putToBatch(byte[], byte[])}.
+     *
+     * @param key the key for the new entry
+     * @param value the value for the new entry
+     */
+    protected abstract void putToBatchInternal(byte[] key, byte[] value);
+
+    @Override
+    public void deleteInBatch(byte[] key) {
+        check(key);
+        check();
+
+        deleteInBatchInternal(key);
+    }
+
+    /**
+     * Database specific delete in batch functionality, without locking or integrity checks
+     * required. Locking and checks are applied in {@link #deleteInBatch(byte[])}.
+     *
+     * @param key the key for the new entry
+     */
+    protected abstract void deleteInBatchInternal(byte[] key);
+
+    @Override
+    public void putBatch(Map<byte[], byte[]> input) {
+        check(input.keySet());
+        check(input.values());
+        check();
+
+        putBatchInternal(input);
+    }
+
+    /**
+     * Database specific put batch functionality, without locking or integrity checks required.
+     * Locking and checks are applied in {@link #putBatch(Map)}.
+     *
+     * @param input a {@link Map} of key-value pairs to be updated in the database
+     */
+    public abstract void putBatchInternal(Map<byte[], byte[]> input);
+
+    @Override
+    public void deleteBatch(Collection<byte[]> keys) {
+        check(keys);
+        check();
+
+        deleteBatchInternal(keys);
+    }
+
+    /**
+     * Database specific delete batch functionality, without locking or integrity checks required.
+     * Locking and checks are applied in {@link #deleteBatch(Collection)}.
+     *
+     * @param keys a {@link Collection} of keys to be deleted form storage
+     */
+    protected abstract void deleteBatchInternal(Collection<byte[]> keys);
 }

@@ -173,7 +173,9 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
                         + (t2 - t1)
                         + " ns."
                         + "\n\t\t\t\t\tkey = "
-                        + (key != null ? Hex.toHexString(key) : "null"));
+                        + (key != null ? Hex.toHexString(key) : "null")
+                        + "\n\t\t\t\t\treturned value = "
+                        + (value.isPresent() ? Hex.toHexString(value.get()) : "null"));
         return value;
     }
 
@@ -239,6 +241,21 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
                         + Hex.toHexString(key)
                         + "\n\t\t\t\t\tvalue = "
                         + (value != null ? Hex.toHexString(value) : "null"));
+    }
+
+    @Override
+    public void deleteInBatch(byte[] key) {
+        long t1 = System.nanoTime();
+        database.deleteInBatch(key);
+        long t2 = System.nanoTime();
+
+        LOG.debug(
+                database.toString()
+                        + " deleteInBatch(key) in "
+                        + (t2 - t1)
+                        + " ns."
+                        + "\n\t\t\t\t\tkey = "
+                        + Hex.toHexString(key));
     }
 
     @Override

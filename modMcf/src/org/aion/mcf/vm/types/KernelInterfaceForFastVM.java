@@ -76,6 +76,11 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
+    public void removeStorage(Address address, byte[] key) {
+        // TODO: remove this placeholder for changes made in a reorganized commit
+    }
+
+    @Override
     public byte[] getStorage(Address address, byte[] key) {
         ByteArrayWrapper storageKey = new DataWord(key).toWrapper();
         ByteArrayWrapper value = this.repositoryCache.getStorageValue(address, storageKey);
@@ -119,6 +124,16 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         if (!this.isLocalCall) {
             this.repositoryCache.addBalance(address, energyCost.negate());
         }
+    }
+
+    @Override
+    public void refundAccount(Address address, BigInteger amount) {
+        // TODO: remove this placeholder for changes made in a reorganized commit
+    }
+
+    @Override
+    public void payMiningFee(Address miner, BigInteger fee) {
+        // TODO: remove this placeholder for changes made in a reorganized commit
     }
 
     @Override

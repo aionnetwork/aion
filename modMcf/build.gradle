@@ -4,6 +4,7 @@ test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
 dependencies {
+    compile project(':modUtil')
     compile project(':modAionBase')
     compile project(':modLogger')
     compile project(':modP2p')

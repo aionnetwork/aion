@@ -66,8 +66,8 @@ import org.aion.mcf.config.CfgTx;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
@@ -247,7 +247,7 @@ public class ApiWeb3Aion extends ApiAion {
                         .build(
                                 new CacheLoader<>() {
                                     public MinerStatsView load(String key) { // no checked exception
-                                        AionAddress miner = new AionAddress(key);
+                                        Address miner = new AionAddress(key);
                                         return new MinerStatsView(
                                                         STRATUM_RECENT_BLK_COUNT, miner.toBytes())
                                                 .update();
@@ -401,7 +401,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address = new AionAddress(_address);
+        Address address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -440,7 +440,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address = new AionAddress(_address);
+        Address address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -491,7 +491,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address = new AionAddress(_address);
+        Address address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -578,7 +578,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address = new AionAddress(_address);
+        Address address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -614,7 +614,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address = AionAddress.wrap(_address);
+        Address address = AionAddress.wrap(_address);
         ECKey key = getAccountKey(address.toString());
         if (key == null) {
             return new RpcMsg(null, RpcError.NOT_ALLOWED, "Account not unlocked.");
@@ -1785,7 +1785,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        AionAddress address;
+        Address address;
 
         try {
             address = new AionAddress(_address);

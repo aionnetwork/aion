@@ -1,8 +1,8 @@
-package org.aion.trie;
+package org.aion.mcf.trie;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.base.util.ByteUtil.intToBytes;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.aion.util.bytes.ByteUtil.intToBytes;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -18,7 +18,6 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.mockdb.MockDB;
-import org.aion.mcf.trie.TrieImpl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -500,7 +499,7 @@ public class TrieTest {
 
         // -------------------------------------------------------------------------------------------------------------
         // delete (key,value2)
-        trie.update(key, "");
+        trie.delete(key);
 
         // ensure correct value retrieval after update
         assertThat(value1).isNotEqualTo(new String(trie.get(key)));
@@ -536,7 +535,7 @@ public class TrieTest {
 
         // -------------------------------------------------------------------------------------------------------------
         // delete
-        trie.update(key, "");
+        trie.delete(key);
         assertThat(new String(trie.get(key))).isNotEqualTo(value1);
 
         // check old root retrieval

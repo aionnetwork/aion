@@ -13,6 +13,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.ImportResult;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
@@ -35,11 +36,11 @@ import org.junit.Test;
  * block of transactions.
  */
 public class ConsensusTest {
-    private static final AionAddress CONTRACT =
+    private static final Address CONTRACT =
             AionAddress.wrap("a04272bb5f935fb170baf2998cb25dd15cc5794e7c5bac7241bec00c4971c7f8");
-    private static final AionAddress OWNER =
+    private static final Address OWNER =
             AionAddress.wrap("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1679");
-    private static final AionAddress OTHER =
+    private static final Address OTHER =
             AionAddress.wrap("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1678");
     private static final byte[] PRIVATE_KEY =
             Hex.decode(
@@ -352,7 +353,7 @@ public class ConsensusTest {
         return transaction;
     }
 
-    /** Calls the function: addOwner(AionAddress) in Wallet.sol */
+    /** Calls the function: addOwner(Address) in Wallet.sol */
     private static AionTransaction getTransactionThatCallsAddOwner() {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
         byte[] callData = ByteUtil.merge(Hex.decode("7065cb48"), OWNER.toBytes());
@@ -369,11 +370,11 @@ public class ConsensusTest {
     }
 
     /**
-     * Calls the function: isOwner(AionAddress) in Wallet.sol
+     * Calls the function: isOwner(Address) in Wallet.sol
      *
-     * <p>The AionAddress that is being queried is 'owner'.
+     * <p>The Address that is being queried is 'owner'.
      */
-    private static AionTransaction getTransactionThatCallsIsOwner(AionAddress owner, int nonce) {
+    private static AionTransaction getTransactionThatCallsIsOwner(Address owner, int nonce) {
         ECKey key = ECKeyFac.inst().fromPrivate(PRIVATE_KEY);
         byte[] callData = ByteUtil.merge(Hex.decode("2f54bf6e"), owner.toBytes());
         AionTransaction transaction =
@@ -389,7 +390,7 @@ public class ConsensusTest {
     }
 
     /**
-     * Calls the function: isOwner(AionAddress) in Wallet.sol
+     * Calls the function: isOwner(Address) in Wallet.sol
      *
      * <p>The energy limit provided to this function is exactly 1 energy unit short of being able to
      * run the transaction. As such, it fails with an OUT_OF_NRG error.

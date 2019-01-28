@@ -22,6 +22,7 @@ import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
@@ -33,10 +34,10 @@ import org.spongycastle.util.encoders.Hex;
 public class EDVerifyContractTest {
 
     private byte[] txHash = RandomUtils.nextBytes(32);
-    private AionAddress origin = AionAddress.wrap(RandomUtils.nextBytes(32));
-    private AionAddress caller = origin;
+    private Address origin = AionAddress.wrap(RandomUtils.nextBytes(32));
+    private Address caller = origin;
 
-    private AionAddress blockCoinbase = AionAddress.wrap(RandomUtils.nextBytes(32));
+    private Address blockCoinbase = AionAddress.wrap(RandomUtils.nextBytes(32));
     private long blockNumber = 2000001;
     private long blockTimestamp = System.currentTimeMillis() / 1000;
     private long blockNrgLimit = 5000000;

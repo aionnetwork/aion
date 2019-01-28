@@ -15,9 +15,10 @@ import java.util.Map;
 import java.util.Random;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.api.interfaces.Address;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -128,10 +129,10 @@ public class KeystoreTest {
         String addr = Keystore.create(password, key);
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
 
-        Map<AionAddress, String> arg = new HashMap<>();
+        Map<Address, String> arg = new HashMap<>();
         arg.put(AionAddress.wrap(addr), password);
 
-        Map<AionAddress, ByteArrayWrapper> export = Keystore.exportAccount(arg);
+        Map<Address, ByteArrayWrapper> export = Keystore.exportAccount(arg);
 
         assertTrue(export.containsKey(AionAddress.wrap(addr)));
         assertTrue(export.containsValue(ByteArrayWrapper.wrap(key.getPrivKeyBytes())));
@@ -147,10 +148,10 @@ public class KeystoreTest {
         String addr = Keystore.create(password, key);
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
 
-        Map<AionAddress, String> arg = new HashMap<>();
+        Map<Address, String> arg = new HashMap<>();
         arg.put(AionAddress.wrap(addr), password);
 
-        Map<AionAddress, ByteArrayWrapper> export = Keystore.backupAccount(arg);
+        Map<Address, ByteArrayWrapper> export = Keystore.backupAccount(arg);
 
         assertNotNull(export);
 
