@@ -18,8 +18,6 @@ public class ByteUtil {
     public static final byte[] ZERO_BYTE_ARRAY = new byte[] {0};
     public static final String EMPTY_STRING = "";
 
-    private static byte[] OP_BYTE_BUFFER = new byte[8];
-
     /** Creates a copy of bytes and appends b to the end of it */
     public static byte[] appendByte(byte[] bytes, byte b) {
         byte[] result = Arrays.copyOf(bytes, bytes.length + 1);
