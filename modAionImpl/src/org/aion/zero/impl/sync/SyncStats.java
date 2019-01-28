@@ -333,143 +333,67 @@ public final class SyncStats {
         }
     }
 
-    /**
-     * Logs the time of status request to an active peer node
-     *
-     * @param _nodeId peer node display Id
-     * @param _requestTime time when the request was sent in nanoseconds
-     */
-    public void addPeerRequestTime(String _nodeId, long _requestTime) {
-        if (responsesEnabled) {
-            responsesLock.lock();
-            try {
-                List<Long> requestStartTimes =
-                        statusRequestTimeByPeers.containsKey(_nodeId)
-                                ? statusRequestTimeByPeers.get(_nodeId)
-                                : new LinkedList<>();
-                requestStartTimes.add(_requestTime);
-                statusRequestTimeByPeers.put(_nodeId, requestStartTimes);
-            } finally {
-                responsesLock.unlock();
-            }
-        }
+
+    public ResponseMgr getStatusResponseMgr() {
+        return statusResponseMgr;
     }
 
-    /**
-     * Log the time of status response received from an active peer node
-     *
-     * @param _nodeId peer node display Id
-     * @param _responseTime time when the response was received in nanoseconds
-     */
-    public void addPeerResponseTime(String _nodeId, long _responseTime) {
-        if (requestsEnabled) {
-            responsesLock.lock();
-            try {
-                List<Long> responseEndTimes =
-                        statusResponseTimeByPeers.containsKey(_nodeId)
-                                ? statusResponseTimeByPeers.get(_nodeId)
-                                : new LinkedList<>();
-                responseEndTimes.add(_responseTime);
-                statusResponseTimeByPeers.put(_nodeId, responseEndTimes);
-            } finally {
-                responsesLock.unlock();
-            }
-        }
+    public ResponseMgr getHeadersResponseMgr() {
+        return headersResponseMgr;
     }
 
-    /**
-     * Obtains the average response time by each active peer node
-     *
-     * @return map of average response time in nanoseconds by peer node
-     */
-    Map<String, Double> getAverageResponseTimeByPeers() {
-        responsesLock.lock();
-        try {
-            double average;
-            String nodeId;
-            List<Long> requests, responses;
-
-            Map<String, Double> avgResponseTimeByPeers = new HashMap<>();
-            overallAvgPeerResponseTime = 0d;
-
-            for (Map.Entry<String, List<Long>> peerData : statusRequestTimeByPeers.entrySet()) {
-
-                nodeId = peerData.getKey(); // node display Id
-                requests = peerData.getValue();
-                responses = statusResponseTimeByPeers.getOrDefault(nodeId, new LinkedList<>());
-
-                // calculate the average response time
-                average = calculateAverage(requests, responses);
-
-                if (average >= 0) {
-                    // collect a map of average response times by peer
-                    avgResponseTimeByPeers.put(nodeId, average);
-                    overallAvgPeerResponseTime += average;
-                }
-            }
-
-            overallAvgPeerResponseTime =
-                    avgResponseTimeByPeers.isEmpty()
-                            ? 0d
-                            : overallAvgPeerResponseTime / avgResponseTimeByPeers.size();
-
-            return avgResponseTimeByPeers.entrySet().stream()
-                    .sorted(Map.Entry.comparingByValue())
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            responsesLock.unlock();
-        }
+    public ResponseMgr getBodiesResponseMgr() {
+        return bodiesResponseMgr;
     }
 
-    /**
-     * Computes the average response time for a peer given the lists of gathered requests and
-     * response times.
-     *
-     * @param requestTimes list of times for requests made
-     * @param responseTimes list of times for responses received
-     * @return the average response time for the request-response cycle
-     */
-    private static double calculateAverage(List<Long> requestTimes, List<Long> responseTimes) {
-        int entries = 0;
-        double sum = 0;
-        int size = Math.min(requestTimes.size(), responseTimes.size());
+    public Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
+        Map<String, Pair<Double, Integer>> statusStats =
+                this.statusResponseMgr.getResponseStatsByPeers();
+        Map<String, Pair<Double, Integer>> headersStats =
+                this.headersResponseMgr.getResponseStatsByPeers();
+        Map<String, Pair<Double, Integer>> bodiesStats =
+                this.bodiesResponseMgr.getResponseStatsByPeers();
 
-        // only consider requests that had responses
-        for (int i = 0; i < size; i++) {
-            long request = requestTimes.get(i);
-            long response = responseTimes.get(i);
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = new LinkedHashMap<>();
 
-            // ignore data where the requests comes after the response
-            if (response >= request) {
-                sum += response - request;
-                entries++;
+        if (!statusStats.isEmpty() && !headersStats.isEmpty() && !bodiesStats.isEmpty()) {
+
+            Pair<Double, Integer> statusOverall = Pair.of(0d, 0);
+            Pair<Double, Integer> headersOverall = Pair.of(0d, 0);
+            Pair<Double, Integer> bodiesOverall = Pair.of(0d, 0);
+
+            for (String nodeId : statusStats.keySet()) {
+
+                Map<String, Pair<Double, Integer>> peerStats = new LinkedHashMap<>();
+                Pair<Double, Integer> status = statusStats.getOrDefault(nodeId, Pair.of(0d, 0));
+                Pair<Double, Integer> headers = headersStats.getOrDefault(nodeId, Pair.of(0d, 0));
+                Pair<Double, Integer> bodies = bodiesStats.getOrDefault(nodeId, Pair.of(0d, 0));
+
+                Pair<Double, Integer> allStats =
+                        Pair.of(
+                                status.getLeft() + headers.getLeft() + bodies.getLeft(),
+                                status.getRight() + headers.getRight() + bodies.getRight());
+
+                peerStats.put("all", allStats);
+                peerStats.put("status", status);
+                peerStats.put("headers", headers);
+                peerStats.put("bodies", bodies);
+                responseStats.put(nodeId, peerStats);
+
+                statusOverall =
+                        Pair.of(
+                            statusOverall.getLeft() + status.getLeft(),
+                            statusOverall.getRight() + status.getRight());
+                headersOverall =
+                        Pair.of(
+                            headersOverall.getLeft() + headers.getLeft(),
+                            headersOverall.getRight() + headers.getRight());
+                bodiesOverall =
+                        Pair.of(
+                            bodiesOverall.getLeft() + bodies.getLeft(),
+                            bodiesOverall.getRight() + bodies.getRight());
             }
         }
-
-        if (entries == 0) {
-            // indicates no data
-            return (double) -1;
-        } else {
-            return Math.ceil(sum / entries);
-        }
-    }
-
-    /**
-     * Obtains the overall average response time from all active peer nodes
-     *
-     * @return overall average response time
-     */
-    double getOverallAveragePeerResponseTime() {
-        responsesLock.lock();
-        try {
-            return overallAvgPeerResponseTime;
-        } finally {
-            responsesLock.unlock();
-        }
+        return responseStats;
     }
 }

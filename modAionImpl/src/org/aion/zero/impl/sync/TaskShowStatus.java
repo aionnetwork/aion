@@ -14,6 +14,7 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 /**
@@ -265,32 +266,37 @@ final class TaskShowStatus implements Runnable {
      * @return log stream with requests statistical data
      */
     private String dumpResponseInfo() {
-        Map<String, Double> avgResponseTimeByPeers = this.stats.getAverageResponseTimeByPeers();
 
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats =
+                this.stats.getResponseStats();
         StringBuilder sb = new StringBuilder();
 
-        if (!avgResponseTimeByPeers.isEmpty()) {
-
-            // value in milliseconds
-            double overallAvgResponse = this.stats.getOverallAveragePeerResponseTime() / 1_000_000;
-
-            sb.append("\n====== sync-responses-by-peer ======\n");
-            sb.append(String.format("   %9s %20s\n", "peer", "avg. response"));
-            sb.append("------------------------------------\n");
+        if (!responseStats.isEmpty()) {
 
             sb.append(
+                    "\n========================== sync-responses-by-peer ==========================\n");
+            sb.append(
                     String.format(
-                            "   «overall» %17s ms\n", String.format("%.0f", overallAvgResponse)));
+                            "   %9s %20s %19s %19s \n",
+                            "peer", "request type", "avg. response", "number of pairs"));
+            sb.append(
+                    "----------------------------------------------------------------------------\n");
 
-            avgResponseTimeByPeers.forEach(
-                    (nodeId, avgResponse) ->
-                            sb.append(
+            for (String nodeId : responseStats.keySet()) {
+
+                Map<String, Pair<Double, Integer>> peerStats = responseStats.get(nodeId);
+                for (String type : peerStats.keySet()) {
+                    sb.append(
+                            String.format(
+                                    "   id:%6s %20s %16s ms %19d\n",
+                                    nodeId,
+                                    "«" + type + "»",
                                     String.format(
-                                            "   id:%6s %17s ms\n",
-                                            nodeId,
-                                            String.format("%.0f", avgResponse / 1_000_000))));
+                                            "%.0f", peerStats.get(type).getLeft() / 1_000_000),
+                                    peerStats.get(type).getRight()));
+                }
+            }
         }
-
         return sb.toString();
     }
 
