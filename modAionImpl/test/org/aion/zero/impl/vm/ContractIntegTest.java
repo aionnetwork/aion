@@ -49,6 +49,7 @@ import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.ResultCode;
+import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
@@ -892,7 +893,7 @@ public class ContractIntegTest {
                         nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
 
         // Mock up the repo so that the contract address already exists.
-        IRepositoryCache repo = mock(IRepositoryCache.class);
+        AionRepositoryCache repo = mock(AionRepositoryCache.class);
         when(repo.hasAccountState(Mockito.any(Address.class))).thenReturn(true);
         when(repo.getNonce(Mockito.any(Address.class))).thenReturn(nonce);
         when(repo.getBalance(Mockito.any(Address.class))).thenReturn(Builder.DEFAULT_BALANCE);

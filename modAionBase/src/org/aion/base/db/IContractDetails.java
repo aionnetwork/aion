@@ -168,4 +168,13 @@ public interface IContractDetails {
      * @param dataSource The new dataSource.
      */
     void setDataSource(IByteArrayKeyValueStore dataSource);
+
+    /**
+     * Returns a sufficiently deep copy of this object. It is up to all implementations of this
+     * method to declare which original object references are in fact leaked by this copy, if any,
+     * and to provide justification of why, despite this, the copy is nonetheless sufficiently deep.
+     *
+     * @return A copy of this object.
+     */
+    IContractDetails copy();
 }
