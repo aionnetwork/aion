@@ -79,7 +79,8 @@ public class Cli {
         DUMP_STATE_SIZE,
         DUMP_STATE,
         DUMP_BLOCKS,
-        DB_COMPACT
+        DB_COMPACT,
+        RE_IMPORT
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -515,11 +516,33 @@ public class Cli {
                 return EXIT;
             }
 
+            if (options.isReImport() != null) {
+                long height = 0L;
+                String parameter = options.isReImport();
+
+                if (parameter.isEmpty()) {
+                    RecoveryUtils.reimportMainChain(height);
+                    return EXIT;
+                } else {
+                    try {
+                        height = Long.parseLong(parameter);
+                    } catch (NumberFormatException e) {
+                        System.out.println(
+                                "The given argument «"
+                                        + parameter
+                                        + "» cannot be converted to a number.");
+                        return ERROR;
+                    }
+                    RecoveryUtils.reimportMainChain(height);
+                    return EXIT;
+                }
+            }
+
             // if no return happened earlier, run the kernel
             return RUN;
         } catch (Exception e) {
             // TODO: should be moved to individual procedures
-            System.out.println("");
+            System.out.println();
             e.printStackTrace();
             return ERROR;
         }
@@ -912,6 +935,9 @@ public class Cli {
         if (options.isDbCompact()) {
             return TaskPriority.DB_COMPACT;
         }
+        if (options.isReImport() != null) {
+            return TaskPriority.RE_IMPORT;
+        }
         return TaskPriority.NONE;
     }
 
@@ -990,6 +1016,10 @@ public class Cli {
         }
         if (breakingTaskPriority.compareTo(TaskPriority.DB_COMPACT) < 0 && options.isDbCompact()) {
             skippedTasks.add("--db-compact");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.RE_IMPORT) < 0
+                && options.isReImport() != null) {
+            skippedTasks.add("--re-import");
         }
         return skippedTasks;
     }
