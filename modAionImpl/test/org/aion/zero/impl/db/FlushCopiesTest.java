@@ -25,7 +25,7 @@ import org.junit.Test;
  * method.
  */
 public class FlushCopiesTest {
-    private IRepository repository;
+    private static IRepository repository;
 
     @Before
     public void setup() {
@@ -43,7 +43,7 @@ public class FlushCopiesTest {
 
     @Test
     public void testAccountStateObjectReference() {
-        AionRepositoryCache repositoryChild = (AionRepositoryCache) this.repository.startTracking();
+        AionRepositoryCache repositoryChild = (AionRepositoryCache) repository.startTracking();
 
         Address account = randomAionAddress();
         BigInteger nonce = BigInteger.TEN;
@@ -58,11 +58,11 @@ public class FlushCopiesTest {
         repositoryChild.setNonce(account, nonce);
         repositoryChild.addBalance(account, balance);
         repositoryChild.saveCode(account, code);
-        repositoryChild.flushCopiesTo(this.repository, false);
+        repositoryChild.flushCopiesTo(repository, false);
 
         // Compare object references.
         AccountState accountStateInChild = repositoryChild.getAccountState(account);
-        AccountState accountStateInParent = (AccountState) this.repository.getAccountState(account);
+        AccountState accountStateInParent = (AccountState) repository.getAccountState(account);
 
         // These references must be different.
         assertNotSame(accountStateInChild, accountStateInParent);
@@ -77,7 +77,7 @@ public class FlushCopiesTest {
 
     @Test
     public void testContractDetailsObjectReference() {
-        AionRepositoryCache repositoryChild = (AionRepositoryCache) this.repository.startTracking();
+        AionRepositoryCache repositoryChild = (AionRepositoryCache) repository.startTracking();
 
         Address account = randomAionAddress();
         BigInteger nonce = BigInteger.TEN;
@@ -96,11 +96,11 @@ public class FlushCopiesTest {
         repositoryChild.addBalance(account, balance);
         repositoryChild.saveCode(account, code);
         repositoryChild.addStorageRow(account, key, value);
-        repositoryChild.flushCopiesTo(this.repository, false);
+        repositoryChild.flushCopiesTo(repository, false);
 
         // Compare object references.
         IContractDetails detailsInChild = repositoryChild.getContractDetails(account);
-        IContractDetails detailsInParent = this.repository.getContractDetails(account);
+        IContractDetails detailsInParent = repository.getContractDetails(account);
 
         // These references must be different.
         assertNotSame(detailsInChild, detailsInParent);
@@ -113,7 +113,7 @@ public class FlushCopiesTest {
 
     @Test
     public void testSiblingStateModificationsAreIndependentOfOneAnother() {
-        AionRepositoryCache firstChild = (AionRepositoryCache) this.repository.startTracking();
+        AionRepositoryCache firstChild = (AionRepositoryCache) repository.startTracking();
 
         Address account = randomAionAddress();
         BigInteger firstNonce = BigInteger.TEN;
@@ -134,12 +134,12 @@ public class FlushCopiesTest {
         firstChild.addBalance(account, firstBalance);
         firstChild.saveCode(account, code);
         firstChild.addStorageRow(account, firstKey, firstValue);
-        firstChild.flushCopiesTo(this.repository, false);
+        firstChild.flushCopiesTo(repository, false);
 
         byte[] firstStorageHash = firstChild.getContractDetails(account).getStorageHash();
 
         // Now create a sibling, and make modifications to this same account in the sibling.
-        AionRepositoryCache secondChild = (AionRepositoryCache) this.repository.startTracking();
+        AionRepositoryCache secondChild = (AionRepositoryCache) repository.startTracking();
 
         BigInteger secondNonce = firstNonce.multiply(BigInteger.TWO);
         ByteArrayWrapper secondKey = new DoubleDataWord(289356).toWrapper();
@@ -148,7 +148,7 @@ public class FlushCopiesTest {
         secondChild.setNonce(account, secondNonce);
         secondChild.addBalance(account, firstBalance);
         secondChild.addStorageRow(account, secondKey, secondValue);
-        secondChild.flushCopiesTo(this.repository, false);
+        secondChild.flushCopiesTo(repository, false);
 
         // Ensure that the first child's state has not been modified by the second.
         assertEquals(firstNonce, firstChild.getNonce(account));

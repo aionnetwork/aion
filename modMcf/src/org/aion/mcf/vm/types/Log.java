@@ -44,17 +44,17 @@ public class Log implements IExecutionLog {
     }
 
     @Override
-    public Address getLogSourceAddress() {
+    public Address getSourceAddress() {
         return addr;
     }
 
     @Override
-    public List<byte[]> getLogTopics() {
+    public List<byte[]> getTopics() {
         return topics;
     }
 
     @Override
-    public byte[] getLogData() {
+    public byte[] getData() {
         return data;
     }
 

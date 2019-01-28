@@ -7,6 +7,8 @@ module aion.vm {
     requires aion.vm.api;
     requires aion.util;
     requires aion.fastvm;
+    requires org.aion.avm.core;
+    requires aion.precompiled;
 
     exports org.aion.vm;
 }
