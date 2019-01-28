@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aion>
+	<mode>aion</mode>
+	<id>38cb8a0e-018d-4f00-8307-88af2e4c52e2</id>
+	<api>
+		<!--rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs-->
+		<rpc active="false" ip="127.0.0.1" port="8545">
+			<cors-enabled>false</cors-enabled>
+			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
+			<apis-enabled>web3,eth,personal,stratum</apis-enabled>
+		</rpc>
+		<java active="false" ip="127.0.0.1" port="8547">
+			<secure-connect>true</secure-connect>
+		</java>
+		<nrg-recommendation>
+			<!--default NRG price used by api if oracle disabled, minimum price recommended by oracle-->
+			<default>10000000000</default>
+			<!--max NRG price recommended by oracle-->
+			<max>100000000000</max>
+			<!--enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice-->
+			<oracle-enabled>false</oracle-enabled>
+		</nrg-recommendation>
+	</api>
+	<net>
+		<id>0</id>
+		<nodes>
+		</nodes>
+		<p2p>
+			<ip>0.0.0.0</ip>
+			<port>30303</port>
+			<discover>false</discover>
+			<max-temp-nodes>128</max-temp-nodes>
+			<max-active-nodes>128</max-active-nodes>
+		</p2p>
+	</net>
+	<sync>
+		<blocks-queue-max>32</blocks-queue-max>
+		<show-status>false</show-status>
+		<!--requires show-status=true; comma separated list of options: [all, peer_states, requests, seeds, leeches, responses, none]-->
+		<show-statistics>none</show-statistics>
+	</sync>
+	<consensus>
+		<mining>false</mining>
+		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
+		<cpu-mine-threads>2</cpu-mine-threads>
+		<extra-data>AION</extra-data>
+		<nrg-strategy>
+			<clamped-decay upper-bound="20000000" lower-bound="15000000"></clamped-decay>
+		</nrg-strategy>
+	</consensus>
+	<db>
+		<!--Sets the physical location on disk where data will be stored.-->
+		<path>database</path>
+		<!--Boolean value. Enable/disable database integrity check run at startup.-->
+		<check_integrity>false</check_integrity>
+		<!--Data pruning behavior for the state database. Options: FULL, TOP, SPREAD.-->
+		<!--FULL: the state is not pruned-->
+		<!--TOP: the state is kept only for the top K blocks; limits sync to branching only within the stored blocks-->
+		<!--SPREAD: the state is kept for the top K blocks and at regular block intervals-->
+		<state-storage>FULL</state-storage>
+		<!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->
+		<!--Caution: changing implementation requires re-syncing from genesis!-->
+		<vendor>leveldb</vendor>
+		<!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
+		<enable_db_compression>false</enable_db_compression>
+	</db>
+	<log>
+		<!--Enable/Disable logback service; if disabled, output will not be logged.-->
+		<log-file>true</log-file>
+		<!--Sets the physical location on disk where log files will be stored.-->
+		<log-path>log</log-path>
+		<GEN>INFO</GEN>
+		<VM>ERROR</VM>
+		<API>INFO</API>
+		<SYNC>INFO</SYNC>
+		<DB>WARN</DB>
+		<CONS>INFO</CONS>
+		<P2P>INFO</P2P>
+	</log>
+	<tx>
+		<cacheMax>256</cacheMax>
+	</tx>
+</aion>

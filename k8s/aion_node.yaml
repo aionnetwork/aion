@@ -1,0 +1,25 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata: 
+  name: aion-node
+spec: 
+  replicas: 1
+  strategy:
+    type: Recreate
+  progressDeadlineSeconds: 60
+  template: 
+    metadata:
+      namespace: ci-deployment
+      labels: 
+        app: aion-node
+      name: aion-node
+    spec: 
+      containers: 
+        - 
+          image: "gcr.io/trusty-drive-228822/aion:19"
+          imagePullPolicy: Always
+          name: aion
+          ports: 
+            - 
+              containerPort: 8545
+              name: aion-node
