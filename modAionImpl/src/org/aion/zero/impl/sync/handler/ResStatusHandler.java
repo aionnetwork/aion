@@ -41,7 +41,7 @@ public final class ResStatusHandler extends Handler {
             }
         }
 
-        this.syncMgr.getSyncStats().addPeerResponseTime(_displayId, System.nanoTime());
+        this.syncMgr.getSyncStats().getStatusResponseMgr().addPeerResponseTime(_displayId, System.nanoTime());
         this.syncMgr.getSyncStats().updatePeerTotalBlocks(_displayId, 1);
 
         INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);

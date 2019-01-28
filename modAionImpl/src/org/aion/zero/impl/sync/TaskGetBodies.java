@@ -87,6 +87,8 @@ final class TaskGetBodies implements Runnable {
                     new ReqBlocksBodies(
                             headers.stream().map(k -> k.getHash()).collect(Collectors.toList())));
             stats.updateTotalRequestsToPeer(displayId, RequestType.BODIES);
+            stats.getBodiesResponseMgr().addPeerRequestTime(displayId, System.nanoTime());
+
 
             headersWithBodiesRequested.put(idHash, hw);
 

@@ -42,11 +42,12 @@ final class TaskGetStatus implements Runnable {
         while (this.run.get()) {
             try {
                 // Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
-                for (INode n : p2p.getActiveNodes().values()) {
+                for (INode node : p2p.getActiveNodes().values()) {
                     // System.out.println("requesting-status from-node=" + n.getIdShort());
-                    p2p.send(n.getIdHash(), n.getIdShort(), reqStatus);
-                    stats.updateTotalRequestsToPeer(n.getIdShort(), RequestType.STATUS);
-                    stats.addPeerRequestTime(n.getIdShort(), System.nanoTime());
+                    p2p.send(node.getIdHash(), node.getIdShort(), reqStatus);
+                    stats.updateTotalRequestsToPeer(node.getIdShort(), RequestType.STATUS);
+                    stats.getStatusResponseMgr()
+                            .addPeerRequestTime(node.getIdShort(), System.nanoTime());
                 }
                 Thread.sleep(interval);
             } catch (Exception e) {

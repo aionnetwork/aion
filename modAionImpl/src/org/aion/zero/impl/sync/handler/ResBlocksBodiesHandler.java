@@ -44,6 +44,8 @@ public final class ResBlocksBodiesHandler extends Handler {
             }
 
         } else {
+            this.syncMgr.getSyncStats().getBodiesResponseMgr().addPeerResponseTime(_displayId, System.nanoTime());
+
             if (bodies.isEmpty()) {
                 p2pMgr.errCheck(_nodeIdHashcode, _displayId);
                 log.error("<res-bodies-empty node={}>", _displayId);
