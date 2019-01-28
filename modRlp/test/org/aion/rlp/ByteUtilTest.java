@@ -378,23 +378,6 @@ public class ByteUtilTest {
     }
 
     @Test
-    public void numToBytesTest2() {
-
-        for (int i=0 ; i<10000000; i++) {
-            ByteUtil.intToBytesNoLeadZeroes(-1);
-        }
-
-        long t1 = System.nanoTime();
-        for (long i=0 ; i<50000000L; i++) {
-            byte[] rec = ByteUtil.intToBytesNoLeadZeroes(-1);
-            int size = rec.length;
-        }
-        long t2 = System.nanoTime() - t1;
-
-        System.out.println("time: " + t2/1000000);
-    }
-
-    @Test
     public void numToBytesTest() {
         byte[] bytes = ByteUtil.intToBytesNoLeadZeroes(-1);
         assertArrayEquals(bytes, Hex.decode("ffffffff"));
