@@ -3,6 +3,8 @@ package org.aion.vm;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import org.aion.avm.core.NodeEnvironment;
+import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
 import org.aion.fastvm.SideEffects;
 import org.aion.mcf.vm.types.DataWord;
@@ -158,7 +160,9 @@ public class KernelTransactionContext implements TransactionContext {
 
     @Override
     public Address getContractAddress() {
-        throw new UnsupportedOperationException("Not implemented yet.");
+        byte[] bytes = this.transaction.getContractAddress().toBytes();
+        bytes[0] = NodeEnvironment.CONTRACT_PREFIX;
+        return AionAddress.wrap(bytes);
     }
 
     /** @return the origination address, which is the sender of original transaction. */
