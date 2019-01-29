@@ -45,6 +45,7 @@ import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.solidity.Compiler;
 import org.aion.utils.NativeLibrary;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
@@ -240,6 +241,7 @@ public class Aion {
         /*
          * Start Threads.
          */
+        VirtualMachineProvider.initializeAllVirtualMachines();
         Thread zmqThread = null;
         ProtocolProcessor processor = null;
         if (cfg.getApi().getZmq().getActive()) {
@@ -377,6 +379,9 @@ public class Aion {
 
                                     genLog.info("Shutting down the AionHub...");
                                     ac.getAionHub().close();
+
+                                    genLog.info("Shutting down the virtual machines...");
+                                    VirtualMachineProvider.shutdownAllVirtualMachines();
 
                                     genLog.info("---------------------------------------------");
                                     genLog.info("| Aion kernel graceful shutdown successful! |");
