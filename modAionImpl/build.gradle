@@ -25,12 +25,19 @@ dependencies {
     compile project(':modTxPool')
     compile project(':aion_api')
     compile project(':aion_fastvm')
+    compile files('../lib/org-aion-avm-rt.jar')
     //compile files('../lib/libJson.jar')
     compile 'org.json:json:20180813'
     compile 'info.picocli:picocli:3.6.1'
 
     testCompile project(path: ':modTxPoolImpl')
     testCompile project(path: ':modDbImpl', configuration: 'testClassesOut')
+
+    compile group: 'org.ow2.asm', name: 'asm', version: '6.2.1'
+    compile group: 'org.ow2.asm', name: 'asm-analysis', version: '6.2.1'
+    compile group: 'org.ow2.asm', name: 'asm-commons', version: '6.2.1'
+    compile group: 'org.ow2.asm', name: 'asm-tree', version: '6.2.1'
+    compile group: 'org.ow2.asm', name: 'asm-util', version: '6.2.1'
 
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'

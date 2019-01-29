@@ -89,6 +89,23 @@ public class AionTransaction extends AbstractTransaction {
         parsed = true;
     }
 
+    // constructor for explicitly setting a transaction type.
+    public AionTransaction(
+        byte[] nonce,
+        Address from,
+        Address to,
+        byte[] value,
+        byte[] data,
+        long nrg,
+        long nrgPrice,
+        byte txType) {
+
+        super(nonce, to, value, data, nrg, nrgPrice);
+        this.from = from;
+        this.type = txType;
+        parsed = true;
+    }
+
     // For InternalTx constructor
     public AionTransaction(byte[] nonce, Address to, byte[] value, byte[] data) {
         super(nonce, to, value, data, 0L, 0L);
