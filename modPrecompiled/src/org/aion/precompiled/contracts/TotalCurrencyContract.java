@@ -173,7 +173,11 @@ public class TotalCurrencyContract extends StatefulPrecompiledContract {
         this.track.addStorageRow(
                 this.address,
                 chainId.toWrapper(),
-                new DataWord(finalValue.toByteArray()).toWrapper());
+                wrapValueForPut(new DataWord(finalValue.toByteArray())));
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - COST);
+    }
+
+    private static ByteArrayWrapper wrapValueForPut(DataWord value) {
+        return (value.isZero()) ? value.toWrapper() : new ByteArrayWrapper(value.getNoLeadZeroesData());
     }
 }

@@ -7,6 +7,7 @@ module aion.zero {
     requires org.json;
     requires commons.lang3;
     requires aion.vm.api;
+    requires aion.util;
 
     exports org.aion.zero.api;
     exports org.aion.zero.db;

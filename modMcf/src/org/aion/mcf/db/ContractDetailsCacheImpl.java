@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.util.ByteArrayWrapper;
@@ -49,7 +50,14 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      */
     @Override
     public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
-        storage.put(key, value);
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+
+        if (value.isZero()) {
+            storage.remove(key);
+        } else {
+            storage.put(key, value);
+        }
         setDirty(true);
     }
 

@@ -11,6 +11,7 @@ import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
@@ -267,7 +268,7 @@ public class AionContractDetailsTest {
             DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
             elements.put(key, value);
-            original.put(key.toWrapper(), value.toWrapper());
+            original.put(key.toWrapper(), wrapValueForPut(value));
         }
 
         original.syncStorage();
@@ -283,7 +284,7 @@ public class AionContractDetailsTest {
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
 
         for (DataWord key : elements.keySet()) {
-            assertEquals(elements.get(key).toWrapper(), deserialized.get(key.toWrapper()));
+            assertEquals(elements.get(key).toWrapper(), wrapValueFromGet(deserialized.get(key.toWrapper())));
         }
 
         DataWord deletedKey = elements.keySet().iterator().next();
@@ -312,7 +313,7 @@ public class AionContractDetailsTest {
             DataWord value = new DataWord(RandomUtils.nextBytes(16));
 
             elements.put(key, value);
-            original.put(key.toWrapper(), value.toWrapper());
+            original.put(key.toWrapper(), wrapValueForPut(value));
         }
 
         original.syncStorage();
@@ -327,7 +328,7 @@ public class AionContractDetailsTest {
 
             elements.put(key, value);
 
-            deserialized.put(key.toWrapper(), value.toWrapper());
+            deserialized.put(key.toWrapper(), wrapValueForPut(value));
         }
 
         deserialized.syncStorage();
@@ -336,7 +337,15 @@ public class AionContractDetailsTest {
         deserialized = deserialize(deserialized.getEncoded(), externalStorage);
 
         for (DataWord key : elements.keySet()) {
-            assertEquals(elements.get(key).toWrapper(), deserialized.get(key.toWrapper()));
+            assertEquals(elements.get(key).toWrapper(), wrapValueFromGet(deserialized.get(key.toWrapper())));
         }
+    }
+
+    private static ByteArrayWrapper wrapValueForPut(DataWord value) {
+        return (value.isZero()) ? new ByteArrayWrapper(value.getData()) : new ByteArrayWrapper(value.getNoLeadZeroesData());
+    }
+
+    private static ByteArrayWrapper wrapValueFromGet(ByteArrayWrapper value) {
+        return new ByteArrayWrapper(new DataWord(value.getData()).getData());
     }
 }
