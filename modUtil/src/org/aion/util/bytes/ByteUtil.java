@@ -196,20 +196,20 @@ public class ByteUtil {
     public static byte[] intToBytesNoLeadZeroes(int val) {
         if (val == 0) {
             return EMPTY_BYTE_ARRAY;
-        } else if (val < 256 && val > 0) {
-            return new byte[] {(byte) (val & 0xFF)};
-        } else if (val > 255 && val < 65536) {
-            return new byte[] {(byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)};
-        } else if (val > 65535 && val < 16777216) {
-            return new byte[] {
-                (byte) ((val >>> 16) & 0xFF), (byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)
-            };
-        } else {
+        } else if (val < 0 || val > 16777215) {
             return new byte[] {
                 (byte) ((val >>> 24) & 0xFF),
                 (byte) ((val >>> 16) & 0xFF),
                 (byte) ((val >>> 8) & 0xFF),
                 (byte) (val & 0xFF)
+            };
+        } else if (val < 256) {
+            return new byte[] {(byte) (val & 0xFF)};
+        } else if (val < 65536) {
+            return new byte[] {(byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)};
+        } else {
+            return new byte[] {
+                (byte) ((val >>> 16) & 0xFF), (byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)
             };
         }
     }

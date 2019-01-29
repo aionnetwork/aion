@@ -11,7 +11,11 @@ import org.aion.base.util.Bytesable;
  *
  * @author jay
  */
-public final class AionAddress implements org.aion.vm.api.interfaces.Address, Comparable<AionAddress>, Bytesable<AionAddress>, Cloneable {
+public final class AionAddress
+        implements org.aion.vm.api.interfaces.Address,
+                Comparable<AionAddress>,
+                Bytesable<AionAddress>,
+                Cloneable {
     private static final AionAddress zeroAddr = AionAddress.wrap(new byte[SIZE]);
     private static final AionAddress emptyAddr = AionAddress.wrap(new byte[0]);
 
@@ -113,8 +117,7 @@ public final class AionAddress implements org.aion.vm.api.interfaces.Address, Co
 
     @Override
     public int compareTo(AionAddress o) {
-        return Arrays.compare(
-                this.address, o.toBytes());
+        return Arrays.compare(this.address, o.toBytes());
     }
 
     public int compareTo(byte[] o) {
