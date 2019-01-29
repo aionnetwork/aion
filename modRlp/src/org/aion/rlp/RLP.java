@@ -439,9 +439,7 @@ public class RLP {
             return encodeByte((byte) singleShort);
         } else {
             return new byte[] {
-                (byte) (OFFSET_SHORT_ITEM + 2),
-                (byte) ((singleShort >>> 8) & 0xFF),
-                (byte) (singleShort & 0xFF)
+                (byte) (OFFSET_SHORT_ITEM + 2), (byte) (singleShort >>> 8), (byte) singleShort
             };
         }
     }
@@ -474,7 +472,7 @@ public class RLP {
             byte[] out = new byte[9];
             out[0] = (byte) (OFFSET_SHORT_ITEM + 8);
             for (int i = 8; i > 0; i--) {
-                out[i] = (byte) (l & 0xFF);
+                out[i] = (byte) l;
                 l >>>= 8;
             }
             return out;
@@ -531,7 +529,7 @@ public class RLP {
             byte[] data = new byte[srcData.length + 1 + byteNum];
             data[0] = (byte) (OFFSET_LONG_ITEM + byteNum);
             for (int i = 0; i < byteNum; i++) {
-                data[byteNum - i] = (byte) ((srcData.length >>> (8 * i)) & 0xFF);
+                data[byteNum - i] = (byte) (srcData.length >>> (8 * i));
             }
             System.arraycopy(srcData, 0, data, 1 + byteNum, srcData.length);
 
@@ -588,7 +586,7 @@ public class RLP {
             header[0] = (byte) (OFFSET_LONG_LIST + byteNum);
 
             for (int i = 0; i < byteNum; i++) {
-                header[byteNum - i] = (byte) ((size >>> (8 * i)) & 0xFF);
+                header[byteNum - i] = (byte) (size >>> (8 * i));
             }
         }
 
@@ -623,7 +621,7 @@ public class RLP {
             byte[] header = new byte[1 + byteNum];
             header[0] = (byte) (OFFSET_LONG_ITEM + byteNum);
             for (int i = 0; i < byteNum; i++) {
-                header[byteNum - i] = (byte) ((length >>> (8 * i)) & 0xFF);
+                header[byteNum - i] = (byte) (length >>> (8 * i));
             }
 
             return header;
@@ -669,7 +667,7 @@ public class RLP {
             data = new byte[1 + byteNum + totalLength];
             data[0] = (byte) (OFFSET_LONG_LIST + byteNum);
             for (int i = 0; i < byteNum; i++) {
-                data[byteNum - i] = (byte) ((totalLength >>> (8 * i)) & 0xFF);
+                data[byteNum - i] = (byte) (totalLength >>> (8 * i));
             }
             copyPos = byteNum + 1;
         }
