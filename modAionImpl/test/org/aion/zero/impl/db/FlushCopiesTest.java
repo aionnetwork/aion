@@ -1,29 +1,20 @@
 package org.aion.zero.impl.db;
 
-import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
-import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
-import java.io.File;
 import java.math.BigInteger;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.crypto.ECKeyFac;
-import org.aion.crypto.HashUtil;
-import org.aion.db.utils.FileUtils;
-import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.utils.NativeLibrary;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionRepositoryCache;
-import org.aion.zero.impl.AionHub;
-import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.StandaloneBlockchain;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -38,19 +29,16 @@ public class FlushCopiesTest {
 
     @Before
     public void setup() {
-        NativeLibrary.checkNativeLibrariesLoaded();
-        ECKeyFac.setType(ED25519);
-        HashUtil.setType(BLAKE2B_256);
-        CfgAion cfg = CfgAion.inst();
-        AionLoggerFactory.init(
-                cfg.getLog().getModules(), cfg.getLog().getLogFile(), cfg.getLogPath());
-        this.repository = AionHub.inst().getRepository();
+        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
+            .withDefaultAccounts()
+            .withValidatorConfiguration("simple")
+            .build();
+        this.repository = bundle.bc.getRepository();
     }
 
     @After
     public void tearDown() {
         this.repository = null;
-        FileUtils.deleteRecursively(new File(System.getProperty("user.dir") + "/mainnet"));
     }
 
     @Test

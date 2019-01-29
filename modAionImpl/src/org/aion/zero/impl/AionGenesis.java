@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
@@ -350,7 +351,7 @@ public class AionGenesis extends AionBlock {
             for (Map.Entry<Integer, BigInteger> entry : this.networkBalance.entrySet()) {
                 networkBalanceStorage.put(
                         new DataWord(entry.getKey()).toWrapper(),
-                        new DataWord(entry.getValue()).toWrapper());
+                        wrapValueForPut(new DataWord(entry.getValue())));
             }
             byte[] networkBalanceStorageHash = networkBalanceStorage.getStorageHash();
 
@@ -366,6 +367,10 @@ public class AionGenesis extends AionBlock {
             }
 
             return worldTrie.getRootHash();
+        }
+
+        private static ByteArrayWrapper wrapValueForPut(DataWord value) {
+            return (value.isZero()) ? DataWord.ZERO.toWrapper() : new ByteArrayWrapper(value.getNoLeadZeroesData());
         }
 
         private static byte[] generateExtraData(int chainId) {
