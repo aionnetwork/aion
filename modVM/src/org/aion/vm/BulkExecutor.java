@@ -14,7 +14,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.mcf.vm.types.Log;
-import org.aion.vm.VirtualMachineFactory.VM;
+import org.aion.vm.VmFactoryImplementation.VM;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
@@ -49,13 +49,10 @@ import org.slf4j.Logger;
  *     field can safely be set null) then a second constructor with this field missing is provided,
  *     and only a repositoryChild is set. A repositoryChild is required for the actual
  *     BulkExecutor's logic, whereas repository is only used by the post-execution logic.
- *
- * The {@code execute()} method is thread-safe.
+ *     <p>The {@code execute()} method is thread-safe.
  */
 public class BulkExecutor {
     private static final Object LOCK = new Object();
-    private static final VirtualMachineFactory VM_FACTORY =
-            VirtualMachineFactory.getFactorySingleton();
 
     private IRepository repository;
     private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild;
@@ -148,20 +145,34 @@ public class BulkExecutor {
 
             int currentIndex = 0;
             while (currentIndex < this.executionBatch.size()) {
-                AionTransaction firstTransactionInNextBatch = this.executionBatch.getTransactions().get(currentIndex);
+                AionTransaction firstTransactionInNextBatch =
+                        this.executionBatch.getTransactions().get(currentIndex);
 
                 if (transactionIsForFastVirtualMachine(firstTransactionInNextBatch)) {
-                    KernelInterfaceForFastVM fvmKernel = new KernelInterfaceForFastVM(this.repositoryChild.startTracking(), this.allowNonceIncrement, this.isLocalCall);
-                    virtualMachineForNextBatch = VM_FACTORY.getVirtualMachineInstance(VM.FVM, fvmKernel);
-                    nextBatchToExecute = fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
+                    KernelInterfaceForFastVM fvmKernel =
+                            new KernelInterfaceForFastVM(
+                                    this.repositoryChild.startTracking(),
+                                    this.allowNonceIncrement,
+                                    this.isLocalCall);
+                    virtualMachineForNextBatch =
+                            VirtualMachineProvider.getVirtualMachineInstance(VM.FVM, fvmKernel);
+                    nextBatchToExecute =
+                            fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
                 } else {
-                    KernelInterfaceForAVM avmKernel = new KernelInterfaceForAVM(this.repositoryChild.startTracking(), this.allowNonceIncrement, this.isLocalCall);
-                    virtualMachineForNextBatch = VM_FACTORY.getVirtualMachineInstance(VM.AVM, avmKernel);
-                    nextBatchToExecute = fetchNextBatchOfTransactionsForAionVirtualMachine(currentIndex);
+                    KernelInterfaceForAVM avmKernel =
+                            new KernelInterfaceForAVM(
+                                    this.repositoryChild.startTracking(),
+                                    this.allowNonceIncrement,
+                                    this.isLocalCall);
+                    virtualMachineForNextBatch =
+                            VirtualMachineProvider.getVirtualMachineInstance(VM.AVM, avmKernel);
+                    nextBatchToExecute =
+                            fetchNextBatchOfTransactionsForAionVirtualMachine(currentIndex);
                 }
 
                 // Execute the next batch of transactions using the specified virtual machine.
-                summaries.addAll(executeTransactions(virtualMachineForNextBatch, nextBatchToExecute));
+                summaries.addAll(
+                        executeTransactions(virtualMachineForNextBatch, nextBatchToExecute));
                 currentIndex += nextBatchToExecute.size();
             }
 
@@ -223,7 +234,7 @@ public class BulkExecutor {
             KernelInterface kernelFromVM,
             TransactionResult result) {
 
-        //TODO: Avm should assure us this is not null: need to add this to VM API specifications.
+        // TODO: Avm should assure us this is not null: need to add this to VM API specifications.
         if (result.getReturnData() == null) {
             result.setReturnData(new byte[0]);
         }
@@ -238,7 +249,8 @@ public class BulkExecutor {
         // We have to do this for now, because the kernel uses the log serialization, which is not
         // implemented in the Avm, and this type may become a POD type anyway..
         List<IExecutionLog> logs;
-        if (transactionIsForAionVirtualMachine(transaction) || transaction.getTargetVM() == VirtualMachineSpecs.AVM_VM_CODE) {
+        if (transactionIsForAionVirtualMachine(transaction)
+                || transaction.getTargetVM() == VirtualMachineSpecs.AVM_VM_CODE) {
             logs = transferAvmLogsToKernel(sideEffects.getExecutionLogs());
         } else {
             logs = sideEffects.getExecutionLogs();
@@ -254,9 +266,13 @@ public class BulkExecutor {
         ResultCode resultCode = result.getResultCode();
 
         if (transactionIsForAionVirtualMachine(transaction)) {
-            kernelFromVM.commitTo(new KernelInterfaceForAVM(this.repositoryChild, this.allowNonceIncrement, this.isLocalCall));
+            kernelFromVM.commitTo(
+                    new KernelInterfaceForAVM(
+                            this.repositoryChild, this.allowNonceIncrement, this.isLocalCall));
         } else {
-            kernelFromVM.commitTo(new KernelInterfaceForFastVM(this.repositoryChild, this.allowNonceIncrement, this.isLocalCall));
+            kernelFromVM.commitTo(
+                    new KernelInterfaceForFastVM(
+                            this.repositoryChild, this.allowNonceIncrement, this.isLocalCall));
         }
 
         if (resultCode.isRejected()) {
@@ -305,7 +321,8 @@ public class BulkExecutor {
             TransactionResult result) {
 
         if (!isLocalCall && !summary.isRejected()) {
-            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track = this.repositoryChild.startTracking();
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track =
+                    this.repositoryChild.startTracking();
 
             // Refund energy if transaction was successfully or reverted.
             if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
@@ -350,7 +367,7 @@ public class BulkExecutor {
     private ExecutionBatch fetchNextBatchOfTransactionsForAionVirtualMachine(int startIndex) {
         // Find the index of the next transaction that is not avm-bound.
         List<AionTransaction> transactions = this.executionBatch.getTransactions();
-        for (int i =  startIndex; i < this.executionBatch.size(); i++) {
+        for (int i = startIndex; i < this.executionBatch.size(); i++) {
             if (!transactionIsForAionVirtualMachine(transactions.get(i))) {
                 return this.executionBatch.slice(startIndex, i);
             }
@@ -361,31 +378,34 @@ public class BulkExecutor {
     /**
      * A transaction is for the {@link FastVirtualMachine} iff:
      *
-     * - It is a CREATE transaction and its target VM is the FVM
-     * - It is a CALL transaction and the destination is not an AVM contract address
+     * <p>- It is a CREATE transaction and its target VM is the FVM - It is a CALL transaction and
+     * the destination is not an AVM contract address
      *
-     * NOTE: If a transaction is a precompiled contract call it will return true and head into the
-     * Fvm. This is currently what we want, but it will be changed and separated out in the future.
+     * <p>NOTE: If a transaction is a precompiled contract call it will return true and head into
+     * the Fvm. This is currently what we want, but it will be changed and separated out in the
+     * future.
      */
     private boolean transactionIsForFastVirtualMachine(AionTransaction transaction) {
         if (transaction.isContractCreationTransaction()) {
             return transaction.getTargetVM() != VirtualMachineSpecs.AVM_VM_CODE;
         } else {
-            return transaction.getDestinationAddress().toBytes()[0] != NodeEnvironment.CONTRACT_PREFIX;
+            return transaction.getDestinationAddress().toBytes()[0]
+                    != NodeEnvironment.CONTRACT_PREFIX;
         }
     }
 
     /**
      * A transaction is for the Avm iff:
      *
-     * - It is a CREATE transaction and its target VM is the AVM
-     * - It is a CALL transaction and the destination is an AVM contract address
+     * <p>- It is a CREATE transaction and its target VM is the AVM - It is a CALL transaction and
+     * the destination is an AVM contract address
      */
     private boolean transactionIsForAionVirtualMachine(AionTransaction transaction) {
         if (transaction.isContractCreationTransaction()) {
             return transaction.getTargetVM() == VirtualMachineSpecs.AVM_VM_CODE;
         } else {
-            return transaction.getDestinationAddress().toBytes()[0] == NodeEnvironment.CONTRACT_PREFIX;
+            return transaction.getDestinationAddress().toBytes()[0]
+                    == NodeEnvironment.CONTRACT_PREFIX;
         }
     }
 }

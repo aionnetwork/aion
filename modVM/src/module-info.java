@@ -9,6 +9,7 @@ module aion.vm {
     requires aion.fastvm;
     requires org.aion.avm.core;
     requires aion.precompiled;
+    requires com.google.common;
 
     exports org.aion.vm;
 }
