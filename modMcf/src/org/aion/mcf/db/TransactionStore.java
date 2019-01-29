@@ -4,13 +4,13 @@ import static org.aion.base.util.Utils.dummy;
 
 import java.io.Closeable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.Flushable;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.FastByteComparisons;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
@@ -49,7 +49,7 @@ public class TransactionStore<
                 existingInfos = new ArrayList<>();
             } else {
                 for (AbstractTxInfo<TXR, TX> info : existingInfos) {
-                    if (FastByteComparisons.equal(info.getBlockHash(), tx.getBlockHash())) {
+                    if (Arrays.equals(info.getBlockHash(), tx.getBlockHash())) {
                         return false;
                     }
                 }
@@ -73,7 +73,7 @@ public class TransactionStore<
         try {
             List<INFO> existingInfos = source.get(txHash);
             for (INFO info : existingInfos) {
-                if (FastByteComparisons.equal(info.getBlockHash(), blockHash)) {
+                if (Arrays.equals(info.getBlockHash(), blockHash)) {
                     return info;
                 }
             }

@@ -4,7 +4,6 @@ import java.util.Arrays;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Bytesable;
-import org.aion.base.util.FastByteComparisons;
 
 /**
  * The address class is a byte array wrapper represent fixed-32bytes array for the kernel account
@@ -12,7 +11,11 @@ import org.aion.base.util.FastByteComparisons;
  *
  * @author jay
  */
-public final class AionAddress implements org.aion.vm.api.interfaces.Address, Comparable<AionAddress>, Bytesable<AionAddress>, Cloneable {
+public final class AionAddress
+        implements org.aion.vm.api.interfaces.Address,
+                Comparable<AionAddress>,
+                Bytesable<AionAddress>,
+                Cloneable {
     private static final AionAddress zeroAddr = AionAddress.wrap(new byte[SIZE]);
     private static final AionAddress emptyAddr = AionAddress.wrap(new byte[0]);
 
@@ -104,15 +107,7 @@ public final class AionAddress implements org.aion.vm.api.interfaces.Address, Co
         if (!(other instanceof AionAddress)) {
             return false;
         } else {
-            byte[] otherAddress = ((AionAddress) other).toBytes();
-            return FastByteComparisons.compareTo(
-                            this.address,
-                            0,
-                            this.address.length,
-                            otherAddress,
-                            0,
-                            otherAddress.length)
-                    == 0;
+            return Arrays.equals(this.address, ((AionAddress) other).toBytes());
         }
     }
 
@@ -122,12 +117,11 @@ public final class AionAddress implements org.aion.vm.api.interfaces.Address, Co
 
     @Override
     public int compareTo(AionAddress o) {
-        return FastByteComparisons.compareTo(
-                this.address, 0, SIZE, o.toBytes(), 0, o.toBytes().length);
+        return Arrays.compare(this.address, o.toBytes());
     }
 
     public int compareTo(byte[] o) {
-        return FastByteComparisons.compareTo(this.address, 0, SIZE, o, 0, o.length);
+        return Arrays.compare(this.address, o);
     }
 
     @Override

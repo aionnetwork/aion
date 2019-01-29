@@ -22,9 +22,8 @@ public class ByteArrayWrapper
         if (!(other instanceof ByteArrayWrapper)) {
             return false;
         }
-        byte[] otherData = ((ByteArrayWrapper) other).getData();
-        return FastByteComparisons.compareTo(data, 0, data.length, otherData, 0, otherData.length)
-                == 0;
+
+        return Arrays.equals(data, ((ByteArrayWrapper) other).getData());
     }
 
     @Override
@@ -34,8 +33,7 @@ public class ByteArrayWrapper
 
     @Override
     public int compareTo(ByteArrayWrapper o) {
-        return FastByteComparisons.compareTo(
-                data, 0, data.length, o.getData(), 0, o.getData().length);
+        return Arrays.compare(data, o.getData());
     }
 
     public byte[] getData() {

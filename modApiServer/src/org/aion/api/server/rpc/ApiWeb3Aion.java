@@ -12,6 +12,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -44,7 +45,6 @@ import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.TypeConverter;
 import org.aion.base.util.Utils;
 import org.aion.crypto.ECKey;
@@ -836,7 +836,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         }
 
-        if (!FastByteComparisons.equal(block.getHash(), mainchainHash)) {
+        if (!Arrays.equals(block.getHash(), mainchainHash)) {
             LOG.debug("<rpc-server not mainchain>", _hash);
             return new RpcMsg(JSONObject.NULL);
         }
@@ -1983,7 +1983,7 @@ public class ApiWeb3Aion extends ApiAion {
             // get the latest head
             AionBlock blk = getBestBlock();
 
-            if (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getHash())) {
+            if (Arrays.equals(hashQueue.peekFirst(), blk.getHash())) {
                 return this; // nothing to do
             }
 
@@ -2005,7 +2005,7 @@ public class ApiWeb3Aion extends ApiAion {
                     " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
             */
 
-            while (!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
+            while (!Arrays.equals(hashQueue.peekFirst(), blk.getParentHash())
                     && itr < qSize
                     && blk.getNumber() > 2) {
 
@@ -2201,7 +2201,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL);
         }
 
-        if (!FastByteComparisons.equal(block.getHash(), mainBlock.getHash())) {
+        if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
             return new RpcMsg(JSONObject.NULL);
         }
 
@@ -2321,7 +2321,7 @@ public class ApiWeb3Aion extends ApiAion {
         AionBlock block = blockCache.get(new ByteArrayWrapper(blockHash));
 
         AionTransaction t = block.getTransactionsList().get(info.getIndex());
-        if (FastByteComparisons.compareTo(t.getTransactionHash(), transactionHash) != 0) {
+        if (Arrays.compare(t.getTransactionHash(), transactionHash) != 0) {
             LOG.error("INCONSISTENT STATE: transaction info's transaction index is wrong.");
             return new RpcMsg(null, RpcError.INTERNAL_ERROR, "Database Error");
         }
@@ -2667,7 +2667,7 @@ public class ApiWeb3Aion extends ApiAion {
                         lastBlkTimestamp = b.getTimestamp();
                     }
 
-                    if (FastByteComparisons.equal(b.getCoinbase().toBytes(), miner)) {
+                    if (Arrays.equals(b.getCoinbase().toBytes(), miner)) {
                         minedByMiner++;
                     }
 
@@ -2710,7 +2710,7 @@ public class ApiWeb3Aion extends ApiAion {
                 return this;
             }
 
-            if (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getHash())) {
+            if (Arrays.equals(hashQueue.peekFirst(), blk.getHash())) {
                 return this; // nothing to do
             }
 
@@ -2731,7 +2731,7 @@ public class ApiWeb3Aion extends ApiAion {
                     " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
             */
 
-            while (!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
+            while (!Arrays.equals(hashQueue.peekFirst(), blk.getParentHash())
                     && itr < qSize
                     && blk.getNumber() > 2) {
 

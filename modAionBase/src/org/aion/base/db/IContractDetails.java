@@ -67,6 +67,16 @@ public interface IContractDetails {
     void decode(byte[] rlpCode);
 
     /**
+     * Decodes an IContractDetails object from the RLP encoding rlpCode including the fast check
+     * optional.
+     *
+     * @implNote Implementing classes may not necessarily support this method.
+     * @param rlpCode The encoding to decode.
+     * @param fastCheck fast check does the contractDetails needs syncing with external storage
+     */
+    void decode(byte[] rlpCode, boolean fastCheck);
+
+    /**
      * Sets the dirty value to dirty.
      *
      * @param dirty The dirty value.

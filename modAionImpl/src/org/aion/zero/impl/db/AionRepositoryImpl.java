@@ -133,7 +133,9 @@ public class AionRepositoryImpl
                     } catch (Exception e) {
                         LOG.error("key deleted exception [{}]", e.toString());
                     }
-                    LOG.debug("key deleted <key={}>", Hex.toHexString(address.toBytes()));
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("key deleted <key={}>", Hex.toHexString(address.toBytes()));
+                    }
                 } else {
 
                     if (!contractDetails.isDirty()) {
@@ -193,7 +195,9 @@ public class AionRepositoryImpl
                 }
             }
 
-            LOG.trace("updated: detailsCache.size: {}", detailsCache.size());
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("updated: detailsCache.size: {}", detailsCache.size());
+            }
             stateCache.clear();
             detailsCache.clear();
         } finally {
@@ -210,18 +214,27 @@ public class AionRepositoryImpl
 
     @Override
     public void flush() {
-        LOG.debug("------ FLUSH ON " + this.toString());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("------ FLUSH ON " + this.toString());
+        }
         rwLock.writeLock().lock();
         try {
-            LOG.debug("flushing to disk");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("flushing to disk");
+            }
             long s = System.currentTimeMillis();
 
             // First sync worldState.
-            LOG.info("worldState.sync()");
+            if (LOG.isInfoEnabled()) {
+
+                LOG.info("worldState.sync()");
+            }
             worldState.sync();
 
             // Flush all necessary caches.
-            LOG.info("flush all databases");
+            if (LOG.isInfoEnabled()) {
+                LOG.info("flush all databases");
+            }
 
             if (databaseGroup != null) {
                 for (IByteArrayKeyValueDatabase db : databaseGroup) {
@@ -230,10 +243,14 @@ public class AionRepositoryImpl
                     }
                 }
             } else {
-                LOG.warn("databaseGroup is null");
+                if (LOG.isWarnEnabled()) {
+                    LOG.warn("databaseGroup is null");
+                }
             }
 
-            LOG.info("RepositoryImpl.flush took " + (System.currentTimeMillis() - s) + " ms");
+            if (LOG.isInfoEnabled()) {
+                LOG.info("RepositoryImpl.flush took " + (System.currentTimeMillis() - s) + " ms");
+            }
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -438,8 +455,12 @@ public class AionRepositoryImpl
 
             if (accountData.length != 0) {
                 result = new AccountState(accountData);
-                LOG.debug(
-                        "New AccountSate [{}], State [{}]", address.toString(), result.toString());
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(
+                            "New AccountSate [{}], State [{}]",
+                            address.toString(),
+                            result.toString());
+                }
             }
             return result;
         } finally {

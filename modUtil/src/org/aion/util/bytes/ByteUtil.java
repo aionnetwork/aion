@@ -145,9 +145,7 @@ public class ByteUtil {
      * @return decimal value with leading byte that are zeroes striped
      */
     public static byte[] longToBytesNoLeadZeroes(long val) {
-
-        // todo: improve performance by while strip numbers until (long >> 8 ==
-        // 0)
+        // todo: improve performance by while strip numbers until (long >> 8 == 0)
         if (val == 0) {
             return EMPTY_BYTE_ARRAY;
         }
@@ -196,30 +194,24 @@ public class ByteUtil {
      * @return value with leading byte that are zeroes striped
      */
     public static byte[] intToBytesNoLeadZeroes(int val) {
-
         if (val == 0) {
             return EMPTY_BYTE_ARRAY;
+        } else if (val < 0 || val > 16777215) {
+            return new byte[] {
+                (byte) ((val >>> 24) & 0xFF),
+                (byte) ((val >>> 16) & 0xFF),
+                (byte) ((val >>> 8) & 0xFF),
+                (byte) (val & 0xFF)
+            };
+        } else if (val < 256) {
+            return new byte[] {(byte) (val & 0xFF)};
+        } else if (val < 65536) {
+            return new byte[] {(byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)};
+        } else {
+            return new byte[] {
+                (byte) ((val >>> 16) & 0xFF), (byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)
+            };
         }
-
-        int lenght = 0;
-
-        int tmpVal = val;
-        while (tmpVal != 0) {
-            tmpVal = tmpVal >>> 8;
-            ++lenght;
-        }
-
-        byte[] result = new byte[lenght];
-
-        int index = result.length - 1;
-        while (val != 0) {
-
-            result[index] = (byte) (val & 0xFF);
-            val = val >>> 8;
-            index -= 1;
-        }
-
-        return result;
     }
 
     /**
@@ -410,14 +402,11 @@ public class ByteUtil {
         switch (firstNonZero) {
             case -1:
                 return ZERO_BYTE_ARRAY;
-
             case 0:
                 return data;
-
             default:
                 byte[] result = new byte[data.length - firstNonZero];
                 System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
-
                 return result;
         }
     }

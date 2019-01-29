@@ -62,9 +62,7 @@ public class DetailsDataStore<
 
             // Check to see if we have to remove it.
             // If it isn't in removes set, we add it to removes set.
-            if (!removes.contains(wrappedKey)) {
-                removes.add(wrappedKey);
-            }
+            removes.add(wrappedKey);
             return null;
         }
 
@@ -143,8 +141,8 @@ public class DetailsDataStore<
             // Decode the details.
             IContractDetails detailsImpl = repoConfig.contractDetailsImpl();
             detailsImpl.setDataSource(storageDSPrune);
-            detailsImpl.decode(rawDetails.get()); // We can safely get as we
-            // checked if it is present.
+            detailsImpl.decode(rawDetails.get(), true);
+            // We can safely get as we checked if it is present.
 
             // IContractDetails details = entry.getValue();
             detailsImpl.syncStorage();

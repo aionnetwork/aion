@@ -2,6 +2,7 @@ package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,7 +25,6 @@ import org.aion.base.Constant;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.util.ByteUtil;
-import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.Hex;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -81,8 +81,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                         if (nonceDiff != 0) {
                             return nonceDiff > 0 ? 1 : -1;
                         }
-                        return FastByteComparisons.compareTo(
-                                tx1.getTransactionHash(), 0, 32, tx2.getTransactionHash(), 0, 32);
+                        return Arrays.compare(tx1.getTransactionHash(), tx2.getTransactionHash());
                     });
         }
     }

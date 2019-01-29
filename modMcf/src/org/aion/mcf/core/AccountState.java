@@ -5,7 +5,6 @@ import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.base.util.FastByteComparisons;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
 import org.aion.util.conversions.Hex;
@@ -200,7 +199,7 @@ public class AccountState extends AbstractState {
      */
     private boolean isInitialized() {
         // TODO: discuss alternative of storing a boolean value
-        return !FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH);
+        return !Arrays.equals(codeHash, EMPTY_DATA_HASH);
     }
 
     /**
@@ -299,7 +298,7 @@ public class AccountState extends AbstractState {
     }
 
     public boolean isEmpty() {
-        return FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH)
+        return Arrays.equals(codeHash, EMPTY_DATA_HASH)
                 && BigInteger.ZERO.equals(balance)
                 && BigInteger.ZERO.equals(nonce);
     }
