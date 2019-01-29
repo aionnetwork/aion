@@ -10,6 +10,7 @@ import org.aion.base.vm.VirtualMachineSpecs;
 import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
+import org.aion.kernel.AvmTransactionResult;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
@@ -204,8 +205,13 @@ public class BulkExecutor {
             long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
             if (energyUsed > this.blockRemainingEnergy) {
                 result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
-                result.setEnergyRemaining(0);
                 result.setReturnData(new byte[0]);
+
+                if (transactionIsForAionVirtualMachine(transaction)) {
+                    ((AvmTransactionResult) result).setEnergyUsed(transaction.getEnergyLimit());
+                } else {
+                    result.setEnergyRemaining(0);
+                }
             }
 
             // 2. build the transaction summary and update the repository (the one backing
@@ -326,7 +332,9 @@ public class BulkExecutor {
 
             // Refund energy if transaction was successfully or reverted.
             if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
-                track.addBalance(tx.getSenderAddress(), summary.getRefund());
+                if (!transactionIsForAionVirtualMachine(tx)) {
+                    track.addBalance(tx.getSenderAddress(), summary.getRefund());
+                }
             }
 
             tx.setNrgConsume(computeEnergyUsed(tx.getEnergyLimit(), result));
