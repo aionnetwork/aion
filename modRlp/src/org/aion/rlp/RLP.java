@@ -83,7 +83,7 @@ public class RLP {
             byte pow = (byte) (length - 1);
             for (int i = 1; i <= length; ++i) {
                 value += (data[index + i] & 0xFF) << (8 * pow);
-                pow--;
+                --pow;
             }
         } else {
             throw new RuntimeException("wrong decode attempt");
@@ -134,7 +134,7 @@ public class RLP {
         int length = 0;
         for (int i = 1; i <= lengthOfLength; ++i) {
             length += (msgData[pos + i] & 0xFF) << (8 * pow);
-            pow--;
+            --pow;
         }
         return length;
     }
@@ -440,7 +440,7 @@ public class RLP {
         } else {
             return new byte[] {
                 (byte) (OFFSET_SHORT_ITEM + 2),
-                (byte) (singleShort >> 8 & 0xFF),
+                (byte) ((singleShort >>> 8) & 0xFF),
                 (byte) (singleShort & 0xFF)
             };
         }
@@ -475,7 +475,7 @@ public class RLP {
             out[0] = (byte) (OFFSET_SHORT_ITEM + 8);
             for (int i = 8; i > 0; i--) {
                 out[i] = (byte) (l & 0xFF);
-                l >>= 8;
+                l >>>= 8;
             }
             return out;
         }
@@ -517,7 +517,7 @@ public class RLP {
             byte byteNum = 0;
             while (tmpLength != 0) {
                 ++byteNum;
-                tmpLength = tmpLength >> 8;
+                tmpLength >>>= 8;
             }
 
             /*
@@ -531,7 +531,7 @@ public class RLP {
             byte[] data = new byte[srcData.length + 1 + byteNum];
             data[0] = (byte) (OFFSET_LONG_ITEM + byteNum);
             for (int i = 0; i < byteNum; i++) {
-                data[byteNum - i] = (byte) ((srcData.length >> (8 * i)) & 0xFF);
+                data[byteNum - i] = (byte) ((srcData.length >>> (8 * i)) & 0xFF);
             }
             System.arraycopy(srcData, 0, data, 1 + byteNum, srcData.length);
 
@@ -556,7 +556,7 @@ public class RLP {
             byte byteNum = 0;
             while (tmpLength != 0) {
                 ++byteNum;
-                tmpLength = tmpLength >> 8;
+                tmpLength >>>= 8;
             }
 
             return 1 + byteNum;
@@ -581,14 +581,14 @@ public class RLP {
             byte byteNum = 0;
             while (tmpLength != 0) {
                 ++byteNum;
-                tmpLength = tmpLength >> 8;
+                tmpLength >>>= 8;
             }
 
             header = new byte[1 + byteNum];
             header[0] = (byte) (OFFSET_LONG_LIST + byteNum);
 
             for (int i = 0; i < byteNum; i++) {
-                header[byteNum - i] = (byte) ((size >> (8 * i)) & 0xFF);
+                header[byteNum - i] = (byte) ((size >>> (8 * i)) & 0xFF);
             }
         }
 
@@ -617,13 +617,13 @@ public class RLP {
             byte byteNum = 0;
             while (tmpLength != 0) {
                 ++byteNum;
-                tmpLength = tmpLength >> 8;
+                tmpLength >>>= 8;
             }
 
             byte[] header = new byte[1 + byteNum];
             header[0] = (byte) (OFFSET_LONG_ITEM + byteNum);
             for (int i = 0; i < byteNum; i++) {
-                header[byteNum - i] = (byte) ((length >> (8 * i)) & 0xFF);
+                header[byteNum - i] = (byte) ((length >>> (8 * i)) & 0xFF);
             }
 
             return header;
@@ -655,7 +655,7 @@ public class RLP {
             byte byteNum = 0;
             while (tmpLength != 0) {
                 ++byteNum;
-                tmpLength = tmpLength >> 8;
+                tmpLength >>>= 8;
             }
 
             /*
@@ -669,7 +669,7 @@ public class RLP {
             data = new byte[1 + byteNum + totalLength];
             data[0] = (byte) (OFFSET_LONG_LIST + byteNum);
             for (int i = 0; i < byteNum; i++) {
-                data[byteNum - i] = (byte) ((totalLength >> (8 * i)) & 0xFF);
+                data[byteNum - i] = (byte) ((totalLength >>> (8 * i)) & 0xFF);
             }
             copyPos = byteNum + 1;
         }
