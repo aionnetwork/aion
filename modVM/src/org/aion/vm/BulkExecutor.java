@@ -154,7 +154,7 @@ public class BulkExecutor {
 
             // 3. Do any post execution work and update the remaining block energy.
             this.blockRemainingEnergy -=
-                    this.postExecutionWork.doExecutionWork(
+                    this.postExecutionWork.doPostExecutionWork(
                             this.repository,
                             this.repositoryChild,
                             summary,
@@ -190,9 +190,10 @@ public class BulkExecutor {
 
         ResultCode resultCode = result.getResultCode();
 
-        if (resultCode.isSuccess()) {
-            kernelFromVM.flush();
-        } else if (resultCode.isRejected()) {
+        // FastVirtualMachine guarantees us that we are always safe to flush its state changes.
+        ((KernelInterfaceForFastVM) kernelFromVM).getRepositoryCache().flushTo(this.repositoryChild, true);
+
+        if (resultCode.isRejected()) {
             builder.markAsRejected();
         } else if (resultCode.isFailed()) {
             builder.markAsFailed();

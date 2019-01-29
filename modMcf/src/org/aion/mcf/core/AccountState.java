@@ -4,6 +4,7 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import org.aion.base.util.FastByteComparisons;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
@@ -260,6 +261,30 @@ public class AccountState extends AbstractState {
             this.balance = balance.subtract(value);
         }
         return this.balance;
+    }
+
+    /**
+     * Returns a deep copy of this account state.
+     *
+     * @return A deep copy of this object.
+     */
+    public AccountState copy() {
+        AccountState accountStateCopy = new AccountState();
+        accountStateCopy.balance = this.balance;
+        accountStateCopy.nonce = this.nonce;
+        accountStateCopy.dirty = this.dirty;
+        accountStateCopy.deleted = this.deleted;
+        accountStateCopy.codeHash =
+                (this.codeHash == null) ? null : Arrays.copyOf(this.codeHash, this.codeHash.length);
+        accountStateCopy.stateRoot =
+                (this.stateRoot == null)
+                        ? null
+                        : Arrays.copyOf(this.stateRoot, this.stateRoot.length);
+        accountStateCopy.rlpEncoded =
+                (this.rlpEncoded == null)
+                        ? null
+                        : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
+        return accountStateCopy;
     }
 
     public byte[] getEncoded() {

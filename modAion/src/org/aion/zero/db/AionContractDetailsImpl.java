@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.AionAddress;
@@ -343,5 +344,69 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         details.dataSource = dataSource;
 
         return details;
+    }
+
+    /**
+     * Returns a sufficiently deep copy of this contract details object.
+     *
+     * The copy is not completely deep. The following object references will be passed on from this
+     * object to the copy:
+     *
+     *   - The external storage data source: the copy will back-end on this same source.
+     *   - The previous root of the trie will pass its original object reference if this root is not
+     *     of type {@code byte[]}.
+     *   - The current root of the trie will pass its original object reference if this root is not
+     *     of type {@code byte[]}.
+     *   - Each {@link org.aion.rlp.Value} object reference held by each of the
+     *     {@link org.aion.mcf.trie.Node} objects in the underlying cache.
+     *
+     * @return A copy of this object.
+     */
+    @Override
+    public AionContractDetailsImpl copy() {
+        AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl();
+        aionContractDetailsCopy.dataSource = this.dataSource;
+        aionContractDetailsCopy.externalStorageDataSource = this.externalStorageDataSource;
+        aionContractDetailsCopy.externalStorage = this.externalStorage;
+        aionContractDetailsCopy.prune = this.prune;
+        aionContractDetailsCopy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;
+        aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
+        aionContractDetailsCopy.setDirty(this.isDirty());
+        aionContractDetailsCopy.setDeleted(this.isDeleted());
+        aionContractDetailsCopy.address =
+            (this.address == null) ? null : new AionAddress(this.address.toBytes());
+        aionContractDetailsCopy.rlpEncoded =
+            (this.rlpEncoded == null)
+                ? null
+                : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
+        aionContractDetailsCopy.storageTrie =
+            (this.storageTrie == null) ? null : this.storageTrie.copy();
+        return aionContractDetailsCopy;
+    }
+
+    // TODO: move this method up to the parent class.
+    private Map<ByteArrayWrapper, byte[]> getDeepCopyOfCodes() {
+        Map<ByteArrayWrapper, byte[]> originalCodes = this.getCodes();
+
+        if (originalCodes == null) {
+            return null;
+        }
+
+        Map<ByteArrayWrapper, byte[]> copyOfCodes = new HashMap<>();
+        for (Entry<ByteArrayWrapper, byte[]> codeEntry : originalCodes.entrySet()) {
+
+            ByteArrayWrapper keyWrapper = null;
+            if (codeEntry.getKey() != null) {
+                byte[] keyBytes = codeEntry.getKey().getData();
+                keyWrapper = new ByteArrayWrapper(Arrays.copyOf(keyBytes, keyBytes.length));
+            }
+
+            byte[] copyOfValue =
+                (codeEntry.getValue() == null)
+                    ? null
+                    : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
+            copyOfCodes.put(keyWrapper, copyOfValue);
+        }
+        return copyOfCodes;
     }
 }

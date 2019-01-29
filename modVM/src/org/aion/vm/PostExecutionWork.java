@@ -8,8 +8,11 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 
 /**
- * A functional interface that specifies post-execution "work". That is, the that must be done
- * directly after a transaction has been executed.
+ * A functional interface that specifies post-execution "work" or logic that is to be applied
+ * immediately after a transaction has been executed. Or, if the transaction is being executed in
+ * bulk, then it is to be applied in such a manner that it appears to be logically applied immediately
+ * after the execution of the transaction so that from the perspective of the caller there is no
+ * difference between running the transactions in bulk or sequentially.
  */
 @FunctionalInterface
 public interface PostExecutionWork {
@@ -21,9 +24,11 @@ public interface PostExecutionWork {
      * <p>This work may do whatever it needs to the provided inputs.
      *
      * <p>The work must return the amount of energy that this transaction will use in its block so
-     * that the remaining block energy may be updated correctly. Note that this value may not always
-     * be relevant to the component of the kernel that wants this work done, and so it is also able
-     * to return 0 in that case.
+     * that the remaining block energy may be updated correctly.
+     *
+     * Note that this value may not always be relevant to the component of the kernel that wants
+     * this work done, in which case that component should define this method to return zero (0) so
+     * that no block energy usage deductions are made.
      *
      * @param repository The top-most level of the repository.
      * @param repositoryChild The child repository of repository.
@@ -33,7 +38,7 @@ public interface PostExecutionWork {
      *     execution.
      * @return The amount of energy that this transaction uses in its block.
      */
-    long doExecutionWork(
+    long doPostExecutionWork(
             IRepository repository,
             IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
             AionTxExecSummary summary,
