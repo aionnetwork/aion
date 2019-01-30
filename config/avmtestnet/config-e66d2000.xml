@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aion>
 	<mode>aion</mode>
-	<id>e66d2000-8805-45be-86a3-e170410a2898</id>
+	<id>f66d2000-9805-55be-96a3-f170410a2898</id>
 	<api>
 		<!-- rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs -->
 		<rpc active="true" ip="127.0.0.1" port="8545">
@@ -21,12 +21,15 @@
 			<oracle-enabled>false</oracle-enabled>
 		</nrg-recommendation>
 	</api>
+	<vm>
+		<avm-enabled>true</avm-enabled>
+	</vm>
 	<net>
 		<id>31</id>
 		<nodes>
-			<node>p2p://e66d1000-16c8-4ea6-a973-078f246b33b1@138.91.123.106:30303</node>
-			<node>p2p://e66d2000-8805-45be-86a3-e170410a2898@23.100.52.181:30303</node>
-			<node>p2p://e66d3000-1581-4979-af8a-5196dbcd29b9@13.91.127.35:30303</node>
+			<node>p2p://f66d1000-26c8-5ea6-b973-178f246b33b1@138.91.123.106:30303</node>
+			<node>p2p://f66d2000-9805-55be-96a3-f170410a2898@23.100.52.181:30303</node>
+			<node>p2p://f66d3000-2581-5979-bf8a-6196dbcd29b9@13.91.127.35:30303</node>
 		</nodes>
 		<p2p>
 			<ip>0.0.0.0</ip>
