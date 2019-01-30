@@ -17,18 +17,18 @@ import java.util.jar.JarFile;
  */
 public class NativeZmqLoader {
     public static final String NO_EMBEDDED_LIB_FLAG = "ZMQ_NO_EMBEDDED";
-    public static final boolean LOADED_EMBEDDED_LIBRARY;
+    public static boolean LOADED_EMBEDDED_LIBRARY = false;
 
-    static {
-        if( System.getProperty(NO_EMBEDDED_LIB_FLAG) == null ) {
+    public void load() {
+        if(!LOADED_EMBEDDED_LIBRARY && System.getProperty(NO_EMBEDDED_LIB_FLAG) == null) {
             LOADED_EMBEDDED_LIBRARY = loadNativeEmbedded("/native/linux/zmq/libjzmq.so")
                 && loadNativeEmbedded("/native/linux/zmq/libzmq.so.5");
         } else {
-            LOADED_EMBEDDED_LIBRARY = false;
+            LOADED_EMBEDDED_LIBRARY |= false;
         }
     }
 
-    private static boolean loadNativeEmbedded(String resourceName) {
+    private boolean loadNativeEmbedded(String resourceName) {
         try (InputStream is = App.class.getResourceAsStream(resourceName)) {
             if(is == null) {
                 // should hook this up to a log4j that can be configured by the top-level program
@@ -39,6 +39,7 @@ public class NativeZmqLoader {
             return true;
         } catch (IOException ioe) {
             // should hook this up to a log4j that can be configured by the top-level program
+            ioe.printStackTrace();
             return false;
         }
     }
@@ -50,7 +51,7 @@ public class NativeZmqLoader {
      * @param resourceName resource name
      * @return last part of the resource name
      */
-    private static String tempNameForResourceName(String resourceName) {
+    private String tempNameForResourceName(String resourceName) {
         resourceName.replace(".", "/");
         String[] resourceParts = resourceName.split("/");
         return resourceParts[resourceParts.length - 1];
@@ -64,7 +65,7 @@ public class NativeZmqLoader {
      * @return path to the file
      * @throws IOException if IO error
      */
-    private static String streamToTempFile(InputStream in, String filename) throws IOException {
+    private String streamToTempFile(InputStream in, String filename) throws IOException {
         final File libfile = File.createTempFile(filename, "");
 
         try (
