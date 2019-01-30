@@ -6,34 +6,3 @@ sourceSets {
     }
 }
 
-apply plugin: 'maven-publish'
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId = 'network.aion'
-            artifactId = "libnzmq"
-            version = "1.0"
-
-            from components.java
-        }   
-    }   
-
-    // this makes it so `publish` goes to $buildDir/repos/
-    repositories {
-        maven {
-
-            //the code sample had support for publishing to different places based on 
-            //whether it is release.  might be useful for pack stuff later.
-            //def releasesRepoUrl = "$buildDir/repos/releases"
-            //def snapshotsRepoUrl = "$buildDir/repos/snapshots"
-            //url = project.hasProperty('release') ? releasesRepoUrl : snapshotsRepoUrl
-
-            // for now we'll just go to the same place all the time
-            if(project.hasProperty('publishTarget')) { 
-                url = publishTarget
-            } else {
-                url = "$buildDir/repos"
-            }
-        }   
-    }   
-}
