@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.AionAddress;
@@ -19,7 +20,6 @@ import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
@@ -76,12 +76,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         if (value.isZero()) {
             storageTrie.delete(key.getData());
         } else {
-            // TODO: VM must handle padding
-            boolean isDouble = value.getData().length == DoubleDataWord.BYTES;
-            byte[] data =
-                    (isDouble)
-                            ? RLP.encodeElement(value.getData())
-                            : RLP.encodeElement(value.getNoLeadZeroesData());
+            byte[] data = RLP.encodeElement(value.getData());
             storageTrie.update(key.getData(), data);
         }
 
@@ -98,17 +93,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      */
     @Override
     public ByteArrayWrapper get(ByteArrayWrapper key) {
-        ByteArrayWrapper result = DataWord.ZERO.toWrapper();
-
         byte[] data = storageTrie.get(key.getData());
-        // TODO: VM must handle padding
-        if (data.length >= DoubleDataWord.BYTES) {
-            result = new DoubleDataWord(RLP.decode2(data).get(0).getRLPData()).toWrapper();
-        } else if (data.length > 0) {
-            result = new DataWord(RLP.decode2(data).get(0).getRLPData()).toWrapper();
-        }
-
-        return result;
+        return (data == null || data.length == 0)
+                ? DataWord.ZERO.toWrapper()
+                : new ByteArrayWrapper(RLP.decode2(data).get(0).getRLPData());
     }
 
     /**
@@ -368,16 +356,14 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     /**
      * Returns a sufficiently deep copy of this contract details object.
      *
-     * The copy is not completely deep. The following object references will be passed on from this
-     * object to the copy:
+     * <p>The copy is not completely deep. The following object references will be passed on from
+     * this object to the copy:
      *
-     *   - The external storage data source: the copy will back-end on this same source.
-     *   - The previous root of the trie will pass its original object reference if this root is not
-     *     of type {@code byte[]}.
-     *   - The current root of the trie will pass its original object reference if this root is not
-     *     of type {@code byte[]}.
-     *   - Each {@link org.aion.rlp.Value} object reference held by each of the
-     *     {@link org.aion.mcf.trie.Node} objects in the underlying cache.
+     * <p>- The external storage data source: the copy will back-end on this same source. - The
+     * previous root of the trie will pass its original object reference if this root is not of type
+     * {@code byte[]}. - The current root of the trie will pass its original object reference if
+     * this root is not of type {@code byte[]}. - Each {@link org.aion.rlp.Value} object reference
+     * held by each of the {@link org.aion.mcf.trie.Node} objects in the underlying cache.
      *
      * @return A copy of this object.
      */
@@ -393,13 +379,13 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         aionContractDetailsCopy.setDirty(this.isDirty());
         aionContractDetailsCopy.setDeleted(this.isDeleted());
         aionContractDetailsCopy.address =
-            (this.address == null) ? null : new AionAddress(this.address.toBytes());
+                (this.address == null) ? null : new AionAddress(this.address.toBytes());
         aionContractDetailsCopy.rlpEncoded =
-            (this.rlpEncoded == null)
-                ? null
-                : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
+                (this.rlpEncoded == null)
+                        ? null
+                        : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
         aionContractDetailsCopy.storageTrie =
-            (this.storageTrie == null) ? null : this.storageTrie.copy();
+                (this.storageTrie == null) ? null : this.storageTrie.copy();
         return aionContractDetailsCopy;
     }
 
@@ -421,9 +407,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             }
 
             byte[] copyOfValue =
-                (codeEntry.getValue() == null)
-                    ? null
-                    : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
+                    (codeEntry.getValue() == null)
+                            ? null
+                            : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
             copyOfCodes.put(keyWrapper, copyOfValue);
         }
         return copyOfCodes;

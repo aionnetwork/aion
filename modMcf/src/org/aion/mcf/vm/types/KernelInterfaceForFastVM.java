@@ -70,8 +70,8 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public void putStorage(Address address, byte[] key, byte[] value) {
-        ByteArrayWrapper storageKey = new DataWord(key).toWrapper();
-        ByteArrayWrapper storageValue = new DataWord(value).toWrapper();
+        ByteArrayWrapper storageKey = alignDataToWordSize(key);
+        ByteArrayWrapper storageValue = alignValueToWordSizeForPut(value);
         this.repositoryCache.addStorageRow(address, storageKey, storageValue);
     }
 
@@ -82,9 +82,9 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public byte[] getStorage(Address address, byte[] key) {
-        ByteArrayWrapper storageKey = new DataWord(key).toWrapper();
+        ByteArrayWrapper storageKey = alignDataToWordSize(key);
         ByteArrayWrapper value = this.repositoryCache.getStorageValue(address, storageKey);
-        return (value == null) ? DataWord.ZERO.getData() : value.getData();
+        return (value == null) ? DataWord.ZERO.getData() : alignValueToWordSizeForGet(value);
     }
 
     @Override
@@ -166,5 +166,55 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     public boolean destinationAddressIsSafeForThisVM(Address address) {
         // TODO: replace with actual logic that prevents the FastVM from calling an Avm contract.
         return true;
+    }
+
+    /**
+     * If data.length > 16 then data is aligned to be 32 bytes.
+     *
+     * <p>Otherwise it is aligned to be 16 bytes with all of its leading zero bytes removed.
+     *
+     * <p>This method should only be used for putting data into storage.
+     */
+    private ByteArrayWrapper alignValueToWordSizeForPut(byte[] value) {
+        if (value.length == DoubleDataWord.BYTES) {
+            return new ByteArrayWrapper(new DoubleDataWord(value).getData());
+        } else {
+            DataWord valueAsWord = new DataWord(value);
+            return (valueAsWord.isZero())
+                    ? valueAsWord.toWrapper()
+                    : new ByteArrayWrapper(valueAsWord.getNoLeadZeroesData());
+        }
+    }
+
+    /**
+     * If data.length > 16 then data is aligned to be 32 bytes.
+     *
+     * <p>Otherwise it is aligned to be 16 bytes.
+     *
+     * <p>This method should only be used for getting data from storage.
+     */
+    private byte[] alignValueToWordSizeForGet(ByteArrayWrapper wrappedValue) {
+        byte[] value = wrappedValue.getData();
+
+        if (value.length > DataWord.BYTES) {
+            return new DoubleDataWord(value).getData();
+        } else {
+            return new DataWord(value).getData();
+        }
+    }
+
+    /**
+     * If data.length > 16 then data is aligned to be 32 bytes.
+     *
+     * <p>Otherwise it is aligned to be 16 bytes.
+     *
+     * <p>Takes a byte[] and outputs a {@link ByteArrayWrapper}.
+     */
+    private ByteArrayWrapper alignDataToWordSize(byte[] data) {
+        if (data.length == DoubleDataWord.BYTES) {
+            return new ByteArrayWrapper(new DoubleDataWord(data).getData());
+        } else {
+            return new ByteArrayWrapper(new DataWord(data).getData());
+        }
     }
 }
