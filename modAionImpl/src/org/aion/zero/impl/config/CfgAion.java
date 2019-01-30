@@ -397,6 +397,10 @@ public final class CfgAion extends Cfg {
             sw.writeCharacters(this.getTx().toXML());
             sw.writeCharacters(this.getReports().toXML());
             sw.writeCharacters(this.getGui().toXML());
+            // config hidden when disabled
+            if (getVm().isAvmEnabled()) {
+                sw.writeCharacters(this.getVm().toXML());
+            }
 
             sw.writeCharacters("\r\n");
             sw.writeEndElement();
