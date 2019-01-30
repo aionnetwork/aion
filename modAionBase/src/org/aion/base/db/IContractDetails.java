@@ -1,7 +1,6 @@
 package org.aion.base.db;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.vm.api.interfaces.Address;
@@ -124,18 +123,6 @@ public interface IContractDetails {
      * @return the associated mappings
      */
     Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys);
-
-    /**
-     * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
-     * storageValues.
-     *
-     * @param storageKeys the list of keys
-     * @param storageValues the list of values
-     * @apiNote Used for testing.
-     * @implNote A {@code null} value is interpreted as deletion.
-     */
-    void setStorage(List<ByteArrayWrapper> storageKeys, List<ByteArrayWrapper> storageValues);
 
     /**
      * Sets the storage to contain the specified key-value mappings.
