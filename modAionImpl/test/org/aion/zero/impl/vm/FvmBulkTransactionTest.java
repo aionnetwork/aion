@@ -28,7 +28,6 @@ import org.junit.Test;
 public class FvmBulkTransactionTest {
     private StandaloneBlockchain blockchain;
     private ECKey deployerKey;
-    private Address deployer;
     private long energyPrice = 1;
 
     @Before
@@ -40,14 +39,12 @@ public class FvmBulkTransactionTest {
                 .build();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
-        deployer = new AionAddress(deployerKey.getAddress());
     }
 
     @After
     public void tearDown() {
         blockchain = null;
         deployerKey = null;
-        deployer = null;
     }
 
     @Test
