@@ -8,7 +8,6 @@ public enum NativeLibrary {
     COMMON("common"),
     SODIUM("sodium"),
     EQUIHASH("equihash"),
-    ZMQ("zmq"),
     BLAKE2B("blake2b"),
     FASTVM("fastvm"),
     SOLIDITY("solidity");
