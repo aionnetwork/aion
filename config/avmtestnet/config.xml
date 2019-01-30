@@ -89,7 +89,4 @@
         <P2P>INFO</P2P>
         <GUI>INFO</GUI>
     </log>
-    <vm>
-        <avm-enabled>true</avm-enabled>
-    </vm>
 </aion>
