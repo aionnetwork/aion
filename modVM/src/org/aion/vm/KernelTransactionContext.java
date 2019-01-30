@@ -3,6 +3,7 @@ package org.aion.vm;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import org.aion.base.type.AionAddress;
 import org.aion.base.vm.IDataWord;
 import org.aion.fastvm.SideEffects;
 import org.aion.mcf.vm.types.DataWord;
@@ -154,6 +155,13 @@ public class KernelTransactionContext implements TransactionContext {
     @Override
     public Address getDestinationAddress() {
         return address;
+    }
+
+    @Override
+    public Address getContractAddress() {
+        byte[] rawBytes = this.transaction.getContractAddress().toBytes();
+        rawBytes[0] = 0x0f;
+        return AionAddress.wrap(rawBytes);
     }
 
     /** @return the origination address, which is the sender of original transaction. */

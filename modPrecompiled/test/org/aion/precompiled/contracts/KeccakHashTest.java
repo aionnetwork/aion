@@ -23,7 +23,7 @@ public class KeccakHashTest {
     @Test
     public void testKeccak256() {
         PrecompiledTransactionResult res = keccakHasher.execute(byteArray1, INPUT_NRG);
-        byte[] output = res.getOutput();
+        byte[] output = res.getReturnData();
 
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(32, output.length);

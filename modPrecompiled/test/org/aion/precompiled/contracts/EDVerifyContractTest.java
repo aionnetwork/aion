@@ -112,7 +112,7 @@ public class EDVerifyContractTest {
         assertNotNull(contract);
         TransactionResult result = contract.execute(input, 21000L);
         assertThat(result.getResultCode().isSuccess());
-        assertThat(Arrays.equals(result.getOutput(), pubKey));
+        assertThat(Arrays.equals(result.getReturnData(), pubKey));
     }
 
     @Test
@@ -143,7 +143,7 @@ public class EDVerifyContractTest {
         assertNotNull(contract);
         TransactionResult result = contract.execute(input, 21000L);
         assertThat(result.getResultCode().isSuccess());
-        assertThat(Arrays.equals(result.getOutput(), pubKey));
+        assertThat(Arrays.equals(result.getReturnData(), pubKey));
     }
 
     @Test
@@ -178,7 +178,7 @@ public class EDVerifyContractTest {
         assertNotNull(contract);
         TransactionResult result = contract.execute(input, 21000L);
         assertThat(result.getResultCode().isSuccess());
-        assertThat(Arrays.equals(result.getOutput(), AionAddress.ZERO_ADDRESS().toBytes()));
+        assertThat(Arrays.equals(result.getReturnData(), AionAddress.ZERO_ADDRESS().toBytes()));
     }
 
     @Test

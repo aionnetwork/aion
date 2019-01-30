@@ -122,7 +122,7 @@ public class TotalCurrencyContractTest {
         res = tcc.execute(input, COST);
 
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-        assertEquals(AMT, new BigInteger(res.getOutput()));
+        assertEquals(AMT, new BigInteger(res.getReturnData()));
     }
 
     @Test
@@ -138,7 +138,7 @@ public class TotalCurrencyContractTest {
         res = tcc.execute(new byte[] {(byte) 0x1}, COST); // query a diff chainID
 
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-        assertEquals(BigInteger.ZERO, new BigInteger(res.getOutput()));
+        assertEquals(BigInteger.ZERO, new BigInteger(res.getReturnData()));
     }
 
     @Test
@@ -154,7 +154,7 @@ public class TotalCurrencyContractTest {
         PrecompiledTransactionResult res = tcc.execute(new byte[] {(byte) 0x0}, COST);
 
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-        assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getOutput()));
+        assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getReturnData()));
     }
 
     @Test
@@ -223,14 +223,14 @@ public class TotalCurrencyContractTest {
 
         PrecompiledTransactionResult res = tcc.execute(new byte[] {(byte) 0x0}, COST);
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-        assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getOutput()));
+        assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getReturnData()));
 
         tcc.execute(input, COST);
         tcc.execute(input, COST);
 
         res = tcc.execute(new byte[] {(byte) 0x0}, COST);
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-        assertEquals(BigInteger.ZERO, new BigInteger(res.getOutput()));
+        assertEquals(BigInteger.ZERO, new BigInteger(res.getReturnData()));
     }
 
     @Test
@@ -245,7 +245,7 @@ public class TotalCurrencyContractTest {
 
         // Verify total amount is non-negative.
         res = tcc.execute(new byte[] {(byte) 0x0}, COST);
-        assertEquals(BigInteger.ZERO, new BigInteger(res.getOutput()));
+        assertEquals(BigInteger.ZERO, new BigInteger(res.getReturnData()));
     }
 
     @Test
@@ -278,14 +278,14 @@ public class TotalCurrencyContractTest {
         PrecompiledTransactionResult res =
                 tcc.execute(new byte[] {(byte) 0x0}, COST); // get chain 0.
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-        assertEquals(AMT, new BigInteger(res.getOutput()));
+        assertEquals(AMT, new BigInteger(res.getReturnData()));
 
         res = tcc.execute(new byte[] {(byte) 0x1}, COST); // get chain 1.
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-        assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getOutput()));
+        assertEquals(AMT.multiply(BigInteger.valueOf(2)), new BigInteger(res.getReturnData()));
 
         res = tcc.execute((new byte[] {(byte) 0x10}), COST); // get chain 16.
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-        assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getOutput()));
+        assertEquals(AMT.multiply(BigInteger.valueOf(4)), new BigInteger(res.getReturnData()));
     }
 }

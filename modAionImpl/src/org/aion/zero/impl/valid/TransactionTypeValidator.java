@@ -24,7 +24,7 @@ public class TransactionTypeValidator {
 
     public boolean isValid(AionTransaction tx) {
         // verify transaction type
-        byte type = tx.getTransactionType();
+        byte type = tx.getTargetVM();
         // the type must be either valid for the FVM
         // or for the AVM when the AVM is enabled
         return isValidFVMTransactionType(type) || (avmEnabled && isValidAVMTransactionType(type));
