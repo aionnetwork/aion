@@ -12,6 +12,8 @@ public interface IPendingState<TX extends ITransaction> {
 
     TxResponse addPendingTransaction(TX tx);
 
+    boolean isValid(TX tx);
+
     IRepositoryCache<?, ?> getRepository();
 
     List<TX> getPendingTransactions();

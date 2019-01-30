@@ -70,6 +70,7 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.valid.TXValidator;
+import org.aion.zero.impl.valid.TransactionTypeValidator;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -102,6 +103,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private A0BCConfig config;
     private long exitOn = Long.MAX_VALUE;
+    private TransactionTypeValidator vmValidator;
 
     private AionRepositoryImpl repository;
     private IRepositoryCache track;
@@ -192,6 +194,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         cfgAion.getConsensus().getEnergyStrategy(),
                         config);
             }
+
+            @Override
+            public boolean isAvmEnabled() {
+                return cfgAion.getVm().isAvmEnabled();
+            }
         };
     }
 
@@ -212,6 +219,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * blockHash and number.
          */
         this.chainConfiguration = chainConfig;
+        this.vmValidator = new TransactionTypeValidator(config.isAvmEnabled());
 
         this.grandParentBlockHeaderValidator =
                 this.chainConfiguration.createGrandParentHeaderValidator();
@@ -992,7 +1000,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
                 Map<Address, BigInteger> nonceCache = new HashMap<>();
 
-                if (txs.parallelStream().anyMatch(tx -> !TXValidator.isValid(tx))) {
+                if (txs.parallelStream()
+                        .anyMatch(tx -> !TXValidator.isValid(tx) || !vmValidator.isValid(tx))) {
                     LOG.error("Some transactions in the block are invalid");
                     return false;
                 }

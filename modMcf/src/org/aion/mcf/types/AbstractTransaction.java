@@ -1,8 +1,8 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
+import org.aion.base.vm.VirtualMachineSpecs;
 import org.aion.crypto.ISignature;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -55,7 +55,7 @@ public abstract class AbstractTransaction implements ITransaction {
         this.value = value;
         this.data = data;
         // default type 0x01; reserve date for multi-type transaction
-        this.type = 0x01;
+        this.type = VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE;
     }
 
     public AbstractTransaction(
