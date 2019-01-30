@@ -11,21 +11,22 @@ import java.util.jar.JarFile;
 
 /**
  * Loads (i.e. {@link System#load(String)} the native libraries that {@link ZMQ} binds to.
- *
- * The loading happens in this class's static initializer; therefore, when this class
- * is loaded by JVM's class loader, ZMQ native libs will also be loaded.
  */
 public class NativeZmqLoader {
     public static final String NO_EMBEDDED_LIB_FLAG = "ZMQ_NO_EMBEDDED";
     public static boolean LOADED_EMBEDDED_LIBRARY = false;
 
+    /**
+     * Load native libs for ZMQ, unless:
+     *   (1) this class has already loaded it once successfully or 
+     *   (2) {@link NO_EMBEDDED_LIB_FLAG} is set 
+     * 
+     */
     public void load() {
         if(!LOADED_EMBEDDED_LIBRARY && System.getProperty(NO_EMBEDDED_LIB_FLAG) == null) {
             LOADED_EMBEDDED_LIBRARY = loadNativeEmbedded("/native/linux/zmq/libjzmq.so")
                 && loadNativeEmbedded("/native/linux/zmq/libzmq.so.5");
-        } else {
-            LOADED_EMBEDDED_LIBRARY |= false;
-        }
+        } 
     }
 
     private boolean loadNativeEmbedded(String resourceName) {
@@ -39,7 +40,6 @@ public class NativeZmqLoader {
             return true;
         } catch (IOException ioe) {
             // should hook this up to a log4j that can be configured by the top-level program
-            ioe.printStackTrace();
             return false;
         }
     }
