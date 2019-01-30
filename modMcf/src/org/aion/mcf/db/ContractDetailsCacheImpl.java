@@ -1,12 +1,11 @@
 package org.aion.mcf.db;
 
-import java.util.Collection;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.util.ByteArrayWrapper;
@@ -51,6 +50,12 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     @Override
     public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
         storage.put(key, value);
+        setDirty(true);
+    }
+
+    @Override
+    public void delete(ByteArrayWrapper key) {
+        storage.put(key, null);
         setDirty(true);
     }
 

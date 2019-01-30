@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.AionAddress;
@@ -79,6 +78,14 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             byte[] data = RLP.encodeElement(value.getData());
             storageTrie.update(key.getData(), data);
         }
+
+        this.setDirty(true);
+        this.rlpEncoded = null;
+    }
+
+    @Override
+    public void delete(ByteArrayWrapper key) {
+        storageTrie.delete(key.getData());
 
         this.setDirty(true);
         this.rlpEncoded = null;
