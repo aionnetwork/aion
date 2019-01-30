@@ -55,6 +55,7 @@ public class StatefulnessTest {
         StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
             .withDefaultAccounts()
             .withValidatorConfiguration("simple")
+            .withAvmEnabled()
             .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
@@ -169,7 +170,7 @@ public class StatefulnessTest {
             jar,
             5_000_000,
             this.energyPrice,
-            VirtualMachineSpecs.AVM_VM_CODE);
+            VirtualMachineSpecs.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
         AionBlock block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), Collections.singletonList(transaction), false);
@@ -187,7 +188,7 @@ public class StatefulnessTest {
             abiEncodeMethodCall(method, arguments),
             2_000_000,
             this.energyPrice,
-            VirtualMachineSpecs.AVM_VM_CODE);
+            VirtualMachineSpecs.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
         AionBlock block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), Collections.singletonList(transaction), false);

@@ -4,11 +4,7 @@ import java.util.Arrays;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Bytesable;
-<<<<<<< HEAD
-=======
-import org.aion.base.util.FastByteComparisons;
 import org.aion.vm.api.interfaces.Address;
->>>>>>> 3895239... Added another Avm test, made some fixes
 
 /**
  * The address class is a byte array wrapper represent fixed-32bytes array for the kernel account
@@ -113,14 +109,7 @@ public final class AionAddress
             return false;
         } else {
             byte[] otherAddress = ((Address) other).toBytes();
-            return FastByteComparisons.compareTo(
-                            this.address,
-                            0,
-                            this.address.length,
-                            otherAddress,
-                            0,
-                            otherAddress.length)
-                    == 0;
+            return Arrays.equals(this.address, otherAddress);
         }
     }
 

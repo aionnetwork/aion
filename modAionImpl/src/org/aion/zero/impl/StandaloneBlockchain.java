@@ -114,6 +114,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     public static class Builder {
         private A0BCConfig a0Config;
 
+        private boolean enableAvm = false;
+
         // note that this parameter is usually not injected into the blockchain
         // it remains here so we can replace the default validator
         private ChainConfiguration configuration;
@@ -168,6 +170,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
         public Builder withA0Config(A0BCConfig config) {
             this.a0Config = config;
+            return this;
+        }
+
+        public Builder withAvmEnabled() {
+            this.enableAvm = true;
             return this;
         }
 
@@ -253,7 +260,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                                 @Override
                                 public boolean isAvmEnabled() {
-                                    return false;
+                                    return enableAvm;
                                 }
                             }
                             : this.a0Config;

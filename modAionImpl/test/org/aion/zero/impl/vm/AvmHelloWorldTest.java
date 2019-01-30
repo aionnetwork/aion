@@ -47,6 +47,7 @@ public class AvmHelloWorldTest {
         StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
             .withDefaultAccounts()
             .withValidatorConfiguration("simple")
+            .withAvmEnabled()
             .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
@@ -128,7 +129,7 @@ public class AvmHelloWorldTest {
     }
 
     private AionTransaction newTransaction(BigInteger nonce, Address sender, Address destination, byte[] data, long energyLimit) {
-        return new AionTransaction(nonce.toByteArray(), sender, destination, BigInteger.ZERO.toByteArray(), data, energyLimit, 1, VirtualMachineSpecs.AVM_VM_CODE);
+        return new AionTransaction(nonce.toByteArray(), sender, destination, BigInteger.ZERO.toByteArray(), data, energyLimit, 1, VirtualMachineSpecs.AVM_CREATE_CODE);
     }
 
 }
