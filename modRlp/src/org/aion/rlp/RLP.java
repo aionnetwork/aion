@@ -76,8 +76,7 @@ public class RLP {
 
         if ((data[index] & 0xFF) < OFFSET_SHORT_ITEM) {
             return data[index];
-        } else if ((data[index] & 0xFF) >= OFFSET_SHORT_ITEM
-                && (data[index] & 0xFF) < OFFSET_LONG_ITEM) {
+        } else if ((data[index] & 0xFF) < OFFSET_LONG_ITEM) {
 
             byte length = (byte) (data[index] - OFFSET_SHORT_ITEM);
             byte pow = (byte) (length - 1);
@@ -170,14 +169,76 @@ public class RLP {
 
             while (pos < endPos) {
 
-                // logger.debug("fullTraverse: level: " + level + " startPos: "
-                // + pos + " endPos: " + endPos);
-                // It's a list with a payload more than 55 bytes
-                // data[0] - 0xF7 = how many next bytes allocated
-                // for the length of the list
-                if ((msgData[pos] & 0xFF) > OFFSET_LONG_LIST) {
+                int type = msgData[pos] & 0xFF;
 
-                    byte lengthOfLength = (byte) (msgData[pos] - OFFSET_LONG_LIST);
+                if (type < OFFSET_SHORT_ITEM) { // single byte item
+                    byte[] item = {(byte) type};
+
+                    RLPItem rlpItem = new RLPItem(item);
+                    rlpList.add(rlpItem);
+                    ++pos;
+                } else if (type == OFFSET_SHORT_ITEM) { // null item
+                    RLPItem rlpItem = new RLPItem(ByteUtil.EMPTY_BYTE_ARRAY);
+                    rlpList.add(rlpItem);
+                    ++pos;
+                } else if (type <= OFFSET_LONG_ITEM) {
+                    // It's an item less than 55 bytes long,
+                    // data[0] - 0x80 == length of the item
+
+                    byte length = (byte) (type - OFFSET_SHORT_ITEM);
+
+                    byte[] item = new byte[length];
+                    System.arraycopy(msgData, pos + 1, item, 0, length);
+
+                    // not used
+                    // byte[] rlpPrefix = new byte[2];
+                    // System.arraycopy(msgData, pos, rlpPrefix, 0, 2);
+
+                    RLPItem rlpItem = new RLPItem(item);
+                    rlpList.add(rlpItem);
+                    pos += 1 + length;
+                } else if (type < OFFSET_SHORT_LIST) {
+
+                    // It's an item with a payload more than 55 bytes
+                    // data[0] - 0xB7 = how much next bytes allocated for
+                    // the length of the string
+                    byte lengthOfLength = (byte) (type - OFFSET_LONG_ITEM);
+                    int length = calcLength(lengthOfLength, msgData, pos);
+
+                    // now we can parse an item for data[1]..data[length]
+                    byte[] item = new byte[length];
+                    System.arraycopy(msgData, pos + lengthOfLength + 1, item, 0, length);
+
+                    // not used
+                    // byte[] rlpPrefix = new byte[lengthOfLength + 1];
+                    // System.arraycopy(msgData, pos, rlpPrefix, 0, lengthOfLength + 1);
+
+                    RLPItem rlpItem = new RLPItem(item);
+                    rlpList.add(rlpItem);
+                    pos += lengthOfLength + length + 1;
+                } else if (type <= OFFSET_LONG_LIST) {
+                    // It's a list with a payload less than 55 bytes
+                    byte length = (byte) (type - OFFSET_SHORT_LIST);
+
+                    byte[] rlpData = new byte[length + 1];
+                    System.arraycopy(msgData, pos, rlpData, 0, length + 1);
+
+                    RLPList newLevelList = new RLPList();
+                    newLevelList.setRLPData(rlpData);
+
+                    if (length > 0) {
+                        fullTraverse(msgData, level + 1, pos + 1, pos + length + 1, newLevelList);
+                    }
+                    rlpList.add(newLevelList);
+
+                    pos += 1 + length;
+                } else {
+                    // logger.debug("fullTraverse: level: " + level + " startPos: "
+                    // + pos + " endPos: " + endPos);
+                    // It's a list with a payload more than 55 bytes
+                    // data[0] - 0xF7 = how many next bytes allocated
+                    // for the length of the list
+                    byte lengthOfLength = (byte) (type - OFFSET_LONG_LIST);
                     int length = calcLength(lengthOfLength, msgData, pos);
 
                     byte[] rlpData = new byte[lengthOfLength + length + 1];
@@ -195,89 +256,6 @@ public class RLP {
                     rlpList.add(newLevelList);
 
                     pos += lengthOfLength + length + 1;
-                    continue;
-                }
-                // It's a list with a payload less than 55 bytes
-                if ((msgData[pos] & 0xFF) >= OFFSET_SHORT_LIST
-                        && (msgData[pos] & 0xFF) <= OFFSET_LONG_LIST) {
-
-                    byte length = (byte) ((msgData[pos] & 0xFF) - OFFSET_SHORT_LIST);
-
-                    byte[] rlpData = new byte[length + 1];
-                    System.arraycopy(msgData, pos, rlpData, 0, length + 1);
-
-                    RLPList newLevelList = new RLPList();
-                    newLevelList.setRLPData(rlpData);
-
-                    if (length > 0) {
-                        fullTraverse(msgData, level + 1, pos + 1, pos + length + 1, newLevelList);
-                    }
-                    rlpList.add(newLevelList);
-
-                    pos += 1 + length;
-                    continue;
-                }
-                // It's an item with a payload more than 55 bytes
-                // data[0] - 0xB7 = how much next bytes allocated for
-                // the length of the string
-                if ((msgData[pos] & 0xFF) > OFFSET_LONG_ITEM
-                        && (msgData[pos] & 0xFF) < OFFSET_SHORT_LIST) {
-
-                    byte lengthOfLength = (byte) (msgData[pos] - OFFSET_LONG_ITEM);
-                    int length = calcLength(lengthOfLength, msgData, pos);
-
-                    // now we can parse an item for data[1]..data[length]
-                    byte[] item = new byte[length];
-                    System.arraycopy(msgData, pos + lengthOfLength + 1, item, 0, length);
-
-                    // not used
-                    // byte[] rlpPrefix = new byte[lengthOfLength + 1];
-                    // System.arraycopy(msgData, pos, rlpPrefix, 0, lengthOfLength + 1);
-
-                    RLPItem rlpItem = new RLPItem(item);
-                    rlpList.add(rlpItem);
-                    pos += lengthOfLength + length + 1;
-
-                    continue;
-                }
-                // It's an item less than 55 bytes long,
-                // data[0] - 0x80 == length of the item
-                if ((msgData[pos] & 0xFF) > OFFSET_SHORT_ITEM
-                        && (msgData[pos] & 0xFF) <= OFFSET_LONG_ITEM) {
-
-                    byte length = (byte) ((msgData[pos] & 0xFF) - OFFSET_SHORT_ITEM);
-
-                    byte[] item = new byte[length];
-                    System.arraycopy(msgData, pos + 1, item, 0, length);
-
-                    // not used
-                    // byte[] rlpPrefix = new byte[2];
-                    // System.arraycopy(msgData, pos, rlpPrefix, 0, 2);
-
-                    RLPItem rlpItem = new RLPItem(item);
-                    rlpList.add(rlpItem);
-                    pos += 1 + length;
-
-                    continue;
-                }
-                // null item
-                if ((msgData[pos] & 0xFF) == OFFSET_SHORT_ITEM) {
-                    // @Jay
-                    // TODO: check with the RLPItem.getRLPData and make the
-                    // logic sync.
-                    RLPItem rlpItem = new RLPItem(ByteUtil.EMPTY_BYTE_ARRAY);
-                    rlpList.add(rlpItem);
-                    pos += 1;
-                    continue;
-                }
-                // single byte item
-                if ((msgData[pos] & 0xFF) < OFFSET_SHORT_ITEM) {
-
-                    byte[] item = {(byte) (msgData[pos] & 0xFF)};
-
-                    RLPItem rlpItem = new RLPItem(item);
-                    rlpList.add(rlpItem);
-                    pos += 1;
                 }
             }
         } catch (Exception e) {

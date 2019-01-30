@@ -115,7 +115,7 @@ public class ByteUtil {
             return;
         }
 
-        for (int i = 0; i < toConvert.length / 2; i++) {
+        for (int i = 0; i < (toConvert.length >>> 1); i++) {
             byte temp = toConvert[i];
             toConvert[i] = toConvert[toConvert.length - 1 - i];
             toConvert[toConvert.length - 1 - i] = temp;
@@ -198,19 +198,14 @@ public class ByteUtil {
             return EMPTY_BYTE_ARRAY;
         } else if (val < 0 || val > 16777215) {
             return new byte[] {
-                (byte) ((val >>> 24) & 0xFF),
-                (byte) ((val >>> 16) & 0xFF),
-                (byte) ((val >>> 8) & 0xFF),
-                (byte) (val & 0xFF)
+                (byte) (val >>> 24), (byte) (val >>> 16), (byte) (val >>> 8), (byte) val
             };
         } else if (val < 256) {
-            return new byte[] {(byte) (val & 0xFF)};
+            return new byte[] {(byte) val};
         } else if (val < 65536) {
-            return new byte[] {(byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)};
+            return new byte[] {(byte) (val >>> 8), (byte) val};
         } else {
-            return new byte[] {
-                (byte) ((val >>> 16) & 0xFF), (byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)
-            };
+            return new byte[] {(byte) (val >>> 16), (byte) (val >>> 8), (byte) val};
         }
     }
 
@@ -241,10 +236,7 @@ public class ByteUtil {
     public static byte[] calcPacketLength(byte[] msg) {
         int msgLen = msg.length;
         return new byte[] {
-            (byte) ((msgLen >> 24) & 0xFF),
-            (byte) ((msgLen >> 16) & 0xFF),
-            (byte) ((msgLen >> 8) & 0xFF),
-            (byte) ((msgLen) & 0xFF)
+            (byte) (msgLen >> 24), (byte) (msgLen >> 16), (byte) (msgLen >> 8), (byte) (msgLen)
         };
     }
 
@@ -592,7 +584,7 @@ public class ByteUtil {
     }
 
     public static int[] bytesToInts(byte[] arr, boolean bigEndian) {
-        int[] ret = new int[arr.length / 4];
+        int[] ret = new int[arr.length >>> 2];
         bytesToInts(arr, ret, bigEndian);
         return ret;
     }
@@ -624,19 +616,19 @@ public class ByteUtil {
             int off = 0;
             for (int i = 0; i < arr.length; i++) {
                 int ii = arr[i];
-                b[off++] = (byte) (ii & 0xFF);
-                b[off++] = (byte) ((ii >> 8) & 0xFF);
-                b[off++] = (byte) ((ii >> 16) & 0xFF);
-                b[off++] = (byte) ((ii >> 24) & 0xFF);
+                b[off++] = (byte) ii;
+                b[off++] = (byte) (ii >>> 8);
+                b[off++] = (byte) (ii >>> 16);
+                b[off++] = (byte) (ii >>> 24);
             }
         } else {
             int off = 0;
             for (int i = 0; i < arr.length; i++) {
                 int ii = arr[i];
-                b[off++] = (byte) ((ii >> 24) & 0xFF);
-                b[off++] = (byte) ((ii >> 16) & 0xFF);
-                b[off++] = (byte) ((ii >> 8) & 0xFF);
-                b[off++] = (byte) (ii & 0xFF);
+                b[off++] = (byte) (ii >>> 24);
+                b[off++] = (byte) (ii >>> 16);
+                b[off++] = (byte) (ii >>> 8);
+                b[off++] = (byte) ii;
             }
         }
     }
@@ -670,7 +662,7 @@ public class ByteUtil {
         if (data.startsWith("0x")) {
             data = data.substring(2);
         }
-        if (data.length() % 2 == 1) {
+        if ((data.length() & 1) == 1) {
             data = "0" + data;
         }
         return Hex.decode(data);
