@@ -14,6 +14,6 @@ public class TransactionTypeRule {
     }
 
     public static boolean isValidAVMTransactionType(byte type) {
-        return type == VirtualMachineSpecs.AVM_VM_CODE;
+        return type == VirtualMachineSpecs.AVM_CREATE_CODE;
     }
 }
