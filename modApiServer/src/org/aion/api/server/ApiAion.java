@@ -430,7 +430,8 @@ public abstract class ApiAion extends Api {
                         _params.getValue().toByteArray(),
                         _params.getData(),
                         _params.getNrg(),
-                        _params.getNrgPrice());
+                        _params.getNrgPrice(),
+                        _params.getType());
         AionTxReceipt rec =
                 this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
         return rec.getTransactionOutput();
@@ -447,7 +448,8 @@ public abstract class ApiAion extends Api {
                         params.getValue().toByteArray(),
                         params.getData(),
                         params.getNrg(),
-                        params.getNrgPrice());
+                        params.getNrgPrice(),
+                        params.getType());
 
         AionTxReceipt receipt =
                 this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
@@ -491,7 +493,8 @@ public abstract class ApiAion extends Api {
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
-                                _params.getNrgPrice());
+                                _params.getNrgPrice(),
+                                _params.getType());
                 tx.sign(key);
 
                 TxResponse rsp = pendingState.addPendingTransaction(tx);
@@ -557,7 +560,8 @@ public abstract class ApiAion extends Api {
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
-                                _params.getNrgPrice());
+                                _params.getNrgPrice(),
+                                _params.getType());
                 tx.sign(key);
 
                 return (new ApiTxResponse(
@@ -615,7 +619,8 @@ public abstract class ApiAion extends Api {
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
-                                _params.getNrgPrice());
+                                _params.getNrgPrice(),
+                                _params.getType());
                 tx.sign(key);
 
                 return tx;
