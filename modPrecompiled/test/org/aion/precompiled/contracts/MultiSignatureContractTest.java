@@ -273,7 +273,7 @@ public class MultiSignatureContractTest {
         MultiSignatureContract msc = new MultiSignatureContract(repo, ownerAddrs.get(0));
         PrecompiledTransactionResult res = msc.execute(input, COST);
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
-        Address wallet = new AionAddress(res.getOutput());
+        Address wallet = new AionAddress(res.getReturnData());
         repo.addBalance(wallet, balance);
         addrsToClean.add(wallet);
         repo.flush();
@@ -301,7 +301,7 @@ public class MultiSignatureContractTest {
     // threshold and consists of all the owners in owners and no more.
     private void checkCreateResult(
             PrecompiledTransactionResult res, long threshold, List<Address> owners) {
-        Address walletId = new AionAddress(res.getOutput());
+        Address walletId = new AionAddress(res.getReturnData());
         addrsToClean.add(walletId);
         assertEquals(BigInteger.ZERO, repo.getBalance(walletId));
         assertEquals(BigInteger.ZERO, repo.getNonce(walletId));
@@ -631,7 +631,7 @@ public class MultiSignatureContractTest {
         PrecompiledTransactionResult res =
                 execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
 
-        Address walletCaller = new AionAddress(res.getOutput());
+        Address walletCaller = new AionAddress(res.getReturnData());
         addrsToClean.add(walletCaller);
         checkAccountState(walletCaller, BigInteger.ZERO, BigInteger.ZERO);
 
@@ -659,7 +659,7 @@ public class MultiSignatureContractTest {
         PrecompiledTransactionResult res =
                 execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
 
-        Address wallet = new AionAddress(res.getOutput());
+        Address wallet = new AionAddress(res.getReturnData());
         addrsToClean.add(wallet);
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
 
@@ -689,7 +689,7 @@ public class MultiSignatureContractTest {
         PrecompiledTransactionResult res =
                 execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getReturnData()), BigInteger.ZERO, BigInteger.ZERO);
 
         // Test using max legal number of owners.
         owners =
@@ -700,7 +700,7 @@ public class MultiSignatureContractTest {
 
         res = execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getReturnData()), BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -714,10 +714,10 @@ public class MultiSignatureContractTest {
 
         PrecompiledTransactionResult res =
                 execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
-        Address wallet1 = new AionAddress(res.getOutput());
+        Address wallet1 = new AionAddress(res.getReturnData());
 
         res = execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
-        Address wallet2 = new AionAddress(res.getOutput());
+        Address wallet2 = new AionAddress(res.getReturnData());
 
         assertEquals(wallet1, wallet2);
     }
@@ -733,7 +733,7 @@ public class MultiSignatureContractTest {
 
         PrecompiledTransactionResult res =
                 execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
-        Address wallet = new AionAddress(res.getOutput());
+        Address wallet = new AionAddress(res.getReturnData());
         assertTrue(wallet.toString().startsWith("a0"));
     }
 
@@ -750,7 +750,7 @@ public class MultiSignatureContractTest {
         PrecompiledTransactionResult res =
                 execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getReturnData()), BigInteger.ZERO, BigInteger.ZERO);
 
         // Test using max legal number of owners.
         owners =
@@ -761,7 +761,7 @@ public class MultiSignatureContractTest {
 
         res = execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new AionAddress(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getReturnData()), BigInteger.ZERO, BigInteger.ZERO);
     }
 
     // <----------------------------------SEND TRANSACTION TESTS----------------------------------->
