@@ -69,7 +69,6 @@ public class StatefulnessTest {
     }
 
     @Test
-    @Ignore
     public void testDeployContract() {
         AionTxReceipt receipt = deployContract();
 
@@ -79,7 +78,6 @@ public class StatefulnessTest {
     }
 
     @Test
-    @Ignore
     public void testStateOfActorsAfterDeployment() {
         BigInteger deployerBalance = getBalance(this.deployer);
         BigInteger deployerNonce = getNonce(this.deployer);
@@ -106,7 +104,6 @@ public class StatefulnessTest {
     }
 
     @Test
-    @Ignore
     public void testUsingCallInContract() {
         AionTxReceipt receipt = deployContract();
 
