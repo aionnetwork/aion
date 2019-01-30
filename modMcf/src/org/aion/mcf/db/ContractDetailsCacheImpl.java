@@ -50,14 +50,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      */
     @Override
     public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
-        Objects.requireNonNull(key);
-        Objects.requireNonNull(value);
-
-        if (value.isZero()) {
-            storage.remove(key);
-        } else {
-            storage.put(key, value);
-        }
+        storage.put(key, value);
         setDirty(true);
     }
 

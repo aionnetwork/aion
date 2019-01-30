@@ -73,9 +73,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
         // we can differentiate between the two.
 
-        Objects.requireNonNull(key);
-        Objects.requireNonNull(value);
-
         if (value.isZero()) {
             storageTrie.delete(key.getData());
         } else {
