@@ -455,9 +455,39 @@ public class RecoveryUtils {
             // import in increments of 10k blocks
             while (currentBlock <= topBlockNumber) {
                 block = store.getChainBlockByNumber(currentBlock);
-                result =
-                        chain.tryToConnectAndFetchSummary(
-                                block, System.currentTimeMillis() / THOUSAND_MS, false);
+                try {
+                    result =
+                            chain.tryToConnectAndFetchSummary(
+                                    block, System.currentTimeMillis() / THOUSAND_MS, false);
+                } catch (Throwable t) {
+                    // we want to see the exception and the block where it occurred
+                    t.printStackTrace();
+                    if (t.getMessage() != null
+                            && t.getMessage().contains("Invalid Trie state, missing node ")) {
+                        System.out.println(
+                                "The exception above is likely due to a pruned database and NOT a consensus problem.\n"
+                                        + "Rebuild the full state by editing the config.xml file or running ./aion.sh --state FULL.\n");
+                    }
+                    result =
+                            new Pair<>() {
+                                @Override
+                                public AionBlockSummary setValue(AionBlockSummary value) {
+                                    return null;
+                                }
+
+                                @Override
+                                public ImportResult getLeft() {
+                                    return ImportResult.INVALID_BLOCK;
+                                }
+
+                                @Override
+                                public AionBlockSummary getRight() {
+                                    return null;
+                                }
+                            };
+
+                    fail = true;
+                }
 
                 if (!result.getLeft().isSuccessful()) {
                     System.out.println("Consensus break at block:\n" + block);
