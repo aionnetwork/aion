@@ -81,7 +81,8 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public void removeStorage(Address address, byte[] key) {
-        // TODO: remove this placeholder for changes made in a reorganized commit
+        ByteArrayWrapper storageKey = alignDataToWordSize(key);
+        this.repositoryCache.removeStorageRow(address, storageKey);
     }
 
     @Override
