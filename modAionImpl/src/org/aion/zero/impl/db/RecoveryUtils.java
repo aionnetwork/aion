@@ -395,7 +395,7 @@ public class RecoveryUtils {
         CfgAion cfg = CfgAion.inst();
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
-        cfg.getDb().setHeapCacheEnabled(false);
+        cfg.getDb().setHeapCacheEnabled(true);
 
         System.out.println("\nRe-importing stored blocks INITIATED...\n");
 

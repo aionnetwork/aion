@@ -373,7 +373,7 @@ public class CfgDb {
             props.setProperty(Props.DB_CACHE_SIZE, String.valueOf(128 * (int) Utils.MEGA_BYTE));
 
             props.setProperty(Props.ENABLE_AUTO_COMMIT, "true");
-            props.setProperty(Props.ENABLE_HEAP_CACHE, "false");
+            props.setProperty(Props.ENABLE_HEAP_CACHE, String.valueOf(heap_cache));
             props.setProperty(Props.MAX_HEAP_CACHE_SIZE, "32");
             props.setProperty(Props.ENABLE_HEAP_CACHE_STATS, "false");
 
@@ -388,12 +388,16 @@ public class CfgDb {
         return propSet;
     }
 
+    private boolean heap_cache = false;
+
     public void setHeapCacheEnabled(boolean value) {
         // already disabled when expert==false
         if (expert) {
             for (Map.Entry<String, CfgDbDetails> entry : specificConfig.entrySet()) {
                 entry.getValue().enable_heap_cache = value;
             }
+        } else {
+            heap_cache = true;
         }
     }
 
