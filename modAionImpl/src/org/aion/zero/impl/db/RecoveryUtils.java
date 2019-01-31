@@ -414,7 +414,7 @@ public class RecoveryUtils {
         AionBlock block = store.getBestBlock();
         AionBlock startBlock;
         long currentBlock;
-        if (startHeight <= block.getNumber()) {
+        if (block != null && startHeight <= block.getNumber()) {
             System.out.println(
                     "\nRe-importing the main chain from block #"
                             + startHeight
@@ -501,12 +501,17 @@ public class RecoveryUtils {
                 System.out.println("Re-importing stored blocks SUCCESSFUL.");
             }
         } else {
-            System.out.println(
-                    "The given height "
-                            + startHeight
-                            + " is above the best known block "
-                            + block.getNumber()
-                            + ". Nothing to do.");
+            if (block == null) {
+                System.out.println(
+                        "The best known block in null. The given database is likely empty. Nothing to do.");
+            } else {
+                System.out.println(
+                        "The given height "
+                                + startHeight
+                                + " is above the best known block "
+                                + block.getNumber()
+                                + ". Nothing to do.");
+            }
         }
 
         System.out.println("Closing databases...");
