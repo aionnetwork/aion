@@ -312,7 +312,7 @@ public class AionTransaction extends AbstractTransaction {
             return true;
         }
         byte[] toBytes = this.to.toBytes();
-        byte[] emptyBytes = AionAddress.wrap(new byte[0]).toBytes();
+        byte[] emptyBytes = AionAddress.EMPTY_ADDRESS().toBytes();
         return Arrays.equals(toBytes, emptyBytes);
     }
 
