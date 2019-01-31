@@ -94,13 +94,26 @@ public abstract class AbstractContractDetails implements IContractDetails {
 
     @Override
     public String toString() {
-        String ret =
-                "  Code: "
-                        + (codes.size() < 2
-                                ? Hex.toHexString(getCode())
-                                : codes.size() + " versions")
-                        + "\n";
-        ret += "  Storage: " + getStorageHash();
+        String ret;
+
+        if (codes != null) {
+            ret =
+                    "  Code: "
+                            + (codes.size() < 2
+                                    ? Hex.toHexString(getCode())
+                                    : codes.size() + " versions")
+                            + "\n";
+        } else {
+            ret = "  Code: null\n";
+        }
+
+        byte[] storage = getStorageHash();
+        if (storage != null) {
+            ret += "  Storage: " + Hex.toHexString(storage);
+        } else {
+            ret += "  Storage: null";
+        }
+
         return ret;
     }
 
