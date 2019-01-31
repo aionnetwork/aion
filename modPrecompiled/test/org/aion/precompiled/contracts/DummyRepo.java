@@ -128,6 +128,9 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
         Map<String, byte[]> map = storage.get(addr);
         if (map != null && map.containsKey(key.toString())) {
             byte[] res = map.get(key.toString());
+            if (res == null) {
+                return null;
+            }
             if (res.length <= DataWord.BYTES) {
                 return new DataWord(res).toWrapper();
             } else if (res.length == DoubleDataWord.BYTES) {

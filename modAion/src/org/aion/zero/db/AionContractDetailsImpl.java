@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.type.AionAddress;
@@ -16,7 +17,6 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
@@ -67,11 +67,19 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      */
     @Override
     public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+
         // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
         // we can differentiate between the two.
 
         if (value.isZero()) {
-            storageTrie.delete(key.getData());
+            // storageTrie.delete(key.getData());
+
+            // TODO: remove when integrating the AVM
+            // used to ensure FVM correctness
+            throw new IllegalArgumentException(
+                    "Put with zero values is not allowed for the FVM. For deletions, explicit calls to delete are necessary.");
         } else {
             byte[] data = RLP.encodeElement(value.getData());
             storageTrie.update(key.getData(), data);
@@ -83,6 +91,8 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
     @Override
     public void delete(ByteArrayWrapper key) {
+        Objects.requireNonNull(key);
+
         storageTrie.delete(key.getData());
 
         this.setDirty(true);
@@ -100,7 +110,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     public ByteArrayWrapper get(ByteArrayWrapper key) {
         byte[] data = storageTrie.get(key.getData());
         return (data == null || data.length == 0)
-                ? DataWord.ZERO.toWrapper()
+                ? null
                 : new ByteArrayWrapper(RLP.decode2(data).get(0).getRLPData());
     }
 

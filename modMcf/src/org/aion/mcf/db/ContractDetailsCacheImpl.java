@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.util.ByteArrayWrapper;
@@ -47,12 +48,24 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      */
     @Override
     public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+
+        if (value.isZero()) {
+            // TODO: remove when integrating the AVM
+            // used to ensure FVM correctness
+            throw new IllegalArgumentException(
+                    "Put with zero values is not allowed for the FVM. For deletions, explicit calls to delete are necessary.");
+        }
+
         storage.put(key, value);
         setDirty(true);
     }
 
     @Override
     public void delete(ByteArrayWrapper key) {
+        Objects.requireNonNull(key);
+
         storage.put(key, null);
         setDirty(true);
     }
@@ -65,20 +78,37 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      */
     @Override
     public ByteArrayWrapper get(ByteArrayWrapper key) {
-        ByteArrayWrapper value = storage.get(key);
-        if (value != null) {
-            value = value.copy();
-        } else {
+        ByteArrayWrapper value;
+
+        // go to parent if not locally stored
+        if (!storage.containsKey(key)) {
             if (origContract == null) {
                 return null;
             }
             value = origContract.get(key);
-            // TODO: the VM must pad the given ZERO value if expecting a fixed size byte array
-            value = (value == null) ? ByteArrayWrapper.ZERO : value;
-            storage.put(key.copy(), value.isZero() ? ByteArrayWrapper.ZERO.copy() : value.copy());
+
+            // save a copy to local storage
+            if (value != null) {
+                storage.put(key.copy(), value.copy());
+            } else {
+                storage.put(key.copy(), null);
+            }
+        } else { // check local storage
+            value = storage.get(key);
+
+            if (value != null) {
+                value = value.copy();
+            }
         }
 
-        if (value == null || value.isZero()) {
+        if (value != null && value.isZero()) {
+            // TODO: remove when integrating the AVM
+            // used to ensure FVM correctness
+            throw new IllegalArgumentException(
+                    "Put with zero values is not allowed for the FVM. Explicit call to delete is necessary.");
+        }
+
+        if (value == null) {
             return null;
         } else {
             return value;
@@ -155,7 +185,12 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         }
 
         for (ByteArrayWrapper key : storage.keySet()) {
-            origContract.put(key, storage.get(key));
+            ByteArrayWrapper value = storage.get(key);
+            if (value != null) {
+                origContract.put(key, storage.get(key));
+            } else {
+                origContract.delete(key);
+            }
         }
 
         if (origContract instanceof AbstractContractDetails) {

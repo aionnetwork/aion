@@ -20,6 +20,7 @@ public class AionHubUtils {
         track.createAccount(networkBalanceAddress);
 
         for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
+            // assumes only additions are performed in the genesis
             track.addStorageRow(
                     networkBalanceAddress,
                     new DataWord(addr.getKey()).toWrapper(),
@@ -37,6 +38,8 @@ public class AionHubUtils {
     }
 
     private static ByteArrayWrapper wrapValueForPut(DataWord value) {
-        return (value.isZero()) ? value.toWrapper() : new ByteArrayWrapper(value.getNoLeadZeroesData());
+        return (value.isZero())
+                ? value.toWrapper()
+                : new ByteArrayWrapper(value.getNoLeadZeroesData());
     }
 }

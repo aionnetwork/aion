@@ -303,6 +303,12 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     public void addStorageRow(Address address, ByteArrayWrapper key, ByteArrayWrapper value) {
         lockDetails.writeLock().lock();
         try {
+            if (value.isZero()) {
+                // TODO: remove when integrating the AVM
+                // used to ensure FVM correctness
+                throw new IllegalArgumentException(
+                        "Put with zero values is not allowed for the FVM. For deletions, explicit calls to delete are necessary.");
+            }
             getContractDetails(address).put(key, value);
         } finally {
             lockDetails.writeLock().unlock();
@@ -322,10 +328,14 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     @Override
     public ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key) {
         ByteArrayWrapper value = getContractDetails(address).get(key);
-        if (value == null) {
-            return null;
+
+        if (value != null && value.isZero()) {
+            // TODO: remove when integrating the AVM
+            // used to ensure FVM correctness
+            throw new IllegalStateException("Zero values should not be returned by contract.");
         }
-        return (value.isZero()) ? null : value;
+
+        return value;
     }
 
     @Override

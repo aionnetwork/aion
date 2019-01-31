@@ -349,6 +349,7 @@ public class AionGenesis extends AionBlock {
             AionContractDetailsImpl networkBalanceStorage = new AionContractDetailsImpl();
 
             for (Map.Entry<Integer, BigInteger> entry : this.networkBalance.entrySet()) {
+                // we assume there are no deletions in the genesis
                 networkBalanceStorage.put(
                         new DataWord(entry.getKey()).toWrapper(),
                         wrapValueForPut(new DataWord(entry.getValue())));
@@ -370,7 +371,9 @@ public class AionGenesis extends AionBlock {
         }
 
         private static ByteArrayWrapper wrapValueForPut(DataWord value) {
-            return (value.isZero()) ? DataWord.ZERO.toWrapper() : new ByteArrayWrapper(value.getNoLeadZeroesData());
+            return (value.isZero())
+                    ? DataWord.ZERO.toWrapper()
+                    : new ByteArrayWrapper(value.getNoLeadZeroesData());
         }
 
         private static byte[] generateExtraData(int chainId) {
