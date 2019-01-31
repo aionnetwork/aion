@@ -496,6 +496,12 @@ public class RecoveryUtils {
                                     + result.getLeft()
                                     + " with summary\n"
                                     + result.getRight());
+
+                    if (repo.isValidRoot(store.getBestBlock().getStateRoot())) {
+                        System.out.println("The repository state trie was:\n");
+                        System.out.println(repo.getTrieDump());
+                    }
+
                     fail = true;
                     break;
                 }
