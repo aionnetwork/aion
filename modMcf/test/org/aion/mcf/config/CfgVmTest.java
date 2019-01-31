@@ -33,6 +33,6 @@ public class CfgVmTest {
 
     @Test
     public void testToXML() {
-        assertThat(new CfgVm().toXML().isEmpty(), is(true));
+        assertThat(new CfgVm().toXML().isEmpty(), is(false));
     }
 }
