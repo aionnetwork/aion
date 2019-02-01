@@ -430,7 +430,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     public boolean isValid(AionTransaction tx) {
-        return TXValidator.isValid(tx) && TransactionTypeValidator.isValid(tx.getTransactionType());
+        return TXValidator.isValid(tx) && TransactionTypeValidator.isValid(tx.getTargetVM());
     }
 
     /**
