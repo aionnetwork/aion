@@ -261,7 +261,7 @@ public class RLP {
         } catch (Exception e) {
             throw new RuntimeException(
                     "RLP wrong encoding ("
-                            + Hex.toHexString(msgData, startPos, endPos - startPos)
+                            + Hex.toHexString(msgData, startPos, endPos - startPos > 1024 ? 1024 : endPos - startPos)
                             + ")",
                     e);
         } catch (OutOfMemoryError e) {
