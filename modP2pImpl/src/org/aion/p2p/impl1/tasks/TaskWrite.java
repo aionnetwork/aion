@@ -84,9 +84,9 @@ public class TaskWrite implements Runnable {
                     }
 
                     t2 = System.nanoTime() - t1;
-                } while (buf.hasRemaining() && (t2 < 100_000_000));
+                } while (buf.hasRemaining() && (t2 < 1_000_000_000L));
 
-                if (p2pLOG.isTraceEnabled() && (t2 > 10_000_000)) {
+                if (p2pLOG.isTraceEnabled() && (t2 > 10_000_000L)) {
                     p2pLOG.trace(
                             "msg write: id {} size {} time {} ms length {}",
                             nodeShortId,
