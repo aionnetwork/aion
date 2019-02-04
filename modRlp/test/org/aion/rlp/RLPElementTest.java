@@ -1,8 +1,8 @@
 package org.aion.rlp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.rlp.Utils.EMPTY_BYTE_ARRAY;
 
-import org.aion.util.bytes.ByteUtil;
 import org.junit.Test;
 
 public class RLPElementTest {
@@ -15,6 +15,6 @@ public class RLPElementTest {
     @Test
     public void testRLPItem_wNull() {
         RLPItem item = new RLPItem(null);
-        assertThat(item.getRLPData()).isEqualTo(ByteUtil.EMPTY_BYTE_ARRAY);
+        assertThat(item.getRLPData()).isEqualTo(EMPTY_BYTE_ARRAY);
     }
 }

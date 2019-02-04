@@ -1,7 +1,6 @@
 package org.aion.rlp;
 
 import java.util.Arrays;
-import org.aion.util.conversions.Hex;
 import org.junit.Test;
 
 public class RLPDump {
@@ -21,7 +20,7 @@ public class RLPDump {
         System.out.println(dump(RLP.decode2(Hex.decode(hexRlp)), 0));
     }
 
-    public static String dump(RLPElement el, int indent) {
+    private static String dump(RLPElement el, int indent) {
         String ret = "";
         if (el instanceof RLPList) {
             ret = repeat("  ", indent) + "[\n";
@@ -40,7 +39,7 @@ public class RLPDump {
         return ret;
     }
 
-    public static String repeat(String s, int n) {
+    private static String repeat(String s, int n) {
         if (s.length() == 1) {
             byte[] bb = new byte[n];
             Arrays.fill(bb, s.getBytes()[0]);

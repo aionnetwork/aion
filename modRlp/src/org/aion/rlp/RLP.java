@@ -1,18 +1,17 @@
 package org.aion.rlp;
 
 import static java.util.Arrays.copyOfRange;
+import static org.aion.rlp.Utils.EMPTY_BYTE_ARRAY;
 import static org.aion.rlp.Utils.asUnsignedByteArray;
+import static org.aion.rlp.Utils.byteArrayToInt;
 import static org.aion.rlp.Utils.concatenate;
-import static org.aion.util.bytes.ByteUtil.byteArrayToInt;
-import static org.aion.util.bytes.ByteUtil.intToBytesNoLeadZeroes;
-import static org.aion.util.bytes.ByteUtil.isNullOrZeroArray;
-import static org.aion.util.bytes.ByteUtil.isSingleZero;
+import static org.aion.rlp.Utils.intToBytesNoLeadZeroes;
+import static org.aion.rlp.Utils.isNullOrZeroArray;
+import static org.aion.rlp.Utils.isSingleZero;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.util.bytes.ByteUtil;
-import org.aion.util.conversions.Hex;
 
 /**
  * @author Roman Mandeleil 2014
@@ -265,7 +264,7 @@ public class RLP {
                     // @Jay
                     // TODO: check with the RLPItem.getRLPData and make the
                     // logic sync.
-                    RLPItem rlpItem = new RLPItem(ByteUtil.EMPTY_BYTE_ARRAY);
+                    RLPItem rlpItem = new RLPItem(EMPTY_BYTE_ARRAY);
                     rlpList.add(rlpItem);
                     pos += 1;
                     continue;
@@ -408,7 +407,7 @@ public class RLP {
     }
 
     /** Integer limitation goes up to 2^31-1 so length can never be bigger than MAX_ITEM_LENGTH */
-    public static byte[] encodeLength(int length, int offset) {
+    static byte[] encodeLength(int length, int offset) {
         if (length < SIZE_THRESHOLD) {
             byte firstByte = (byte) (length + offset);
             return new byte[] {firstByte};
@@ -690,27 +689,27 @@ public class RLP {
         } else if (input instanceof Byte) {
             Byte inputByte = (Byte) input;
             return (inputByte == 0)
-                    ? ByteUtil.EMPTY_BYTE_ARRAY
+                    ? EMPTY_BYTE_ARRAY
                     : asUnsignedByteArray(BigInteger.valueOf(inputByte));
         } else if (input instanceof Short) {
             Short inputShort = (Short) input;
             return (inputShort == 0)
-                    ? ByteUtil.EMPTY_BYTE_ARRAY
+                    ? EMPTY_BYTE_ARRAY
                     : asUnsignedByteArray(BigInteger.valueOf(inputShort));
         } else if (input instanceof Integer) {
             Integer inputInt = (Integer) input;
             return (inputInt == 0)
-                    ? ByteUtil.EMPTY_BYTE_ARRAY
+                    ? EMPTY_BYTE_ARRAY
                     : asUnsignedByteArray(BigInteger.valueOf(inputInt));
         } else if (input instanceof Long) {
             Long inputLong = (Long) input;
             return (inputLong == 0)
-                    ? ByteUtil.EMPTY_BYTE_ARRAY
+                    ? EMPTY_BYTE_ARRAY
                     : asUnsignedByteArray(BigInteger.valueOf(inputLong));
         } else if (input instanceof BigInteger) {
             BigInteger inputBigInt = (BigInteger) input;
             return (inputBigInt.equals(BigInteger.ZERO))
-                    ? ByteUtil.EMPTY_BYTE_ARRAY
+                    ? EMPTY_BYTE_ARRAY
                     : asUnsignedByteArray(inputBigInt);
         } else if (input instanceof Value) {
             Value val = (Value) input;

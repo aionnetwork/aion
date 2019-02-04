@@ -1,6 +1,6 @@
 package org.aion.rlp;
 
-import org.aion.util.bytes.ByteUtil;
+import static org.aion.rlp.Utils.EMPTY_BYTE_ARRAY;
 
 /**
  * @author Roman Mandeleil 2014
@@ -16,20 +16,13 @@ public class RLPItem implements RLPElement {
      * @Jay inside the RLP encode/decode logic, there is no difference between null obj and
      * zero-byte array Therefore, put empty array when we see the input data is null
      *
-     * @param rlpData
+     * @param rlpData data encoded by the rlp protocol
      */
     public RLPItem(byte[] rlpData) {
-        this.rlpData = (rlpData == null) ? ByteUtil.EMPTY_BYTE_ARRAY : rlpData;
+        this.rlpData = (rlpData == null) ? EMPTY_BYTE_ARRAY : rlpData;
     }
 
     public byte[] getRLPData() {
-        // @Jay
-        // TODO: the ethereumJ implement the comment code piece, it will make
-        // ambiguous with the null RLPItem and the
-        // Empty byte array
-        // if (rlpData.length == 0) {
-        // return null;
-        // }
         return rlpData;
     }
 }

@@ -1,10 +1,12 @@
 package org.aion.rlp;
 
+import static org.aion.rlp.Utils.EMPTY_BYTE_ARRAY;
+import static org.aion.rlp.Utils.nibblesToPrettyString;
+import static org.aion.rlp.Utils.oneByteToHexString;
+
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.util.bytes.ByteUtil;
-import org.aion.util.conversions.Hex;
 
 /**
  * Class to encapsulate an object and provide utilities for conversion
@@ -137,7 +139,7 @@ public class Value {
         } else if (isString()) {
             return asString().getBytes();
         }
-        return ByteUtil.EMPTY_BYTE_ARRAY;
+        return EMPTY_BYTE_ARRAY;
     }
 
     public byte[] getData() {
@@ -274,7 +276,7 @@ public class Value {
                 Value key = new Value(list[0]);
 
                 byte[] keyNibbles = CompactEncoder.binToNibblesNoTerminator(key.asBytes());
-                String keyString = ByteUtil.nibblesToPrettyString(keyNibbles);
+                String keyString = nibblesToPrettyString(keyNibbles);
                 stringBuilder.append(keyString);
 
                 stringBuilder.append(",");
@@ -312,7 +314,7 @@ public class Value {
                 output.append("'");
                 for (byte oneByte : asBytes()) {
                     if (oneByte < 16) {
-                        output.append("\\x").append(ByteUtil.oneByteToHexString(oneByte));
+                        output.append("\\x").append(oneByteToHexString(oneByte));
                     } else {
                         output.append(Character.valueOf((char) oneByte));
                     }

@@ -6,6 +6,7 @@ import java.util.Map;
 
 class Utils {
 
+    static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
     static final byte[] encodingTable = {
         (byte) '0',
         (byte) '1',
@@ -99,5 +100,87 @@ class Utils {
         }
 
         return ret;
+    }
+
+    static String oneByteToHexString(byte value) {
+        String retVal = Integer.toString(value & 0xFF, 16);
+        if (retVal.length() == 1) {
+            retVal = "0" + retVal;
+        }
+        return retVal;
+    }
+
+    static boolean isSingleZero(byte[] array) {
+        return (array.length == 1 && array[0] == 0);
+    }
+
+    static boolean isNullOrZeroArray(byte[] array) {
+        return (array == null) || (array.length == 0);
+    }
+
+    public static int byteArrayToInt(byte[] b) {
+        if (b == null || b.length == 0) {
+            return 0;
+        }
+        return new BigInteger(1, b).intValue();
+    }
+
+    /**
+     * Cast hex encoded value from byte[] to long
+     *
+     * <p>Limited to Long.MAX_VALUE: 2^63-1 (8 bytes)
+     *
+     * @param b array contains the values
+     * @return unsigned positive long value.
+     */
+    public static long byteArrayToLong(byte[] b) {
+        if (b == null || b.length == 0) {
+            return 0;
+        }
+        return new BigInteger(1, b).longValue();
+    }
+
+    /**
+     * Converts a int value into a byte array.
+     *
+     * @param val - int value to convert
+     * @return value with leading byte that are zeroes striped
+     */
+    static byte[] intToBytesNoLeadZeroes(int val) {
+        if (val == 0) {
+            return EMPTY_BYTE_ARRAY;
+        } else if (val < 0 || val > 16777215) {
+            return new byte[] {
+                (byte) ((val >>> 24) & 0xFF),
+                (byte) ((val >>> 16) & 0xFF),
+                (byte) ((val >>> 8) & 0xFF),
+                (byte) (val & 0xFF)
+            };
+        } else if (val < 256) {
+            return new byte[] {(byte) (val & 0xFF)};
+        } else if (val < 65536) {
+            return new byte[] {(byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)};
+        } else {
+            return new byte[] {
+                (byte) ((val >>> 16) & 0xFF), (byte) ((val >>> 8) & 0xFF), (byte) (val & 0xFF)
+            };
+        }
+    }
+
+    /**
+     * Turn nibbles to a pretty looking output string
+     *
+     * <p>Example. [ 1, 2, 3, 4, 5 ] becomes '\x11\x23\x45'
+     *
+     * @param nibbles - getting byte of data [ 04 ] and turning it to a '\x04' representation
+     * @return pretty string of nibbles
+     */
+    static String nibblesToPrettyString(byte[] nibbles) {
+        StringBuilder builder = new StringBuilder();
+        for (byte nibble : nibbles) {
+            final String nibbleString = oneByteToHexString(nibble);
+            builder.append("\\x").append(nibbleString);
+        }
+        return builder.toString();
     }
 }

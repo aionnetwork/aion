@@ -2,15 +2,13 @@ package org.aion.rlp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.rlp.RLPTest.bytesToAscii;
+import static org.aion.rlp.Utils.EMPTY_BYTE_ARRAY;
 import static org.aion.rlp.Utils.asUnsignedByteArray;
-import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.util.bytes.ByteUtil.byteArrayToInt;
-import static org.aion.util.bytes.ByteUtil.byteArrayToLong;
+import static org.aion.rlp.Utils.byteArrayToInt;
+import static org.aion.rlp.Utils.byteArrayToLong;
 
 import java.math.BigInteger;
 import java.util.List;
-import org.aion.util.bytes.ByteUtil;
-import org.aion.util.conversions.Hex;
 import org.junit.Test;
 
 /**
@@ -256,7 +254,7 @@ public class RLPSpecTest {
         assertThat(
                         RLP.encodeElement(
                                 input.equals(BigInteger.ZERO)
-                                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                                        ? EMPTY_BYTE_ARRAY
                                         : asUnsignedByteArray(input)))
                 .isEqualTo(expected);
     }
@@ -270,7 +268,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(0);
     }
@@ -284,7 +282,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(0);
     }
@@ -298,7 +296,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(0);
     }
@@ -312,7 +310,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(0);
     }
@@ -326,7 +324,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(0);
     }
@@ -340,7 +338,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
@@ -356,7 +354,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
@@ -372,7 +370,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input == 0
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(BigInteger.valueOf(input));
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
@@ -388,7 +386,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input.equals(BigInteger.ZERO)
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(input);
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
@@ -406,7 +404,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input.equals(BigInteger.ZERO)
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(input);
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
@@ -426,7 +424,7 @@ public class RLPSpecTest {
 
         byte[] inputAsBytes =
                 input.equals(BigInteger.ZERO)
-                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        ? EMPTY_BYTE_ARRAY
                         : asUnsignedByteArray(input);
         assertThat(RLP.calcElementPrefixSize(inputAsBytes)).isEqualTo(1);
 
@@ -873,7 +871,7 @@ public class RLPSpecTest {
         assertThat(list.get(0).getRLPData().length).isEqualTo(0);
 
         RLPList.recursivePrint(list);
-        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
+        assertThat(result.toString()).isEqualTo(Hex.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
         // check Value
@@ -906,7 +904,7 @@ public class RLPSpecTest {
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
         RLPList.recursivePrint(list);
-        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
+        assertThat(result.toString()).isEqualTo(Hex.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
         // check Value
@@ -939,7 +937,7 @@ public class RLPSpecTest {
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
         RLPList.recursivePrint(list);
-        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
+        assertThat(result.toString()).isEqualTo(Hex.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
         // check Value
@@ -972,7 +970,7 @@ public class RLPSpecTest {
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
         RLPList.recursivePrint(list);
-        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
+        assertThat(result.toString()).isEqualTo(Hex.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
         // check Value
@@ -1006,7 +1004,7 @@ public class RLPSpecTest {
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
         RLPList.recursivePrint(list);
-        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
+        assertThat(result.toString()).isEqualTo(Hex.toHexString(list.get(0).getRLPData()));
         System.out.println();
 
         // check Value
@@ -1041,7 +1039,7 @@ public class RLPSpecTest {
         assertThat(list.get(0).getRLPData()).isEqualTo(actual);
 
         RLPList.recursivePrint(list);
-        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
+        assertThat(result.toString()).isEqualTo(Hex.toHexString(list.get(0).getRLPData()));
         System.out.println();
     }
 
@@ -1069,7 +1067,7 @@ public class RLPSpecTest {
 
         RLPList.recursivePrint(list);
         System.out.println();
-        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
+        assertThat(result.toString()).isEqualTo(Hex.toHexString(list.get(0).getRLPData()));
     }
 
     /**
@@ -1094,7 +1092,7 @@ public class RLPSpecTest {
 
         RLPList.recursivePrint(list);
         System.out.println();
-        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
+        assertThat(result.toString()).isEqualTo(Hex.toHexString(list.get(0).getRLPData()));
     }
 
     @Test
@@ -1119,7 +1117,7 @@ public class RLPSpecTest {
 
         RLPList.recursivePrint(list);
         System.out.println();
-        assertThat(result.toString()).isEqualTo(ByteUtil.toHexString(list.get(0).getRLPData()));
+        assertThat(result.toString()).isEqualTo(Hex.toHexString(list.get(0).getRLPData()));
 
         // check Value
         Value val = Value.fromRlpEncoded(input);

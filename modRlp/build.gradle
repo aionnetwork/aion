@@ -1,12 +1,6 @@
 ext.moduleName = 'aion.rlp'
 
 dependencies {
-    compile project(':modUtil')
-    //compile files('../lib/libnsc.jar')
-    compile 'com.madgag.spongycastle:prov:1.58.0.0'
-    compile 'com.madgag.spongycastle:core:1.58.0.0'
-    compile 'com.google.guava:guava:25.1-jre'
-
     testCompile 'junit:junit:4.12' 
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
     testCompile 'org.hamcrest:hamcrest-all:1.3'

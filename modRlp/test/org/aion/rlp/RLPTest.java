@@ -39,14 +39,13 @@ import static org.aion.rlp.RlpTestData.test09;
 import static org.aion.rlp.RlpTestData.test12;
 import static org.aion.rlp.RlpTestData.test13;
 import static org.aion.rlp.RlpTestData.test16;
-import static org.aion.util.bytes.ByteUtil.byteArrayToInt;
+import static org.aion.rlp.Utils.byteArrayToInt;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.spongycastle.util.encoders.Hex.encode;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -54,7 +53,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Objects;
-import org.aion.util.conversions.Hex;
 import org.junit.Test;
 
 public class RLPTest {
@@ -681,7 +679,7 @@ public class RLPTest {
      */
     @Test(expected = RuntimeException.class)
     public void testEncodeNull() {
-        encode(null);
+        RLP.encode(null);
     }
 
     @Test

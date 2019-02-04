@@ -1,9 +1,11 @@
 package org.aion.rlp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.rlp.Utils.nibblesToPrettyString;
+import static org.junit.Assert.assertEquals;
 
+import java.io.IOException;
 import java.util.Arrays;
-import org.aion.util.conversions.Hex;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -16,7 +18,7 @@ public class UtilsTest {
 
     @Test
     @Ignore
-    public void testHexEncode_wSingleByte() {
+    public void testHexEncode_wSingleByte() throws IOException {
         for (byte b : Utils.encodingTable) {
             byte[] input = new byte[] {b};
             assertThat(Utils.hexEncode(input)).isEqualTo(Hex.encode(input));
@@ -25,7 +27,7 @@ public class UtilsTest {
 
     @Test
     @Ignore
-    public void testHexEncode_woTerminatorByte() {
+    public void testHexEncode_woTerminatorByte() throws IOException {
         String value = "1234567890abcdef";
         byte[] input = Hex.decode(value);
 
@@ -35,7 +37,7 @@ public class UtilsTest {
 
     @Test
     @Ignore
-    public void testHexEncode_wTerminatorByte() {
+    public void testHexEncode_wTerminatorByte() throws IOException {
         String value = "1234567890abcdef";
         byte[] input = Hex.decode(value);
 
@@ -78,5 +80,42 @@ public class UtilsTest {
     @Test
     public void testConcatenate_wEmptyArrays() {
         assertThat(Utils.concatenate(new byte[] {}, new byte[] {})).isEqualTo(new byte[] {});
+    }
+
+    @Test
+    public void testNiceNiblesOutput_1() {
+        byte[] test = {7, 0, 7, 5, 7, 0, 7, 0, 7, 9};
+        String result = "\\x07\\x00\\x07\\x05\\x07\\x00\\x07\\x00\\x07\\x09";
+        assertEquals(result, nibblesToPrettyString(test));
+    }
+
+    @Test
+    public void testNiceNiblesOutput_2() {
+        byte[] test = {7, 0, 7, 0xf, 7, 0, 0xa, 0, 7, 9};
+        String result = "\\x07\\x00\\x07\\x0f\\x07\\x00\\x0a\\x00\\x07\\x09";
+        assertEquals(result, nibblesToPrettyString(test));
+    }
+
+    @Test
+    public void testToHexString() {
+        assertEquals("", Hex.toHexString(null));
+    }
+
+    @Test
+    public void testToHexString2() {
+
+        byte[] testInput =
+                new byte[] {
+                    (byte) 0x01,
+                    (byte) 0x23,
+                    (byte) 0x45,
+                    (byte) 0x67,
+                    (byte) 0x89,
+                    (byte) 0xab,
+                    (byte) 0xcd,
+                    (byte) 0xef
+                };
+
+        assertEquals("0123456789abcdef", Hex.toHexString(testInput));
     }
 }

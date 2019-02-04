@@ -1,7 +1,6 @@
 package org.aion.rlp;
 
 import java.io.Serializable;
-import org.aion.util.conversions.Hex;
 
 @SuppressWarnings("serial")
 public class DecodeResult implements Serializable {

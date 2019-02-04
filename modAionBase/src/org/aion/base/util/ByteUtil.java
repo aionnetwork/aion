@@ -295,22 +295,7 @@ public class ByteUtil {
         return b[0];
     }
 
-    /**
-     * Turn nibbles to a pretty looking output string
-     *
-     * <p>Example. [ 1, 2, 3, 4, 5 ] becomes '\x11\x23\x45'
-     *
-     * @param nibbles - getting byte of data [ 04 ] and turning it to a '\x04' representation
-     * @return pretty string of nibbles
-     */
-    public static String nibblesToPrettyString(byte[] nibbles) {
-        StringBuilder builder = new StringBuilder();
-        for (byte nibble : nibbles) {
-            final String nibbleString = oneByteToHexString(nibble);
-            builder.append("\\x").append(nibbleString);
-        }
-        return builder.toString();
-    }
+
 
     public static String oneByteToHexString(byte value) {
         String retVal = Integer.toString(value & 0xFF, 16);
