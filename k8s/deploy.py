@@ -4,12 +4,22 @@ from google.auth.exceptions import DefaultCredentialsError
 from os import path
 import yaml
 import sys
-
-
-config.load_kube_config()
+import time
 
 max_num_deploy = 2
 namespace = "default"
+
+def load_credentials():
+    for i in range(1,4):
+        print("Attempt: " + str(i))
+        try:
+            config.load_kube_config()
+            return True
+        except DefaultCredentialsError as e:
+            print("Unable to load credentials, waiting 10s and retrying")
+            time.sleep(10)
+    
+    return False
 
 def update_image(configuration, image):
     
@@ -23,9 +33,9 @@ def deploy(num, image):
         dep = yaml.safe_load(f)
         k8s_beta = client.ExtensionsV1beta1Api()
         
-        # Modify name to next in sequence
-        # Use latest tag for image; don't need to re-write it
+        # Modify name and label to next in sequence
         dep["metadata"]["name"]="aion-" + str(num)
+        dep["spec"]["template"]["metadata"]["labels"]["app"] = "aion-" + str(num)
 
         update_image(dep, image)
 
@@ -72,10 +82,11 @@ def update(deployments, image):
         k8s_beta = client.ExtensionsV1beta1Api()
         
         to_update = "-".join((oldest_deployed.metadata.name).split('-')[0:2])
-
         dep["metadata"]["name"]=to_update
 
         update_image(dep, image)
+
+        dep["spec"]["template"]["metadata"]["labels"]["app"] = "aion-" + str(image)
 
         # Use latest tag for image; don't need to re-write it
         try:
@@ -118,6 +129,10 @@ def main(image):
         update(dep, image)
 
 if __name__ == '__main__':
+
+    if not load_credentials():
+        print("Unable to load credentials")
+        sys.exit(1)
 
     image = ""
 

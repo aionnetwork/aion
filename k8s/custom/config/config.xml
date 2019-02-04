@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <aion>
 	<mode>aion</mode>
-	<id>38cb8a0e-018d-4f00-8307-88af2e4c52e2</id>
+	<id>[NODE-ID-PLACEHOLDER]</id>
 	<api>
 		<!--rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs-->
-		<rpc active="false" ip="127.0.0.1" port="8545">
+		<rpc active="true" ip="0.0.0.0" port="8545">
 			<cors-enabled>false</cors-enabled>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
 			<apis-enabled>web3,eth,personal,stratum</apis-enabled>
@@ -22,8 +22,9 @@
 		</nrg-recommendation>
 	</api>
 	<net>
-		<id>0</id>
+		<id>1</id>
 		<nodes>
+                <node>p2p://e0f2e565-59d5-4a31-ace7-5fa8c87da7ab@35.245.69.208:30303</node>
 		</nodes>
 		<p2p>
 			<ip>0.0.0.0</ip>
@@ -75,7 +76,7 @@
 		<SYNC>INFO</SYNC>
 		<DB>WARN</DB>
 		<CONS>INFO</CONS>
-		<P2P>INFO</P2P>
+		<P2P>DEBUG</P2P>
 	</log>
 	<tx>
 		<cacheMax>256</cacheMax>

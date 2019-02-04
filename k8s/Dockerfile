@@ -29,8 +29,8 @@ WORKDIR /aion
 # Copy config file for the test network
 COPY custom custom
 
-RUN pwd
-RUN ls -a
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
 
 # Start aion on image start
 CMD ["/aion/aion.sh", "-n", "custom"]

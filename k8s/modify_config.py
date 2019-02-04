@@ -18,6 +18,9 @@ def main():
         print(cfg["spec"]["template"]["spec"]["containers"][0]["image"])
 
 
+
+        print(cfg["spec"]["template"]["metadata"]["labels"]["app"])
+
 if __name__ == '__main__':
     main()
     sys.exit(0)

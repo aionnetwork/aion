@@ -14,12 +14,15 @@ spec:
         app: aion-node
       name: aion-node
     spec: 
+      imagePullSecrets:
+        - name: acr-auth   
       containers: 
-        - 
-          image: "gcr.io/trusty-drive-228822/aion:19"
-          imagePullPolicy: Always
-          name: aion
-          ports: 
-            - 
-              containerPort: 8545
-              name: aion-node
+      - 
+        image: "aionkuberacr.azurecr.io/aion:latest"
+        imagePullPolicy: Always
+        name: aion
+        ports: 
+          - 
+            containerPort: 8545
+            name: aion-node
+     

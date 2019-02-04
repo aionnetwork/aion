@@ -7,10 +7,10 @@ node {
 	def app
     def project = 'trusty-drive-228822'
 	def appName = 'aion'
-    def imageTag = "gcr.io/${project}/${appName}"
 
     stage('Clone repository') {
         /* Let's make sure we have the repository cloned to our workspace */
+
         checkout scm
     }
 
@@ -27,7 +27,7 @@ node {
 		// Copy to k8s folder to create image
 		sh "cp pack/aion.tar.bz2 k8s/aion.tar.bz2"
 
-		app = docker.build("gcr.io/${project}/${appName}", "k8s")
+		app = docker.build("${appName}", "k8s")
 
 	}
 
@@ -41,7 +41,7 @@ node {
 		/*Push image with 2 tags (cheap since all layers are duplicated on 2nd push)
 		*/
 
-        docker.withRegistry('https://gcr.io/trusty-drive-228822/', 'gcr:trusty-drive-228822') {
+        docker.withRegistry('https://aionkuberacr.azurecr.io', 'acr-credentials') {
             
             app.push("${env.BUILD_NUMBER}")
             app.push("latest")
@@ -49,6 +49,10 @@ node {
 	}
 
 	stage("Deploy Image") {
+		
+		// Refresh kubectl (Python can have some issues refreshing)
+		sh('kubectl get nodes')
+
         withPythonEnv('python3') {
             sh 'pip install -r k8s/requirements.txt'
             sh "python k8s/deploy.py ${env.BUILD_NUMBER}"
