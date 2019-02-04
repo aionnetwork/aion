@@ -9,10 +9,12 @@ import org.aion.base.vm.IDataWord;
 import org.aion.fastvm.SideEffects;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.vm.api.interfaces.TransactionSideEffects;
 import org.aion.zero.types.AionTransaction;
+import org.apache.commons.lang3.ArrayUtils;
 
 public class KernelTransactionContext implements TransactionContext {
     private static final int ENCODE_BASE_LEN =
@@ -120,6 +122,12 @@ public class KernelTransactionContext implements TransactionContext {
      */
     @Override
     public byte[] toBytes() {
+        // If this is a CREATE then we do not want to serialize the callData.
+        byte[] callData =
+                transaction.isContractCreationTransaction()
+                        ? ByteUtil.EMPTY_BYTE_ARRAY
+                        : ArrayUtils.nullToEmpty(transaction.getData());
+
         ByteBuffer buffer = ByteBuffer.allocate(getEncodingLength());
         buffer.order(ByteOrder.BIG_ENDIAN);
         buffer.put(address.toBytes());
