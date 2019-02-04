@@ -380,8 +380,8 @@ public class RecoveryUtils {
     /**
      * Alternative to performing a full sync when the database already contains the <b>blocks</b>
      * and <b>index</b> databases. It will rebuild the entire blockchain structure other than these
-     * two databases verifying consensus properties. It only re-imports main chain blocks, i.e. does
-     * not perform the checks for side chains.
+     * two databases verifying consensus properties. It only redoes imports of the main chain
+     * blocks, i.e. does not perform the checks for side chains.
      *
      * <p>The minimum start height is 0, i.e. the genesis block. Specifying a height can be useful
      * in performing the operation is sessions.
@@ -390,14 +390,14 @@ public class RecoveryUtils {
      * @implNote The assumption is that the stored blocks are correct, but the code may interpret
      *     them differently.
      */
-    public static void reimportMainChain(long startHeight) {
+    public static void redoMainChainImport(long startHeight) {
         // ensure mining is disabled
         CfgAion cfg = CfgAion.inst();
         cfg.dbFromXML();
         cfg.getConsensus().setMining(false);
         cfg.getDb().setHeapCacheEnabled(true);
 
-        System.out.println("\nRe-importing stored blocks INITIATED...\n");
+        System.out.println("\nImporting stored blocks INITIATED...\n");
 
         Map<String, String> cfgLog = new HashMap<>();
         cfgLog.put("GEN", "INFO");
@@ -416,7 +416,7 @@ public class RecoveryUtils {
         long currentBlock;
         if (block != null && startHeight <= block.getNumber()) {
             System.out.println(
-                    "\nRe-importing the main chain from block #"
+                    "\nImporting the main chain from block #"
                             + startHeight
                             + " to block #"
                             + block.getNumber()
@@ -455,6 +455,15 @@ public class RecoveryUtils {
             // import in increments of 10k blocks
             while (currentBlock <= topBlockNumber) {
                 block = store.getChainBlockByNumber(currentBlock);
+                if (block == null) {
+                    System.out.println(
+                            "The main chain block at level "
+                                    + currentBlock
+                                    + " is missing from the database. Cannot continue importing stored blocks.");
+                    fail = true;
+                    break;
+                }
+
                 try {
                     result =
                             chain.tryToConnectAndFetchSummary(
@@ -532,9 +541,9 @@ public class RecoveryUtils {
             }
 
             if (fail) {
-                System.out.println("Re-importing stored blocks FAILED due to consensus issues.");
+                System.out.println("Importing stored blocks FAILED.");
             } else {
-                System.out.println("Re-importing stored blocks SUCCESSFUL.");
+                System.out.println("Importing stored blocks SUCCESSFUL.");
             }
         } else {
             if (block == null) {
@@ -553,6 +562,6 @@ public class RecoveryUtils {
         System.out.println("Closing databases...");
         repo.close();
 
-        System.out.println("Re-import COMPLETE.");
+        System.out.println("Importing stored blocks COMPLETE.");
     }
 }

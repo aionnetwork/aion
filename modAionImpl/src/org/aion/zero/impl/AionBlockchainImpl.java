@@ -540,7 +540,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(
             AionBlock block, long currTimeSeconds, boolean doExistCheck) {
         // Check block exists before processing more rules
-        if (doExistCheck // skipped when re-importing
+        if (doExistCheck // skipped when redoing imports
                 && getBlockStore().getMaxNumber() >= block.getNumber()
                 && getBlockStore().isBlockExist(block.getHash())) {
 

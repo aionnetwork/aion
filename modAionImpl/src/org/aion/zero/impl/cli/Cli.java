@@ -80,7 +80,7 @@ public class Cli {
         DUMP_STATE,
         DUMP_BLOCKS,
         DB_COMPACT,
-        RE_IMPORT
+        REDO_IMPORT
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -516,12 +516,12 @@ public class Cli {
                 return EXIT;
             }
 
-            if (options.isReImport() != null) {
+            if (options.isRedoImport() != null) {
                 long height = 0L;
-                String parameter = options.isReImport();
+                String parameter = options.isRedoImport();
 
                 if (parameter.isEmpty()) {
-                    RecoveryUtils.reimportMainChain(height);
+                    RecoveryUtils.redoMainChainImport(height);
                     return EXIT;
                 } else {
                     try {
@@ -533,7 +533,7 @@ public class Cli {
                                         + "» cannot be converted to a number.");
                         return ERROR;
                     }
-                    RecoveryUtils.reimportMainChain(height);
+                    RecoveryUtils.redoMainChainImport(height);
                     return EXIT;
                 }
             }
@@ -935,8 +935,8 @@ public class Cli {
         if (options.isDbCompact()) {
             return TaskPriority.DB_COMPACT;
         }
-        if (options.isReImport() != null) {
-            return TaskPriority.RE_IMPORT;
+        if (options.isRedoImport() != null) {
+            return TaskPriority.REDO_IMPORT;
         }
         return TaskPriority.NONE;
     }
@@ -1017,9 +1017,9 @@ public class Cli {
         if (breakingTaskPriority.compareTo(TaskPriority.DB_COMPACT) < 0 && options.isDbCompact()) {
             skippedTasks.add("--db-compact");
         }
-        if (breakingTaskPriority.compareTo(TaskPriority.RE_IMPORT) < 0
-                && options.isReImport() != null) {
-            skippedTasks.add("--re-import");
+        if (breakingTaskPriority.compareTo(TaskPriority.REDO_IMPORT) < 0
+                && options.isRedoImport() != null) {
+            skippedTasks.add("--redo-import");
         }
         return skippedTasks;
     }

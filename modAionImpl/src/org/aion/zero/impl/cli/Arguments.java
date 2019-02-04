@@ -152,12 +152,12 @@ public class Arguments {
     private boolean dbCompact;
 
     @Option(
-            names = {"--re-import"},
+            names = {"--redo-import"},
             arity = "0..1",
             paramLabel = "<start_height>",
             description =
-                    "drops all databases except for block and index when not given a parameter or starting from 0 and re-imports all blocks")
-    private String reImport = null;
+                    "drops all databases except for block and index when not given a parameter or starting from 0 and redoes import of all known main chain blocks")
+    private String redoImport = null;
 
     /** Compacts the account options into specific commands. */
     public static String[] preProcess(String[] arguments) {
@@ -267,7 +267,7 @@ public class Arguments {
         return dbCompact;
     }
 
-    public String isReImport() {
-        return reImport;
+    public String isRedoImport() {
+        return redoImport;
     }
 }
