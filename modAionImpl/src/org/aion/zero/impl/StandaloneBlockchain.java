@@ -47,7 +47,8 @@ import org.apache.commons.lang3.tuple.Pair;
  * configurations that a user might expected, and handles any non-intuitive setup that the
  * blockchain may require.
  */
-public class StandaloneBlockchain extends AionBlockchainImpl {
+public class
+StandaloneBlockchain extends AionBlockchainImpl {
 
     public AionGenesis genesis;
 
