@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Collections;
 import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.NodeEnvironment;
@@ -170,10 +171,7 @@ public class StatefulnessTest {
             VirtualMachineSpecs.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
-        AionBlock block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), Collections.singletonList(transaction), false);
-        Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
-        assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
-        return connectResult.getRight().getReceipts().get(0);
+        return sendTransactions(transaction);
     }
 
     private AionTxReceipt callContract(Address contract, String method, Object... arguments) {
@@ -188,10 +186,7 @@ public class StatefulnessTest {
             VirtualMachineSpecs.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
-        AionBlock block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), Collections.singletonList(transaction), false);
-        Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
-        assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
-        return connectResult.getRight().getReceipts().get(0);
+        return sendTransactions(transaction);
     }
 
     private AionTxReceipt transferValueTo(Address beneficiary, BigInteger value) {
@@ -206,7 +201,12 @@ public class StatefulnessTest {
             (byte) 0x1);
         transaction.sign(this.deployerKey);
 
-        AionBlock block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), Collections.singletonList(transaction), false);
+        return sendTransactions(transaction);
+    }
+
+    private AionTxReceipt sendTransactions(AionTransaction... transactions) {
+        AionBlock parentBlock = this.blockchain.getBestBlock();
+        AionBlock block = this.blockchain.createBlock(parentBlock, Arrays.asList(transactions), false, parentBlock.getTimestamp());
         Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         return connectResult.getRight().getReceipts().get(0);

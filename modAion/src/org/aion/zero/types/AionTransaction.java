@@ -91,14 +91,14 @@ public class AionTransaction extends AbstractTransaction {
 
     // constructor for explicitly setting a transaction type.
     public AionTransaction(
-        byte[] nonce,
-        Address from,
-        Address to,
-        byte[] value,
-        byte[] data,
-        long nrg,
-        long nrgPrice,
-        byte txType) {
+            byte[] nonce,
+            Address from,
+            Address to,
+            byte[] value,
+            byte[] data,
+            long nrg,
+            long nrgPrice,
+            byte txType) {
 
         super(nonce, to, value, data, nrg, nrgPrice);
         this.from = from;

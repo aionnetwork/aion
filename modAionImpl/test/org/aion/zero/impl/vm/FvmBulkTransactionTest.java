@@ -33,10 +33,10 @@ public class FvmBulkTransactionTest {
     @Before
     public void setup() {
         StandaloneBlockchain.Bundle bundle =
-            (new StandaloneBlockchain.Builder())
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts()
-                .build();
+                (new StandaloneBlockchain.Builder())
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts()
+                        .build();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
     }
@@ -52,11 +52,16 @@ public class FvmBulkTransactionTest {
         BigInteger expectedDeployerNonce = getNonce(this.deployerKey);
 
         // First, deploy a contract that we can call into.
-        AionBlockSummary initialSummary = sendTransactionsInBulkInSingleBlock(Collections.singletonList(makeFvmContractCreateTransaction(this.deployerKey, expectedDeployerNonce)));
+        AionBlockSummary initialSummary =
+                sendTransactionsInBulkInSingleBlock(
+                        Collections.singletonList(
+                                makeFvmContractCreateTransaction(
+                                        this.deployerKey, expectedDeployerNonce)));
         expectedDeployerNonce = expectedDeployerNonce.add(BigInteger.ONE);
 
         // Grab the address of the newly deployed contract.
-        Address deployedContract = initialSummary.getReceipts().get(0).getTransaction().getContractAddress();
+        Address deployedContract =
+                initialSummary.getReceipts().get(0).getTransaction().getContractAddress();
 
         int numFvmCreateTransactions = 10;
         int numFvmCallTransactions = 10;
@@ -68,13 +73,16 @@ public class FvmBulkTransactionTest {
         // Make the create transactions.
         List<AionTransaction> transactions = new ArrayList<>();
         for (int i = 0; i < numFvmCreateTransactions; i++) {
-            transactions.add(makeFvmContractCreateTransaction(this.deployerKey, expectedDeployerNonce));
+            transactions.add(
+                    makeFvmContractCreateTransaction(this.deployerKey, expectedDeployerNonce));
             expectedDeployerNonce = expectedDeployerNonce.add(BigInteger.ONE);
         }
 
         // Make the call transactions.
         for (int i = 0; i < numFvmCallTransactions; i++) {
-            transactions.add(makeFvmContractCallTransaction(this.deployerKey, expectedDeployerNonce, deployedContract));
+            transactions.add(
+                    makeFvmContractCallTransaction(
+                            this.deployerKey, expectedDeployerNonce, deployedContract));
             expectedDeployerNonce = expectedDeployerNonce.add(BigInteger.ONE);
         }
 
@@ -90,12 +98,20 @@ public class FvmBulkTransactionTest {
         List<Address> contracts = new ArrayList<>();
         BigInteger expectedDeployerBalance = initialBalanceDeployer;
         for (int i = 0; i < numTransactions; i++) {
-            BigInteger energyUsed = BigInteger.valueOf(blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
+            BigInteger energyUsed =
+                    BigInteger.valueOf(
+                            blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
             expectedDeployerBalance = expectedDeployerBalance.subtract(energyUsed);
 
             // The first batch are creates, so grab the new contract addresses.
             if (i < numFvmCreateTransactions) {
-                contracts.add(blockSummary.getSummaries().get(i).getReceipt().getTransaction().getContractAddress());
+                contracts.add(
+                        blockSummary
+                                .getSummaries()
+                                .get(i)
+                                .getReceipt()
+                                .getTransaction()
+                                .getContractAddress());
             }
         }
 
@@ -110,72 +126,103 @@ public class FvmBulkTransactionTest {
         assertEquals(expectedDeployerNonce, getNonce(this.deployerKey));
 
         // Call into the contract to get its current 'count' to verify its state is correct.
-        int count = getDeployedTickerCountValue(this.deployerKey, expectedDeployerNonce, deployedContract);
+        int count =
+                getDeployedTickerCountValue(
+                        this.deployerKey, expectedDeployerNonce, deployedContract);
         assertEquals(numFvmCallTransactions, count);
     }
 
-    private AionBlockSummary sendTransactionsInBulkInSingleBlock(List<AionTransaction> transactions) {
-        AionBlock block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), transactions, false);
-        Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
+    private AionBlockSummary sendTransactionsInBulkInSingleBlock(
+            List<AionTransaction> transactions) {
+        AionBlock parentBlock = this.blockchain.getBestBlock();
+        AionBlock block =
+                this.blockchain.createBlock(
+                        parentBlock, transactions, false, parentBlock.getTimestamp());
+        Pair<ImportResult, AionBlockSummary> connectResult =
+                this.blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         return connectResult.getRight();
     }
 
     // Deploys the Ticker.sol contract.
-    private AionTransaction makeFvmContractCreateTransaction(ECKey sender, BigInteger nonce) throws IOException {
+    private AionTransaction makeFvmContractCreateTransaction(ECKey sender, BigInteger nonce)
+            throws IOException {
         byte[] contractBytes = ContractUtils.getContractDeployer("Ticker.sol", "Ticker");
 
-        AionTransaction transaction = newTransaction(
-            nonce,
-            AionAddress.wrap(sender.getAddress()),
-            null,
-            BigInteger.ZERO,
-            contractBytes,
-            5_000_000,
-            this.energyPrice,
-            (byte) 0x01);
+        AionTransaction transaction =
+                newTransaction(
+                        nonce,
+                        AionAddress.wrap(sender.getAddress()),
+                        null,
+                        BigInteger.ZERO,
+                        contractBytes,
+                        5_000_000,
+                        this.energyPrice,
+                        (byte) 0x01);
         transaction.sign(this.deployerKey);
         return transaction;
     }
 
-    private AionTransaction makeFvmContractCallTransaction(ECKey sender, BigInteger nonce, Address contract) {
-        // This hash will call the 'ticking' function of the deployed contract (this increments a counter).
+    private AionTransaction makeFvmContractCallTransaction(
+            ECKey sender, BigInteger nonce, Address contract) {
+        // This hash will call the 'ticking' function of the deployed contract (this increments a
+        // counter).
         byte[] callBytes = Hex.decode("dae29f29");
 
-        AionTransaction transaction = newTransaction(
-            nonce,
-            AionAddress.wrap(sender.getAddress()),
-            contract,
-            BigInteger.ZERO,
-            callBytes,
-            2_000_000,
-            this.energyPrice,
-            (byte) 0x01);
+        AionTransaction transaction =
+                newTransaction(
+                        nonce,
+                        AionAddress.wrap(sender.getAddress()),
+                        contract,
+                        BigInteger.ZERO,
+                        callBytes,
+                        2_000_000,
+                        this.energyPrice,
+                        (byte) 0x01);
         transaction.sign(this.deployerKey);
         return transaction;
     }
 
     private int getDeployedTickerCountValue(ECKey sender, BigInteger nonce, Address contract) {
-        // This hash will call the 'getTicker' function of the deployed contract (giving us the count).
+        // This hash will call the 'getTicker' function of the deployed contract (giving us the
+        // count).
         byte[] callBytes = Hex.decode("c0004213");
 
-        AionTransaction transaction = newTransaction(
-            nonce,
-            AionAddress.wrap(sender.getAddress()),
-            contract,
-            BigInteger.ZERO,
-            callBytes,
-            2_000_000,
-            this.energyPrice,
-            (byte) 0x01);
+        AionTransaction transaction =
+                newTransaction(
+                        nonce,
+                        AionAddress.wrap(sender.getAddress()),
+                        contract,
+                        BigInteger.ZERO,
+                        callBytes,
+                        2_000_000,
+                        this.energyPrice,
+                        (byte) 0x01);
         transaction.sign(this.deployerKey);
 
-        AionBlockSummary summary = sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
+        AionBlockSummary summary =
+                sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
         return new DataWord(summary.getReceipts().get(0).getTransactionOutput()).intValue();
     }
 
-    private AionTransaction newTransaction(BigInteger nonce, Address sender, Address destination, BigInteger value, byte[] data, long energyLimit, long energyPrice, byte vm) {
-        return new AionTransaction(nonce.toByteArray(), sender, destination, value.toByteArray(), data, energyLimit, energyPrice, vm);
+    private AionTransaction newTransaction(
+            BigInteger nonce,
+            Address sender,
+            Address destination,
+            BigInteger value,
+            byte[] data,
+            long energyLimit,
+            long energyPrice,
+            byte vm) {
+        return new AionTransaction(
+                nonce.toByteArray(),
+                sender,
+                destination,
+                value.toByteArray(),
+                data,
+                energyLimit,
+                energyPrice,
+                vm);
     }
 
     private BigInteger getNonce(Address address) {
@@ -193,5 +240,4 @@ public class FvmBulkTransactionTest {
     private BigInteger getBalance(ECKey address) {
         return getBalance(AionAddress.wrap(address.getAddress()));
     }
-
 }

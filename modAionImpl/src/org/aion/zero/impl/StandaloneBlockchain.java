@@ -39,6 +39,7 @@ import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.types.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -371,7 +372,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
     @Override
     public synchronized ImportResult tryToConnect(final AionBlock block) {
-        ImportResult result = tryToConnectInternalAndSkipTimeCheck(block, System.currentTimeMillis() / 1000);
+        ImportResult result = tryToConnectInternal(block, System.currentTimeMillis() / 1000);
 
         if (result == ImportResult.IMPORTED_BEST) {
             BigInteger tdForHash = getBlockStore().getTotalDifficultyForHash(block.getHash());
@@ -384,7 +385,19 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     // TEMPORARY: here to support the ConsensusTest
     public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(
             AionBlock block) {
-        return tryToConnectAndFetchSummary(block, System.currentTimeMillis() / 1000, true);
+        return tryToConnectAndFetchSummary(block, System.currentTimeMillis() / 1000);
+    }
+
+    /**
+     * Uses the createNewBlockInternal functionality to avoid time-stamping issues.
+     */
+    public AionBlock createBlock(
+            AionBlock parent,
+            List<AionTransaction> txs,
+            boolean waitUntilBlockTime,
+            long currTimeSeconds) {
+
+        return createNewBlockInternal(parent, txs, waitUntilBlockTime, currTimeSeconds).block;
     }
 
     /**

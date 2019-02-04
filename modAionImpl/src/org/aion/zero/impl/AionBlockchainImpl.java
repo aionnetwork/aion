@@ -538,7 +538,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     // TEMPORARY: here to support the ConsensusTest
     public Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(
-            AionBlock block, long currTimeSeconds, boolean skipClockTimeCheck) {
+            AionBlock block, long currTimeSeconds) {
         // Check block exists before processing more rules
         if (getBlockStore().getMaxNumber() >= block.getNumber()
                 && getBlockStore().isBlockExist(block.getHash())) {
@@ -564,7 +564,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return Pair.of(EXIST, null);
         }
 
-        if (!skipClockTimeCheck && block.getTimestamp()
+        if (block.getTimestamp()
                 > (currTimeSeconds
                         + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
             if (LOG.isDebugEnabled()) {
@@ -646,11 +646,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * can feed timestamps manually
      */
     ImportResult tryToConnectInternal(final AionBlock block, long currTimeSeconds) {
-        return tryToConnectAndFetchSummary(block, currTimeSeconds, false).getLeft();
-    }
-
-    ImportResult tryToConnectInternalAndSkipTimeCheck(final AionBlock block, long currTimeSeconds) {
-        return tryToConnectAndFetchSummary(block, currTimeSeconds, true).getLeft();
+        return tryToConnectAndFetchSummary(block, currTimeSeconds).getLeft();
     }
 
     /**

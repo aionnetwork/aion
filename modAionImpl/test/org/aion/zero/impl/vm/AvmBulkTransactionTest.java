@@ -49,11 +49,12 @@ public class AvmBulkTransactionTest {
 
     @Before
     public void setup() {
-        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
-            .withDefaultAccounts()
-            .withValidatorConfiguration("simple")
-            .withAvmEnabled()
-            .build();
+        StandaloneBlockchain.Bundle bundle =
+                new StandaloneBlockchain.Builder()
+                        .withDefaultAccounts()
+                        .withValidatorConfiguration("simple")
+                        .withAvmEnabled()
+                        .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
     }
@@ -82,7 +83,12 @@ public class AvmBulkTransactionTest {
         // Make the transactions, then bundle them up together.
         List<AionTransaction> transactions = new ArrayList<>();
         for (int i = 0; i < numTransactions; i++) {
-            transactions.add(makeValueTransferTransaction(this.deployerKey, accounts.get(i), transferAmounts.get(i), expectedDeployerNonce));
+            transactions.add(
+                    makeValueTransferTransaction(
+                            this.deployerKey,
+                            accounts.get(i),
+                            transferAmounts.get(i),
+                            expectedDeployerNonce));
             expectedDeployerNonce = expectedDeployerNonce.add(BigInteger.ONE);
         }
 
@@ -97,8 +103,11 @@ public class AvmBulkTransactionTest {
 
         BigInteger expectedDeployerBalance = initialBalanceDeployer;
         for (int i = 0; i < numTransactions; i++) {
-            BigInteger energyUsed = BigInteger.valueOf(blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
-            expectedDeployerBalance = expectedDeployerBalance.subtract(energyUsed).subtract(transferAmounts.get(i));
+            BigInteger energyUsed =
+                    BigInteger.valueOf(
+                            blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
+            expectedDeployerBalance =
+                    expectedDeployerBalance.subtract(energyUsed).subtract(transferAmounts.get(i));
         }
 
         // Verify account states after the transactions have been processed.
@@ -115,11 +124,16 @@ public class AvmBulkTransactionTest {
         BigInteger expectedDeployerNonce = getNonce(this.deployerKey);
 
         // First, deploy a contract that we can call into.
-        AionBlockSummary initialSummary = sendTransactionsInBulkInSingleBlock(Collections.singletonList(makeAvmContractCreateTransaction(this.deployerKey, expectedDeployerNonce)));
+        AionBlockSummary initialSummary =
+                sendTransactionsInBulkInSingleBlock(
+                        Collections.singletonList(
+                                makeAvmContractCreateTransaction(
+                                        this.deployerKey, expectedDeployerNonce)));
         expectedDeployerNonce = expectedDeployerNonce.add(BigInteger.ONE);
 
         // Grab the address of the newly deployed contract.
-        Address deployedContract = AionAddress.wrap(initialSummary.getReceipts().get(0).getTransactionOutput());
+        Address deployedContract =
+                AionAddress.wrap(initialSummary.getReceipts().get(0).getTransactionOutput());
 
         int numAvmCreateTransactions = 10;
         int numAvmCallTransactions = 10;
@@ -131,13 +145,16 @@ public class AvmBulkTransactionTest {
         // Make the create transactions.
         List<AionTransaction> transactions = new ArrayList<>();
         for (int i = 0; i < numAvmCreateTransactions; i++) {
-            transactions.add(makeAvmContractCreateTransaction(this.deployerKey, expectedDeployerNonce));
+            transactions.add(
+                    makeAvmContractCreateTransaction(this.deployerKey, expectedDeployerNonce));
             expectedDeployerNonce = expectedDeployerNonce.add(BigInteger.ONE);
         }
 
         // Make the call transactions.
         for (int i = 0; i < numAvmCallTransactions; i++) {
-            transactions.add(makeAvmContractCallTransaction(this.deployerKey, expectedDeployerNonce, deployedContract));
+            transactions.add(
+                    makeAvmContractCallTransaction(
+                            this.deployerKey, expectedDeployerNonce, deployedContract));
             expectedDeployerNonce = expectedDeployerNonce.add(BigInteger.ONE);
         }
 
@@ -153,12 +170,20 @@ public class AvmBulkTransactionTest {
         List<Address> contracts = new ArrayList<>();
         BigInteger expectedDeployerBalance = initialBalanceDeployer;
         for (int i = 0; i < numTransactions; i++) {
-            BigInteger energyUsed = BigInteger.valueOf(blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
+            BigInteger energyUsed =
+                    BigInteger.valueOf(
+                            blockSummary.getSummaries().get(i).getReceipt().getEnergyUsed());
             expectedDeployerBalance = expectedDeployerBalance.subtract(energyUsed);
 
             // The first batch are creates, so grab the new contract addresses.
             if (i < numAvmCreateTransactions) {
-                contracts.add(AionAddress.wrap(blockSummary.getSummaries().get(i).getReceipt().getTransactionOutput()));
+                contracts.add(
+                        AionAddress.wrap(
+                                blockSummary
+                                        .getSummaries()
+                                        .get(i)
+                                        .getReceipt()
+                                        .getTransactionOutput()));
             }
         }
 
@@ -173,83 +198,115 @@ public class AvmBulkTransactionTest {
         assertEquals(expectedDeployerNonce, getNonce(this.deployerKey));
 
         // Call into the contract to get its current 'count' to verify its state is correct.
-        int count = getDeployedStatefulnessCountValue(this.deployerKey, expectedDeployerNonce, deployedContract);
+        int count =
+                getDeployedStatefulnessCountValue(
+                        this.deployerKey, expectedDeployerNonce, deployedContract);
         assertEquals(numAvmCallTransactions, count);
     }
 
     // Deploys the Statefulness.java contract
     private AionTransaction makeAvmContractCreateTransaction(ECKey sender, BigInteger nonce) {
         byte[] jar = getJarBytes();
-        AionTransaction transaction = newTransaction(
-            nonce,
-            AionAddress.wrap(sender.getAddress()),
-            null,
-            BigInteger.ZERO,
-            jar,
-            5_000_000,
-            this.energyPrice,
-            VirtualMachineSpecs.AVM_CREATE_CODE);
+        AionTransaction transaction =
+                newTransaction(
+                        nonce,
+                        AionAddress.wrap(sender.getAddress()),
+                        null,
+                        BigInteger.ZERO,
+                        jar,
+                        5_000_000,
+                        this.energyPrice,
+                        VirtualMachineSpecs.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
         return transaction;
     }
 
-    private AionTransaction makeAvmContractCallTransaction(ECKey sender, BigInteger nonce, Address contract) {
-        AionTransaction transaction = newTransaction(
-            nonce,
-            AionAddress.wrap(sender.getAddress()),
-            contract,
-            BigInteger.ZERO,
-            abiEncodeMethodCall("incrementCounter"),
-            2_000_000,
-            this.energyPrice,
-            VirtualMachineSpecs.AVM_CREATE_CODE);
+    private AionTransaction makeAvmContractCallTransaction(
+            ECKey sender, BigInteger nonce, Address contract) {
+        AionTransaction transaction =
+                newTransaction(
+                        nonce,
+                        AionAddress.wrap(sender.getAddress()),
+                        contract,
+                        BigInteger.ZERO,
+                        abiEncodeMethodCall("incrementCounter"),
+                        2_000_000,
+                        this.energyPrice,
+                        VirtualMachineSpecs.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
         return transaction;
     }
 
-    private AionTransaction makeValueTransferTransaction(ECKey sender, ECKey beneficiary, BigInteger value, BigInteger nonce) {
+    private AionTransaction makeValueTransferTransaction(
+            ECKey sender, ECKey beneficiary, BigInteger value, BigInteger nonce) {
         Address senderAddress = AionAddress.wrap(sender.getAddress());
 
-        AionTransaction transaction = newTransaction(
-            nonce,
-            senderAddress,
-            AionAddress.wrap(beneficiary.getAddress()),
-            value,
-            new byte[0],
-            2_000_000,
-            this.energyPrice,
-            (byte) 0x1);
+        AionTransaction transaction =
+                newTransaction(
+                        nonce,
+                        senderAddress,
+                        AionAddress.wrap(beneficiary.getAddress()),
+                        value,
+                        new byte[0],
+                        2_000_000,
+                        this.energyPrice,
+                        (byte) 0x1);
         transaction.sign(sender);
         return transaction;
     }
 
-    private int getDeployedStatefulnessCountValue(ECKey sender, BigInteger nonce, Address contract) {
+    private int getDeployedStatefulnessCountValue(
+            ECKey sender, BigInteger nonce, Address contract) {
         Address senderAddress = AionAddress.wrap(sender.getAddress());
 
-        AionTransaction transaction = newTransaction(
-            nonce,
-            senderAddress,
-            contract,
-            BigInteger.ZERO,
-            abiEncodeMethodCall("getCount"),
-            2_000_000,
-            this.energyPrice,
-            VirtualMachineSpecs.AVM_CREATE_CODE);
+        AionTransaction transaction =
+                newTransaction(
+                        nonce,
+                        senderAddress,
+                        contract,
+                        BigInteger.ZERO,
+                        abiEncodeMethodCall("getCount"),
+                        2_000_000,
+                        this.energyPrice,
+                        VirtualMachineSpecs.AVM_CREATE_CODE);
         transaction.sign(sender);
 
-        AionBlockSummary summary = sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
-        return (int) ABIDecoder.decodeOneObject(summary.getReceipts().get(0).getTransactionOutput());
+        AionBlockSummary summary =
+                sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
+        return (int)
+                ABIDecoder.decodeOneObject(summary.getReceipts().get(0).getTransactionOutput());
     }
 
-    private AionBlockSummary sendTransactionsInBulkInSingleBlock(List<AionTransaction> transactions) {
-        AionBlock block = this.blockchain.createNewBlock(this.blockchain.getBestBlock(), transactions, false);
-        Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
+    private AionBlockSummary sendTransactionsInBulkInSingleBlock(
+            List<AionTransaction> transactions) {
+        AionBlock parentBlock = this.blockchain.getBestBlock();
+        AionBlock block =
+                this.blockchain.createBlock(
+                        parentBlock, transactions, false, parentBlock.getTimestamp());
+        Pair<ImportResult, AionBlockSummary> connectResult =
+                this.blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         return connectResult.getRight();
     }
 
-    private AionTransaction newTransaction(BigInteger nonce, Address sender, Address destination, BigInteger value, byte[] data, long energyLimit, long energyPrice, byte vm) {
-        return new AionTransaction(nonce.toByteArray(), sender, destination, value.toByteArray(), data, energyLimit, energyPrice, vm);
+    private AionTransaction newTransaction(
+            BigInteger nonce,
+            Address sender,
+            Address destination,
+            BigInteger value,
+            byte[] data,
+            long energyLimit,
+            long energyPrice,
+            byte vm) {
+        return new AionTransaction(
+                nonce.toByteArray(),
+                sender,
+                destination,
+                value.toByteArray(),
+                data,
+                energyLimit,
+                energyPrice,
+                vm);
     }
 
     private BigInteger getNonce(Address address) {
@@ -281,7 +338,9 @@ public class AvmBulkTransactionTest {
     }
 
     private byte[] getJarBytes() {
-        return new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(Statefulness.class), new byte[0]).encodeToBytes();
+        return new CodeAndArguments(
+                        JarBuilder.buildJarForMainAndClasses(Statefulness.class), new byte[0])
+                .encodeToBytes();
     }
 
     private byte[] abiEncodeMethodCall(String method, Object... arguments) {
@@ -297,14 +356,14 @@ public class AvmBulkTransactionTest {
     }
 
     /**
-     * Since we are using random values here ... we want to be able to reproduce these amounts if
-     * a test fails, so we print them off to console every time.
+     * Since we are using random values here ... we want to be able to reproduce these amounts if a
+     * test fails, so we print them off to console every time.
      */
     private void printValuesUsed(List<BigInteger> values) {
-        System.out.println("sendValueTransferTransactionsInBulk test is using the following values:");
+        System.out.println(
+                "sendValueTransferTransactionsInBulk test is using the following values:");
         for (BigInteger value : values) {
             System.out.print(" " + value + " ");
         }
     }
-
 }
