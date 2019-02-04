@@ -7,9 +7,9 @@ pack_dir="avm_pack"
 
 echo "Building avm testnet release on $date..." \
 && aion_repo="$(pwd)" \
-&& echo "Checking out latest version of kernel avmtestnet-build-jan30 branch..." \
-&& git checkout avmtestnet-build-jan30 \
-&& git pull origin avmtestnet-build-jan30 \
+&& echo "Checking out latest version of kernel avmtestnet-build-feb1 branch..." \
+&& git checkout avmtestnet-build-feb1 \
+&& git pull origin avmtestnet-build-feb1 \
 && git submodule update --init --recursive \
 && cd $avm_repo \
 && echo "$(pwd)" \
