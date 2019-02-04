@@ -53,11 +53,12 @@ public class StatefulnessTest {
 
     @Before
     public void setup() {
-        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
-            .withDefaultAccounts()
-            .withValidatorConfiguration("simple")
-            .withAvmEnabled()
-            .build();
+        StandaloneBlockchain.Bundle bundle =
+                new StandaloneBlockchain.Builder()
+                        .withDefaultAccounts()
+                        .withValidatorConfiguration("simple")
+                        .withAvmEnabled()
+                        .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
         this.deployer = AionAddress.wrap(this.deployerKey.getAddress());
@@ -95,10 +96,13 @@ public class StatefulnessTest {
         BigInteger contractBalance = getBalance(contract);
         BigInteger contractNonce = this.blockchain.getRepository().getNonce(contract);
 
-        BigInteger deploymentEnergyCost = BigInteger.valueOf(receipt.getEnergyUsed()).multiply(BigInteger.valueOf(this.energyPrice));
+        BigInteger deploymentEnergyCost =
+                BigInteger.valueOf(receipt.getEnergyUsed())
+                        .multiply(BigInteger.valueOf(this.energyPrice));
 
         // Check that balances and nonce are in agreement after the deployment.
-        assertEquals(deployerBalance.subtract(deploymentEnergyCost), deployerBalanceAfterDeployment);
+        assertEquals(
+                deployerBalance.subtract(deploymentEnergyCost), deployerBalanceAfterDeployment);
         assertEquals(deployerNonce.add(BigInteger.ONE), deployerNonceAfterDeployment);
         assertEquals(BigInteger.ZERO, contractBalance);
         assertEquals(BigInteger.ZERO, contractNonce);
@@ -124,8 +128,11 @@ public class StatefulnessTest {
         assertTrue(receipt.isSuccessful());
 
         // verify that the sender and contract balances are correct after the transfer.
-        BigInteger transferEnergyCost = BigInteger.valueOf(receipt.getEnergyUsed()).multiply(BigInteger.valueOf(this.energyPrice));
-        BigInteger deployerBalanceAfterTransfer = deployerInitialBalance.subtract(fundsToSendToContract).subtract(transferEnergyCost);
+        BigInteger transferEnergyCost =
+                BigInteger.valueOf(receipt.getEnergyUsed())
+                        .multiply(BigInteger.valueOf(this.energyPrice));
+        BigInteger deployerBalanceAfterTransfer =
+                deployerInitialBalance.subtract(fundsToSendToContract).subtract(transferEnergyCost);
         BigInteger contractBalanceAfterTransfer = contractInitialBalance.add(fundsToSendToContract);
         BigInteger deployerNonceAfterTransfer = deployerInitialNonce.add(BigInteger.ONE);
 
@@ -139,7 +146,9 @@ public class StatefulnessTest {
         long valueForContractToSend = fundsToSendToContract.longValue() / 2;
 
         // Call the contract to send value using an internal call.
-        receipt = callContract(contract, "transferValue", beneficiary.toBytes(), valueForContractToSend);
+        receipt =
+                callContract(
+                        contract, "transferValue", beneficiary.toBytes(), valueForContractToSend);
         assertTrue(receipt.isSuccessful());
 
         // Verify the accounts have the expected state.
@@ -147,10 +156,15 @@ public class StatefulnessTest {
         BigInteger contractBalanceAfterCall = getBalance(contract);
         BigInteger beneficiaryBalanceAfterCall = getBalance(beneficiary);
 
-        BigInteger callEnergyCost = BigInteger.valueOf(receipt.getEnergyUsed()).multiply(BigInteger.valueOf(this.energyPrice));
+        BigInteger callEnergyCost =
+                BigInteger.valueOf(receipt.getEnergyUsed())
+                        .multiply(BigInteger.valueOf(this.energyPrice));
 
-        assertEquals(deployerBalanceAfterTransfer.subtract(callEnergyCost), deployerBalanceAfterCall);
-        assertEquals(contractBalanceAfterTransfer.subtract(BigInteger.valueOf(valueForContractToSend)), contractBalanceAfterCall);
+        assertEquals(
+                deployerBalanceAfterTransfer.subtract(callEnergyCost), deployerBalanceAfterCall);
+        assertEquals(
+                contractBalanceAfterTransfer.subtract(BigInteger.valueOf(valueForContractToSend)),
+                contractBalanceAfterCall);
         assertEquals(BigInteger.valueOf(valueForContractToSend), beneficiaryBalanceAfterCall);
         assertEquals(deployerNonceAfterTransfer.add(BigInteger.ONE), getNonce(this.deployer));
 
@@ -160,45 +174,48 @@ public class StatefulnessTest {
 
     private AionTxReceipt deployContract() {
         byte[] jar = getJarBytes();
-        AionTransaction transaction = newTransaction(
-            getNonce(this.deployer),
-            this.deployer,
-            null,
-            BigInteger.ZERO,
-            jar,
-            5_000_000,
-            this.energyPrice,
-            VirtualMachineSpecs.AVM_CREATE_CODE);
+        AionTransaction transaction =
+                newTransaction(
+                        getNonce(this.deployer),
+                        this.deployer,
+                        null,
+                        BigInteger.ZERO,
+                        jar,
+                        5_000_000,
+                        this.energyPrice,
+                        VirtualMachineSpecs.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
     }
 
     private AionTxReceipt callContract(Address contract, String method, Object... arguments) {
-        AionTransaction transaction = newTransaction(
-            getNonce(this.deployer),
-            this.deployer,
-            contract,
-            BigInteger.ZERO,
-            abiEncodeMethodCall(method, arguments),
-            2_000_000,
-            this.energyPrice,
-            VirtualMachineSpecs.AVM_CREATE_CODE);
+        AionTransaction transaction =
+                newTransaction(
+                        getNonce(this.deployer),
+                        this.deployer,
+                        contract,
+                        BigInteger.ZERO,
+                        abiEncodeMethodCall(method, arguments),
+                        2_000_000,
+                        this.energyPrice,
+                        VirtualMachineSpecs.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
     }
 
     private AionTxReceipt transferValueTo(Address beneficiary, BigInteger value) {
-        AionTransaction transaction = newTransaction(
-            getNonce(this.deployer),
-            this.deployer,
-            beneficiary,
-            value,
-            new byte[0],
-            2_000_000,
-            this.energyPrice,
-            (byte) 0x1);
+        AionTransaction transaction =
+                newTransaction(
+                        getNonce(this.deployer),
+                        this.deployer,
+                        beneficiary,
+                        value,
+                        new byte[0],
+                        2_000_000,
+                        this.energyPrice,
+                        (byte) 0x1);
         transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);
@@ -206,22 +223,46 @@ public class StatefulnessTest {
 
     private AionTxReceipt sendTransactions(AionTransaction... transactions) {
         AionBlock parentBlock = this.blockchain.getBestBlock();
-        AionBlock block = this.blockchain.createBlock(parentBlock, Arrays.asList(transactions), false, parentBlock.getTimestamp());
-        Pair<ImportResult, AionBlockSummary> connectResult = this.blockchain.tryToConnectAndFetchSummary(block);
+        AionBlock block =
+                this.blockchain.createBlock(
+                        parentBlock,
+                        Arrays.asList(transactions),
+                        false,
+                        parentBlock.getTimestamp());
+        Pair<ImportResult, AionBlockSummary> connectResult =
+                this.blockchain.tryToConnectAndFetchSummary(block);
         assertEquals(ImportResult.IMPORTED_BEST, connectResult.getLeft());
         return connectResult.getRight().getReceipts().get(0);
     }
 
     private byte[] getJarBytes() {
-        return new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(Statefulness.class), new byte[0]).encodeToBytes();
+        return new CodeAndArguments(
+                        JarBuilder.buildJarForMainAndClasses(Statefulness.class), new byte[0])
+                .encodeToBytes();
     }
 
     private byte[] abiEncodeMethodCall(String method, Object... arguments) {
         return ABIEncoder.encodeMethodArguments(method, arguments);
     }
 
-    private AionTransaction newTransaction(BigInteger nonce, Address sender, Address destination, BigInteger value, byte[] data, long energyLimit, long energyPrice, byte vm) {
-        return new AionTransaction(nonce.toByteArray(), sender, destination, value.toByteArray(), data, energyLimit, energyPrice, vm);
+    private AionTransaction newTransaction(
+            BigInteger nonce,
+            Address sender,
+            Address destination,
+            BigInteger value,
+            byte[] data,
+            long energyLimit,
+            long energyPrice,
+            byte vm) {
+        return new AionTransaction(
+                nonce.toByteArray(),
+                sender,
+                destination,
+                value.toByteArray(),
+                data,
+                energyLimit,
+                energyPrice,
+                vm);
     }
 
     private BigInteger getBalance(Address address) {
@@ -237,5 +278,4 @@ public class StatefulnessTest {
         bytes[0] = (byte) 0xa0;
         return AionAddress.wrap(bytes);
     }
-
 }

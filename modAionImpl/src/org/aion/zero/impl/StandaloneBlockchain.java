@@ -388,9 +388,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
         return tryToConnectAndFetchSummary(block, System.currentTimeMillis() / 1000);
     }
 
-    /**
-     * Uses the createNewBlockInternal functionality to avoid time-stamping issues.
-     */
+    /** Uses the createNewBlockInternal functionality to avoid time-stamping issues. */
     public AionBlock createBlock(
             AionBlock parent,
             List<AionTransaction> txs,
