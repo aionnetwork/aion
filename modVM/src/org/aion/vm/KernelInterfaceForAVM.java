@@ -18,9 +18,9 @@ public class KernelInterfaceForAVM implements KernelInterface {
     private boolean allowNonceIncrement, isLocalCall;
 
     public KernelInterfaceForAVM(
-        IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
-        boolean allowNonceIncrement,
-        boolean isLocalCall) {
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
+            boolean allowNonceIncrement,
+            boolean isLocalCall) {
 
         if (repositoryCache == null) {
             throw new NullPointerException("Cannot set null repositoryCache!");
@@ -35,7 +35,7 @@ public class KernelInterfaceForAVM implements KernelInterface {
     @Override
     public KernelInterfaceForFastVM makeChildKernelInterface() {
         return new KernelInterfaceForFastVM(
-            this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall);
+                this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall);
     }
 
     @Override
