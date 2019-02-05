@@ -1,9 +1,11 @@
 package org.aion.mcf.db;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -271,6 +273,44 @@ public class IContractDetailsTest {
             }
             count++;
         }
+    }
+
+    /**
+     * This test is specific to the ContractDetailsCacheImpl class, which at times holds a different
+     * storage value for contracts. This test checks that after an update to the cache object, the
+     * original value from the contract details is not returned for use.
+     */
+    @Test
+    public void testCacheUpdatedAndGetWithOriginalAionContract() {
+
+        ByteArrayWrapper key = getRandomWord(true).toWrapper();
+        ByteArrayWrapper value1 = getRandomWord(true).toWrapper();
+        ByteArrayWrapper value2 = getRandomWord(true).toWrapper();
+
+        // ensure the second value is different
+        // unlikely to be necessary
+        while (Arrays.equals(value1.getData(), value2.getData())) {
+            value2 = getRandomWord(true).toWrapper();
+        }
+
+        // ensure the initial cache has the value
+        cache1.put(key, value1);
+
+        ContractDetailsCacheImpl impl = new ContractDetailsCacheImpl(cache1);
+
+        // check that original value is retrieved
+        assertThat(impl.get(key)).isEqualTo(value1);
+
+        // delete and check that value is missing
+        impl.delete(key);
+        assertThat(impl.get(key)).isEqualTo(null);
+
+        // add new value and check correctness
+        impl.put(key, value2);
+        assertThat(impl.get(key)).isEqualTo(value2);
+
+        // clean-up
+        cache1.delete(key);
     }
 
     // <------------------------------------------HELPERS------------------------------------------->
