@@ -530,7 +530,7 @@ public class RecoveryUtils {
                     if (currentBlock % stepSize == 0) {
                         long time = System.currentTimeMillis() - start;
 
-                        double timePerBlock = time / currentBlock;
+                        double timePerBlock = time / (currentBlock - startHeight + 1);
                         long remainingBlocks = topBlockNumber - currentBlock;
                         double estimate =
                                 (timePerBlock * remainingBlocks) / 60_000 + 1; // in minutes
