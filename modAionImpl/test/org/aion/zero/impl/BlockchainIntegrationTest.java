@@ -152,11 +152,7 @@ public class BlockchainIntegrationTest {
                                 .subtract(BigInteger.valueOf(100)));
     }
 
-    /**
-     * Ignored temporarily until we figure out the clock time issue.
-     */
     @Test
-    @Ignore
     public void testAppendIncorrectTimestampBlock() {
         StandaloneBlockchain.Bundle bundle =
                 (new StandaloneBlockchain.Builder())
@@ -164,7 +160,9 @@ public class BlockchainIntegrationTest {
                         .withDefaultAccounts()
                         .build();
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        AionBlock parent = bc.getBestBlock();
+        AionBlock block =
+                bc.createBlock(parent, Collections.EMPTY_LIST, true, parent.getTimestamp());
 
         // set the block to be created 1 month in the future
         block.getHeader().setTimestamp((System.currentTimeMillis() / 1000) + 2592000);

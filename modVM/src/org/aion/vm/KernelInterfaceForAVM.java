@@ -79,7 +79,6 @@ public class KernelInterfaceForAVM implements KernelInterface {
 
     @Override
     public void putStorage(Address address, byte[] key, byte[] value) {
-        //new byte[]{21, 22, 23, 24, 25, 26, 27, 28, 29, 20};
         ByteArrayWrapper storageKey = new ByteArrayWrapper(key);
         ByteArrayWrapper storageValue = new ByteArrayWrapper(value);
         this.repositoryCache.addStorageRow(address, storageKey, storageValue);
