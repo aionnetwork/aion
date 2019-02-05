@@ -789,8 +789,9 @@ public class AionRepositoryImpl
     public void dropDatabasesExcept(List<String> names) {
         for (IByteArrayKeyValueDatabase db : databaseGroup) {
             if (!names.contains(db.getName().get())) {
-                LOG.warn("Dropping database " + db.toString());
+                LOG.warn("Dropping database " + db.toString() + " ...");
                 db.drop();
+                LOG.warn(db.toString() + " successfully dropped and reopened.");
             }
         }
     }

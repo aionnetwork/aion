@@ -528,7 +528,7 @@ public class RecoveryUtils {
                     }
 
                     if (currentBlock % stepSize == 0) {
-                        long time = System.currentTimeMillis() - start;
+                        double time = System.currentTimeMillis() - start;
 
                         double timePerBlock = time / (currentBlock - startHeight + 1);
                         long remainingBlocks = topBlockNumber - currentBlock;
@@ -538,9 +538,9 @@ public class RecoveryUtils {
                                 "Finished with blocks up to "
                                         + currentBlock
                                         + " in "
-                                        + time
+                                        + String.format("%.0f", time)
                                         + " ms (under "
-                                        + (time / 60_000 + 1)
+                                        + String.format("%.0f", time / 60_000 + 1)
                                         + " min). The average time per block is < "
                                         + String.format("%.0f", timePerBlock + 1)
                                         + " ms. Completion for remaining "
