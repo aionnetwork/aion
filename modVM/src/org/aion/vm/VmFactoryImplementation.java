@@ -8,9 +8,9 @@ import org.aion.vm.api.interfaces.VirtualMachine;
 
 /**
  * A Singleton factory class that is responsible for:
- *
- * <p>- Initializing the state of all the supported virtual machines. - Returning any requested
- * instances of any supported virtual machines. - Shutting down all the supported virtual machines.
+ *   1. Initializing the state of all the supported virtual machines.
+ *   2. Returning any requested instances of any supported virtual machines.
+ *   3. Shutting down all the supported virtual machines.
  */
 public final class VmFactoryImplementation implements VirtualMachineManager {
     private static final VmFactoryImplementation SINGLETON = new VmFactoryImplementation();

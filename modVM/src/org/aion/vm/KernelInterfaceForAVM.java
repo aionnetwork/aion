@@ -30,8 +30,6 @@ public class KernelInterfaceForAVM implements KernelInterface {
         this.isLocalCall = isLocalCall;
     }
 
-    // These 4 methods are temporary. Really any of this type of functionality should be moved out
-    // into the kernel.
     @Override
     public KernelInterfaceForFastVM makeChildKernelInterface() {
         return new KernelInterfaceForFastVM(
@@ -48,6 +46,7 @@ public class KernelInterfaceForAVM implements KernelInterface {
         this.repositoryCache.flushTo(((KernelInterfaceForAVM) target).repositoryCache, false);
     }
 
+    // the below two methods are temporary and will be removed by the upcoming refactorings.
     public void rollback() {
         this.repositoryCache.rollback();
     }
@@ -55,7 +54,6 @@ public class KernelInterfaceForAVM implements KernelInterface {
     public IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> getRepositoryCache() {
         return this.repositoryCache;
     }
-    // The above 4 methods are temporary. See comment just above.
 
     @Override
     public void createAccount(Address address) {
