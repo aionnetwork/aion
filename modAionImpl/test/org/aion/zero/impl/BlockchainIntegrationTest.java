@@ -15,6 +15,7 @@ import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -159,7 +160,9 @@ public class BlockchainIntegrationTest {
                         .withDefaultAccounts()
                         .build();
         StandaloneBlockchain bc = bundle.bc;
-        AionBlock block = bc.createNewBlock(bc.getBestBlock(), Collections.EMPTY_LIST, true);
+        AionBlock parent = bc.getBestBlock();
+        AionBlock block =
+                bc.createBlock(parent, Collections.EMPTY_LIST, true, parent.getTimestamp());
 
         // set the block to be created 1 month in the future
         block.getHeader().setTimestamp((System.currentTimeMillis() / 1000) + 2592000);

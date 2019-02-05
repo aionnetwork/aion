@@ -21,10 +21,11 @@ public class CfgVmTest {
 
     @Test
     public void testFromXML() throws Exception {
-        String testXml = "<vm><avmEnabled>true</avmEnabled><unrecognizedThing>should_be_ignored</unrecognizedThing></vm>";
+        String testXml =
+                "<vm><avm-enabled>true</avm-enabled><unrecognizedThing>should_be_ignored</unrecognizedThing></vm>";
         XMLStreamReader xmlStream =
-            XMLInputFactory.newInstance()
-                .createXMLStreamReader(CharSource.wrap(testXml).openStream());
+                XMLInputFactory.newInstance()
+                        .createXMLStreamReader(CharSource.wrap(testXml).openStream());
         CfgVm unit = new CfgVm();
         unit.fromXML(xmlStream);
         assertThat(unit.isAvmEnabled(), is(true));
@@ -32,7 +33,6 @@ public class CfgVmTest {
 
     @Test
     public void testToXML() {
-        assertThat(new CfgVm().toXML().isEmpty(), is(true));
+        assertThat(new CfgVm().toXML().isEmpty(), is(false));
     }
-
 }

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Bytesable;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * The address class is a byte array wrapper represent fixed-32bytes array for the kernel account
@@ -104,10 +105,11 @@ public final class AionAddress
     }
 
     public boolean equals(Object other) {
-        if (!(other instanceof AionAddress)) {
+        if (!(other instanceof Address)) {
             return false;
         } else {
-            return Arrays.equals(this.address, ((AionAddress) other).toBytes());
+            byte[] otherAddress = ((Address) other).toBytes();
+            return Arrays.equals(this.address, otherAddress);
         }
     }
 

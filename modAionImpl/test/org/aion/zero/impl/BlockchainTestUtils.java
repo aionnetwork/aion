@@ -56,8 +56,10 @@ public class BlockchainTestUtils {
                 ECKey key = accounts.get(rand.nextInt(accounts.size()));
                 BigInteger accountNonce = nonces.get(key);
 
-                // generate a random address
-                Address destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
+                // generate a random Aion account address
+                byte[] aionBytes = HashUtil.h256(accountNonce.toByteArray());
+                aionBytes[0] = (byte) 0xa0; // the Aion prefix
+                Address destAddr = new AionAddress(aionBytes);
                 AionTransaction newTx =
                         new AionTransaction(
                                 accountNonce.toByteArray(),
