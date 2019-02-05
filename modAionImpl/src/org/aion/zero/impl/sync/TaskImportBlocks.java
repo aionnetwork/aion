@@ -572,7 +572,9 @@ final class TaskImportBlocks implements Runnable {
             }
         }
         // trigger compact when IO is slow
-        if (t2 - t1 > this.slowImportTime && t2 - lastCompactTime > this.compactFrequency) {
+        if (slowImportTime > 0 // disabled when set to <= 0
+                && t2 - t1 > this.slowImportTime
+                && t2 - lastCompactTime > this.compactFrequency) {
             if (log.isInfoEnabled()) {
                 log.info("Compacting state database due to slow IO time.");
             }

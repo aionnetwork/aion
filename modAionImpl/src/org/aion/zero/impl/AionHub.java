@@ -166,7 +166,9 @@ public class AionHub {
                 cfg.getSync().getBlocksQueueMax(),
                 cfg.getSync().getShowStatus(),
                 cfg.getSync().getShowStatistics(),
-                cfg.getSync().getSlowImportTime(),
+                cfg.getSync().getCompactEnabled()
+                        ? cfg.getSync().getSlowImportTime()
+                        : 0, // set to 0 when disabled
                 cfg.getSync().getCompactFrequency());
 
         ChainConfiguration chainConfig = new ChainConfiguration();
