@@ -50,9 +50,9 @@ import org.aion.vm.PostExecutionWork;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.zero.db.AionRepositoryCache;
-import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -115,19 +115,17 @@ public class ContractIntegTest {
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
+        AionBlock block = makeBlock(tx);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
 
-        ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
+        ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         BulkExecutor exec =
                 new BulkExecutor(
                         details,
                         repo,
                         false,
                         true,
-                        context.block.getNrgLimit(),
+                        block.getNrgLimit(),
                         LOGGER_VM,
                         getPostExecutionWork());
         AionTxExecSummary summary = exec.execute().get(0);
@@ -158,11 +156,9 @@ public class ContractIntegTest {
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
+        AionBlock block = makeBlock(tx);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError()); // "" == SUCCESS
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -197,11 +193,9 @@ public class ContractIntegTest {
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
+        AionBlock block = makeBlock(tx);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("OUT_OF_NRG", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -237,11 +231,9 @@ public class ContractIntegTest {
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
+        AionBlock block = makeBlock(tx);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("REVERT", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -278,11 +270,9 @@ public class ContractIntegTest {
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
+        AionBlock block = makeBlock(tx);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -314,11 +304,9 @@ public class ContractIntegTest {
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
+        AionBlock block = makeBlock(tx);
         IRepositoryCache repo = blockchain.getRepository().startTracking();
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("INSUFFICIENT_BALANCE", summary.getReceipt().getError());
         assertEquals(0, tx.getNrgConsume());
@@ -368,10 +356,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -412,10 +398,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -441,10 +425,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        exec = getNewExecutor(tx, context.block, repo);
+        block = makeBlock(tx);
+        exec = getNewExecutor(tx, block, repo);
         summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -489,10 +471,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("REVERT", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -536,10 +516,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -587,10 +565,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -639,10 +615,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -703,10 +677,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -737,10 +709,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        exec = getNewExecutor(tx, context.block, repo);
+        block = makeBlock(tx);
+        exec = getNewExecutor(tx, block, repo);
         summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -785,10 +755,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -819,10 +787,8 @@ public class ContractIntegTest {
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
-        context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        exec = getNewExecutor(tx, context.block, repo);
+        block = makeBlock(tx);
+        exec = getNewExecutor(tx, block, repo);
         summary = exec.execute().get(0);
         assertEquals("REVERT", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -905,11 +871,8 @@ public class ContractIntegTest {
         assertEquals(Builder.DEFAULT_BALANCE, blockchain.getRepository().getBalance(deployer));
         assertEquals(BigInteger.ZERO, blockchain.getRepository().getNonce(deployer));
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("FAILURE", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -1005,11 +968,8 @@ public class ContractIntegTest {
         assertEquals(deployerBalance, repo.getBalance(deployer));
         assertEquals(deployerNonce, repo.getNonce(deployer));
 
-        BlockContext context =
-                blockchain.createNewBlockContext(
-                        blockchain.getBestBlock(), Collections.singletonList(tx), false);
-
-        BulkExecutor exec = getNewExecutor(tx, context.block, repo);
+        AionBlock block = makeBlock(tx);
+        BulkExecutor exec = getNewExecutor(tx, block, repo);
         AionTxExecSummary summary = exec.execute().get(0);
         assertEquals("", summary.getReceipt().getError());
         assertEquals(tx.getNrgConsume(), summary.getNrgUsed().longValue());
@@ -1166,5 +1126,11 @@ public class ContractIntegTest {
         return (r, c, s, t, b) -> {
             return 0L;
         };
+    }
+
+    private AionBlock makeBlock(AionTransaction tx) {
+        AionBlock parent = blockchain.getBestBlock();
+        return blockchain.createBlock(
+                parent, Collections.singletonList(tx), false, parent.getTimestamp());
     }
 }
