@@ -151,6 +151,14 @@ public class Arguments {
             description = "if using leveldb, it triggers its database compaction processes")
     private boolean dbCompact;
 
+    @Option(
+            names = {"--redo-import"},
+            arity = "0..1",
+            paramLabel = "<start_height>",
+            description =
+                    "drops all databases except for block and index when not given a parameter or starting from 0 and redoes import of all known main chain blocks")
+    private String redoImport = null;
+
     /** Compacts the account options into specific commands. */
     public static String[] preProcess(String[] arguments) {
         List<String> list = new ArrayList<>();
@@ -257,5 +265,9 @@ public class Arguments {
 
     public boolean isDbCompact() {
         return dbCompact;
+    }
+
+    public String isRedoImport() {
+        return redoImport;
     }
 }

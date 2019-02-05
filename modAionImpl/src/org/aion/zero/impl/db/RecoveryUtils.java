@@ -2,10 +2,12 @@ package org.aion.zero.impl.db;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.aion.base.type.IBlock;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgDb;
+import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.AionGenesis;
@@ -13,7 +15,17 @@ import org.aion.zero.impl.AionHubUtils;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
+import org.apache.commons.lang3.tuple.Pair;
 
+/**
+ * Methods used by CLI calls for debugging the local blockchain data.
+ *
+ * @author Alexandra Roatis
+ * @implNote This class started off with helper functions for data recovery at runtime. It evolved
+ *     into a diverse set of CLI calls for displaying or manipulating the data. It would benefit
+ *     from refactoring to separate the different use cases.
+ */
 public class RecoveryUtils {
 
     public enum Status {
@@ -325,7 +337,7 @@ public class RecoveryUtils {
         AionLoggerFactory.init(cfgLog);
 
         AionBlockchainImpl chain = AionBlockchainImpl.inst();
-        AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
+        AionRepositoryImpl repo = chain.getRepository();
         AionBlockStore store = repo.getBlockStore();
 
         // dropping old state database
@@ -363,5 +375,207 @@ public class RecoveryUtils {
 
         repo.close();
         System.out.println("Reorganizing the state storage COMPLETE.");
+    }
+
+    /**
+     * Alternative to performing a full sync when the database already contains the <b>blocks</b>
+     * and <b>index</b> databases. It will rebuild the entire blockchain structure other than these
+     * two databases verifying consensus properties. It only redoes imports of the main chain
+     * blocks, i.e. does not perform the checks for side chains.
+     *
+     * <p>The minimum start height is 0, i.e. the genesis block. Specifying a height can be useful
+     * in performing the operation is sessions.
+     *
+     * @param startHeight the height from which to start importing the blocks
+     * @implNote The assumption is that the stored blocks are correct, but the code may interpret
+     *     them differently.
+     */
+    public static void redoMainChainImport(long startHeight) {
+        if (startHeight < 0) {
+            System.out.println("Negative values are not valid as starting height. Nothing to do.");
+            return;
+        }
+
+        // ensure mining is disabled
+        CfgAion cfg = CfgAion.inst();
+        cfg.dbFromXML();
+        cfg.getConsensus().setMining(false);
+        cfg.getDb().setHeapCacheEnabled(true);
+
+        System.out.println("\nImporting stored blocks INITIATED...\n");
+
+        Map<String, String> cfgLog = new HashMap<>();
+        cfgLog.put("GEN", "INFO");
+        cfgLog.put("DB", "WARN");
+        cfgLog.put("CONS", "ERROR");
+
+        AionLoggerFactory.init(cfgLog);
+
+        AionBlockchainImpl chain = AionBlockchainImpl.inst();
+        AionRepositoryImpl repo = chain.getRepository();
+        AionBlockStore store = repo.getBlockStore();
+
+        // determine the parameters of the rebuild
+        AionBlock block = store.getBestBlock();
+        AionBlock startBlock;
+        long currentBlock;
+        if (block != null && startHeight <= block.getNumber()) {
+            System.out.println(
+                    "\nImporting the main chain from block #"
+                            + startHeight
+                            + " to block #"
+                            + block.getNumber()
+                            + ". This may take a while.\n"
+                            + "The time estimates are optimistic based on current progress.\n"
+                            + "It is expected that later blocks take a longer time to import due to the increasing size of the database.\n");
+
+            if (startHeight == 0L) {
+                // dropping databases that can be inferred when starting from genesis
+                List<String> keep = List.of("block", "index");
+                repo.dropDatabasesExcept(keep);
+
+                // recover genesis
+                AionGenesis genesis = cfg.getGenesis();
+                AionHubUtils.buildGenesis(genesis, repo);
+                System.out.println("\nFinished rebuilding genesis block.");
+                startBlock = genesis;
+                currentBlock = 1L;
+            } else {
+                startBlock = store.getChainBlockByNumber(startHeight - 1);
+                currentBlock = startHeight;
+            }
+
+            boolean fail = false;
+
+            if (startBlock == null) {
+                System.out.println(
+                        "The main chain block at level "
+                                + currentBlock
+                                + " is missing from the database. Cannot continue importing stored blocks.");
+                fail = true;
+            } else {
+                chain.setBestBlock(startBlock);
+
+                long topBlockNumber = block.getNumber();
+                long stepSize = 10_000L;
+
+                Pair<ImportResult, AionBlockSummary> result;
+                final int THOUSAND_MS = 1000;
+
+                long start = System.currentTimeMillis();
+
+                // import in increments of 10k blocks
+                while (currentBlock <= topBlockNumber) {
+                    block = store.getChainBlockByNumber(currentBlock);
+                    if (block == null) {
+                        System.out.println(
+                                "The main chain block at level "
+                                        + currentBlock
+                                        + " is missing from the database. Cannot continue importing stored blocks.");
+                        fail = true;
+                        break;
+                    }
+
+                    try {
+                        result =
+                                chain.tryToConnectAndFetchSummary(
+                                        block, System.currentTimeMillis() / THOUSAND_MS, false);
+                    } catch (Throwable t) {
+                        // we want to see the exception and the block where it occurred
+                        t.printStackTrace();
+                        if (t.getMessage() != null
+                                && t.getMessage().contains("Invalid Trie state, missing node ")) {
+                            System.out.println(
+                                    "The exception above is likely due to a pruned database and NOT a consensus problem.\n"
+                                            + "Rebuild the full state by editing the config.xml file or running ./aion.sh --state FULL.\n");
+                        }
+                        result =
+                                new Pair<>() {
+                                    @Override
+                                    public AionBlockSummary setValue(AionBlockSummary value) {
+                                        return null;
+                                    }
+
+                                    @Override
+                                    public ImportResult getLeft() {
+                                        return ImportResult.INVALID_BLOCK;
+                                    }
+
+                                    @Override
+                                    public AionBlockSummary getRight() {
+                                        return null;
+                                    }
+                                };
+
+                        fail = true;
+                    }
+
+                    if (!result.getLeft().isSuccessful()) {
+                        System.out.println("Consensus break at block:\n" + block);
+                        System.out.println(
+                                "Import attempt returned result "
+                                        + result.getLeft()
+                                        + " with summary\n"
+                                        + result.getRight());
+
+                        if (repo.isValidRoot(store.getBestBlock().getStateRoot())) {
+                            System.out.println("The repository state trie was:\n");
+                            System.out.println(repo.getTrieDump());
+                        }
+
+                        fail = true;
+                        break;
+                    }
+
+                    if (currentBlock % stepSize == 0) {
+                        double time = System.currentTimeMillis() - start;
+
+                        double timePerBlock = time / (currentBlock - startHeight + 1);
+                        long remainingBlocks = topBlockNumber - currentBlock;
+                        double estimate =
+                                (timePerBlock * remainingBlocks) / 60_000 + 1; // in minutes
+                        System.out.println(
+                                "Finished with blocks up to "
+                                        + currentBlock
+                                        + " in "
+                                        + String.format("%.0f", time)
+                                        + " ms (under "
+                                        + String.format("%.0f", time / 60_000 + 1)
+                                        + " min). The average time per block is < "
+                                        + String.format("%.0f", timePerBlock + 1)
+                                        + " ms. Completion for remaining "
+                                        + remainingBlocks
+                                        + " blocks estimated to take "
+                                        + String.format("%.0f", estimate)
+                                        + " min.");
+                    }
+
+                    currentBlock++;
+                }
+            }
+
+            if (fail) {
+                System.out.println("Importing stored blocks FAILED.");
+            } else {
+                System.out.println("Importing stored blocks SUCCESSFUL.");
+            }
+        } else {
+            if (block == null) {
+                System.out.println(
+                        "The best known block in null. The given database is likely empty. Nothing to do.");
+            } else {
+                System.out.println(
+                        "The given height "
+                                + startHeight
+                                + " is above the best known block "
+                                + block.getNumber()
+                                + ". Nothing to do.");
+            }
+        }
+
+        System.out.println("Closing databases...");
+        repo.close();
+
+        System.out.println("Importing stored blocks COMPLETE.");
     }
 }

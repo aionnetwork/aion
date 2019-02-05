@@ -780,6 +780,22 @@ public class AionRepositoryImpl
                 + '}';
     }
 
+    /**
+     * Calls {@link IByteArrayKeyValueDatabase#drop()} on all the current databases except for the
+     * ones given in the list by name.
+     *
+     * @param names the names of the databases that should not be dropped
+     */
+    public void dropDatabasesExcept(List<String> names) {
+        for (IByteArrayKeyValueDatabase db : databaseGroup) {
+            if (!names.contains(db.getName().get())) {
+                LOG.warn("Dropping database " + db.toString() + " ...");
+                db.drop();
+                LOG.warn(db.toString() + " successfully dropped and reopened.");
+            }
+        }
+    }
+
     @Override
     public void compact() {
         rwLock.writeLock().lock();
