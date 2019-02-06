@@ -27,6 +27,13 @@ allprojects {
 
         flatDir {
             dirs './lib' // does not recurse, don't make subdirectories in here
+<<<<<<< 92e6cf91cfbdd12f87e42993d2e956af3527ddc3
+=======
+        }
+
+        maven { 
+            url "${rootDir}/lib/maven_repo"
+>>>>>>> Gradle build logic for publishing to arbitrary local Maven repo and consuming from one
         }
     }
 }
@@ -390,23 +397,21 @@ configure(subprojects.findAll { it.name != 'aion_api' })  {
     // Configuration(s) specified but the install task does not exist in project :aion_api.
     // Publication mavenPublication not found in project :aion_api.
     
-    apply plugin: 'maven-publish'
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                groupId = 'network.aion'
+	apply plugin: 'maven-publish'
+	publishing {
+		publications {
+			mavenJava(MavenPublication) {
+				groupId = 'network.aion'
+				artifactId = project.hasProperty('mavenPubArtifactId')
+                                ? mavenPubArtifactId
+                                : project.name
+				version = project.hasProperty('mavenPubVersion')
+                                ? mavenPubVersion
+                                : kernelVersionFromSrc();
 
-                afterEvaluate {
-                    artifactId = project.hasProperty('mavenPubArtifactId')
-                                    ? mavenPubArtifactId
-                                    : project.name
-                    version = project.hasProperty('mavenPubVersion')
-                                    ? mavenPubVersion
-                                    : kernelVersionFromSrc();
-                }
-                from components.java
-            }   
-        }   
+				from components.java
+			}   
+		}   
 
         repositories {
             maven {
@@ -450,5 +455,9 @@ configure(subprojects.findAll { it.name != 'aion_api' })  {
             }
         }
 
+<<<<<<< 92e6cf91cfbdd12f87e42993d2e956af3527ddc3
     } //publishing
+=======
+	} //publishing
+>>>>>>> Gradle build logic for publishing to arbitrary local Maven repo and consuming from one
 }
