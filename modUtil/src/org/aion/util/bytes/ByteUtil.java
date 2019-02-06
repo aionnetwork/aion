@@ -614,8 +614,7 @@ public class ByteUtil {
     public static void intsToBytes(int[] arr, byte[] b, boolean bigEndian) {
         if (!bigEndian) {
             int off = 0;
-            for (int i = 0; i < arr.length; i++) {
-                int ii = arr[i];
+            for (int ii : arr) {
                 b[off++] = (byte) ii;
                 b[off++] = (byte) (ii >>> 8);
                 b[off++] = (byte) (ii >>> 16);
@@ -623,8 +622,7 @@ public class ByteUtil {
             }
         } else {
             int off = 0;
-            for (int i = 0; i < arr.length; i++) {
-                int ii = arr[i];
+            for (int ii : arr) {
                 b[off++] = (byte) (ii >>> 24);
                 b[off++] = (byte) (ii >>> 16);
                 b[off++] = (byte) (ii >>> 8);
