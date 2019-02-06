@@ -314,11 +314,7 @@ public class AionRepositoryImpl
     @Override
     public ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key) {
         IContractDetails details = getContractDetails(address);
-        ByteArrayWrapper value = (details == null) ? null : details.get(key);
-        if (value == null) {
-            return null;
-        }
-        return (value.isZero()) ? null : value;
+        return (details == null) ? null : details.get(key);
     }
 
     @Override

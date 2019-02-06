@@ -488,10 +488,8 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
         domainName = getNameFromStorage(auctionDomainsAddressName, domainAddress);
         addBigIntegerToStorage(domainAddress, BID_KEY_COUNTER, new BigInteger("0"));
         // remove from auction domains
-        this.track.addStorageRow(
-                auctionDomainsAddress,
-                new DataWord(blake128(domainAddress.toBytes())).toWrapper(),
-                DoubleDataWord.ZERO.toWrapper());
+        this.track.removeStorageRow(
+                auctionDomainsAddress, new DataWord(blake128(domainAddress.toBytes())).toWrapper());
         addToActiveDomains(domainAddress, winnerAddress, domainName, secondHighestBid);
         printWinner(domainAddress, winnerAddress, secondHighestBid, domainName);
     }
@@ -606,30 +604,23 @@ public class AionAuctionContract extends StatefulPrecompiledContract {
 
         printRemoveActiveDomain(domainAddress);
         // erase
-        this.track.addStorageRow(
+        this.track.removeStorageRow(
+                activeDomainsAddress, new DataWord(blake128(domainAddress.toBytes())).toWrapper());
+        this.track.removeStorageRow(
                 activeDomainsAddress,
-                new DataWord(blake128(domainAddress.toBytes())).toWrapper(),
-                DoubleDataWord.ZERO.toWrapper());
-        this.track.addStorageRow(
-                activeDomainsAddress,
-                new DataWord(blake128(blake128(domainAddress.toBytes()))).toWrapper(),
-                DoubleDataWord.ZERO.toWrapper());
-        this.track.addStorageRow(
+                new DataWord(blake128(blake128(domainAddress.toBytes()))).toWrapper());
+        this.track.removeStorageRow(
                 activeDomainsAddressName,
-                new DataWord(blake128(domainAddress.toBytes())).toWrapper(),
-                DoubleDataWord.ZERO.toWrapper());
-        this.track.addStorageRow(
+                new DataWord(blake128(domainAddress.toBytes())).toWrapper());
+        this.track.removeStorageRow(
                 activeDomainsAddressName,
-                new DataWord(blake128(blake128(domainAddress.toBytes()))).toWrapper(),
-                DoubleDataWord.ZERO.toWrapper());
-        this.track.addStorageRow(
+                new DataWord(blake128(blake128(domainAddress.toBytes()))).toWrapper());
+        this.track.removeStorageRow(
                 activeDomainsAddressValue,
-                new DataWord(blake128(domainAddress.toBytes())).toWrapper(),
-                DoubleDataWord.ZERO.toWrapper());
-        this.track.addStorageRow(
+                new DataWord(blake128(domainAddress.toBytes())).toWrapper());
+        this.track.removeStorageRow(
                 activeDomainsAddressTime,
-                new DataWord(blake128(domainAddress.toBytes())).toWrapper(),
-                DoubleDataWord.ZERO.toWrapper());
+                new DataWord(blake128(domainAddress.toBytes())).toWrapper());
     }
 
     /**

@@ -118,10 +118,19 @@ public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase
     }
 
     @Override
+    public void removeStorageRow(Address addr, ByteArrayWrapper key) {
+        Map<String, byte[]> map = storage.computeIfAbsent(addr, k -> new HashMap<>());
+        map.put(key.toString(), null);
+    }
+
+    @Override
     public ByteArrayWrapper getStorageValue(Address addr, ByteArrayWrapper key) {
         Map<String, byte[]> map = storage.get(addr);
         if (map != null && map.containsKey(key.toString())) {
             byte[] res = map.get(key.toString());
+            if (res == null) {
+                return null;
+            }
             if (res.length <= DataWord.BYTES) {
                 return new DataWord(res).toWrapper();
             } else if (res.length == DoubleDataWord.BYTES) {

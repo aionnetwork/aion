@@ -139,23 +139,32 @@ public class AionRepositoryDummy extends AionRepositoryImpl {
     public ByteArrayWrapper getStorageValue(Address addr, ByteArrayWrapper key) {
         IContractDetails details = getContractDetails(addr);
         ByteArrayWrapper value = (details == null) ? null : details.get(key);
-        if (value == null) {
-            return null;
-        }
-        return (value.isZero()) ? null : value;
-    }
 
-    public void addStorageRow(Address addr, ByteArrayWrapper key, ByteArrayWrapper value) {
-        IContractDetails details = getContractDetails(addr);
-
-        if (details == null) {
-            createAccount(addr);
-            details = getContractDetails(addr);
+        if (value != null && value.isZero()) {
+            // TODO: remove when integrating the AVM
+            // used to ensure FVM correctness
+            throw new IllegalStateException(
+                    "The contract address "
+                            + addr.toString()
+                            + " returned a zero value for the key "
+                            + key.toString()
+                            + " which is not a valid stored value for the FVM. ");
         }
 
-        details.put(key, value);
-        detailsDB.put(ByteArrayWrapper.wrap(addr.toBytes()), details);
+        return value;
     }
+
+    // never used
+    //    public void addStorageRow(Address addr, ByteArrayWrapper key, ByteArrayWrapper value) {
+    //        IContractDetails details = getContractDetails(addr);
+    //
+    //        if (details == null) {
+    //            createAccount(addr);
+    //            details = getContractDetails(addr);
+    //        }
+    //        details.put(key, value);
+    //        detailsDB.put(ByteArrayWrapper.wrap(addr.toBytes()), details);
+    //    }
 
     public byte[] getCode(Address addr) {
         IContractDetails details = getContractDetails(addr);

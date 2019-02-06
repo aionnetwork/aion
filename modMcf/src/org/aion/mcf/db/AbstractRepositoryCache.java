@@ -310,12 +310,18 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key) {
-        ByteArrayWrapper value = getContractDetails(address).get(key);
-        if (value == null) {
-            return null;
+    public void removeStorageRow(Address address, ByteArrayWrapper key) {
+        lockDetails.writeLock().lock();
+        try {
+            getContractDetails(address).delete(key);
+        } finally {
+            lockDetails.writeLock().unlock();
         }
-        return (value.isZero()) ? null : value;
+    }
+
+    @Override
+    public ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key) {
+        return getContractDetails(address).get(key);
     }
 
     @Override

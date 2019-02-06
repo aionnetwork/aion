@@ -1,10 +1,11 @@
 package org.aion.mcf.db;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,35 +96,31 @@ public class IContractDetailsTest {
     @Test
     public void testPutZeroKeyAndValue() {
         // Try single-single
-        cache1.put(DataWord.ZERO.toWrapper(), DataWord.ZERO.toWrapper());
+        cache1.delete(DataWord.ZERO.toWrapper());
         ByteArrayWrapper result = cache1.get(DataWord.ZERO.toWrapper());
-        assertTrue(result.isZero());
-        assertTrue(result instanceof ByteArrayWrapper);
-        cache2.put(DataWord.ZERO.toWrapper(), DataWord.ZERO.toWrapper());
+        assertNull(result);
+        cache2.delete(DataWord.ZERO.toWrapper());
         assertNull(cache2.get(DataWord.ZERO.toWrapper()));
 
         // Try single-double
-        cache1.put(DataWord.ZERO.toWrapper(), DoubleDataWord.ZERO.toWrapper());
+        cache1.delete(DataWord.ZERO.toWrapper());
         result = cache1.get(DataWord.ZERO.toWrapper());
-        assertTrue(result.isZero());
-        assertTrue(result instanceof ByteArrayWrapper);
-        cache2.put(DataWord.ZERO.toWrapper(), DoubleDataWord.ZERO.toWrapper());
+        assertNull(result);
+        cache2.delete(DataWord.ZERO.toWrapper());
         assertNull(cache2.get(DataWord.ZERO.toWrapper()));
 
         // Try double-single
-        cache1.put(DoubleDataWord.ZERO.toWrapper(), DataWord.ZERO.toWrapper());
+        cache1.delete(DoubleDataWord.ZERO.toWrapper());
         result = cache1.get(DoubleDataWord.ZERO.toWrapper());
-        assertTrue(result.isZero());
-        assertTrue(result instanceof ByteArrayWrapper);
-        cache2.put(DoubleDataWord.ZERO.toWrapper(), DataWord.ZERO.toWrapper());
+        assertNull(result);
+        cache2.delete(DoubleDataWord.ZERO.toWrapper());
         assertNull(cache2.get(DoubleDataWord.ZERO.toWrapper()));
 
         // Try double-double
-        cache1.put(DoubleDataWord.ZERO.toWrapper(), DoubleDataWord.ZERO.toWrapper());
+        cache1.delete(DoubleDataWord.ZERO.toWrapper());
         result = cache1.get(DoubleDataWord.ZERO.toWrapper());
-        assertTrue(result.isZero());
-        assertTrue(result instanceof ByteArrayWrapper);
-        cache2.put(DoubleDataWord.ZERO.toWrapper(), DoubleDataWord.ZERO.toWrapper());
+        assertNull(result);
+        cache2.delete(DoubleDataWord.ZERO.toWrapper());
         assertNull(cache2.get(DoubleDataWord.ZERO.toWrapper()));
     }
 
@@ -228,8 +225,7 @@ public class IContractDetailsTest {
             try {
                 if (count % deleteOdds == 0) {
                     assertNull(impl.get(key));
-                    assertTrue(cache1.get(key).isZero());
-                    assertTrue(cache1.get(key) instanceof ByteArrayWrapper);
+                    assertNull(cache1.get(key));
                 } else {
                     assertEquals(impl.get(key), cache1.get(key));
                 }
@@ -279,6 +275,44 @@ public class IContractDetailsTest {
         }
     }
 
+    /**
+     * This test is specific to the ContractDetailsCacheImpl class, which at times holds a different
+     * storage value for contracts. This test checks that after an update to the cache object, the
+     * original value from the contract details is not returned for use.
+     */
+    @Test
+    public void testCacheUpdatedAndGetWithOriginalAionContract() {
+
+        ByteArrayWrapper key = getRandomWord(true).toWrapper();
+        ByteArrayWrapper value1 = getRandomWord(true).toWrapper();
+        ByteArrayWrapper value2 = getRandomWord(true).toWrapper();
+
+        // ensure the second value is different
+        // unlikely to be necessary
+        while (Arrays.equals(value1.getData(), value2.getData())) {
+            value2 = getRandomWord(true).toWrapper();
+        }
+
+        // ensure the initial cache has the value
+        cache1.put(key, value1);
+
+        ContractDetailsCacheImpl impl = new ContractDetailsCacheImpl(cache1);
+
+        // check that original value is retrieved
+        assertThat(impl.get(key)).isEqualTo(value1);
+
+        // delete and check that value is missing
+        impl.delete(key);
+        assertThat(impl.get(key)).isEqualTo(null);
+
+        // add new value and check correctness
+        impl.put(key, value2);
+        assertThat(impl.get(key)).isEqualTo(value2);
+
+        // clean-up
+        cache1.delete(key);
+    }
+
     // <------------------------------------------HELPERS------------------------------------------->
 
     /**
@@ -323,13 +357,13 @@ public class IContractDetailsTest {
         // Test DataWord.
         cache.put(key, value);
         assertEquals(value, cache.get(key));
-        cache.put(key, DataWord.ZERO.toWrapper());
+        cache.delete(key);
         checkGetNonExistentPairing(cache, key);
 
         // Test DoubleDataWord.
         cache.put(key, value);
         assertEquals(value, cache.get(key));
-        cache.put(key, DoubleDataWord.ZERO.toWrapper());
+        cache.delete(key);
         checkGetNonExistentPairing(cache, key);
     }
 
@@ -392,7 +426,7 @@ public class IContractDetailsTest {
         int count = 1;
         for (ByteArrayWrapper key : keys) {
             if (count % n == 0) {
-                cache.put(key, DataWord.ZERO.toWrapper());
+                cache.delete(key);
             }
             count++;
         }
@@ -405,7 +439,12 @@ public class IContractDetailsTest {
         int size = keys.size();
         assertEquals(size, values.size());
         for (int i = 0; i < size; i++) {
-            cache.put(keys.get(i), values.get(i));
+            ByteArrayWrapper value = values.get(i);
+            if (value == null || value.isZero()) {
+                cache.delete(keys.get(i));
+            } else {
+                cache.put(keys.get(i), values.get(i));
+            }
         }
     }
 
@@ -445,7 +484,7 @@ public class IContractDetailsTest {
     private void doSetZeroValueViaStorageTest(IContractDetails cache) {
         Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
         ByteArrayWrapper key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
-        storage.put(key, DataWord.ZERO.toWrapper());
+        storage.put(key, null);
         cache.setStorage(storage);
         checkGetNonExistentPairing(cache, key);
     }
@@ -456,7 +495,7 @@ public class IContractDetailsTest {
 
         for (ByteArrayWrapper key : storage.keySet()) {
             ByteArrayWrapper value = storage.get(key);
-            if (value.isZero()) {
+            if (value == null) {
                 checkGetNonExistentPairing(cache, key);
             } else {
                 assertEquals(value, cache.get(key));
@@ -477,7 +516,7 @@ public class IContractDetailsTest {
         assertEquals(size, values.size());
         for (int i = 0; i < size; i++) {
             if ((i + 1) % n == 0) {
-                storage.put(keys.get(i), DoubleDataWord.ZERO.toWrapper());
+                storage.put(keys.get(i), null);
             } else {
                 storage.put(keys.get(i), values.get(i));
             }
@@ -491,13 +530,7 @@ public class IContractDetailsTest {
      */
     private void checkGetNonExistentPairing(IContractDetails cache, ByteArrayWrapper key) {
         try {
-            if (cache instanceof AionContractDetailsImpl) {
-                ByteArrayWrapper result = cache.get(key);
-                assertTrue(result.isZero());
-                assertTrue(result instanceof ByteArrayWrapper);
-            } else {
-                assertNull(cache.get(key));
-            }
+            assertNull(cache.get(key));
         } catch (AssertionError e) {
             System.err.println("\nAssertion failed on key: " + Hex.toHexString(key.getData()));
             e.printStackTrace();

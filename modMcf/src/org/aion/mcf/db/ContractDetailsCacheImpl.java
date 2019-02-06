@@ -1,9 +1,7 @@
 package org.aion.mcf.db;
 
-import java.util.Collection;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -50,7 +48,18 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      */
     @Override
     public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+
         storage.put(key, value);
+        setDirty(true);
+    }
+
+    @Override
+    public void delete(ByteArrayWrapper key) {
+        Objects.requireNonNull(key);
+
+        storage.put(key, null);
         setDirty(true);
     }
 
@@ -62,24 +71,29 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      */
     @Override
     public ByteArrayWrapper get(ByteArrayWrapper key) {
-        ByteArrayWrapper value = storage.get(key);
-        if (value != null) {
-            value = value.copy();
-        } else {
+        ByteArrayWrapper value;
+
+        // go to parent if not locally stored
+        if (!storage.containsKey(key)) {
             if (origContract == null) {
                 return null;
             }
             value = origContract.get(key);
-            // TODO: the VM must pad the given ZERO value if expecting a fixed size byte array
-            value = (value == null) ? ByteArrayWrapper.ZERO : value;
-            storage.put(key.copy(), value.isZero() ? ByteArrayWrapper.ZERO.copy() : value.copy());
-        }
 
-        if (value == null || value.isZero()) {
-            return null;
-        } else {
-            return value;
+            // save a copy to local storage
+            if (value != null) {
+                storage.put(key.copy(), value.copy());
+            } else {
+                storage.put(key.copy(), null);
+            }
+        } else { // check local storage
+            value = storage.get(key);
+
+            if (value != null) {
+                value = value.copy();
+            }
         }
+        return value;
     }
 
     /**
@@ -108,65 +122,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     @Override
     public byte[] getEncoded() {
         throw new RuntimeException("Not supported by this implementation.");
-    }
-
-    /**
-     * Returns a mapping of all the key-value pairs who have keys in the collection keys.
-     *
-     * @param keys The keys to query for.
-     * @return The associated mappings.
-     */
-    @Override
-    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
-        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
-        if (keys == null) {
-            throw new IllegalArgumentException("Input keys can't be null");
-        } else {
-            for (ByteArrayWrapper key : keys) {
-                ByteArrayWrapper value = get(key);
-
-                // we check if the value is not null,
-                // cause we keep all historical keys
-                if ((value != null) && (!value.isZero())) {
-                    storage.put(key, value);
-                }
-            }
-        }
-
-        return storage;
-    }
-
-    /**
-     * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
-     * storageValues.
-     *
-     * @param storageKeys The keys.
-     * @param storageValues The values.
-     */
-    @Override
-    public void setStorage(
-            List<ByteArrayWrapper> storageKeys, List<ByteArrayWrapper> storageValues) {
-
-        for (int i = 0; i < storageKeys.size(); ++i) {
-
-            ByteArrayWrapper key = storageKeys.get(i);
-            ByteArrayWrapper value = storageValues.get(i);
-
-            put(key, value);
-        }
-    }
-
-    /**
-     * Sets the storage to contain the specified key-value mappings.
-     *
-     * @param storage The specified mappings.
-     */
-    @Override
-    public void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
-        for (Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry : storage.entrySet()) {
-            put(entry.getKey(), entry.getValue());
-        }
     }
 
     /**
@@ -211,7 +166,12 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         }
 
         for (ByteArrayWrapper key : storage.keySet()) {
-            origContract.put(key, storage.get(key));
+            ByteArrayWrapper value = storage.get(key);
+            if (value != null) {
+                origContract.put(key, storage.get(key));
+            } else {
+                origContract.delete(key);
+            }
         }
 
         if (origContract instanceof AbstractContractDetails) {

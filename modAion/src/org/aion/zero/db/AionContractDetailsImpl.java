@@ -6,9 +6,7 @@ import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -19,7 +17,6 @@ import org.aion.base.util.ByteArrayWrapper;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
@@ -70,15 +67,25 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      */
     @Override
     public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+
+        // The following must be done before making this call:
         // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
         // we can differentiate between the two.
 
-        if (value.isZero()) {
-            storageTrie.delete(key.getData());
-        } else {
-            byte[] data = RLP.encodeElement(value.getData());
-            storageTrie.update(key.getData(), data);
-        }
+        byte[] data = RLP.encodeElement(value.getData());
+        storageTrie.update(key.getData(), data);
+
+        this.setDirty(true);
+        this.rlpEncoded = null;
+    }
+
+    @Override
+    public void delete(ByteArrayWrapper key) {
+        Objects.requireNonNull(key);
+
+        storageTrie.delete(key.getData());
 
         this.setDirty(true);
         this.rlpEncoded = null;
@@ -95,7 +102,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     public ByteArrayWrapper get(ByteArrayWrapper key) {
         byte[] data = storageTrie.get(key.getData());
         return (data == null || data.length == 0)
-                ? DataWord.ZERO.toWrapper()
+                ? null
                 : new ByteArrayWrapper(RLP.decode2(data).get(0).getRLPData());
     }
 
@@ -205,60 +212,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         }
 
         return rlpEncoded;
-    }
-
-    /**
-     * Returns a mapping of all the key-value pairs who have keys in the collection keys.
-     *
-     * @param keys The keys to query for.
-     * @return The associated mappings.
-     */
-    @Override
-    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
-        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
-        if (keys == null) {
-            throw new IllegalArgumentException("Input keys can't be null");
-        } else {
-            for (ByteArrayWrapper key : keys) {
-                ByteArrayWrapper value = get(key);
-
-                // we check if the value is not null,
-                // cause we keep all historical keys
-                if ((value != null) && (!value.isZero())) {
-                    storage.put(key, value);
-                }
-            }
-        }
-
-        return storage;
-    }
-
-    /**
-     * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
-     * storageValues.
-     *
-     * @param storageKeys The keys.
-     * @param storageValues The values.
-     */
-    @Override
-    public void setStorage(
-            List<ByteArrayWrapper> storageKeys, List<ByteArrayWrapper> storageValues) {
-        for (int i = 0; i < storageKeys.size(); ++i) {
-            put(storageKeys.get(i), storageValues.get(i));
-        }
-    }
-
-    /**
-     * Sets the storage to contain the specified key-value mappings.
-     *
-     * @param storage The specified mappings.
-     */
-    @Override
-    public void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
-        for (ByteArrayWrapper key : storage.keySet()) {
-            put(key, storage.get(key));
-        }
     }
 
     /**
