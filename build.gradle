@@ -26,7 +26,7 @@ allprojects {
         jcenter()
 
         flatDir {
-            dirs './lib'
+            dirs './lib' // does not recurse, don't make subdirectories in here
         }
     }
 }
@@ -73,16 +73,6 @@ task compileNative(type:Exec) {
     def stdout = new ByteArrayOutputStream()
     ext.output = {
         return stdout.toString()
-    }
-}
-
-// define a subproject for libnzmq
-project(':3rdParty/libnzmq') {
-    ext.moduleName = 'libnzmq';
-    sourceSets { 
-        main {
-            java.srcDirs = ['src']
-        }
     }
 }
 
@@ -374,3 +364,87 @@ task fixIdea {
     }
 }
 
+
+/** 
+ * Returns the value of the constant src.org.aion.zero.impl.Version.KERNEL_VERSION 
+ * as defined in the Java source (the Java code is not compiled, this just greps it 
+ * out of the file).
+ */
+def kernelVersionFromSrc() {
+    def src = file("./modAionImpl/src/org/aion/zero/impl/Version.java").readLines();
+    def version = src.find { l -> l =~ /KERNEL_VERSION/  }.split("=")[1].trim().replaceAll('[;"]', '')
+    if(version.empty) {
+        throw new GradleException("Could not determine kernel version.");
+    }
+    return version;
+}
+
+configure(subprojects.findAll { it.name != 'aion_api' })  { 
+    // it makes the following harmless warning message, but that will not be a problem once aion_api
+    // is no longer a submodule:
+    //
+    // Configuration(s) specified but the install task does not exist in project :aion_api.
+    // Publication mavenPublication not found in project :aion_api.
+    
+    apply plugin: 'maven-publish'
+    publishing {
+        publications {
+            mavenJava(MavenPublication) {
+                groupId = 'network.aion'
+
+                afterEvaluate {
+                    artifactId = project.hasProperty('mavenPubArtifactId')
+                                    ? mavenPubArtifactId
+                                    : project.name
+                    version = project.hasProperty('mavenPubVersion')
+                                    ? mavenPubVersion
+                                    : kernelVersionFromSrc();
+                }
+                from components.java
+            }   
+        }   
+
+        repositories {
+            maven {
+                if(project.hasProperty('publishTarget')) { 
+                    url = publishTarget
+                } else {
+                    url = "$buildDir/repos"
+                }
+            }   
+        }   
+
+        // need to reference the publish-related tasks this way, since they're 
+        // generated during evaluation.
+        // https://docs.gradle.org/current/userguide/publishing_overview.html#sec:configuring_publishing_tasks
+        tasks.withType(PublishToMavenRepository).all { pubTask -> 
+            // tidy up maven output if the task inputted by user contains 'publish'.
+            // this is to get rid of the checksum files .md5, .sha1, etc. since we are
+            // always publishing to a local directory.  if we start publishing to an
+            // actual remote Maven repo, need to detect that and avoid this deletion
+            if(! gradle.startParameter.taskNames.findAll {it.contains('publish')}.empty) {
+                tasks.register("tidyUpMavenOutput", Delete) {
+                    mustRunAfter pubTask
+                    doLast { 
+                        delete.each { 
+                            logger.info('Deleting Maven publish metadata ' + it)
+                        }
+                    }
+                }
+                finalizedBy tidyUpMavenOutput
+                
+                doLast{
+                    file(pubTask.repository.url).eachFileRecurse { 
+                        if(! it.toString().endsWith('jar') 
+                            && ! it.toString().endsWith('pom')
+                            && ! it.isDirectory()) {
+                                logger.info "found Maven metadata: " + it
+                                tidyUpMavenOutput.delete(it.canonicalPath)
+                        }
+                    }
+                }
+            }
+        }
+
+    } //publishing
+}
