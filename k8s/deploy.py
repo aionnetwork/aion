@@ -86,7 +86,8 @@ def update(deployments, image):
 
         update_image(dep, image)
 
-        dep["spec"]["template"]["metadata"]["labels"]["app"] = "aion-" + str(image)
+        # Re-use the correct app label
+        dep["spec"]["template"]["metadata"]["labels"]["app"] = oldest_deployed.metadata.labels['app']
 
         # Use latest tag for image; don't need to re-write it
         try:
