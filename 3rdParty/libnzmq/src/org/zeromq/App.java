@@ -1,5 +1,11 @@
 package org.zeromq;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 
 /**
@@ -7,9 +13,7 @@ import java.util.Collection;
  * 
  */
 public class App {
-
     public static void main(final String[] args) throws Exception {
-
         final Package p = App.class.getPackage();
         final String appname = p.getSpecificationTitle();
         final String versionMaven = p.getSpecificationVersion();
@@ -37,16 +41,5 @@ public class App {
         System.out.printf(fmt, appname, "version:", versionMaven);
         System.out.printf(fmt, appname, "build time:", version[1]);
         System.out.printf(fmt, appname, "build commit:", version[0]);
-
-        System.out.println();
-        System.out.println("JNI lib location:       "
-                + (EmbeddedLibraryTools.LOADED_EMBEDDED_LIBRARY ? "embedded" : "java.library.path"));
-        System.out.println("current platform:       " + EmbeddedLibraryTools.getCurrentPlatformIdentifier());
-        final Collection<String> files = EmbeddedLibraryTools.getEmbeddedLibraryList();
-        for (final String file : files) {
-            System.out.println("embedded library:       " + file);
-        }
-
     }
-
 }

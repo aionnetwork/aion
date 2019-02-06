@@ -34,6 +34,9 @@ import java.util.Arrays;
  *
  */
 public class ZMQ {
+    static { 
+        new NativeZmqLoader().load();
+    }
 
     // Values for flags in Socket's send and recv functions.
     /**

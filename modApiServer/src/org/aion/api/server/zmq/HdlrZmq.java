@@ -16,11 +16,6 @@ import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 public class HdlrZmq implements IHdlr {
-
-    static {
-        NativeLoader.loadLibrary("zmq");
-    }
-
     private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.API.name());
 
     private final IApiAion api;
