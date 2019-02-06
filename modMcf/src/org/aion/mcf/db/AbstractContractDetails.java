@@ -145,12 +145,6 @@ public abstract class AbstractContractDetails implements IContractDetails {
                 // we check if the value is not null,
                 // cause we keep all historical keys
                 if (value != null) {
-                    if (value.isZero()) {
-                        // TODO: remove when integrating the AVM
-                        // used to ensure FVM correctness
-                        throw new IllegalArgumentException(
-                                "Put with zero values is not allowed for the FVM. Explicit call to delete is necessary.");
-                    }
                     storage.put(key, value);
                 }
             }

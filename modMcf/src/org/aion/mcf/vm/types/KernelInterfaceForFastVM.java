@@ -76,6 +76,12 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     public void putStorage(Address address, byte[] key, byte[] value) {
         ByteArrayWrapper storageKey = alignDataToWordSize(key);
         ByteArrayWrapper storageValue = alignValueToWordSizeForPut(value);
+        if (value == null || value.length == 0 || storageValue.isZero()) {
+            // used to ensure FVM correctness
+            throw new IllegalArgumentException(
+                    "Put with null, empty or zero byte array values is not allowed for the FVM. For deletions, make explicit calls to the delete method.");
+        }
+
         this.repositoryCache.addStorageRow(address, storageKey, storageValue);
     }
 
@@ -89,6 +95,11 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     public byte[] getStorage(Address address, byte[] key) {
         ByteArrayWrapper storageKey = alignDataToWordSize(key);
         ByteArrayWrapper value = this.repositoryCache.getStorageValue(address, storageKey);
+        if (value != null && (value.isZero() || value.isEmpty())) {
+            // used to ensure FVM correctness
+            throw new IllegalStateException(
+                    "A zero or empty value was retrieved from storage. Storing zeros is not allowed by the FVM. An incorrect put was previously performed instead of an explicit call to the delete method.");
+        }
         return (value == null) ? DataWord.ZERO.getData() : alignValueToWordSizeForGet(value);
     }
 

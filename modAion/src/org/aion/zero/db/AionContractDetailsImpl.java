@@ -70,20 +70,12 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         Objects.requireNonNull(key);
         Objects.requireNonNull(value);
 
+        // The following must be done before making this call:
         // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
         // we can differentiate between the two.
 
-        if (value.isZero()) {
-            // storageTrie.delete(key.getData());
-
-            // TODO: remove when integrating the AVM
-            // used to ensure FVM correctness
-            throw new IllegalArgumentException(
-                    "Put with zero values is not allowed for the FVM. For deletions, explicit calls to delete are necessary.");
-        } else {
-            byte[] data = RLP.encodeElement(value.getData());
-            storageTrie.update(key.getData(), data);
-        }
+        byte[] data = RLP.encodeElement(value.getData());
+        storageTrie.update(key.getData(), data);
 
         this.setDirty(true);
         this.rlpEncoded = null;

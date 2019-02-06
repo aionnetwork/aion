@@ -75,6 +75,15 @@ public class ByteArrayWrapper
         return true;
     }
 
+    /**
+     * Checks if the stored byte array is empty.
+     *
+     * @return {@code true} if empty, {@code false} otherwise
+     */
+    public boolean isEmpty() {
+        return data.length == 0;
+    }
+
     public ByteArrayWrapper copy() {
         int length = data.length;
         byte[] bs = new byte[length];

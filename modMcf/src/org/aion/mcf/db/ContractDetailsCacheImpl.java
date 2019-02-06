@@ -51,13 +51,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         Objects.requireNonNull(key);
         Objects.requireNonNull(value);
 
-        if (value.isZero()) {
-            // TODO: remove when integrating the AVM
-            // used to ensure FVM correctness
-            throw new IllegalArgumentException(
-                    "Put with zero values is not allowed for the FVM. For deletions, explicit calls to delete are necessary.");
-        }
-
         storage.put(key, value);
         setDirty(true);
     }
@@ -100,19 +93,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
                 value = value.copy();
             }
         }
-
-        if (value != null && value.isZero()) {
-            // TODO: remove when integrating the AVM
-            // used to ensure FVM correctness
-            throw new IllegalArgumentException(
-                    "Put with zero values is not allowed for the FVM. Explicit call to delete is necessary.");
-        }
-
-        if (value == null) {
-            return null;
-        } else {
-            return value;
-        }
+        return value;
     }
 
     /**
