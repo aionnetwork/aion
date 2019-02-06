@@ -10,7 +10,7 @@ dependencies {
     compile project(':modP2p')
     compile project(':modMcf')
     compile project(':modTxPoolImpl')
-    compile project(':3rdParty/libnzmq')
+    compile project(':3rdParty.libnzmq')
     compile 'com.madgag.spongycastle:prov:1.58.0.0'
     compile 'com.madgag.spongycastle:core:1.58.0.0'
     compile 'org.slf4j:slf4j-api:1.7.25'

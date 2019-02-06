@@ -29,3 +29,4 @@ if (hasProperty('modGuiPath') && !modGuiPath.empty) {
 }
 
 include '3rdParty/libnzmq'
+project(":3rdParty/libnzmq").name = "3rdParty.libnzmq"
