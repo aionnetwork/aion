@@ -1,5 +1,7 @@
 package org.aion.zero.impl.sync.handler;
 
+import java.math.BigInteger;
+import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
@@ -21,9 +23,13 @@ public final class ReqStatusHandler extends Handler {
 
     private IAionBlockchain chain;
 
+    private final IPendingStateInternal pendingState;
+
     private IP2pMgr mgr;
 
     private byte[] genesisHash;
+
+    private byte apiVersion;
 
     private final int UPDATE_INTERVAL = 500;
 
@@ -34,14 +40,27 @@ public final class ReqStatusHandler extends Handler {
     public ReqStatusHandler(
             final Logger _log,
             final IAionBlockchain _chain,
+            final IPendingStateInternal _pendingState,
             final IP2pMgr _mgr,
-            final byte[] _genesisHash) {
+            final byte[] _genesisHash,
+            final byte _apiVersion) {
         super(Ver.V0, Ctrl.SYNC, Act.REQ_STATUS);
         this.log = _log;
         this.chain = _chain;
+        this.pendingState = _pendingState;
         this.mgr = _mgr;
         this.genesisHash = _genesisHash;
-        this.cache = new ResStatus(0, new byte[0], new byte[0], _genesisHash);
+        this.apiVersion = _apiVersion;
+        this.cache =
+                new ResStatus(
+                        0,
+                        new byte[0],
+                        new byte[0],
+                        _genesisHash,
+                        _apiVersion,
+                        (short) 0,
+                        new byte[0],
+                        0);
     }
 
     @Override
@@ -56,7 +75,12 @@ public final class ReqStatusHandler extends Handler {
                                     bestBlock.getNumber(),
                                     bestBlock.getCumulativeDifficulty().toByteArray(),
                                     bestBlock.getHash(),
-                                    this.genesisHash);
+                                    this.genesisHash,
+                                    this.apiVersion,
+                                    (short) this.mgr.getActiveNodes().size(),
+                                    BigInteger.valueOf(this.pendingState.getPendingTxSize())
+                                            .toByteArray(),
+                                    this.mgr.getAvgLatency());
                 } catch (Exception e) {
                     if (log.isDebugEnabled()) {
                         log.debug("ReqStatus exception {}", e.toString());
