@@ -9,7 +9,7 @@ import org.aion.zero.impl.sync.Act;
 /** @author Chris */
 public final class ResStatus extends Msg {
 
-    private static final int minLen = 8 + 1 + 1 + 32 + 32;
+    private static final int minLen = 8 + 1 + 1 + 32 + 32 + 1 + 2 + 1 + 1 + 4;
 
     private final long bestBlockNumber; // 8
 
@@ -21,17 +21,35 @@ public final class ResStatus extends Msg {
 
     private final byte[] genesisHash; // 32
 
+    private final byte apiVersion; // 1
+
+    private final short peerCount; // 2
+
+    private final byte pendingTxCountLen; // 1
+
+    private final byte[] pendingTxCount; // 1+n
+
+    private final int latency; // 4
+
     /**
      * @param bestBlockNumber long
      * @param _totalDifficulty byte[]
      * @param _bestHash byte[]
      * @param _genesisHash byte[]
+     * @param _apiVersion byte
+     * @param _peerCount short
+     * @param _pendingTxCount byte[]
+     * @param _latency int
      */
     public ResStatus(
             long bestBlockNumber,
             final byte[] _totalDifficulty,
             final byte[] _bestHash,
-            final byte[] _genesisHash) {
+            final byte[] _genesisHash,
+            final byte _apiVersion,
+            final short _peerCount,
+            final byte[] _pendingTxCount,
+            final int _latency) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
         this.bestBlockNumber = bestBlockNumber;
         this.totalDifficultyLen =
@@ -39,6 +57,12 @@ public final class ResStatus extends Msg {
         this.totalDifficulty = _totalDifficulty;
         this.bestHash = _bestHash;
         this.genesisHash = _genesisHash;
+        this.apiVersion = _apiVersion;
+        this.peerCount = _peerCount;
+        this.pendingTxCountLen =
+                _pendingTxCount.length > Byte.MAX_VALUE ? 1 : (byte) _pendingTxCount.length;
+        this.pendingTxCount = _pendingTxCount;
+        this.latency = _latency;
     }
 
     /** @return long */
@@ -61,6 +85,26 @@ public final class ResStatus extends Msg {
         return this.totalDifficulty;
     }
 
+    /** @return byte */
+    public byte getApiVersion() {
+        return this.apiVersion;
+    }
+
+    /** @return short */
+    public short getPeerCount() {
+        return this.peerCount;
+    }
+
+    /** @return byte[] */
+    public byte[] getPendingTxCount() {
+        return this.pendingTxCount;
+    }
+
+    /** @return short */
+    public int getLatency() {
+        return this.latency;
+    }
+
     public static ResStatus decode(final byte[] _bytes) {
         if (_bytes == null || _bytes.length < minLen) return null;
         ByteBuffer bb = ByteBuffer.wrap(_bytes);
@@ -73,18 +117,38 @@ public final class ResStatus extends Msg {
         bb.get(_totalDifficulty);
         bb.get(_bestHash);
         bb.get(_genesisHash);
-        return new ResStatus(_bestBlockNumber, _totalDifficulty, _bestHash, _genesisHash);
+        byte _apiVersion = bb.get();
+        short _peerCount = bb.getShort();
+        int _pendingTxCountLen = bb.get();
+        byte[] _pendingTxCount = new byte[_pendingTxCountLen];
+        bb.get(_pendingTxCount);
+        int _latency = bb.getInt();
+
+        return new ResStatus(
+                _bestBlockNumber,
+                _totalDifficulty,
+                _bestHash,
+                _genesisHash,
+                _apiVersion,
+                _peerCount,
+                _pendingTxCount,
+                _latency);
     }
 
     @Override
     public byte[] encode() {
-        int _len = 8 + 1 + totalDifficultyLen + 32 + 32;
+        int _len = 8 + 1 + totalDifficultyLen + 32 + 32 + 1 + 2 + 1 + pendingTxCountLen + 4;
         ByteBuffer bb = ByteBuffer.allocate(_len);
         bb.putLong(this.bestBlockNumber);
         bb.put(this.totalDifficultyLen);
         bb.put(this.totalDifficulty);
         bb.put(this.bestHash);
         bb.put(this.genesisHash);
+        bb.put(this.apiVersion);
+        bb.putShort(this.peerCount);
+        bb.put(this.pendingTxCountLen);
+        bb.put(this.pendingTxCount);
+        bb.putInt(this.latency);
         return bb.array();
     }
 }
