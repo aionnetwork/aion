@@ -46,6 +46,7 @@ import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.manager.ChainStatistics;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
+import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.mcf.types.BlockIdentifier;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
@@ -517,6 +518,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(
             byte[] value, int limit, DatabaseType dbType) {
         return repository.getReferencedTrieNodes(value, limit, dbType);
+    }
+
+    /**
+     * Imports a trie node to the indicated blockchain database.
+     *
+     * @param key the hash key of the trie node to be imported
+     * @param value the value of the trie node to be imported
+     * @param dbType the database where the key-value pair should be stored
+     * @throws IllegalArgumentException if the given key is null
+     * @return a {@link TrieNodeResult} indicating the success or failure of the import operation
+     */
+    public TrieNodeResult importTrieNode(byte[] key, byte[] value, DatabaseType dbType) {
+        // TODO: implement
+        return null;
     }
 
     /**
