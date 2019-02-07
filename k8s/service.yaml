@@ -17,4 +17,3 @@ spec:
     targetPort: 30303
   selector:
     app: aion-2
-     
