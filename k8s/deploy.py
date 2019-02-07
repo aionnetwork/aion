@@ -5,9 +5,15 @@ from os import path
 import yaml
 import sys
 import time
+import datetime
 
 max_num_deploy = 2
 namespace = "default"
+
+# Update deployment annotation (Allows redeployment of pod with the same image by modifying annoration)
+def update_annotations(configuration):
+    configuration["spec"]["template"]["metadata"]["annotations"]["date"] = datetime.datetime.now()
+    
 
 def load_credentials():
     for i in range(1,4):
@@ -38,6 +44,7 @@ def deploy(num, image):
         dep["spec"]["template"]["metadata"]["labels"]["app"] = "aion-" + str(num)
 
         update_image(dep, image)
+        update_annotations(dep)
 
         try:
             resp = k8s_beta.create_namespaced_deployment(
@@ -63,7 +70,7 @@ def filter_pods(seq, value):
 
 def list_deployments():
     v1 = client.CoreV1Api()
-    print("Listing pods with their IPs:")
+    print("Finding pods with their IPs:")
     ret = v1.list_pod_for_all_namespaces(watch=False)
 
     return filter_results(ret, namespace)
@@ -85,6 +92,7 @@ def update(deployments, image):
         dep["metadata"]["name"]=to_update
 
         update_image(dep, image)
+        update_annotations(dep)
 
         # Re-use the correct app label
         dep["spec"]["template"]["metadata"]["labels"]["app"] = oldest_deployed.metadata.labels['app']

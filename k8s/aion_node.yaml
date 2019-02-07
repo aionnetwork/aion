@@ -13,6 +13,8 @@ spec:
       labels: 
         app: aion-node
       name: aion-node
+      annotations: 
+        date: date
     spec: 
       imagePullSecrets:
         - name: acr-auth   
@@ -25,4 +27,6 @@ spec:
           - 
             containerPort: 8545
             name: aion-node
+            containerPort: 30303
+            name: p2p
      
