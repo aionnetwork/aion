@@ -516,8 +516,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     @Override
     public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(
             byte[] value, int limit, DatabaseType dbType) {
-        // TODO: implement
-        return null;
+        return repository.getReferencedTrieNodes(value, limit, dbType);
     }
 
     /**

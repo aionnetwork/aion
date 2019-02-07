@@ -1,6 +1,8 @@
 package org.aion.mcf.trie;
 
+import java.util.Map;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.util.ByteArrayWrapper;
 
 /**
  * Trie interface for the main data structure in Ethereum which is used to store both the account
@@ -71,6 +73,20 @@ public interface Trie {
 
     // never used
     //    boolean validate();
+
+    /**
+     * Retrieves nodes referenced by a trie node value, where the size of the result is bounded by
+     * the given limit.
+     *
+     * @param value a trie node value which may be referencing other nodes
+     * @param limit the maximum number of key-value pairs to be retrieved by this method, which
+     *     limits the search in the trie; zero and negative values for the limit will result in no
+     *     search and an empty map will be returned
+     * @return an empty map when the value does not reference other trie nodes or the given limit is
+     *     invalid, or a map containing all the referenced nodes reached while keeping within the
+     *     limit on the result size
+     */
+    Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(byte[] value, int limit);
 
     long saveFullStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db);
 

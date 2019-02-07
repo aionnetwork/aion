@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
+import org.aion.mcf.trie.TrieImpl;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
@@ -837,6 +839,31 @@ public class AionRepositoryImpl
             return value.get();
         } else {
             return null;
+        }
+    }
+
+    /**
+     * Retrieves nodes referenced by a trie node value, where the size of the result is bounded by
+     * the given limit.
+     *
+     * @param value a trie node value which may be referencing other nodes
+     * @param limit the maximum number of key-value pairs to be retrieved by this method, which
+     *     limits the search in the trie; zero and negative values for the limit will result in no
+     *     search and an empty map will be returned
+     * @param dbType the database where the value was stored and further keys should be searched for
+     * @return an empty map when the value does not reference other trie nodes or the given limit is
+     *     invalid, or a map containing all the referenced nodes reached while keeping within the
+     *     limit on the result size
+     */
+    public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(
+            byte[] value, int limit, DatabaseType dbType) {
+        if (limit <= 0) {
+            return new HashMap<>();
+        } else {
+            IByteArrayKeyValueDatabase db = selectDatabase(dbType);
+
+            Trie trie = new TrieImpl(db);
+            return trie.getReferencedTrieNodes(value, limit);
         }
     }
 

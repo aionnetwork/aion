@@ -882,6 +882,12 @@ public class TrieImpl implements Trie {
     //    }
 
     @Override
+    public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(byte[] value, int limit) {
+        // TODO: implement
+        return null;
+    }
+
+    @Override
     public long saveFullStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db) {
         ExtractToDatabase traceAction = new ExtractToDatabase(db);
         traceTrie(stateRoot, traceAction);
