@@ -58,13 +58,39 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public byte getApiVersion() {
+            return 0;
+        }
+
+        @Override
+        public short getPeerCount() {
+            return 0;
+        }
+
+        @Override
+        public int getPendingTxCount() {
+            return 0;
+        }
+
+        @Override
+        public int getLatency() {
+            return 0;
+        }
+
+        @Override
         public int getPeerId() {
             throw new UnsupportedOperationException();
         }
 
         @Override
         public void updateStatus(
-                long _bestBlockNumber, byte[] _bestBlockHash, BigInteger _totalDifficulty) {}
+                long _bestBlockNumber,
+                byte[] _bestBlockHash,
+                BigInteger _totalDifficulty,
+                byte _apiVersion,
+                short _peerCount,
+                int _pendingTxCount,
+                int _latency) {}
 
         @Override
         public byte[] getIp() {
@@ -247,6 +273,11 @@ public class BlockPropagationTest {
         }
 
         @Override
+        public int getAvgLatency() {
+            return 0;
+        }
+
+        @Override
         public String getOutGoingIP() {
             throw new IllegalStateException("not implemented.");
         }
@@ -304,7 +335,9 @@ public class BlockPropagationTest {
                         syncStats,
                         p2pMock,
                         anotherBundle.bc.getBlockHeaderValidator(),
-                        false);
+                        false,
+                        (byte) 2,
+                        0);
 
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
                 .isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
@@ -367,7 +400,9 @@ public class BlockPropagationTest {
                         syncStats,
                         p2pMock,
                         anotherBundle.bc.getBlockHeaderValidator(),
-                        false);
+                        false,
+                        (byte) 2,
+                        0);
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
@@ -427,7 +462,9 @@ public class BlockPropagationTest {
                         syncStats,
                         p2pMock,
                         anotherBundle.bc.getBlockHeaderValidator(),
-                        false);
+                        false,
+                        (byte) 2,
+                        0);
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
@@ -481,7 +518,9 @@ public class BlockPropagationTest {
                         syncStats,
                         p2pMock,
                         anotherBundle.bc.getBlockHeaderValidator(),
-                        false);
+                        false,
+                        (byte) 2,
+                        0);
 
         // pretend that we propagate the new block
         handler.propagateNewBlock(block); // send counter incremented

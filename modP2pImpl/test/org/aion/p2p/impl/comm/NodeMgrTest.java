@@ -82,7 +82,15 @@ public class NodeMgrTest {
 
         byte[] rHash = new byte[32];
         r.nextBytes(rHash);
-        node.updateStatus(r.nextLong(), rHash, BigInteger.valueOf(r.nextLong()));
+
+        node.updateStatus(
+                r.nextLong(),
+                rHash,
+                BigInteger.valueOf(r.nextLong()),
+                (byte) r.nextInt(),
+                (short) r.nextInt(),
+                r.nextInt(),
+                r.nextInt());
         addNodetoOutbound(node, UUID.randomUUID());
         nMgr.movePeerToActive(node.getIdHash(), "outbound");
     }
@@ -503,7 +511,14 @@ public class NodeMgrTest {
         INode node = nMgr.allocNode(ip1, 1);
         byte[] rHash = new byte[32];
         r.nextBytes(rHash);
-        node.updateStatus(r.nextLong(), rHash, BigInteger.ONE);
+        node.updateStatus(
+                r.nextLong(),
+                rHash,
+                BigInteger.ONE,
+                (byte) r.nextInt(),
+                (short) r.nextInt(),
+                r.nextInt(),
+                r.nextInt());
         addNodetoOutbound(node, UUID.randomUUID());
         nMgr.movePeerToActive(node.getIdHash(), "outbound");
 
@@ -566,7 +581,14 @@ public class NodeMgrTest {
                         n.setChannel(ch);
                         byte[] rHash = new byte[32];
                         r.nextBytes(rHash);
-                        n.updateStatus(r.nextLong(), rHash, BigInteger.valueOf(r.nextLong()));
+                        n.updateStatus(
+                                r.nextLong(),
+                                rHash,
+                                BigInteger.valueOf(r.nextLong()),
+                                (byte) r.nextInt(),
+                                (short) r.nextInt(),
+                                r.nextInt(),
+                                r.nextInt());
                         return n;
                     }
                 };
