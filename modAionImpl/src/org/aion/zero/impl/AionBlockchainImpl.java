@@ -64,6 +64,7 @@ import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.EnergyStrategies;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
+import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
@@ -505,6 +506,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
     public boolean skipTryToConnect(long blockNumber) {
         long current = bestBlockNumber.get();
         return blockNumber > current + 32 || blockNumber < current - 32;
+    }
+
+    @Override
+    public byte[] getTrieNode(byte[] key, DatabaseType dbType) {
+        // TODO: implement
+        return null;
+    }
+
+    @Override
+    public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(
+            byte[] value, int limit, DatabaseType dbType) {
+        // TODO: implement
+        return null;
     }
 
     /**
