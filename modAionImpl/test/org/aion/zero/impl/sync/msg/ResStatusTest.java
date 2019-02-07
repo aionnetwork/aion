@@ -20,12 +20,31 @@ public class ResStatusTest {
         ThreadLocalRandom.current().nextBytes(bestBlockHash);
         byte[] genesisHash = new byte[32];
 
-        ResStatus rs1 = new ResStatus(bestBlockNumber, totalDifficulty, bestBlockHash, genesisHash);
+        byte apiVersion = (byte) ThreadLocalRandom.current().nextInt();
+        short peerCount = (short) ThreadLocalRandom.current().nextInt();
+        byte[] pendingTxCount = new byte[Byte.MAX_VALUE];
+        ThreadLocalRandom.current().nextBytes(pendingTxCount);
+        int latency = ThreadLocalRandom.current().nextInt();
+
+        ResStatus rs1 =
+                new ResStatus(
+                        bestBlockNumber,
+                        totalDifficulty,
+                        bestBlockHash,
+                        genesisHash,
+                        apiVersion,
+                        peerCount,
+                        pendingTxCount,
+                        latency);
         ResStatus rs2 = ResStatus.decode(rs1.encode());
 
         assertEquals(bestBlockNumber, rs2.getBestBlockNumber());
         assertTrue(Arrays.equals(totalDifficulty, rs2.getTotalDifficulty()));
         assertTrue(Arrays.equals(bestBlockHash, rs2.getBestHash()));
         assertTrue(Arrays.equals(genesisHash, rs2.getGenesisHash()));
+        assertEquals(apiVersion, rs2.getApiVersion());
+        assertEquals(peerCount, rs2.getPeerCount());
+        assertTrue(Arrays.equals(pendingTxCount, rs2.getPendingTxCount()));
+        assertEquals(latency, rs2.getLatency());
     }
 }

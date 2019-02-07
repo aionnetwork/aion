@@ -122,7 +122,13 @@ public class NodeTest {
         String hash = "015d1b31cc93e2ca5807d8da52342e1ef6d295e7a27c3620b24ba367db781321";
         byte[] bestBlockHash = hash.getBytes();
         BigInteger td = BigInteger.valueOf(ThreadLocalRandom.current().nextInt());
-        validNode.updateStatus(bestBlockNum, bestBlockHash, td);
+        byte apiVersion = (byte) ThreadLocalRandom.current().nextInt();
+        short peerCount = (short) ThreadLocalRandom.current().nextInt();
+        int pendingTxCount = ThreadLocalRandom.current().nextInt();
+        int latency = ThreadLocalRandom.current().nextInt();
+
+        validNode.updateStatus(
+                bestBlockNum, bestBlockHash, td, apiVersion, peerCount, pendingTxCount, latency);
 
         assertEquals(bestBlockNum, validNode.getBestBlockNumber());
         assertEquals(bestBlockHash, validNode.getBestBlockHash());
