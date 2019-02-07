@@ -14,7 +14,6 @@ module aion.boot {
     uses org.aion.log.AionLoggerFactory;
 
     requires aion.base;
-    requires libnzmq;
     requires aion.vm;
 
     exports org.aion;
