@@ -24,7 +24,7 @@
 	<net>
 		<id>1</id>
 		<nodes>
-                <node>p2p://e0f2e565-59d5-4a31-ace7-5fa8c87da7ab@35.245.69.208:30303</node>
+                <node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f333@40.70.221.182:30303</node>
 		</nodes>
 		<p2p>
 			<ip>0.0.0.0</ip>

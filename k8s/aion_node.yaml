@@ -13,6 +13,8 @@ spec:
       labels: 
         app: aion-node
       name: aion-node
+      annotations: 
+        date: date
     spec: 
       imagePullSecrets:
         - name: acr-auth   
