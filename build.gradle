@@ -77,6 +77,10 @@ task compileNative(type:Exec) {
 }
 
 subprojects {
+    test { 
+        maxHeapSize = "6g"
+    }
+
     sourceSets { 
         main {
             java.srcDirs = ['src']
