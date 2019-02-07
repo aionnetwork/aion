@@ -443,6 +443,11 @@ public final class P2pMgr implements IP2pMgr {
         return this.syncSeedsOnly;
     }
 
+    @Override
+    public int getAvgLatency() {
+        return this.nodeMgr.getAvgLatency();
+    }
+
     private TaskInbound getInboundInstance() {
         return new TaskInbound(
                 this,

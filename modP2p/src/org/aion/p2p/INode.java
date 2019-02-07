@@ -30,6 +30,18 @@ public interface INode {
     /** @return BigInteger */
     BigInteger getTotalDifficulty();
 
+    /** @return byte */
+    byte getApiVersion();
+
+    /** @return short */
+    short getPeerCount();
+
+    /** @return int */
+    int getPendingTxCount();
+
+    /** @return short */
+    int getLatency();
+
     int getPeerId();
 
     long getTimestamp();
@@ -40,7 +52,14 @@ public interface INode {
      * @param _totalDifficulty long
      */
     void updateStatus(
-            long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty);
+            long _bestBlockNumber,
+            final byte[] _bestBlockHash,
+            BigInteger _totalDifficulty,
+            byte _apiVersion,
+            short _peerCount,
+            int _pendingTxCount,
+            int _latency
+        );
 
     String getBinaryVersion();
 

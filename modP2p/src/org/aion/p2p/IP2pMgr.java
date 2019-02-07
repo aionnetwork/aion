@@ -55,5 +55,7 @@ public interface IP2pMgr {
 
     int getSelfNetId();
 
+    int getAvgLatency();
+
     String getOutGoingIP();
 }

@@ -76,7 +76,6 @@ import org.json.JSONArray;
 @SuppressWarnings("Duplicates")
 public class ApiAion0 extends ApiAion implements IApiAion {
 
-    public static final byte JAVAAPI_VAR = 2;
     private static final int JAVAAPI_REQHEADER_LEN = 4;
     private static final int TX_HASH_LEN = 32;
     private static final int ACCOUNT_CREATE_LIMIT = 100;

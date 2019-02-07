@@ -37,7 +37,7 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, INode> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> activeNodes = new ConcurrentHashMap<>();
     private int avgLatency = 0;
-    
+
     public NodeMgr(IP2pMgr _p2pMgr, int _maxActiveNodes, int _maxTempNodes, Logger _logger) {
         this.maxActiveNodes = _maxActiveNodes;
         this.maxTempNodes = _maxTempNodes;
