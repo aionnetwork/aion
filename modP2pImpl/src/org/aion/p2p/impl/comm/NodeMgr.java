@@ -36,7 +36,8 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, INode> outboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> activeNodes = new ConcurrentHashMap<>();
-
+    private int avgLatency = 0;
+    
     public NodeMgr(IP2pMgr _p2pMgr, int _maxActiveNodes, int _maxTempNodes, Logger _logger) {
         this.maxActiveNodes = _maxActiveNodes;
         this.maxTempNodes = _maxTempNodes;
@@ -248,6 +249,11 @@ public class NodeMgr implements INodeMgr {
     }
 
     @Override
+    public int getAvgLatency() {
+        return this.avgLatency;
+    }
+
+    @Override
     public void timeoutCheck() {
         timeoutInbound();
         timeoutOutBound();
@@ -388,11 +394,11 @@ public class NodeMgr implements INodeMgr {
         long now = System.currentTimeMillis();
         OptionalDouble average =
                 activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
-
+        this.avgLatency = (int) average.orElse(0);
         long timeout = ((long) average.orElse(4000)) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
         if (p2pLOG.isDebugEnabled()) {
-            p2pLOG.debug("<average-delay={}ms>", (long) average.orElse(0));
+            p2pLOG.debug("<average-delay={}ms>", this.avgLatency);
         }
 
         try {
