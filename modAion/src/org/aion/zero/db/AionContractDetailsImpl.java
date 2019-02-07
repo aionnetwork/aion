@@ -287,15 +287,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     @Override
     public IContractDetails getSnapshotTo(byte[] hash) {
 
-        IByteArrayKeyValueStore keyValueDataSource = this.storageTrie.getCache().getDb();
-
         SecureTrie snapStorage =
                 wrap(hash).equals(wrap(EMPTY_TRIE_HASH))
-                        ? new SecureTrie(keyValueDataSource, "".getBytes())
-                        : new SecureTrie(keyValueDataSource, hash);
+                        ? new SecureTrie(storageTrie.getCache(), "".getBytes())
+                        : new SecureTrie(storageTrie.getCache(), hash);
         snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-
-        snapStorage.setCache(this.storageTrie.getCache());
 
         AionContractDetailsImpl details =
                 new AionContractDetailsImpl(this.address, snapStorage, getCodes());

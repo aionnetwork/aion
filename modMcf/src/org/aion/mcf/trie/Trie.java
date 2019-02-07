@@ -58,9 +58,10 @@ public interface Trie {
 
     void sync(boolean flushCache);
 
-    /** Discard all the changes until now */
-    @Deprecated
-    void undo();
+    // never used
+    //    /** Discard all the changes until now */
+    //    @Deprecated
+    //    void undo();
 
     String getTrieDump();
 
@@ -68,7 +69,8 @@ public interface Trie {
 
     int getTrieSize(byte[] stateRoot);
 
-    boolean validate();
+    // never used
+    //    boolean validate();
 
     long saveFullStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db);
 

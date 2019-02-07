@@ -114,25 +114,25 @@ public class TrieTestWithRootHashValues {
                 Hex.toHexString(trie.getRootHash()));
     }
 
-    @Test
-    public void testTrieUndo() {
-        TrieImpl trie = new TrieImpl(mockDb);
-        trie.update("doe", "reindeer");
-        assertEquals(
-                "11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
-                Hex.toHexString(trie.getRootHash()));
-        trie.sync();
-
-        trie.update("dog", "puppy");
-        assertEquals(
-                "05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4",
-                Hex.toHexString(trie.getRootHash()));
-
-        trie.undo();
-        assertEquals(
-                "11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
-                Hex.toHexString(trie.getRootHash()));
-    }
+    //    @Test
+    //    public void testTrieUndo() {
+    //        TrieImpl trie = new TrieImpl(mockDb);
+    //        trie.update("doe", "reindeer");
+    //        assertEquals(
+    //                "11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
+    //                Hex.toHexString(trie.getRootHash()));
+    //        trie.sync();
+    //
+    //        trie.update("dog", "puppy");
+    //        assertEquals(
+    //                "05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4",
+    //                Hex.toHexString(trie.getRootHash()));
+    //
+    //        trie.undo();
+    //        assertEquals(
+    //                "11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e",
+    //                Hex.toHexString(trie.getRootHash()));
+    //    }
 
     @Test
     public void testDeleteMultipleItems1() {

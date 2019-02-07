@@ -745,17 +745,17 @@ public class TrieTest {
 
     private static String cat = "cat";
 
-    @Test
-    public void TestTrieReset() {
-        TrieImpl trie = new TrieImpl(new MockDB("TestTrieReset"));
-
-        trie.update(cat, LONG_STRING);
-        assertNotEquals("Expected cached nodes", 0, trie.getCache().getNodes().size());
-
-        trie.getCache().undo();
-
-        assertEquals("Expected no nodes after undo", 0, trie.getCache().getNodes().size());
-    }
+    //    @Test
+    //    public void TestTrieReset() {
+    //        TrieImpl trie = new TrieImpl(new MockDB("TestTrieReset"));
+    //
+    //        trie.update(cat, LONG_STRING);
+    //        assertNotEquals("Expected cached nodes", 0, trie.getCache().getNodes().size());
+    //
+    //        trie.getCache().undo();
+    //
+    //        assertEquals("Expected no nodes after undo", 0, trie.getCache().getNodes().size());
+    //    }
 
     @Test
     public void testDeleteCompletellyDiferentItems() {
