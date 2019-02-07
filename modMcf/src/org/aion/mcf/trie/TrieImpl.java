@@ -869,18 +869,17 @@ public class TrieImpl implements Trie {
         }
     }
 
-    public boolean validate() {
-        synchronized (cache) {
-            try {
-                // fails when a referenced node is not found
-                // indicating that the root is not valid
-                scanTreeLoop(getRootHash(), new CountNodes());
-            } catch (Exception e) {
-                return false;
-            }
-            return true;
-        }
-    }
+    // not used
+    //    public boolean validate() {
+    //        try {
+    //            // fails when a referenced node is not found
+    //            // indicating that the root is not valid
+    //            scanTreeLoop(getRootHash(), new CountNodes());
+    //        } catch (Exception e) {
+    //            return false;
+    //        }
+    //        return true;
+    //    }
 
     @Override
     public long saveFullStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db) {

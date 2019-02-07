@@ -69,7 +69,8 @@ public interface Trie {
 
     int getTrieSize(byte[] stateRoot);
 
-    boolean validate();
+    // never used
+    //    boolean validate();
 
     long saveFullStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db);
 
