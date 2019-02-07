@@ -51,13 +51,19 @@ public class BlockPropagationHandler {
 
     private static final byte[] genesis = CfgAion.inst().getGenesis().getHash();
 
+    private final byte apiVersion;
+
+    private final int pendingTxCount;
+
     public BlockPropagationHandler(
             final int cacheSize,
             final IAionBlockchain blockchain,
             final SyncStats syncStats,
             final IP2pMgr p2pManager,
             BlockHeaderValidator<A0BlockHeader> headerValidator,
-            final boolean isSyncOnlyNode) {
+            final boolean isSyncOnlyNode,
+            final byte apiVersion,
+            final int pendingTxCount) {
         /*
          * Size of the cache maintained within the map, a lower cacheSize
          * saves space, but indicates we may "forget" about a block sooner.
@@ -80,6 +86,8 @@ public class BlockPropagationHandler {
         this.blockHeaderValidator = headerValidator;
 
         this.isSyncOnlyNode = isSyncOnlyNode;
+        this.apiVersion = apiVersion;
+        this.pendingTxCount = pendingTxCount;
     }
 
     // assumption here is that blocks propagated have unique hashes
@@ -206,7 +214,14 @@ public class BlockPropagationHandler {
             BigInteger td = bestBlock.getCumulativeDifficulty();
             ResStatus rs =
                     new ResStatus(
-                            bestBlock.getNumber(), td.toByteArray(), bestBlock.getHash(), genesis);
+                            bestBlock.getNumber(),
+                            td.toByteArray(),
+                            bestBlock.getHash(),
+                            genesis,
+                            apiVersion,
+                            (short) p2pManager.getActiveNodes().size(),
+                            BigInteger.valueOf(this.pendingTxCount).toByteArray(),
+                            p2pManager.getAvgLatency());
 
             this.p2pManager.getActiveNodes().values().stream()
                     .filter(n -> n.getIdHash() != nodeId)

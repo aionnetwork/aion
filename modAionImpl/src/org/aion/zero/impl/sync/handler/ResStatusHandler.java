@@ -53,15 +53,30 @@ public final class ResStatusHandler extends Handler {
             long remoteBestBlockNumber = rs.getBestBlockNumber();
             byte[] remoteBestBlockHash = rs.getBestHash();
             byte[] remoteTdBytes = rs.getTotalDifficulty();
+            byte apiVersion = rs.getApiVersion();
+            short peerCount = rs.getPeerCount();
+            byte[] pendingTcBytes = rs.getPendingTxCount();
+            int latency = rs.getLatency();
             if (remoteTdBytes != null && remoteBestBlockHash != null) {
                 BigInteger remoteTotalDifficulty = new BigInteger(1, remoteTdBytes);
+                int pendingTxCount = new BigInteger(1, pendingTcBytes).intValue();
                 node.updateStatus(
-                        remoteBestBlockNumber, remoteBestBlockHash, remoteTotalDifficulty);
+                        remoteBestBlockNumber,
+                        remoteBestBlockHash,
+                        remoteTotalDifficulty,
+                        apiVersion,
+                        peerCount,
+                        pendingTxCount,
+                        latency);
                 syncMgr.updateNetworkStatus(
                         _displayId,
                         remoteBestBlockNumber,
                         remoteBestBlockHash,
-                        remoteTotalDifficulty);
+                        remoteTotalDifficulty,
+                        apiVersion,
+                        peerCount,
+                        pendingTxCount,
+                        latency);
             }
         }
     }

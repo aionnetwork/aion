@@ -36,6 +36,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionGenesis;
+import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
@@ -59,6 +60,8 @@ public abstract class ApiAion extends Api {
     // delegate concurrency to underlying object
     private static NrgOracle NRG_ORACLE;
     protected IAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
+
+    public static final byte JAVAAPI_VAR = AionHub.getApiVersion();
 
     // using java.util.concurrent library objects
     protected AtomicLong fltrIndex; // AtomicLong
@@ -133,7 +136,7 @@ public abstract class ApiAion extends Api {
 
     // General Level
     public byte getApiVersion() {
-        return 2;
+        return JAVAAPI_VAR;
     }
 
     protected Map<Long, Fltr> getInstalledFltrs() {

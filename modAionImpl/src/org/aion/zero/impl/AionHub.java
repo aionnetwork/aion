@@ -73,6 +73,8 @@ public class AionHub {
 
     private AtomicBoolean start = new AtomicBoolean(true);
 
+    private static final byte apiVersion = 2;
+
     /** Test functionality for checking if the hub has been shut down. */
     public boolean isRunning() {
         return start.get();
@@ -179,7 +181,9 @@ public class AionHub {
                         syncMgr.getSyncStats(),
                         p2pMgr,
                         chainConfig.createBlockHeaderValidator(),
-                        cfg.getNet().getP2p().inSyncOnlyMode());
+                        cfg.getNet().getP2p().inSyncOnlyMode(),
+                        apiVersion,
+                        mempool.getPendingTxSize());
 
         registerCallback();
 
@@ -208,7 +212,14 @@ public class AionHub {
 
     private void registerCallback() {
         List<Handler> cbs = new ArrayList<>();
-        cbs.add(new ReqStatusHandler(syncLOG, blockchain, p2pMgr, cfg.getGenesis().getHash()));
+        cbs.add(
+                new ReqStatusHandler(
+                        syncLOG,
+                        blockchain,
+                        mempool,
+                        p2pMgr,
+                        cfg.getGenesis().getHash(),
+                        apiVersion));
         cbs.add(new ResStatusHandler(syncLOG, p2pMgr, syncMgr));
         boolean inSyncOnlyMode = cfg.getNet().getP2p().inSyncOnlyMode();
         cbs.add(new ReqBlocksHeadersHandler(syncLOG, blockchain, p2pMgr, inSyncOnlyMode));
@@ -522,5 +533,9 @@ public class AionHub {
 
     public AionBlock getStartingBlock() {
         return this.startingBlock;
+    }
+
+    public static byte getApiVersion() {
+        return apiVersion;
     }
 }

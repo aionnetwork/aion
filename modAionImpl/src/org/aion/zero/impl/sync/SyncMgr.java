@@ -99,7 +99,11 @@ public final class SyncMgr {
             String _displayId,
             long _remoteBestBlockNumber,
             final byte[] _remoteBestBlockHash,
-            BigInteger _remoteTotalDiff) {
+            BigInteger _remoteTotalDiff,
+            byte _apiVersion,
+            short _peerCount,
+            int _pendingTxCount,
+            int _latency) {
 
         // self
         BigInteger selfTd = this.chain.getTotalDifficulty();
@@ -131,14 +135,26 @@ public final class SyncMgr {
                                         ? ""
                                         : Utils.getNodeIdShort(
                                                 this.networkStatus.getTargetBestBlockHash()),
-                                Utils.getNodeIdShort(remoteBestBlockHash));
+                                Utils.getNodeIdShort(remoteBestBlockHash),
+                                this.networkStatus.getTargetApiVersion(),
+                                (int) _apiVersion,
+                                this.networkStatus.getTargetPeerCount(),
+                                _peerCount,
+                                this.networkStatus.getTargetPendingTxCount(),
+                                _pendingTxCount,
+                                this.networkStatus.getTargetLatency(),
+                                _latency);
                     }
 
                     this.networkStatus.update(
                             _displayId,
                             _remoteTotalDiff,
                             _remoteBestBlockNumber,
-                            remoteBestBlockHash);
+                            remoteBestBlockHash,
+                            (int) _apiVersion,
+                            _peerCount,
+                            _pendingTxCount,
+                            _latency);
                 }
             }
         }

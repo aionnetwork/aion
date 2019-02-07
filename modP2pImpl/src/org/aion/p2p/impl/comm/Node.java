@@ -43,6 +43,11 @@ public final class Node implements INode {
     private long bestBlockNumber;
     private byte[] bestBlockHash;
     private BigInteger totalDifficulty = BigInteger.ZERO;
+    private byte apiVersion;
+    private short peerCount;
+    private int pendingTxCount;
+    private int latency;
+
     private String binaryVersion = "";
     private SocketChannel channel;
     /**
@@ -277,11 +282,41 @@ public final class Node implements INode {
     }
 
     @Override
+    public byte getApiVersion() {
+        return this.apiVersion;
+    }
+
+    @Override
+    public short getPeerCount() {
+        return this.peerCount;
+    }
+
+    @Override
+    public int getPendingTxCount() {
+        return this.pendingTxCount;
+    }
+
+    @Override
+    public int getLatency() {
+        return this.latency;
+    }
+
+    @Override
     public void updateStatus(
-            long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty) {
+            long _bestBlockNumber,
+            final byte[] _bestBlockHash,
+            BigInteger _totalDifficulty,
+            byte _apiVersion,
+            short _peerCount,
+            int _pendingTxCount,
+            int _latency) {
         this.bestBlockNumber = _bestBlockNumber;
         this.bestBlockHash = _bestBlockHash;
         this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
+        this.apiVersion = _apiVersion;
+        this.peerCount = _peerCount;
+        this.pendingTxCount = _pendingTxCount;
+        this.latency = _latency;
     }
 
     @Override
