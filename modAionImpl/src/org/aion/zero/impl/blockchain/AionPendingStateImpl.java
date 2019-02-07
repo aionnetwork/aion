@@ -95,8 +95,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
 
-    private TransactionTypeValidator vmValidator;
-
     private IRepository repository;
 
     private ITxPool<AionTransaction> txPool;
@@ -284,7 +282,6 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
-        this.vmValidator = new TransactionTypeValidator(_cfgAion.getVm().isAvmEnabled());
 
         this.repository = _repository;
 
@@ -433,7 +430,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     public boolean isValid(AionTransaction tx) {
-        return TXValidator.isValid(tx) && vmValidator.isValid(tx);
+        return TXValidator.isValid(tx) && TransactionTypeValidator.isValid(tx.getTargetVM());
     }
 
     /**

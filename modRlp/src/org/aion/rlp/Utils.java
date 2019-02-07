@@ -25,7 +25,7 @@ class Utils {
         (byte) 'f'
     };
 
-    private static final Map<Character, Byte> hexMap = new HashMap<>();
+    static final Map<Character, Byte> hexMap = new HashMap<>();
 
     static {
         hexMap.put('0', (byte) 0x0);

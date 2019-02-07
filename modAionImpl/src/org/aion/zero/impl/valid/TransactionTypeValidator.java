@@ -3,8 +3,6 @@ package org.aion.zero.impl.valid;
 import static org.aion.mcf.valid.TransactionTypeRule.isValidAVMTransactionType;
 import static org.aion.mcf.valid.TransactionTypeRule.isValidFVMTransactionType;
 
-import org.aion.zero.types.AionTransaction;
-
 /**
  * Validator for the type field of transactions allowed by the network. The transaction types
  * currently correlate with which virtual machines are enabled. This field mainly impacts contract
@@ -16,15 +14,13 @@ import org.aion.zero.types.AionTransaction;
  */
 public class TransactionTypeValidator {
 
-    private boolean avmEnabled;
+    private static boolean avmEnabled;
 
-    public TransactionTypeValidator(boolean enableAVM) {
-        this.avmEnabled = enableAVM;
+    public static void enableAvmCheck(boolean enableAVM) {
+        avmEnabled = enableAVM;
     }
 
-    public boolean isValid(AionTransaction tx) {
-        // verify transaction type
-        byte type = tx.getTargetVM();
+    public static boolean isValid(byte type) {
         // the type must be either valid for the FVM
         // or for the AVM when the AVM is enabled
         return isValidFVMTransactionType(type) || (avmEnabled && isValidAVMTransactionType(type));

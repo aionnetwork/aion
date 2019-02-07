@@ -1,10 +1,12 @@
 package org.aion.rlp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.rlp.Utils.encodingTable;
+import static org.aion.rlp.Utils.hexMap;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
-import java.util.Arrays;
 import org.aion.util.conversions.Hex;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class UtilsTest {
@@ -15,36 +17,42 @@ public class UtilsTest {
     }
 
     @Test
-    @Ignore
     public void testHexEncode_wSingleByte() {
-        for (byte b : Utils.encodingTable) {
+        for (byte b : encodingTable) {
             byte[] input = new byte[] {b};
-            assertThat(Utils.hexEncode(input)).isEqualTo(Hex.encode(input));
+
+            byte[] rlpHexEncodeOutput = Utils.hexEncode(input);
+            byte[] hexEncodeOutput = Hex.encode(input);
+            assertEquals(rlpHexEncodeOutput.length, hexEncodeOutput.length);
+            for (int i = 0; i < rlpHexEncodeOutput.length; i++) {
+                assertThat(rlpHexEncodeOutput[i])
+                        .isEqualTo(hexMap.get((char) encodingTable[hexEncodeOutput[i] & 0xf]));
+            }
         }
     }
 
     @Test
-    @Ignore
     public void testHexEncode_woTerminatorByte() {
         String value = "1234567890abcdef";
         byte[] input = Hex.decode(value);
 
-        assertThat(Utils.hexEncode(input)).isEqualTo(Hex.encode(input));
-        assertThat(Hex.decode(Utils.hexEncode(input))).isEqualTo(input);
+        byte[] rlpHexEncodeOutput = Utils.hexEncode(input);
+        byte[] expectOutput = new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10, 11, 12, 13, 14, 15};
+
+        assertArrayEquals(rlpHexEncodeOutput, expectOutput);
     }
 
     @Test
-    @Ignore
     public void testHexEncode_wTerminatorByte() {
         String value = "1234567890abcdef";
         byte[] input = Hex.decode(value);
 
         // expecting an extra byte at the end of the array
-        byte[] expected = Hex.encode(input);
-        expected = Arrays.copyOf(expected, expected.length + 1);
+        byte[] expectOutput = new byte[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 10, 11, 12, 13, 14, 15, 16};
 
-        byte[] actual = Utils.hexEncodeWithTerminatorByte(input);
-        assertThat(actual).isEqualTo(expected);
+        byte[] rlpHexEncodeOutput = Utils.hexEncodeWithTerminatorByte(input);
+
+        assertArrayEquals(rlpHexEncodeOutput, expectOutput);
     }
 
     @Test(expected = NullPointerException.class)

@@ -103,7 +103,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private A0BCConfig config;
     private long exitOn = Long.MAX_VALUE;
-    private TransactionTypeValidator vmValidator;
 
     private AionRepositoryImpl repository;
     private IRepositoryCache track;
@@ -219,7 +218,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * blockHash and number.
          */
         this.chainConfiguration = chainConfig;
-        this.vmValidator = new TransactionTypeValidator(config.isAvmEnabled());
+        TransactionTypeValidator.enableAvmCheck(config.isAvmEnabled());
 
         this.grandParentBlockHeaderValidator =
                 this.chainConfiguration.createGrandParentHeaderValidator();
@@ -405,11 +404,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static byte[] calcTxTrie(List<AionTransaction> transactions) {
 
-        Trie txsState = new TrieImpl(null);
-
         if (transactions == null || transactions.isEmpty()) {
             return HashUtil.EMPTY_TRIE_HASH;
         }
+
+        Trie txsState = new TrieImpl(null);
 
         for (int i = 0; i < transactions.size(); i++) {
             byte[] txEncoding = transactions.get(i).getEncoded();
@@ -777,7 +776,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized AionBlockSummary add(AionBlock block) {
+    public AionBlockSummary add(AionBlock block) {
         // typical use without rebuild
         AionBlockSummary summary = add(block, false);
 
@@ -795,7 +794,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         return summary;
     }
 
-    public synchronized AionBlockSummary add(AionBlock block, boolean rebuild) {
+    public AionBlockSummary add(AionBlock block, boolean rebuild) {
 
         if (!isValid(block)) {
             LOG.error("Attempting to add {} block.", (block == null ? "NULL" : "INVALID"));
@@ -952,15 +951,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         IAionBlock grandParent = this.getParent(parent.getHeader());
 
-        if (!this.grandParentBlockHeaderValidator.validate(
+        return this.grandParentBlockHeaderValidator.validate(
                 grandParent == null ? null : grandParent.getHeader(),
                 parent.getHeader(),
                 header,
-                LOG)) {
-            return false;
-        }
-
-        return true;
+                LOG);
     }
 
     /**
@@ -981,19 +976,21 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             // Sanity checks
-            String trieHash = toHexString(block.getTxTrieRoot());
-            String trieListHash = toHexString(calcTxTrie(block.getTransactionsList()));
+            byte[] trieHash = block.getTxTrieRoot();
+            List<AionTransaction> txs = block.getTransactionsList();
 
-            if (!trieHash.equals(trieListHash)) {
-                LOG.warn("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
+            byte[] trieListHash = calcTxTrie(txs);
+            if (!Arrays.equals(trieHash, trieListHash)) {
+                LOG.warn(
+                        "Block's given Trie Hash doesn't match: {} != {}",
+                        toHexString(trieHash),
+                        toHexString(trieListHash));
                 return false;
             }
 
-            List<AionTransaction> txs = block.getTransactionsList();
             if (txs != null && !txs.isEmpty()) {
                 IRepository parentRepo = repository;
-                if (!Arrays.equals(
-                        getBlockStore().getBestBlock().getHash(), block.getParentHash())) {
+                if (!Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
                     parentRepo =
                             repository.getSnapshotTo(
                                     getBlockByHash(block.getParentHash()).getStateRoot());
@@ -1002,7 +999,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 Map<Address, BigInteger> nonceCache = new HashMap<>();
 
                 if (txs.parallelStream()
-                        .anyMatch(tx -> !TXValidator.isValid(tx) || !vmValidator.isValid(tx))) {
+                        .anyMatch(
+                                tx ->
+                                        !TXValidator.isValid(tx)
+                                                || !TransactionTypeValidator.isValid(
+                                                        tx.getTargetVM()))) {
                     LOG.error("Some transactions in the block are invalid");
                     return false;
                 }
@@ -1016,8 +1017,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         expectedNonce = parentRepo.getNonce(txSender);
                     }
 
-                    BigInteger txNonce = new BigInteger(1, tx.getNonce());
-
+                    BigInteger txNonce = tx.getNonceBI();
                     if (!expectedNonce.equals(txNonce)) {
                         LOG.warn(
                                 "Invalid transaction: Tx nonce {} != expected nonce {} (parent nonce: {}): {}",
@@ -1713,6 +1713,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     other.getShortHash(),
                     other.getNumber(),
                     other.getTransactionsList().size());
+
+            if (bestBlock == null) {
+                bestBlock = getBlockStore().getBestBlock();
+            }
+
             this.add(other, true);
         }
 

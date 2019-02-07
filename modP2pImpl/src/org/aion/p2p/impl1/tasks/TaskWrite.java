@@ -18,6 +18,9 @@ public class TaskWrite implements Runnable {
     private final Msg msg;
     private final ChannelBuffer channelBuffer;
     private final IP2pMgr p2pMgr;
+    private final static long MAX_BUFFER_WRITE_TIME = 1_000_000_000L;
+    private final static long MIN_TRACE_BUFFER_WRITE_TIME = 10_000_000L;
+
 
     TaskWrite(
             final String _nodeShortId,
@@ -84,9 +87,9 @@ public class TaskWrite implements Runnable {
                     }
 
                     t2 = System.nanoTime() - t1;
-                } while (buf.hasRemaining() && (t2 < 100_000_000));
+                } while (buf.hasRemaining() && (t2 < MAX_BUFFER_WRITE_TIME));
 
-                if (p2pLOG.isTraceEnabled() && (t2 > 10_000_000)) {
+                if (p2pLOG.isTraceEnabled() && (t2 > MIN_TRACE_BUFFER_WRITE_TIME)) {
                     p2pLOG.trace(
                             "msg write: id {} size {} time {} ms length {}",
                             nodeShortId,

@@ -76,8 +76,7 @@ public class TXValidator {
             }
         }
 
-        nrg = tx.getEnergyPrice();
-        if (nrg < 0 || nrg > Long.MAX_VALUE) {
+        if (tx.getEnergyPrice() < 0) {
             LOG.error("invalid tx nrgprice!");
             return false;
         }
