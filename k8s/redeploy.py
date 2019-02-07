@@ -26,11 +26,13 @@ def load_credentials():
     
     return False
 
+# Filter sequence of items based on the value
 def filter_results(seq, value):
     for e1 in seq.items:
         if e1.metadata.namespace==value:
             yield e1
 
+# Query all deployments under the default namespace
 def list_deployments():
     v1 = client.CoreV1Api()
     print("Querying pods:")
@@ -38,6 +40,7 @@ def list_deployments():
 
     return filter_results(ret, namespace)
 
+# Reload configuration for the passed deployment
 def reload(deployment):
 
     with open(path.join(path.dirname(__file__), "aion_node.yaml")) as f:
@@ -81,11 +84,10 @@ def main():
 
 if __name__ == '__main__':
 
+    # Ensure kubectl credentials are loaded before proceeding
     if not load_credentials():
         print("Unable to load credentials")
         sys.exit(1)
 
-    image = ""
- 
     main()
     sys.exit(0)
