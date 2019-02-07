@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IContractDetails;
@@ -29,6 +30,7 @@ import org.aion.mcf.trie.Trie;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
@@ -814,6 +816,41 @@ public class AionRepositoryImpl
             this.stateDatabase.compact();
         } finally {
             rwLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Retrieves the value for a given node from the database associated with the given type.
+     *
+     * @param key the key of the node to be retrieved
+     * @param dbType the database where the key should be found
+     * @return the {@code byte} array value associated with the given key or {@code null} when the
+     *     key cannot be found in the database.
+     * @throws IllegalArgumentException if the given key is null or the database type is not
+     *     supported
+     */
+    public byte[] getTrieNode(byte[] key, DatabaseType dbType) {
+        IByteArrayKeyValueDatabase db = selectDatabase(dbType);
+
+        Optional<byte[]> value = db.get(key);
+        if (value.isPresent()) {
+            return value.get();
+        } else {
+            return null;
+        }
+    }
+
+    private IByteArrayKeyValueDatabase selectDatabase(DatabaseType dbType) {
+        switch (dbType) {
+            case DETAILS:
+                return detailsDatabase;
+            case STORAGE:
+                return storageDatabase;
+            case STATE:
+                return stateDatabase;
+            default:
+                throw new IllegalArgumentException(
+                        "The database type " + dbType.toString() + " is not supported.");
         }
     }
 }

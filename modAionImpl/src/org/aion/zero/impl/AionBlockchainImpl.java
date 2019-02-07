@@ -510,8 +510,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     @Override
     public byte[] getTrieNode(byte[] key, DatabaseType dbType) {
-        // TODO: implement
-        return null;
+        return repository.getTrieNode(key, dbType);
     }
 
     @Override
