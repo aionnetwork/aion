@@ -49,6 +49,8 @@ public interface INodeMgr {
 
     boolean notAtOutboundList(int _nodeIdHash);
 
+    int getAvgLatency();
+
     /**
      * move node object from the inbound or outbound list to the active list
      *
