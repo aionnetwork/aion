@@ -51,6 +51,7 @@ def reload(deployment):
         dep["metadata"]["name"]=to_update
         dep["spec"]["template"]["spec"]["containers"][0]["image"] = deployment.spec.containers[0].image
         dep["spec"]["template"]["metadata"]["labels"]["app"] = deployment.metadata.labels['app']
+        update_annotations(dep)
 
         print(dep)
         print("-----------------------------------------------------------------------------------")

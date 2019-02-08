@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata: 
-  name: aion-2-service
+  name: aion-1-service
   labels: 
-    app: aion-2
+    app: aion-1
 spec:
   externalTrafficPolicy: Cluster
   sessionAffinity: None
@@ -16,4 +16,4 @@ spec:
     name: p2p
     targetPort: 30303
   selector:
-    app: aion-2
+    app: aion-1
