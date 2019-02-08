@@ -1,6 +1,7 @@
 package org.aion.zero.impl.sync.msg;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.p2p.V1Constants.HASH_SIZE;
 import static org.aion.zero.impl.sync.DatabaseType.DETAILS;
 import static org.aion.zero.impl.sync.DatabaseType.STATE;
 import static org.aion.zero.impl.sync.DatabaseType.STORAGE;
@@ -31,7 +32,7 @@ public class RequestTrieDataTest {
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
                 23, 24, 25, 26, 27, 28, 29, 30, 31
             };
-    public static final byte[] zeroNodeKey = new byte[32];
+    public static final byte[] zeroNodeKey = new byte[HASH_SIZE];
     public static final byte[] smallNodeKey =
             new byte[] {
                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,

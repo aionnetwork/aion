@@ -1,5 +1,9 @@
 package org.aion.zero.impl.sync.msg;
 
+import static org.aion.p2p.V1Constants.HASH_SIZE;
+import static org.aion.p2p.V1Constants.TRIE_DATA_RESPONSE_COMPONENTS;
+
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -94,12 +98,12 @@ public final class ResponseTrieData extends Msg {
             return null;
         } else {
             RLPList list = (RLPList) RLP.decode2(message).get(0);
-            if (list.size() != 4) {
+            if (list.size() != TRIE_DATA_RESPONSE_COMPONENTS) {
                 return null;
             } else {
                 // decode the key
                 byte[] hash = list.get(0).getRLPData();
-                if (hash.length != 32) {
+                if (hash.length != HASH_SIZE) {
                     return null;
                 }
 
@@ -155,7 +159,7 @@ public final class ResponseTrieData extends Msg {
 
             // decode the key
             hash = current.get(0).getRLPData();
-            if (hash.length != 32) {
+            if (hash.length != HASH_SIZE) {
                 return null;
             }
 
@@ -185,6 +189,7 @@ public final class ResponseTrieData extends Msg {
      *
      * @return an array of all the key-value pair encodings
      */
+    @VisibleForTesting
     static byte[][] encodeReferencedNodes(Map<ByteArrayWrapper, byte[]> referencedNodes) {
         byte[][] pairs = new byte[referencedNodes.size()][];
 

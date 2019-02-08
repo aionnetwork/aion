@@ -1,5 +1,8 @@
 package org.aion.zero.impl.sync.msg;
 
+import static org.aion.p2p.V1Constants.HASH_SIZE;
+import static org.aion.p2p.V1Constants.TRIE_DATA_REQUEST_COMPONENTS;
+
 import java.math.BigInteger;
 import java.util.Objects;
 import org.aion.p2p.Ctrl;
@@ -40,7 +43,7 @@ public final class RequestTrieData extends Msg {
         // ensure limit is positive
         if (limit < 0) {
             throw new IllegalArgumentException(
-                    "The RequestTrieData object cannot be built with a negative limit.");
+                    "The RequestTrieData object must be built with a positive limit.");
         }
 
         this.nodeKey = nodeKey;
@@ -61,12 +64,12 @@ public final class RequestTrieData extends Msg {
             return null;
         } else {
             RLPList list = (RLPList) RLP.decode2(message).get(0);
-            if (list.size() != 3) {
+            if (list.size() != TRIE_DATA_REQUEST_COMPONENTS) {
                 return null;
             } else {
                 // decode the key
                 byte[] hash = list.get(0).getRLPData();
-                if (hash.length != 32) {
+                if (hash.length != HASH_SIZE) {
                     return null;
                 }
 
