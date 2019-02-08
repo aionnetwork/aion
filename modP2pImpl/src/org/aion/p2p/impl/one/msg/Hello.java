@@ -13,7 +13,7 @@ public final class Hello extends Msg {
     private String msg;
 
     public Hello(String _msg) {
-        super(Ver.V1, (byte) 0, (byte) 0);
+        super(Ver.VTEST, (byte) 0, (byte) 0);
         this.msg = _msg;
     }
 

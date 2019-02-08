@@ -18,4 +18,8 @@ public final class Act {
     public static final byte BROADCAST_TX = 6;
 
     public static final byte BROADCAST_BLOCK = 7;
+
+    public static final byte REQUEST_TRIE_DATA = 8;
+
+    public static final byte RESPONSE_TRIE_DATA = 9;
 }
