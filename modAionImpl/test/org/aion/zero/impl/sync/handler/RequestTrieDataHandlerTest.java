@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
 import org.aion.rlp.RLP;
@@ -66,6 +67,8 @@ public class RequestTrieDataHandlerTest {
     @Test
     public void testReceive_incorrectMessage() {
         Logger log = mock(Logger.class);
+        when(log.isTraceEnabled()).thenReturn(false);
+
         IAionBlockchain chain = mock(AionBlockchainImpl.class);
         IP2pMgr p2p = mock(P2pMgr.class);
 
@@ -83,6 +86,33 @@ public class RequestTrieDataHandlerTest {
                 .error(
                         "<req-trie decode-error msg-bytes={} peer={}>",
                         outOfOderEncoding.length,
+                        peerId);
+        verifyZeroInteractions(chain);
+        verifyZeroInteractions(p2p);
+    }
+
+    @Test
+    public void testReceive_incorrectMessage_withTrace() {
+        Logger log = mock(Logger.class);
+        when(log.isTraceEnabled()).thenReturn(true);
+
+        IAionBlockchain chain = mock(AionBlockchainImpl.class);
+        IP2pMgr p2p = mock(P2pMgr.class);
+
+        RequestTrieDataHandler handler = new RequestTrieDataHandler(log, chain, p2p);
+
+        // receive incorrect message
+        byte[] outOfOderEncoding =
+                RLP.encodeList(
+                        RLP.encodeString(STATE.toString()),
+                        RLP.encodeElement(nodeKey),
+                        RLP.encodeInt(0));
+        handler.receive(peerId, displayId, outOfOderEncoding);
+
+        verify(log, times(1))
+                .trace(
+                        "<req-trie decode-error for msg={} peer={}>",
+                        Arrays.toString(outOfOderEncoding),
                         peerId);
         verifyZeroInteractions(chain);
         verifyZeroInteractions(p2p);
