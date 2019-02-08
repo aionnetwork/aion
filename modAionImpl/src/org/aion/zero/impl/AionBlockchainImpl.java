@@ -530,8 +530,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @return a {@link TrieNodeResult} indicating the success or failure of the import operation
      */
     public TrieNodeResult importTrieNode(byte[] key, byte[] value, DatabaseType dbType) {
-        // TODO: implement
-        return null;
+        return repository.importTrieNode(key, value, dbType);
     }
 
     /**
