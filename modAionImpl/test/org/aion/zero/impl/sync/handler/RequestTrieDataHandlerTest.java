@@ -1,7 +1,7 @@
 package org.aion.zero.impl.sync.handler;
 
+import static org.aion.p2p.V1Constants.TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE;
 import static org.aion.zero.impl.sync.DatabaseType.STATE;
-import static org.aion.zero.impl.sync.handler.RequestTrieDataHandler.MAXIMUM_BATCH_SIZE;
 import static org.aion.zero.impl.sync.msg.RequestTrieDataTest.nodeKey;
 import static org.aion.zero.impl.sync.msg.ResponseTrieDataTest.leafValue;
 import static org.aion.zero.impl.sync.msg.ResponseTrieDataTest.multipleReferences;
@@ -150,7 +150,7 @@ public class RequestTrieDataHandlerTest {
 
         IAionBlockchain chain = mock(AionBlockchainImpl.class);
         when(chain.getTrieNode(nodeKey, STATE)).thenReturn(leafValue);
-        when(chain.getReferencedTrieNodes(leafValue, MAXIMUM_BATCH_SIZE, STATE))
+        when(chain.getReferencedTrieNodes(leafValue, TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE, STATE))
                 .thenReturn(multipleReferences);
 
         IP2pMgr p2p = mock(P2pMgr.class);
@@ -169,7 +169,8 @@ public class RequestTrieDataHandlerTest {
                 .debug("<req-trie from-db={} key={} peer={}>", STATE, wrappedNodeKey, displayId);
 
         verify(chain, times(1)).getTrieNode(nodeKey, STATE);
-        verify(chain, times(1)).getReferencedTrieNodes(leafValue, MAXIMUM_BATCH_SIZE, STATE);
+        verify(chain, times(1))
+                .getReferencedTrieNodes(leafValue, TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE, STATE);
 
         ResponseTrieData expectedResponse =
                 new ResponseTrieData(wrappedNodeKey, leafValue, multipleReferences, STATE);

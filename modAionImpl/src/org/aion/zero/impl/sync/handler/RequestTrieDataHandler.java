@@ -1,5 +1,7 @@
 package org.aion.zero.impl.sync.handler;
 
+import static org.aion.p2p.V1Constants.TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE;
+
 import java.util.Map;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.p2p.Ctrl;
@@ -25,9 +27,6 @@ public final class RequestTrieDataHandler extends Handler {
     private final IAionBlockchain chain;
 
     private final IP2pMgr p2p;
-
-    // limits the number of key-value pairs returned to one request
-    public static final int MAXIMUM_BATCH_SIZE = 100;
 
     /**
      * Constructor.
@@ -74,11 +73,14 @@ public final class RequestTrieDataHandler extends Handler {
                 } else {
                     // check for internal limit on the request
                     if (limit == 0) {
-                        limit = MAXIMUM_BATCH_SIZE;
+                        limit = TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE;
                     } else {
                         // the first value counts towards the limit
                         limit--;
-                        limit = limit < MAXIMUM_BATCH_SIZE ? limit : MAXIMUM_BATCH_SIZE;
+                        limit =
+                                limit < TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE
+                                        ? limit
+                                        : TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE;
                     }
 
                     // determine if the node can be expanded
