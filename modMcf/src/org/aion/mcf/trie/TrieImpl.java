@@ -883,6 +883,50 @@ public class TrieImpl implements Trie {
     //    }
 
     @Override
+    public Set<ByteArrayWrapper> getMissingNodes(byte[] nodeKey) {
+        CollectFullSetOfNodes traceAction = new CollectFullSetOfNodes();
+        Value value = new Value(nodeKey);
+
+        if (value.isHashCode()) {
+            scanTreeForMissingNodes(nodeKey, traceAction);
+        }
+        return traceAction.getCollectedHashes();
+    }
+
+    private void scanTreeForMissingNodes(byte[] hash, ScanAction scanAction) {
+        ArrayList<byte[]> hashes = new ArrayList<>();
+        hashes.add(hash);
+
+        while (!hashes.isEmpty()) {
+            synchronized (cache) {
+                byte[] myHash = hashes.remove(0);
+                Value node = this.getCache().get(myHash);
+                if (node == null) {
+                    // performs action for missing nodes
+                    scanAction.doOnNode(myHash, null);
+                } else {
+                    if (node.isList()) {
+                        List<Object> siblings = node.asList();
+                        if (siblings.size() == PAIR_SIZE) {
+                            Value val = new Value(siblings.get(1));
+                            if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
+                                hashes.add(val.asBytes());
+                            }
+                        } else {
+                            for (int j = 0; j < LIST_SIZE; ++j) {
+                                Value val = new Value(siblings.get(j));
+                                if (val.isHashCode()) {
+                                    hashes.add(val.asBytes());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(byte[] value, int limit) {
         CollectMappings collect = new CollectMappings();
         ArrayList<byte[]> hashes = new ArrayList<>();
