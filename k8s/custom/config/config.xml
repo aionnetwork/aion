@@ -24,11 +24,13 @@
 	<net>
 		<id>1</id>
 		<nodes>
-                <node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f333@40.70.221.182:30303</node>
+                	<!-- <node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f333@40.70.221.182:30303</node> -->
+			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f333@10.0.37.24:30303</node>
+			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f554@10.0.71.177:30303</node>
 		</nodes>
 		<p2p>
 			<ip>0.0.0.0</ip>
-			<port>30304</port>
+			<port>30303</port>
 			<discover>false</discover>
 			<max-temp-nodes>128</max-temp-nodes>
 			<max-active-nodes>128</max-active-nodes>
