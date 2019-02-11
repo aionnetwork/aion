@@ -28,7 +28,7 @@
 		</nodes>
 		<p2p>
 			<ip>0.0.0.0</ip>
-			<port>30303</port>
+			<port>30304</port>
 			<discover>false</discover>
 			<max-temp-nodes>128</max-temp-nodes>
 			<max-active-nodes>128</max-active-nodes>
