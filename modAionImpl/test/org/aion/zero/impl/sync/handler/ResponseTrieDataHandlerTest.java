@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.aion.rlp.RLP;
@@ -59,6 +60,8 @@ public class ResponseTrieDataHandlerTest {
     @Test
     public void testReceive_incorrectMessage() {
         Logger log = mock(Logger.class);
+        when(log.isTraceEnabled()).thenReturn(false);
+
         BlockingQueue<TrieNodeWrapper> receivedQueue = mock(LinkedBlockingQueue.class);
 
         ResponseTrieDataHandler handler = new ResponseTrieDataHandler(log, receivedQueue);
@@ -81,6 +84,37 @@ public class ResponseTrieDataHandlerTest {
                 .error(
                         "<res-trie decode-error msg-bytes={} peer={}>",
                         outOfOderEncoding.length,
+                        peerId);
+        verifyZeroInteractions(receivedQueue);
+    }
+
+    @Test
+    public void testReceive_incorrectMessage_withTrace() {
+        Logger log = mock(Logger.class);
+        when(log.isTraceEnabled()).thenReturn(true);
+
+        BlockingQueue<TrieNodeWrapper> receivedQueue = mock(LinkedBlockingQueue.class);
+
+        ResponseTrieDataHandler handler = new ResponseTrieDataHandler(log, receivedQueue);
+
+        // receive incorrect message
+        byte[] outOfOderEncoding =
+                RLP.encodeList(
+                        RLP.encodeList(
+                                RLP.encodeList(
+                                        RLP.encodeElement(nodeKey), RLP.encodeElement(leafValue)),
+                                RLP.encodeList(
+                                        RLP.encodeElement(altNodeKey),
+                                        RLP.encodeElement(leafValue))),
+                        RLP.encodeElement(nodeKey),
+                        RLP.encodeElement(leafValue),
+                        RLP.encodeString(STATE.toString()));
+        handler.receive(peerId, displayId, outOfOderEncoding);
+
+        verify(log, times(1))
+                .trace(
+                        "<res-trie decode-error for msg={} peer={}>",
+                        Arrays.toString(outOfOderEncoding),
                         peerId);
         verifyZeroInteractions(receivedQueue);
     }

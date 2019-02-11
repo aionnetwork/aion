@@ -1,5 +1,6 @@
 package org.aion.zero.impl.sync.handler;
 
+import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
@@ -49,6 +50,13 @@ public final class ResponseTrieDataHandler extends Handler {
             states.add(new TrieNodeWrapper(peerId, displayId, response));
         } else {
             this.log.error("<res-trie decode-error msg-bytes={} peer={}>", message.length, peerId);
+
+            if (log.isTraceEnabled()) {
+                this.log.trace(
+                        "<res-trie decode-error for msg={} peer={}>",
+                        Arrays.toString(message),
+                        peerId);
+            }
         }
     }
 }
