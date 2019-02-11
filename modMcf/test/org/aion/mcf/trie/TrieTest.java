@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -932,6 +933,57 @@ public class TrieTest {
         data.put(key, value);
 
         return data;
+    }
+
+    @Test
+    public void testGetMissingNodes_wCompleteTrie() {
+        MockDB mockDB = new MockDB("temp");
+        mockDB.open();
+        TrieImpl trie = new TrieImpl(mockDB);
+
+        for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
+            trie.update(e.getKey().getData(), e.getValue());
+        }
+        trie.getCache().commit(true);
+
+        byte[] root = trie.getRootHash();
+
+        trie = new TrieImpl(mockDB);
+        assertThat(trie.getMissingNodes(root)).isEmpty();
+    }
+
+    @Test
+    public void testGetMissingNodes_wIncompleteTrie() {
+        MockDB mockDB = new MockDB("temp");
+        mockDB.open();
+        TrieImpl trie = new TrieImpl(mockDB);
+
+        for (Map.Entry<ByteArrayWrapper, byte[]> e : getSampleTrieUpdates().entrySet()) {
+            trie.update(e.getKey().getData(), e.getValue());
+        }
+        trie.getCache().commit(true);
+
+        byte[] root = trie.getRootHash();
+        System.out.println(trie.getTrieDump(root));
+
+        // removing two of the nodes from the trie
+        Set<ByteArrayWrapper> expected = new HashSet<>();
+        expected.add(
+                new ByteArrayWrapper(
+                        "59c2a26cebd0ed50053bba185a7d13e1ae58314e2c37d46c1f7b885fd93b687a"));
+        expected.add(
+                new ByteArrayWrapper(
+                        "ddf1b495a3e98e1897a9b1257d4172d59fcbe0dba23b8b87812ca2a55919d9ab"));
+
+        for (ByteArrayWrapper key : expected) {
+            mockDB.delete(key.getData());
+        }
+
+        trie = new TrieImpl(mockDB);
+
+        Set<ByteArrayWrapper> missing = trie.getMissingNodes(root);
+        assertThat(missing).hasSize(2);
+        assertThat(missing).isEqualTo(expected);
     }
 
     @Test
