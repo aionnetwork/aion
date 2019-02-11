@@ -23,10 +23,10 @@ spec:
         image: "aionkuberacr.azurecr.io/aion:latest"
         imagePullPolicy: Always
         name: aion
-        ports: 
-          - 
-            containerPort: 8545
-            name: aion-node
-            containerPort: 30303
-            name: p2p
+        #ports: 
+        #  - 
+        #    containerPort: 8545
+        #    name: aion-node
+        #    containerPort: 30303
+        #    name: p2p
      
