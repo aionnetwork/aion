@@ -37,7 +37,7 @@ public class ResponseTrieDataTest {
     private static final ByteArrayWrapper wrappedZeroNodeKey = ByteArrayWrapper.wrap(zeroNodeKey);
 
     // values (taken from TrieTest#testGetReferencedTrieNodes_withStartFromAllNodes)
-    private static final byte[] emptyValue = new byte[] {};
+    public static final byte[] emptyValue = new byte[] {};
     public static final byte[] leafValue =
             new byte[] {
                 -8, 114, -97, 60, -96, -3, -97, 10, 112, 111, 28, -32, 44, 18, 101, -106, 51, 6,
@@ -48,7 +48,7 @@ public class ResponseTrieDataTest {
                 67, -78, -24, -85, 46, -80, 96, -103, -38, -95, -47, -27, -33, 71, 119, -113, 119,
                 -121, -6, -85, 69, -51, -15, 47, -29, -88
             };
-    private static final byte[] branchValue =
+    public static final byte[] branchValue =
             new byte[] {
                 -8, -111, -128, -96, -99, -57, 89, 41, -60, -8, -93, -128, 9, -59, -23, -116, 4, 70,
                 -94, -76, 119, -16, 22, 117, -72, -96, -117, 125, -57, 95, 123, -29, -46, 37, -78,

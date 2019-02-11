@@ -20,9 +20,13 @@ import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionContractDetailsImpl;
+import org.aion.zero.impl.sync.DatabaseType;
+import org.aion.zero.impl.sync.msg.RequestTrieDataTest;
+import org.aion.zero.impl.sync.msg.ResponseTrieDataTest;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -370,5 +374,51 @@ public class AionRepositoryImplTest {
         assertThat(repository.getBalance(account1)).isLessThan(snapshot.getBalance(account1));
         assertThat(repository.getBalance(account2)).isLessThan(snapshot.getBalance(account2));
         assertThat(repository.getBalance(account3)).isLessThan(snapshot.getBalance(account3));
+    }
+
+    @Test
+    public void testImportTrieNode() {
+        AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
+        IByteArrayKeyValueDatabase db = repository.getStateDatabase();
+        byte[] nodeKey = RequestTrieDataTest.nodeKey;
+        byte[] altNodeKey = RequestTrieDataTest.altNodeKey;
+        byte[] smallNodeKey = RequestTrieDataTest.smallNodeKey;
+        byte[] leafValue = ResponseTrieDataTest.leafValue;
+        byte[] branchValue = ResponseTrieDataTest.branchValue;
+        byte[] emptyValue = ResponseTrieDataTest.emptyValue;
+
+        // check import with empty database: TrieNodeResult.IMPORTED
+        assertThat(db.isEmpty()).isTrue();
+        assertThat(repository.importTrieNode(nodeKey, leafValue, DatabaseType.STATE))
+                .isEqualTo(TrieNodeResult.IMPORTED);
+        Optional<byte[]> value = db.get(nodeKey);
+        assertThat(value.isPresent()).isTrue();
+        assertThat(value.get()).isEqualTo(leafValue);
+
+        // check import with same key + same value: TrieNodeResult.KNOWN
+        assertThat(repository.importTrieNode(nodeKey, leafValue, DatabaseType.STATE))
+                .isEqualTo(TrieNodeResult.KNOWN);
+        value = db.get(nodeKey);
+        assertThat(value.isPresent()).isTrue();
+        assertThat(value.get()).isEqualTo(leafValue);
+
+        // check import with same key + different value: TrieNodeResult.INCONSISTENT
+        assertThat(repository.importTrieNode(nodeKey, branchValue, DatabaseType.STATE))
+                .isEqualTo(TrieNodeResult.INCONSISTENT);
+        value = db.get(nodeKey);
+        assertThat(value.isPresent()).isTrue();
+        assertThat(value.get()).isEqualTo(leafValue);
+
+        // check import with incorrect key: TrieNodeResult.INVALID_KEY
+        assertThat(repository.importTrieNode(smallNodeKey, branchValue, DatabaseType.STATE))
+                .isEqualTo(TrieNodeResult.INVALID_KEY);
+        value = db.get(smallNodeKey);
+        assertThat(value.isPresent()).isFalse();
+
+        // check import with incorrect value: TrieNodeResult.INVALID_VALUE
+        assertThat(repository.importTrieNode(altNodeKey, emptyValue, DatabaseType.STATE))
+                .isEqualTo(TrieNodeResult.INVALID_VALUE);
+        value = db.get(altNodeKey);
+        assertThat(value.isPresent()).isFalse();
     }
 }

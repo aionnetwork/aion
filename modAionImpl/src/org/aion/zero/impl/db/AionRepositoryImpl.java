@@ -29,6 +29,7 @@ import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
+import org.aion.p2p.V1Constants;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
@@ -890,7 +891,7 @@ public class AionRepositoryImpl
         }
 
         // empty keys are not allowed
-        if (key == null || key.length != 32) {
+        if (key == null || key.length != V1Constants.HASH_SIZE) {
             return TrieNodeResult.INVALID_KEY;
         }
 
