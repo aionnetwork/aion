@@ -23,6 +23,11 @@ spec:
         image: "aionkuberacr.azurecr.io/aion:latest"
         imagePullPolicy: Always
         name: aion
+        resources:
+          limits:
+            memory: 6Gi
+          requests:
+            memory: 2Gi
         #ports: 
         #  - 
         #    containerPort: 8545
