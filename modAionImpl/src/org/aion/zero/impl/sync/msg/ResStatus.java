@@ -9,7 +9,9 @@ import org.aion.zero.impl.sync.Act;
 /** @author Chris */
 public final class ResStatus extends Msg {
 
-    private static final int minLen = 8 + 1 + 1 + 32 + 32 + 1 + 2 + 1 + 1 + 4;
+    private static final int minLen = 8 + 1 + 1 + 32 + 32;
+
+    private static final int minLenNew = 8 + 1 + 1 + 32 + 32 + 1 + 2 + 1 + 1 + 4;
 
     private final long bestBlockNumber; // 8
 
@@ -117,13 +119,21 @@ public final class ResStatus extends Msg {
         bb.get(_totalDifficulty);
         bb.get(_bestHash);
         bb.get(_genesisHash);
-        byte _apiVersion = bb.get();
-        short _peerCount = bb.getShort();
-        int _pendingTxCountLen = bb.get();
-        byte[] _pendingTxCount = new byte[_pendingTxCountLen];
-        bb.get(_pendingTxCount);
-        int _latency = bb.getInt();
 
+        int _len = 8 + 1 + _totalDifficultyLen + 32 + 32;
+
+        byte _apiVersion = 0;
+        short _peerCount = 0;
+        byte[] _pendingTxCount = new byte[0];
+        int _latency = 0;
+        if (_bytes.length > Math.max(_len, minLenNew)) {
+            _apiVersion = bb.get();
+            _peerCount = bb.getShort();
+            int _pendingTxCountLen = bb.get();
+            _pendingTxCount = new byte[_pendingTxCountLen];
+            bb.get(_pendingTxCount);
+            _latency = bb.getInt();
+        }
         return new ResStatus(
                 _bestBlockNumber,
                 _totalDifficulty,
