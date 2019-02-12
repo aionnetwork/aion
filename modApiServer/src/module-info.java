@@ -20,6 +20,7 @@ module aion.apiserver {
     requires com.google.common;
     requires jdk.unsupported;
     requires aion.vm.api;
+    requires libnzmq;
 
     exports org.aion.api.server.pb;
     exports org.aion.api.server.zmq;
