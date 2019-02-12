@@ -186,7 +186,8 @@ public class RpcMethods {
     private final Map<String, RpcMethod> eth =
             Map.ofEntries(
                     Map.entry("eth_getCompilers", (params) -> api.eth_getCompilers()),
-                    Map.entry("eth_compileSolidity", (params) -> api.eth_compileSolidity(params)),
+                Map.entry("eth_compileSolidity", (params) -> api.eth_compileSolidity(params)),
+                Map.entry("eth_compileSolidityZip", (params) -> api.eth_compileSolidityZip(params)),
                     Map.entry(
                             "eth_accounts",
                             (params) -> api.eth_accounts()), // belongs to the personal api

@@ -13,6 +13,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -1041,6 +1042,31 @@ public class ApiWeb3Aion extends ApiAion {
 
         @SuppressWarnings("unchecked")
         Map<String, CompiledContr> compiled = contract_compileSolidity(_contract);
+        JSONObject obj = new JSONObject();
+        for (String key : compiled.keySet()) {
+            CompiledContr cc = compiled.get(key);
+            obj.put(key, cc.toJSON());
+        }
+        return new RpcMsg(obj);
+    }
+
+    public RpcMsg eth_compileSolidityZip(Object _params) {
+        String _zipfile, _entrypoint;
+        if (_params instanceof JSONArray) {
+            _zipfile = ((JSONArray) _params).get(0) + "";
+            _entrypoint = ((JSONArray) _params).get(1) + "";
+        } else if (_params instanceof JSONObject) {
+            _zipfile = ((JSONObject) _params).get("zipfile") + "";
+            _entrypoint = ((JSONObject) _params).get("entrypoint") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        byte[] _zippedBytes = Base64.getDecoder().decode(_zipfile);
+
+        @SuppressWarnings("unchecked")
+        Map<String, CompiledContr> compiled =
+                contract_compileSolidityZip(_zippedBytes, _entrypoint);
         JSONObject obj = new JSONObject();
         for (String key : compiled.keySet()) {
             CompiledContr cc = compiled.get(key);
