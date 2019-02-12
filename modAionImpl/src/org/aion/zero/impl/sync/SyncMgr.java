@@ -162,7 +162,7 @@ public final class SyncMgr {
         blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
         long selfBest = chain.getBestBlock().getNumber();
-        stats = new SyncStats(selfBest);
+        stats = new SyncStats(selfBest, _showStatus, showStatistics);
 
         syncGb =
                 new Thread(

@@ -1,5 +1,7 @@
 package org.aion.zero.impl.sync;
 
+import com.google.common.annotations.VisibleForTesting;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -9,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import org.aion.mcf.config.StatsType;
 
 /** @author chris */
 public final class SyncStats {
@@ -19,11 +22,13 @@ public final class SyncStats {
     private double avgBlocksPerSec;
 
     private final Lock blockAverageLock = new ReentrantLock();
+    private final boolean averageEnabled;
 
     /** @implNote Access to this resource is managed by the {@link #requestsLock}. */
     private final Map<String, RequestCounter> requestsToPeers = new HashMap<>();
 
     private final Lock requestsLock = new ReentrantLock();
+    private final boolean requestsEnabled;
 
     /**
      * Records information on top seeds.
@@ -33,6 +38,7 @@ public final class SyncStats {
     private final Map<String, Long> blocksByPeer = new HashMap<>();
 
     private final Lock seedsLock = new ReentrantLock();
+    private final boolean seedEnabled;
 
     /**
      * Records information on top leeches.
@@ -42,6 +48,7 @@ public final class SyncStats {
     private final Map<String, Long> blockRequestsByPeer = new HashMap<>();
 
     private final Lock leechesLock = new ReentrantLock();
+    private final boolean leechesEnabled;
 
     /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
     private final Map<String, List<Long>> statusRequestTimeByPeers = new HashMap<>();
@@ -51,12 +58,31 @@ public final class SyncStats {
     private double overallAvgPeerResponseTime;
 
     private final Lock responsesLock = new ReentrantLock();
+    private final boolean responsesEnabled;
 
-    SyncStats(long _startBlock) {
+    /**
+     * @param enabled all starts are enabled when {@code true}, all stats are disabled otherwise
+     * @implNote Enables all statistics.
+     */
+    @VisibleForTesting
+    SyncStats(long _startBlock, boolean enabled) {
+        this(
+                _startBlock,
+                enabled,
+                enabled ? StatsType.getAllSpecificTypes() : Collections.emptyList());
+    }
+
+    SyncStats(long _startBlock, boolean averageEnabled, Collection<StatsType> showStatistics) {
         this.start = System.currentTimeMillis();
         this.startBlock = _startBlock;
         this.avgBlocksPerSec = 0;
         this.overallAvgPeerResponseTime = 0L;
+
+        this.averageEnabled = averageEnabled;
+        requestsEnabled = showStatistics.contains(StatsType.REQUESTS);
+        seedEnabled = showStatistics.contains(StatsType.SEEDS);
+        leechesEnabled = showStatistics.contains(StatsType.LEECHES);
+        responsesEnabled = showStatistics.contains(StatsType.RESPONSES);
     }
 
     /**
@@ -65,14 +91,16 @@ public final class SyncStats {
      * @param _blockNumber best block number
      */
     void update(long _blockNumber) {
-        blockAverageLock.lock();
-        try {
-            avgBlocksPerSec =
-                    (double) (_blockNumber - startBlock)
-                            * 1000
-                            / (System.currentTimeMillis() - start);
-        } finally {
-            blockAverageLock.unlock();
+        if (averageEnabled) {
+            blockAverageLock.lock();
+            try {
+                avgBlocksPerSec =
+                        ((double) _blockNumber - startBlock)
+                                * 1000
+                                / (System.currentTimeMillis() - start);
+            } finally {
+                blockAverageLock.unlock();
+            }
         }
     }
 
@@ -92,29 +120,31 @@ public final class SyncStats {
      * @param type the type of request added
      */
     public void updateTotalRequestsToPeer(String nodeId, RequestType type) {
-        requestsLock.lock();
-        try {
-            RequestCounter current = requestsToPeers.get(nodeId);
+        if (requestsEnabled) {
+            requestsLock.lock();
+            try {
+                RequestCounter current = requestsToPeers.get(nodeId);
 
-            if (current == null) {
-                current = new RequestCounter();
-                requestsToPeers.put(nodeId, current);
+                if (current == null) {
+                    current = new RequestCounter();
+                    requestsToPeers.put(nodeId, current);
+                }
+
+                switch (type) {
+                    case STATUS:
+                        current.incStatus();
+                        break;
+                    case HEADERS:
+                        current.incHeaders();
+                        break;
+                    case BODIES:
+                        current.incBodies();
+                        break;
+                }
+
+            } finally {
+                requestsLock.unlock();
             }
-
-            switch (type) {
-                case STATUS:
-                    current.incStatus();
-                    break;
-                case HEADERS:
-                    current.incHeaders();
-                    break;
-                case BODIES:
-                    current.incBodies();
-                    break;
-            }
-
-        } finally {
-            requestsLock.unlock();
         }
     }
 
@@ -163,14 +193,16 @@ public final class SyncStats {
      * @param _totalBlocks total number of blocks received
      */
     public void updatePeerTotalBlocks(String _nodeId, int _totalBlocks) {
-        seedsLock.lock();
-        try {
-            long blocks = (long) _totalBlocks;
-            if (blocksByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                blocksByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                long blocks = (long) _totalBlocks;
+                if (blocksByPeer.putIfAbsent(_nodeId, blocks) != null) {
+                    blocksByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                }
+            } finally {
+                seedsLock.unlock();
             }
-        } finally {
-            seedsLock.unlock();
         }
     }
 
@@ -205,14 +237,16 @@ public final class SyncStats {
      * @param _totalBlocks total number of blocks requested
      */
     public void updateTotalBlockRequestsByPeer(String _nodeId, int _totalBlocks) {
-        leechesLock.lock();
-        try {
-            long blocks = (long) _totalBlocks;
-            if (blockRequestsByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                blockRequestsByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+        if (leechesEnabled) {
+            leechesLock.lock();
+            try {
+                long blocks = (long) _totalBlocks;
+                if (blockRequestsByPeer.putIfAbsent(_nodeId, blocks) != null) {
+                    blockRequestsByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                }
+            } finally {
+                leechesLock.unlock();
             }
-        } finally {
-            leechesLock.unlock();
         }
     }
 
@@ -246,16 +280,18 @@ public final class SyncStats {
      * @param _requestTime time when the request was sent in nanoseconds
      */
     public void addPeerRequestTime(String _nodeId, long _requestTime) {
-        responsesLock.lock();
-        try {
-            List<Long> requestStartTimes =
-                    statusRequestTimeByPeers.containsKey(_nodeId)
-                            ? statusRequestTimeByPeers.get(_nodeId)
-                            : new LinkedList<>();
-            requestStartTimes.add(_requestTime);
-            statusRequestTimeByPeers.put(_nodeId, requestStartTimes);
-        } finally {
-            responsesLock.unlock();
+        if (responsesEnabled) {
+            responsesLock.lock();
+            try {
+                List<Long> requestStartTimes =
+                        statusRequestTimeByPeers.containsKey(_nodeId)
+                                ? statusRequestTimeByPeers.get(_nodeId)
+                                : new LinkedList<>();
+                requestStartTimes.add(_requestTime);
+                statusRequestTimeByPeers.put(_nodeId, requestStartTimes);
+            } finally {
+                responsesLock.unlock();
+            }
         }
     }
 
@@ -266,16 +302,18 @@ public final class SyncStats {
      * @param _responseTime time when the response was received in nanoseconds
      */
     public void addPeerResponseTime(String _nodeId, long _responseTime) {
-        responsesLock.lock();
-        try {
-            List<Long> responseEndTimes =
-                    statusResponseTimeByPeers.containsKey(_nodeId)
-                            ? statusResponseTimeByPeers.get(_nodeId)
-                            : new LinkedList<>();
-            responseEndTimes.add(_responseTime);
-            statusResponseTimeByPeers.put(_nodeId, responseEndTimes);
-        } finally {
-            responsesLock.unlock();
+        if (requestsEnabled) {
+            responsesLock.lock();
+            try {
+                List<Long> responseEndTimes =
+                        statusResponseTimeByPeers.containsKey(_nodeId)
+                                ? statusResponseTimeByPeers.get(_nodeId)
+                                : new LinkedList<>();
+                responseEndTimes.add(_responseTime);
+                statusResponseTimeByPeers.put(_nodeId, responseEndTimes);
+            } finally {
+                responsesLock.unlock();
+            }
         }
     }
 
