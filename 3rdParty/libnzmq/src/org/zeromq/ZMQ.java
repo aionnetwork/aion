@@ -2575,6 +2575,9 @@ public class ZMQ {
      * Class that interfaces the generation of CURVE key pairs
      */
     public static class Curve {
+        static {
+            new NativeZmqLoader().load();
+        }
 
         /**
          * A container for a public and a corresponding secret key

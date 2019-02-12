@@ -19,7 +19,7 @@ public class NativeZmqLoader {
     /**
      * Load native libs for ZMQ, unless:
      *   (1) this class has already loaded it once successfully or 
-     *   (2) {@link NO_EMBEDDED_LIB_FLAG} is set 
+     *   (2) {@link #NO_EMBEDDED_LIB_FLAG} is set
      * 
      */
     public void load() {
