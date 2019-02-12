@@ -26,10 +26,10 @@ def load_credentials():
     
     return False
 
-# Filter sequence of items based on the value
+# Filter a generator
 def filter_results(seq, value):
     for e1 in seq.items:
-        if e1.metadata.namespace==value:
+        if (e1.metadata.namespace==value and e1.metadata.annotations["type"]=="node"):
             yield e1
 
 # Query all deployments under the default namespace

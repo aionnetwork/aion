@@ -15,6 +15,7 @@ spec:
       name: aion-node
       annotations: 
         date: date
+        type: node
     spec: 
       imagePullSecrets:
         - name: acr-auth   
