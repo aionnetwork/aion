@@ -63,7 +63,7 @@ def filter_results(seq, value):
     for e1 in seq.items:
         if e1.metadata.namespace==value:
             yield e1
-            print (e1)
+            #print (e1)
 
 # Filter list
 def filter_pods(seq, value):
@@ -73,7 +73,7 @@ def filter_pods(seq, value):
 
 def list_deployments():
     v1 = client.CoreV1Api()
-    print("Finding pods with their IPs:")
+    print("Finding pods:")
     ret = v1.list_pod_for_all_namespaces(watch=False)
 
     return filter_results(ret, namespace)
