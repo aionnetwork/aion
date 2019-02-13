@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -858,7 +857,7 @@ public class AionRepositoryImpl
     public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(
             byte[] value, int limit, DatabaseType dbType) {
         if (limit <= 0) {
-            return new HashMap<>();
+            return Collections.emptyMap();
         } else {
             IByteArrayKeyValueDatabase db = selectDatabase(dbType);
 

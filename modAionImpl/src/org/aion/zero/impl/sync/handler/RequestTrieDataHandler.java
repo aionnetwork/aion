@@ -3,6 +3,7 @@ package org.aion.zero.impl.sync.handler;
 import static org.aion.p2p.V1Constants.TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.p2p.Ctrl;
@@ -62,8 +63,13 @@ public final class RequestTrieDataHandler extends Handler {
                 this.log.debug("<req-trie from-db={} key={} peer={}>", dbType, key, displayId);
             }
 
-            // retrieve from blockchain depending on db type
-            byte[] value = chain.getTrieNode(key.getData(), dbType);
+            byte[] value = null;
+            try {
+                // retrieve from blockchain depending on db type
+                value = chain.getTrieNode(key.getData(), dbType);
+            } catch (Exception e) {
+                this.log.error("<req-trie value retrieval failed>", e);
+            }
 
             if (value != null) {
                 ResponseTrieData response;
@@ -77,16 +83,16 @@ public final class RequestTrieDataHandler extends Handler {
                         limit = TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE;
                     } else {
                         // the first value counts towards the limit
-                        limit--;
-                        limit =
-                                limit < TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE
-                                        ? limit
-                                        : TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE;
+                        limit = Math.min(limit - 1, TRIE_DATA_REQUEST_MAXIMUM_BATCH_SIZE);
                     }
 
-                    // determine if the node can be expanded
-                    Map<ByteArrayWrapper, byte[]> referencedNodes =
-                            chain.getReferencedTrieNodes(value, limit, dbType);
+                    Map<ByteArrayWrapper, byte[]> referencedNodes = Collections.emptyMap();
+                    try {
+                        // determine if the node can be expanded
+                        referencedNodes = chain.getReferencedTrieNodes(value, limit, dbType);
+                    } catch (Exception e) {
+                        this.log.error("<req-trie reference retrieval failed>", e);
+                    }
 
                     // generate response with referenced nodes
                     response = new ResponseTrieData(key, value, referencedNodes, dbType);
@@ -96,14 +102,13 @@ public final class RequestTrieDataHandler extends Handler {
                 this.p2p.send(peerId, displayId, response);
             }
         } else {
+            this.log.error("<req-trie decode-error msg-bytes={} peer={}>", message.length, peerId);
+
             if (log.isTraceEnabled()) {
                 this.log.trace(
                         "<req-trie decode-error for msg={} peer={}>",
                         Arrays.toString(message),
                         peerId);
-            } else {
-                this.log.error(
-                        "<req-trie decode-error msg-bytes={} peer={}>", message.length, peerId);
             }
         }
     }
