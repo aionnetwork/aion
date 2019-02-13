@@ -7,7 +7,7 @@ import sys
 import time
 import datetime
 
-max_num_deploy = 2
+max_num_deploy = 3
 namespace = "default"
 
 # Update deployment annotation (Allows redeployment of pod with the same image by modifying annoration)
