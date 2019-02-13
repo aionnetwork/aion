@@ -891,8 +891,9 @@ public class TrieImpl implements Trie {
         synchronized (cache) {
             appendHashes(node, hashes);
 
-            while (!hashes.isEmpty() && collect.getSize() < limit) {
-                byte[] myHash = hashes.remove(0);
+            int items = hashes.size();
+            for (int i = 0; (i < items) && (collect.getSize() < limit); i++) {
+                byte[] myHash = hashes.get(i);
                 node = this.getCache().get(myHash);
 
                 if (node != null) {
@@ -902,12 +903,14 @@ public class TrieImpl implements Trie {
                             Value val = new Value(siblings.get(1));
                             if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
                                 hashes.add(val.asBytes());
+                                items++;
                             }
                         } else {
                             for (int j = 0; j < LIST_SIZE; ++j) {
                                 Value val = new Value(siblings.get(j));
                                 if (val.isHashCode()) {
                                     hashes.add(val.asBytes());
+                                    items++;
                                 }
                             }
                         }
