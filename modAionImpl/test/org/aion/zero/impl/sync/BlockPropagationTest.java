@@ -337,7 +337,7 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        0);
+                        new ArrayList());
 
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
                 .isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
@@ -402,7 +402,7 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        0);
+                        new ArrayList());
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
@@ -464,7 +464,7 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        0);
+                        new ArrayList());
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
@@ -520,7 +520,7 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        0);
+                        new ArrayList());
 
         // pretend that we propagate the new block
         handler.propagateNewBlock(block); // send counter incremented

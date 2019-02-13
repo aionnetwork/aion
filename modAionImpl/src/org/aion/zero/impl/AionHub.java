@@ -183,7 +183,7 @@ public class AionHub {
                         chainConfig.createBlockHeaderValidator(),
                         cfg.getNet().getP2p().inSyncOnlyMode(),
                         apiVersion,
-                        mempool.getPendingTxSize());
+                        mempool.getPendingTransactions());
 
         registerCallback();
 

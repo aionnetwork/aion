@@ -11,7 +11,7 @@ public final class ResStatus extends Msg {
 
     private static final int minLen = 8 + 1 + 1 + 32 + 32;
 
-    private static final int minLenNew = 8 + 1 + 1 + 32 + 32 + 1 + 2 + 1 + 1 + 4;
+    private static final int minLenNew = minLen + 1 + 2 + 1 + 1 + 4;
 
     private final long bestBlockNumber; // 8
 
