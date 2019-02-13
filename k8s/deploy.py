@@ -17,12 +17,11 @@ def update_annotations(configuration):
 
 def load_credentials():
     for i in range(1,4):
-        print("Attempt: " + str(i))
         try:
             config.load_kube_config()
             return True
         except DefaultCredentialsError as e:
-            print("Unable to load credentials, waiting 10s and retrying")
+            #print("Unable to load credentials, waiting 10s and retrying")
             time.sleep(10)
     
     return False
@@ -33,7 +32,7 @@ def update_image(configuration, image):
     template_image[1] = image
     configuration["spec"]["template"]["spec"]["containers"][0]["image"] = ":".join(template_image)
 
-
+# Create a new deployment (Not enough aion nodes currently deployed)
 def deploy(num, image):
     with open(path.join(path.dirname(__file__), "aion_node.yaml")) as f:
         dep = yaml.safe_load(f)
@@ -49,7 +48,7 @@ def deploy(num, image):
         try:
             resp = k8s_beta.create_namespaced_deployment(
             body=dep, namespace=namespace)
-            print("Deployment created. status='%s'" % str(resp.status))
+            #print("Deployment created. status='%s'" % str(resp.status))
         except ApiException as e:
             print("Exception occured when attempting to create new deployment")
             print("Status: %s"  % str(e.status))
@@ -57,13 +56,14 @@ def deploy(num, image):
             print("")
             print("Exception when calling ExtensionsV1beta1Api->create_namespaced_deployment: %s\n" % e)
             sys.exit(1)
-
+        
+        return dep["metadata"]["name"]
+    
 # Filter a generator
 def filter_results(seq, value):
     for e1 in seq.items:
         if (e1.metadata.namespace==value and e1.metadata.annotations["type"]=="node"):
             yield e1
-            #print (e1)
 
 # Filter list
 def filter_pods(seq, value):
@@ -71,19 +71,22 @@ def filter_pods(seq, value):
         if(e1.metadata.namespace==value and e1.metadata.annotations["type"]=="node"):
             yield e1
 
+# List current deployments
 def list_deployments():
     v1 = client.CoreV1Api()
-    print("Finding pods:")
+    #print("Finding pods:")
     ret = v1.list_pod_for_all_namespaces(watch=False)
 
     return filter_results(ret, namespace)
 
+# Find oldest deployment from the passed list of deployments
 def find_oldest(deployments):
     sorted_deployment = sorted(deployments, 
                         key = lambda a: a.metadata.creation_timestamp, 
                         reverse=False)
     return sorted_deployment[0]
 
+# Update a deployment with with specified image
 def update(deployments, image):
     oldest_deployed = find_oldest(deployments)
 
@@ -106,7 +109,7 @@ def update(deployments, image):
             name=to_update,
             body=dep, 
             namespace=namespace)
-            print("Deployment  %s updated to latest build; status: %s" % (to_update, resp.status))
+            #print("Deployment  %s updated to latest build; status: %s" % (to_update, resp.status))
         except ApiException as e:
             print("Exception occured when attempting to create new deployment")
             print("Status: %s"  % str(e.status))
@@ -114,12 +117,9 @@ def update(deployments, image):
             print("")
             print("Exception when calling ExtensionsV1beta1Api->create_namespaced_deployment: %s\n" % e)
             sys.exit(1)
+        return dep["metadata"]["name"]    
 
 def main(image):
-    # Configs can be set in Configuration class directly or using helper
-    # utility. If no argument provided, the config will be loaded from
-    # default location.
-
     deployments = list_deployments()
     dep = []
 
@@ -133,12 +133,12 @@ def main(image):
         print("%s\t%s\t%s" % (i.status.pod_ip, i.metadata.namespace, i.metadata.name))
 
     if(num_deployments < max_num_deploy):
-        print("Deploying new node. Current nodes: %s, Requested nodes: %s" %(num_deployments, max_num_deploy))
-        deploy(num_deployments + 1, image)
+        #print("Deploying new node. Current nodes: %s, Requested nodes: %s" %(num_deployments, max_num_deploy))
+        return deploy(num_deployments + 1, image)
     else:
-        print("Desired number of deployments has been met: " + str(num_deployments))
-        print("Updating oldest build with image: %s" % str(image))
-        update(dep, image)
+        #print("Desired number of deployments has been met: " + str(num_deployments))
+        #print("Updating oldest build with image: %s" % str(image))
+        return update(dep, image)
 
 if __name__ == '__main__':
 
@@ -153,5 +153,6 @@ if __name__ == '__main__':
     else:
         image = sys.argv[1]
 
-    main(image)
+    deployed_name = main(image)
+    print(deployed_name)
     sys.exit(0)

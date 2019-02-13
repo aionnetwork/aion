@@ -6,6 +6,8 @@ properties([[$class: 'jenkins.model.BuildDiscarderProperty', strategy:
 node {
 	def app
 	def appName = 'aion'
+	def deployName
+	def endPoint
 
     stage('Clone repository') {
         /* Let's make sure we have the repository cloned to our workspace */
@@ -54,7 +56,15 @@ node {
 
         withPythonEnv('python3') {
             sh 'pip install -r k8s/requirements.txt'
-            sh "python k8s/deploy.py ${env.BUILD_NUMBER}"
+            deployName = sh("python k8s/deploy.py ${env.BUILD_NUMBER}", returnStdout: true)
         }
     }
+
+	stage("Fetch Deployment Endpoint") {
+		endPoint = sh("python k8s/find_endpoint.py " + deployName)
+	}
+
+	stage("Run Test") {
+		sh("echo " + endPoint)
+	}
 }
