@@ -56,12 +56,14 @@ node {
 
         withPythonEnv('python3') {
             sh 'pip install -r k8s/requirements.txt'
-            deployName = sh("python k8s/deploy.py ${env.BUILD_NUMBER}", returnStdout: true)
+            deployName = sh(script: "python k8s/deploy.py ${env.BUILD_NUMBER}", returnStdout: true)
         }
     }
 
 	stage("Fetch Deployment Endpoint") {
-		endPoint = sh("python k8s/find_endpoint.py " + deployName)
+		withPythonEnv('python3') {
+			endPoint = sh(script: "python k8s/find_endpoint.py " + deployName, returnStdout: true)
+		}
 	}
 
 	stage("Run Test") {

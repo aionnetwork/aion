@@ -7,7 +7,7 @@
 		<rpc active="true" ip="0.0.0.0" port="8545">
 			<cors-enabled>false</cors-enabled>
 			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
-			<apis-enabled>web3,eth,personal,stratum</apis-enabled>
+			<apis-enabled>web3,eth,personal,stratum,net,ops</apis-enabled>
 		</rpc>
 		<java active="false" ip="127.0.0.1" port="8547">
 			<secure-connect>true</secure-connect>
@@ -24,10 +24,10 @@
 	<net>
 		<id>1</id>
 		<nodes>
-                	<!-- <node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f333@40.70.221.182:30303</node> -->
-			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f333@10.0.37.24:30303</node>
-			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f554@10.0.71.177:30303</node>
-			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f567@10.0.171.165:30303</node>
+			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f333@10.0.37.24:30303</node> <!-- 2 -->
+			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f554@10.0.71.177:30303</node> <!-- 1 -->
+			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f567@10.0.171.165:30303</node> <!-- seed -->
+            <node>p2p://d97ae533-8454-428f-96d3-1e41a5b2ffff@10.0.198.237:30303</node> <!-- 3 -->
 		</nodes>
 		<p2p>
 			<ip>0.0.0.0</ip>
@@ -45,7 +45,7 @@
 	</sync>
 	<consensus>
 		<mining>false</mining>
-		<miner-address>0000000000000000000000000000000000000000000000000000000000000000</miner-address>
+		<miner-address>a037818674c51fafbb1da0656dd467076d6a00552e13dfb1137d3ca6f288b65f</miner-address>
 		<cpu-mine-threads>2</cpu-mine-threads>
 		<extra-data>AION</extra-data>
 		<nrg-strategy>
