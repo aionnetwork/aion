@@ -1005,6 +1005,17 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                                 || !TransactionTypeValidator.isValid(
                                                         tx.getTargetVM()))) {
                     LOG.error("Some transactions in the block are invalid");
+                    if (LOG.isDebugEnabled()) {
+                        for (AionTransaction tx : txs) {
+                            LOG.debug(
+                                    "Tx valid ["
+                                            + TXValidator.isValid(tx)
+                                            + "]. Type valid ["
+                                            + TransactionTypeValidator.isValid(tx.getTargetVM())
+                                            + "]\n"
+                                            + tx.toString());
+                        }
+                    }
                     return false;
                 }
 
