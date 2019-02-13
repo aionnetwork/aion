@@ -65,7 +65,7 @@ public final class SyncStats {
     private final boolean responsesEnabled;
 
     /**
-     * @param enabled all starts are enabled when {@code true}, all stats are disabled otherwise
+     * @param enabled all stats are enabled when {@code true}, all stats are disabled otherwise
      * @implNote Enables all statistics.
      */
     @VisibleForTesting

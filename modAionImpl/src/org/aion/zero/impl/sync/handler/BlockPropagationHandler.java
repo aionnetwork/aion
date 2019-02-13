@@ -153,6 +153,11 @@ public class BlockPropagationHandler {
                         result);
             }
             boolean stored = blockchain.storePendingStatusBlock(block);
+            if (stored) {
+                this.syncStats.updatePeerStoredBlocks(_displayId, 1);
+                this.syncStats.updatePeerTotalBlocks(_displayId, 1);
+            }
+
             if (log.isDebugEnabled()) {
                 log.debug(
                         "Block hash = {}, number = {}, txs = {} was {}.",
@@ -165,7 +170,10 @@ public class BlockPropagationHandler {
             result = this.blockchain.tryToConnect(block);
 
             long t2 = System.currentTimeMillis();
-            this.syncStats.updatePeerImportedBlocks(_displayId, 1);
+            if (result.isStored()) {
+                this.syncStats.updatePeerImportedBlocks(_displayId, 1);
+                this.syncStats.updatePeerTotalBlocks(_displayId, 1);
+            }
 
             if (log.isInfoEnabled()) {
                 log.info(

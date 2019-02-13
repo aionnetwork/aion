@@ -281,7 +281,7 @@ public class BlockPropagationTest {
         Map<Integer, INode> node = new HashMap<>();
         node.put(1, senderMock);
 
-        SyncStats syncStats = new SyncStats(block.getNumber());
+        SyncStats syncStats = new SyncStats(block.getNumber(), true);
 
         P2pMock p2pMock =
                 new P2pMock(node) {
@@ -359,7 +359,7 @@ public class BlockPropagationTest {
 
         AionBlock bestBlock = bundle.bc.getBestBlock();
         assertThat(bestBlock.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
-        SyncStats syncStats =  new SyncStats(bestBlock.getNumber());
+        SyncStats syncStats =  new SyncStats(bestBlock.getNumber(), true);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,
@@ -419,7 +419,7 @@ public class BlockPropagationTest {
 
         assertThat(bundle.bc.genesis.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
 
-        SyncStats syncStats =  new SyncStats(bundle.bc.getBestBlock().getNumber());
+        SyncStats syncStats =  new SyncStats(bundle.bc.getBestBlock().getNumber(), true);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,
@@ -473,7 +473,7 @@ public class BlockPropagationTest {
                         .withDefaultAccounts(accounts)
                         .build();
 
-        SyncStats syncStats =  new SyncStats(bundle.bc.getBestBlock().getNumber());
+        SyncStats syncStats =  new SyncStats(bundle.bc.getBestBlock().getNumber(), true);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,
