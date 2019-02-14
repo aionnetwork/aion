@@ -11,6 +11,7 @@ import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
+import org.aion.zero.impl.sync.SyncStats;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.aion.zero.impl.types.AionBlock;
@@ -38,6 +39,8 @@ public class BlockPropagationHandler {
     /** LRU cache map, maintains the latest cacheSize blocks seen (not counting duplicates). */
     private final Map<ByteArrayWrapper, Boolean> cacheMap;
 
+    private final SyncStats syncStats;
+
     private final IP2pMgr p2pManager;
 
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
@@ -51,6 +54,7 @@ public class BlockPropagationHandler {
     public BlockPropagationHandler(
             final int cacheSize,
             final IAionBlockchain blockchain,
+            final SyncStats syncStats,
             final IP2pMgr p2pManager,
             BlockHeaderValidator<A0BlockHeader> headerValidator,
             final boolean isSyncOnlyNode) {
@@ -67,6 +71,8 @@ public class BlockPropagationHandler {
 
         // the expectation is that we will not have as many peers as we have blocks
         this.blockchain = blockchain;
+
+        this.syncStats = syncStats;
 
         // record our own nodeId to cover corner case
         this.p2pManager = p2pManager;
@@ -147,6 +153,11 @@ public class BlockPropagationHandler {
                         result);
             }
             boolean stored = blockchain.storePendingStatusBlock(block);
+            if (stored) {
+                this.syncStats.updatePeerStoredBlocks(_displayId, 1);
+                this.syncStats.updatePeerTotalBlocks(_displayId, 1);
+            }
+
             if (log.isDebugEnabled()) {
                 log.debug(
                         "Block hash = {}, number = {}, txs = {} was {}.",
@@ -157,7 +168,13 @@ public class BlockPropagationHandler {
             }
         } else {
             result = this.blockchain.tryToConnect(block);
+
             long t2 = System.currentTimeMillis();
+            if (result.isStored()) {
+                this.syncStats.updatePeerImportedBlocks(_displayId, 1);
+                this.syncStats.updatePeerTotalBlocks(_displayId, 1);
+            }
+
             if (log.isInfoEnabled()) {
                 log.info(
                         "<import-status: node = {}, hash = {}, number = {}, txs = {}, result = {}, time elapsed = {} ms>",
@@ -191,10 +208,7 @@ public class BlockPropagationHandler {
                     new ResStatus(
                             bestBlock.getNumber(), td.toByteArray(), bestBlock.getHash(), genesis);
 
-            this.p2pManager
-                    .getActiveNodes()
-                    .values()
-                    .stream()
+            this.p2pManager.getActiveNodes().values().stream()
                     .filter(n -> n.getIdHash() != nodeId)
                     .filter(n -> n.getTotalDifficulty().compareTo(td) >= 0)
                     .forEach(
@@ -226,10 +240,7 @@ public class BlockPropagationHandler {
 
         // current proposal is to send to all peers with lower blockNumbers
         AtomicBoolean sent = new AtomicBoolean();
-        this.p2pManager
-                .getActiveNodes()
-                .values()
-                .stream()
+        this.p2pManager.getActiveNodes().values().stream()
                 .filter(n -> n.getIdHash() != nodeId)
                 // peer is within 5 blocks of the block we're about to send
                 .filter(

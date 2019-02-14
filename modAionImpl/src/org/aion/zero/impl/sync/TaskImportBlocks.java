@@ -47,7 +47,7 @@ final class TaskImportBlocks implements Runnable {
 
     private final BlockingQueue<BlocksWrapper> downloadedBlocks;
 
-    private final SyncStats stats;
+    private final SyncStats syncStats;
 
     private final Map<ByteArrayWrapper, Object> importedBlockHashes;
 
@@ -66,7 +66,7 @@ final class TaskImportBlocks implements Runnable {
     TaskImportBlocks(
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
-            final SyncStats _stats,
+            final SyncStats _syncStats,
             final BlockingQueue<BlocksWrapper> _downloadedBlocks,
             final Map<ByteArrayWrapper, Object> _importedBlockHashes,
             final Map<Integer, PeerState> _peerStates,
@@ -75,7 +75,7 @@ final class TaskImportBlocks implements Runnable {
             final int _compactFrequency) {
         this.chain = _chain;
         this.start = _start;
-        this.stats = _stats;
+        this.syncStats = _syncStats;
         this.downloadedBlocks = _downloadedBlocks;
         this.importedBlockHashes = _importedBlockHashes;
         this.peerStates = _peerStates;
@@ -133,7 +133,7 @@ final class TaskImportBlocks implements Runnable {
                             peerState.getBase());
                 }
 
-                stats.update(getBestBlockNumber());
+                syncStats.update(getBestBlockNumber());
             }
         }
         if (log.isDebugEnabled()) {
@@ -257,6 +257,7 @@ final class TaskImportBlocks implements Runnable {
 
                 if (importResult.isStored()) {
                     importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
+                    this.syncStats.updatePeerImportedBlocks(displayId, 1);
 
                     if (last <= b.getNumber()) {
                         last = b.getNumber() + 1;
@@ -264,6 +265,7 @@ final class TaskImportBlocks implements Runnable {
                 }
             } catch (Exception e) {
                 log.error("<import-block throw> ", e);
+
                 if (e.getMessage() != null && e.getMessage().contains("No space left on device")) {
                     log.error("Shutdown due to lack of disk space.");
                     System.exit(0);
@@ -278,7 +280,7 @@ final class TaskImportBlocks implements Runnable {
 
                 // if any block results in NO_PARENT, all subsequent blocks will too
                 if (importResult == ImportResult.NO_PARENT) {
-                    executors.submit(new TaskStorePendingBlocks(chain, batch, displayId, log));
+                    executors.submit(new TaskStorePendingBlocks(chain, batch, displayId, syncStats, log));
 
                     if (log.isDebugEnabled()) {
                         log.debug(

@@ -37,6 +37,10 @@ public final class SyncStats {
      */
     private final Map<String, Long> blocksByPeer = new HashMap<>();
 
+    private final Map<String, Long> importedByPeer = new HashMap<>();
+
+    private final Map<String, Long> storedByPeer = new HashMap<>();
+
     private final Lock seedsLock = new ReentrantLock();
     private final boolean seedEnabled;
 
@@ -61,7 +65,7 @@ public final class SyncStats {
     private final boolean responsesEnabled;
 
     /**
-     * @param enabled all starts are enabled when {@code true}, all stats are disabled otherwise
+     * @param enabled all stats are enabled when {@code true}, all stats are disabled otherwise
      * @implNote Enables all statistics.
      */
     @VisibleForTesting
@@ -171,9 +175,7 @@ public final class SyncStats {
                 percentageReq.put(entry.getKey(), entry.getValue().getTotal() / totalReq);
             }
 
-            return percentageReq
-                    .entrySet()
-                    .stream()
+            return percentageReq.entrySet().stream()
                     .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                     .collect(
                             Collectors.toMap(
@@ -214,9 +216,7 @@ public final class SyncStats {
     Map<String, Long> getTotalBlocksByPeer() {
         seedsLock.lock();
         try {
-            return blocksByPeer
-                    .entrySet()
-                    .stream()
+            return blocksByPeer.entrySet().stream()
                     .filter(entry -> entry.getValue() > 0)
                     .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                     .collect(
@@ -225,6 +225,74 @@ public final class SyncStats {
                                     Map.Entry::getValue,
                                     (e1, e2) -> e2,
                                     LinkedHashMap::new));
+        } finally {
+            seedsLock.unlock();
+        }
+    }
+
+    /**
+     * Updates the total number of blocks imported from each seed peer
+     *
+     * @param _nodeId peer node display Id
+     * @param _importedBlocks total number of blocks imported
+     */
+    public void updatePeerImportedBlocks(String _nodeId, int _importedBlocks) {
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                long blocks = (long) _importedBlocks;
+                if (importedByPeer.putIfAbsent(_nodeId, blocks) != null) {
+                    importedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                }
+            } finally {
+                seedsLock.unlock();
+            }
+        }
+    }
+
+    /**
+     * Obtains the total number of blocks imported from the given seed peer
+     *
+     * @return number of total imported blocks by peer
+     */
+    long getImportedBlocksByPeer(String _nodeId) {
+        seedsLock.lock();
+        try {
+            return this.importedByPeer.getOrDefault(_nodeId, (long) 0);
+        } finally {
+            seedsLock.unlock();
+        }
+    }
+
+    /**
+     * Updates the total number of blocks stored from each seed peer
+     *
+     * @param _nodeId peer node display Id
+     * @param _storedBlocks total number of blocks stored
+     */
+    public void updatePeerStoredBlocks(String _nodeId, int _storedBlocks) {
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                long blocks = (long) _storedBlocks;
+                if (storedByPeer.putIfAbsent(_nodeId, blocks) != null) {
+                    storedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                }
+            } finally {
+                seedsLock.unlock();
+            }
+        }
+    }
+
+    /**
+     * Obtains the total number of blocks stored from the given seed peer
+     *
+     * @return number of total stored blocks by peer
+     */
+    long getStoredBlocksByPeer(String _nodeId) {
+        seedsLock.lock();
+        try {
+            return this.storedByPeer.getOrDefault(_nodeId, (long) 0);
         } finally {
             seedsLock.unlock();
         }
@@ -258,9 +326,7 @@ public final class SyncStats {
     Map<String, Long> getTotalBlockRequestsByPeer() {
         leechesLock.lock();
         try {
-            return blockRequestsByPeer
-                    .entrySet()
-                    .stream()
+            return blockRequestsByPeer.entrySet().stream()
                     .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
                     .collect(
                             Collectors.toMap(
@@ -353,9 +419,7 @@ public final class SyncStats {
                             ? 0d
                             : overallAvgPeerResponseTime / avgResponseTimeByPeers.size();
 
-            return avgResponseTimeByPeers
-                    .entrySet()
-                    .stream()
+            return avgResponseTimeByPeers.entrySet().stream()
                     .sorted(Map.Entry.comparingByValue())
                     .collect(
                             Collectors.toMap(

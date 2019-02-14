@@ -4,6 +4,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.aion.zero.impl.BlockchainTestUtils.generateAccounts;
 import static org.aion.zero.impl.BlockchainTestUtils.generateNewBlock;
 import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChain;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -208,33 +210,30 @@ public class SyncStatsTest {
 
         int peerNo = 0;
         int processedBlocks = 0;
-
         for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
             int blocks = totalBlocks;
             processedBlocks += totalBlocks;
             while (blocks > 0) {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                stats.updatePeerTotalBlocks(peers.get(peerNo), blocks);
+                stats.updatePeerTotalBlocks(peers.get(peerNo), 1);
                 blocks--;
             }
             peerNo++;
         }
 
         Map<String, Long> totalBlockReqByPeer = stats.getTotalBlocksByPeer();
-
         assertThat(totalBlockReqByPeer.size()).isEqualTo(peers.size());
 
-        int blocks = 3;
-
+        int total = 3;
         long lastTotalBlocks = processedBlocks;
-
         for (String nodeId : peers) {
             // ensures desc order
             assertThat(lastTotalBlocks >= totalBlockReqByPeer.get(nodeId)).isTrue();
             lastTotalBlocks = totalBlockReqByPeer.get(nodeId);
-            assertThat(totalBlockReqByPeer.get(nodeId).compareTo(Long.valueOf(blocks)) == 0);
-            blocks--;
+            assertEquals(Long.valueOf(total), totalBlockReqByPeer.get(nodeId));
+
+            total--;
         }
     }
 
@@ -254,7 +253,7 @@ public class SyncStatsTest {
             while (blocks > 0) {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                stats.updatePeerTotalBlocks(peers.get(peerNo), blocks);
+                stats.updatePeerTotalBlocks(peers.get(peerNo), 1);
                 blocks--;
             }
             peerNo++;
@@ -262,6 +261,122 @@ public class SyncStatsTest {
 
         // ensures still empty
         assertThat(stats.getTotalBlocksByPeer().isEmpty()).isTrue();
+    }
+
+    @Test
+    public void testImportedBlocksByPeerStats() {
+        StandaloneBlockchain chain = bundle.bc;
+        generateRandomChain(chain, 1, 1, accounts, 10);
+
+        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+
+        // ensures correct behaviour on empty stats
+        assertEquals(stats.getImportedBlocksByPeer(peers.get(0)), 0);
+
+        int peerNo = 0;
+        for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
+            int blocks = totalBlocks;
+            while (blocks > 0) {
+                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
+                ImportResult result = chain.tryToConnect(current);
+                assertTrue(result.isStored());
+                stats.updatePeerImportedBlocks(peers.get(peerNo), 1);
+                blocks--;
+            }
+            peerNo++;
+        }
+
+        int imported = 3;
+        for (String nodeId : peers) {
+            assertEquals((long) imported, stats.getImportedBlocksByPeer(nodeId));
+            imported--;
+        }
+    }
+
+    @Test
+    public void testImportedBlocksByPeerDisabled() {
+
+        StandaloneBlockchain chain = bundle.bc;
+        generateRandomChain(chain, 1, 1, accounts, 10);
+
+        // disables the stats
+        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
+
+        int peerNo = 0;
+        for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
+            int blocks = totalBlocks;
+            while (blocks > 0) {
+                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
+                ImportResult result = chain.tryToConnect(current);
+                assertTrue(result.isStored());
+                stats.updatePeerImportedBlocks(peers.get(peerNo), 1);
+                blocks--;
+            }
+            peerNo++;
+        }
+
+        // ensures still empty
+        for (String nodeId : peers) {
+            assertEquals(0, stats.getImportedBlocksByPeer(nodeId));
+        }
+    }
+
+    @Test
+    public void testStoredBlocksByPeerStats() {
+        StandaloneBlockchain chain = bundle.bc;
+        generateRandomChain(chain, 1, 1, accounts, 10);
+
+        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+
+        // ensures correct behaviour on empty stats
+        assertEquals(stats.getStoredBlocksByPeer(peers.get(0)), 0);
+
+        int peerNo = 0;
+        for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
+            int blocks = totalBlocks;
+            while (blocks > 0) {
+                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
+                boolean result = chain.storePendingStatusBlock(current);
+                assertTrue(result);
+                stats.updatePeerStoredBlocks(peers.get(peerNo), 1);
+                blocks--;
+            }
+            peerNo++;
+        }
+
+        int stored = 3;
+        for (String nodeId : peers) {
+            assertEquals((long) stored, stats.getStoredBlocksByPeer(nodeId));
+            stored--;
+        }
+    }
+
+    @Test
+    public void testStoredBlocksByPeerDisabled() {
+
+        StandaloneBlockchain chain = bundle.bc;
+        generateRandomChain(chain, 1, 1, accounts, 10);
+
+        // disables the stats
+        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
+
+        int peerNo = 0;
+        for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
+            int blocks = totalBlocks;
+            while (blocks > 0) {
+                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
+                boolean result = chain.storePendingStatusBlock(current);
+                assertTrue(result);
+                stats.updatePeerStoredBlocks(peers.get(peerNo), 1);
+                blocks--;
+            }
+            peerNo++;
+        }
+
+        // ensures still empty
+        for (String nodeId : peers) {
+            assertEquals(0, stats.getStoredBlocksByPeer(nodeId));
+        }
     }
 
     @Test
