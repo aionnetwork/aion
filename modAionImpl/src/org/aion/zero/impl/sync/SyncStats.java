@@ -237,14 +237,16 @@ public final class SyncStats {
      * @param _importedBlocks total number of blocks imported
      */
     public void updatePeerImportedBlocks(String _nodeId, int _importedBlocks) {
-        seedsLock.lock();
-        try {
-            long blocks = (long) _importedBlocks;
-            if (importedByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                importedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                long blocks = (long) _importedBlocks;
+                if (importedByPeer.putIfAbsent(_nodeId, blocks) != null) {
+                    importedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                }
+            } finally {
+                seedsLock.unlock();
             }
-        } finally {
-            seedsLock.unlock();
         }
     }
 
@@ -256,9 +258,7 @@ public final class SyncStats {
     long getImportedBlocksByPeer(String _nodeId) {
         seedsLock.lock();
         try {
-            return this.importedByPeer.get(_nodeId);
-        } catch (NullPointerException e) {
-            return 0;
+            return this.importedByPeer.getOrDefault(_nodeId, (long) 0);
         } finally {
             seedsLock.unlock();
         }
@@ -271,14 +271,16 @@ public final class SyncStats {
      * @param _storedBlocks total number of blocks stored
      */
     public void updatePeerStoredBlocks(String _nodeId, int _storedBlocks) {
-        seedsLock.lock();
-        try {
-            long blocks = (long) _storedBlocks;
-            if (storedByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                storedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                long blocks = (long) _storedBlocks;
+                if (storedByPeer.putIfAbsent(_nodeId, blocks) != null) {
+                    storedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                }
+            } finally {
+                seedsLock.unlock();
             }
-        } finally {
-            seedsLock.unlock();
         }
     }
 
@@ -290,9 +292,7 @@ public final class SyncStats {
     long getStoredBlocksByPeer(String _nodeId) {
         seedsLock.lock();
         try {
-            return this.storedByPeer.get(_nodeId);
-        } catch (NullPointerException e) {
-            return 0;
+            return this.storedByPeer.getOrDefault(_nodeId, (long) 0);
         } finally {
             seedsLock.unlock();
         }
