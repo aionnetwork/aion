@@ -110,12 +110,8 @@ public class InFlightConfigReceiver implements InFlightConfigReceiverMBean {
                         String.format(
                                 "The key '%s' does not support in-flight configuration change",
                                 key));
-            } else if (maybeApplier == null) {
-                throw new IllegalStateException(
-                        String.format(
-                                "DynamicConfigKeyRegistry configuration error.  There is no applier for the bound key '%s'",
-                                key));
             }
+
             IDynamicConfigApplier applier = maybeApplier.get();
 
             final InFlightConfigChangeResult result;
