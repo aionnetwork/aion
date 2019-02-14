@@ -81,7 +81,7 @@ final class TaskImportTrieData implements Runnable {
                 TrieNodeResult result = chain.importTrieNode(key.getData(), value, dbType);
 
                 if (result.isSuccessful()) {
-                    fastSyncMgr.addImportedNode(key, value);
+                    fastSyncMgr.addImportedNode(key, value, dbType);
                     log.debug(
                             "<import-trie-nodes: key={}, value length={}, db={}, result={}, peer={}>",
                             key,
@@ -108,7 +108,8 @@ final class TaskImportTrieData implements Runnable {
 
             if (!failed) {
                 // reexamine missing states and make further requests
-                fastSyncMgr.updateRequests(tnw.getNodeKey(), tnw.getReferencedNodes().keySet());
+                fastSyncMgr.updateRequests(
+                        tnw.getNodeKey(), tnw.getReferencedNodes().keySet(), tnw.getDbType());
             }
         }
 
