@@ -27,6 +27,7 @@ import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.trie.scan.CollectFullSetOfNodes;
+import org.aion.mcf.trie.scan.CollectMappings;
 import org.aion.mcf.trie.scan.CountNodes;
 import org.aion.mcf.trie.scan.ExtractToDatabase;
 import org.aion.mcf.trie.scan.ScanAction;
@@ -880,6 +881,67 @@ public class TrieImpl implements Trie {
     //        }
     //        return true;
     //    }
+
+    @Override
+    public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(byte[] value, int limit) {
+        CollectMappings collect = new CollectMappings();
+        ArrayList<byte[]> hashes = new ArrayList<>();
+        Value node = Value.fromRlpEncoded(value);
+
+        synchronized (cache) {
+            appendHashes(node, hashes);
+
+            int items = hashes.size();
+            for (int i = 0; (i < items) && (collect.getSize() < limit); i++) {
+                byte[] myHash = hashes.get(i);
+                node = this.getCache().get(myHash);
+
+                if (node != null) {
+                    if (node.isList()) {
+                        List<Object> siblings = node.asList();
+                        if (siblings.size() == PAIR_SIZE) {
+                            Value val = new Value(siblings.get(1));
+                            if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
+                                hashes.add(val.asBytes());
+                                items++;
+                            }
+                        } else {
+                            for (int j = 0; j < LIST_SIZE; ++j) {
+                                Value val = new Value(siblings.get(j));
+                                if (val.isHashCode()) {
+                                    hashes.add(val.asBytes());
+                                    items++;
+                                }
+                            }
+                        }
+                    }
+                    collect.doOnNode(myHash, node);
+                }
+            }
+        }
+        return collect.getNodes();
+    }
+
+    private void appendHashes(Value node, ArrayList<byte[]> hashes) {
+        if (node.isHashCode()) {
+            hashes.add(node.asBytes());
+        } else if (node.isList()) {
+            List<Object> siblings = node.asList();
+            if (siblings.size() == PAIR_SIZE) {
+                Value val = new Value(siblings.get(1));
+                if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
+                    hashes.add(val.asBytes());
+                }
+            } else {
+                for (int j = 0; j < LIST_SIZE; ++j) {
+                    Value val = new Value(siblings.get(j));
+                    if (val.isHashCode()) {
+                        hashes.add(val.asBytes());
+                    }
+                }
+            }
+        }
+    }
 
     @Override
     public long saveFullStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db) {
