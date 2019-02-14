@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<aion>
+	<mode>aion</mode>
+	<id>[NODE-ID-PLACEHOLDER]</id>
+	<api>
+		<!--rpc config docs: https://github.com/aionnetwork/aion/wiki/JSON-RPC-API-Docs-->
+		<rpc active="true" ip="0.0.0.0" port="8545">
+			<cors-enabled>false</cors-enabled>
+			<!--comma-separated list, APIs available: web3,net,debug,personal,eth,stratum-->
+			<apis-enabled>web3,eth,personal,stratum,net,ops</apis-enabled>
+		</rpc>
+		<java active="false" ip="127.0.0.1" port="8547">
+			<secure-connect>true</secure-connect>
+		</java>
+		<nrg-recommendation>
+			<!--default NRG price used by api if oracle disabled, minimum price recommended by oracle-->
+			<default>10000000000</default>
+			<!--max NRG price recommended by oracle-->
+			<max>100000000000</max>
+			<!--enable/diable nrg-oracle service. if disabled, api returns default NRG price if asked for nrgPrice-->
+			<oracle-enabled>false</oracle-enabled>
+		</nrg-recommendation>
+	</api>
+	<net>
+		<id>1</id>
+		<nodes>
+			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f333@10.0.37.24:30303</node> <!-- 2 -->
+			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f554@10.0.71.177:30303</node> <!-- 1 -->
+			<node>p2p://d97ae533-8454-428f-96d3-1e41a5b2f567@10.0.171.165:30303</node> <!-- seed -->
+            <node>p2p://d97ae533-8454-428f-96d3-1e41a5b2ffff@10.0.198.237:30303</node> <!-- 3 -->
+		</nodes>
+		<p2p>
+			<ip>0.0.0.0</ip>
+			<port>30303</port>
+			<discover>false</discover>
+			<max-temp-nodes>128</max-temp-nodes>
+			<max-active-nodes>128</max-active-nodes>
+		</p2p>
+	</net>
+	<sync>
+		<blocks-queue-max>32</blocks-queue-max>
+		<show-status>true</show-status>
+		<!--requires show-status=true; comma separated list of options: [all, peer_states, requests, seeds, leeches, responses, none]-->
+		<show-statistics>none</show-statistics>
+	</sync>
+	<consensus>
+		<mining>false</mining>
+		<miner-address>a037818674c51fafbb1da0656dd467076d6a00552e13dfb1137d3ca6f288b65f</miner-address>
+		<cpu-mine-threads>2</cpu-mine-threads>
+		<extra-data>AION</extra-data>
+		<nrg-strategy>
+			<clamped-decay upper-bound="20000000" lower-bound="15000000"></clamped-decay>
+		</nrg-strategy>
+	</consensus>
+	<db>
+		<!--Sets the physical location on disk where data will be stored.-->
+		<path>database</path>
+		<!--Boolean value. Enable/disable database integrity check run at startup.-->
+		<check_integrity>false</check_integrity>
+		<!--Data pruning behavior for the state database. Options: FULL, TOP, SPREAD.-->
+		<!--FULL: the state is not pruned-->
+		<!--TOP: the state is kept only for the top K blocks; limits sync to branching only within the stored blocks-->
+		<!--SPREAD: the state is kept for the top K blocks and at regular block intervals-->
+		<state-storage>FULL</state-storage>
+		<!--Database implementation used to store data; supported options: leveldb, h2, rocksdb.-->
+		<!--Caution: changing implementation requires re-syncing from genesis!-->
+		<vendor>leveldb</vendor>
+		<!--Boolean value. Enable/disable database compression to trade storage space for execution time.-->
+		<enable_db_compression>false</enable_db_compression>
+	</db>
+	<log>
+		<!--Enable/Disable logback service; if disabled, output will not be logged.-->
+		<log-file>true</log-file>
+		<!--Sets the physical location on disk where log files will be stored.-->
+		<log-path>log</log-path>
+		<GEN>INFO</GEN>
+		<VM>ERROR</VM>
+		<API>INFO</API>
+		<SYNC>INFO</SYNC>
+		<DB>WARN</DB>
+		<CONS>INFO</CONS>
+		<P2P>DEBUG</P2P>
+	</log>
+	<tx>
+		<cacheMax>256</cacheMax>
+	</tx>
+</aion>

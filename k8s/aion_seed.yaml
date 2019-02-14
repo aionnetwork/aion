@@ -1,0 +1,41 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata: 
+  name: aion-seed
+spec: 
+  replicas: 1
+  strategy:
+    type: Recreate
+  progressDeadlineSeconds: 60
+  template: 
+    metadata:
+      namespace: ci-deployment
+      labels: 
+        app: aion-seed
+      name: aion-seed
+      annotations: 
+        date: date
+        type: seed
+    spec: 
+      imagePullSecrets:
+        - name: acr-auth   
+      containers: 
+      - 
+        image: "aionkuberacr.azurecr.io/aion:latest"
+        imagePullPolicy: Always
+        name: aion
+        resources:
+          limits:
+            memory: 6Gi
+          requests:
+            memory: 2Gi
+        volumeMounts:
+        - mountPath: "/aion/custom/database"
+          name: volume
+
+      volumes:
+      - name: volume
+        persistentVolumeClaim:
+          claimName: azure-managed-disk
+  
+     

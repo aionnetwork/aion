@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata: 
+  name: aion-3-service
+  labels: 
+    app: aion-3
+spec:
+  externalTrafficPolicy: Cluster
+  sessionAffinity: None
+  type: LoadBalancer
+  ports:
+  - 
+    port: 8545
+    name: rpc
+    targetPort: 8545
+  - 
+   port: 30303
+   name: p2p
+   targetPort: 30303
+  selector:
+    app: aion-3

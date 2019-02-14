@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata: 
+  name: aion-node
+spec: 
+  replicas: 1
+  strategy:
+    type: Recreate
+  progressDeadlineSeconds: 60
+  template: 
+    metadata:
+      namespace: ci-deployment
+      labels: 
+        app: aion-node
+      name: aion-node
+      annotations: 
+        date: date
+        type: node
+    spec: 
+      imagePullSecrets:
+        - name: acr-auth   
+      containers: 
+      - 
+        image: "aionkuberacr.azurecr.io/aion:latest"
+        imagePullPolicy: Always
+        name: aion
+        resources:
+          limits:
+            memory: 6Gi
+          requests:
+            memory: 2Gi
+        #ports: 
+        #  - 
+        #    containerPort: 8545
+        #    name: aion-node
+        #    containerPort: 30303
+        #    name: p2p
+     
