@@ -220,6 +220,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
          */
         this.chainConfiguration = chainConfig;
         TransactionTypeValidator.enableAvmCheck(config.isAvmEnabled());
+        BulkExecutor.enabledAvmCheck(config.isAvmEnabled());
 
         this.grandParentBlockHeaderValidator =
                 this.chainConfiguration.createGrandParentHeaderValidator();
