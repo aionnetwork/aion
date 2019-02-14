@@ -28,6 +28,10 @@ allprojects {
         flatDir {
             dirs './lib' // does not recurse, don't make subdirectories in here
         }
+
+        maven { 
+            url "${rootDir}/lib/maven_repo"
+        }
     }
 }
 
@@ -247,9 +251,6 @@ build {
 }
 
 task prePack(type:Exec)  {
-    dependsOn ':aion_api:cleanPack' 
-    dependsOn ':aion_api:build'
-
     if(findProject(":modGui") != null && gradle.useGui) { 
         dependsOn ':modGui:setupAionRootProject';
         environment "useGui", "true"
@@ -312,7 +313,6 @@ task packDevDocker(type: Exec) {
 }
 
 clean { 
-    dependsOn ':aion_api:clean' 
     dependsOn 'cleanJars'
     delete dirPack
     delete file('report')
@@ -363,7 +363,7 @@ task fixIdea {
     // this task puts those files where IDEA expects them by running build and test
 
     dependsOn build
-    configure(subprojects.findAll { it.name != 'aion_api' }) {
+    subprojects {
         dependsOn test
     }
 }
@@ -383,30 +383,22 @@ def kernelVersionFromSrc() {
     return version;
 }
 
-configure(subprojects.findAll { it.name != 'aion_api' })  { 
-    // it makes the following harmless warning message, but that will not be a problem once aion_api
-    // is no longer a submodule:
-    //
-    // Configuration(s) specified but the install task does not exist in project :aion_api.
-    // Publication mavenPublication not found in project :aion_api.
-    
-    apply plugin: 'maven-publish'
-    publishing {
-        publications {
-            mavenJava(MavenPublication) {
-                groupId = 'network.aion'
+subprojects  { 
+	apply plugin: 'maven-publish'
+	publishing {
+		publications {
+			mavenJava(MavenPublication) {
+				groupId = 'network.aion'
+				artifactId = project.hasProperty('mavenPubArtifactId')
+                                ? mavenPubArtifactId
+                                : project.name
+				version = project.hasProperty('mavenPubVersion')
+                                ? mavenPubVersion
+                                : kernelVersionFromSrc();
 
-                afterEvaluate {
-                    artifactId = project.hasProperty('mavenPubArtifactId')
-                                    ? mavenPubArtifactId
-                                    : project.name
-                    version = project.hasProperty('mavenPubVersion')
-                                    ? mavenPubVersion
-                                    : kernelVersionFromSrc();
-                }
-                from components.java
-            }   
-        }   
+				from components.java
+			}   
+		}   
 
         repositories {
             maven {
@@ -450,5 +442,5 @@ configure(subprojects.findAll { it.name != 'aion_api' })  {
             }
         }
 
-    } //publishing
+	} //publishing
 }

@@ -13,7 +13,6 @@ include 'modAionBase', 'modAion', 'modAionImpl',
     'modVM',
     'modApiServer',
     'aion_fastvm/modFastVM',
-    'aion_api',
     'aion_vm_api',
     'modBoot'
 
