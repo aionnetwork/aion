@@ -897,9 +897,10 @@ public class TrieImpl implements Trie {
         ArrayList<byte[]> hashes = new ArrayList<>();
         hashes.add(hash);
 
-        while (!hashes.isEmpty()) {
-            synchronized (cache) {
-                byte[] myHash = hashes.remove(0);
+        synchronized (cache) {
+            int items = hashes.size();
+            for (int i = 0; i < items; i++) {
+                byte[] myHash = hashes.get(i);
                 Value node = this.getCache().get(myHash);
                 if (node == null) {
                     // performs action for missing nodes
@@ -911,12 +912,14 @@ public class TrieImpl implements Trie {
                             Value val = new Value(siblings.get(1));
                             if (val.isHashCode() && !hasTerminator((byte[]) siblings.get(0))) {
                                 hashes.add(val.asBytes());
+                                items++;
                             }
                         } else {
                             for (int j = 0; j < LIST_SIZE; ++j) {
                                 Value val = new Value(siblings.get(j));
                                 if (val.isHashCode()) {
                                     hashes.add(val.asBytes());
+                                    items++;
                                 }
                             }
                         }
