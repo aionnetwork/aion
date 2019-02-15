@@ -29,8 +29,6 @@ public class TaskWrite implements Runnable {
             final Msg _msg,
             final ChannelBuffer _cb,
             final IP2pMgr _p2pMgr) {
-        com.google.common.base.Preconditions.checkNotNull(_msg);
-
         this.nodeShortId = _nodeShortId;
         this.sc = _sc;
         this.msg = _msg;

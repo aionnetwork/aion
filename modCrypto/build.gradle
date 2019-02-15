@@ -13,8 +13,7 @@ dependencies {
     testCompile "org.mockito:mockito-core:2.23.0"
 }
 
-task compileNative(type: Exec) { 
-    environment JAVA_HOME: "/home/sergiu/opt/jdk-10.0.1" // Do not push.
+task compileNative(type: Exec) {
     workingDir 'src_native'
     commandLine 'make'
 }

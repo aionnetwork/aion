@@ -61,7 +61,7 @@ public class InstrumentedResTxReceiptHandler extends ResTxReceiptHandler {
     protected void persist(List<AionTxInfo> txInfo) {
         super.persist(txInfo);
         for(AionTxInfo txi : txInfo) {
-            rrv.receivedTxHash(txi.getReceipt().getTransaction().getHash());
+            rrv.receivedTxHash(txi.getReceipt().getTransaction().getTransactionHash());
             rrv.validateAgainstBlockchain(txi);
             rrv.validateDatabases(txi, txStore);
         }

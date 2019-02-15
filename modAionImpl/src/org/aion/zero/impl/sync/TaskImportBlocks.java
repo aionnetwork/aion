@@ -95,14 +95,16 @@ final class TaskImportBlocks implements Runnable {
     TaskImportBlocks(
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
-            final SyncStats _stats,
+            final SyncStats _syncStats,
             final BlockingQueue<BlocksWrapper> _downloadedBlocks,
             final Map<ByteArrayWrapper, Object> _importedBlockHashes,
             final Map<Integer, PeerState> _peerStates,
             final Logger _log,
+            final int _slowImportTime,
+            final int _compactFrequency,
             final boolean requestReceipts,
             final ReceiptsRetrievalVerifier receiptsRetrievalVerifier) {
-        this(_chain, _start, _stats, _downloadedBlocks, _importedBlockHashes, _peerStates, _log);
+        this(_chain, _start, _syncStats, _downloadedBlocks, _importedBlockHashes, _peerStates, _log, _slowImportTime, _compactFrequency);
         this.requestReceipts = requestReceipts;
         this.rrv = receiptsRetrievalVerifier;
     }

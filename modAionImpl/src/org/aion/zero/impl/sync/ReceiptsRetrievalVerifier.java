@@ -37,13 +37,13 @@ public class ReceiptsRetrievalVerifier {
     public void requestReceiptsFromPeers(List<AionBlock> blocks, String originNodeDisplayId, int originNodeHashId) {
         for(AionBlock b : blocks) {
             for(AionTransaction tx : b.getTransactionsList())
-            outstandingRequests.put(ByteUtil.toHexString(tx.getHash()), b);
+            outstandingRequests.put(ByteUtil.toHexString(tx.getTransactionHash()), b);
         }
 
         ReqTxReceipts request = new ReqTxReceipts(blocks
                 .stream()
                 .flatMap(b -> b.getTransactionsList()
-                        .stream().map(t ->  t.getHash())
+                        .stream().map(t ->  t.getTransactionHash())
                 )
                 .collect(Collectors.toList())
         );
@@ -61,27 +61,27 @@ public class ReceiptsRetrievalVerifier {
 
     /** Validate an incoming AionTxInfo against what is stored in the canonical tx db */
     public void validateAgainstBlockchain(AionTxInfo receivedInfo) {
-        byte[] hash = receivedInfo.getReceipt().getTransaction().getHash();
+        byte[] hash = receivedInfo.getReceipt().getTransaction().getTransactionHash();
         AionTxInfo blockchainInfo = bc.getTransactionInfo(hash);
 
         if(!Arrays.equals(
-                receivedInfo.getReceipt().getTransaction().getHash(),
-                blockchainInfo.getReceipt().getTransaction().getHash())) {
+                receivedInfo.getReceipt().getTransaction().getTransactionHash(),
+                blockchainInfo.getReceipt().getTransaction().getTransactionHash())) {
             throw new IllegalArgumentException(String.format("Can't compare AionTxInfo of different hashes (%s / %s)",
-                    receivedInfo.getReceipt().getTransaction().getHash(),
-                    blockchainInfo.getReceipt().getTransaction().getHash()));
+                    receivedInfo.getReceipt().getTransaction().getTransactionHash(),
+                    blockchainInfo.getReceipt().getTransaction().getTransactionHash()));
         }
 
         String result = receivedInfo.equals(blockchainInfo) ? "SAME" : "DIFFERENT";
         LOG.info(String.format("<<<ReceiptsRetrievalVerifier %s>>> result=%s txHash=%s",
                 "blockchain",
                 result,
-                ByteUtil.toHexString(receivedInfo.getReceipt().getTransaction().getHash())));
+                ByteUtil.toHexString(receivedInfo.getReceipt().getTransaction().getTransactionHash())));
     }
 
     /** Validate that alternate tx db and canonical tx db returns same data when given a tx hash key. */
     public void validateDatabases(AionTxInfo receivedInfo, TransactionStore alternateTxStore) {
-        byte[] hash = receivedInfo.getReceipt().getTransaction().getHash();
+        byte[] hash = receivedInfo.getReceipt().getTransaction().getTransactionHash();
 
         List<AionTxInfo> altDbInfos = alternateTxStore.get(hash);
         List<AionTxInfo> canonicalDbInfos = AionRepositoryImpl.inst().getTransactionStore().get(hash);

@@ -209,7 +209,6 @@ public class SyncMgr {
                                 log,
                                 _slowImportTime,
                                 _compactFrequency,
-                                rrv,
                                 requestReceipts,
                                 rrv),
                         "sync-ib");

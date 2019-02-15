@@ -25,13 +25,11 @@ public final class CfgSync {
     private int compactFrequency;
 
     private static final int BLOCKS_QUEUE_MAX = 32;
-
     private static final int SLOW_IMPORT_TIME = 1_000; // 1 sec
     private static final int COMPACT_FREQUENCY = 600_000; // 10 min
+
     // For verification of AJK-91 only - shouldn't be merged into master
     private boolean requestReceipts;
-
-    private static int BLOCKS_QUEUE_MAX = 32;
 
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
