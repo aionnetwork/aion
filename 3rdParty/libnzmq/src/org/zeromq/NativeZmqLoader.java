@@ -23,6 +23,9 @@ public class NativeZmqLoader {
      *   (2) {@link #NO_EMBEDDED_LIB_FLAG} is set
      *
      * The following OSes are supported: Linux, Mac OS X, Windows.
+     *
+     * @implNote this method will write the native libs into a temporary location on disk
+     * @throws IOException if failed to read/write native libs to/from temporary location
      */
     public void load() {
         if(!LOADED_EMBEDDED_LIBRARY && System.getProperty(NO_EMBEDDED_LIB_FLAG) == null) {
@@ -31,7 +34,7 @@ public class NativeZmqLoader {
                 libDir.toFile().deleteOnExit();
                 load(System.getProperty("os.name").toLowerCase(), libDir);
             } catch (IOException ioe) {
-                ioe.printStackTrace();
+                throw new RuntimeException("Failed to persist and load native library for ZMQ", ioe);
             }
         } 
     }
