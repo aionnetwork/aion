@@ -1,12 +1,12 @@
 package org.aion.zero.impl.sync.handler;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
@@ -17,7 +17,6 @@ import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTransaction;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
@@ -55,7 +54,7 @@ public class BlockPropagationHandler {
 
     private final byte apiVersion;
 
-    private final List<AionTransaction> pendingTransactions;
+    private final IPendingStateInternal pendingState;
 
     public BlockPropagationHandler(
             final int cacheSize,
@@ -65,7 +64,7 @@ public class BlockPropagationHandler {
             BlockHeaderValidator<A0BlockHeader> headerValidator,
             final boolean isSyncOnlyNode,
             final byte apiVersion,
-            final List<AionTransaction> pendingTransactions) {
+            final IPendingStateInternal pendingState) {
         /*
          * Size of the cache maintained within the map, a lower cacheSize
          * saves space, but indicates we may "forget" about a block sooner.
@@ -89,7 +88,7 @@ public class BlockPropagationHandler {
 
         this.isSyncOnlyNode = isSyncOnlyNode;
         this.apiVersion = apiVersion;
-        this.pendingTransactions = pendingTransactions;
+        this.pendingState = pendingState;
     }
 
     // assumption here is that blocks propagated have unique hashes
@@ -222,7 +221,7 @@ public class BlockPropagationHandler {
                             genesis,
                             apiVersion,
                             (short) p2pManager.getActiveNodes().size(),
-                            BigInteger.valueOf(this.pendingTransactions.size()).toByteArray(),
+                            BigInteger.valueOf(this.pendingState.getPendingTxSize()).toByteArray(),
                             p2pManager.getAvgLatency());
 
             this.p2pManager.getActiveNodes().values().stream()

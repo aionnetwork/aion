@@ -10,16 +10,23 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
+import org.aion.evtmgr.EventMgrModule;
+import org.aion.evtmgr.IEventMgr;
 import org.aion.p2p.Handler;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.IPeerMetric;
 import org.aion.p2p.Msg;
 import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.blockchain.AionPendingStateImpl;
+import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.types.AionBlock;
 import org.junit.Test;
@@ -328,6 +335,8 @@ public class BlockPropagationTest {
                         .withDefaultAccounts(accounts)
                         .build();
 
+        IEventMgr evtMgr = this.loadEventMgr();
+        anotherBundle.bc.setEventManager(evtMgr);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,
@@ -337,7 +346,8 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        new ArrayList());
+                        AionPendingStateImpl.createForTesting(
+                                CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst()));
 
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
                 .isEqualTo(BlockPropagationHandler.PropStatus.CONNECTED);
@@ -392,7 +402,9 @@ public class BlockPropagationTest {
 
         AionBlock bestBlock = bundle.bc.getBestBlock();
         assertThat(bestBlock.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
-        SyncStats syncStats =  new SyncStats(bestBlock.getNumber(), true);
+        SyncStats syncStats = new SyncStats(bestBlock.getNumber(), true);
+        IEventMgr evtMgr = this.loadEventMgr();
+        anotherBundle.bc.setEventManager(evtMgr);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,
@@ -402,7 +414,8 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        new ArrayList());
+                        AionPendingStateImpl.createForTesting(
+                                CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst()));
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
@@ -451,10 +464,11 @@ public class BlockPropagationTest {
                         .withValidatorConfiguration("simple")
                         .withDefaultAccounts(accounts)
                         .build();
-
         assertThat(bundle.bc.genesis.getHash()).isEqualTo(anotherBundle.bc.genesis.getHash());
 
-        SyncStats syncStats =  new SyncStats(bundle.bc.getBestBlock().getNumber(), true);
+        IEventMgr evtMgr = this.loadEventMgr();
+        anotherBundle.bc.setEventManager(evtMgr);
+        SyncStats syncStats = new SyncStats(bundle.bc.getBestBlock().getNumber(), true);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,
@@ -464,7 +478,8 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        new ArrayList());
+                        AionPendingStateImpl.createForTesting(
+                                CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst()));
 
         // block is processed
         assertThat(handler.processIncomingBlock(senderMock.getIdHash(), "test", block))
@@ -510,7 +525,9 @@ public class BlockPropagationTest {
                         .withDefaultAccounts(accounts)
                         .build();
 
-        SyncStats syncStats =  new SyncStats(bundle.bc.getBestBlock().getNumber(), true);
+        SyncStats syncStats = new SyncStats(bundle.bc.getBestBlock().getNumber(), true);
+        IEventMgr evtMgr = this.loadEventMgr();
+        anotherBundle.bc.setEventManager(evtMgr);
         BlockPropagationHandler handler =
                 new BlockPropagationHandler(
                         1024,
@@ -520,7 +537,8 @@ public class BlockPropagationTest {
                         anotherBundle.bc.getBlockHeaderValidator(),
                         false,
                         (byte) 2,
-                        new ArrayList());
+                        AionPendingStateImpl.createForTesting(
+                                CfgAion.inst(), anotherBundle.bc, AionRepositoryImpl.inst()));
 
         // pretend that we propagate the new block
         handler.propagateNewBlock(block); // send counter incremented
@@ -533,5 +551,18 @@ public class BlockPropagationTest {
 
         // we expect the counter to be incremented once (on propagation)
         assertThat(sendCount.get()).isEqualTo(1);
+    }
+
+    private IEventMgr loadEventMgr() {
+        ServiceLoader.load(EventMgrModule.class);
+        IEventMgr eventMgr = null;
+        Properties prop = new Properties();
+        prop.put(EventMgrModule.MODULENAME, "org.aion.evtmgr.impl.mgr.EventMgrA0");
+        try {
+            eventMgr = EventMgrModule.getSingleton(prop).getEventMgr();
+        } catch (Exception e) {
+            System.out.println("Failed to load the Event Manager Module");
+        }
+        return eventMgr;
     }
 }
