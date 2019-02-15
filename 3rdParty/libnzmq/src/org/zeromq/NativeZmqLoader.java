@@ -28,6 +28,7 @@ public class NativeZmqLoader {
         if(!LOADED_EMBEDDED_LIBRARY && System.getProperty(NO_EMBEDDED_LIB_FLAG) == null) {
             try {
                 final Path libDir = Files.createTempDirectory("zmq_native");
+                libDir.toFile().deleteOnExit();
                 load(System.getProperty("os.name").toLowerCase(), libDir);
             } catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -94,18 +95,18 @@ public class NativeZmqLoader {
             suffix = "." + fnParts[fnParts.length - 1];
         }
 
-        String libFile = libDir.toAbsolutePath() + File.separator + filename;
+        File libFile = new File(libDir.toAbsolutePath() + File.separator + filename);
         try (
-            final OutputStream out = new BufferedOutputStream(new FileOutputStream(libFile));
+            final FileOutputStream fos = new FileOutputStream(libFile);
+            final OutputStream out = new BufferedOutputStream(fos);
         ) {
             int len = 0;
             byte[] buffer = new byte[8192];
             while ((len = in.read(buffer)) > -1)
                 out.write(buffer, 0, len);
-            out.close();
-            in.close();
         }
 
-        return libFile;
+        libFile.deleteOnExit();
+        return libFile.getAbsolutePath();
     }
 }
