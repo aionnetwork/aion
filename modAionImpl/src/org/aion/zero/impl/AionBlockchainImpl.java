@@ -273,7 +273,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param eventManager
      */
-    void setEventManager(IEventMgr eventManager) {
+    public void setEventManager(IEventMgr eventManager) {
         this.evtMgr = eventManager;
     }
 

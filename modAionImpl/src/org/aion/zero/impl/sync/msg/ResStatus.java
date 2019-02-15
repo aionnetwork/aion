@@ -33,6 +33,8 @@ public final class ResStatus extends Msg {
 
     private final int latency; // 4
 
+    private int msgLen;
+
     /**
      * @param bestBlockNumber long
      * @param _totalDifficulty byte[]
@@ -65,6 +67,7 @@ public final class ResStatus extends Msg {
                 _pendingTxCount.length > Byte.MAX_VALUE ? 1 : (byte) _pendingTxCount.length;
         this.pendingTxCount = _pendingTxCount;
         this.latency = _latency;
+        this.msgLen = 8 + 1 + totalDifficultyLen + 32 + 32 + 1 + 2 + 1 + pendingTxCountLen + 4;
     }
 
     /** @return long */
@@ -147,8 +150,7 @@ public final class ResStatus extends Msg {
 
     @Override
     public byte[] encode() {
-        int _len = 8 + 1 + totalDifficultyLen + 32 + 32 + 1 + 2 + 1 + pendingTxCountLen + 4;
-        ByteBuffer bb = ByteBuffer.allocate(_len);
+        ByteBuffer bb = ByteBuffer.allocate(msgLen);
         bb.putLong(this.bestBlockNumber);
         bb.put(this.totalDifficultyLen);
         bb.put(this.totalDifficulty);
