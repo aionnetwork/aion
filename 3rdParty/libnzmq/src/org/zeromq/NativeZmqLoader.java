@@ -1,41 +1,62 @@
 package org.zeromq;
 
 import java.io.*;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Loads (i.e. {@link System#load(String)} the native libraries that {@link ZMQ} binds to.
+ * The appropriate library is loaded based on the OS name.
  */
 public class NativeZmqLoader {
     public static final String NO_EMBEDDED_LIB_FLAG = "ZMQ_NO_EMBEDDED";
-    public static boolean LOADED_EMBEDDED_LIBRARY = false;
+    private static boolean LOADED_EMBEDDED_LIBRARY = false;
+
+    /** @return whether this class has already loaded the embedded library */
+    public static boolean isLoaded() {
+        return LOADED_EMBEDDED_LIBRARY;
+    }
 
     /**
      * Load native libs for ZMQ, unless:
-     *   (1) this class has already loaded it once successfully or 
+     *   (1) this class has already loaded it once successfully (i.e. {@link #isLoaded()} is true), or
      *   (2) {@link #NO_EMBEDDED_LIB_FLAG} is set
-     * 
+     *
+     * The following OSes are supported: Linux, Mac OS X, Windows.
      */
     public void load() {
         if(!LOADED_EMBEDDED_LIBRARY && System.getProperty(NO_EMBEDDED_LIB_FLAG) == null) {
-            LOADED_EMBEDDED_LIBRARY = loadNativeEmbedded("/native/linux/zmq/libjzmq.so")
-                && loadNativeEmbedded("/native/linux/zmq/libzmq.so.5");
+            try {
+                final Path libDir = Files.createTempDirectory("zmq_native");
+                load(System.getProperty("os.name").toLowerCase(), libDir);
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
         } 
     }
 
-    private boolean loadNativeEmbedded(String resourceName) {
+    private void load(String osName, Path libDir) {
+        if (osName.contains("win")) {
+            LOADED_EMBEDDED_LIBRARY = loadNativeEmbedded("/native/win/zmq/libzmq.dll", libDir)
+                && loadNativeEmbedded("/native/win/zmq/jzmq.dll", libDir);
+        } else if (osName.contains("linux")) {
+            LOADED_EMBEDDED_LIBRARY = loadNativeEmbedded("/native/linux/zmq/libzmq.so.5", libDir)
+                && loadNativeEmbedded("/native/linux/zmq/libjzmq.so", libDir);
+        } else if (osName.contains("mac")) {
+            LOADED_EMBEDDED_LIBRARY = loadNativeEmbedded("/native/darwin/zmq/libzmq.5.dylib", libDir)
+                && loadNativeEmbedded("/native/darwin/zmq/libjzmq.0.dylib", libDir);
+        } else {
+            throw new RuntimeException("Unrecognized OS: " + osName);
+        }
+    }
+
+    private boolean loadNativeEmbedded(String resourceName, Path libDir) {
         try (InputStream is = App.class.getResourceAsStream(resourceName)) {
             if(is == null) {
                 // should hook this up to a log4j that can be configured by the top-level program
                 return false;
             } else {
-                System.load(streamToTempFile(is, tempNameForResourceName(resourceName)));
+                System.load(streamToTempFile(is, tempNameForResourceName(resourceName), libDir));
             }
             return true;
         } catch (IOException ioe) {
@@ -62,14 +83,20 @@ public class NativeZmqLoader {
      *
      * @param in input stream
      * @param filename temp output filename
+     * @param libDir location to save temp file to
      * @return path to the file
      * @throws IOException if IO error
      */
-    private String streamToTempFile(InputStream in, String filename) throws IOException {
-        final File libfile = File.createTempFile(filename, "");
+    private String streamToTempFile(InputStream in, String filename, Path libDir) throws IOException {
+        String[] fnParts = filename.split("\\.");
+        String suffix = "";
+        if(fnParts.length > 1) {
+            suffix = "." + fnParts[fnParts.length - 1];
+        }
 
+        String libFile = libDir.toAbsolutePath() + File.separator + filename;
         try (
-            final OutputStream out = new BufferedOutputStream(new FileOutputStream(libfile));
+            final OutputStream out = new BufferedOutputStream(new FileOutputStream(libFile));
         ) {
             int len = 0;
             byte[] buffer = new byte[8192];
@@ -79,6 +106,6 @@ public class NativeZmqLoader {
             in.close();
         }
 
-        return libfile.getAbsolutePath();
+        return libFile;
     }
 }
