@@ -28,6 +28,8 @@ import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
+import org.aion.mcf.trie.TrieNodeResult;
+import org.aion.p2p.V1Constants;
 import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
@@ -864,6 +866,42 @@ public class AionRepositoryImpl
             Trie trie = new TrieImpl(db);
             return trie.getReferencedTrieNodes(value, limit);
         }
+    }
+
+    /**
+     * Imports a trie node to the indicated blockchain database.
+     *
+     * @param key the hash key of the trie node to be imported
+     * @param value the value of the trie node to be imported
+     * @param dbType the database where the key-value pair should be stored
+     * @throws IllegalArgumentException if the given key is null or the database type is not
+     *     supported
+     * @return a {@link TrieNodeResult} indicating the success or failure of the import operation
+     */
+    public TrieNodeResult importTrieNode(byte[] key, byte[] value, DatabaseType dbType) {
+        // empty keys are not allowed
+        if (key == null || key.length != V1Constants.HASH_SIZE) {
+            return TrieNodeResult.INVALID_KEY;
+        }
+
+        // not allowing deletions to be imported
+        if (value == null || value.length == 0) {
+            return TrieNodeResult.INVALID_VALUE;
+        }
+
+        IByteArrayKeyValueDatabase db = selectDatabase(dbType);
+
+        Optional<byte[]> stored = db.get(key);
+        if (stored.isPresent()) {
+            if (Arrays.equals(stored.get(), value)) {
+                return TrieNodeResult.KNOWN;
+            } else {
+                return TrieNodeResult.INCONSISTENT;
+            }
+        }
+
+        db.put(key, value);
+        return TrieNodeResult.IMPORTED;
     }
 
     private IByteArrayKeyValueDatabase selectDatabase(DatabaseType dbType) {

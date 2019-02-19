@@ -18,6 +18,15 @@ public class ByteArrayWrapper
         this.hashCode = Arrays.hashCode(data);
     }
 
+    /** Constructor based on the hex representation of the byte array. */
+    public ByteArrayWrapper(String data) {
+        if (data == null) {
+            throw new NullPointerException("Data must not be null");
+        }
+        this.data = Hex.decode(data);
+        this.hashCode = Arrays.hashCode(this.data);
+    }
+
     public boolean equals(Object other) {
         if (!(other instanceof ByteArrayWrapper)) {
             return false;

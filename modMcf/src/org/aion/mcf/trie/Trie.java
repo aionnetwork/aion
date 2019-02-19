@@ -1,6 +1,7 @@
 package org.aion.mcf.trie;
 
 import java.util.Map;
+import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
 
@@ -73,6 +74,16 @@ public interface Trie {
 
     // never used
     //    boolean validate();
+
+    /**
+     * Traverse the trie starting from the given node. Return the keys for all the missing branches
+     * that are encountered during the traversal.
+     *
+     * @param key the starting node for the trie traversal
+     * @return a set of keys that were referenced as part of the trie but could not be found in the
+     *     database
+     */
+    Set<ByteArrayWrapper> getMissingNodes(byte[] key);
 
     /**
      * Retrieves nodes referenced by a trie node value, where the size of the result is bounded by
