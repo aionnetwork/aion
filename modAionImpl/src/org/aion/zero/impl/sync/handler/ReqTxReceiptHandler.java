@@ -60,10 +60,14 @@ public class ReqTxReceiptHandler extends Handler {
         List<AionTxInfo> receipts = new LinkedList<>();
         for(byte[] txHash : reqTxReceipts.getTxHashes()) {
             AionTxInfo txInfo = bc.getTransactionInfo(txHash);
-            receipts.add(txInfo);
+            if(txInfo != null) {
+                receipts.add(txInfo);
+            }
+            LOGGER.trace("Requested receipt with txHash '%s' not found; ignoring it");
         }
 
-        LOGGER.info("<<< ReqTxReceiptHandler >>>  about to send");
+        LOGGER.debug(String.format("<<< ReqTxReceiptHandler >>> Received receipt request of size %d; sending back %d receipts >>>",
+            reqTxReceipts.getTxHashes().size(), receipts.size()));
         this.p2pMgr.send(id, displayId, new ResTxReceipts(receipts));
     }
 }
