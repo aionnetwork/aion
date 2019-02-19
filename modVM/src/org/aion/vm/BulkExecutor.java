@@ -55,6 +55,12 @@ import org.slf4j.Logger;
 public class BulkExecutor {
     private static final Object LOCK = new Object();
 
+    private static boolean avmEnabled = false;
+
+    public static void enabledAvmCheck(boolean isEnabled) {
+        avmEnabled = isEnabled;
+    }
+
     private IRepository repository;
     private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild;
     private PostExecutionWork postExecutionWork;
@@ -394,11 +400,16 @@ public class BulkExecutor {
      * future.
      */
     private boolean transactionIsForFastVirtualMachine(AionTransaction transaction) {
-        if (transaction.isContractCreationTransaction()) {
-            return transaction.getTargetVM() != VirtualMachineSpecs.AVM_CREATE_CODE;
+        // first verify that the AVM is enabled
+        if (avmEnabled) {
+            if (transaction.isContractCreationTransaction()) {
+                return transaction.getTargetVM() != VirtualMachineSpecs.AVM_CREATE_CODE;
+            } else {
+                return transaction.getDestinationAddress().toBytes()[0]
+                        != NodeEnvironment.CONTRACT_PREFIX;
+            }
         } else {
-            return transaction.getDestinationAddress().toBytes()[0]
-                    != NodeEnvironment.CONTRACT_PREFIX;
+            return true;
         }
     }
 
@@ -409,11 +420,16 @@ public class BulkExecutor {
      * the destination is an AVM contract address
      */
     private boolean transactionIsForAionVirtualMachine(AionTransaction transaction) {
-        if (transaction.isContractCreationTransaction()) {
-            return transaction.getTargetVM() == VirtualMachineSpecs.AVM_CREATE_CODE;
+        // first verify that the AVM is enabled
+        if (avmEnabled) {
+            if (transaction.isContractCreationTransaction()) {
+                return transaction.getTargetVM() == VirtualMachineSpecs.AVM_CREATE_CODE;
+            } else {
+                return transaction.getDestinationAddress().toBytes()[0]
+                        == NodeEnvironment.CONTRACT_PREFIX;
+            }
         } else {
-            return transaction.getDestinationAddress().toBytes()[0]
-                    == NodeEnvironment.CONTRACT_PREFIX;
+            return false;
         }
     }
 }
