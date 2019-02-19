@@ -879,6 +879,16 @@ public class AionRepositoryImpl
      * @return a {@link TrieNodeResult} indicating the success or failure of the import operation
      */
     public TrieNodeResult importTrieNode(byte[] key, byte[] value, DatabaseType dbType) {
+        // empty keys are not allowed
+        if (key == null || key.length != V1Constants.HASH_SIZE) {
+            return TrieNodeResult.INVALID_KEY;
+        }
+
+        // not allowing deletions to be imported
+        if (value == null || value.length == 0) {
+            return TrieNodeResult.INVALID_VALUE;
+        }
+
         IByteArrayKeyValueDatabase db = selectDatabase(dbType);
 
         Optional<byte[]> stored = db.get(key);
@@ -888,16 +898,6 @@ public class AionRepositoryImpl
             } else {
                 return TrieNodeResult.INCONSISTENT;
             }
-        }
-
-        // empty keys are not allowed
-        if (key == null || key.length != V1Constants.HASH_SIZE) {
-            return TrieNodeResult.INVALID_KEY;
-        }
-
-        // not allowing deletions to be imported
-        if (value == null || value.length == 0) {
-            return TrieNodeResult.INVALID_VALUE;
         }
 
         db.put(key, value);
