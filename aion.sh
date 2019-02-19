@@ -44,9 +44,14 @@ if [[ ! ${JAVA_OPTS} = *"-Xms"* ]]; then
   JAVA_OPTS+=" -Xms4g"
 fi
 
+if [[ ! ${JAVA_OPTS} = *"-Xmx"* ]]; then
+  JAVA_OPTS+=" -Xmx8g"
+fi
+
+
 # to suppress illegal reflective access warning out of xnio and protobuf
 # (we depend on xnio transitively via undertow-core)
-JAVA_OPTS+=" -Xmx8g --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED"
+JAVA_OPTS+=" --add-opens=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED"
 
 ####### WATCHGUARD IMPLEMENTATION #######
 #				    	#
