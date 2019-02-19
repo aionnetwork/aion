@@ -20,7 +20,7 @@ import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
 /**
  * Like {@link ResTxReceiptHandler} but instead of writing to actual Transaction Store,
  * write it to an alternate Transaction Store used only for verification/testing purposes,
- * and then perform verification on the result.
+ * and then perform verification on the result by (see {@link ReceiptsRetrievalVerifier}
  */
 public class InstrumentedResTxReceiptHandler extends ResTxReceiptHandler {
     private final ReceiptsRetrievalVerifier rrv;
@@ -67,7 +67,7 @@ public class InstrumentedResTxReceiptHandler extends ResTxReceiptHandler {
         }
 
         LOGGER.info(String.format(
-                "<<< InstrumentedResTxReceiptHandler >>> Persisted batch of AionTxInfo [block0=%s, blockN=%s].  Outstanding hashes after:",
+                "InstrumentedResTxReceiptHandler persisted batch of AionTxInfo [block0=%s, blockN=%s].  Outstanding hashes after:",
                 ByteUtil.toHexString(txInfo.get(0).getBlockHash()),
                 ByteUtil.toHexString(txInfo.get(txInfo.size()-1).getBlockHash())
                 ));

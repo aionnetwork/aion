@@ -48,14 +48,14 @@ public class ReqTxReceiptHandler extends Handler {
             reqTxReceipts = new ReqTxReceipts(msg);
         } catch (NullPointerException | IllegalArgumentException ex) {
             LOGGER.error(
-                    "<<< ReqTxReceiptHandler receive >>> req-tx-receipts decode-error, unable to decode bodies from {}, len: {}, reason: {}",
+                    "ReqTxReceiptHandler req-tx-receipts decode-error, unable to decode bodies from {}, len: {}, reason: {}",
                     displayId, msg.length, ex.getMessage());
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("req-tx-receipts dump: {}", ByteUtil.toHexString(msg));
             }
             return;
         }
-        LOGGER.info("<<< ReqTxReceiptHandler receive >>> receive start, request size " + reqTxReceipts.getTxHashes().size());
+        LOGGER.debug("ReqTxReceiptHandler receive start, request size " + reqTxReceipts.getTxHashes().size());
 
         List<AionTxInfo> receipts = new LinkedList<>();
         for(byte[] txHash : reqTxReceipts.getTxHashes()) {
@@ -66,7 +66,7 @@ public class ReqTxReceiptHandler extends Handler {
             LOGGER.trace("Requested receipt with txHash '%s' not found; ignoring it");
         }
 
-        LOGGER.debug(String.format("<<< ReqTxReceiptHandler >>> Received receipt request of size %d; sending back %d receipts >>>",
+        LOGGER.debug(String.format("ReqTxReceiptHandler received receipt request of size %d; sending back %d receipts >>>",
             reqTxReceipts.getTxHashes().size(), receipts.size()));
         this.p2pMgr.send(id, displayId, new ResTxReceipts(receipts));
     }

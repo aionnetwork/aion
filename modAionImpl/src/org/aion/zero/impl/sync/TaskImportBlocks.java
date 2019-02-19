@@ -61,36 +61,10 @@ final class TaskImportBlocks implements Runnable {
 
     private final int slowImportTime;
     private final int compactFrequency;
-
     private long lastCompactTime;
-    // For verificiation of AJK-91 -- should not be committed into master
-    private boolean requestReceipts;
-    private ReceiptsRetrievalVerifier rrv;
 
-    TaskImportBlocks(
-            final AionBlockchainImpl _chain,
-            final AtomicBoolean _start,
-            final SyncStats _syncStats,
-            final BlockingQueue<BlocksWrapper> _downloadedBlocks,
-            final Map<ByteArrayWrapper, Object> _importedBlockHashes,
-            final Map<Integer, PeerState> _peerStates,
-            final Logger _log,
-            final int _slowImportTime,
-            final int _compactFrequency) {
-        this.chain = _chain;
-        this.start = _start;
-        this.syncStats = _syncStats;
-        this.downloadedBlocks = _downloadedBlocks;
-        this.importedBlockHashes = _importedBlockHashes;
-        this.peerStates = _peerStates;
-        this.log = _log;
-        this.baseList = new TreeSet<>();
-        this.state = new PeerState(NORMAL, 0L);
-        this.slowImportTime = _slowImportTime;
-        this.compactFrequency = _compactFrequency;
-        this.lastCompactTime = System.currentTimeMillis();
-        this.requestReceipts = false;
-    }
+    private final boolean requestReceipts;
+    private final ReceiptsRetrievalVerifier rrv; // Used only for testing/verification
 
     TaskImportBlocks(
             final AionBlockchainImpl _chain,
@@ -104,9 +78,34 @@ final class TaskImportBlocks implements Runnable {
             final int _compactFrequency,
             final boolean requestReceipts,
             final ReceiptsRetrievalVerifier receiptsRetrievalVerifier) {
-        this(_chain, _start, _syncStats, _downloadedBlocks, _importedBlockHashes, _peerStates, _log, _slowImportTime, _compactFrequency);
+        this.chain = _chain;
+        this.start = _start;
+        this.syncStats = _syncStats;
+        this.downloadedBlocks = _downloadedBlocks;
+        this.importedBlockHashes = _importedBlockHashes;
+        this.peerStates = _peerStates;
+        this.log = _log;
+        this.baseList = new TreeSet<>();
+        this.state = new PeerState(NORMAL, 0L);
+        this.slowImportTime = _slowImportTime;
+        this.compactFrequency = _compactFrequency;
+        this.lastCompactTime = System.currentTimeMillis();
         this.requestReceipts = requestReceipts;
         this.rrv = receiptsRetrievalVerifier;
+    }
+
+    TaskImportBlocks(
+            final AionBlockchainImpl _chain,
+            final AtomicBoolean _start,
+            final SyncStats _syncStats,
+            final BlockingQueue<BlocksWrapper> _downloadedBlocks,
+            final Map<ByteArrayWrapper, Object> _importedBlockHashes,
+            final Map<Integer, PeerState> _peerStates,
+            final Logger _log,
+            final int _slowImportTime,
+            final int _compactFrequency) {
+        this(_chain, _start, _syncStats, _downloadedBlocks, _importedBlockHashes, _peerStates, _log, _slowImportTime, _compactFrequency,
+            false /* requestReceipts */, null /* receiptsRetrievalVerifier */);
     }
 
     ExecutorService executors =
@@ -115,7 +114,6 @@ final class TaskImportBlocks implements Runnable {
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-        log.info("<<< TaskImportBlocks >>> requestReceipts = " + this.requestReceipts);
         while (start.get()) {
             BlocksWrapper bw;
             try {

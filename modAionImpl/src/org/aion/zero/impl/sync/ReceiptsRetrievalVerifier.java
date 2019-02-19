@@ -19,6 +19,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Verify receipts requests process by:
+ *  1) comparing the list of tx receipts we've requested against the list of tx receipts we've received.
+ *  2) checking that the received receipt matches that of the receipt we would have made if we had computed it locally
+ *
+ * For test/verification usage only.
+ */
 public class ReceiptsRetrievalVerifier {
     private final IP2pMgr p2p;
     private final IAionBlockchain bc;
@@ -49,9 +56,9 @@ public class ReceiptsRetrievalVerifier {
         );
 
         long b0 = blocks.get(0).getNumber();
-        long bn = blocks.get(blocks.size()-1).getNumber();
+        long bn = blocks.get(blocks.size() - 1).getNumber();
         String logMsg = String.format(
-                "<<<ReceiptsRetrievalVerifier>>> requesting receipts for for blocks (%d, %d) from peer %s.  reqSize = " + request.getTxHashes().size(),
+                "ReceiptsRetrievalVerifier requesting receipts for for blocks (%d, %d) from peer %s.",
                 b0, bn, originNodeDisplayId
         );
         LOG.info(logMsg);
@@ -73,7 +80,7 @@ public class ReceiptsRetrievalVerifier {
         }
 
         String result = receivedInfo.equals(blockchainInfo) ? "SAME" : "DIFFERENT";
-        LOG.info(String.format("<<<ReceiptsRetrievalVerifier %s>>> result=%s txHash=%s",
+        LOG.info(String.format("ReceiptsRetrievalVerifier %s result=%s txHash=%s",
                 "blockchain",
                 result,
                 ByteUtil.toHexString(receivedInfo.getReceipt().getTransaction().getTransactionHash())));
@@ -87,8 +94,7 @@ public class ReceiptsRetrievalVerifier {
         List<AionTxInfo> canonicalDbInfos = AionRepositoryImpl.inst().getTransactionStore().get(hash);
 
         String result = altDbInfos.equals(canonicalDbInfos) ? "SAME" : "DIFFERENT";
-        LOG.info(String.format("<<<ReceiptsRetrievalVerifier %s>>> result=%s altDbInfos=%s canonicalDbInfos=%s",
-                "database",
+        LOG.info(String.format("ReceiptsRetrievalVerifier result=%s altDbInfos=%s canonicalDbInfos=%s",
                 result,
                 altDbInfos,
                 canonicalDbInfos));
@@ -98,7 +104,7 @@ public class ReceiptsRetrievalVerifier {
         String sTxHash = ByteUtil.toHexString(txHash);
         if(!outstandingRequests.containsKey(sTxHash)) {
             LOG.info(String.format(
-                    "<<<ReceiptsRetrievalVerifier unexpected-rx>>> Received txHash %s but was not expected to",
+                    "ReceiptsRetrievalVerifier unexpected-rx Received txHash %s but was not expected to",
                     ByteUtil.toHexString(txHash)));
         } else {
             outstandingRequests.remove(sTxHash);
@@ -107,7 +113,7 @@ public class ReceiptsRetrievalVerifier {
 
     public void displayOutstandingRequests() {
         StringBuffer sb = new StringBuffer();
-        LOG.info("<<<ReceiptsRetrievalVerifier outstanding-requests>>>" + outstandingRequests.entrySet()
+        LOG.info("ReceiptsRetrievalVerifier outstanding-requests" + outstandingRequests.entrySet()
                 .stream()
                 .map(e -> String.format("<txHash=%s (Block %s)",
                         e.getKey(), e.getValue().getNumber()))

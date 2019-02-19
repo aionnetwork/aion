@@ -38,13 +38,13 @@ public class ResTxReceiptHandler extends Handler {
 
     @Override
     public void receive(int id, String displayId, byte[] msg) {
-        LOGGER.info("<<< ResTxReceiptHandler receive-start >>> from: " + displayId);
+        LOGGER.info("ResTxReceiptHandler received receipts results from " + displayId);
         final ResTxReceipts resTxReceipts;
         try {
             resTxReceipts = new ResTxReceipts(msg);
         } catch (NullPointerException | IllegalArgumentException ex) {
             LOGGER.error(
-                    "<res-tx-receipts decode-error, unable to Msg body from {}, len: {}, reason: {}>",
+                    "ResTxReceiptHandler decode-error, unable to Msg body from {}, length: {}, reason: {}",
                     displayId, msg.length, ex.getMessage());
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("res-tx-receipts dump: {}", ByteUtil.toHexString(msg));
@@ -57,12 +57,11 @@ public class ResTxReceiptHandler extends Handler {
             AionTransaction tx = txs.get(atr.getIndex());
             atr.setTransaction(tx);
         }
+
+        LOGGER.debug("ResTxReceiptHandler persisting {} receipts", resTxReceipts.getTxInfo().size());
         if(!resTxReceipts.getTxInfo().isEmpty()) {
             persist(resTxReceipts.getTxInfo());
-        } else {
-            LOGGER.info("<<< ResTxReceiptHandler::receiver >>> called with empty tx receipts so no-op");
         }
-
     }
 
     protected void persist(List<AionTxInfo> txInfo) {
