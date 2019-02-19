@@ -282,7 +282,11 @@ final class TaskImportBlocks implements Runnable {
                 if (importResult.isStored()) {
                     importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
                     this.syncStats.updatePeerImportedBlocks(displayId, 1);
-                    storedImportedBlocks.add(b);
+
+                    if(requestReceipts) {
+                        // only used for requesting receipts transfer
+                        storedImportedBlocks.add(b);
+                    }
 
                     if (last <= b.getNumber()) {
                         last = b.getNumber() + 1;
