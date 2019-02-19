@@ -129,7 +129,7 @@ final class TaskImportTrieData implements Runnable {
         Map<ByteArrayWrapper, byte[]> nodes =
                 wrapper.getReferencedNodes()
                         .entrySet()
-                        .parallelStream()
+                        .stream()
                         .filter(e -> !fastSyncMgr.containsExact(e.getKey(), e.getValue()))
                         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
