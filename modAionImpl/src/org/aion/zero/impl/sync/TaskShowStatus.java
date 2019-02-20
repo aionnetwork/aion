@@ -282,18 +282,28 @@ final class TaskShowStatus implements Runnable {
             sb.append(
                     "----------------------------------------------------------------------------\n");
 
+            Map<String, Pair<Double, Integer>> peerStats = responseStats.get("overall");
+            for (String type : peerStats.keySet()) {
+                sb.append(
+                        String.format(
+                                "   «overall» %20s %16s ms %19d\n",
+                                "«" + type + "»",
+                                String.format("%.0f", peerStats.get(type).getLeft() / 1_000_000),
+                                peerStats.get(type).getRight()));
+            }
             for (String nodeId : responseStats.keySet()) {
-
-                Map<String, Pair<Double, Integer>> peerStats = responseStats.get(nodeId);
-                for (String type : peerStats.keySet()) {
-                    sb.append(
-                            String.format(
-                                    "   id:%6s %20s %16s ms %19d\n",
-                                    nodeId,
-                                    "«" + type + "»",
-                                    String.format(
-                                            "%.0f", peerStats.get(type).getLeft() / 1_000_000),
-                                    peerStats.get(type).getRight()));
+                if (nodeId != "overall") {
+                   peerStats = responseStats.get(nodeId);
+                    for (String type : peerStats.keySet()) {
+                        sb.append(
+                                String.format(
+                                        "   id:%6s %20s %16s ms %19d\n",
+                                        nodeId,
+                                        "«" + type + "»",
+                                        String.format(
+                                                "%.0f", peerStats.get(type).getLeft() / 1_000_000),
+                                        peerStats.get(type).getRight()));
+                    }
                 }
             }
         }

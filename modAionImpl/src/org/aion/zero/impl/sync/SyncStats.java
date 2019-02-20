@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import org.aion.mcf.config.StatsType;
 import org.apache.commons.lang3.tuple.Pair;
 
-
 /** @author chris */
 public final class SyncStats {
 
@@ -333,7 +332,6 @@ public final class SyncStats {
         }
     }
 
-
     public ResponseMgr getStatusResponseMgr() {
         return statusResponseMgr;
     }
@@ -369,12 +367,12 @@ public final class SyncStats {
                 Pair<Double, Integer> headers = headersStats.getOrDefault(nodeId, Pair.of(0d, 0));
                 Pair<Double, Integer> bodies = bodiesStats.getOrDefault(nodeId, Pair.of(0d, 0));
 
-                Pair<Double, Integer> allStats =
+                Pair<Double, Integer> sumStats =
                         Pair.of(
                                 status.getLeft() + headers.getLeft() + bodies.getLeft(),
                                 status.getRight() + headers.getRight() + bodies.getRight());
 
-                peerStats.put("all", allStats);
+                peerStats.put("all", sumStats);
                 peerStats.put("status", status);
                 peerStats.put("headers", headers);
                 peerStats.put("bodies", bodies);
@@ -382,17 +380,32 @@ public final class SyncStats {
 
                 statusOverall =
                         Pair.of(
-                            statusOverall.getLeft() + status.getLeft(),
-                            statusOverall.getRight() + status.getRight());
+                                statusOverall.getLeft() + status.getLeft(),
+                                statusOverall.getRight() + status.getRight());
                 headersOverall =
                         Pair.of(
-                            headersOverall.getLeft() + headers.getLeft(),
-                            headersOverall.getRight() + headers.getRight());
+                                headersOverall.getLeft() + headers.getLeft(),
+                                headersOverall.getRight() + headers.getRight());
                 bodiesOverall =
                         Pair.of(
-                            bodiesOverall.getLeft() + bodies.getLeft(),
-                            bodiesOverall.getRight() + bodies.getRight());
+                                bodiesOverall.getLeft() + bodies.getLeft(),
+                                bodiesOverall.getRight() + bodies.getRight());
             }
+            Pair<Double, Integer> sumOverall =
+                    Pair.of(
+                            statusOverall.getLeft()
+                                    + headersOverall.getLeft()
+                                    + bodiesOverall.getLeft(),
+                            statusOverall.getRight()
+                                    + headersOverall.getRight()
+                                    + bodiesOverall.getRight());
+
+            Map<String, Pair<Double, Integer>> overallStats = new LinkedHashMap<>();
+            overallStats.put("all", sumOverall);
+            overallStats.put("status", statusOverall);
+            overallStats.put("headers", headersOverall);
+            overallStats.put("bodies", bodiesOverall);
+            responseStats.put("overall", overallStats);
         }
         return responseStats;
     }
