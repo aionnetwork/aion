@@ -714,7 +714,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         if (txSum.isRejected()) {
             if (LOGGER_TX.isTraceEnabled()) {
                 LOGGER_TX.trace(
-                        "addPendingTransactionImpl tx is rejected due to: {}",
+                        "addPendingTransactionImpl tx "
+                                + Hex.toHexString(tx.getTransactionHash())
+                                + " is rejected due to: {}",
                         txSum.getReceipt().getError());
             }
             fireTxUpdate(txSum.getReceipt(), PendingTransactionState.DROPPED, best.get());
@@ -1075,13 +1077,13 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     /**
-     * Currently there is no post-execution work to do because this class actually uses the
-     * {@link BulkExecutor} to execute transactions sequentially instead of in bulk.
+     * Currently there is no post-execution work to do because this class actually uses the {@link
+     * BulkExecutor} to execute transactions sequentially instead of in bulk.
      *
-     * In the future we may choose to be more ambitious and to use the {@link BulkExecutor} properly,
-     * in which case we will have to give this method real functionality. Likely, we will need
-     * several methods that will capture the different post-execution work logic that the different
-     * methods in this class expect to have done when they call into the executor.
+     * <p>In the future we may choose to be more ambitious and to use the {@link BulkExecutor}
+     * properly, in which case we will have to give this method real functionality. Likely, we will
+     * need several methods that will capture the different post-execution work logic that the
+     * different methods in this class expect to have done when they call into the executor.
      */
     private static PostExecutionWork getPostExecutionWork() {
         return (r, c, s, t, b) -> {

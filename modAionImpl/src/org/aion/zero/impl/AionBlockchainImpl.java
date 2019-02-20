@@ -100,6 +100,7 @@ import org.slf4j.LoggerFactory;
 public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOG = LoggerFactory.getLogger(LogEnum.CONS.name());
+    private static final Logger TX_LOG = LoggerFactory.getLogger(LogEnum.TX.name());
     private static final int THOUSAND_MS = 1000;
     private static final int DIFFICULTY_BYTES = 16;
 
@@ -664,6 +665,23 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
         }
 
+        if (ret == IMPORTED_BEST) {
+            if (TX_LOG.isDebugEnabled()) {
+                if (summary != null) {
+                    for (AionTxReceipt receipt : summary.getReceipts()) {
+                        if (receipt != null) {
+                            byte[] transactionHash = receipt.getTransaction().getTransactionHash();
+                            TX_LOG.debug(
+                                    "Transaction: "
+                                            + Hex.toHexString(transactionHash)
+                                            + " was sealed into block #"
+                                            + block.getNumber());
+                        }
+                    }
+                }
+            }
+        }
+
         return Pair.of(ret, summary);
     }
 
@@ -1032,9 +1050,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
                                                 || !TransactionTypeValidator.isValid(
                                                         tx.getTargetVM()))) {
                     LOG.error("Some transactions in the block are invalid");
-                    if (LOG.isDebugEnabled()) {
+                    if (TX_LOG.isDebugEnabled()) {
                         for (AionTransaction tx : txs) {
-                            LOG.debug(
+                            TX_LOG.debug(
                                     "Tx valid ["
                                             + TXValidator.isValid(tx)
                                             + "]. Type valid ["
