@@ -15,6 +15,7 @@ import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -436,56 +437,45 @@ public class SyncStatsTest {
     }
 
     @Test
-    public void testAverageResponseTimeByPeersStats() {
+    public void testResponseStatsByPeers() {
 
         StandaloneBlockchain chain = bundle.bc;
         generateRandomChain(chain, 1, 1, accounts, 10);
 
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
 
+        ResponseMgr responseMgr = stats.getStatusResponseMgr();
         // ensures correct behaviour on empty stats
-        Map<String, Double> emptyAvgResponseTimeByPeers = stats.getAverageResponseTimeByPeers();
+        Map<String, Pair<Double, Integer>> responseStatsByPeers =
+                responseMgr.getResponseStatsByPeers();
+        assertThat(responseStatsByPeers.isEmpty()).isTrue();
+
         // request time is logged but no response is received
-        stats.addPeerRequestTime("dummy", System.nanoTime());
-        double overallAveragePeerResponseTime = stats.getOverallAveragePeerResponseTime();
-        assertThat(emptyAvgResponseTimeByPeers.isEmpty()).isTrue();
-        assertThat(overallAveragePeerResponseTime).isEqualTo(0d);
+        responseMgr.addPeerRequestTime("dummy", System.nanoTime());
+        responseStatsByPeers = responseMgr.getResponseStatsByPeers();
+        assertThat(responseStatsByPeers).isEmpty();
 
         stats = new SyncStats(chain.getBestBlock().getNumber(), true);
-
-        int requests = 3;
+        responseMgr = stats.getStatusResponseMgr();
         for (String nodeId : peers) {
-            int count = requests;
-            while (count > 0) {
-                stats.addPeerRequestTime(nodeId, System.nanoTime());
+            int count = 1;
+
+            while (count <= 3) {
+                responseMgr.addPeerRequestTime(nodeId, System.nanoTime());
                 try {
-                    Thread.sleep(100 * count);
-                } catch (InterruptedException e) {
+                    Thread.sleep(100);
+                }   catch(InterruptedException e) {
                 }
-                stats.addPeerResponseTime(nodeId, System.nanoTime());
-                count--;
-            }
-            requests--;
-        }
+                responseMgr.updatePeerResponseStats(nodeId, System.nanoTime());
 
-        Map<String, Double> avgResponseTimeByPeers = stats.getAverageResponseTimeByPeers();
-        assertThat(avgResponseTimeByPeers.size()).isEqualTo(peers.size());
+                responseStatsByPeers = responseMgr.getResponseStatsByPeers();
+                assertEquals(100, responseStatsByPeers.get(nodeId).getLeft() / 1_000_000, 1);
+                assertEquals(count, (int) responseStatsByPeers.get(nodeId).getRight());
 
-        Double lastAvgResponseTime = Double.MIN_VALUE;
-        int i = 0;
-        for (String nodeId : avgResponseTimeByPeers.keySet()) {
-            // ensures asc order
-            if (i++ == 0) {
-                // First record correspond to the overall average response time by all peers
-                assertThat(
-                        avgResponseTimeByPeers
-                                .get(nodeId)
-                                .compareTo(stats.getOverallAveragePeerResponseTime()));
-            } else {
-                assertThat(avgResponseTimeByPeers.get(nodeId) > lastAvgResponseTime).isTrue();
-                lastAvgResponseTime = avgResponseTimeByPeers.get(nodeId);
+                count++;
             }
         }
+        assertEquals(peers.size(), responseStatsByPeers.size());
     }
 
     @Test
@@ -501,14 +491,14 @@ public class SyncStatsTest {
         for (String nodeId : peers) {
             int count = requests;
             while (count > 0) {
-                stats.addPeerRequestTime(nodeId, System.nanoTime());
-                stats.addPeerResponseTime(nodeId, System.nanoTime());
+                stats.getStatusResponseMgr().addPeerRequestTime(nodeId, System.nanoTime());
+                stats.getStatusResponseMgr().updatePeerResponseStats(nodeId, System.nanoTime());
                 count--;
             }
             requests--;
         }
 
         // ensures still empty
-        assertThat(stats.getAverageResponseTimeByPeers().isEmpty()).isTrue();
+        assertThat(stats.getStatusResponseMgr().getResponseStatsByPeers().isEmpty()).isTrue();
     }
 }

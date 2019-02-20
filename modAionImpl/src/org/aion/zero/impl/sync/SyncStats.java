@@ -54,9 +54,9 @@ public final class SyncStats {
     private final boolean leechesEnabled;
     private final boolean responsesEnabled;
 
-    private final ResponseMgr statusResponseMgr = new ResponseMgr();
-    private final ResponseMgr headersResponseMgr = new ResponseMgr();
-    private final ResponseMgr bodiesResponseMgr = new ResponseMgr();
+    private final ResponseMgr statusResponseMgr;
+    private final ResponseMgr headersResponseMgr;
+    private final ResponseMgr bodiesResponseMgr;
 
     /**
      * @param enabled all stats are enabled when {@code true}, all stats are disabled otherwise
@@ -80,6 +80,10 @@ public final class SyncStats {
         seedEnabled = showStatistics.contains(StatsType.SEEDS);
         leechesEnabled = showStatistics.contains(StatsType.LEECHES);
         responsesEnabled = showStatistics.contains(StatsType.RESPONSES);
+        this.statusResponseMgr = new ResponseMgr(responsesEnabled);
+        this.headersResponseMgr = new ResponseMgr(responsesEnabled);
+        this.bodiesResponseMgr = new ResponseMgr(responsesEnabled);
+
     }
 
     /**
