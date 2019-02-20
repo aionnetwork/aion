@@ -20,7 +20,9 @@ import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
 /**
  * Like {@link ResTxReceiptHandler} but instead of writing to actual Transaction Store,
  * write it to an alternate Transaction Store used only for verification/testing purposes,
- * and then perform verification on the result by (see {@link ReceiptsRetrievalVerifier}
+ * and then perform verification on the result by {@link ReceiptsRetrievalVerifier}.
+ *
+ * Unlike the normal ResTxReceiptHandler,
  */
 public class InstrumentedResTxReceiptHandler extends ResTxReceiptHandler {
     private final ReceiptsRetrievalVerifier rrv;
@@ -28,6 +30,9 @@ public class InstrumentedResTxReceiptHandler extends ResTxReceiptHandler {
     private static String ALTERNATE_DB_NAME = "alt_transaction";
     private static final Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
+    public void closeDb() {
+        super.txStore.close();
+    }
 
     /**
      * Constructor

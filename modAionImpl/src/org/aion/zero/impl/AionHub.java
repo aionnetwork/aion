@@ -226,7 +226,12 @@ public class AionHub {
         initializeHub(_cfgAion, _blockchain, _repository, forTest);
     }
 
+    private InstrumentedResTxReceiptHandler instrumentedResTxReceiptHandler;
+
     private void registerCallback() {
+
+        instrumentedResTxReceiptHandler = new InstrumentedResTxReceiptHandler((AionBlockStore) getBlockStore(), receiptsRetrievalVerifier, this.cfg.getDatabasePath());
+
         List<Handler> cbs = new ArrayList<>();
         cbs.add(
                 new ReqStatusHandler(
@@ -245,7 +250,7 @@ public class AionHub {
         cbs.add(new BroadcastTxHandler(syncLOG, mempool, p2pMgr, inSyncOnlyMode));
         cbs.add(new BroadcastNewBlockHandler(syncLOG, propHandler, p2pMgr));
 //        cbs.add(new ResTxReceiptHandler(repository.getTransactionStore(), (AionBlockStore) getBlockStore()));
-        cbs.add(new InstrumentedResTxReceiptHandler((AionBlockStore) getBlockStore(), receiptsRetrievalVerifier, this.cfg.getDatabasePath()));
+        cbs.add(instrumentedResTxReceiptHandler);
         cbs.add(new ReqTxReceiptHandler(p2pMgr, blockchain));
         this.p2pMgr.register(cbs);
     }
@@ -533,6 +538,10 @@ public class AionHub {
             genLOG.info("shutting down DB...");
             repository.close();
             genLOG.info("shutdown DB... Done!");
+        }
+
+        if(instrumentedResTxReceiptHandler != null) {
+            instrumentedResTxReceiptHandler.closeDb();
         }
 
         this.start.set(false);
