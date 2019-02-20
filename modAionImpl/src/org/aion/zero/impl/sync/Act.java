@@ -23,7 +23,7 @@ public final class Act {
 
     public static final byte RESPONSE_TRIE_DATA = 9;
 
-    public static final byte REQ_TX_RECEIPT_HEADERS = 10; // TODO ??
+    public static final byte REQUEST_RECEIPTS = 10;
 
-    public static final byte RES_TX_RECEIPT_HEADERS = 11; // TODO ??
+    public static final byte RESPONSE_RECEIPTS = 11;
 }

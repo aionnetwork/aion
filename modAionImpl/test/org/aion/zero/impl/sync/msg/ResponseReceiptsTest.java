@@ -18,18 +18,16 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ResTxReceiptsTest {
+public class ResponseReceiptsTest {
     @Test
     public void testBaseCtor() {
         AionTxInfo r1 = mock(AionTxInfo.class);
         AionTxInfo r2 = mock(AionTxInfo.class);
         AionTxInfo r3 = mock(AionTxInfo.class);
-        ResTxReceipts unit = new ResTxReceipts(List.of(r1, r2, r3));
+        ResponseReceipts unit = new ResponseReceipts(List.of(r1, r2, r3));
         assertThat(unit.getTxInfo().size(), is(3));
-        assertThat(unit.getTxInfo().containsAll(
-                List.of(r1, r2, r3)
-        ), is(true));
-        assertThat(unit.getHeader().getAction(), is(Act.RES_TX_RECEIPT_HEADERS));
+        assertThat(unit.getTxInfo().containsAll(List.of(r1, r2, r3)), is(true));
+        assertThat(unit.getHeader().getAction(), is(Act.RESPONSE_RECEIPTS));
         assertThat(unit.getHeader().getCtrl(), is(Ctrl.SYNC));
         assertThat(unit.getHeader().getVer(), is(Ver.V0));
     }
@@ -45,13 +43,11 @@ public class ResTxReceiptsTest {
         AionTxInfo inf1 = new AionTxInfo(r1);
         AionTxInfo inf2 = new AionTxInfo(r2);
 
-        byte[] encodedRequest = new ResTxReceipts(List.of(inf1, inf2)).encode();
-        ResTxReceipts unit = new ResTxReceipts(encodedRequest);
+        byte[] encodedRequest = new ResponseReceipts(List.of(inf1, inf2)).encode();
+        ResponseReceipts unit = new ResponseReceipts(encodedRequest);
         assertThat(unit.getTxInfo().size(), is(2));
-        assertThat(unit.getTxInfo().containsAll(
-                List.of(inf1, inf2)
-        ), is(true));
-        assertThat(unit.getHeader().getAction(), is(Act.RES_TX_RECEIPT_HEADERS));
+        assertThat(unit.getTxInfo().containsAll(List.of(inf1, inf2)), is(true));
+        assertThat(unit.getHeader().getAction(), is(Act.RESPONSE_RECEIPTS));
         assertThat(unit.getHeader().getCtrl(), is(Ctrl.SYNC));
         assertThat(unit.getHeader().getVer(), is(Ver.V0));
     }
@@ -65,7 +61,7 @@ public class ResTxReceiptsTest {
         when(r1.getEncoded()).thenReturn(txBytes1);
         when(r2.getEncoded()).thenReturn(txBytes2);
 
-        ResTxReceipts unit = new ResTxReceipts(List.of(r1, r2));
+        ResponseReceipts unit = new ResponseReceipts(List.of(r1, r2));
         assertThat(unit.encode(), is(RLP.encodeList(txBytes1, txBytes2)));
     }
 }

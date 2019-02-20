@@ -1,10 +1,6 @@
 package org.aion.zero.impl.sync.msg;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,17 +12,18 @@ import org.aion.p2p.Ver;
 import org.aion.zero.impl.sync.Act;
 
 /** Request for transaction receipts */
-public class ReqTxReceipts extends Msg {
+public class RequestReceipts extends Msg {
+
     private final List<byte[]> txHashes;
-    private final static int TX_RECEIPT_LENGTH = 32;
+    private static final int TX_RECEIPT_LENGTH = 32;
 
     /**
      * Constructor
      *
      * @param txHashes hashes of the transaction receipts requested
      */
-    public ReqTxReceipts(List<byte[]> txHashes) {
-        super(Ver.V0, Ctrl.SYNC, Act.REQ_TX_RECEIPT_HEADERS);
+    public RequestReceipts(List<byte[]> txHashes) {
+        super(Ver.V0, Ctrl.SYNC, Act.REQUEST_RECEIPTS);
         this.txHashes = new LinkedList<>(txHashes);
     }
 
@@ -34,9 +31,9 @@ public class ReqTxReceipts extends Msg {
      * Constructor
      *
      * @param msgBytes List of transaction hashes, as encoded by {@link #encode())} (or
-     *                 equivalently, a ReqTxReceipts).  Must not be null.
+     *     equivalently, a ReqTxReceipts). Must not be null.
      */
-    public ReqTxReceipts(byte[] msgBytes) {
+    public RequestReceipts(byte[] msgBytes) {
         this(decode(msgBytes));
     }
 
@@ -48,13 +45,15 @@ public class ReqTxReceipts extends Msg {
      */
     private static List<byte[]> decode(byte[] msgBytes) {
         Preconditions.checkNotNull(msgBytes, "Cannot decode null message bytes to ReqTxReceipts");
-        Preconditions.checkArgument(msgBytes.length % TX_RECEIPT_LENGTH == 0,
-                "Invalid encoding of ReqTxReceipts; length must be a multiple of 32, but was " + msgBytes.length);
+        Preconditions.checkArgument(
+                msgBytes.length % TX_RECEIPT_LENGTH == 0,
+                "Invalid encoding of ReqTxReceipts; length must be a multiple of 32, but was "
+                        + msgBytes.length);
 
         List<byte[]> blocksHashes = new LinkedList<>();
         ByteBuffer bb = ByteBuffer.wrap(msgBytes);
 
-        for(int ix = 0; ix < msgBytes.length; ix += TX_RECEIPT_LENGTH ) {
+        for (int ix = 0; ix < msgBytes.length; ix += TX_RECEIPT_LENGTH) {
             byte[] receipt = new byte[TX_RECEIPT_LENGTH];
             bb.get(receipt);
             blocksHashes.add(receipt);

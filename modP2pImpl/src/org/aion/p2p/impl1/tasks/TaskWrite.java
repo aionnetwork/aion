@@ -1,15 +1,14 @@
 package org.aion.p2p.impl1.tasks;
 
-import org.aion.p2p.Header;
-import org.aion.p2p.IP2pMgr;
-import org.aion.p2p.Msg;
+import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SocketChannel;
-
-import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
+import org.aion.p2p.Header;
+import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.Msg;
 
 /** @author chris */
 public class TaskWrite implements Runnable {

@@ -37,15 +37,14 @@ import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.handler.BlockPropagationHandler;
 import org.aion.zero.impl.sync.handler.BroadcastNewBlockHandler;
 import org.aion.zero.impl.sync.handler.BroadcastTxHandler;
-import org.aion.zero.impl.sync.handler.InstrumentedResTxReceiptHandler;
+import org.aion.zero.impl.sync.handler.InstrumentedResponseReceiptsHandler;
 import org.aion.zero.impl.sync.handler.ReqBlocksBodiesHandler;
 import org.aion.zero.impl.sync.handler.ReqBlocksHeadersHandler;
 import org.aion.zero.impl.sync.handler.ReqStatusHandler;
-import org.aion.zero.impl.sync.handler.ReqTxReceiptHandler;
+import org.aion.zero.impl.sync.handler.RequestReceiptsHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksBodiesHandler;
 import org.aion.zero.impl.sync.handler.ResBlocksHeadersHandler;
 import org.aion.zero.impl.sync.handler.ResStatusHandler;
-import org.aion.zero.impl.sync.handler.ResTxReceiptHandler;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
@@ -98,6 +97,7 @@ public class AionHub {
      * holder pattern
      */
     private static class Holder {
+
         static final AionHub INSTANCE = new AionHub();
     }
 
@@ -169,7 +169,6 @@ public class AionHub {
 
         this.receiptsRetrievalVerifier = new ReceiptsRetrievalVerifier(p2pMgr, blockchain);
 
-
         this.syncMgr = SyncMgr.inst();
         this.syncMgr.init(
                 blockchain,
@@ -210,7 +209,6 @@ public class AionHub {
 
         this.pow = new AionPoW();
         this.pow.init(blockchain, mempool, eventMgr);
-
     }
 
     static AionHub createForTesting(
@@ -226,12 +224,9 @@ public class AionHub {
         initializeHub(_cfgAion, _blockchain, _repository, forTest);
     }
 
-    private InstrumentedResTxReceiptHandler instrumentedResTxReceiptHandler;
+    private InstrumentedResponseReceiptsHandler instrumentedResTxReceiptHandler;
 
     private void registerCallback() {
-
-        instrumentedResTxReceiptHandler = new InstrumentedResTxReceiptHandler((AionBlockStore) getBlockStore(), receiptsRetrievalVerifier, this.cfg.getDatabasePath());
-
         List<Handler> cbs = new ArrayList<>();
         cbs.add(
                 new ReqStatusHandler(
@@ -249,9 +244,20 @@ public class AionHub {
         cbs.add(new ResBlocksBodiesHandler(syncLOG, syncMgr, p2pMgr));
         cbs.add(new BroadcastTxHandler(syncLOG, mempool, p2pMgr, inSyncOnlyMode));
         cbs.add(new BroadcastNewBlockHandler(syncLOG, propHandler, p2pMgr));
-//        cbs.add(new ResTxReceiptHandler(repository.getTransactionStore(), (AionBlockStore) getBlockStore()));
+
+        // Receipts transfer response handler -- use instrumented version for test/verification
+        instrumentedResTxReceiptHandler =
+                new InstrumentedResponseReceiptsHandler(
+                        (AionBlockStore) getBlockStore(),
+                        receiptsRetrievalVerifier,
+                        this.cfg.getDatabasePath());
+        // Receipts transfer response handler -- non-instrumented version
+        // cbs.add(new ResTxReceiptHandler(repository.getTransactionStore(), (AionBlockStore)
+        // getBlockStore()));
         cbs.add(instrumentedResTxReceiptHandler);
-        cbs.add(new ReqTxReceiptHandler(p2pMgr, blockchain));
+        // Receipts transfer request handler
+        cbs.add(new RequestReceiptsHandler(p2pMgr, blockchain));
+
         this.p2pMgr.register(cbs);
     }
 
@@ -540,7 +546,7 @@ public class AionHub {
             genLOG.info("shutdown DB... Done!");
         }
 
-        if(instrumentedResTxReceiptHandler != null) {
+        if (instrumentedResTxReceiptHandler != null) {
             instrumentedResTxReceiptHandler.closeDb();
         }
 

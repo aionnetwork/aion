@@ -21,10 +21,11 @@ public class PendingStateTest {
 
     @Before
     public void before() {
-        bundle = new StandaloneBlockchain.Builder()
-                .withValidatorConfiguration("simple")
-                .withDefaultAccounts()
-                .build();
+        bundle =
+                new StandaloneBlockchain.Builder()
+                        .withValidatorConfiguration("simple")
+                        .withDefaultAccounts()
+                        .build();
         bc = bundle.bc;
 
         CfgAion.inst().setGenesis(bc.getGenesis());
@@ -39,23 +40,23 @@ public class PendingStateTest {
 
     @Test
     public void TestAddPendingTransactionSuccess() {
-            Address to = new AionAddress(bundle.privateKeys.get(0).getAddress());
-            ECKey signer = bundle.privateKeys.get(1);
+        Address to = new AionAddress(bundle.privateKeys.get(0).getAddress());
+        ECKey signer = bundle.privateKeys.get(1);
 
-            // Successful transaction
+        // Successful transaction
 
-            AionTransaction tx =
+        AionTransaction tx =
                 new AionTransaction(
-                    BigInteger.ZERO.toByteArray(),
-                    to,
-                    new byte[0],
-                    new byte[0],
-                    1_000_000L,
-                    10_000_000_000L);
+                        BigInteger.ZERO.toByteArray(),
+                        to,
+                        new byte[0],
+                        new byte[0],
+                        1_000_000L,
+                        10_000_000_000L);
 
-            tx.sign(signer);
+        tx.sign(signer);
 
-            assertEquals(hub.getPendingState().addPendingTransaction(tx), TxResponse.SUCCESS);
+        assertEquals(hub.getPendingState().addPendingTransaction(tx), TxResponse.SUCCESS);
     }
 
     @Test

@@ -173,7 +173,8 @@ public class SyncMgr {
             final int maxActivePeers) {
             final int _compactFrequency, 
             final boolean requestReceipts,
-            final ReceiptsRetrievalVerifier rrv /* temporary -- remove when fast sync work verified */) {
+            final ReceiptsRetrievalVerifier
+                    rrv /* temporary -- remove when fast sync work verified */) {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
@@ -407,6 +408,7 @@ public class SyncMgr {
     }
 
     private static final class AionSyncMgrHolder {
+
         static final SyncMgr INSTANCE = new SyncMgr();
     }
 }

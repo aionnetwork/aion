@@ -18,13 +18,14 @@ import java.util.Properties;
 import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
 
 /**
- * Like {@link ResTxReceiptHandler} but instead of writing to actual Transaction Store,
- * write it to an alternate Transaction Store used only for verification/testing purposes,
- * and then perform verification on the result by {@link ReceiptsRetrievalVerifier}.
+ * Like {@link ResponseReceiptsHandler} but instead of writing to actual Transaction Store, write it
+ * to an alternate Transaction Store used only for verification/testing purposes, and then perform
+ * verification on the result by {@link ReceiptsRetrievalVerifier}.
  *
- * Unlike the normal ResTxReceiptHandler,
+ * <p>Unlike the normal ResTxReceiptHandler,
  */
-public class InstrumentedResTxReceiptHandler extends ResTxReceiptHandler {
+public class InstrumentedResponseReceiptsHandler extends ResponseReceiptsHandler {
+
     private final ReceiptsRetrievalVerifier rrv;
 
     private static String ALTERNATE_DB_NAME = "alt_transaction";
@@ -34,13 +35,9 @@ public class InstrumentedResTxReceiptHandler extends ResTxReceiptHandler {
         super.txStore.close();
     }
 
-    /**
-     * Constructor
-     */
-    public InstrumentedResTxReceiptHandler(
-            AionBlockStore blockStore,
-            ReceiptsRetrievalVerifier rrv,
-            String altDbPath) {
+    /** Constructor */
+    public InstrumentedResponseReceiptsHandler(
+            AionBlockStore blockStore, ReceiptsRetrievalVerifier rrv, String altDbPath) {
         super(createAlternateTxStore(altDbPath), blockStore);
         this.rrv = rrv;
     }
@@ -65,17 +62,17 @@ public class InstrumentedResTxReceiptHandler extends ResTxReceiptHandler {
     @Override
     protected void persist(List<AionTxInfo> txInfo) {
         super.persist(txInfo);
-        for(AionTxInfo txi : txInfo) {
+        for (AionTxInfo txi : txInfo) {
             rrv.receivedTxHash(txi.getReceipt().getTransaction().getTransactionHash());
             rrv.validateAgainstBlockchain(txi);
             rrv.validateDatabases(txi, txStore);
         }
 
-        LOGGER.info(String.format(
-                "InstrumentedResTxReceiptHandler persisted batch of AionTxInfo [block0=%s, blockN=%s].  Outstanding hashes after:",
-                ByteUtil.toHexString(txInfo.get(0).getBlockHash()),
-                ByteUtil.toHexString(txInfo.get(txInfo.size()-1).getBlockHash())
-                ));
+        LOGGER.info(
+                String.format(
+                        "InstrumentedResTxReceiptHandler persisted batch of AionTxInfo [block0=%s, blockN=%s].  Outstanding hashes after:",
+                        ByteUtil.toHexString(txInfo.get(0).getBlockHash()),
+                        ByteUtil.toHexString(txInfo.get(txInfo.size() - 1).getBlockHash())));
         rrv.displayOutstandingRequests();
     }
 }

@@ -11,6 +11,7 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
 public class AionTxInfo extends AbstractTxInfo<AionTxReceipt, AionTransaction> {
+
     public AionTxInfo(AionTxReceipt receipt, byte[] blockHash, int index) {
         this.receipt = receipt;
         this.blockHash = blockHash;
@@ -30,7 +31,7 @@ public class AionTxInfo extends AbstractTxInfo<AionTxReceipt, AionTransaction> {
         RLPItem indexRLP = (RLPItem) txInfo.get(2);
 
         receipt = new AionTxReceipt(receiptRLP.getRLPData());
-        if(blockHashRLP.getRLPData().length == 0) {
+        if (blockHashRLP.getRLPData().length == 0) {
             blockHash = null;
         } else {
             blockHash = blockHashRLP.getRLPData();
@@ -85,8 +86,12 @@ public class AionTxInfo extends AbstractTxInfo<AionTxReceipt, AionTransaction> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AionTxInfo)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof AionTxInfo)) {
+            return false;
+        }
         return super.equals(o);
     }
 
@@ -97,10 +102,13 @@ public class AionTxInfo extends AbstractTxInfo<AionTxReceipt, AionTransaction> {
 
     @Override
     public String toString() {
-        return "AionTxInfo{" +
-                ", blockHash=" + blockHash +
-                ", index=" + index +
-                "receipt=" + receipt +
-                '}';
+        return "AionTxInfo{"
+                + ", blockHash="
+                + blockHash
+                + ", index="
+                + index
+                + "receipt="
+                + receipt
+                + '}';
     }
 }

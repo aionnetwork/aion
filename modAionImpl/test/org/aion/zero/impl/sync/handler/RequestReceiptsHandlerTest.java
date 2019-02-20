@@ -3,7 +3,7 @@ package org.aion.zero.impl.sync.handler;
 import org.aion.base.util.ByteUtil;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.core.IAionBlockchain;
-import org.aion.zero.impl.sync.msg.ResTxReceipts;
+import org.aion.zero.impl.sync.msg.ResponseReceipts;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTxReceipt;
 import org.junit.Before;
@@ -20,7 +20,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-public class ReqTxReceiptHandlerTest {
+public class RequestReceiptsHandlerTest {
+
     private IP2pMgr p2pMgr;
     private IAionBlockchain bc;
 
@@ -35,16 +36,20 @@ public class ReqTxReceiptHandlerTest {
         int id = 54321;
         String displayId = "321";
 
-        byte[] b1 = ByteUtil.hexStringToBytes( "" +
-                "01020304050a0b0c" +
-                "05040302010a0b0c" +
-                "00000000000d0e0f" +
-                "05040302010a0b0c"); // 32 bytes
-        byte[] b2 = ByteUtil.hexStringToBytes( "" +
-                "01000000000f0f0f" +
-                "02000000000a0b0c" +
-                "03000000000d0e0f" +
-                "04000000000a0b0c"); // 32 bytes
+        byte[] b1 =
+                ByteUtil.hexStringToBytes(
+                        ""
+                                + "01020304050a0b0c"
+                                + "05040302010a0b0c"
+                                + "00000000000d0e0f"
+                                + "05040302010a0b0c"); // 32 bytes
+        byte[] b2 =
+                ByteUtil.hexStringToBytes(
+                        ""
+                                + "01000000000f0f0f"
+                                + "02000000000a0b0c"
+                                + "03000000000d0e0f"
+                                + "04000000000a0b0c"); // 32 bytes
         byte[] request = ByteBuffer.allocate(64).put(b1).put(b2).array();
 
         AionTxInfo txInfo1 = mock(AionTxInfo.class);
@@ -56,12 +61,12 @@ public class ReqTxReceiptHandlerTest {
         when(bc.getTransactionInfo(b2)).thenReturn(txInfo2);
         when(txInfo2.getReceipt()).thenReturn(txr2);
 
-        ReqTxReceiptHandler unit = new ReqTxReceiptHandler(p2pMgr, bc);
+        RequestReceiptsHandler unit = new RequestReceiptsHandler(p2pMgr, bc);
         unit.receive(id, displayId, request);
 
-        ArgumentCaptor<ResTxReceipts> receipts = ArgumentCaptor.forClass(ResTxReceipts.class);
+        ArgumentCaptor<ResponseReceipts> receipts = ArgumentCaptor.forClass(ResponseReceipts.class);
         verify(p2pMgr).send(eq(id), eq(displayId), receipts.capture());
-        ResTxReceipts receiptsSent = receipts.getValue();
+        ResponseReceipts receiptsSent = receipts.getValue();
         assertThat(receiptsSent.getTxInfo().size(), is(2));
         assertThat(receiptsSent.getTxInfo().contains(txInfo1), is(true));
         assertThat(receiptsSent.getTxInfo().contains(txInfo2), is(true));
@@ -71,9 +76,9 @@ public class ReqTxReceiptHandlerTest {
     public void testReceiveWhenDecodingError() {
         int id = 54321;
         String displayId = "321";
-        byte[] badRequest = new byte[] { (byte) 0xc0, (byte) 0xff, (byte) 0xee } ;
+        byte[] badRequest = new byte[] {(byte) 0xc0, (byte) 0xff, (byte) 0xee};
 
-        ReqTxReceiptHandler unit = new ReqTxReceiptHandler(p2pMgr, bc);
+        RequestReceiptsHandler unit = new RequestReceiptsHandler(p2pMgr, bc);
         unit.receive(id, displayId, badRequest);
 
         verifyZeroInteractions(p2pMgr);

@@ -104,8 +104,18 @@ final class TaskImportBlocks implements Runnable {
             final Logger _log,
             final int _slowImportTime,
             final int _compactFrequency) {
-        this(_chain, _start, _syncStats, _downloadedBlocks, _importedBlockHashes, _peerStates, _log, _slowImportTime, _compactFrequency,
-            false /* requestReceipts */, null /* receiptsRetrievalVerifier */);
+        this(
+                _chain,
+                _start,
+                _syncStats,
+                _downloadedBlocks,
+                _importedBlockHashes,
+                _peerStates,
+                _log,
+                _slowImportTime,
+                _compactFrequency,
+                false /* requestReceipts */,
+                null /* receiptsRetrievalVerifier */);
     }
 
     ExecutorService executors =
@@ -141,7 +151,8 @@ final class TaskImportBlocks implements Runnable {
                 }
 
                 // process batch and update the peer state
-                peerState.copy(processBatch(peerState, batch, bw.getDisplayId(), bw.getNodeIdHash()));
+                peerState.copy(
+                        processBatch(peerState, batch, bw.getDisplayId(), bw.getNodeIdHash()));
 
                 // so we can continue immediately
                 peerState.resetLastHeaderRequest();
@@ -204,7 +215,8 @@ final class TaskImportBlocks implements Runnable {
     }
 
     /** @implNote This method is called only when state is not null. */
-    private PeerState processBatch(PeerState givenState, List<AionBlock> batch, String displayId, int nodeId) {
+    private PeerState processBatch(
+            PeerState givenState, List<AionBlock> batch, String displayId, int nodeId) {
         // make a copy of the original state
         state.copy(Objects.requireNonNull(givenState));
 
@@ -246,7 +258,6 @@ final class TaskImportBlocks implements Runnable {
                 // keeping track of the last block check
                 importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
 
-
                 // skipping the batch
                 if (log.isDebugEnabled()) {
                     log.debug(
@@ -283,7 +294,7 @@ final class TaskImportBlocks implements Runnable {
                     importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
                     this.syncStats.updatePeerImportedBlocks(displayId, 1);
 
-                    if(requestReceipts) {
+                    if (requestReceipts) {
                         // only used for requesting receipts transfer
                         storedImportedBlocks.add(b);
                     }
@@ -309,7 +320,8 @@ final class TaskImportBlocks implements Runnable {
 
                 // if any block results in NO_PARENT, all subsequent blocks will too
                 if (importResult == ImportResult.NO_PARENT) {
-                    executors.submit(new TaskStorePendingBlocks(chain, batch, displayId, syncStats, log));
+                    executors.submit(
+                            new TaskStorePendingBlocks(chain, batch, displayId, syncStats, log));
 
                     if (log.isDebugEnabled()) {
                         log.debug(
@@ -399,7 +411,7 @@ final class TaskImportBlocks implements Runnable {
             }
         }
 
-        if(requestReceipts) {
+        if (requestReceipts) {
             rrv.requestReceiptsFromPeers(storedImportedBlocks, displayId, nodeId);
         }
 
@@ -614,7 +626,7 @@ final class TaskImportBlocks implements Runnable {
                 log.info("Compacting state database due to slow IO time.");
             }
             t1 = System.currentTimeMillis();
-            //this.chain.compactState();
+            // this.chain.compactState();
             t2 = System.currentTimeMillis();
             if (log.isInfoEnabled()) {
                 log.info("Compacting state completed in {} ms.", t2 - t1);
@@ -629,6 +641,10 @@ final class TaskImportBlocks implements Runnable {
      * when (1) a block import resulted in an IMPORTED_BEST result or (2) the maximum number of
      * repetitions has been reached.
      *
+     * @param state the peer state to be updated
+     * @param lastBlock the last imported block number
+     * @param importResult the result for the last imported block
+     * @return an updated state according to the description above.
      * @implNote Reaching the maximum number of repetitions allowed means that the FORWARD requests
      *     have covered the scope of blocks between the BACKWARD request that has had a NO_PARENT
      *     result and the subsequent BACKWARD request that got an EXIST / IMPORTED_BEST /
@@ -636,10 +652,6 @@ final class TaskImportBlocks implements Runnable {
      *     means that either an error has occurred or that another peer has already imported these
      *     blocks. The second scenario is the most likely which makes switching to NORMAL mode the
      *     natural consequence.
-     * @param state the peer state to be updated
-     * @param lastBlock the last imported block number
-     * @param importResult the result for the last imported block
-     * @return an updated state according to the description above.
      */
     static PeerState forwardModeUpdate(PeerState state, long lastBlock, ImportResult importResult) {
         // when the maximum number of repeats has passed

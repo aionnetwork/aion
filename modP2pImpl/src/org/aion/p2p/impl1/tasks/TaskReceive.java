@@ -41,7 +41,6 @@ public class TaskReceive implements Runnable {
                     try {
                         hlr.receive(mi.getNodeId(), mi.getDisplayId(), mi.getMsg());
                     } catch (Exception e) {
-                        e.printStackTrace();
                         if (p2pLOG.isDebugEnabled()) {
                             p2pLOG.debug("TaskReceive exception.", e);
                         }
@@ -51,7 +50,6 @@ public class TaskReceive implements Runnable {
                 p2pLOG.error("TaskReceive interrupted.", e);
                 return;
             } catch (Exception e) {
-                e.printStackTrace();
                 if (p2pLOG.isDebugEnabled()) {
                     p2pLOG.debug("TaskReceive exception.", e);
                 }
