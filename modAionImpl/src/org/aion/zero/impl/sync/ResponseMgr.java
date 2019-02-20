@@ -19,17 +19,9 @@ public class ResponseMgr {
      *
      * @implNote Access to this resource is managed by the {@Link #responseLock}.
      */
-    private final Map<String, List<Long>> requestTimeByPeers = new HashMap<>();
+    private final Map<String, LinkedList<Long>> requestTimeByPeers = new HashMap<>();
 
-    private final Map<String, List<Long>> responseTimeByPeers = new HashMap<>();
-
-    private double overallAvgPeerResponseTime;
-    private int overallNumberOfPairs;
-
-    ResponseMgr() {
-        this.overallAvgPeerResponseTime = 0L;
-        this.overallNumberOfPairs = 0;
-    }
+    private final Map<String, Pair<Double, Integer>> responseStatsByPeers = new HashMap<>();
 
     /**
      * Log the time of request sent to an active peer node
@@ -40,7 +32,7 @@ public class ResponseMgr {
     public void addPeerRequestTime(String _nodeId, long _requestTime) {
         responseLock.lock();
         try {
-            List<Long> requestStartTimes =
+            LinkedList<Long> requestStartTimes =
                     requestTimeByPeers.containsKey(_nodeId)
                             ? requestTimeByPeers.get(_nodeId)
                             : new LinkedList<>();
@@ -52,24 +44,44 @@ public class ResponseMgr {
     }
 
     /**
-     * Log the time of response received from an active peer node
+     * update the average response time and the number of request/response pairs by each active
+     * peer node
      *
      * @param _nodeId peer node display Id
      * @param _responseTime time when the response was received in nanoseconds
      */
-    public void addPeerResponseTime(String _nodeId, long _responseTime) {
+    public void updatePeerResponseStats(String _nodeId, long _responseTime) {
         responseLock.lock();
         try {
-            List<Long> responseEndTimes =
-                    responseTimeByPeers.containsKey(_nodeId)
-                            ? responseTimeByPeers.get(_nodeId)
-                            : new LinkedList<>();
-            responseEndTimes.add(_responseTime);
-            responseTimeByPeers.put(_nodeId, responseEndTimes);
+            if (!requestTimeByPeers.containsKey(_nodeId)
+                    || requestTimeByPeers.get(_nodeId).isEmpty()) {
+                return;
+            }
+
+            LinkedList<Long> requestTimeList = requestTimeByPeers.get(_nodeId);
+            Pair<Double, Integer> stats =
+                    responseStatsByPeers.containsKey(_nodeId)
+                            ? responseStatsByPeers.get(_nodeId)
+                            : Pair.of(0d, 0);
+
+            if (_responseTime > requestTimeList.getFirst()) {
+                double average = stats.getLeft();
+                int count = stats.getRight();
+
+                responseStatsByPeers.put(
+                        _nodeId,
+                        Pair.of(
+                                (average * count + _responseTime - requestTimeList.getFirst())
+                                        / (count + 1),
+                                count + 1));
+            }
+            requestTimeList.removeFirst();
+
         } finally {
             responseLock.unlock();
         }
     }
+
 
     /**
      * Obtains the average response time and the number of request/response pairs by each active
@@ -79,85 +91,8 @@ public class ResponseMgr {
      *     request/response pairs by peer node
      */
     public Map<String, Pair<Double, Integer>> getResponseStatsByPeers() {
-        responseLock.lock();
-        try {
-            Pair<Double, Integer> stats;
-            String nodeId;
-            List<Long> requests, responses;
-
-            Map<String, Pair<Double, Integer>> avgResponseStatsByPeers = new HashMap<>();
-            overallAvgPeerResponseTime = 0d;
-            overallNumberOfPairs = 0;
-
-            for (Map.Entry<String, List<Long>> peerData : requestTimeByPeers.entrySet()) {
-                nodeId = peerData.getKey();
-                requests = peerData.getValue();
-                responses = responseTimeByPeers.getOrDefault(nodeId, new LinkedList());
-
-                // calculate the average response time and number of request/response pairs
-                stats = calculateStats(requests, responses);
-
-                if (stats != null) {
-                    // collect a map of average response times by peer
-                    avgResponseStatsByPeers.put(nodeId, stats);
-                    overallAvgPeerResponseTime += stats.getLeft();
-                    overallNumberOfPairs += stats.getRight();
-                }
-            }
-
-            overallAvgPeerResponseTime =
-                    avgResponseStatsByPeers.isEmpty()
-                            ? 0d
-                            : overallAvgPeerResponseTime / avgResponseStatsByPeers.size();
-
-            return avgResponseStatsByPeers.entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey())
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            responseLock.unlock();
-        }
+        return this.responseStatsByPeers;
     }
 
-    /**
-     * Computes the average response time for a peer given the lists of gathered requests and
-     * response times.
-     *
-     * @param requestTimes list of times for requests made
-     * @param responseTimes list of times for responses received
-     * @return the average response time for the request-response cycle
-     */
-    private static Pair<Double, Integer> calculateStats(
-            List<Long> requestTimes, List<Long> responseTimes) {
-        int entries = 0;
-        double sum = 0;
-        int size = Math.min(requestTimes.size(), responseTimes.size());
 
-        // only consider requests that had responses
-        for (int i = 0; i < size; i++) {
-            long request = requestTimes.get(i);
-            long response = responseTimes.get(i);
-
-            // ignore data where the requests comes after the response
-            if (response >= request) {
-                sum += response - request;
-                entries++;
-            }
-        }
-
-        if (entries == 0) {
-            // indicates no data
-            return null;
-        } else {
-            return Pair.of(Math.ceil(sum / entries), entries);
-        }
-    }
-
-    Pair<Double, Integer> getOverallResponseStats() {
-        return Pair.of(overallAvgPeerResponseTime, overallNumberOfPairs);
-    }
 }

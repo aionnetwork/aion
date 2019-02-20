@@ -35,7 +35,7 @@ public final class ResBlocksHeadersHandler extends Handler {
         ResBlocksHeaders resHeaders = ResBlocksHeaders.decode(_msgBytes);
         if (resHeaders != null) {
 
-            this.syncMgr.getSyncStats().getHeadersResponseMgr().addPeerResponseTime(_displayId, System.nanoTime());
+            this.syncMgr.getSyncStats().getHeadersResponseMgr().updatePeerResponseStats(_displayId, System.nanoTime());
 
             List<A0BlockHeader> headers = resHeaders.getHeaders();
             if (headers != null && headers.size() > 0) {
