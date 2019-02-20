@@ -141,17 +141,17 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
     @Override
     public String toString() {
         return "TransactionReceipt["
-                + ", postTxState="
+                + "\n  , postTxState="
                 + Hex.toHexString(postTxState)
-                + ", error="
+                + "\n  , error="
                 + error
-                + ", executionResult="
+                + "\n  , executionResult="
                 + Hex.toHexString(executionResult)
-                + ", bloom="
+                + "\n  , bloom="
                 + bloomFilter.toString()
-                + ", logs="
+                + "\n  , logs="
                 + logInfoList
-                + ", nrgUsed="
+                + "\n  , nrgUsed="
                 + this.energyUsed
                 + ']';
     }
