@@ -66,7 +66,7 @@ public class ReqTxReceiptHandler extends Handler {
             LOGGER.trace("Requested receipt with txHash '%s' not found; ignoring it");
         }
 
-        LOGGER.debug(String.format("ReqTxReceiptHandler received receipt request of size %d; sending back %d receipts >>>",
+        LOGGER.debug(String.format("ReqTxReceiptHandler received receipt request of size %d; sending back %d receipts",
             reqTxReceipts.getTxHashes().size(), receipts.size()));
         this.p2pMgr.send(id, displayId, new ResTxReceipts(receipts));
     }

@@ -63,8 +63,8 @@ public class ReqTxReceiptHandlerTest {
         verify(p2pMgr).send(eq(id), eq(displayId), receipts.capture());
         ResTxReceipts receiptsSent = receipts.getValue();
         assertThat(receiptsSent.getTxInfo().size(), is(2));
-        assertThat(receiptsSent.getTxInfo().contains(txr1), is(true));
-        assertThat(receiptsSent.getTxInfo().contains(txr2), is(true));
+        assertThat(receiptsSent.getTxInfo().contains(txInfo1), is(true));
+        assertThat(receiptsSent.getTxInfo().contains(txInfo2), is(true));
     }
 
     @Test
