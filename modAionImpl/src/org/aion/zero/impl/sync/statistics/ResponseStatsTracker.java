@@ -212,7 +212,7 @@ public class ResponseStatsTracker {
     public void updateStatusRequest(String displayId, long requestTime) {
         lockStatus.lock();
         try {
-            status.addPeerRequestTime(displayId, requestTime);
+            status.updateRequestTime(displayId, requestTime);
         } finally {
             lockStatus.unlock();
         }
@@ -221,7 +221,7 @@ public class ResponseStatsTracker {
     public void updateHeadersRequest(String displayId, long requestTime) {
         lockHeaders.lock();
         try {
-            headers.addPeerRequestTime(displayId, requestTime);
+            headers.updateRequestTime(displayId, requestTime);
         } finally {
             lockHeaders.unlock();
         }
@@ -230,7 +230,7 @@ public class ResponseStatsTracker {
     public void updateBodiesRequest(String displayId, long requestTime) {
         lockBodies.lock();
         try {
-            bodies.addPeerRequestTime(displayId, requestTime);
+            bodies.updateRequestTime(displayId, requestTime);
         } finally {
             lockBodies.unlock();
         }
@@ -239,7 +239,7 @@ public class ResponseStatsTracker {
     public void updateStatusResponse(String displayId, long responseTime) {
         lockStatus.lock();
         try {
-            status.updatePeerResponseStats(displayId, responseTime);
+            status.updateResponseTime(displayId, responseTime);
         } finally {
             lockStatus.unlock();
         }
@@ -248,7 +248,7 @@ public class ResponseStatsTracker {
     public void updateHeadersResponse(String displayId, long responseTime) {
         lockHeaders.lock();
         try {
-            headers.updatePeerResponseStats(displayId, responseTime);
+            headers.updateResponseTime(displayId, responseTime);
         } finally {
             lockHeaders.unlock();
         }
@@ -257,7 +257,7 @@ public class ResponseStatsTracker {
     public void updateBodiesResponse(String displayId, long responseTime) {
         lockBodies.lock();
         try {
-            bodies.updatePeerResponseStats(displayId, responseTime);
+            bodies.updateResponseTime(displayId, responseTime);
         } finally {
             lockBodies.unlock();
         }

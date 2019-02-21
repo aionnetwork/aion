@@ -1,75 +1,74 @@
 package org.aion.zero.impl.sync.statistics;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class ResponseStats {
 
-    /**
-     * Records time of requests/responses for active peer nodes
-     *
-     * @implNote Access to this resource is managed by the {@Link #responseLock}.
-     */
-    private final Map<String, LinkedBlockingQueue<Long>> requestTimeByPeers = new HashMap<>();
+    /** Records time of requests made to peers. */
+    private final Map<String, Deque<Long>> requestTimeByPeers = new HashMap<>();
 
+    /** Records average response time of peers and number of aggregates data points. */
     private final Map<String, Pair<Double, Integer>> responseStatsByPeers = new HashMap<>();
 
     /**
-     * Log the time of request sent to an active peer node
+     * Log the time of a request sent to a peer.
      *
-     * @param nodeId peer node displya Id
+     * @param nodeId peer display identifier
      * @param requestTime time when the request was sent in nanoseconds
      */
-    public void addPeerRequestTime(String nodeId, long requestTime) {
-        LinkedBlockingQueue<Long> requestStartTimes = new LinkedBlockingQueue<>();
+    public void updateRequestTime(String nodeId, long requestTime) {
         if (requestTimeByPeers.containsKey(nodeId)) {
             requestTimeByPeers.get(nodeId).add(requestTime);
         } else {
+            Deque<Long> requestStartTimes = new ArrayDeque<>();
             requestStartTimes.add(requestTime);
             requestTimeByPeers.put(nodeId, requestStartTimes);
         }
     }
 
     /**
-     * update the average response time and the number of request/response pairs by each active peer
-     * node
+     * Log the time of a response received from a peer and update the computed average time and
+     * number of data points.
      *
-     * @param _nodeId peer node display Id
-     * @param _responseTime time when the response was received in nanoseconds
+     * @param nodeId peer display identifier
+     * @param responseTime time when the response was received in nanoseconds
      */
-    public void updatePeerResponseStats(String _nodeId, long _responseTime) {
-        if (!requestTimeByPeers.containsKey(_nodeId) || requestTimeByPeers.get(_nodeId).isEmpty()) {
+    public void updateResponseTime(String nodeId, long responseTime) {
+        if (!requestTimeByPeers.containsKey(nodeId) || requestTimeByPeers.get(nodeId).isEmpty()) {
             return;
         }
 
-        LinkedBlockingQueue<Long> requestTimeQueue = requestTimeByPeers.get(_nodeId);
-        Pair<Double, Integer> stats =
-                responseStatsByPeers.containsKey(_nodeId)
-                        ? responseStatsByPeers.get(_nodeId)
-                        : Pair.of(0d, 0);
+        Long matchingRequestTime = requestTimeByPeers.get(nodeId).pollFirst();
+        // there was a matching entry and it's correct wrt to time expectation
+        if (matchingRequestTime != null && responseTime >= matchingRequestTime) {
+            if (responseStatsByPeers.containsKey(nodeId)) {
+                Pair<Double, Integer> stats = responseStatsByPeers.get(nodeId);
+                int newCount = stats.getRight() + 1;
+                responseStatsByPeers.put(
+                        nodeId,
+                        Pair.of(
+                                (stats.getLeft() * stats.getRight() // old sum
+                                                + (responseTime - matchingRequestTime)) // new data
+                                        / newCount, // new count
+                                newCount));
 
-        if (_responseTime > requestTimeQueue.element()) {
-            double average = stats.getLeft();
-            int count = stats.getRight();
-
-            responseStatsByPeers.put(
-                    _nodeId,
-                    Pair.of(
-                            (average * count + _responseTime - requestTimeQueue.peek())
-                                    / (count + 1),
-                            count + 1));
+            } else {
+                responseStatsByPeers.put(
+                        nodeId, Pair.of((double) responseTime - matchingRequestTime, 1));
+            }
         }
-        requestTimeQueue.remove();
     }
 
     /**
-     * Obtains the average response time and the number of request/response pairs by each active
-     * peer node
+     * Returns the average response time and the number of recorded request/response pairs for each
+     * peer.
      *
-     * @return map of pairs containing average reseponse time in nanoseconds and number of
-     *     request/response pairs by peer node
+     * @return map of pairs containing the average response time in nanoseconds and the number of
+     *     recorded request/response pairs for each peer
      */
     public Map<String, Pair<Double, Integer>> getResponseStatsByPeers() {
         return this.responseStatsByPeers;
