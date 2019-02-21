@@ -48,8 +48,7 @@
     </sync>
     <consensus>
         <mining>true</mining>
-        <miner-address>a08fc457b39b03c30dc71bdb89a4d0409dd4fa42f6539a5c3ee4054af9b71f23
-        </miner-address>
+        <miner-address>a08fc457b39b03c30dc71bdb89a4d0409dd4fa42f6539a5c3ee4054af9b71f23</miner-address>
         <cpu-mine-threads>1</cpu-mine-threads>
         <extra-data>AION</extra-data>
         <nrg-strategy>
