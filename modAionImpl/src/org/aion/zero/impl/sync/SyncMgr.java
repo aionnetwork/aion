@@ -33,12 +33,11 @@ import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
-import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 
 /** @author chris */
-public class SyncMgr {
+public final class SyncMgr {
 
     // interval - show status
     private static final int INTERVAL_SHOW_STATUS = 10000;
@@ -171,10 +170,6 @@ public class SyncMgr {
             final int _slowImportTime,
             final int _compactFrequency,
             final int maxActivePeers) {
-            final int _compactFrequency, 
-            final boolean requestReceipts,
-            final ReceiptsRetrievalVerifier
-                    rrv /* temporary -- remove when fast sync work verified */) {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
@@ -408,7 +403,6 @@ public class SyncMgr {
     }
 
     private static final class AionSyncMgrHolder {
-
         static final SyncMgr INSTANCE = new SyncMgr();
     }
 }

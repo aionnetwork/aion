@@ -182,10 +182,6 @@ public class AionHub {
                         : 0, // set to 0 when disabled
                 cfg.getSync().getCompactFrequency(),
                 cfg.getNet().getP2p().getMaxActiveNodes());
-                cfg.getSync().getCompactFrequency()
-                cfg.getSync().isRequestReceipts(),
-                false, /* request receipts not yet enabled - replace with cfg.getSync().isRequestReceipts() when ready*/
-                receiptsRetrievalVerifier);
 
         ChainConfiguration chainConfig = new ChainConfiguration();
         this.propHandler =

@@ -25,10 +25,9 @@ public final class CfgSync {
     private int compactFrequency;
 
     private static final int BLOCKS_QUEUE_MAX = 32;
+
     private static final int SLOW_IMPORT_TIME = 1_000; // 1 sec
     private static final int COMPACT_FREQUENCY = 600_000; // 10 min
-
-    private boolean requestReceipts;
 
     public CfgSync() {
         this.blocksQueueMax = BLOCKS_QUEUE_MAX;
@@ -38,7 +37,6 @@ public final class CfgSync {
         this.compactEnabled = false;
         this.slowImportTime = SLOW_IMPORT_TIME;
         this.compactFrequency = COMPACT_FREQUENCY;
-        this.requestReceipts = false;
     }
 
     public void fromXML(final XMLStreamReader sr) throws XMLStreamException {
@@ -60,8 +58,6 @@ public final class CfgSync {
                             break;
                         case "compact":
                             parseCompact(sr);
-                        case "request-receipts":
-                            this.requestReceipts = Boolean.parseBoolean(Cfg.readValue(sr));
                             break;
                         default:
                             Cfg.skipElement(sr);
@@ -259,10 +255,6 @@ public final class CfgSync {
 
     public void setCompactFrequency(int frequency) {
         this.compactFrequency = frequency;
-    }
-
-    public boolean isRequestReceipts() {
-        return this.requestReceipts;
     }
 
     @Override
