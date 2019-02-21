@@ -14,7 +14,6 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
 /**
@@ -101,7 +100,7 @@ final class TaskShowStatus implements Runnable {
             }
 
             if (showStatistics.contains(StatsType.RESPONSES)) {
-                requestedInfo = dumpResponseInfo();
+                requestedInfo = stats.dumpResponseStats();
                 if (!requestedInfo.isEmpty()) {
                     p2pLOG.info(requestedInfo);
                 }
@@ -138,7 +137,7 @@ final class TaskShowStatus implements Runnable {
             if (!requestedInfo.isEmpty()) {
                 p2pLOG.debug(requestedInfo);
             }
-            requestedInfo = dumpResponseInfo();
+            requestedInfo = stats.dumpResponseStats();
             if (!requestedInfo.isEmpty()) {
                 p2pLOG.debug(requestedInfo);
             }
@@ -256,57 +255,6 @@ final class TaskShowStatus implements Runnable {
                             sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
         }
 
-        return sb.toString();
-    }
-
-    /**
-     * Obtain log stream containing statistics about the average response time between sending
-     * status requests out and that peer responding shown for each peer and averaged for all peers.
-     *
-     * @return log stream with requests statistical data
-     */
-    private String dumpResponseInfo() {
-
-        Map<String, Map<String, Pair<Double, Integer>>> responseStats =
-                this.stats.getResponseStats();
-        StringBuilder sb = new StringBuilder();
-
-        if (!responseStats.isEmpty()) {
-
-            sb.append(
-                    "\n========================== sync-responses-by-peer ==========================\n");
-            sb.append(
-                    String.format(
-                            "   %9s %20s %19s %19s \n",
-                            "peer", "request type", "avg. response", "number of pairs"));
-            sb.append(
-                    "----------------------------------------------------------------------------\n");
-
-            Map<String, Pair<Double, Integer>> peerStats = responseStats.get("overall");
-            for (String type : peerStats.keySet()) {
-                sb.append(
-                        String.format(
-                                "   «overall» %20s %16s ms %19d\n",
-                                "«" + type + "»",
-                                String.format("%.0f", peerStats.get(type).getLeft() / 1_000_000),
-                                peerStats.get(type).getRight()));
-            }
-            for (String nodeId : responseStats.keySet()) {
-                if (nodeId != "overall") {
-                   peerStats = responseStats.get(nodeId);
-                    for (String type : peerStats.keySet()) {
-                        sb.append(
-                                String.format(
-                                        "   id:%6s %20s %16s ms %19d\n",
-                                        nodeId,
-                                        "«" + type + "»",
-                                        String.format(
-                                                "%.0f", peerStats.get(type).getLeft() / 1_000_000),
-                                        peerStats.get(type).getRight()));
-                    }
-                }
-            }
-        }
         return sb.toString();
     }
 

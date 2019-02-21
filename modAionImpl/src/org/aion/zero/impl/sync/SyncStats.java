@@ -10,6 +10,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import org.aion.mcf.config.StatsType;
+import org.aion.zero.impl.sync.statistics.ResponseStatsTracker;
 import org.apache.commons.lang3.tuple.Pair;
 
 /** @author chris */
@@ -52,11 +53,9 @@ public final class SyncStats {
 
     private final Lock leechesLock = new ReentrantLock();
     private final boolean leechesEnabled;
-    private final boolean responsesEnabled;
 
-    private final ResponseMgr statusResponseMgr;
-    private final ResponseMgr headersResponseMgr;
-    private final ResponseMgr bodiesResponseMgr;
+    private final ResponseStatsTracker responseTracker;
+    private final boolean responsesEnabled;
 
     /**
      * @param enabled all stats are enabled when {@code true}, all stats are disabled otherwise
@@ -79,11 +78,13 @@ public final class SyncStats {
         requestsEnabled = showStatistics.contains(StatsType.REQUESTS);
         seedEnabled = showStatistics.contains(StatsType.SEEDS);
         leechesEnabled = showStatistics.contains(StatsType.LEECHES);
-        responsesEnabled = showStatistics.contains(StatsType.RESPONSES);
-        this.statusResponseMgr = new ResponseMgr(responsesEnabled);
-        this.headersResponseMgr = new ResponseMgr(responsesEnabled);
-        this.bodiesResponseMgr = new ResponseMgr(responsesEnabled);
 
+        this.responsesEnabled = showStatistics.contains(StatsType.RESPONSES);
+        if (this.responsesEnabled) {
+            this.responseTracker = new ResponseStatsTracker();
+        } else {
+            this.responseTracker = null;
+        }
     }
 
     /**
@@ -336,81 +337,62 @@ public final class SyncStats {
         }
     }
 
-    public ResponseMgr getStatusResponseMgr() {
-        return statusResponseMgr;
-    }
-
-    public ResponseMgr getHeadersResponseMgr() {
-        return headersResponseMgr;
-    }
-
-    public ResponseMgr getBodiesResponseMgr() {
-        return bodiesResponseMgr;
-    }
-
-    public Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
-        Map<String, Pair<Double, Integer>> statusStats =
-                this.statusResponseMgr.getResponseStatsByPeers();
-        Map<String, Pair<Double, Integer>> headersStats =
-                this.headersResponseMgr.getResponseStatsByPeers();
-        Map<String, Pair<Double, Integer>> bodiesStats =
-                this.bodiesResponseMgr.getResponseStatsByPeers();
-
-        Map<String, Map<String, Pair<Double, Integer>>> responseStats = new LinkedHashMap<>();
-
-        if (!statusStats.isEmpty() && !headersStats.isEmpty() && !bodiesStats.isEmpty()) {
-
-            Pair<Double, Integer> statusOverall = Pair.of(0d, 0);
-            Pair<Double, Integer> headersOverall = Pair.of(0d, 0);
-            Pair<Double, Integer> bodiesOverall = Pair.of(0d, 0);
-
-            for (String nodeId : statusStats.keySet()) {
-
-                Map<String, Pair<Double, Integer>> peerStats = new LinkedHashMap<>();
-                Pair<Double, Integer> status = statusStats.getOrDefault(nodeId, Pair.of(0d, 0));
-                Pair<Double, Integer> headers = headersStats.getOrDefault(nodeId, Pair.of(0d, 0));
-                Pair<Double, Integer> bodies = bodiesStats.getOrDefault(nodeId, Pair.of(0d, 0));
-
-                Pair<Double, Integer> sumStats =
-                        Pair.of(
-                                status.getLeft() + headers.getLeft() + bodies.getLeft(),
-                                status.getRight() + headers.getRight() + bodies.getRight());
-
-                peerStats.put("all", sumStats);
-                peerStats.put("status", status);
-                peerStats.put("headers", headers);
-                peerStats.put("bodies", bodies);
-                responseStats.put(nodeId, peerStats);
-
-                statusOverall =
-                        Pair.of(
-                                statusOverall.getLeft() + status.getLeft(),
-                                statusOverall.getRight() + status.getRight());
-                headersOverall =
-                        Pair.of(
-                                headersOverall.getLeft() + headers.getLeft(),
-                                headersOverall.getRight() + headers.getRight());
-                bodiesOverall =
-                        Pair.of(
-                                bodiesOverall.getLeft() + bodies.getLeft(),
-                                bodiesOverall.getRight() + bodies.getRight());
-            }
-            Pair<Double, Integer> sumOverall =
-                    Pair.of(
-                            statusOverall.getLeft()
-                                    + headersOverall.getLeft()
-                                    + bodiesOverall.getLeft(),
-                            statusOverall.getRight()
-                                    + headersOverall.getRight()
-                                    + bodiesOverall.getRight());
-
-            Map<String, Pair<Double, Integer>> overallStats = new LinkedHashMap<>();
-            overallStats.put("all", sumOverall);
-            overallStats.put("status", statusOverall);
-            overallStats.put("headers", headersOverall);
-            overallStats.put("bodies", bodiesOverall);
-            responseStats.put("overall", overallStats);
+    public void updateStatusRequest(String displayId, long requestTime) {
+        if (responsesEnabled) {
+            responseTracker.updateStatusRequest(displayId, requestTime);
         }
-        return responseStats;
+    }
+
+    public void updateHeadersRequest(String displayId, long requestTime) {
+        if (responsesEnabled) {
+            responseTracker.updateHeadersRequest(displayId, requestTime);
+        }
+    }
+
+    public void updateBodiesRequest(String displayId, long requestTime) {
+        if (responsesEnabled) {
+            responseTracker.updateBodiesRequest(displayId, requestTime);
+        }
+    }
+
+    public void updateStatusResponse(String displayId, long responseTime) {
+        if (responsesEnabled) {
+            responseTracker.updateStatusResponse(displayId, responseTime);
+        }
+    }
+
+    public void updateHeadersResponse(String displayId, long responseTime) {
+        if (responsesEnabled) {
+            responseTracker.updateHeadersResponse(displayId, responseTime);
+        }
+    }
+
+    public void updateBodiesResponse(String displayId, long responseTime) {
+        if (responsesEnabled) {
+            responseTracker.updateBodiesResponse(displayId, responseTime);
+        }
+    }
+
+    @VisibleForTesting
+    Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
+        if (responsesEnabled) {
+            return responseTracker.getResponseStats();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Obtain log stream containing statistics about the average response time between sending
+     * status requests out and that peer responding shown for each peer and averaged for all peers.
+     *
+     * @return log stream with requests statistical data
+     */
+    public String dumpResponseStats() {
+        if (responsesEnabled) {
+            return responseTracker.dumpResponseStats();
+        } else {
+            return "";
+        }
     }
 }
