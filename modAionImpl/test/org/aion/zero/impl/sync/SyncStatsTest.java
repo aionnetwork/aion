@@ -519,21 +519,185 @@ public class SyncStatsTest {
                 }
             }
         }
+
+        // System.out.println(stats.dumpResponseStats());
     }
 
     @Test
     public void testResponseStatsByPeersStatusOnly() {
-        // TODO
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+
+        for (String nodeId : peers) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // status
+                stats.updateStatusRequest(nodeId, time);
+                stats.updateStatusResponse(nodeId, time + 1_000_000);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // for entries for each: «all» «status» «headers» «bodies»
+            assertThat(e.getValue().size()).isEqualTo(4);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("status")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            } else {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("status")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            }
+        }
+
+        // System.out.println(stats.dumpResponseStats());
     }
 
     @Test
     public void testResponseStatsByPeersHeadersOnly() {
-        // TODO
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+
+        for (String nodeId : peers) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // headers
+                stats.updateHeadersRequest(nodeId, time);
+                stats.updateHeadersResponse(nodeId, time + 1_000_000);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // for entries for each: «all» «status» «headers» «bodies»
+            assertThat(e.getValue().size()).isEqualTo(4);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("headers")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            } else {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("headers")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            }
+        }
+
+        // System.out.println(stats.dumpResponseStats());
     }
 
     @Test
     public void testResponseStatsByPeersBodiesOnly() {
-        // TODO
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+
+        for (String nodeId : peers) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // bodies
+                stats.updateBodiesRequest(nodeId, time);
+                stats.updateBodiesResponse(nodeId, time + 1_000_000);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // for entries for each: «all» «status» «headers» «bodies»
+            assertThat(e.getValue().size()).isEqualTo(4);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("bodies")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            } else {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("bodies")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            }
+        }
+
+        // System.out.println(stats.dumpResponseStats());
     }
 
     @Test
