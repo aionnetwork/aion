@@ -54,6 +54,11 @@ public class ResponseStatsTracker {
                     this.headers.getResponseStatsByPeers();
             Map<String, Pair<Double, Integer>> bodiesStats = this.bodies.getResponseStatsByPeers();
 
+            // skip if there's nothing to show
+            if (statusStats.isEmpty() && headersStats.isEmpty() && bodiesStats.isEmpty()) {
+                return null;
+            }
+
             Map<String, Map<String, Pair<Double, Integer>>> responseStats = new LinkedHashMap<>();
 
             Pair<Double, Integer> statusOverall = Pair.of(0d, 0);

@@ -433,13 +433,15 @@ public class SyncStatsTest {
         SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
-        assertThat(stats.getResponseStats().isEmpty()).isTrue();
+        assertThat(stats.getResponseStats()).isNull();
+        assertThat(stats.dumpResponseStats()).isEmpty();
 
         // request time is logged but no response is received
         stats.updateStatusRequest("dummy", System.nanoTime());
         stats.updateHeadersRequest("dummy", System.nanoTime());
         stats.updateBodiesRequest("dummy", System.nanoTime());
-        assertThat(stats.getResponseStats()).isEmpty();
+        assertThat(stats.getResponseStats()).isNull();
+        assertThat(stats.dumpResponseStats()).isEmpty();
 
         stats = new SyncStats(0L, true);
 
@@ -447,7 +449,8 @@ public class SyncStatsTest {
         stats.updateStatusResponse("dummy", System.nanoTime());
         stats.updateHeadersResponse("dummy", System.nanoTime());
         stats.updateBodiesResponse("dummy", System.nanoTime());
-        assertThat(stats.getResponseStats()).isEmpty();
+        assertThat(stats.getResponseStats()).isNull();
+        assertThat(stats.dumpResponseStats()).isEmpty();
     }
 
     @Test
