@@ -63,9 +63,6 @@ final class TaskImportBlocks implements Runnable {
     private final int compactFrequency;
     private long lastCompactTime;
 
-    private final boolean requestReceipts;
-    private final ReceiptsRetrievalVerifier rrv; // Used only for testing/verification
-
     TaskImportBlocks(
             final AionBlockchainImpl _chain,
             final AtomicBoolean _start,
@@ -75,9 +72,7 @@ final class TaskImportBlocks implements Runnable {
             final Map<Integer, PeerState> _peerStates,
             final Logger _log,
             final int _slowImportTime,
-            final int _compactFrequency,
-            final boolean requestReceipts,
-            final ReceiptsRetrievalVerifier receiptsRetrievalVerifier) {
+            final int _compactFrequency) {
         this.chain = _chain;
         this.start = _start;
         this.syncStats = _syncStats;
@@ -90,32 +85,6 @@ final class TaskImportBlocks implements Runnable {
         this.slowImportTime = _slowImportTime;
         this.compactFrequency = _compactFrequency;
         this.lastCompactTime = System.currentTimeMillis();
-        this.requestReceipts = requestReceipts;
-        this.rrv = receiptsRetrievalVerifier;
-    }
-
-    TaskImportBlocks(
-            final AionBlockchainImpl _chain,
-            final AtomicBoolean _start,
-            final SyncStats _syncStats,
-            final BlockingQueue<BlocksWrapper> _downloadedBlocks,
-            final Map<ByteArrayWrapper, Object> _importedBlockHashes,
-            final Map<Integer, PeerState> _peerStates,
-            final Logger _log,
-            final int _slowImportTime,
-            final int _compactFrequency) {
-        this(
-                _chain,
-                _start,
-                _syncStats,
-                _downloadedBlocks,
-                _importedBlockHashes,
-                _peerStates,
-                _log,
-                _slowImportTime,
-                _compactFrequency,
-                false /* requestReceipts */,
-                null /* receiptsRetrievalVerifier */);
     }
 
     ExecutorService executors =
@@ -284,8 +253,6 @@ final class TaskImportBlocks implements Runnable {
         long first = -1L, last = -1L;
         ImportResult importResult;
 
-        List<AionBlock> storedImportedBlocks = new LinkedList<>();
-
         for (AionBlock b : batch) {
             try {
                 importResult = importBlock(b, displayId, givenState);
@@ -293,11 +260,6 @@ final class TaskImportBlocks implements Runnable {
                 if (importResult.isStored()) {
                     importedBlockHashes.put(ByteArrayWrapper.wrap(b.getHash()), true);
                     this.syncStats.updatePeerImportedBlocks(displayId, 1);
-
-                    if (requestReceipts) {
-                        // only used for requesting receipts transfer
-                        storedImportedBlocks.add(b);
-                    }
 
                     if (last <= b.getNumber()) {
                         last = b.getNumber() + 1;
@@ -409,10 +371,6 @@ final class TaskImportBlocks implements Runnable {
                     }
                 }
             }
-        }
-
-        if (requestReceipts) {
-            rrv.requestReceiptsFromPeers(storedImportedBlocks, displayId, nodeId);
         }
 
         // check for stored blocks
