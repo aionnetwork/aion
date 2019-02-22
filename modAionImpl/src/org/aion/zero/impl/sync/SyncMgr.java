@@ -168,7 +168,8 @@ public final class SyncMgr {
             final boolean _showStatus,
             final Set<StatsType> showStatistics,
             final int _slowImportTime,
-            final int _compactFrequency) {
+            final int _compactFrequency,
+            final int maxActivePeers) {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
@@ -178,7 +179,7 @@ public final class SyncMgr {
         blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
         long selfBest = chain.getBestBlock().getNumber();
-        stats = new SyncStats(selfBest, _showStatus, showStatistics);
+        stats = new SyncStats(selfBest, _showStatus, showStatistics, maxActivePeers);
 
         syncGb =
                 new Thread(

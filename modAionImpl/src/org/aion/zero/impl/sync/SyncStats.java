@@ -18,40 +18,26 @@ public final class SyncStats {
 
     private final long start;
     private final long startBlock;
-    /** @implNote Access to this resource is managed by the {@link #blockAverageLock}. */
+    // Access to this resource is managed by the {@link #blockAverageLock}.
     private double avgBlocksPerSec;
-
     private final Lock blockAverageLock = new ReentrantLock();
     private final boolean averageEnabled;
 
-    /** @implNote Access to this resource is managed by the {@link #requestsLock}. */
-    private final Map<String, RequestCounter> requestsToPeers = new LRUMap<>(128);
-
-    private final Lock requestsLock = new ReentrantLock();
+    // Access to this resource is managed by the {@link #requestsLock}.
+    private final Map<String, RequestCounter> requestsToPeers;
+    private final Lock requestsLock;
     private final boolean requestsEnabled;
 
-    /**
-     * Records information on top seeds.
-     *
-     * @implNote Access to this resource is managed by the {@link #seedsLock}.
-     */
-    private final Map<String, Integer> blocksByPeer = new LRUMap<>(128);
-
-    private final Map<String, Integer> importedByPeer = new LRUMap<>(128);
-
-    private final Map<String, Integer> storedByPeer = new LRUMap<>(128);
-
-    private final Lock seedsLock = new ReentrantLock();
+    // Access to these resources is managed by the {@link #seedsLock}.
+    private final Map<String, Integer> blocksByPeer;
+    private final Map<String, Integer> importedByPeer;
+    private final Map<String, Integer> storedByPeer;
+    private final Lock seedsLock;
     private final boolean seedEnabled;
 
-    /**
-     * Records information on top leeches.
-     *
-     * @implNote Access to this resource is managed by the {@link #leechesLock}.
-     */
-    private final Map<String, Integer> blockRequestsByPeer = new LRUMap<>(128);
-
-    private final Lock leechesLock = new ReentrantLock();
+    // @implNote Access to this resource is managed by the {@link #leechesLock}.
+    private final Map<String, Integer> blockRequestsByPeer;
+    private final Lock leechesLock;
     private final boolean leechesEnabled;
 
     private final ResponseStatsTracker responseTracker;
@@ -66,22 +52,54 @@ public final class SyncStats {
         this(
                 _startBlock,
                 enabled,
-                enabled ? StatsType.getAllSpecificTypes() : Collections.emptyList());
+                enabled ? StatsType.getAllSpecificTypes() : Collections.emptyList(),
+                128); // using a default value since it's only used for testing
     }
 
-    SyncStats(long _startBlock, boolean averageEnabled, Collection<StatsType> showStatistics) {
+    SyncStats(
+            long _startBlock,
+            boolean averageEnabled,
+            Collection<StatsType> showStatistics,
+            int maxActivePeers) {
         this.start = System.currentTimeMillis();
         this.startBlock = _startBlock;
         this.avgBlocksPerSec = 0;
-
         this.averageEnabled = averageEnabled;
+
         requestsEnabled = showStatistics.contains(StatsType.REQUESTS);
+        if (requestsEnabled) {
+            requestsToPeers = new LRUMap<>(maxActivePeers);
+            requestsLock = new ReentrantLock();
+        } else {
+            requestsToPeers = null;
+            requestsLock = null;
+        }
+
         seedEnabled = showStatistics.contains(StatsType.SEEDS);
+        if (seedEnabled) {
+            blocksByPeer = new LRUMap<>(maxActivePeers);
+            importedByPeer = new LRUMap<>(maxActivePeers);
+            storedByPeer = new LRUMap<>(maxActivePeers);
+            seedsLock = new ReentrantLock();
+        } else {
+            blocksByPeer = null;
+            importedByPeer = null;
+            storedByPeer = null;
+            seedsLock = null;
+        }
+
         leechesEnabled = showStatistics.contains(StatsType.LEECHES);
+        if (leechesEnabled) {
+            blockRequestsByPeer = new LRUMap<>(maxActivePeers);
+            leechesLock = new ReentrantLock();
+        } else {
+            blockRequestsByPeer = null;
+            leechesLock = null;
+        }
 
         this.responsesEnabled = showStatistics.contains(StatsType.RESPONSES);
         if (this.responsesEnabled) {
-            this.responseTracker = new ResponseStatsTracker();
+            this.responseTracker = new ResponseStatsTracker(maxActivePeers);
         } else {
             this.responseTracker = null;
         }
@@ -157,34 +175,38 @@ public final class SyncStats {
      *     requests made by the node
      */
     Map<String, Float> getPercentageOfRequestsToPeers() {
-        requestsLock.lock();
+        if (responsesEnabled) {
+            requestsLock.lock();
 
-        try {
-            Map<String, Float> percentageReq = new LinkedHashMap<>();
+            try {
+                Map<String, Float> percentageReq = new LinkedHashMap<>();
 
-            float totalReq = 0f;
+                float totalReq = 0f;
 
-            // if there are any values the total will be != 0 after this
-            for (RequestCounter rc : requestsToPeers.values()) {
-                totalReq += rc.getTotal();
+                // if there are any values the total will be != 0 after this
+                for (RequestCounter rc : requestsToPeers.values()) {
+                    totalReq += rc.getTotal();
+                }
+
+                // resources are locked so the requestsToPeers map is unchanged
+                // if we enter this loop the totalReq is not equal to 0
+                for (Map.Entry<String, RequestCounter> entry : requestsToPeers.entrySet()) {
+                    percentageReq.put(entry.getKey(), entry.getValue().getTotal() / totalReq);
+                }
+
+                return percentageReq.entrySet().stream()
+                        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                        .collect(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (e1, e2) -> e2,
+                                        LinkedHashMap::new));
+            } finally {
+                requestsLock.unlock();
             }
-
-            // resources are locked so the requestsToPeers map is unchanged
-            // if we enter this loop the totalReq is not equal to 0
-            for (Map.Entry<String, RequestCounter> entry : requestsToPeers.entrySet()) {
-                percentageReq.put(entry.getKey(), entry.getValue().getTotal() / totalReq);
-            }
-
-            return percentageReq.entrySet().stream()
-                    .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            requestsLock.unlock();
+        } else {
+            return Collections.emptyMap();
         }
     }
 
@@ -213,19 +235,23 @@ public final class SyncStats {
      * @return map of total imported blocks by peer and sorted in descending order
      */
     Map<String, Integer> getTotalBlocksByPeer() {
-        seedsLock.lock();
-        try {
-            return blocksByPeer.entrySet().stream()
-                    .filter(entry -> entry.getValue() > 0)
-                    .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            seedsLock.unlock();
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                return blocksByPeer.entrySet().stream()
+                        .filter(entry -> entry.getValue() > 0)
+                        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                        .collect(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (e1, e2) -> e2,
+                                        LinkedHashMap::new));
+            } finally {
+                seedsLock.unlock();
+            }
+        } else {
+            return Collections.emptyMap();
         }
     }
 
@@ -254,11 +280,15 @@ public final class SyncStats {
      * @return number of total imported blocks by peer
      */
     long getImportedBlocksByPeer(String _nodeId) {
-        seedsLock.lock();
-        try {
-            return this.importedByPeer.getOrDefault(_nodeId, 0);
-        } finally {
-            seedsLock.unlock();
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                return this.importedByPeer.getOrDefault(_nodeId, 0);
+            } finally {
+                seedsLock.unlock();
+            }
+        } else {
+            return 0L;
         }
     }
 
@@ -287,11 +317,15 @@ public final class SyncStats {
      * @return number of total stored blocks by peer
      */
     long getStoredBlocksByPeer(String _nodeId) {
-        seedsLock.lock();
-        try {
-            return this.storedByPeer.getOrDefault(_nodeId, 0);
-        } finally {
-            seedsLock.unlock();
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                return this.storedByPeer.getOrDefault(_nodeId, 0);
+            } finally {
+                seedsLock.unlock();
+            }
+        } else {
+            return 0L;
         }
     }
 
@@ -321,18 +355,22 @@ public final class SyncStats {
      * @return map of total requested blocks by peer and sorted in descending order
      */
     Map<String, Integer> getTotalBlockRequestsByPeer() {
-        leechesLock.lock();
-        try {
-            return blockRequestsByPeer.entrySet().stream()
-                    .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            leechesLock.unlock();
+        if (leechesEnabled) {
+            leechesLock.lock();
+            try {
+                return blockRequestsByPeer.entrySet().stream()
+                        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                        .collect(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (e1, e2) -> e2,
+                                        LinkedHashMap::new));
+            } finally {
+                leechesLock.unlock();
+            }
+        } else {
+            return Collections.emptyMap();
         }
     }
 

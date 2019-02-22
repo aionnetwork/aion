@@ -2,7 +2,6 @@ package org.aion.zero.impl.sync.statistics;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
@@ -10,10 +9,15 @@ import org.apache.commons.lang3.tuple.Pair;
 public class ResponseStats {
 
     /** Records time of requests made to peers. */
-    private final Map<String, Deque<Long>> requestTimeByPeers = new HashMap<>();
+    private final Map<String, Deque<Long>> requestTimeByPeers;
 
     /** Records average response time of peers and number of aggregates data points. */
-    private final Map<String, Pair<Double, Integer>> responseStatsByPeers = new LRUMap<>(128);
+    private final Map<String, Pair<Double, Integer>> responseStatsByPeers;
+
+    public ResponseStats(int maxActivePeers) {
+        requestTimeByPeers = new LRUMap<>(maxActivePeers);
+        responseStatsByPeers = new LRUMap<>(maxActivePeers);
+    }
 
     /**
      * Log the time of a request sent to a peer.
