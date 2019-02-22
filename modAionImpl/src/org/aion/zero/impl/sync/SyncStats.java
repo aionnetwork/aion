@@ -3,7 +3,6 @@ package org.aion.zero.impl.sync;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -11,6 +10,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import org.aion.mcf.config.StatsType;
 import org.aion.zero.impl.sync.statistics.ResponseStatsTracker;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 /** @author chris */
@@ -25,7 +25,7 @@ public final class SyncStats {
     private final boolean averageEnabled;
 
     /** @implNote Access to this resource is managed by the {@link #requestsLock}. */
-    private final Map<String, RequestCounter> requestsToPeers = new HashMap<>();
+    private final Map<String, RequestCounter> requestsToPeers = new LRUMap<>(128);
 
     private final Lock requestsLock = new ReentrantLock();
     private final boolean requestsEnabled;
@@ -35,11 +35,11 @@ public final class SyncStats {
      *
      * @implNote Access to this resource is managed by the {@link #seedsLock}.
      */
-    private final Map<String, Long> blocksByPeer = new HashMap<>();
+    private final Map<String, Integer> blocksByPeer = new LRUMap<>(128);
 
-    private final Map<String, Long> importedByPeer = new HashMap<>();
+    private final Map<String, Integer> importedByPeer = new LRUMap<>(128);
 
-    private final Map<String, Long> storedByPeer = new HashMap<>();
+    private final Map<String, Integer> storedByPeer = new LRUMap<>(128);
 
     private final Lock seedsLock = new ReentrantLock();
     private final boolean seedEnabled;
@@ -49,7 +49,7 @@ public final class SyncStats {
      *
      * @implNote Access to this resource is managed by the {@link #leechesLock}.
      */
-    private final Map<String, Long> blockRequestsByPeer = new HashMap<>();
+    private final Map<String, Integer> blockRequestsByPeer = new LRUMap<>(128);
 
     private final Lock leechesLock = new ReentrantLock();
     private final boolean leechesEnabled;
@@ -189,16 +189,15 @@ public final class SyncStats {
     /**
      * Updates the total number of blocks received from each seed peer
      *
-     * @param _nodeId peer node display Id
-     * @param _totalBlocks total number of blocks received
+     * @param nodeId peer node display Id
+     * @param totalBlocks total number of blocks received
      */
-    public void updatePeerTotalBlocks(String _nodeId, int _totalBlocks) {
+    public void updatePeerTotalBlocks(String nodeId, int totalBlocks) {
         if (seedEnabled) {
             seedsLock.lock();
             try {
-                long blocks = (long) _totalBlocks;
-                if (blocksByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                    blocksByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                if (blocksByPeer.putIfAbsent(nodeId, totalBlocks) != null) {
+                    blocksByPeer.computeIfPresent(nodeId, (key, value) -> value + totalBlocks);
                 }
             } finally {
                 seedsLock.unlock();
@@ -211,7 +210,7 @@ public final class SyncStats {
      *
      * @return map of total imported blocks by peer and sorted in descending order
      */
-    Map<String, Long> getTotalBlocksByPeer() {
+    Map<String, Integer> getTotalBlocksByPeer() {
         seedsLock.lock();
         try {
             return blocksByPeer.entrySet().stream()
@@ -231,16 +230,15 @@ public final class SyncStats {
     /**
      * Updates the total number of blocks imported from each seed peer
      *
-     * @param _nodeId peer node display Id
-     * @param _importedBlocks total number of blocks imported
+     * @param nodeId peer node display Id
+     * @param importedBlocks total number of blocks imported
      */
-    public void updatePeerImportedBlocks(String _nodeId, int _importedBlocks) {
+    public void updatePeerImportedBlocks(String nodeId, int importedBlocks) {
         if (seedEnabled) {
             seedsLock.lock();
             try {
-                long blocks = (long) _importedBlocks;
-                if (importedByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                    importedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                if (importedByPeer.putIfAbsent(nodeId, importedBlocks) != null) {
+                    importedByPeer.computeIfPresent(nodeId, (key, value) -> value + importedBlocks);
                 }
             } finally {
                 seedsLock.unlock();
@@ -256,7 +254,7 @@ public final class SyncStats {
     long getImportedBlocksByPeer(String _nodeId) {
         seedsLock.lock();
         try {
-            return this.importedByPeer.getOrDefault(_nodeId, (long) 0);
+            return this.importedByPeer.getOrDefault(_nodeId, 0);
         } finally {
             seedsLock.unlock();
         }
@@ -265,16 +263,15 @@ public final class SyncStats {
     /**
      * Updates the total number of blocks stored from each seed peer
      *
-     * @param _nodeId peer node display Id
-     * @param _storedBlocks total number of blocks stored
+     * @param nodeId peer node display Id
+     * @param storedBlocks total number of blocks stored
      */
-    public void updatePeerStoredBlocks(String _nodeId, int _storedBlocks) {
+    public void updatePeerStoredBlocks(String nodeId, int storedBlocks) {
         if (seedEnabled) {
             seedsLock.lock();
             try {
-                long blocks = (long) _storedBlocks;
-                if (storedByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                    storedByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                if (storedByPeer.putIfAbsent(nodeId, storedBlocks) != null) {
+                    storedByPeer.computeIfPresent(nodeId, (key, value) -> value + storedBlocks);
                 }
             } finally {
                 seedsLock.unlock();
@@ -290,7 +287,7 @@ public final class SyncStats {
     long getStoredBlocksByPeer(String _nodeId) {
         seedsLock.lock();
         try {
-            return this.storedByPeer.getOrDefault(_nodeId, (long) 0);
+            return this.storedByPeer.getOrDefault(_nodeId, 0);
         } finally {
             seedsLock.unlock();
         }
@@ -299,16 +296,16 @@ public final class SyncStats {
     /**
      * Updates the total block requests made by a peer.
      *
-     * @param _nodeId peer node display Id
-     * @param _totalBlocks total number of blocks requested
+     * @param nodeId peer node display Id
+     * @param totalBlocks total number of blocks requested
      */
-    public void updateTotalBlockRequestsByPeer(String _nodeId, int _totalBlocks) {
+    public void updateTotalBlockRequestsByPeer(String nodeId, int totalBlocks) {
         if (leechesEnabled) {
             leechesLock.lock();
             try {
-                long blocks = (long) _totalBlocks;
-                if (blockRequestsByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                    blockRequestsByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+                if (blockRequestsByPeer.putIfAbsent(nodeId, totalBlocks) != null) {
+                    blockRequestsByPeer.computeIfPresent(
+                            nodeId, (key, value) -> value + totalBlocks);
                 }
             } finally {
                 leechesLock.unlock();
@@ -321,7 +318,7 @@ public final class SyncStats {
      *
      * @return map of total requested blocks by peer and sorted in descending order
      */
-    Map<String, Long> getTotalBlockRequestsByPeer() {
+    Map<String, Integer> getTotalBlockRequestsByPeer() {
         leechesLock.lock();
         try {
             return blockRequestsByPeer.entrySet().stream()

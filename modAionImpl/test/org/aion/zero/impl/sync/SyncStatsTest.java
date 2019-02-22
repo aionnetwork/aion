@@ -206,7 +206,7 @@ public class SyncStatsTest {
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
 
         // ensures correct behaviour on empty stats
-        Map<String, Long> emptyTotalBlockReqByPeer = stats.getTotalBlocksByPeer();
+        Map<String, Integer> emptyTotalBlockReqByPeer = stats.getTotalBlocksByPeer();
         assertThat(emptyTotalBlockReqByPeer.isEmpty()).isTrue();
 
         int peerNo = 0;
@@ -223,17 +223,16 @@ public class SyncStatsTest {
             peerNo++;
         }
 
-        Map<String, Long> totalBlockReqByPeer = stats.getTotalBlocksByPeer();
+        Map<String, Integer> totalBlockReqByPeer = stats.getTotalBlocksByPeer();
         assertThat(totalBlockReqByPeer.size()).isEqualTo(peers.size());
 
         int total = 3;
-        long lastTotalBlocks = processedBlocks;
+        int lastTotalBlocks = processedBlocks;
         for (String nodeId : peers) {
             // ensures desc order
             assertThat(lastTotalBlocks >= totalBlockReqByPeer.get(nodeId)).isTrue();
             lastTotalBlocks = totalBlockReqByPeer.get(nodeId);
-            assertEquals(Long.valueOf(total), totalBlockReqByPeer.get(nodeId));
-
+            assertThat(totalBlockReqByPeer.get(nodeId)).isEqualTo(total);
             total--;
         }
     }
@@ -385,7 +384,7 @@ public class SyncStatsTest {
         SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
-        Map<String, Long> emptyTotalBlocksByPeer = stats.getTotalBlockRequestsByPeer();
+        Map<String, Integer> emptyTotalBlocksByPeer = stats.getTotalBlockRequestsByPeer();
         assertThat(emptyTotalBlocksByPeer.isEmpty()).isTrue();
 
         int blocks = 3;
@@ -398,10 +397,10 @@ public class SyncStatsTest {
             blocks--;
         }
 
-        Map<String, Long> totalBlocksByPeer = stats.getTotalBlockRequestsByPeer();
+        Map<String, Integer> totalBlocksByPeer = stats.getTotalBlockRequestsByPeer();
         assertThat(totalBlocksByPeer.size()).isEqualTo(peers.size());
 
-        Long lastTotalBlocks = (long) peers.size();
+        int lastTotalBlocks = peers.size();
         for (String nodeId : totalBlocksByPeer.keySet()) {
             // ensures desc order
             assertThat(lastTotalBlocks >= totalBlocksByPeer.get(nodeId)).isTrue();

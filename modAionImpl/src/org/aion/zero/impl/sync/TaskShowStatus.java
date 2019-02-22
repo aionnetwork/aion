@@ -205,7 +205,7 @@ final class TaskShowStatus implements Runnable {
      * @return log stream with peers statistical data on seeds
      */
     private String dumpTopSeedsInfo() {
-        Map<String, Long> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
+        Map<String, Integer> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
 
         StringBuilder sb = new StringBuilder();
 
@@ -240,7 +240,7 @@ final class TaskShowStatus implements Runnable {
      * @return log stream with peers statistical data on leeches
      */
     private String dumpTopLeechesInfo() {
-        Map<String, Long> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
+        Map<String, Integer> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
 
         StringBuilder sb = new StringBuilder();
 

@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class ResponseStats {
@@ -12,7 +13,7 @@ public class ResponseStats {
     private final Map<String, Deque<Long>> requestTimeByPeers = new HashMap<>();
 
     /** Records average response time of peers and number of aggregates data points. */
-    private final Map<String, Pair<Double, Integer>> responseStatsByPeers = new HashMap<>();
+    private final Map<String, Pair<Double, Integer>> responseStatsByPeers = new LRUMap<>(128);
 
     /**
      * Log the time of a request sent to a peer.
