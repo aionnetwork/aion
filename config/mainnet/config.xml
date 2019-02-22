@@ -66,7 +66,7 @@
         <!--Sets the physical location on disk where data will be stored.-->
         <path>database</path>
         <!--Boolean value. Enable/disable database integrity check run at startup.-->
-        <check_integrity>true</check_integrity>
+        <check_integrity>false</check_integrity>
         <!--Data pruning behavior for the state database. Options: FULL, TOP, SPREAD.-->
         <!--FULL: the state is not pruned-->
         <!--TOP: the state is kept only for the top K blocks; limits sync to branching only within the stored blocks-->

@@ -12,7 +12,19 @@ public class RequestCounter {
     private long bodies = 0;
     private long total = 0;
 
-    public RequestCounter() {}
+    public RequestCounter(RequestType type) {
+        switch (type) {
+            case STATUS:
+                incStatus();
+                break;
+            case HEADERS:
+                incHeaders();
+                break;
+            case BODIES:
+                incBodies();
+                break;
+        }
+    }
 
     public long getStatus() {
         return status;

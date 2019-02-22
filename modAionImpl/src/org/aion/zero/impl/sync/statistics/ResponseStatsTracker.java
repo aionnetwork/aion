@@ -30,11 +30,11 @@ public class ResponseStatsTracker {
     private final ResponseStats bodies;
     private final Lock lockBodies;
 
-    public ResponseStatsTracker() {
+    public ResponseStatsTracker(int maxActivePeers) {
         // instantiate objects for gathering stats
-        this.status = new ResponseStats();
-        this.headers = new ResponseStats();
-        this.bodies = new ResponseStats();
+        this.status = new ResponseStats(maxActivePeers);
+        this.headers = new ResponseStats(maxActivePeers);
+        this.bodies = new ResponseStats(maxActivePeers);
 
         // instantiate locks
         this.lockStatus = new ReentrantLock();
