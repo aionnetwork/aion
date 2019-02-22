@@ -128,22 +128,21 @@ public final class SyncStats {
                 RequestCounter current = requestsToPeers.get(nodeId);
 
                 if (current == null) {
-                    current = new RequestCounter();
+                    current = new RequestCounter(type);
                     requestsToPeers.put(nodeId, current);
+                } else {
+                    switch (type) {
+                        case STATUS:
+                            current.incStatus();
+                            break;
+                        case HEADERS:
+                            current.incHeaders();
+                            break;
+                        case BODIES:
+                            current.incBodies();
+                            break;
+                    }
                 }
-
-                switch (type) {
-                    case STATUS:
-                        current.incStatus();
-                        break;
-                    case HEADERS:
-                        current.incHeaders();
-                        break;
-                    case BODIES:
-                        current.incBodies();
-                        break;
-                }
-
             } finally {
                 requestsLock.unlock();
             }
@@ -165,10 +164,13 @@ public final class SyncStats {
 
             float totalReq = 0f;
 
+            // if there are any values the total will be != 0 after this
             for (RequestCounter rc : requestsToPeers.values()) {
                 totalReq += rc.getTotal();
             }
 
+            // resources are locked so the requestsToPeers map is unchanged
+            // if we enter this loop the totalReq is not equal to 0
             for (Map.Entry<String, RequestCounter> entry : requestsToPeers.entrySet()) {
                 percentageReq.put(entry.getKey(), entry.getValue().getTotal() / totalReq);
             }
