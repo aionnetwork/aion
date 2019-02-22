@@ -5,13 +5,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import org.aion.mcf.config.StatsType;
+import org.aion.zero.impl.sync.statistics.ResponseStatsTracker;
+import org.apache.commons.lang3.tuple.Pair;
 
 /** @author chris */
 public final class SyncStats {
@@ -54,14 +54,7 @@ public final class SyncStats {
     private final Lock leechesLock = new ReentrantLock();
     private final boolean leechesEnabled;
 
-    /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private final Map<String, List<Long>> statusRequestTimeByPeers = new HashMap<>();
-    /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private final Map<String, List<Long>> statusResponseTimeByPeers = new HashMap<>();
-    /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private double overallAvgPeerResponseTime;
-
-    private final Lock responsesLock = new ReentrantLock();
+    private final ResponseStatsTracker responseTracker;
     private final boolean responsesEnabled;
 
     /**
@@ -80,13 +73,18 @@ public final class SyncStats {
         this.start = System.currentTimeMillis();
         this.startBlock = _startBlock;
         this.avgBlocksPerSec = 0;
-        this.overallAvgPeerResponseTime = 0L;
 
         this.averageEnabled = averageEnabled;
         requestsEnabled = showStatistics.contains(StatsType.REQUESTS);
         seedEnabled = showStatistics.contains(StatsType.SEEDS);
         leechesEnabled = showStatistics.contains(StatsType.LEECHES);
-        responsesEnabled = showStatistics.contains(StatsType.RESPONSES);
+
+        this.responsesEnabled = showStatistics.contains(StatsType.RESPONSES);
+        if (this.responsesEnabled) {
+            this.responseTracker = new ResponseStatsTracker();
+        } else {
+            this.responseTracker = null;
+        }
     }
 
     /**
@@ -339,143 +337,62 @@ public final class SyncStats {
         }
     }
 
-    /**
-     * Logs the time of status request to an active peer node
-     *
-     * @param _nodeId peer node display Id
-     * @param _requestTime time when the request was sent in nanoseconds
-     */
-    public void addPeerRequestTime(String _nodeId, long _requestTime) {
+    public void updateStatusRequest(String displayId, long requestTime) {
         if (responsesEnabled) {
-            responsesLock.lock();
-            try {
-                List<Long> requestStartTimes =
-                        statusRequestTimeByPeers.containsKey(_nodeId)
-                                ? statusRequestTimeByPeers.get(_nodeId)
-                                : new LinkedList<>();
-                requestStartTimes.add(_requestTime);
-                statusRequestTimeByPeers.put(_nodeId, requestStartTimes);
-            } finally {
-                responsesLock.unlock();
-            }
+            responseTracker.updateStatusRequest(displayId, requestTime);
         }
     }
 
-    /**
-     * Log the time of status response received from an active peer node
-     *
-     * @param _nodeId peer node display Id
-     * @param _responseTime time when the response was received in nanoseconds
-     */
-    public void addPeerResponseTime(String _nodeId, long _responseTime) {
-        if (requestsEnabled) {
-            responsesLock.lock();
-            try {
-                List<Long> responseEndTimes =
-                        statusResponseTimeByPeers.containsKey(_nodeId)
-                                ? statusResponseTimeByPeers.get(_nodeId)
-                                : new LinkedList<>();
-                responseEndTimes.add(_responseTime);
-                statusResponseTimeByPeers.put(_nodeId, responseEndTimes);
-            } finally {
-                responsesLock.unlock();
-            }
+    public void updateHeadersRequest(String displayId, long requestTime) {
+        if (responsesEnabled) {
+            responseTracker.updateHeadersRequest(displayId, requestTime);
         }
     }
 
-    /**
-     * Obtains the average response time by each active peer node
-     *
-     * @return map of average response time in nanoseconds by peer node
-     */
-    Map<String, Double> getAverageResponseTimeByPeers() {
-        responsesLock.lock();
-        try {
-            double average;
-            String nodeId;
-            List<Long> requests, responses;
-
-            Map<String, Double> avgResponseTimeByPeers = new HashMap<>();
-            overallAvgPeerResponseTime = 0d;
-
-            for (Map.Entry<String, List<Long>> peerData : statusRequestTimeByPeers.entrySet()) {
-
-                nodeId = peerData.getKey(); // node display Id
-                requests = peerData.getValue();
-                responses = statusResponseTimeByPeers.getOrDefault(nodeId, new LinkedList<>());
-
-                // calculate the average response time
-                average = calculateAverage(requests, responses);
-
-                if (average >= 0) {
-                    // collect a map of average response times by peer
-                    avgResponseTimeByPeers.put(nodeId, average);
-                    overallAvgPeerResponseTime += average;
-                }
-            }
-
-            overallAvgPeerResponseTime =
-                    avgResponseTimeByPeers.isEmpty()
-                            ? 0d
-                            : overallAvgPeerResponseTime / avgResponseTimeByPeers.size();
-
-            return avgResponseTimeByPeers.entrySet().stream()
-                    .sorted(Map.Entry.comparingByValue())
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            responsesLock.unlock();
+    public void updateBodiesRequest(String displayId, long requestTime) {
+        if (responsesEnabled) {
+            responseTracker.updateBodiesRequest(displayId, requestTime);
         }
     }
 
-    /**
-     * Computes the average response time for a peer given the lists of gathered requests and
-     * response times.
-     *
-     * @param requestTimes list of times for requests made
-     * @param responseTimes list of times for responses received
-     * @return the average response time for the request-response cycle
-     */
-    private static double calculateAverage(List<Long> requestTimes, List<Long> responseTimes) {
-        int entries = 0;
-        double sum = 0;
-        int size = Math.min(requestTimes.size(), responseTimes.size());
-
-        // only consider requests that had responses
-        for (int i = 0; i < size; i++) {
-            long request = requestTimes.get(i);
-            long response = responseTimes.get(i);
-
-            // ignore data where the requests comes after the response
-            if (response >= request) {
-                sum += response - request;
-                entries++;
-            }
+    public void updateStatusResponse(String displayId, long responseTime) {
+        if (responsesEnabled) {
+            responseTracker.updateStatusResponse(displayId, responseTime);
         }
+    }
 
-        if (entries == 0) {
-            // indicates no data
-            return (double) -1;
+    public void updateHeadersResponse(String displayId, long responseTime) {
+        if (responsesEnabled) {
+            responseTracker.updateHeadersResponse(displayId, responseTime);
+        }
+    }
+
+    public void updateBodiesResponse(String displayId, long responseTime) {
+        if (responsesEnabled) {
+            responseTracker.updateBodiesResponse(displayId, responseTime);
+        }
+    }
+
+    @VisibleForTesting
+    Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
+        if (responsesEnabled) {
+            return responseTracker.getResponseStats();
         } else {
-            return Math.ceil(sum / entries);
+            return null;
         }
     }
 
     /**
-     * Obtains the overall average response time from all active peer nodes
+     * Obtain log stream containing statistics about the average response time between sending
+     * status requests out and that peer responding shown for each peer and averaged for all peers.
      *
-     * @return overall average response time
+     * @return log stream with requests statistical data
      */
-    double getOverallAveragePeerResponseTime() {
-        responsesLock.lock();
-        try {
-            return overallAvgPeerResponseTime;
-        } finally {
-            responsesLock.unlock();
+    public String dumpResponseStats() {
+        if (responsesEnabled) {
+            return responseTracker.dumpResponseStats();
+        } else {
+            return "";
         }
     }
 }

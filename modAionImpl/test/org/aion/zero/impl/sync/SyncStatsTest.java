@@ -15,6 +15,7 @@ import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -381,11 +382,7 @@ public class SyncStatsTest {
 
     @Test
     public void testTotalBlockRequestsByPeerStats() {
-
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+        SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
         Map<String, Long> emptyTotalBlocksByPeer = stats.getTotalBlockRequestsByPeer();
@@ -414,12 +411,8 @@ public class SyncStatsTest {
 
     @Test
     public void testTotalBlockRequestsByPeerStatsDisabled() {
-
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
         // disables the stats
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
+        SyncStats stats = new SyncStats(0L, false);
 
         int blocks = 3;
         for (String nodeId : peers) {
@@ -436,79 +429,305 @@ public class SyncStatsTest {
     }
 
     @Test
-    public void testAverageResponseTimeByPeersStats() {
-
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+    public void testResponseStatsByPeersEmpty() {
+        SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
-        Map<String, Double> emptyAvgResponseTimeByPeers = stats.getAverageResponseTimeByPeers();
+        assertThat(stats.getResponseStats()).isNull();
+        assertThat(stats.dumpResponseStats()).isEmpty();
+
         // request time is logged but no response is received
-        stats.addPeerRequestTime("dummy", System.nanoTime());
-        double overallAveragePeerResponseTime = stats.getOverallAveragePeerResponseTime();
-        assertThat(emptyAvgResponseTimeByPeers.isEmpty()).isTrue();
-        assertThat(overallAveragePeerResponseTime).isEqualTo(0d);
+        stats.updateStatusRequest("dummy", System.nanoTime());
+        stats.updateHeadersRequest("dummy", System.nanoTime());
+        stats.updateBodiesRequest("dummy", System.nanoTime());
+        assertThat(stats.getResponseStats()).isNull();
+        assertThat(stats.dumpResponseStats()).isEmpty();
 
-        stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+        stats = new SyncStats(0L, true);
 
-        int requests = 3;
+        // response time is logged but no request exists
+        stats.updateStatusResponse("dummy", System.nanoTime());
+        stats.updateHeadersResponse("dummy", System.nanoTime());
+        stats.updateBodiesResponse("dummy", System.nanoTime());
+        assertThat(stats.getResponseStats()).isNull();
+        assertThat(stats.dumpResponseStats()).isEmpty();
+    }
+
+    @Test
+    public void testResponseStatsByPeers() {
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+        // should be updated if more message types are added
+        int requestTypes = 3;
+
         for (String nodeId : peers) {
-            int count = requests;
-            while (count > 0) {
-                stats.addPeerRequestTime(nodeId, System.nanoTime());
-                try {
-                    Thread.sleep(100 * count);
-                } catch (InterruptedException e) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // status -> type of request 1
+                stats.updateStatusRequest(nodeId, time);
+                stats.updateStatusResponse(nodeId, time + 1_000_000);
+
+                // headers -> type of request 2
+                stats.updateHeadersRequest(nodeId, time);
+                stats.updateHeadersResponse(nodeId, time + 1_000_000);
+
+                // bodies -> type of request 3
+                stats.updateBodiesRequest(nodeId, time);
+                stats.updateBodiesResponse(nodeId, time + 1_000_000);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // for entries for each: «all» «status» «headers» «bodies»
+            assertThat(e.getValue().size()).isEqualTo(4);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight())
+                                .isEqualTo(peers.size() * entries * requestTypes);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    }
                 }
-                stats.addPeerResponseTime(nodeId, System.nanoTime());
-                count--;
-            }
-            requests--;
-        }
-
-        Map<String, Double> avgResponseTimeByPeers = stats.getAverageResponseTimeByPeers();
-        assertThat(avgResponseTimeByPeers.size()).isEqualTo(peers.size());
-
-        Double lastAvgResponseTime = Double.MIN_VALUE;
-        int i = 0;
-        for (String nodeId : avgResponseTimeByPeers.keySet()) {
-            // ensures asc order
-            if (i++ == 0) {
-                // First record correspond to the overall average response time by all peers
-                assertThat(
-                        avgResponseTimeByPeers
-                                .get(nodeId)
-                                .compareTo(stats.getOverallAveragePeerResponseTime()));
             } else {
-                assertThat(avgResponseTimeByPeers.get(nodeId) > lastAvgResponseTime).isTrue();
-                lastAvgResponseTime = avgResponseTimeByPeers.get(nodeId);
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries * requestTypes);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    }
+                }
             }
         }
+
+        // System.out.println(stats.dumpResponseStats());
+    }
+
+    @Test
+    public void testResponseStatsByPeersStatusOnly() {
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+
+        for (String nodeId : peers) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // status
+                stats.updateStatusRequest(nodeId, time);
+                stats.updateStatusResponse(nodeId, time + 1_000_000);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // for entries for each: «all» «status» «headers» «bodies»
+            assertThat(e.getValue().size()).isEqualTo(4);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("status")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            } else {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("status")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            }
+        }
+
+        // System.out.println(stats.dumpResponseStats());
+    }
+
+    @Test
+    public void testResponseStatsByPeersHeadersOnly() {
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+
+        for (String nodeId : peers) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // headers
+                stats.updateHeadersRequest(nodeId, time);
+                stats.updateHeadersResponse(nodeId, time + 1_000_000);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // for entries for each: «all» «status» «headers» «bodies»
+            assertThat(e.getValue().size()).isEqualTo(4);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("headers")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            } else {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("headers")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            }
+        }
+
+        // System.out.println(stats.dumpResponseStats());
+    }
+
+    @Test
+    public void testResponseStatsByPeersBodiesOnly() {
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+
+        for (String nodeId : peers) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // bodies
+                stats.updateBodiesRequest(nodeId, time);
+                stats.updateBodiesResponse(nodeId, time + 1_000_000);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // for entries for each: «all» «status» «headers» «bodies»
+            assertThat(e.getValue().size()).isEqualTo(4);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("bodies")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            } else {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("bodies")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            }
+        }
+
+        // System.out.println(stats.dumpResponseStats());
     }
 
     @Test
     public void testAverageResponseTimeByPeersStatsDisabled() {
-
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
         // disables the stats
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
+        SyncStats stats = new SyncStats(0L, false);
 
         int requests = 3;
         for (String nodeId : peers) {
             int count = requests;
             while (count > 0) {
-                stats.addPeerRequestTime(nodeId, System.nanoTime());
-                stats.addPeerResponseTime(nodeId, System.nanoTime());
+
+                // status updates
+                stats.updateStatusRequest(nodeId, System.nanoTime());
+                stats.updateStatusResponse(nodeId, System.nanoTime());
+
+                // headers updates
+                stats.updateHeadersRequest(nodeId, System.nanoTime());
+                stats.updateHeadersResponse(nodeId, System.nanoTime());
+
+                // bodies updates
+                stats.updateBodiesRequest(nodeId, System.nanoTime());
+                stats.updateBodiesResponse(nodeId, System.nanoTime());
+
                 count--;
             }
             requests--;
         }
 
         // ensures still empty
-        assertThat(stats.getAverageResponseTimeByPeers().isEmpty()).isTrue();
+        assertThat(stats.getResponseStats()).isNull();
     }
 }

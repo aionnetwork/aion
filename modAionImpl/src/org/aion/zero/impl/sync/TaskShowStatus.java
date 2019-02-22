@@ -100,7 +100,7 @@ final class TaskShowStatus implements Runnable {
             }
 
             if (showStatistics.contains(StatsType.RESPONSES)) {
-                requestedInfo = dumpResponseInfo();
+                requestedInfo = stats.dumpResponseStats();
                 if (!requestedInfo.isEmpty()) {
                     p2pLOG.info(requestedInfo);
                 }
@@ -137,7 +137,7 @@ final class TaskShowStatus implements Runnable {
             if (!requestedInfo.isEmpty()) {
                 p2pLOG.debug(requestedInfo);
             }
-            requestedInfo = dumpResponseInfo();
+            requestedInfo = stats.dumpResponseStats();
             if (!requestedInfo.isEmpty()) {
                 p2pLOG.debug(requestedInfo);
             }
@@ -253,42 +253,6 @@ final class TaskShowStatus implements Runnable {
             totalBlockReqByPeer.forEach(
                     (nodeId, totalBlocks) ->
                             sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * Obtain log stream containing statistics about the average response time between sending
-     * status requests out and that peer responding shown for each peer and averaged for all peers.
-     *
-     * @return log stream with requests statistical data
-     */
-    private String dumpResponseInfo() {
-        Map<String, Double> avgResponseTimeByPeers = this.stats.getAverageResponseTimeByPeers();
-
-        StringBuilder sb = new StringBuilder();
-
-        if (!avgResponseTimeByPeers.isEmpty()) {
-
-            // value in milliseconds
-            double overallAvgResponse = this.stats.getOverallAveragePeerResponseTime() / 1_000_000;
-
-            sb.append("\n====== sync-responses-by-peer ======\n");
-            sb.append(String.format("   %9s %20s\n", "peer", "avg. response"));
-            sb.append("------------------------------------\n");
-
-            sb.append(
-                    String.format(
-                            "   «overall» %17s ms\n", String.format("%.0f", overallAvgResponse)));
-
-            avgResponseTimeByPeers.forEach(
-                    (nodeId, avgResponse) ->
-                            sb.append(
-                                    String.format(
-                                            "   id:%6s %17s ms\n",
-                                            nodeId,
-                                            String.format("%.0f", avgResponse / 1_000_000))));
         }
 
         return sb.toString();
