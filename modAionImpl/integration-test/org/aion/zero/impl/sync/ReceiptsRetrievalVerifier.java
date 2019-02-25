@@ -123,16 +123,15 @@ public class ReceiptsRetrievalVerifier {
     }
 
     public void displayOutstandingRequests() {
-        StringBuffer sb = new StringBuffer();
-        LOG.info(
-                "ReceiptsRetrievalVerifier outstanding-requests"
-                        + outstandingRequests.entrySet().stream()
-                                .map(
-                                        e ->
-                                                String.format(
-                                                        "<txHash=%s (Block %s)",
-                                                        e.getKey(), e.getValue().getNumber()))
-                                .collect(Collectors.toList())
-                                .toString());
+        StringBuffer sb = new StringBuffer("ReceiptsRetrievalVerifier outstanding-requests");
+        sb.append(outstandingRequests.entrySet().stream()
+                        .map(
+                                e ->
+                                        String.format(
+                                                "<txHash=%s (Block %s)",
+                                                e.getKey(), e.getValue().getNumber()))
+                        .collect(Collectors.toList())
+                        .toString());
+        LOG.info(sb.toString());
     }
 }
