@@ -319,6 +319,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
+    public List<AionBlock> getBlocksByRange(long lowest, long highest) {
+        // TODO: implement
+        return null;
+    }
+
+    @Override
     /* NOTE: only returns receipts from the main chain
      */
     @SuppressWarnings("Duplicates")
