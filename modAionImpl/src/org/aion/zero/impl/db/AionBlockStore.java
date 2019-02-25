@@ -17,6 +17,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -236,6 +237,87 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             }
 
             return null;
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Returns a range of main chain blocks.
+     *
+     * @param first the height of the first block in the requested range
+     * @param last the height of the last block in the requested range
+     * @return a list containing consecutive main chain blocks with heights ranging according to the
+     *     given parameters
+     * @apiNote The blocks must be added to the list in the order that they are requested. If {@code
+     *     first > last} the blocks are returned in descending order of their height, otherwise when
+     *     {@code first < last} the blocks are returned in ascending order of their height.
+     */
+    public List<AionBlock> getBlocksByRange(long first, long last) {
+        lock.readLock().lock();
+
+        try {
+            AionBlock block = getChainBlockByNumber(first);
+            if (block == null) {
+                // invalid request
+                return null;
+            }
+
+            if (first == last) {
+                return List.of(block);
+            } else if (first > last) { // first is highest -> can query directly by parent hash
+                List<AionBlock> blocks = new ArrayList<>();
+                blocks.add(block);
+
+                for (long i = first - 1; i >= (last > 0 ? last : 1); i--) {
+                    block = this.blocks.get(block.getParentHash());
+                    if (block == null) {
+                        break; // stops at any invalid data
+                    } else {
+                        blocks.add(block);
+                    }
+                }
+                return blocks;
+            } else { // last is highest
+                LinkedList<AionBlock> blocks = new LinkedList<>();
+                AionBlock lastBlock = getChainBlockByNumber(last);
+
+                if (lastBlock == null) { // assuming height was above best block
+                    // attempt to get best block
+                    lastBlock = getBestBlock();
+                    if (lastBlock == null) {
+                        LOG.error(
+                                "Encountered a possible database/kernel corruption: cannot find best block in data store.");
+                        // invalid data store
+                        return null;
+                    } else if (last < lastBlock.getNumber()) {
+                        // the block should have been stored but null was returned above
+                        LOG.error(
+                                "Encountered a possible database/kernel corruption: cannot find block at level {} in data store.",
+                                last);
+                        // invalid data store
+                        return null;
+                    } else { // the block was indeed higher than the best block
+                        // building existing range
+                        blocks.addFirst(lastBlock);
+                        long newLast = lastBlock.getNumber();
+                        for (long i = newLast - 1; i > first; i--) {
+                            lastBlock = this.blocks.get(lastBlock.getParentHash());
+                            if (lastBlock == null) {
+                                break; // stops at any invalid data
+                            } else {
+                                // always adding at the beginning of the list
+                                // to return the expected order of blocks
+                                blocks.addFirst(lastBlock);
+                            }
+                        }
+                    }
+                }
+
+                // adding the initial block
+                blocks.addFirst(block);
+                return blocks;
+            }
         } finally {
             lock.readLock().unlock();
         }
