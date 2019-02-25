@@ -22,4 +22,6 @@ public final class Act {
     public static final byte REQUEST_TRIE_DATA = 8;
 
     public static final byte RESPONSE_TRIE_DATA = 9;
+
+    public static final byte REQUEST_BLOCKS = 12;
 }

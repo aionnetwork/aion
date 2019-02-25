@@ -8,7 +8,7 @@ public class Ver {
 
     public static final short V0 = 0;
 
-    // new protocol version supporting fast sync
+    /** New protocol version supporting fast sync. */
     public static final short V1 = 1;
 
     // for test
