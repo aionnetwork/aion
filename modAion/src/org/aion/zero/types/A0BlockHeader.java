@@ -1,36 +1,14 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.types;
 
 import static org.aion.base.util.ByteUtil.longToBytes;
 import static org.aion.base.util.ByteUtil.merge;
+import static org.aion.base.util.ByteUtil.oneByteToHexString;
 import static org.aion.base.util.ByteUtil.toHexString;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
 import java.util.Objects;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.IPowBlockHeader;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.Utils;
@@ -38,6 +16,7 @@ import org.aion.crypto.HashUtil;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.json.JSONObject;
 
@@ -69,7 +48,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
     // TODO: Update this
     public JSONObject toJSON() {
         JSONObject obj = new JSONObject();
-        obj.putOpt("version", toHexString(this.parentHash));
+        obj.putOpt("version", oneByteToHexString(this.version));
         obj.putOpt("number", toHexString(longToBytes(this.number)));
         obj.putOpt("parentHash", toHexString(this.parentHash));
         obj.putOpt("coinBase", toHexString(this.coinbase.toBytes()));
@@ -107,8 +86,8 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         byte[] data = rlpHeader.get(RPL_BH_COINBASE).getRLPData();
         this.coinbase =
                 (data == null)
-                        ? Address.EMPTY_ADDRESS()
-                        : Address.wrap(rlpHeader.get(RPL_BH_COINBASE).getRLPData());
+                        ? AionAddress.EMPTY_ADDRESS()
+                        : AionAddress.wrap(rlpHeader.get(RPL_BH_COINBASE).getRLPData());
 
         // StateRoot
         this.stateRoot = rlpHeader.get(RPL_BH_STATEROOT).getRLPData();
@@ -237,7 +216,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
             byte[] nonce,
             byte[] solution) {
         this.version = version;
-        this.coinbase = coinbase;
+        this.coinbase = (AionAddress) coinbase;
         this.parentHash = parentHash;
         this.logsBloom = logsBloom;
         this.difficulty = difficulty;
@@ -520,7 +499,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
         builder.withParentHash(rlpHeader.get(RPL_BH_PARENTHASH).getRLPData());
 
         // Coinbase (miner)
-        builder.withCoinbase(new Address(rlpHeader.get(RPL_BH_COINBASE).getRLPData()));
+        builder.withCoinbase(new AionAddress(rlpHeader.get(RPL_BH_COINBASE).getRLPData()));
 
         // State root
         builder.withStateRoot(rlpHeader.get(RPL_BH_STATEROOT).getRLPData());
@@ -580,7 +559,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
          * Some constants for fallbacks, these are not rigorously defined this;
          * TODO: define these with explanations in the future
          */
-        protected Address EMPTY_ADDRESS = Address.EMPTY_ADDRESS();
+        protected Address EMPTY_ADDRESS = AionAddress.EMPTY_ADDRESS();
 
         protected byte version;
         protected byte[] parentHash;
@@ -885,7 +864,7 @@ public class A0BlockHeader extends AbstractBlockHeader implements IPowBlockHeade
 
             this.version = this.version == 0 ? 1 : this.version;
             this.parentHash = this.parentHash == null ? HashUtil.EMPTY_DATA_HASH : this.parentHash;
-            this.coinbase = this.coinbase == null ? Address.ZERO_ADDRESS() : this.coinbase;
+            this.coinbase = this.coinbase == null ? AionAddress.ZERO_ADDRESS() : this.coinbase;
             this.stateRoot = this.stateRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.stateRoot;
             this.txTrieRoot = this.txTrieRoot == null ? HashUtil.EMPTY_TRIE_HASH : this.txTrieRoot;
             this.receiptTrieRoot =

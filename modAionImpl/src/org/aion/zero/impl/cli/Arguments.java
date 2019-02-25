@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.cli;
 
 import java.util.ArrayList;
@@ -72,7 +49,7 @@ public class Arguments {
             arity = "0..1",
             paramLabel = "<network>",
             description =
-                    "create config for the selected network\noptions: mainnet, conquest, mastery")
+                    "create config for the selected network\noptions: mainnet, conquest, mastery, avmtestnet")
     private String config = null;
 
     // get information and version
@@ -118,13 +95,27 @@ public class Arguments {
     @Option(
             names = {"-n", "--network"},
             description =
-                    "execute kernel with selected network\noptions: mainnet, conquest, mastery")
+                    "execute kernel with selected network\noptions: mainnet, conquest, mastery, avmtestnet")
     private String network = null;
 
     @Option(
             names = {"-d", "--datadir"},
             description = "execute kernel with selected database directory")
     private String directory = null;
+
+    @Option(
+            names = {"-p", "--port"},
+            description = "execute kernel with selected port")
+    private String port = null;
+
+    @Option(
+            names = {"--force-compact"},
+            arity = "1..2",
+            paramLabel = "<enabled> <slow_import> <frequency>",
+            description =
+                    "enable/disable compact during sync when one boolean parameter is given, or "
+                            + "enable when two values are provided for slow_import and frequency in milliseconds")
+    private String[] forceCompact = null;
 
     // offline database query and update
     @Option(
@@ -159,6 +150,14 @@ public class Arguments {
             names = {"--db-compact"},
             description = "if using leveldb, it triggers its database compaction processes")
     private boolean dbCompact;
+
+    @Option(
+            names = {"--redo-import"},
+            arity = "0..1",
+            paramLabel = "<start_height>",
+            description =
+                    "drops all databases except for block and index when not given a parameter or starting from 0 and redoes import of all known main chain blocks")
+    private String redoImport = null;
 
     /** Compacts the account options into specific commands. */
     public static String[] preProcess(String[] arguments) {
@@ -240,6 +239,14 @@ public class Arguments {
         return directory;
     }
 
+    public String getPort() {
+        return port;
+    }
+
+    public String[] getForceCompact() {
+        return forceCompact;
+    }
+
     public String getPruneStateOption() {
         return pruntStateOption;
     }
@@ -258,5 +265,9 @@ public class Arguments {
 
     public boolean isDbCompact() {
         return dbCompact;
+    }
+
+    public String isRedoImport() {
+        return redoImport;
     }
 }

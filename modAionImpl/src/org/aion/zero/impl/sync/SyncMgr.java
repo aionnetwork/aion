@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.zero.impl.sync;
 
 import java.math.BigInteger;
@@ -121,7 +99,11 @@ public final class SyncMgr {
             String _displayId,
             long _remoteBestBlockNumber,
             final byte[] _remoteBestBlockHash,
-            BigInteger _remoteTotalDiff) {
+            BigInteger _remoteTotalDiff,
+            byte _apiVersion,
+            short _peerCount,
+            int _pendingTxCount,
+            int _latency) {
 
         // self
         BigInteger selfTd = this.chain.getTotalDifficulty();
@@ -153,14 +135,26 @@ public final class SyncMgr {
                                         ? ""
                                         : Utils.getNodeIdShort(
                                                 this.networkStatus.getTargetBestBlockHash()),
-                                Utils.getNodeIdShort(remoteBestBlockHash));
+                                Utils.getNodeIdShort(remoteBestBlockHash),
+                                this.networkStatus.getTargetApiVersion(),
+                                (int) _apiVersion,
+                                this.networkStatus.getTargetPeerCount(),
+                                _peerCount,
+                                this.networkStatus.getTargetPendingTxCount(),
+                                _pendingTxCount,
+                                this.networkStatus.getTargetLatency(),
+                                _latency);
                     }
 
                     this.networkStatus.update(
                             _displayId,
                             _remoteTotalDiff,
                             _remoteBestBlockNumber,
-                            remoteBestBlockHash);
+                            remoteBestBlockHash,
+                            (int) _apiVersion,
+                            _peerCount,
+                            _pendingTxCount,
+                            _latency);
                 }
             }
         }
@@ -172,7 +166,10 @@ public final class SyncMgr {
             final IEventMgr _evtMgr,
             final int _blocksQueueMax,
             final boolean _showStatus,
-            final Set<StatsType> showStatistics) {
+            final Set<StatsType> showStatistics,
+            final int _slowImportTime,
+            final int _compactFrequency,
+            final int maxActivePeers) {
         p2pMgr = _p2pMgr;
         chain = _chain;
         evtMgr = _evtMgr;
@@ -182,7 +179,7 @@ public final class SyncMgr {
         blockHeaderValidator = new ChainConfiguration().createBlockHeaderValidator();
 
         long selfBest = chain.getBestBlock().getNumber();
-        stats = new SyncStats(selfBest);
+        stats = new SyncStats(selfBest, _showStatus, showStatistics, maxActivePeers);
 
         syncGb =
                 new Thread(
@@ -205,7 +202,9 @@ public final class SyncMgr {
                                 downloadedBlocks,
                                 importedBlockHashes,
                                 peerStates,
-                                log),
+                                log,
+                                _slowImportTime,
+                                _compactFrequency),
                         "sync-ib");
         syncIb.start();
         syncGs = new Thread(new TaskGetStatus(start, p2pMgr, stats, log), "sync-gs");

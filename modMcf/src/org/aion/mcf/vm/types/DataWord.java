@@ -1,34 +1,12 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.mcf.vm.types;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 import org.aion.base.vm.IDataWord;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 
 /**
  * Data word is the basic unit data used by virtual machine. The size of a data word is 128 bits.
@@ -76,7 +54,31 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     }
 
     public DataWord(BigInteger num) {
-        this(num.toByteArray());
+        // NOTE: DataWord.value() produces a signed positive BigInteger. The byte array
+        // representation of such a number must prepend a zero byte so that this can be decoded
+        // correctly. This means that a 16-byte array with a non-zero starting bit will become 17
+        // bytes when BigInteger::toByteArray is called, and therefore we must remove any leading
+        // zero bytes from this representation for full compatibility.
+        this(removeLargeBigIntegerLeadingZeroByte(num));
+    }
+
+    /**
+     * Similar to {@code stripLeadingZeroes} but more specialized to be more efficient in a specific
+     * necessary situation.
+     *
+     * <p>Essentially this method will always return {@code number.toByteArray()} UNLESS this byte
+     * array is length {@value BYTES} + 1 (that is, 17), and its initial byte is a zero byte. In
+     * this single case, the leading zero byte will be stripped.
+     *
+     * @param number The {@link BigInteger} whose byte array representation is to be possibly
+     *     truncated.
+     * @return The re-formatted {@link BigInteger#toByteArray()} representation as here specified.
+     */
+    private static byte[] removeLargeBigIntegerLeadingZeroByte(BigInteger number) {
+        byte[] bytes = number.toByteArray();
+        return ((bytes.length == (DataWord.BYTES + 1)) && (bytes[0] == 0x0))
+                ? Arrays.copyOfRange(bytes, 1, bytes.length)
+                : bytes;
     }
 
     public DataWord(String data) {
@@ -168,5 +170,10 @@ public class DataWord implements Comparable<DataWord>, IDataWord {
     @Override
     public String toString() {
         return Hex.toHexString(data);
+    }
+
+    @Override
+    public ByteArrayWrapper toWrapper() {
+        return ByteArrayWrapper.wrap(data);
     }
 }

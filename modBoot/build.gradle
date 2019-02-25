@@ -10,14 +10,14 @@ dependencies {
     compile project(':modP2p')
     compile project(':modMcf')
     compile project(':modTxPoolImpl')
-    compile files('../lib/libnsc.jar')
-    compile files('../lib/libnzmq.jar')
+    compile project(':3rdParty.libnzmq')
+    compile 'com.madgag.spongycastle:prov:1.58.0.0'
+    compile 'com.madgag.spongycastle:core:1.58.0.0'
     compile 'org.slf4j:slf4j-api:1.7.25'
     
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
 }
-
 
 // Skip unit tests when doing build task; unit tests are all mixed up with 
 // long-running integration tests in this module,so doing this to avoid 

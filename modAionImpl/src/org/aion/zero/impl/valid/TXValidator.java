@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.valid;
 
 import static org.aion.mcf.valid.TxNrgRule.isValidNrgContractCreate;
@@ -47,12 +24,12 @@ public class TXValidator {
             Collections.synchronizedMap(new LRUMap<>(128 * 1024));
 
     public static boolean isValid(AionTransaction tx) {
-        Boolean valid = cache.get(ByteArrayWrapper.wrap(tx.getHash()));
+        Boolean valid = cache.get(ByteArrayWrapper.wrap(tx.getTransactionHash()));
         if (valid != null) {
             return valid;
         } else {
             valid = isValid0(tx);
-            cache.put(ByteArrayWrapper.wrap(tx.getHash()), valid);
+            cache.put(ByteArrayWrapper.wrap(tx.getTransactionHash()), valid);
             return valid;
         }
     }
@@ -86,8 +63,8 @@ public class TXValidator {
             return false;
         }
 
-        long nrg = tx.getNrg();
-        if (tx.isContractCreation()) {
+        long nrg = tx.getEnergyLimit();
+        if (tx.isContractCreationTransaction()) {
             if (!isValidNrgContractCreate(nrg)) {
                 LOG.error("invalid contract create nrg!");
                 return false;
@@ -99,8 +76,7 @@ public class TXValidator {
             }
         }
 
-        nrg = tx.getNrgPrice();
-        if (nrg < 0 || nrg > Long.MAX_VALUE) {
+        if (tx.getEnergyPrice() < 0) {
             LOG.error("invalid tx nrgprice!");
             return false;
         }

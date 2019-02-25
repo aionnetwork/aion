@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.db.impl.rocksdb;
 
 import java.io.File;
@@ -277,79 +255,81 @@ public class RocksDBWrapper extends AbstractDB {
 
         @Override
         public byte[] next() {
-            byte[] key = iterator.key();
             iterator.next();
-            return key;
+            return iterator.key();
         }
     }
 
     @Override
-    protected byte[] getInternal(byte[] k) {
+    protected byte[] getInternal(byte[] key) {
         try {
-            return db.get(k);
+            return db.get(key);
         } catch (RocksDBException e) {
-            LOG.error("Unable to get key " + Arrays.toString(k) + ". " + e);
+            LOG.error("Unable to get key " + Arrays.toString(key) + ". " + e);
         }
 
         return null;
     }
 
-    // AbstractDB functionality
-
     @Override
-    public void put(byte[] k, byte[] v) {
-        check(k);
-
-        check();
-
+    public void putInternal(byte[] key, byte[] value) {
         try {
-            if (v == null) {
-                db.delete(k);
-            } else {
-                db.put(k, v);
-            }
+            db.put(key, value);
         } catch (RocksDBException e) {
-            LOG.error("Unable to put / delete key " + Arrays.toString(k) + ". " + e);
+            LOG.error("Unable to put / update key " + Arrays.toString(key) + ". " + e);
         }
     }
 
     @Override
-    public void delete(byte[] k) {
-        check(k);
-
-        check();
+    public void deleteInternal(byte[] key) {
         try {
-            db.delete(k);
+            db.delete(key);
         } catch (RocksDBException e) {
-            LOG.error("Unable to delete key " + Arrays.toString(k) + ". " + e);
+            LOG.error("Unable to delete key " + Arrays.toString(key) + ". " + e);
         }
     }
 
     private WriteBatch batch = null;
 
     @Override
-    public void putToBatch(byte[] key, byte[] value) {
-        check(key);
-
-        check();
-
+    public void putToBatchInternal(byte[] key, byte[] value) {
         if (batch == null) {
             batch = new WriteBatch();
         }
 
         try {
-            if (value == null) {
-                batch.delete(key);
-            } else {
-                batch.put(key, value);
-            }
+            batch.put(key, value);
         } catch (RocksDBException e) {
-            LOG.error("Unable to add to batch operation on " + this.toString() + ".", e);
+            LOG.error("Unable to perform put to batch operation on " + this.toString() + ".", e);
         } finally {
             // attempting to write directly since batch operation didn't work
-            put(key, value);
-            batch.close();
-            batch = null;
+            putInternal(key, value);
+            try {
+                batch.close();
+            } finally {
+                batch = null;
+            }
+        }
+    }
+
+    @Override
+    public void deleteInBatchInternal(byte[] key) {
+        if (batch == null) {
+            batch = new WriteBatch();
+        }
+
+        try {
+            batch.delete(key);
+        } catch (RocksDBException e) {
+            LOG.error("Unable to perform delete in batch operation on " + this.toString() + ".", e);
+        } finally {
+            // attempting to write directly since batch operation didn't work
+            deleteInternal(key);
+            try {
+                batch.close();
+            } finally {
+                batch = null;
+            }
         }
     }
 
@@ -360,7 +340,9 @@ public class RocksDBWrapper extends AbstractDB {
                 db.write(new WriteOptions(), batch);
             } catch (RocksDBException e) {
                 LOG.error(
-                        "Unable to execute batch put/update operation on " + this.toString() + ".",
+                        "Unable to execute batch put/update/delete operation on "
+                                + this.toString()
+                                + ".",
                         e);
             }
             batch.close();
@@ -369,23 +351,15 @@ public class RocksDBWrapper extends AbstractDB {
     }
 
     @Override
-    public void putBatch(Map<byte[], byte[]> inputMap) {
-        check(inputMap.keySet());
-
-        check();
-
+    public void putBatchInternal(Map<byte[], byte[]> input) {
         // try-with-resources will automatically close the batch object
         try (WriteBatch batch = new WriteBatch()) {
             // add put and delete operations to batch
-            for (Map.Entry<byte[], byte[]> e : inputMap.entrySet()) {
+            for (Map.Entry<byte[], byte[]> e : input.entrySet()) {
                 byte[] key = e.getKey();
                 byte[] value = e.getValue();
 
-                if (value == null) {
-                    batch.delete(key);
-                } else {
-                    batch.put(key, value);
-                }
+                batch.put(key, value);
             }
 
             // bulk atomic update
@@ -397,15 +371,11 @@ public class RocksDBWrapper extends AbstractDB {
     }
 
     @Override
-    public void deleteBatch(Collection<byte[]> keys) {
-        check(keys);
-
-        check();
-
+    public void deleteBatchInternal(Collection<byte[]> keys) {
         try (WriteBatch batch = new WriteBatch()) {
             // add delete operations to batch
-            for (byte[] k : keys) {
-                batch.delete(k);
+            for (byte[] key : keys) {
+                batch.delete(key);
             }
 
             // bulk atomic update

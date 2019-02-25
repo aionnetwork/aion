@@ -6,6 +6,7 @@ module aion.db.impl {
     requires rocksdbjni;
     requires h2.mvstore;
     requires com.google.common;
+    requires mongo.java.driver;
 
     exports org.aion.db.impl;
     exports org.aion.db.impl.leveldb;

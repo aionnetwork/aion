@@ -1,30 +1,8 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.api.server.types;
 
 import static org.aion.base.util.TypeConverter.toJsonHex;
 
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.IBlock;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.util.ByteUtil;
@@ -33,6 +11,8 @@ import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
 import org.aion.mcf.vm.types.Log;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -107,7 +87,7 @@ public final class TxRecpt {
             this.txRoot = block.getReceiptsRoot();
             this.logs = new TxRecptLg[receipt.getLogInfoList().size()];
             for (int i = 0; i < this.logs.length; i++) {
-                Log logInfo = receipt.getLogInfoList().get(i);
+                IExecutionLog logInfo = receipt.getLogInfoList().get(i);
                 this.logs[i] =
                         new TxRecptLg(
                                 logInfo,
@@ -121,22 +101,22 @@ public final class TxRecpt {
 
         this.cumulativeNrgUsed = cumulativeNrgUsed;
         this.nrgUsed = ((AionTxReceipt) receipt).getEnergyUsed();
-        this.gasPrice = ((AionTxReceipt) receipt).getTransaction().getNrgPrice();
-        this.nrgLimit = ((AionTxReceipt) receipt).getTransaction().getNrg();
+        this.gasPrice = ((AionTxReceipt) receipt).getTransaction().getEnergyPrice();
+        this.nrgLimit = ((AionTxReceipt) receipt).getTransaction().getEnergyLimit();
 
         if (receipt.getTransaction().getContractAddress() != null)
             this.contractAddress =
                     toJsonHex(receipt.getTransaction().getContractAddress().toString());
-        this.transactionHash = toJsonHex(receipt.getTransaction().getHash());
+        this.transactionHash = toJsonHex(receipt.getTransaction().getTransactionHash());
         this.transactionIndex = txInfo.getIndex();
         this.root = ByteUtil.toHexString(this.txRoot);
-        this.fromAddr = receipt.getTransaction().getFrom();
+        this.fromAddr = receipt.getTransaction().getSenderAddress();
         this.from =
                 toJsonHex(
                         this.fromAddr == null
                                 ? ByteUtil.EMPTY_BYTE_ARRAY
                                 : this.fromAddr.toBytes());
-        this.toAddr = receipt.getTransaction().getTo();
+        this.toAddr = receipt.getTransaction().getDestinationAddress();
         this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toBytes());
 
         this.txTimeStamp = ByteUtil.byteArrayToLong(receipt.getTransaction().getTimeStamp());
@@ -166,7 +146,7 @@ public final class TxRecpt {
 
         this.logs = new TxRecptLg[receipt.getLogInfoList().size()];
         for (int i = 0; i < this.logs.length; i++) {
-            Log logInfo = receipt.getLogInfoList().get(i);
+            IExecutionLog logInfo = receipt.getLogInfoList().get(i);
             this.logs[i] =
                     new TxRecptLg(
                             logInfo, block, txIndex, receipt.getTransaction(), i, isMainchain);
@@ -179,24 +159,24 @@ public final class TxRecpt {
                 tx.getContractAddress() != null
                         ? toJsonHex(tx.getContractAddress().toString())
                         : null;
-        this.transactionHash = toJsonHex(tx.getHash());
+        this.transactionHash = toJsonHex(tx.getTransactionHash());
         this.transactionIndex = txIndex;
         this.root = this.txRoot != null ? ByteUtil.toHexString(this.txRoot) : null;
-        this.fromAddr = tx.getFrom();
+        this.fromAddr = tx.getSenderAddress();
         this.from =
                 toJsonHex(
                         this.fromAddr == null
                                 ? ByteUtil.EMPTY_BYTE_ARRAY
                                 : this.fromAddr.toBytes());
-        this.toAddr = tx.getTo();
+        this.toAddr = tx.getDestinationAddress();
         this.to = this.toAddr == null ? null : toJsonHex(this.toAddr.toBytes());
 
         this.txTimeStamp = ByteUtil.byteArrayToLong(tx.getTimeStamp());
         this.txValue = toJsonHex(tx.getValue());
         this.txNonce = ByteUtil.byteArrayToLong(tx.getNonce());
         this.txData = tx.getData() == null ? "" : toJsonHex(tx.getData());
-        this.gasPrice = tx.getNrgPrice();
-        this.nrgLimit = tx.getNrg();
+        this.gasPrice = tx.getEnergyPrice();
+        this.nrgLimit = tx.getEnergyLimit();
 
         this.logsBloom = receipt.getBloomFilter().toString();
         this.successful = receipt.isSuccessful();

@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.mcf.config;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -60,6 +38,8 @@ public abstract class Cfg {
     protected CfgGui gui;
 
     protected CfgFork fork;
+
+    protected CfgVm vm;
 
     public void setId(final String _id) {
         this.id = _id;
@@ -127,6 +107,10 @@ public abstract class Cfg {
 
     public CfgFork getFork() {
         return this.fork;
+    }
+
+    public CfgVm getVm() {
+        return this.vm;
     }
 
     public String[] getNodes() {
@@ -231,6 +215,9 @@ public abstract class Cfg {
                     break;
                 case 32:
                     network = "mastery";
+                    break;
+                case 31:
+                    network = "avmtestnet";
                     break;
                 default:
                     network = "custom";
@@ -424,7 +411,11 @@ public abstract class Cfg {
     }
 
     public String getDatabasePath() {
-        return getDatabaseDir().getAbsolutePath();
+        if (getDb().isFileBased()) {
+            return getDatabaseDir().getAbsolutePath();
+        } else {
+            return getDb().getPath();
+        }
     }
 
     public File getDatabaseDir() {

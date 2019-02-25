@@ -1,85 +1,108 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.sync;
 
+import com.google.common.annotations.VisibleForTesting;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+import org.aion.mcf.config.StatsType;
+import org.aion.zero.impl.sync.statistics.ResponseStatsTracker;
+import org.apache.commons.collections4.map.LRUMap;
+import org.apache.commons.lang3.tuple.Pair;
 
 /** @author chris */
 public final class SyncStats {
 
     private final long start;
     private final long startBlock;
-    /** @implNote Access to this resource is managed by the {@link #blockAverageLock}. */
+    // Access to this resource is managed by the {@link #blockAverageLock}.
     private double avgBlocksPerSec;
-
     private final Lock blockAverageLock = new ReentrantLock();
+    private final boolean averageEnabled;
 
-    /** @implNote Access to this resource is managed by the {@link #requestsLock}. */
-    private final Map<String, RequestCounter> requestsToPeers = new HashMap<>();
+    // Access to this resource is managed by the {@link #requestsLock}.
+    private final Map<String, RequestCounter> requestsToPeers;
+    private final Lock requestsLock;
+    private final boolean requestsEnabled;
 
-    private final Lock requestsLock = new ReentrantLock();
+    // Access to these resources is managed by the {@link #seedsLock}.
+    private final Map<String, Integer> blocksByPeer;
+    private final Map<String, Integer> importedByPeer;
+    private final Map<String, Integer> storedByPeer;
+    private final Lock seedsLock;
+    private final boolean seedEnabled;
+
+    // @implNote Access to this resource is managed by the {@link #leechesLock}.
+    private final Map<String, Integer> blockRequestsByPeer;
+    private final Lock leechesLock;
+    private final boolean leechesEnabled;
+
+    private final ResponseStatsTracker responseTracker;
+    private final boolean responsesEnabled;
 
     /**
-     * Records information on top seeds.
-     *
-     * @implNote Access to this resource is managed by the {@link #seedsLock}.
+     * @param enabled all stats are enabled when {@code true}, all stats are disabled otherwise
+     * @implNote Enables all statistics.
      */
-    private final Map<String, Long> blocksByPeer = new HashMap<>();
+    @VisibleForTesting
+    SyncStats(long _startBlock, boolean enabled) {
+        this(
+                _startBlock,
+                enabled,
+                enabled ? StatsType.getAllSpecificTypes() : Collections.emptyList(),
+                128); // using a default value since it's only used for testing
+    }
 
-    private final Lock seedsLock = new ReentrantLock();
-
-    /**
-     * Records information on top leeches.
-     *
-     * @implNote Access to this resource is managed by the {@link #leechesLock}.
-     */
-    private final Map<String, Long> blockRequestsByPeer = new HashMap<>();
-
-    private final Lock leechesLock = new ReentrantLock();
-
-    /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private final Map<String, List<Long>> statusRequestTimeByPeers = new HashMap<>();
-    /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private final Map<String, List<Long>> statusResponseTimeByPeers = new HashMap<>();
-    /** @implNote Access to this resource is managed by the {@link #responsesLock}. */
-    private double overallAvgPeerResponseTime;
-
-    private final Lock responsesLock = new ReentrantLock();
-
-    SyncStats(long _startBlock) {
+    SyncStats(
+            long _startBlock,
+            boolean averageEnabled,
+            Collection<StatsType> showStatistics,
+            int maxActivePeers) {
         this.start = System.currentTimeMillis();
         this.startBlock = _startBlock;
         this.avgBlocksPerSec = 0;
-        this.overallAvgPeerResponseTime = 0L;
+        this.averageEnabled = averageEnabled;
+
+        requestsEnabled = showStatistics.contains(StatsType.REQUESTS);
+        if (requestsEnabled) {
+            requestsToPeers = new LRUMap<>(maxActivePeers);
+            requestsLock = new ReentrantLock();
+        } else {
+            requestsToPeers = null;
+            requestsLock = null;
+        }
+
+        seedEnabled = showStatistics.contains(StatsType.SEEDS);
+        if (seedEnabled) {
+            blocksByPeer = new LRUMap<>(maxActivePeers);
+            importedByPeer = new LRUMap<>(maxActivePeers);
+            storedByPeer = new LRUMap<>(maxActivePeers);
+            seedsLock = new ReentrantLock();
+        } else {
+            blocksByPeer = null;
+            importedByPeer = null;
+            storedByPeer = null;
+            seedsLock = null;
+        }
+
+        leechesEnabled = showStatistics.contains(StatsType.LEECHES);
+        if (leechesEnabled) {
+            blockRequestsByPeer = new LRUMap<>(maxActivePeers);
+            leechesLock = new ReentrantLock();
+        } else {
+            blockRequestsByPeer = null;
+            leechesLock = null;
+        }
+
+        this.responsesEnabled = showStatistics.contains(StatsType.RESPONSES);
+        if (this.responsesEnabled) {
+            this.responseTracker = new ResponseStatsTracker(maxActivePeers);
+        } else {
+            this.responseTracker = null;
+        }
     }
 
     /**
@@ -88,14 +111,16 @@ public final class SyncStats {
      * @param _blockNumber best block number
      */
     void update(long _blockNumber) {
-        blockAverageLock.lock();
-        try {
-            avgBlocksPerSec =
-                    (double) (_blockNumber - startBlock)
-                            * 1000
-                            / (System.currentTimeMillis() - start);
-        } finally {
-            blockAverageLock.unlock();
+        if (averageEnabled) {
+            blockAverageLock.lock();
+            try {
+                avgBlocksPerSec =
+                        ((double) _blockNumber - startBlock)
+                                * 1000
+                                / (System.currentTimeMillis() - start);
+            } finally {
+                blockAverageLock.unlock();
+            }
         }
     }
 
@@ -115,29 +140,30 @@ public final class SyncStats {
      * @param type the type of request added
      */
     public void updateTotalRequestsToPeer(String nodeId, RequestType type) {
-        requestsLock.lock();
-        try {
-            RequestCounter current = requestsToPeers.get(nodeId);
+        if (requestsEnabled) {
+            requestsLock.lock();
+            try {
+                RequestCounter current = requestsToPeers.get(nodeId);
 
-            if (current == null) {
-                current = new RequestCounter();
-                requestsToPeers.put(nodeId, current);
+                if (current == null) {
+                    current = new RequestCounter(type);
+                    requestsToPeers.put(nodeId, current);
+                } else {
+                    switch (type) {
+                        case STATUS:
+                            current.incStatus();
+                            break;
+                        case HEADERS:
+                            current.incHeaders();
+                            break;
+                        case BODIES:
+                            current.incBodies();
+                            break;
+                    }
+                }
+            } finally {
+                requestsLock.unlock();
             }
-
-            switch (type) {
-                case STATUS:
-                    current.incStatus();
-                    break;
-                case HEADERS:
-                    current.incHeaders();
-                    break;
-                case BODIES:
-                    current.incBodies();
-                    break;
-            }
-
-        } finally {
-            requestsLock.unlock();
         }
     }
 
@@ -149,51 +175,57 @@ public final class SyncStats {
      *     requests made by the node
      */
     Map<String, Float> getPercentageOfRequestsToPeers() {
-        requestsLock.lock();
+        if (responsesEnabled) {
+            requestsLock.lock();
 
-        try {
-            Map<String, Float> percentageReq = new LinkedHashMap<>();
+            try {
+                Map<String, Float> percentageReq = new LinkedHashMap<>();
 
-            float totalReq = 0f;
+                float totalReq = 0f;
 
-            for (RequestCounter rc : requestsToPeers.values()) {
-                totalReq += rc.getTotal();
+                // if there are any values the total will be != 0 after this
+                for (RequestCounter rc : requestsToPeers.values()) {
+                    totalReq += rc.getTotal();
+                }
+
+                // resources are locked so the requestsToPeers map is unchanged
+                // if we enter this loop the totalReq is not equal to 0
+                for (Map.Entry<String, RequestCounter> entry : requestsToPeers.entrySet()) {
+                    percentageReq.put(entry.getKey(), entry.getValue().getTotal() / totalReq);
+                }
+
+                return percentageReq.entrySet().stream()
+                        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                        .collect(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (e1, e2) -> e2,
+                                        LinkedHashMap::new));
+            } finally {
+                requestsLock.unlock();
             }
-
-            for (Map.Entry<String, RequestCounter> entry : requestsToPeers.entrySet()) {
-                percentageReq.put(entry.getKey(), entry.getValue().getTotal() / totalReq);
-            }
-
-            return percentageReq
-                    .entrySet()
-                    .stream()
-                    .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            requestsLock.unlock();
+        } else {
+            return Collections.emptyMap();
         }
     }
 
     /**
      * Updates the total number of blocks received from each seed peer
      *
-     * @param _nodeId peer node display Id
-     * @param _totalBlocks total number of blocks received
+     * @param nodeId peer node display Id
+     * @param totalBlocks total number of blocks received
      */
-    public void updatePeerTotalBlocks(String _nodeId, int _totalBlocks) {
-        seedsLock.lock();
-        try {
-            long blocks = (long) _totalBlocks;
-            if (blocksByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                blocksByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+    public void updatePeerTotalBlocks(String nodeId, int totalBlocks) {
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                if (blocksByPeer.putIfAbsent(nodeId, totalBlocks) != null) {
+                    blocksByPeer.computeIfPresent(nodeId, (key, value) -> value + totalBlocks);
+                }
+            } finally {
+                seedsLock.unlock();
             }
-        } finally {
-            seedsLock.unlock();
         }
     }
 
@@ -202,40 +234,118 @@ public final class SyncStats {
      *
      * @return map of total imported blocks by peer and sorted in descending order
      */
-    Map<String, Long> getTotalBlocksByPeer() {
-        seedsLock.lock();
-        try {
-            return blocksByPeer
-                    .entrySet()
-                    .stream()
-                    .filter(entry -> entry.getValue() > 0)
-                    .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            seedsLock.unlock();
+    Map<String, Integer> getTotalBlocksByPeer() {
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                return blocksByPeer.entrySet().stream()
+                        .filter(entry -> entry.getValue() > 0)
+                        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                        .collect(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (e1, e2) -> e2,
+                                        LinkedHashMap::new));
+            } finally {
+                seedsLock.unlock();
+            }
+        } else {
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
+     * Updates the total number of blocks imported from each seed peer
+     *
+     * @param nodeId peer node display Id
+     * @param importedBlocks total number of blocks imported
+     */
+    public void updatePeerImportedBlocks(String nodeId, int importedBlocks) {
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                if (importedByPeer.putIfAbsent(nodeId, importedBlocks) != null) {
+                    importedByPeer.computeIfPresent(nodeId, (key, value) -> value + importedBlocks);
+                }
+            } finally {
+                seedsLock.unlock();
+            }
+        }
+    }
+
+    /**
+     * Obtains the total number of blocks imported from the given seed peer
+     *
+     * @return number of total imported blocks by peer
+     */
+    long getImportedBlocksByPeer(String _nodeId) {
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                return this.importedByPeer.getOrDefault(_nodeId, 0);
+            } finally {
+                seedsLock.unlock();
+            }
+        } else {
+            return 0L;
+        }
+    }
+
+    /**
+     * Updates the total number of blocks stored from each seed peer
+     *
+     * @param nodeId peer node display Id
+     * @param storedBlocks total number of blocks stored
+     */
+    public void updatePeerStoredBlocks(String nodeId, int storedBlocks) {
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                if (storedByPeer.putIfAbsent(nodeId, storedBlocks) != null) {
+                    storedByPeer.computeIfPresent(nodeId, (key, value) -> value + storedBlocks);
+                }
+            } finally {
+                seedsLock.unlock();
+            }
+        }
+    }
+
+    /**
+     * Obtains the total number of blocks stored from the given seed peer
+     *
+     * @return number of total stored blocks by peer
+     */
+    long getStoredBlocksByPeer(String _nodeId) {
+        if (seedEnabled) {
+            seedsLock.lock();
+            try {
+                return this.storedByPeer.getOrDefault(_nodeId, 0);
+            } finally {
+                seedsLock.unlock();
+            }
+        } else {
+            return 0L;
         }
     }
 
     /**
      * Updates the total block requests made by a peer.
      *
-     * @param _nodeId peer node display Id
-     * @param _totalBlocks total number of blocks requested
+     * @param nodeId peer node display Id
+     * @param totalBlocks total number of blocks requested
      */
-    public void updateTotalBlockRequestsByPeer(String _nodeId, int _totalBlocks) {
-        leechesLock.lock();
-        try {
-            long blocks = (long) _totalBlocks;
-            if (blockRequestsByPeer.putIfAbsent(_nodeId, blocks) != null) {
-                blockRequestsByPeer.computeIfPresent(_nodeId, (key, value) -> value + blocks);
+    public void updateTotalBlockRequestsByPeer(String nodeId, int totalBlocks) {
+        if (leechesEnabled) {
+            leechesLock.lock();
+            try {
+                if (blockRequestsByPeer.putIfAbsent(nodeId, totalBlocks) != null) {
+                    blockRequestsByPeer.computeIfPresent(
+                            nodeId, (key, value) -> value + totalBlocks);
+                }
+            } finally {
+                leechesLock.unlock();
             }
-        } finally {
-            leechesLock.unlock();
         }
     }
 
@@ -244,159 +354,82 @@ public final class SyncStats {
      *
      * @return map of total requested blocks by peer and sorted in descending order
      */
-    Map<String, Long> getTotalBlockRequestsByPeer() {
-        leechesLock.lock();
-        try {
-            return blockRequestsByPeer
-                    .entrySet()
-                    .stream()
-                    .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            leechesLock.unlock();
-        }
-    }
-
-    /**
-     * Logs the time of status request to an active peer node
-     *
-     * @param _nodeId peer node display Id
-     * @param _requestTime time when the request was sent in nanoseconds
-     */
-    public void addPeerRequestTime(String _nodeId, long _requestTime) {
-        responsesLock.lock();
-        try {
-            List<Long> requestStartTimes =
-                    statusRequestTimeByPeers.containsKey(_nodeId)
-                            ? statusRequestTimeByPeers.get(_nodeId)
-                            : new LinkedList<>();
-            requestStartTimes.add(_requestTime);
-            statusRequestTimeByPeers.put(_nodeId, requestStartTimes);
-        } finally {
-            responsesLock.unlock();
-        }
-    }
-
-    /**
-     * Log the time of status response received from an active peer node
-     *
-     * @param _nodeId peer node display Id
-     * @param _responseTime time when the response was received in nanoseconds
-     */
-    public void addPeerResponseTime(String _nodeId, long _responseTime) {
-        responsesLock.lock();
-        try {
-            List<Long> responseEndTimes =
-                    statusResponseTimeByPeers.containsKey(_nodeId)
-                            ? statusResponseTimeByPeers.get(_nodeId)
-                            : new LinkedList<>();
-            responseEndTimes.add(_responseTime);
-            statusResponseTimeByPeers.put(_nodeId, responseEndTimes);
-        } finally {
-            responsesLock.unlock();
-        }
-    }
-
-    /**
-     * Obtains the average response time by each active peer node
-     *
-     * @return map of average response time in nanoseconds by peer node
-     */
-    Map<String, Double> getAverageResponseTimeByPeers() {
-        responsesLock.lock();
-        try {
-            double average;
-            String nodeId;
-            List<Long> requests, responses;
-
-            Map<String, Double> avgResponseTimeByPeers = new HashMap<>();
-            overallAvgPeerResponseTime = 0d;
-
-            for (Map.Entry<String, List<Long>> peerData : statusRequestTimeByPeers.entrySet()) {
-
-                nodeId = peerData.getKey(); // node display Id
-                requests = peerData.getValue();
-                responses = statusResponseTimeByPeers.getOrDefault(nodeId, new LinkedList<>());
-
-                // calculate the average response time
-                average = calculateAverage(requests, responses);
-
-                if (average >= 0) {
-                    // collect a map of average response times by peer
-                    avgResponseTimeByPeers.put(nodeId, average);
-                    overallAvgPeerResponseTime += average;
-                }
+    Map<String, Integer> getTotalBlockRequestsByPeer() {
+        if (leechesEnabled) {
+            leechesLock.lock();
+            try {
+                return blockRequestsByPeer.entrySet().stream()
+                        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
+                        .collect(
+                                Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (e1, e2) -> e2,
+                                        LinkedHashMap::new));
+            } finally {
+                leechesLock.unlock();
             }
-
-            overallAvgPeerResponseTime =
-                    avgResponseTimeByPeers.isEmpty()
-                            ? 0d
-                            : overallAvgPeerResponseTime / avgResponseTimeByPeers.size();
-
-            return avgResponseTimeByPeers
-                    .entrySet()
-                    .stream()
-                    .sorted(Map.Entry.comparingByValue())
-                    .collect(
-                            Collectors.toMap(
-                                    Map.Entry::getKey,
-                                    Map.Entry::getValue,
-                                    (e1, e2) -> e2,
-                                    LinkedHashMap::new));
-        } finally {
-            responsesLock.unlock();
-        }
-    }
-
-    /**
-     * Computes the average response time for a peer given the lists of gathered requests and
-     * response times.
-     *
-     * @param requestTimes list of times for requests made
-     * @param responseTimes list of times for responses received
-     * @return the average response time for the request-response cycle
-     */
-    private static double calculateAverage(List<Long> requestTimes, List<Long> responseTimes) {
-        int entries = 0;
-        double sum = 0;
-        int size = Math.min(requestTimes.size(), responseTimes.size());
-
-        // only consider requests that had responses
-        for (int i = 0; i < size; i++) {
-            long request = requestTimes.get(i);
-            long response = responseTimes.get(i);
-
-            // ignore data where the requests comes after the response
-            if (response >= request) {
-                sum += response - request;
-                entries++;
-            }
-        }
-
-        if (entries == 0) {
-            // indicates no data
-            return (double) -1;
         } else {
-            return Math.ceil(sum / entries);
+            return Collections.emptyMap();
+        }
+    }
+
+    public void updateStatusRequest(String displayId, long requestTime) {
+        if (responsesEnabled) {
+            responseTracker.updateStatusRequest(displayId, requestTime);
+        }
+    }
+
+    public void updateHeadersRequest(String displayId, long requestTime) {
+        if (responsesEnabled) {
+            responseTracker.updateHeadersRequest(displayId, requestTime);
+        }
+    }
+
+    public void updateBodiesRequest(String displayId, long requestTime) {
+        if (responsesEnabled) {
+            responseTracker.updateBodiesRequest(displayId, requestTime);
+        }
+    }
+
+    public void updateStatusResponse(String displayId, long responseTime) {
+        if (responsesEnabled) {
+            responseTracker.updateStatusResponse(displayId, responseTime);
+        }
+    }
+
+    public void updateHeadersResponse(String displayId, long responseTime) {
+        if (responsesEnabled) {
+            responseTracker.updateHeadersResponse(displayId, responseTime);
+        }
+    }
+
+    public void updateBodiesResponse(String displayId, long responseTime) {
+        if (responsesEnabled) {
+            responseTracker.updateBodiesResponse(displayId, responseTime);
+        }
+    }
+
+    @VisibleForTesting
+    Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
+        if (responsesEnabled) {
+            return responseTracker.getResponseStats();
+        } else {
+            return null;
         }
     }
 
     /**
-     * Obtains the overall average response time from all active peer nodes
+     * Obtain log stream containing statistics about the average response time between sending
+     * status requests out and that peer responding shown for each peer and averaged for all peers.
      *
-     * @return overall average response time
+     * @return log stream with requests statistical data
      */
-    double getOverallAveragePeerResponseTime() {
-        responsesLock.lock();
-        try {
-            return overallAvgPeerResponseTime;
-        } finally {
-            responsesLock.unlock();
+    public String dumpResponseStats() {
+        if (responsesEnabled) {
+            return responseTracker.dumpResponseStats();
+        } else {
+            return "";
         }
     }
 }

@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.p2p.impl1;
 
 import java.io.BufferedReader;
@@ -189,11 +167,23 @@ public final class P2pMgr implements IP2pMgr {
              * Bigger RECV_BUFFER and BACKLOG can have a better socket read/write tolerance, can be a advanced p2p settings in the config file.
              */
             tcpServer.socket().setReceiveBufferSize(SOCKET_RECV_BUFFER);
-            tcpServer
-                    .socket()
-                    .bind(
-                            new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort),
-                            SOCKET_BACKLOG);
+
+            try {
+                tcpServer
+                        .socket()
+                        .bind(
+                                new InetSocketAddress(Node.ipBytesToStr(selfIp), selfPort),
+                                SOCKET_BACKLOG);
+            } catch (IOException e) {
+                p2pLOG.error(
+                        "Failed to connect to Socket Address: "
+                                + Node.ipBytesToStr(selfIp)
+                                + ":"
+                                + selfPort
+                                + ", please check your ip and port configration!",
+                        e);
+            }
+
             tcpServer.register(selector, SelectionKey.OP_ACCEPT);
 
             Thread thrdIn = new Thread(getInboundInstance(), "p2p-in");
@@ -451,6 +441,11 @@ public final class P2pMgr implements IP2pMgr {
     @Override
     public boolean isSyncSeedsOnly() {
         return this.syncSeedsOnly;
+    }
+
+    @Override
+    public int getAvgLatency() {
+        return this.nodeMgr.getAvgLatency();
     }
 
     private TaskInbound getInboundInstance() {

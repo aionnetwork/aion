@@ -1,42 +1,20 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.precompiled.contracts;
 
 import static org.aion.crypto.HashUtil.blake256;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
+import org.aion.precompiled.type.PrecompiledContract;
 
 /**
  * @author Jay Tseng
  * @author William Zhai
- * @implNote Base on benchmark the keccak256hash and blake2bhash precompiled contract blake2b is
- *     5 times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3 of the
+ * @implNote Base on benchmark the keccak256hash and blake2bhash precompiled contract blake2b is 5
+ *     times faster then keccak256. Therefore, blake2b modify the energy charge to 1/3 of the
  *     Ethereum keccak256 precompiled contract charge.
  */
-public class Blake2bHashContract implements IPrecompiledContract {
+public class Blake2bHashContract implements PrecompiledContract {
 
     private static final long COST = 10L;
     private static final int WORD_LENGTH = 4;
@@ -51,12 +29,14 @@ public class Blake2bHashContract implements IPrecompiledContract {
      * @param input data input; must be less or equal than 2 MB
      * @return the returned blake2b 256bits hash is in ExecutionResult.getOutput
      */
-    public ExecutionResult execute(byte[] input, long nrg) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrg) {
 
         // check length
         if (input == null || input.length == 0 || input.length > 2_097_152L) {
-            return new ExecutionResult(
-                    ResultCode.FAILURE, nrg - COST, INPUT_LENGTH_ERROR_MESSAGE.getBytes());
+            return new PrecompiledTransactionResult(
+                    PrecompiledResultCode.FAILURE,
+                    nrg - COST,
+                    INPUT_LENGTH_ERROR_MESSAGE.getBytes());
         }
 
         long additionalNRG =
@@ -66,15 +46,15 @@ public class Blake2bHashContract implements IPrecompiledContract {
         long nrgLeft = nrg - (COST + additionalNRG);
 
         if (nrgLeft < 0) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
 
         return blake256Hash(input, nrgLeft);
     }
 
-    private ExecutionResult blake256Hash(byte[] input, long nrg) {
+    private PrecompiledTransactionResult blake256Hash(byte[] input, long nrg) {
         byte[] hash = blake256(input);
-        return new ExecutionResult(ResultCode.SUCCESS, nrg, hash);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg, hash);
     }
 
     @VisibleForTesting

@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.mcf.account;
 
 import static org.junit.Assert.assertEquals;
@@ -35,11 +13,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.api.interfaces.Address;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -151,11 +130,11 @@ public class KeystoreTest {
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
 
         Map<Address, String> arg = new HashMap<>();
-        arg.put(Address.wrap(addr), password);
+        arg.put(AionAddress.wrap(addr), password);
 
         Map<Address, ByteArrayWrapper> export = Keystore.exportAccount(arg);
 
-        assertTrue(export.containsKey(Address.wrap(addr)));
+        assertTrue(export.containsKey(AionAddress.wrap(addr)));
         assertTrue(export.containsValue(ByteArrayWrapper.wrap(key.getPrivKeyBytes())));
         filesToRemove.add(addr);
     }
@@ -170,7 +149,7 @@ public class KeystoreTest {
         assertEquals(addr.substring(2), ByteUtil.toHexString(key.getAddress()));
 
         Map<Address, String> arg = new HashMap<>();
-        arg.put(Address.wrap(addr), password);
+        arg.put(AionAddress.wrap(addr), password);
 
         Map<Address, ByteArrayWrapper> export = Keystore.backupAccount(arg);
 
@@ -179,7 +158,7 @@ public class KeystoreTest {
         File f = Keystore.getAccountFile(addr.substring(2), password);
         assertNotNull(f);
 
-        assertTrue(export.containsKey(Address.wrap(addr)));
+        assertTrue(export.containsKey(AionAddress.wrap(addr)));
         try {
             assertTrue(export.containsValue(ByteArrayWrapper.wrap(Files.readAllBytes(f.toPath()))));
         } catch (IOException e) {

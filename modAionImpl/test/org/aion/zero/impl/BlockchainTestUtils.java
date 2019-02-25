@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
@@ -30,11 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -68,7 +46,7 @@ public class BlockchainTestUtils {
             // get the current nonce for each account
             Map<ECKey, BigInteger> nonces = new HashMap<>();
             for (ECKey key : accounts) {
-                nonces.put(key, repo.getNonce(new Address(key.getAddress())));
+                nonces.put(key, repo.getNonce(new AionAddress(key.getAddress())));
             }
 
             List<AionTransaction> transactions = new ArrayList<>();
@@ -78,8 +56,10 @@ public class BlockchainTestUtils {
                 ECKey key = accounts.get(rand.nextInt(accounts.size()));
                 BigInteger accountNonce = nonces.get(key);
 
-                // generate a random address
-                Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
+                // generate a random Aion account address
+                byte[] aionBytes = HashUtil.h256(accountNonce.toByteArray());
+                aionBytes[0] = (byte) 0xa0; // the Aion prefix
+                Address destAddr = new AionAddress(aionBytes);
                 AionTransaction newTx =
                         new AionTransaction(
                                 accountNonce.toByteArray(),

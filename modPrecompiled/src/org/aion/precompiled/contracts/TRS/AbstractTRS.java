@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.contracts.TRS;
 
 import java.math.BigDecimal;
@@ -30,25 +7,26 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * The purpose of this abstract class is mostly as a place to store important constants and methods
  * that may be useful to multiple concrete subclasses.
  */
 public abstract class AbstractTRS extends StatefulPrecompiledContract {
-    // TODO: grab AION from CfgAion later and preferrably aion prefix too.
+    // TODO: grab AION from CfgAion later and preferably aion prefix too.
     static final Address AION =
-            Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+            AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     static final long COST = 21000L; // temporary.
     private static final long TEST_DURATION = 1;
     private static final long PERIOD_DURATION = TimeUnit.DAYS.toSeconds(30);
@@ -60,9 +38,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     /*
      * The database keys each have unique prefixes denoting the function of that key. Some keys have
      * mutable bytes following this prefix. In these cases oly the prefixes are provided. Otherwise
-     * for unchanging keys we store them as an IDataWord object directly.
+     * for unchanging keys we store them as an ByteArrayWrapper object directly.
      */
-    private static final IDataWord OWNER_KEY,
+    private static final ByteArrayWrapper OWNER_KEY,
             SPECS_KEY,
             LIST_HEAD_KEY,
             FUNDS_SPECS_KEY,
@@ -90,40 +68,40 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     static {
         byte[] singleKey = new byte[SINGLE_WORD_SIZE];
         singleKey[0] = (byte) 0xF0;
-        OWNER_KEY = toIDataWord(singleKey);
+        OWNER_KEY = toByteArrayWrapper(singleKey);
 
         singleKey[0] = (byte) 0xE0;
-        SPECS_KEY = toIDataWord(singleKey);
+        SPECS_KEY = toByteArrayWrapper(singleKey);
 
         singleKey[0] = (byte) 0x93;
-        EXTRA_SPECS_KEY = toIDataWord(singleKey);
+        EXTRA_SPECS_KEY = toByteArrayWrapper(singleKey);
 
         singleKey[0] = (byte) 0x91;
-        FUNDS_SPECS_KEY = toIDataWord(singleKey);
+        FUNDS_SPECS_KEY = toByteArrayWrapper(singleKey);
 
         singleKey[0] = (byte) 0x70;
-        LIST_HEAD_KEY = toIDataWord(singleKey);
+        LIST_HEAD_KEY = toByteArrayWrapper(singleKey);
 
         singleKey[0] = (byte) 0x50;
-        TIMESTAMP = toIDataWord(singleKey);
+        TIMESTAMP = toByteArrayWrapper(singleKey);
 
         singleKey[0] = (byte) 0x20;
-        BONUS_SPECS_KEY = toIDataWord(singleKey);
+        BONUS_SPECS_KEY = toByteArrayWrapper(singleKey);
 
         singleKey[0] = (byte) 0x10;
-        OPEN_KEY = toIDataWord(singleKey);
+        OPEN_KEY = toByteArrayWrapper(singleKey);
 
         byte[] value = new byte[DOUBLE_WORD_SIZE];
         value[0] = NULL_BIT;
-        NULL32 = toIDataWord(value);
+        NULL32 = toByteArrayWrapper(value);
 
         value[0] = (byte) 0x0;
-        INVALID = toIDataWord(value);
+        INVALID = toByteArrayWrapper(value);
     }
 
     // Constructor.
     AbstractTRS(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             Address caller,
             IBlockchain blockchain) {
         super(track);
@@ -135,7 +113,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     // The execute method for subclasses to implement.
-    public abstract ExecutionResult execute(byte[] input, long nrgLimit);
+    public abstract PrecompiledTransactionResult execute(byte[] input, long nrgLimit);
 
     // <-------------------------------------HELPER METHODS---------------------------------------->
 
@@ -159,7 +137,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         if (contract.toBytes()[0] != TRS_PREFIX) {
             return null;
         }
-        IDataWord spec = track.getStorageValue(contract, SPECS_KEY);
+        ByteArrayWrapper spec = track.getStorageValue(contract, SPECS_KEY);
         return (spec == null) ? null : Arrays.copyOf(spec.getData(), spec.getData().length);
     }
 
@@ -206,7 +184,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         specs[LOCK_OFFSET] = (byte) 0x0; // sanity
         specs[LIVE_OFFSET] = (byte) 0x0; // sanity
 
-        track.addStorageRow(contract, SPECS_KEY, toIDataWord(specs));
+        track.addStorageRow(contract, SPECS_KEY, toByteArrayWrapper(specs));
     }
 
     /**
@@ -217,8 +195,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the owner of the contract or null if not a TRS contract.
      */
     public Address getContractOwner(Address contract) {
-        IDataWord owner = track.getStorageValue(contract, OWNER_KEY);
-        return (owner == null) ? null : new Address(owner.getData());
+        ByteArrayWrapper owner = track.getStorageValue(contract, OWNER_KEY);
+        return (owner == null) ? null : new AionAddress(owner.getData());
     }
 
     /**
@@ -235,7 +213,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         if (track.getStorageValue(contract, OWNER_KEY) != null) {
             return;
         }
-        track.addStorageRow(contract, OWNER_KEY, toIDataWord(caller.toBytes()));
+        track.addStorageRow(contract, OWNER_KEY, toByteArrayWrapper(caller.toBytes()));
     }
 
     /**
@@ -253,7 +231,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @throws NullPointerException if contract has no linked list.
      */
     public byte[] getListHead(Address contract) {
-        IDataWord head = track.getStorageValue(contract, LIST_HEAD_KEY);
+        ByteArrayWrapper head = track.getStorageValue(contract, LIST_HEAD_KEY);
         if (head == null) {
             throw new NullPointerException("Contract has no list: " + contract);
         }
@@ -283,7 +261,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             track.addStorageRow(contract, LIST_HEAD_KEY, NULL32);
         } else if (head.length == DOUBLE_WORD_SIZE) {
             head[0] = 0x0;
-            track.addStorageRow(contract, LIST_HEAD_KEY, toIDataWord(head));
+            track.addStorageRow(contract, LIST_HEAD_KEY, toByteArrayWrapper(head));
         }
     }
 
@@ -306,7 +284,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         prevKey[0] = LIST_PREV_PREFIX;
         System.arraycopy(account.toBytes(), 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
 
-        IDataWord prev = track.getStorageValue(contract, toIDataWord(prevKey));
+        ByteArrayWrapper prev = track.getStorageValue(contract, toByteArrayWrapper(prevKey));
         if (prev == null) {
             throw new NullPointerException("Account has no prev: " + account);
         }
@@ -362,10 +340,10 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         System.arraycopy(account, 1, prevKey, 1, DOUBLE_WORD_SIZE - 1);
 
         if (prev == null) {
-            track.addStorageRow(contract, toIDataWord(prevKey), NULL32);
+            track.addStorageRow(contract, toByteArrayWrapper(prevKey), NULL32);
         } else if (prev.length == DOUBLE_WORD_SIZE) {
             prev[0] = 0x0;
-            track.addStorageRow(contract, toIDataWord(prevKey), toIDataWord(prev));
+            track.addStorageRow(contract, toByteArrayWrapper(prevKey), toByteArrayWrapper(prev));
         }
     }
 
@@ -404,7 +382,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @throws NullPointerException if account has no next entry.
      */
     byte[] getListNext(Address contract, byte[] account) {
-        IDataWord next = track.getStorageValue(contract, toIDataWord(account));
+        ByteArrayWrapper next = track.getStorageValue(contract, toByteArrayWrapper(account));
         if (next == null) {
             throw new NullPointerException("Account has no next: " + ByteUtil.toHexString(account));
         }
@@ -432,7 +410,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @throws NullPointerException if account has no next entry.
      */
     public byte[] getListNextBytes(Address contract, Address account) {
-        IDataWord next = track.getStorageValue(contract, toIDataWord(account.toBytes()));
+        ByteArrayWrapper next =
+                track.getStorageValue(contract, toByteArrayWrapper(account.toBytes()));
         if (next == null) {
             throw new NullPointerException("Account has no next: " + account);
         }
@@ -501,18 +480,19 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     void setListNext(Address contract, byte[] account, byte oldMeta, byte[] next, boolean isValid) {
         if (!isValid) {
             // Mark account invalid and also make it ineligible for special withdrawal.
-            track.addStorageRow(contract, toIDataWord(account), INVALID);
+            track.addStorageRow(contract, toByteArrayWrapper(account), INVALID);
             setAccountIneligibleForSpecial(contract, account);
         } else if (next == null) {
             byte[] nullNext = Arrays.copyOf(NULL32.getData(), NULL32.getData().length);
             nullNext[0] |= VALID_BIT;
             nullNext[0] |= oldMeta;
-            track.addStorageRow(contract, toIDataWord(account), toIDataWord(nullNext));
+            track.addStorageRow(
+                    contract, toByteArrayWrapper(account), toByteArrayWrapper(nullNext));
         } else if (next.length == DOUBLE_WORD_SIZE) {
             next[0] = VALID_BIT;
             next[0] |= oldMeta;
             next[0] &= ~NULL_BIT;
-            track.addStorageRow(contract, toIDataWord(account), toIDataWord(next));
+            track.addStorageRow(contract, toByteArrayWrapper(account), toByteArrayWrapper(next));
         }
     }
 
@@ -537,7 +517,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the total balance of the contract.
      */
     public BigInteger getTotalBalance(Address contract) {
-        IDataWord ttlSpec = track.getStorageValue(contract, FUNDS_SPECS_KEY);
+        ByteArrayWrapper ttlSpec = track.getStorageValue(contract, FUNDS_SPECS_KEY);
         int numRows =
                 ByteBuffer.wrap(
                                 Arrays.copyOfRange(
@@ -552,7 +532,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] balance = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
         for (int i = 0; i < numRows; i++) {
             byte[] ttlKey = makeTotalBalanceKey(i);
-            byte[] ttlVal = track.getStorageValue(contract, toIDataWord(ttlKey)).getData();
+            byte[] ttlVal = track.getStorageValue(contract, toByteArrayWrapper(ttlKey)).getData();
             System.arraycopy(ttlVal, 0, balance, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
         }
         return new BigInteger(balance);
@@ -585,7 +565,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             byte[] ttlKey = makeTotalBalanceKey(i);
             byte[] ttlVal = new byte[DOUBLE_WORD_SIZE];
             System.arraycopy(bal, i * DOUBLE_WORD_SIZE, ttlVal, 0, DOUBLE_WORD_SIZE);
-            track.addStorageRow(contract, toIDataWord(ttlKey), toIDataWord(ttlVal));
+            track.addStorageRow(contract, toByteArrayWrapper(ttlKey), toByteArrayWrapper(ttlVal));
         }
 
         // Update total balance specs.
@@ -593,7 +573,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         for (int i = 0; i < Integer.BYTES; i++) {
             ttlSpec[SINGLE_WORD_SIZE - i - 1] = (byte) ((numRows >> (i * Byte.SIZE)) & 0xFF);
         }
-        track.addStorageRow(contract, FUNDS_SPECS_KEY, toIDataWord(ttlSpec));
+        track.addStorageRow(contract, FUNDS_SPECS_KEY, toByteArrayWrapper(ttlSpec));
     }
 
     /**
@@ -607,7 +587,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the account's deposit balance for this TRS contract.
      */
     public BigInteger getDepositBalance(Address contract, Address account) {
-        IDataWord accountData = track.getStorageValue(contract, toIDataWord(account.toBytes()));
+        ByteArrayWrapper accountData =
+                track.getStorageValue(contract, toByteArrayWrapper(account.toBytes()));
         if (accountData == null) {
             return BigInteger.ZERO;
         }
@@ -619,7 +600,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] balance = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
         for (int i = 0; i < numRows; i++) {
             byte[] balKey = makeBalanceKey(account, i);
-            byte[] balVal = track.getStorageValue(contract, toIDataWord(balKey)).getData();
+            byte[] balVal = track.getStorageValue(contract, toByteArrayWrapper(balKey)).getData();
             System.arraycopy(balVal, 0, balance, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
         }
         return new BigInteger(balance);
@@ -659,11 +640,12 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             byte[] balKey = makeBalanceKey(account, i);
             byte[] balVal = new byte[DOUBLE_WORD_SIZE];
             System.arraycopy(bal, i * DOUBLE_WORD_SIZE, balVal, 0, DOUBLE_WORD_SIZE);
-            track.addStorageRow(contract, toIDataWord(balKey), toIDataWord(balVal));
+            track.addStorageRow(contract, toByteArrayWrapper(balKey), toByteArrayWrapper(balVal));
         }
 
         // Update account meta data.
-        IDataWord acctData = track.getStorageValue(contract, toIDataWord(account.toBytes()));
+        ByteArrayWrapper acctData =
+                track.getStorageValue(contract, toByteArrayWrapper(account.toBytes()));
         byte[] acctVal;
         if ((acctData == null) || (acctData.equals(INVALID))) {
             // Set null bit and row count but do not set valid bit. Also init withdrawal stats.
@@ -676,7 +658,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             acctVal = acctData.getData();
             acctVal[0] = (byte) ((acctVal[0] & NULL_BIT) | VALID_BIT | numRows);
         }
-        track.addStorageRow(contract, toIDataWord(account.toBytes()), toIDataWord(acctVal));
+        track.addStorageRow(
+                contract, toByteArrayWrapper(account.toBytes()), toByteArrayWrapper(acctVal));
         return true;
     }
 
@@ -692,7 +675,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     void setLock(Address contract) {
         byte[] spec = getContractSpecs(contract);
         spec[LOCK_OFFSET] = (byte) 0x1;
-        track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
+        track.addStorageRow(contract, SPECS_KEY, toByteArrayWrapper(spec));
     }
 
     /**
@@ -706,7 +689,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     void setLive(Address contract) {
         byte[] spec = getContractSpecs(contract);
         spec[LIVE_OFFSET] = (byte) 0x1;
-        track.addStorageRow(contract, SPECS_KEY, toIDataWord(spec));
+        track.addStorageRow(contract, SPECS_KEY, toByteArrayWrapper(spec));
     }
 
     /**
@@ -761,7 +744,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(timestamp);
         System.arraycopy(buffer.array(), 0, value, DataWord.BYTES - Long.BYTES, Long.BYTES);
-        track.addStorageRow(contract, TIMESTAMP, toIDataWord(value));
+        track.addStorageRow(contract, TIMESTAMP, toByteArrayWrapper(value));
     }
 
     /**
@@ -775,7 +758,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return The timestamp for the TRS contract contract.
      */
     public long getTimestamp(Address contract) {
-        IDataWord value = track.getStorageValue(contract, TIMESTAMP);
+        ByteArrayWrapper value = track.getStorageValue(contract, TIMESTAMP);
         if (value == null) {
             return -1;
         }
@@ -898,7 +881,10 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] stats = new byte[SINGLE_WORD_SIZE];
         stats[0] = 0x1; // set is-eligible.
         stats[SINGLE_WORD_SIZE - 1] = 0x0; // sanity. Set is-done to false (is done withdrawing)
-        track.addStorageRow(contract, toIDataWord(makeWithdrawalKey(account)), toIDataWord(stats));
+        track.addStorageRow(
+                contract,
+                toByteArrayWrapper(makeWithdrawalKey(account)),
+                toByteArrayWrapper(stats));
     }
 
     /**
@@ -911,14 +897,17 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to update.
      */
     private void setAccountIsDoneWithdrawing(Address contract, Address account) {
-        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        ByteArrayWrapper stats =
+                track.getStorageValue(contract, toByteArrayWrapper(makeWithdrawalKey(account)));
         if (stats == null) {
             return;
         }
         byte[] statsBytes = stats.getData();
         statsBytes[statsBytes.length - 1] = 0x1; // set is-done flag.
         track.addStorageRow(
-                contract, toIDataWord(makeWithdrawalKey(account)), toIDataWord(statsBytes));
+                contract,
+                toByteArrayWrapper(makeWithdrawalKey(account)),
+                toByteArrayWrapper(statsBytes));
     }
 
     /**
@@ -934,7 +923,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return true only if account is done withdrawing funds from contract.
      */
     public boolean isAccountDoneWithdrawing(Address contract, Address account) {
-        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        ByteArrayWrapper stats =
+                track.getStorageValue(contract, toByteArrayWrapper(makeWithdrawalKey(account)));
         if (stats == null) {
             return true;
         }
@@ -954,11 +944,14 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @param account The account to be made ineligible for the special withdrawal.
      */
     private void setAccountIneligibleForSpecial(Address contract, byte[] account) {
-        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        ByteArrayWrapper stats =
+                track.getStorageValue(contract, toByteArrayWrapper(makeWithdrawalKey(account)));
         byte[] statsBytes = (stats == null) ? new byte[SINGLE_WORD_SIZE] : stats.getData();
         statsBytes[0] = 0x0; // unset is-eligible.
         track.addStorageRow(
-                contract, toIDataWord(makeWithdrawalKey(account)), toIDataWord(statsBytes));
+                contract,
+                toByteArrayWrapper(makeWithdrawalKey(account)),
+                toByteArrayWrapper(statsBytes));
     }
 
     /**
@@ -972,7 +965,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @throws NullPointerException if account has no withdrawal stats.
      */
     private void updateAccountLastWithdrawalPeriod(Address contract, Address account, int period) {
-        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        ByteArrayWrapper stats =
+                track.getStorageValue(contract, toByteArrayWrapper(makeWithdrawalKey(account)));
         if (stats == null) {
             throw new NullPointerException("Account has no withdrawal stats!");
         }
@@ -980,7 +974,9 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         statsBytes[2] = (byte) (period & 0xFF);
         statsBytes[1] = (byte) ((period >>> Byte.SIZE) & 0xFF);
         track.addStorageRow(
-                contract, toIDataWord(makeWithdrawalKey(account)), toIDataWord(statsBytes));
+                contract,
+                toByteArrayWrapper(makeWithdrawalKey(account)),
+                toByteArrayWrapper(statsBytes));
     }
 
     /**
@@ -995,7 +991,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the last period in which account has withdrawn from the contract.
      */
     public int getAccountLastWithdrawalPeriod(Address contract, Address account) {
-        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        ByteArrayWrapper stats =
+                track.getStorageValue(contract, toByteArrayWrapper(makeWithdrawalKey(account)));
         if ((stats == null) || (!accountIsValid(getListNextBytes(contract, account)))) {
             return -1;
         }
@@ -1017,7 +1014,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return true only if the account is eligible for the special withdrawal event.
      */
     public boolean accountIsEligibleForSpecial(Address contract, Address account) {
-        IDataWord stats = track.getStorageValue(contract, toIDataWord(makeWithdrawalKey(account)));
+        ByteArrayWrapper stats =
+                track.getStorageValue(contract, toByteArrayWrapper(makeWithdrawalKey(account)));
         return ((stats != null) && (stats.getData()[0] == 0x1));
     }
 
@@ -1254,7 +1252,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             byte[] bonusKey = makeBonusKey(i);
             byte[] bonusVal = new byte[DOUBLE_WORD_SIZE];
             System.arraycopy(bal, i * DOUBLE_WORD_SIZE, bonusVal, 0, DOUBLE_WORD_SIZE);
-            track.addStorageRow(contract, toIDataWord(bonusKey), toIDataWord(bonusVal));
+            track.addStorageRow(
+                    contract, toByteArrayWrapper(bonusKey), toByteArrayWrapper(bonusVal));
         }
 
         // Update bonus balance specs.
@@ -1262,7 +1261,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         for (int i = 0; i < Integer.BYTES; i++) {
             bonusSpec[SINGLE_WORD_SIZE - i - 1] = (byte) ((numRows >>> (i * Byte.SIZE)) & 0xFF);
         }
-        track.addStorageRow(contract, BONUS_SPECS_KEY, toIDataWord(bonusSpec));
+        track.addStorageRow(contract, BONUS_SPECS_KEY, toByteArrayWrapper(bonusSpec));
     }
 
     /**
@@ -1273,7 +1272,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the bonus balance of the TRS contract contract.
      */
     public BigInteger getBonusBalance(Address contract) {
-        IDataWord bonusSpec = track.getStorageValue(contract, BONUS_SPECS_KEY);
+        ByteArrayWrapper bonusSpec = track.getStorageValue(contract, BONUS_SPECS_KEY);
         if (bonusSpec == null) {
             return BigInteger.ZERO;
         }
@@ -1291,7 +1290,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] balance = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
         for (int i = 0; i < numRows; i++) {
             byte[] bonusVal =
-                    track.getStorageValue(contract, toIDataWord(makeBonusKey(i))).getData();
+                    track.getStorageValue(contract, toByteArrayWrapper(makeBonusKey(i))).getData();
             System.arraycopy(bonusVal, 0, balance, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
         }
         return new BigInteger(balance);
@@ -1311,7 +1310,10 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     private void initExtraWithdrawalSpecs(Address contract, Address account) {
         byte[] specs = new byte[SINGLE_WORD_SIZE];
         specs[0] = 0x0;
-        track.addStorageRow(contract, toIDataWord(makeExtraSpecsKey(account)), toIDataWord(specs));
+        track.addStorageRow(
+                contract,
+                toByteArrayWrapper(makeExtraSpecsKey(account)),
+                toByteArrayWrapper(specs));
     }
 
     /**
@@ -1326,8 +1328,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the extra funds account has already withdrawn from contract.
      */
     public BigInteger getExtraWithdrawalBalance(Address contract, Address account) {
-        IDataWord extraSpecs =
-                track.getStorageValue(contract, toIDataWord(makeExtraSpecsKey(account)));
+        ByteArrayWrapper extraSpecs =
+                track.getStorageValue(contract, toByteArrayWrapper(makeExtraSpecsKey(account)));
         if (extraSpecs == null) {
             return BigInteger.ZERO;
         }
@@ -1339,7 +1341,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] extraFunds = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
         for (int i = 0; i < numRows; i++) {
             byte[] extraKey = makeExtraWithdrawnKey(account, i);
-            byte[] extraVal = track.getStorageValue(contract, toIDataWord(extraKey)).getData();
+            byte[] extraVal =
+                    track.getStorageValue(contract, toByteArrayWrapper(extraKey)).getData();
             System.arraycopy(extraVal, 0, extraFunds, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
         }
         return new BigInteger(extraFunds);
@@ -1364,14 +1367,17 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             byte[] extraKey = makeExtraWithdrawnKey(account, i);
             byte[] extraVal = new byte[DOUBLE_WORD_SIZE];
             System.arraycopy(bal, i * DOUBLE_WORD_SIZE, extraVal, 0, DOUBLE_WORD_SIZE);
-            track.addStorageRow(contract, toIDataWord(extraKey), toIDataWord(extraVal));
+            track.addStorageRow(
+                    contract, toByteArrayWrapper(extraKey), toByteArrayWrapper(extraVal));
         }
 
         // Update extra funds withdrawn specs.
         byte[] extraSpec = new byte[SINGLE_WORD_SIZE];
         extraSpec[0] = (byte) (numRows & 0x0F);
         track.addStorageRow(
-                contract, toIDataWord(makeExtraSpecsKey(account)), toIDataWord(extraSpec));
+                contract,
+                toByteArrayWrapper(makeExtraSpecsKey(account)),
+                toByteArrayWrapper(extraSpec));
     }
 
     /**
@@ -1381,7 +1387,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return the amount of extra funds contract has.
      */
     public BigInteger getExtraFunds(Address contract) {
-        IDataWord extraSpecs = track.getStorageValue(contract, EXTRA_SPECS_KEY);
+        ByteArrayWrapper extraSpecs = track.getStorageValue(contract, EXTRA_SPECS_KEY);
         if (extraSpecs == null) {
             return BigInteger.ZERO;
         }
@@ -1399,7 +1405,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] extraFunds = new byte[(numRows * DOUBLE_WORD_SIZE) + 1];
         for (int i = 0; i < numRows; i++) {
             byte[] extraKey = makeExtraKey(i);
-            byte[] extraVal = track.getStorageValue(contract, toIDataWord(extraKey)).getData();
+            byte[] extraVal =
+                    track.getStorageValue(contract, toByteArrayWrapper(extraKey)).getData();
             System.arraycopy(extraVal, 0, extraFunds, (i * DOUBLE_WORD_SIZE) + 1, DOUBLE_WORD_SIZE);
         }
         return new BigInteger(extraFunds);
@@ -1428,7 +1435,8 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
             byte[] extraKey = makeExtraKey(i);
             byte[] extraVal = new byte[DOUBLE_WORD_SIZE];
             System.arraycopy(bal, i * DOUBLE_WORD_SIZE, extraVal, 0, DOUBLE_WORD_SIZE);
-            track.addStorageRow(contract, toIDataWord(extraKey), toIDataWord(extraVal));
+            track.addStorageRow(
+                    contract, toByteArrayWrapper(extraKey), toByteArrayWrapper(extraVal));
         }
 
         // Update extra funds specs.
@@ -1436,7 +1444,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         for (int i = 0; i < Integer.BYTES; i++) {
             extraSpec[SINGLE_WORD_SIZE - i - 1] = (byte) ((numRows >> (i * Byte.SIZE)) & 0xFF);
         }
-        track.addStorageRow(contract, EXTRA_SPECS_KEY, toIDataWord(extraSpec));
+        track.addStorageRow(contract, EXTRA_SPECS_KEY, toByteArrayWrapper(extraSpec));
     }
 
     /**
@@ -1450,7 +1458,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
         byte[] fundsVal = new byte[SINGLE_WORD_SIZE];
         fundsVal[0] = 0x0;
-        track.addStorageRow(contract, OPEN_KEY, toIDataWord(fundsVal));
+        track.addStorageRow(contract, OPEN_KEY, toByteArrayWrapper(fundsVal));
     }
 
     /**
@@ -1467,14 +1475,14 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * never happen.
      */
     void setIsOpenFunds(Address contract) {
-        IDataWord value = track.getStorageValue(contract, OPEN_KEY);
+        ByteArrayWrapper value = track.getStorageValue(contract, OPEN_KEY);
         if (value == null) {
             throw new IllegalStateException(
                     "contract does not exist: " + ByteUtil.toHexString(contract.toBytes()));
         }
         byte[] valueBytes = value.getData();
         valueBytes[0] = 0x1;
-        track.addStorageRow(contract, OPEN_KEY, toIDataWord(valueBytes));
+        track.addStorageRow(contract, OPEN_KEY, toByteArrayWrapper(valueBytes));
     }
 
     /**
@@ -1483,7 +1491,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      * @return true only if the contract's funds are open and the contract has been killed.
      */
     public boolean isOpenFunds(Address contract) {
-        IDataWord value = track.getStorageValue(contract, OPEN_KEY);
+        ByteArrayWrapper value = track.getStorageValue(contract, OPEN_KEY);
         return ((value != null) && (value.getData()[0] == 0x1));
     }
 
@@ -1531,7 +1539,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         if (isOpenFunds(contract)) {
             return false;
         }
-        IDataWord specs = track.getStorageValue(contract, SPECS_KEY);
+        ByteArrayWrapper specs = track.getStorageValue(contract, SPECS_KEY);
         return ((specs != null) && (specs.getData()[LOCK_OFFSET] == (byte) 0x1));
     }
 
@@ -1545,7 +1553,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         if (isOpenFunds(contract)) {
             return false;
         }
-        IDataWord specs = track.getStorageValue(contract, SPECS_KEY);
+        ByteArrayWrapper specs = track.getStorageValue(contract, SPECS_KEY);
         return ((specs != null) && (specs.getData()[LIVE_OFFSET] == (byte) 0x1));
     }
 
@@ -1559,7 +1567,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         if (isOpenFunds(contract)) {
             return false;
         }
-        IDataWord specs = track.getStorageValue(contract, SPECS_KEY);
+        ByteArrayWrapper specs = track.getStorageValue(contract, SPECS_KEY);
         return ((specs != null) && (specs.getData()[DIR_DEPO_OFFSET] == (byte) 0x1));
     }
 
@@ -1617,7 +1625,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     private byte[] makeExtraSpecsKey(Address account) {
         byte[] extraSpecKey = new byte[DOUBLE_WORD_SIZE];
         extraSpecKey[0] = EXTRA_WITH_SPEC_PREFIX;
-        System.arraycopy(account.toBytes(), 1, extraSpecKey, 1, Address.ADDRESS_LEN - 1);
+        System.arraycopy(account.toBytes(), 1, extraSpecKey, 1, Address.SIZE - 1);
         return extraSpecKey;
     }
 
@@ -1633,7 +1641,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         byte[] extraWithKey = new byte[DOUBLE_WORD_SIZE];
         extraWithKey[0] = EXTRA_WITH_PREFIX;
         extraWithKey[0] |= (row & 0x0F);
-        System.arraycopy(account.toBytes(), 1, extraWithKey, 1, Address.ADDRESS_LEN - 1);
+        System.arraycopy(account.toBytes(), 1, extraWithKey, 1, Address.SIZE - 1);
         return extraWithKey;
     }
 
@@ -1735,17 +1743,17 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     }
 
     /**
-     * Returns an IDataWord object that wraps word with the correctly sized IDataWord
+     * Returns an ByteArrayWrapper object that wraps word with the correctly sized ByteArrayWrapper
      * implementation.
      *
      * @param word The word to wrap.
-     * @return the word as an IDataWord.
+     * @return the word as an ByteArrayWrapper.
      */
-    private static IDataWord toIDataWord(byte[] word) {
+    private static ByteArrayWrapper toByteArrayWrapper(byte[] word) {
         if (word.length == SINGLE_WORD_SIZE) {
-            return new DataWord(word);
+            return new DataWord(word).toWrapper();
         } else if (word.length == DOUBLE_WORD_SIZE) {
-            return new DoubleDataWord(word);
+            return new DoubleDataWord(word).toWrapper();
         } else {
             throw new IllegalArgumentException("Incorrect word size: " + word.length);
         }

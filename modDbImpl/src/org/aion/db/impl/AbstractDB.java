@@ -1,38 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- */
-
 package org.aion.db.impl;
 
 import java.io.File;
@@ -44,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -109,6 +75,7 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
 
     @Override
     public void drop() {
+        boolean wasOpen = isOpen();
         close();
 
         try (Stream<Path> stream = Files.walk(new File(path).toPath())) {
@@ -117,7 +84,9 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
             LOG.error("Unable to delete path due to: ", e);
         }
 
-        open();
+        if (wasOpen) {
+            open();
+        }
     }
 
     @Override
@@ -141,9 +110,9 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
      * Checks that the given key is not null. Throws a {@link IllegalArgumentException} if the key
      * is null.
      */
-    public static void check(byte[] k) {
-        if (k == null) {
-            throw new IllegalArgumentException("The database does not accept null keys.");
+    public static void check(byte[] keyOrValue) {
+        if (keyOrValue == null) {
+            throw new IllegalArgumentException("The database does not accept null keys or values.");
         }
     }
 
@@ -151,9 +120,9 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
      * Checks that the given collection of keys does not contain null values. Throws a {@link
      * IllegalArgumentException} if a null key is present.
      */
-    public static void check(Collection<byte[]> keys) {
-        if (keys.contains(null)) {
-            throw new IllegalArgumentException("The database does not accept null keys.");
+    public static void check(Collection<byte[]> keysOrValues) {
+        if (keysOrValues.contains(null)) {
+            throw new IllegalArgumentException("The database does not accept null keys or values.");
         }
     }
 
@@ -169,9 +138,9 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isPersistent() {
-        // always persistent when not overwritten by the class
-        return true;
+    public PersistenceMethod getPersistenceMethod() {
+        // Default to file-based since most of our dbs are that
+        return PersistenceMethod.FILE_BASED;
     }
 
     /**
@@ -188,26 +157,122 @@ public abstract class AbstractDB implements IByteArrayKeyValueDatabase {
     /** Functionality for directly interacting with the heap cache. */
     public abstract boolean commitCache(Map<ByteArrayWrapper, byte[]> cache);
 
-    // IKeyValueStore functionality
-    // ------------------------------------------------------------------------------------
-
     @Override
-    public Optional<byte[]> get(byte[] k) {
-        check(k);
-
+    public Optional<byte[]> get(byte[] key) {
+        check(key);
         check();
 
-        byte[] v = getInternal(k);
-
+        byte[] v = getInternal(key);
         return Optional.ofNullable(v);
     }
 
     /**
-     * Database specific get functionality, without locking required. Locking is applied in {@link
-     * #get(byte[])}.
+     * Database specific get functionality, without locking or integrity checks required. Locking
+     * and checks are applied in {@link #get(byte[])}.
      *
-     * @param k the key for which the method must return the associated value
-     * @return the value stored in the database for the give key.
+     * @param key the key for which the method must return the associated value
+     * @return the value stored in the database for the give key
      */
-    protected abstract byte[] getInternal(byte[] k);
+    protected abstract byte[] getInternal(byte[] key);
+
+    @Override
+    public void put(byte[] key, byte[] value) {
+        check(key);
+        check(value);
+        check();
+
+        putInternal(key, value);
+    }
+
+    /**
+     * Database specific put functionality, without locking or integrity checks required. Locking
+     * and checks are applied in {@link #put(byte[], byte[])}.
+     *
+     * @param key the key for the new entry
+     * @param value the value for the new entry
+     */
+    protected abstract void putInternal(byte[] key, byte[] value);
+
+    @Override
+    public void delete(byte[] key) {
+        check(key);
+        check();
+
+        deleteInternal(key);
+    }
+
+    /**
+     * Database specific delete functionality, without locking or integrity checks required. Locking
+     * and checks are applied in {@link #delete(byte[])}.
+     *
+     * @param key the key for the new entry
+     */
+    protected abstract void deleteInternal(byte[] key);
+
+    @Override
+    public void putToBatch(byte[] key, byte[] value) {
+        check(key);
+        check(value);
+        check();
+
+        putToBatchInternal(key, value);
+    }
+
+    /**
+     * Database specific put to batch functionality, without locking or integrity checks required.
+     * Locking and checks are applied in {@link #putToBatch(byte[], byte[])}.
+     *
+     * @param key the key for the new entry
+     * @param value the value for the new entry
+     */
+    protected abstract void putToBatchInternal(byte[] key, byte[] value);
+
+    @Override
+    public void deleteInBatch(byte[] key) {
+        check(key);
+        check();
+
+        deleteInBatchInternal(key);
+    }
+
+    /**
+     * Database specific delete in batch functionality, without locking or integrity checks
+     * required. Locking and checks are applied in {@link #deleteInBatch(byte[])}.
+     *
+     * @param key the key for the new entry
+     */
+    protected abstract void deleteInBatchInternal(byte[] key);
+
+    @Override
+    public void putBatch(Map<byte[], byte[]> input) {
+        check(input.keySet());
+        check(input.values());
+        check();
+
+        putBatchInternal(input);
+    }
+
+    /**
+     * Database specific put batch functionality, without locking or integrity checks required.
+     * Locking and checks are applied in {@link #putBatch(Map)}.
+     *
+     * @param input a {@link Map} of key-value pairs to be updated in the database
+     */
+    public abstract void putBatchInternal(Map<byte[], byte[]> input);
+
+    @Override
+    public void deleteBatch(Collection<byte[]> keys) {
+        check(keys);
+        check();
+
+        deleteBatchInternal(keys);
+    }
+
+    /**
+     * Database specific delete batch functionality, without locking or integrity checks required.
+     * Locking and checks are applied in {@link #deleteBatch(Collection)}.
+     *
+     * @param keys a {@link Collection} of keys to be deleted form storage
+     */
+    protected abstract void deleteBatchInternal(Collection<byte[]> keys);
 }

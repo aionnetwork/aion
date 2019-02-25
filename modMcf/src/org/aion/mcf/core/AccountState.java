@@ -1,35 +1,13 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.mcf.core;
 
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 import java.math.BigInteger;
-import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.Hex;
+import java.util.Arrays;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.util.conversions.Hex;
 
 /** Account state. */
 public class AccountState extends AbstractState {
@@ -221,7 +199,7 @@ public class AccountState extends AbstractState {
      */
     private boolean isInitialized() {
         // TODO: discuss alternative of storing a boolean value
-        return !FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH);
+        return !Arrays.equals(codeHash, EMPTY_DATA_HASH);
     }
 
     /**
@@ -284,6 +262,30 @@ public class AccountState extends AbstractState {
         return this.balance;
     }
 
+    /**
+     * Returns a deep copy of this account state.
+     *
+     * @return A deep copy of this object.
+     */
+    public AccountState copy() {
+        AccountState accountStateCopy = new AccountState();
+        accountStateCopy.balance = this.balance;
+        accountStateCopy.nonce = this.nonce;
+        accountStateCopy.dirty = this.dirty;
+        accountStateCopy.deleted = this.deleted;
+        accountStateCopy.codeHash =
+                (this.codeHash == null) ? null : Arrays.copyOf(this.codeHash, this.codeHash.length);
+        accountStateCopy.stateRoot =
+                (this.stateRoot == null)
+                        ? null
+                        : Arrays.copyOf(this.stateRoot, this.stateRoot.length);
+        accountStateCopy.rlpEncoded =
+                (this.rlpEncoded == null)
+                        ? null
+                        : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
+        return accountStateCopy;
+    }
+
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
             byte[] nonce = RLP.encodeBigInteger(this.nonce);
@@ -296,7 +298,7 @@ public class AccountState extends AbstractState {
     }
 
     public boolean isEmpty() {
-        return FastByteComparisons.equal(codeHash, EMPTY_DATA_HASH)
+        return Arrays.equals(codeHash, EMPTY_DATA_HASH)
                 && BigInteger.ZERO.equals(balance)
                 && BigInteger.ZERO.equals(nonce);
     }

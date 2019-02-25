@@ -1,39 +1,19 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.mcf.db;
 
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
+import com.google.common.annotations.VisibleForTesting;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
+import org.aion.util.conversions.Hex;
 
 /** Abstract contract details. */
-public abstract class AbstractContractDetails<DW> implements IContractDetails<DW> {
+public abstract class AbstractContractDetails implements IContractDetails {
 
     private boolean dirty = false;
     private boolean deleted = false;
@@ -114,13 +94,62 @@ public abstract class AbstractContractDetails<DW> implements IContractDetails<DW
 
     @Override
     public String toString() {
-        String ret =
-                "  Code: "
-                        + (codes.size() < 2
-                                ? Hex.toHexString(getCode())
-                                : codes.size() + " versions")
-                        + "\n";
-        ret += "  Storage: " + getStorageHash();
+        String ret;
+
+        if (codes != null) {
+            ret =
+                    "  Code: "
+                            + (codes.size() < 2
+                                    ? Hex.toHexString(getCode())
+                                    : codes.size() + " versions")
+                            + "\n";
+        } else {
+            ret = "  Code: null\n";
+        }
+
+        byte[] storage = getStorageHash();
+        if (storage != null) {
+            ret += "  Storage: " + Hex.toHexString(storage);
+        } else {
+            ret += "  Storage: null";
+        }
+
         return ret;
+    }
+
+    @VisibleForTesting
+    @Override
+    public void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
+        for (Map.Entry<ByteArrayWrapper, ByteArrayWrapper> entry : storage.entrySet()) {
+            ByteArrayWrapper key = entry.getKey();
+            ByteArrayWrapper value = entry.getValue();
+
+            if (value != null) {
+                put(key, value);
+            } else {
+                delete(key);
+            }
+        }
+    }
+
+    @Override
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys) {
+        Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
+
+        if (keys == null) {
+            throw new IllegalArgumentException("Input keys cannot be null");
+        } else {
+            for (ByteArrayWrapper key : keys) {
+                ByteArrayWrapper value = get(key);
+
+                // we check if the value is not null,
+                // cause we keep all historical keys
+                if (value != null) {
+                    storage.put(key, value);
+                }
+            }
+        }
+
+        return storage;
     }
 }

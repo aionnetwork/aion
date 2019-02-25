@@ -10,8 +10,8 @@ API_PATH="${PACK_PATH}/clientAPI"
 SCRIPT_PATH="${PACK_PATH}/script"
 JDK_VER="11.0.1"
 JDK_TYPE="openjdk"
-JAVAFX_PATH="${PACK_PATH}/javafx"
-JAVAFX_VER="javafx-jmods-11"
+#JAVAFX_PATH="${PACK_PATH}/javafx"
+#JAVAFX_VER="javafx-jmods-11"
 DEFAULT_NETWORK="mainnet"
 
 if [ ! -d "$PACK_PATH" ]; then
@@ -25,19 +25,12 @@ if [ ! -d "$JDK_PATH" ]; then
   mv "${PACK_PATH}/jdk-${JDK_VER}" $JDK_PATH
 fi
 
-# download javafx if can't find the javafx env
-if [ "$noGui" != "true" ] && [ ! -d "$JAVAFX_PATH" ]; then
-  wget -c http://gluonhq.com/download/javafx-11-jmods-linux -O openjfx-11_linux-x64_bin-jmods.zip
-  unzip openjfx-11_linux-x64_bin-jmods.zip -d $PACK_PATH
-  mv "${PACK_PATH}/${JAVAFX_VER}" $JAVAFX_PATH
-fi
-
 module_path=$JDK_PATH/jmods 
-add_modules="java.base,java.xml,java.logging,java.management,jdk.unsupported,jdk.sctp"
+add_modules="java.base,java.xml,java.logging,java.management,jdk.unsupported,jdk.sctp,java.security.sasl"
 # generate aion runtime
-if [ "$noGui" != "true" ]; then
+if [ "$useGui" = "true" ]; then
     module_path="$module_path:$JAVAFX_PATH"
-    add_modules="$add_modules,javafx.graphics,javafx.controls,javafx.base,javafx.fxml,javafx.swing"
+    add_modules="$add_modules,$JAVAFX_MODULES"
 fi
 if [ ! -d "$JDK_RT" ]; then
   $JDK_PATH/bin/jlink --module-path $module_path --add-modules $add_modules \

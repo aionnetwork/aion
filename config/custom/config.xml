@@ -41,6 +41,8 @@
 		<show-status>false</show-status>
 		<!--requires show-status=true; comma separated list of options: [all, peer_states, requests, seeds, leeches, responses, none]-->
 		<show-statistics>none</show-statistics>
+		<!--Trigger compact when IO time is slow. slow-import and frequency values are in milliseconds-->
+		<compact enabled="false" slow-import="1000" frequency="600000"></compact>
 	</sync>
 	<consensus>
 		<mining>true</mining>

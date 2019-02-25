@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.zero.impl;
 
 import com.google.common.io.ByteStreams;
@@ -29,7 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.regex.Pattern;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.zero.exceptions.HeaderStructureException;
@@ -72,7 +50,7 @@ public class GenesisBlockLoader {
                 }
 
                 if (mapper.has("coinbase")) {
-                    genesisBuilder.withCoinbase(Address.wrap(mapper.getString("coinbase")));
+                    genesisBuilder.withCoinbase(AionAddress.wrap(mapper.getString("coinbase")));
                 }
 
                 if (mapper.has("difficulty")) {
@@ -152,7 +130,7 @@ public class GenesisBlockLoader {
                                 new BigInteger(
                                         accountAllocs.getJSONObject(key).getString("balance"));
                         AccountState acctState = new AccountState(BigInteger.ZERO, balance);
-                        genesisBuilder.addPreminedAccount(Address.wrap(key), acctState);
+                        genesisBuilder.addPreminedAccount(AionAddress.wrap(key), acctState);
                     }
                 }
 

@@ -1,32 +1,11 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
@@ -35,6 +14,7 @@ import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionContractDetailsImpl;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.AionBlock;
@@ -69,7 +49,7 @@ public class AionGenesis extends AionBlock {
      * Corresponds to {@link AbstractBlockHeader#getCoinbase()} that mined the first block. For
      * fairness, the address is set to an address that is not ever to be used
      */
-    protected static final Address GENESIS_COINBASE = Address.ZERO_ADDRESS();
+    protected static final Address GENESIS_COINBASE = AionAddress.ZERO_ADDRESS();
 
     /**
      * Corresponds to {@link AbstractBlockHeader#getLogsBloom()} indicates the logsBloom of the
@@ -369,8 +349,10 @@ public class AionGenesis extends AionBlock {
             AionContractDetailsImpl networkBalanceStorage = new AionContractDetailsImpl();
 
             for (Map.Entry<Integer, BigInteger> entry : this.networkBalance.entrySet()) {
+                // we assume there are no deletions in the genesis
                 networkBalanceStorage.put(
-                        new DataWord(entry.getKey()), new DataWord(entry.getValue()));
+                        new DataWord(entry.getKey()).toWrapper(),
+                        wrapValueForPut(new DataWord(entry.getValue())));
             }
             byte[] networkBalanceStorageHash = networkBalanceStorage.getStorageHash();
 
@@ -386,6 +368,12 @@ public class AionGenesis extends AionBlock {
             }
 
             return worldTrie.getRootHash();
+        }
+
+        private static ByteArrayWrapper wrapValueForPut(DataWord value) {
+            return (value.isZero())
+                    ? DataWord.ZERO.toWrapper()
+                    : new ByteArrayWrapper(value.getNoLeadZeroesData());
         }
 
         private static byte[] generateExtraData(int chainId) {

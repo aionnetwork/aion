@@ -1,45 +1,23 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.mcf.db;
 
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
-import org.aion.base.type.Address;
-import org.aion.base.vm.IDataWord;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.vm.api.interfaces.Address;
 
 /** Contract details cache implementation. */
-public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord> {
+public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
-    private Map<IDataWord, IDataWord> storage = new HashMap<>();
+    private Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
 
-    public IContractDetails<IDataWord> origContract;
+    public IContractDetails origContract;
 
-    public ContractDetailsCacheImpl(IContractDetails<IDataWord> origContract) {
+    public ContractDetailsCacheImpl(IContractDetails origContract) {
         this.origContract = origContract;
         if (origContract != null) {
             if (origContract instanceof AbstractContractDetails) {
@@ -69,8 +47,19 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @param value The value.
      */
     @Override
-    public void put(IDataWord key, IDataWord value) {
+    public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+
         storage.put(key, value);
+        setDirty(true);
+    }
+
+    @Override
+    public void delete(ByteArrayWrapper key) {
+        Objects.requireNonNull(key);
+
+        storage.put(key, null);
         setDirty(true);
     }
 
@@ -81,24 +70,30 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
      * @return the associated value or null.
      */
     @Override
-    public IDataWord get(IDataWord key) {
-        IDataWord value = storage.get(key);
-        if (value != null) {
-            value = value.copy();
-        } else {
+    public ByteArrayWrapper get(ByteArrayWrapper key) {
+        ByteArrayWrapper value;
+
+        // go to parent if not locally stored
+        if (!storage.containsKey(key)) {
             if (origContract == null) {
                 return null;
             }
             value = origContract.get(key);
-            value = (value == null) ? DataWord.ZERO : value;
-            storage.put(key.copy(), value.isZero() ? DataWord.ZERO.copy() : value.copy());
-        }
 
-        if (value == null || value.isZero()) {
-            return null;
-        } else {
-            return value;
+            // save a copy to local storage
+            if (value != null) {
+                storage.put(key.copy(), value.copy());
+            } else {
+                storage.put(key.copy(), null);
+            }
+        } else { // check local storage
+            value = storage.get(key);
+
+            if (value != null) {
+                value = value.copy();
+            }
         }
+        return value;
     }
 
     /**
@@ -127,64 +122,6 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
     @Override
     public byte[] getEncoded() {
         throw new RuntimeException("Not supported by this implementation.");
-    }
-
-    /**
-     * Returns a mapping of all the key-value pairs who have keys in the collection keys.
-     *
-     * @param keys The keys to query for.
-     * @return The associated mappings.
-     */
-    @Override
-    public Map<IDataWord, IDataWord> getStorage(Collection<IDataWord> keys) {
-        Map<IDataWord, IDataWord> storage = new HashMap<>();
-        if (keys == null) {
-            throw new IllegalArgumentException("Input keys can't be null");
-        } else {
-            for (IDataWord key : keys) {
-                IDataWord value = get(key);
-
-                // we check if the value is not null,
-                // cause we keep all historical keys
-                if ((value != null) && (!value.isZero())) {
-                    storage.put(key, value);
-                }
-            }
-        }
-
-        return storage;
-    }
-
-    /**
-     * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
-     * storageValues.
-     *
-     * @param storageKeys The keys.
-     * @param storageValues The values.
-     */
-    @Override
-    public void setStorage(List<IDataWord> storageKeys, List<IDataWord> storageValues) {
-
-        for (int i = 0; i < storageKeys.size(); ++i) {
-
-            IDataWord key = storageKeys.get(i);
-            IDataWord value = storageValues.get(i);
-
-            put(key, value);
-        }
-    }
-
-    /**
-     * Sets the storage to contain the specified key-value mappings.
-     *
-     * @param storage The specified mappings.
-     */
-    @Override
-    public void setStorage(Map<IDataWord, IDataWord> storage) {
-        for (Map.Entry<IDataWord, IDataWord> entry : storage.entrySet()) {
-            put(entry.getKey(), entry.getValue());
-        }
     }
 
     /**
@@ -228,8 +165,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
             return;
         }
 
-        for (IDataWord key : storage.keySet()) {
-            origContract.put(key, storage.get(key));
+        for (ByteArrayWrapper key : storage.keySet()) {
+            ByteArrayWrapper value = storage.get(key);
+            if (value != null) {
+                origContract.put(key, storage.get(key));
+            } else {
+                origContract.delete(key);
+            }
         }
 
         if (origContract instanceof AbstractContractDetails) {
@@ -242,7 +184,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
 
     /** This method is not supported. */
     @Override
-    public IContractDetails<IDataWord> getSnapshotTo(byte[] hash) {
+    public IContractDetails getSnapshotTo(byte[] hash) {
         throw new UnsupportedOperationException("No snapshot option during cache state");
     }
 
@@ -252,4 +194,92 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails<IDataWord>
         throw new UnsupportedOperationException("Can't set datasource in cache implementation.");
     }
 
+    /**
+     * Returns a sufficiently deep copy of this contract details object.
+     *
+     * <p>If this contract details object's "original contract" is of type {@link
+     * ContractDetailsCacheImpl}, and the same is true for all of its ancestors, then this method
+     * will return a perfectly deep copy of this contract details object.
+     *
+     * <p>Otherwise, the "original contract" copy will retain some references that are also held by
+     * the object it is a copy of. In particular, the following references will not be copied:
+     *
+     * <p>- The external storage data source. - The previous root of the trie will pass its original
+     * object reference if this root is not of type {@code byte[]}. - The current root of the trie
+     * will pass its original object reference if this root is not of type {@code byte[]}. - Each
+     * {@link org.aion.rlp.Value} object reference held by each of the {@link
+     * org.aion.mcf.trie.Node} objects in the underlying cache.
+     *
+     * @return A copy of this object.
+     */
+    @Override
+    public ContractDetailsCacheImpl copy() {
+        // TODO: better to move this check into all constructors instead.
+        if (this == this.origContract) {
+            throw new IllegalStateException(
+                    "Cannot copy a ContractDetailsCacheImpl whose original contract is itself!");
+        }
+
+        IContractDetails originalContractCopy =
+                (this.origContract == null) ? null : this.origContract.copy();
+        ContractDetailsCacheImpl contractDetailsCacheCopy =
+                new ContractDetailsCacheImpl(originalContractCopy);
+        contractDetailsCacheCopy.storage = getDeepCopyOfStorage();
+        contractDetailsCacheCopy.prune = this.prune;
+        contractDetailsCacheCopy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;
+        contractDetailsCacheCopy.setCodes(getDeepCopyOfCodes());
+        contractDetailsCacheCopy.setDirty(this.isDirty());
+        contractDetailsCacheCopy.setDeleted(this.isDeleted());
+        return contractDetailsCacheCopy;
+    }
+
+    private Map<ByteArrayWrapper, byte[]> getDeepCopyOfCodes() {
+        Map<ByteArrayWrapper, byte[]> originalCodes = this.getCodes();
+
+        if (originalCodes == null) {
+            return null;
+        }
+
+        Map<ByteArrayWrapper, byte[]> copyOfCodes = new HashMap<>();
+        for (Entry<ByteArrayWrapper, byte[]> codeEntry : originalCodes.entrySet()) {
+
+            ByteArrayWrapper keyWrapper = null;
+            if (codeEntry.getKey() != null) {
+                byte[] keyBytes = codeEntry.getKey().getData();
+                keyWrapper = new ByteArrayWrapper(Arrays.copyOf(keyBytes, keyBytes.length));
+            }
+
+            byte[] copyOfValue =
+                    (codeEntry.getValue() == null)
+                            ? null
+                            : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
+            copyOfCodes.put(keyWrapper, copyOfValue);
+        }
+        return copyOfCodes;
+    }
+
+    private Map<ByteArrayWrapper, ByteArrayWrapper> getDeepCopyOfStorage() {
+        if (this.storage == null) {
+            return null;
+        }
+
+        Map<ByteArrayWrapper, ByteArrayWrapper> storageCopy = new HashMap<>();
+        for (Entry<ByteArrayWrapper, ByteArrayWrapper> storageEntry : this.storage.entrySet()) {
+            ByteArrayWrapper keyWrapper = null;
+            ByteArrayWrapper valueWrapper = null;
+
+            if (storageEntry.getKey() != null) {
+                byte[] keyBytes = storageEntry.getKey().getData();
+                keyWrapper = new ByteArrayWrapper(Arrays.copyOf(keyBytes, keyBytes.length));
+            }
+
+            if (storageEntry.getValue() != null) {
+                byte[] valueBytes = storageEntry.getValue().getData();
+                valueWrapper = new ByteArrayWrapper(Arrays.copyOf(valueBytes, valueBytes.length));
+            }
+
+            storageCopy.put(keyWrapper, valueWrapper);
+        }
+        return storageCopy;
+    }
 }

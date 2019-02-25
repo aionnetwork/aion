@@ -1,42 +1,9 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- */
 package org.aion.zero.impl.sync.msg;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 import org.junit.Test;
@@ -45,7 +12,44 @@ import org.junit.Test;
 public class ResStatusTest {
 
     @Test
-    public void test() {
+    public void testNew() {
+
+        long bestBlockNumber = ThreadLocalRandom.current().nextLong();
+        byte[] totalDifficulty = new byte[Byte.MAX_VALUE];
+        ThreadLocalRandom.current().nextBytes(totalDifficulty);
+        byte[] bestBlockHash = new byte[32];
+        ThreadLocalRandom.current().nextBytes(bestBlockHash);
+        byte[] genesisHash = new byte[32];
+        byte apiVersion = (byte) ThreadLocalRandom.current().nextInt();
+        short peerCount = (short) ThreadLocalRandom.current().nextInt();
+        byte[] pendingTxCount = new byte[Byte.MAX_VALUE];
+        ThreadLocalRandom.current().nextBytes(pendingTxCount);
+        int latency = ThreadLocalRandom.current().nextInt();
+
+        ResStatus rs1 =
+                new ResStatus(
+                        bestBlockNumber,
+                        totalDifficulty,
+                        bestBlockHash,
+                        genesisHash,
+                        apiVersion,
+                        peerCount,
+                        pendingTxCount,
+                        latency);
+        ResStatus rs2 = ResStatus.decode(rs1.encode());
+
+        assertEquals(bestBlockNumber, rs2.getBestBlockNumber());
+        assertTrue(Arrays.equals(totalDifficulty, rs2.getTotalDifficulty()));
+        assertTrue(Arrays.equals(bestBlockHash, rs2.getBestHash()));
+        assertTrue(Arrays.equals(genesisHash, rs2.getGenesisHash()));
+        assertEquals(apiVersion, rs2.getApiVersion());
+        assertEquals(peerCount, rs2.getPeerCount());
+        assertTrue(Arrays.equals(pendingTxCount, rs2.getPendingTxCount()));
+        assertEquals(latency, rs2.getLatency());
+    }
+
+    @Test
+    public void testOld() {
 
         long bestBlockNumber = ThreadLocalRandom.current().nextLong();
         byte[] totalDifficulty = new byte[Byte.MAX_VALUE];
@@ -54,12 +58,22 @@ public class ResStatusTest {
         ThreadLocalRandom.current().nextBytes(bestBlockHash);
         byte[] genesisHash = new byte[32];
 
-        ResStatus rs1 = new ResStatus(bestBlockNumber, totalDifficulty, bestBlockHash, genesisHash);
-        ResStatus rs2 = ResStatus.decode(rs1.encode());
+        int _len = 8 + 1 + totalDifficulty.length + 32 + 32;
+        ByteBuffer bb = ByteBuffer.allocate(_len);
+        bb.putLong(bestBlockNumber);
+        bb.put((byte) totalDifficulty.length);
+        bb.put(totalDifficulty);
+        bb.put(bestBlockHash);
+        bb.put(genesisHash);
+        ResStatus rs2 = ResStatus.decode(bb.array());
 
         assertEquals(bestBlockNumber, rs2.getBestBlockNumber());
         assertTrue(Arrays.equals(totalDifficulty, rs2.getTotalDifficulty()));
         assertTrue(Arrays.equals(bestBlockHash, rs2.getBestHash()));
         assertTrue(Arrays.equals(genesisHash, rs2.getGenesisHash()));
+        assertEquals(0, rs2.getApiVersion());
+        assertEquals(0, rs2.getPeerCount());
+        assertTrue(Arrays.equals(new byte[0], rs2.getPendingTxCount()));
+        assertEquals(0, rs2.getLatency());
     }
 }

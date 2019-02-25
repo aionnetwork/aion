@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.p2p.impl.comm;
 
 import java.math.BigInteger;
@@ -28,9 +5,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 import java.util.regex.Pattern;
-import org.aion.base.util.ByteUtil;
 import org.aion.p2p.INode;
 import org.aion.p2p.IPeerMetric;
+import org.aion.util.bytes.ByteUtil;
 
 /**
  * @author Chris p2p://{node-id}@{ip}:{port} node-id could be any non-empty string update to 36
@@ -66,6 +43,11 @@ public final class Node implements INode {
     private long bestBlockNumber;
     private byte[] bestBlockHash;
     private BigInteger totalDifficulty = BigInteger.ZERO;
+    private byte apiVersion;
+    private short peerCount;
+    private int pendingTxCount;
+    private int latency;
+
     private String binaryVersion = "";
     private SocketChannel channel;
     /**
@@ -300,11 +282,41 @@ public final class Node implements INode {
     }
 
     @Override
+    public byte getApiVersion() {
+        return this.apiVersion;
+    }
+
+    @Override
+    public short getPeerCount() {
+        return this.peerCount;
+    }
+
+    @Override
+    public int getPendingTxCount() {
+        return this.pendingTxCount;
+    }
+
+    @Override
+    public int getLatency() {
+        return this.latency;
+    }
+
+    @Override
     public void updateStatus(
-            long _bestBlockNumber, final byte[] _bestBlockHash, BigInteger _totalDifficulty) {
+            long _bestBlockNumber,
+            final byte[] _bestBlockHash,
+            BigInteger _totalDifficulty,
+            byte _apiVersion,
+            short _peerCount,
+            int _pendingTxCount,
+            int _latency) {
         this.bestBlockNumber = _bestBlockNumber;
         this.bestBlockHash = _bestBlockHash;
         this.totalDifficulty = _totalDifficulty == null ? BigInteger.ZERO : _totalDifficulty;
+        this.apiVersion = _apiVersion;
+        this.peerCount = _peerCount;
+        this.pendingTxCount = _pendingTxCount;
+        this.latency = _latency;
     }
 
     @Override

@@ -41,6 +41,8 @@
 		<blocks-queue-max>32</blocks-queue-max>
 		<!-- Display syncing status -->
 		<show-status>false</show-status>
+		<!--Trigger compact when IO time is slow. slow-import and frequency values are in milliseconds-->
+		<compact enabled="false" slow-import="1000" frequency="600000"></compact>
 	</sync>
 	<consensus>
 		<mining>false</mining>

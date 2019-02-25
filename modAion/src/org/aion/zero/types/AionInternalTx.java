@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.types;
 
 import static org.aion.base.util.ByteUtil.toHexString;
@@ -30,15 +7,17 @@ import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.InternalTransactionInterface;
 
 /** aion internal transaction class. */
-public class AionInternalTx extends AionTransaction {
+public class AionInternalTx extends AionTransaction implements InternalTransactionInterface {
 
     private byte[] parentHash;
     private int deep;
@@ -78,18 +57,21 @@ public class AionInternalTx extends AionTransaction {
         return (nrgPrice == null) ? ByteUtil.EMPTY_BYTE_ARRAY : nrgPrice.getData();
     }
 
-    public void reject() {
+    @Override
+    public void markAsRejected() {
         this.rejected = true;
     }
 
-    public int getDeep() {
+    @Override
+    public int getStackDepth() {
         if (!parsed) {
             rlpParse();
         }
         return deep;
     }
 
-    public int getIndex() {
+    @Override
+    public int getIndexOfInternalTransaction() {
         if (!parsed) {
             rlpParse();
         }
@@ -111,14 +93,15 @@ public class AionInternalTx extends AionTransaction {
     }
 
     @Override
-    public Address getFrom() {
+    public Address getSenderAddress() {
         if (!parsed) {
             rlpParse();
         }
         return from;
     }
 
-    public byte[] getParentHash() {
+    @Override
+    public byte[] getParentTransactionHash() {
         if (!parsed) {
             rlpParse();
         }
@@ -129,7 +112,8 @@ public class AionInternalTx extends AionTransaction {
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
 
-            byte[] to = (getTo() == null) ? new byte[0] : getTo().toBytes();
+            byte[] to = (this.getDestinationAddress() == null) ? new byte[0] : this
+                .getDestinationAddress().toBytes();
             byte[] nonce = getNonce();
             boolean isEmptyNonce = isEmpty(nonce) || (getLength(nonce) == 1 && nonce[0] == 0);
 
@@ -137,7 +121,7 @@ public class AionInternalTx extends AionTransaction {
                     RLP.encodeList(
                             RLP.encodeElement(isEmptyNonce ? null : nonce),
                             RLP.encodeElement(this.parentHash),
-                            RLP.encodeElement(getFrom().toBytes()),
+                            RLP.encodeElement(this.getSenderAddress().toBytes()),
                             RLP.encodeElement(to),
                             RLP.encodeElement(getValue()),
                             RLP.encodeElement(getData()),
@@ -163,8 +147,8 @@ public class AionInternalTx extends AionTransaction {
         int rlpIdx = 0;
         this.nonce = transaction.get(rlpIdx++).getRLPData();
         this.parentHash = transaction.get(rlpIdx++).getRLPData();
-        this.from = Address.wrap(transaction.get(rlpIdx++).getRLPData());
-        this.to = Address.wrap(transaction.get(rlpIdx++).getRLPData());
+        this.from = AionAddress.wrap(transaction.get(rlpIdx++).getRLPData());
+        this.to = AionAddress.wrap(transaction.get(rlpIdx++).getRLPData());
         this.value = transaction.get(rlpIdx++).getRLPData();
 
         // TODO: check the order
@@ -192,16 +176,16 @@ public class AionInternalTx extends AionTransaction {
 
     @Override
     public String toString() {
-        String to = (getTo() == null) ? "" : getTo().toString();
+        String to = (this.getDestinationAddress() == null) ? "" : this.getDestinationAddress().toString();
         return "TransactionData ["
                 + "  parentHash="
-                + toHexString(getParentHash())
+                + toHexString(getParentTransactionHash())
                 + ", hash="
-                + toHexString(getHash())
+                + toHexString(this.getTransactionHash())
                 + ", nonce="
                 + toHexString(getNonce())
                 + ", fromAddress="
-                + getFrom().toString()
+                + this.getSenderAddress().toString()
                 + ", toAddress="
                 + to
                 + ", value="
@@ -211,9 +195,9 @@ public class AionInternalTx extends AionTransaction {
                 + ", note="
                 + getNote()
                 + ", deep="
-                + getDeep()
+                + getStackDepth()
                 + ", index="
-                + getIndex()
+                + getIndexOfInternalTransaction()
                 + ", rejected="
                 + isRejected()
                 + "]";

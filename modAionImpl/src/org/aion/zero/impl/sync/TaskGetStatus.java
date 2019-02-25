@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.sync;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -65,11 +42,11 @@ final class TaskGetStatus implements Runnable {
         while (this.run.get()) {
             try {
                 // Set<Integer> ids = new HashSet<>(p2p.getActiveNodes().keySet());
-                for (INode n : p2p.getActiveNodes().values()) {
+                for (INode node : p2p.getActiveNodes().values()) {
                     // System.out.println("requesting-status from-node=" + n.getIdShort());
-                    p2p.send(n.getIdHash(), n.getIdShort(), reqStatus);
-                    stats.updateTotalRequestsToPeer(n.getIdShort(), RequestType.STATUS);
-                    stats.addPeerRequestTime(n.getIdShort(), System.nanoTime());
+                    p2p.send(node.getIdHash(), node.getIdShort(), reqStatus);
+                    stats.updateTotalRequestsToPeer(node.getIdShort(), RequestType.STATUS);
+                    stats.updateStatusRequest(node.getIdShort(), System.nanoTime());
                 }
                 Thread.sleep(interval);
             } catch (Exception e) {

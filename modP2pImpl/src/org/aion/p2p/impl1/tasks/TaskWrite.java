@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.p2p.impl1.tasks;
 
 import static org.aion.p2p.impl1.P2pMgr.p2pLOG;
@@ -40,6 +18,9 @@ public class TaskWrite implements Runnable {
     private final Msg msg;
     private final ChannelBuffer channelBuffer;
     private final IP2pMgr p2pMgr;
+    private final static long MAX_BUFFER_WRITE_TIME = 1_000_000_000L;
+    private final static long MIN_TRACE_BUFFER_WRITE_TIME = 10_000_000L;
+
 
     TaskWrite(
             final String _nodeShortId,
@@ -106,9 +87,9 @@ public class TaskWrite implements Runnable {
                     }
 
                     t2 = System.nanoTime() - t1;
-                } while (buf.hasRemaining() && (t2 < 100_000_000));
+                } while (buf.hasRemaining() && (t2 < MAX_BUFFER_WRITE_TIME));
 
-                if (p2pLOG.isTraceEnabled() && (t2 > 10_000_000)) {
+                if (p2pLOG.isTraceEnabled() && (t2 > MIN_TRACE_BUFFER_WRITE_TIME)) {
                     p2pLOG.trace(
                             "msg write: id {} size {} time {} ms length {}",
                             nodeShortId,
@@ -133,7 +114,7 @@ public class TaskWrite implements Runnable {
                                     + " bodyLen="
                                     + String.valueOf(bodyLen)
                                     + " time="
-                                    + String.valueOf(System.nanoTime()- t1)
+                                    + String.valueOf(System.nanoTime() - t1)
                                     + "ns",
                             ex2);
                 }

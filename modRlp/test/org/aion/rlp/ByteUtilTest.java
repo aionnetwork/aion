@@ -1,38 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- */
-
 package org.aion.rlp;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -42,14 +7,15 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.FastByteComparisons;
-import org.aion.base.util.Hex;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.BigIntegers;
 
+/** TODO: functionality should be moved to modUtil */
 public class ByteUtilTest {
 
     @Test
@@ -268,7 +234,7 @@ public class ByteUtilTest {
             byte[] max = ByteBuffer.allocate(4).putInt(Integer.MAX_VALUE).array();
             long start1 = System.currentTimeMillis();
             while (ByteUtil.increment(counter1)) {
-                if (FastByteComparisons.compareTo(counter1, 0, 4, max, 0, 4) == 0) {
+                if (compareTo(counter1, 0, 4, max, 0, 4) == 0) {
                     break;
                 }
             }
@@ -292,6 +258,15 @@ public class ByteUtilTest {
                             + "ms to reach: "
                             + Hex.toHexString(BigIntegers.asUnsignedByteArray(4, counter2)));
         }
+    }
+
+    /** Compares two regions of byte array. */
+    public static int compareTo(
+            byte[] array1, int offset1, int size1, byte[] array2, int offset2, int size2) {
+        byte[] b1 = Arrays.copyOfRange(array1, offset1, offset1 + size1);
+        byte[] b2 = Arrays.copyOfRange(array2, offset2, offset2 + size2);
+
+        return Arrays.compare(b1, b2);
     }
 
     @Test

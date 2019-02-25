@@ -1,4 +1,5 @@
 module aion.mcf {
+    requires aion.util;
     requires aion.crypto;
     requires aion.base;
     requires aion.log;
@@ -8,8 +9,10 @@ module aion.mcf {
     requires slf4j.api;
     requires aion.p2p;
     requires com.google.common;
-    requires libnsc;
+    // requires libnsc;
     requires commons.collections4;
+    requires aion.vm.api;
+    requires core;
 
     exports org.aion.mcf.account;
     exports org.aion.mcf.blockchain;

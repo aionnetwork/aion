@@ -1,0 +1,72 @@
+//configuration
+properties([[$class: 'jenkins.model.BuildDiscarderProperty', strategy:
+			[$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
+			]])
+			
+node {
+	def app
+	def appName = 'aion'
+	def deployName
+	def endPoint
+
+    stage('Clone repository') {
+        /* Let's make sure we have the repository cloned to our workspace */
+
+        checkout scm
+    }
+
+	stage('Build') {
+		// Build steps
+		sh "git submodule init" 
+
+		sh "git submodule update --init --recursive"
+
+		sh "./gradlew build pack"	
+	}
+
+	stage('Create Image') {
+		// Copy to k8s folder to create image
+		sh "cp pack/aion.tar.bz2 k8s/aion.tar.bz2"
+
+		app = docker.build("${appName}", "k8s")
+
+	}
+
+	stage('Cleanup') {
+		//Clean up duplicate files required during the build process
+		sh "rm k8s/aion.tar.bz2"
+	}
+
+	stage('Push Image') {
+
+		/*Push image with 2 tags (cheap since all layers are duplicated on 2nd push)
+		*/
+
+        docker.withRegistry('https://aionkuberacr.azurecr.io', 'acr') {
+            
+            app.push("${env.BUILD_NUMBER}")
+            app.push("latest")
+        }
+	}
+
+	stage("Deploy Image") {
+		
+		// Refresh kubectl (Python can have some issues refreshing)
+		sh('kubectl get nodes')
+
+        withPythonEnv('python3') {
+            sh 'pip install -r k8s/requirements.txt'
+            deployName = sh(script: "python k8s/deploy.py ${env.BUILD_NUMBER}", returnStdout: true)
+        }
+    }
+
+	stage("Fetch Deployment Endpoint") {
+		withPythonEnv('python3') {
+			endPoint = sh(script: "python k8s/find_endpoint.py " + deployName, returnStdout: true)
+		}
+	}
+
+	stage("Run Test") {
+		sh("echo " + endPoint)
+	}
+}

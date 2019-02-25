@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.db;
 
 import static org.aion.base.util.ByteArrayWrapper.wrap;
@@ -28,32 +5,31 @@ import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import org.aion.base.db.IByteArrayKeyValueStore;
 import org.aion.base.db.IContractDetails;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
-import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.Address;
 
-public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> {
+public class AionContractDetailsImpl extends AbstractContractDetails {
 
     private IByteArrayKeyValueStore dataSource;
 
     private byte[] rlpEncoded;
 
-    private Address address = Address.EMPTY_ADDRESS();
+    private Address address = AionAddress.EMPTY_ADDRESS();
 
     private SecureTrie storageTrie = new SecureTrie(null);
 
@@ -82,29 +58,34 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
     }
 
     /**
-     * Adds the key-value pair to the database unless value is an IDataWord whose underlying byte
-     * array consists only of zeros. In this case, if key already exists in the database it will be
-     * deleted.
+     * Adds the key-value pair to the database unless value is an ByteArrayWrapper whose underlying
+     * byte array consists only of zeros. In this case, if key already exists in the database it
+     * will be deleted.
      *
      * @param key The key.
      * @param value The value.
      */
     @Override
-    public void put(IDataWord key, IDataWord value) {
+    public void put(ByteArrayWrapper key, ByteArrayWrapper value) {
+        Objects.requireNonNull(key);
+        Objects.requireNonNull(value);
+
+        // The following must be done before making this call:
         // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
         // we can differentiate between the two.
 
-        if (value.isZero()) {
-            storageTrie.delete(key.getData());
-        } else {
-            boolean isDouble = value.getData().length == DoubleDataWord.BYTES;
-            byte[] data =
-                    (isDouble)
-                            ? RLP.encodeElement(value.getData())
-                            : RLP.encodeElement(value.getNoLeadZeroesData());
+        byte[] data = RLP.encodeElement(value.getData());
+        storageTrie.update(key.getData(), data);
 
-            storageTrie.update(key.getData(), data);
-        }
+        this.setDirty(true);
+        this.rlpEncoded = null;
+    }
+
+    @Override
+    public void delete(ByteArrayWrapper key) {
+        Objects.requireNonNull(key);
+
+        storageTrie.delete(key.getData());
 
         this.setDirty(true);
         this.rlpEncoded = null;
@@ -118,17 +99,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @return the corresponding value or a zero-byte DataWord if no such value.
      */
     @Override
-    public IDataWord get(IDataWord key) {
-        IDataWord result = DataWord.ZERO;
-
+    public ByteArrayWrapper get(ByteArrayWrapper key) {
         byte[] data = storageTrie.get(key.getData());
-        if (data.length >= DoubleDataWord.BYTES) {
-            result = new DoubleDataWord(RLP.decode2(data).get(0).getRLPData());
-        } else if (data.length > 0) {
-            result = new DataWord(RLP.decode2(data).get(0).getRLPData());
-        }
-
-        return result;
+        return (data == null || data.length == 0)
+                ? null
+                : new ByteArrayWrapper(RLP.decode2(data).get(0).getRLPData());
     }
 
     /**
@@ -178,9 +153,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         RLPElement code = rlpList.get(4);
 
         if (address.getRLPData() == null) {
-            this.address = Address.EMPTY_ADDRESS();
+            this.address = AionAddress.EMPTY_ADDRESS();
         } else {
-            this.address = Address.wrap(address.getRLPData());
+            this.address = AionAddress.wrap(address.getRLPData());
         }
 
         if (code instanceof RLPList) {
@@ -237,59 +212,6 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         }
 
         return rlpEncoded;
-    }
-
-    /**
-     * Returns a mapping of all the key-value pairs who have keys in the collection keys.
-     *
-     * @param keys The keys to query for.
-     * @return The associated mappings.
-     */
-    @Override
-    public Map<IDataWord, IDataWord> getStorage(Collection<IDataWord> keys) {
-        Map<IDataWord, IDataWord> storage = new HashMap<>();
-        if (keys == null) {
-            throw new IllegalArgumentException("Input keys can't be null");
-        } else {
-            for (IDataWord key : keys) {
-                IDataWord value = get(key);
-
-                // we check if the value is not null,
-                // cause we keep all historical keys
-                if ((value != null) && (!value.isZero())) {
-                    storage.put(key, value);
-                }
-            }
-        }
-
-        return storage;
-    }
-
-    /**
-     * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
-     * storageValues.
-     *
-     * @param storageKeys The keys.
-     * @param storageValues The values.
-     */
-    @Override
-    public void setStorage(List<IDataWord> storageKeys, List<IDataWord> storageValues) {
-        for (int i = 0; i < storageKeys.size(); ++i) {
-            put(storageKeys.get(i), storageValues.get(i));
-        }
-    }
-
-    /**
-     * Sets the storage to contain the specified key-value mappings.
-     *
-     * @param storage The specified mappings.
-     */
-    @Override
-    public void setStorage(Map<IDataWord, IDataWord> storage) {
-        for (IDataWord key : storage.keySet()) {
-            put(key, storage.get(key));
-        }
     }
 
     /**
@@ -363,17 +285,13 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
      * @return the specified AionContractDetailsImpl.
      */
     @Override
-    public IContractDetails<IDataWord> getSnapshotTo(byte[] hash) {
-
-        IByteArrayKeyValueStore keyValueDataSource = this.storageTrie.getCache().getDb();
+    public IContractDetails getSnapshotTo(byte[] hash) {
 
         SecureTrie snapStorage =
                 wrap(hash).equals(wrap(EMPTY_TRIE_HASH))
-                        ? new SecureTrie(keyValueDataSource, "".getBytes())
-                        : new SecureTrie(keyValueDataSource, hash);
+                        ? new SecureTrie(storageTrie.getCache(), "".getBytes())
+                        : new SecureTrie(storageTrie.getCache(), hash);
         snapStorage.withPruningEnabled(storageTrie.isPruningEnabled());
-
-        snapStorage.setCache(this.storageTrie.getCache());
 
         AionContractDetailsImpl details =
                 new AionContractDetailsImpl(this.address, snapStorage, getCodes());
@@ -382,5 +300,67 @@ public class AionContractDetailsImpl extends AbstractContractDetails<IDataWord> 
         details.dataSource = dataSource;
 
         return details;
+    }
+
+    /**
+     * Returns a sufficiently deep copy of this contract details object.
+     *
+     * <p>The copy is not completely deep. The following object references will be passed on from
+     * this object to the copy:
+     *
+     * <p>- The external storage data source: the copy will back-end on this same source. - The
+     * previous root of the trie will pass its original object reference if this root is not of type
+     * {@code byte[]}. - The current root of the trie will pass its original object reference if
+     * this root is not of type {@code byte[]}. - Each {@link org.aion.rlp.Value} object reference
+     * held by each of the {@link org.aion.mcf.trie.Node} objects in the underlying cache.
+     *
+     * @return A copy of this object.
+     */
+    @Override
+    public AionContractDetailsImpl copy() {
+        AionContractDetailsImpl aionContractDetailsCopy = new AionContractDetailsImpl();
+        aionContractDetailsCopy.dataSource = this.dataSource;
+        aionContractDetailsCopy.externalStorageDataSource = this.externalStorageDataSource;
+        aionContractDetailsCopy.externalStorage = this.externalStorage;
+        aionContractDetailsCopy.prune = this.prune;
+        aionContractDetailsCopy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;
+        aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
+        aionContractDetailsCopy.setDirty(this.isDirty());
+        aionContractDetailsCopy.setDeleted(this.isDeleted());
+        aionContractDetailsCopy.address =
+                (this.address == null) ? null : new AionAddress(this.address.toBytes());
+        aionContractDetailsCopy.rlpEncoded =
+                (this.rlpEncoded == null)
+                        ? null
+                        : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
+        aionContractDetailsCopy.storageTrie =
+                (this.storageTrie == null) ? null : this.storageTrie.copy();
+        return aionContractDetailsCopy;
+    }
+
+    // TODO: move this method up to the parent class.
+    private Map<ByteArrayWrapper, byte[]> getDeepCopyOfCodes() {
+        Map<ByteArrayWrapper, byte[]> originalCodes = this.getCodes();
+
+        if (originalCodes == null) {
+            return null;
+        }
+
+        Map<ByteArrayWrapper, byte[]> copyOfCodes = new HashMap<>();
+        for (Entry<ByteArrayWrapper, byte[]> codeEntry : originalCodes.entrySet()) {
+
+            ByteArrayWrapper keyWrapper = null;
+            if (codeEntry.getKey() != null) {
+                byte[] keyBytes = codeEntry.getKey().getData();
+                keyWrapper = new ByteArrayWrapper(Arrays.copyOf(keyBytes, keyBytes.length));
+            }
+
+            byte[] copyOfValue =
+                    (codeEntry.getValue() == null)
+                            ? null
+                            : Arrays.copyOf(codeEntry.getValue(), codeEntry.getValue().length);
+            copyOfCodes.put(keyWrapper, copyOfValue);
+        }
+        return copyOfCodes;
     }
 }

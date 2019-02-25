@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.config;
 
 import java.io.IOException;
@@ -30,7 +7,7 @@ import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgConsensus;
 
@@ -40,7 +17,7 @@ public final class CfgConsensusPow extends CfgConsensus {
 
     CfgConsensusPow() {
         this.mining = false;
-        this.minerAddress = Address.ZERO_ADDRESS().toString();
+        this.minerAddress = AionAddress.ZERO_ADDRESS().toString();
         this.cpuMineThreads =
                 (byte)
                         (Runtime.getRuntime().availableProcessors()

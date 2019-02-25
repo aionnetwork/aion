@@ -1,34 +1,16 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.api.server.types;
 
+import static org.aion.mcf.vm.Constants.NRG_CREATE_CONTRACT_DEFAULT;
+import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
+
 import java.math.BigInteger;
-import org.aion.api.server.nrgprice.NrgOracle;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.base.util.TypeConverter;
+import org.aion.base.vm.VirtualMachineSpecs;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.api.interfaces.Address;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
@@ -38,6 +20,7 @@ public final class ArgTxCall {
     private final Address from;
     private final Address to;
     private final byte[] data;
+    private final byte type;
     private final BigInteger nonce;
     private final BigInteger value;
     private final long nrg;
@@ -56,6 +39,26 @@ public final class ArgTxCall {
             final BigInteger _value,
             final long _nrg,
             final long _nrgPrice) {
+        this(
+                _from,
+                _to,
+                _data,
+                _nonce,
+                _value,
+                _nrg,
+                _nrgPrice,
+                VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE);
+    }
+
+    public ArgTxCall(
+            final Address _from,
+            final Address _to,
+            final byte[] _data,
+            final BigInteger _nonce,
+            final BigInteger _value,
+            final long _nrg,
+            final long _nrgPrice,
+            final byte _type) {
         this.from = _from;
         this.to = _to;
         this.data = _data == null ? ByteUtil.EMPTY_BYTE_ARRAY : _data;
@@ -63,14 +66,16 @@ public final class ArgTxCall {
         this.value = _value == null ? BigInteger.ZERO : _value;
         this.nrg = _nrg;
         this.nrgPrice = _nrgPrice;
+        this.type = _type;
     }
 
-    public static ArgTxCall fromJSON(
-            final JSONObject _jsonObj, NrgOracle oracle, long defaultNrgLimit) {
+    public static ArgTxCall fromJSON(final JSONObject _jsonObj, long defaultNrgPrice) {
         try {
-            Address from = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
-            Address to = Address.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
+            Address from =
+                    AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("from", "")));
+            Address to = AionAddress.wrap(ByteUtil.hexStringToBytes(_jsonObj.optString("to", "")));
             byte[] data = ByteUtil.hexStringToBytes(_jsonObj.optString("data", ""));
+            byte type = ByteUtil.hexStringToBytes(_jsonObj.optString("type", "0x1"))[0];
 
             String nonceStr = _jsonObj.optString("nonce", "0x0");
             String valueStr = _jsonObj.optString("value", "0x0");
@@ -86,22 +91,21 @@ public final class ArgTxCall {
             String nrgStr = _jsonObj.optString("gas", null);
             String nrgPriceStr = _jsonObj.optString("gasPrice", null);
 
-            long nrg = defaultNrgLimit;
+            long nrg = to.isEmptyAddress() ? NRG_CREATE_CONTRACT_DEFAULT : NRG_TRANSACTION_DEFAULT;
             if (nrgStr != null)
                 nrg =
                         nrgStr.contains("0x")
                                 ? TypeConverter.StringHexToBigInteger(nrgStr).longValue()
                                 : TypeConverter.StringNumberAsBigInt(nrgStr).longValue();
 
-            long nrgPrice;
+            long nrgPrice = defaultNrgPrice;
             if (nrgPriceStr != null)
                 nrgPrice =
-                    nrgPriceStr.contains("0x")
+                        nrgPriceStr.contains("0x")
                                 ? TypeConverter.StringHexToBigInteger(nrgPriceStr).longValue()
                                 : TypeConverter.StringNumberAsBigInt(nrgPriceStr).longValue();
-            else nrgPrice = oracle.getNrgPrice();
 
-            return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice);
+            return new ArgTxCall(from, to, data, nonce, value, nrg, nrgPrice, type);
         } catch (Exception e) {
             LOG.debug("Failed to parse transaction call object from input parameters", e);
             return null;
@@ -134,5 +138,9 @@ public final class ArgTxCall {
 
     public long getNrgPrice() {
         return nrgPrice;
+    }
+
+    public byte getType() {
+        return type;
     }
 }

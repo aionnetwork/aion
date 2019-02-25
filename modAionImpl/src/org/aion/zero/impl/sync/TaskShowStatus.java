@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.sync;
 
 import java.util.ArrayList;
@@ -123,7 +100,7 @@ final class TaskShowStatus implements Runnable {
             }
 
             if (showStatistics.contains(StatsType.RESPONSES)) {
-                requestedInfo = dumpResponseInfo();
+                requestedInfo = stats.dumpResponseStats();
                 if (!requestedInfo.isEmpty()) {
                     p2pLOG.info(requestedInfo);
                 }
@@ -160,7 +137,7 @@ final class TaskShowStatus implements Runnable {
             if (!requestedInfo.isEmpty()) {
                 p2pLOG.debug(requestedInfo);
             }
-            requestedInfo = dumpResponseInfo();
+            requestedInfo = stats.dumpResponseStats();
             if (!requestedInfo.isEmpty()) {
                 p2pLOG.debug(requestedInfo);
             }
@@ -228,19 +205,29 @@ final class TaskShowStatus implements Runnable {
      * @return log stream with peers statistical data on seeds
      */
     private String dumpTopSeedsInfo() {
-        Map<String, Long> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
+        Map<String, Integer> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
 
         StringBuilder sb = new StringBuilder();
 
         if (!totalBlocksByPeer.isEmpty()) {
 
-            sb.append("\n========== sync-top-seeds ==========\n");
-            sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
-            sb.append("------------------------------------\n");
-
+            sb.append(
+                    "\n============================= sync-top-seeds ==============================\n");
+            sb.append(
+                    String.format(
+                            "   %9s %20s %19s %19s\n",
+                            "peer", "total blocks", "imported blocks", "stored blocks"));
+            sb.append(
+                    "---------------------------------------------------------------------------\n");
             totalBlocksByPeer.forEach(
                     (nodeId, totalBlocks) ->
-                            sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
+                            sb.append(
+                                    String.format(
+                                            "   id:%6s %20s %19s %19s\n",
+                                            nodeId,
+                                            totalBlocks,
+                                            this.stats.getImportedBlocksByPeer(nodeId),
+                                            this.stats.getStoredBlocksByPeer(nodeId))));
         }
 
         return sb.toString();
@@ -253,7 +240,7 @@ final class TaskShowStatus implements Runnable {
      * @return log stream with peers statistical data on leeches
      */
     private String dumpTopLeechesInfo() {
-        Map<String, Long> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
+        Map<String, Integer> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
 
         StringBuilder sb = new StringBuilder();
 
@@ -266,42 +253,6 @@ final class TaskShowStatus implements Runnable {
             totalBlockReqByPeer.forEach(
                     (nodeId, totalBlocks) ->
                             sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * Obtain log stream containing statistics about the average response time between sending
-     * status requests out and that peer responding shown for each peer and averaged for all peers.
-     *
-     * @return log stream with requests statistical data
-     */
-    private String dumpResponseInfo() {
-        Map<String, Double> avgResponseTimeByPeers = this.stats.getAverageResponseTimeByPeers();
-
-        StringBuilder sb = new StringBuilder();
-
-        if (!avgResponseTimeByPeers.isEmpty()) {
-
-            // value in milliseconds
-            double overallAvgResponse = this.stats.getOverallAveragePeerResponseTime() / 1_000_000;
-
-            sb.append("\n====== sync-responses-by-peer ======\n");
-            sb.append(String.format("   %9s %20s\n", "peer", "avg. response"));
-            sb.append("------------------------------------\n");
-
-            sb.append(
-                    String.format(
-                            "   «overall» %17s ms\n", String.format("%.0f", overallAvgResponse)));
-
-            avgResponseTimeByPeers.forEach(
-                    (nodeId, avgResponse) ->
-                            sb.append(
-                                    String.format(
-                                            "   id:%6s %17s ms\n",
-                                            nodeId,
-                                            String.format("%.0f", avgResponse / 1_000_000))));
         }
 
         return sb.toString();

@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.p2p.impl.comm;
 
 import static org.junit.Assert.assertEquals;
@@ -105,7 +82,15 @@ public class NodeMgrTest {
 
         byte[] rHash = new byte[32];
         r.nextBytes(rHash);
-        node.updateStatus(r.nextLong(), rHash, BigInteger.valueOf(r.nextLong()));
+
+        node.updateStatus(
+                r.nextLong(),
+                rHash,
+                BigInteger.valueOf(r.nextLong()),
+                (byte) r.nextInt(),
+                (short) r.nextInt(),
+                r.nextInt(),
+                r.nextInt());
         addNodetoOutbound(node, UUID.randomUUID());
         nMgr.movePeerToActive(node.getIdHash(), "outbound");
     }
@@ -526,7 +511,14 @@ public class NodeMgrTest {
         INode node = nMgr.allocNode(ip1, 1);
         byte[] rHash = new byte[32];
         r.nextBytes(rHash);
-        node.updateStatus(r.nextLong(), rHash, BigInteger.ONE);
+        node.updateStatus(
+                r.nextLong(),
+                rHash,
+                BigInteger.ONE,
+                (byte) r.nextInt(),
+                (short) r.nextInt(),
+                r.nextInt(),
+                r.nextInt());
         addNodetoOutbound(node, UUID.randomUUID());
         nMgr.movePeerToActive(node.getIdHash(), "outbound");
 
@@ -589,7 +581,14 @@ public class NodeMgrTest {
                         n.setChannel(ch);
                         byte[] rHash = new byte[32];
                         r.nextBytes(rHash);
-                        n.updateStatus(r.nextLong(), rHash, BigInteger.valueOf(r.nextLong()));
+                        n.updateStatus(
+                                r.nextLong(),
+                                rHash,
+                                BigInteger.valueOf(r.nextLong()),
+                                (byte) r.nextInt(),
+                                (short) r.nextInt(),
+                                r.nextInt(),
+                                r.nextInt());
                         return n;
                     }
                 };

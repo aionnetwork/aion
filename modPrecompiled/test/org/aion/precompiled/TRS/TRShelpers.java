@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.TRS;
 
 import static junit.framework.TestCase.fail;
@@ -39,20 +16,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.contracts.TRS.TRSstateContract;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.types.AionBlock;
@@ -64,15 +42,15 @@ class TRShelpers {
     static final BigInteger DEFAULT_BALANCE = BigInteger.TEN;
     private IAionBlockchain blockchain = StandaloneBlockchain.inst();
     Address AION =
-            Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
-    IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> repo;
+            AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+    IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
     List<Address> tempAddrs;
     ECKey senderKey;
     long COST = 21000L;
 
     // Returns a new account with initial balance balance that exists in the repo.
     Address getNewExistentAccount(BigInteger balance) {
-        Address acct = Address.wrap(ECKeyFac.inst().create().getAddress());
+        Address acct = AionAddress.wrap(ECKeyFac.inst().create().getAddress());
         acct.toBytes()[0] = (byte) 0xA0;
         repo.createAccount(acct);
         repo.addBalance(acct, balance);
@@ -107,11 +85,11 @@ class TRShelpers {
 
         byte[] input = getCreateInput(isTest, isDirectDeposit, periods, percent, precision);
         TRSstateContract trs = new TRSstateContract(repo, owner, blockchain);
-        ExecutionResult res = trs.execute(input, COST);
-        if (!res.getResultCode().equals(ResultCode.SUCCESS)) {
+        PrecompiledTransactionResult res = trs.execute(input, COST);
+        if (!res.getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
             fail("Unable to create contract!");
         }
-        Address contract = new Address(res.getOutput());
+        Address contract = new AionAddress(res.getReturnData());
         tempAddrs.add(contract);
         repo.incrementNonce(owner);
         repo.flush();
@@ -134,7 +112,7 @@ class TRShelpers {
         if (!newTRSuseContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(PrecompiledResultCode.SUCCESS)) {
             fail(
                     "Owner failed to deposit 1 token into contract! Owner balance is: "
                             + repo.getBalance(owner));
@@ -143,7 +121,7 @@ class TRShelpers {
         if (!newTRSstateContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(PrecompiledResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
         return contract;
@@ -166,7 +144,7 @@ class TRShelpers {
         if (!newTRSuseContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(PrecompiledResultCode.SUCCESS)) {
             fail(
                     "Owner failed to deposit 1 token into contract! Owner balance is: "
                             + repo.getBalance(owner));
@@ -175,14 +153,14 @@ class TRShelpers {
         if (!newTRSstateContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(PrecompiledResultCode.SUCCESS)) {
             fail("Failed to lock contract!");
         }
         input = getStartInput(contract);
         if (!newTRSstateContract(owner)
                 .execute(input, COST)
                 .getResultCode()
-                .equals(ResultCode.SUCCESS)) {
+                .equals(PrecompiledResultCode.SUCCESS)) {
             fail("Failed to start contract!");
         }
         return contract;
@@ -192,11 +170,11 @@ class TRShelpers {
     void lockAndStartContract(Address contract, Address owner) {
         byte[] input = getLockInput(contract);
         AbstractTRS trs = newTRSstateContract(owner);
-        if (!trs.execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
+        if (!trs.execute(input, COST).getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
             Assert.fail("Unable to lock contract!");
         }
         input = getStartInput(contract);
-        if (!trs.execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
+        if (!trs.execute(input, COST).getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
             Assert.fail("Unable to start contract!");
         }
     }
@@ -221,7 +199,7 @@ class TRShelpers {
             if (!newTRSuseContract(acct)
                     .execute(input, COST)
                     .getResultCode()
-                    .equals(ResultCode.SUCCESS)) {
+                    .equals(PrecompiledResultCode.SUCCESS)) {
                 Assert.fail("Depositor #" + i + " failed to deposit!");
             }
         }
@@ -244,7 +222,7 @@ class TRShelpers {
         for (int i = 0; i < numDepositors; i++) {
             Address acct = getNewExistentAccount(BigInteger.ZERO);
             byte[] input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
-            if (!trs.execute(input, COST).getResultCode().equals(ResultCode.SUCCESS)) {
+            if (!trs.execute(input, COST).getResultCode().equals(PrecompiledResultCode.SUCCESS)) {
                 Assert.fail("Depositor #" + i + " failed to deposit!");
             }
         }
@@ -503,7 +481,7 @@ class TRShelpers {
         for (int i = 0; i < numDepositors; i++) {
             Address acc = getNewExistentAccount(deposits);
             assertEquals(
-                    ResultCode.SUCCESS,
+                    PrecompiledResultCode.SUCCESS,
                     newTRSuseContract(acc).execute(input, COST).getResultCode());
         }
         repo.addBalance(contract, bonus);
@@ -542,7 +520,7 @@ class TRShelpers {
     byte[] getLockInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = (byte) 0x1;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
@@ -550,7 +528,7 @@ class TRShelpers {
     byte[] getStartInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = (byte) 0x2;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
@@ -562,7 +540,7 @@ class TRShelpers {
         }
         byte[] input = new byte[161];
         input[0] = 0x0;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         System.arraycopy(amtBytes, 0, input, 161 - amtBytes.length, amtBytes.length);
         return input;
     }
@@ -575,8 +553,8 @@ class TRShelpers {
         }
         byte[] input = new byte[193];
         input[0] = 0x5;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        System.arraycopy(beneficiary.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
+        System.arraycopy(beneficiary.toBytes(), 0, input, 33, Address.SIZE);
         System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
         return input;
     }
@@ -585,7 +563,7 @@ class TRShelpers {
     byte[] getWithdrawInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = (byte) 0x1;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
@@ -597,8 +575,8 @@ class TRShelpers {
         }
         byte[] input = new byte[193];
         input[0] = 0x4;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        System.arraycopy(account.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
+        System.arraycopy(account.toBytes(), 0, input, 33, Address.SIZE);
         System.arraycopy(amtBytes, 0, input, 193 - amtBytes.length, amtBytes.length);
         return input;
     }
@@ -608,7 +586,7 @@ class TRShelpers {
     byte[] getIsLiveInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x0;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
@@ -616,7 +594,7 @@ class TRShelpers {
     byte[] getIsLockedInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x1;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
@@ -625,7 +603,7 @@ class TRShelpers {
     byte[] getIsDirDepoEnabledInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x2;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
@@ -633,7 +611,7 @@ class TRShelpers {
     byte[] getPeriodInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x3;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
@@ -650,7 +628,7 @@ class TRShelpers {
     byte[] getBulkWithdrawInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x3;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
@@ -658,7 +636,7 @@ class TRShelpers {
     byte[] getOpenFundsInput(Address contract) {
         byte[] input = new byte[33];
         input[0] = 0x3;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         return input;
     }
 
@@ -667,7 +645,7 @@ class TRShelpers {
     byte[] getAvailableForWithdrawalAtInput(Address contract, long timestamp) {
         byte[] input = new byte[41];
         input[0] = 0x5;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(timestamp);
         byte[] buf = buffer.array();
@@ -679,7 +657,7 @@ class TRShelpers {
     byte[] getAddExtraInput(Address contract, BigInteger amount) {
         byte[] input = new byte[161];
         input[0] = 0x6;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         byte[] amtBytes = amount.toByteArray();
         if (amtBytes.length > 128) {
             fail();
@@ -692,7 +670,7 @@ class TRShelpers {
     byte[] getAddExtraMaxInput(Address contract) {
         byte[] input = new byte[161];
         input[0] = 0x6;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         for (int i = 33; i < 161; i++) {
             input[i] = (byte) 0xFF;
         }
@@ -713,10 +691,10 @@ class TRShelpers {
 
         byte[] input = new byte[arrLen];
         input[0] = 0x2;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         int index = 33;
         for (int i = 0; i < len; i++) {
-            System.arraycopy(beneficiaries[i].toBytes(), 0, input, index, Address.ADDRESS_LEN);
+            System.arraycopy(beneficiaries[i].toBytes(), 0, input, index, Address.SIZE);
             index += 32 + 128;
             byte[] amtBytes = amounts[i].toByteArray();
             if (amtBytes.length > 128) {
@@ -732,8 +710,8 @@ class TRShelpers {
     byte[] getMaxRefundInput(Address contract, Address account) {
         byte[] input = new byte[193];
         input[0] = 0x4;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
-        System.arraycopy(account.toBytes(), 0, input, 33, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
+        System.arraycopy(account.toBytes(), 0, input, 33, Address.SIZE);
         for (int i = 65; i < 193; i++) {
             input[i] = (byte) 0xFF;
         }
@@ -745,7 +723,7 @@ class TRShelpers {
     byte[] getMaxDepositInput(Address contract) {
         byte[] input = new byte[161];
         input[0] = 0x0;
-        System.arraycopy(contract.toBytes(), 0, input, 1, Address.ADDRESS_LEN);
+        System.arraycopy(contract.toBytes(), 0, input, 1, Address.SIZE);
         for (int i = 33; i < 161; i++) {
             input[i] = (byte) 0xFF;
         }
@@ -754,7 +732,7 @@ class TRShelpers {
 
     // Makes input for numBeneficiaries beneficiaries who each receive a deposit amount deposits.
     byte[] makeBulkDepositForInput(Address contract, int numBeneficiaries, BigInteger deposits) {
-        Address[] beneficiaries = new Address[numBeneficiaries];
+        Address[] beneficiaries = new AionAddress[numBeneficiaries];
         BigInteger[] amounts = new BigInteger[numBeneficiaries];
         for (int i = 0; i < numBeneficiaries; i++) {
             beneficiaries[i] = getNewExistentAccount(BigInteger.ZERO);
@@ -767,7 +745,7 @@ class TRShelpers {
     byte[] makeBulkDepositForInputwithSelf(
             Address contract, Address self, int numOthers, BigInteger deposits) {
 
-        Address[] beneficiaries = new Address[numOthers + 1];
+        Address[] beneficiaries = new AionAddress[numOthers + 1];
         BigInteger[] amounts = new BigInteger[numOthers + 1];
         for (int i = 0; i < numOthers; i++) {
             beneficiaries[i] = getNewExistentAccount(BigInteger.ZERO);
@@ -803,7 +781,7 @@ class TRShelpers {
             return null;
         }
         head[0] = (byte) 0xA0;
-        return new Address(head);
+        return new AionAddress(head);
     }
 
     // Returns the next account in the linked list after current, or null if no next.
@@ -814,7 +792,7 @@ class TRShelpers {
             return null;
         }
         next[0] = (byte) 0xA0;
-        return new Address(next);
+        return new AionAddress(next);
     }
 
     // Returns the previous account in the linked list prior to current, or null if no previous.
@@ -824,7 +802,7 @@ class TRShelpers {
             return null;
         }
         prev[0] = (byte) 0xA0;
-        return new Address(prev);
+        return new AionAddress(prev);
     }
 
     // Checks that each account is paid out correctly when they withdraw in a non-final period.
@@ -851,7 +829,7 @@ class TRShelpers {
 
             byte[] input = getWithdrawInput(contract);
             assertEquals(
-                    ResultCode.SUCCESS,
+                    PrecompiledResultCode.SUCCESS,
                     newTRSuseContract(acc).execute(input, COST).getResultCode());
             assertEquals(amt.add(extraShare), repo.getBalance(acc));
         }
@@ -879,7 +857,7 @@ class TRShelpers {
         for (Address acc : contributors) {
             byte[] input = getWithdrawInput(contract);
             assertEquals(
-                    ResultCode.SUCCESS,
+                    PrecompiledResultCode.SUCCESS,
                     newTRSuseContract(acc).execute(input, COST).getResultCode());
             assertEquals(collected, repo.getBalance(acc));
         }
@@ -915,9 +893,9 @@ class TRShelpers {
         byte[] input = getAvailableForWithdrawalAtInput(contract, timestamp);
         Set<Address> contributors = getAllDepositors(trs, contract);
         for (Address acc : contributors) {
-            ExecutionResult res = newTRSqueryContract(acc).execute(input, COST);
-            assertEquals(ResultCode.SUCCESS, res.getResultCode());
-            BigDecimal frac = new BigDecimal(new BigInteger(res.getOutput())).movePointLeft(18);
+            PrecompiledTransactionResult res = newTRSqueryContract(acc).execute(input, COST);
+            assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+            BigDecimal frac = new BigDecimal(new BigInteger(res.getReturnData())).movePointLeft(18);
             assertEquals(expectedFraction, frac);
         }
     }
@@ -944,12 +922,12 @@ class TRShelpers {
         return OUT;
     }
 
-    // Returns a new IDataWord that wraps data. Here so we can switch types easy if needed.
-    IDataWord newIDataWord(byte[] data) {
+    // Returns a new ByteArrayWrapper that wraps data. Here so we can switch types easy if needed.
+    ByteArrayWrapper newDataWordStub(byte[] data) {
         if (data.length == DataWord.BYTES) {
-            return new DataWord(data);
+            return new DataWord(data).toWrapper();
         } else if (data.length == DoubleDataWord.BYTES) {
-            return new DoubleDataWord(data);
+            return new DoubleDataWord(data).toWrapper();
         } else {
             fail();
         }

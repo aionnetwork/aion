@@ -1,39 +1,16 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.mcf.db;
 
 import static org.aion.base.util.Utils.dummy;
 
 import java.io.Closeable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.db.Flushable;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.FastByteComparisons;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
@@ -60,7 +37,7 @@ public class TransactionStore<
         lock.writeLock().lock();
 
         try {
-            byte[] txHash = tx.getReceipt().getTransaction().getHash();
+            byte[] txHash = tx.getReceipt().getTransaction().getTransactionHash();
 
             List<INFO> existingInfos = null;
             if (lastSavedTxHash.put(new ByteArrayWrapper(txHash), dummy) != null
@@ -72,7 +49,7 @@ public class TransactionStore<
                 existingInfos = new ArrayList<>();
             } else {
                 for (AbstractTxInfo<TXR, TX> info : existingInfos) {
-                    if (FastByteComparisons.equal(info.getBlockHash(), tx.getBlockHash())) {
+                    if (Arrays.equals(info.getBlockHash(), tx.getBlockHash())) {
                         return false;
                     }
                 }
@@ -96,7 +73,7 @@ public class TransactionStore<
         try {
             List<INFO> existingInfos = source.get(txHash);
             for (INFO info : existingInfos) {
-                if (FastByteComparisons.equal(info.getBlockHash(), blockHash)) {
+                if (Arrays.equals(info.getBlockHash(), blockHash)) {
                     return info;
                 }
             }

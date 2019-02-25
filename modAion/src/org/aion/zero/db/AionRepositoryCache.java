@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.db;
 
 import java.util.HashMap;
@@ -30,12 +7,12 @@ import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepositoryCache;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.vm.api.interfaces.Address;
 
 public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase<?, ?>> {
 
@@ -51,12 +28,75 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     /**
-     * @implNote To maintain intended functionality this method does not call the parent's {@code
-     *     flush()} method. The changes are propagated to the parent through calling the parent's
-     *     {@code updateBatch()} method.
+     * Flushes its state to other in such a manner that other receives sufficiently deep copies of
+     * its {@link AccountState} and {@link IContractDetails} objects.
+     *
+     * If {@code clearStateAfterFlush == true} then this repository's state will be completely
+     * cleared after this method returns, otherwise it will retain all of its state.
+     *
+     * A "sufficiently deep copy" is an imperfect deep copy (some original object references get
+     * leaked) but such that for all conceivable use cases these imperfections should go unnoticed.
+     * This is because doing something like copying the underlying data store makes no sense, both
+     * repositories should be accessing it, and there are some other cases where objects are defined
+     * as type {@link Object} and are cast to their expected types and copied, but will not be copied
+     * if they are not in fact their expected types. This is something to be aware of. Most of the
+     * imperfection results from the inability to copy
+     * {@link org.aion.base.db.IByteArrayKeyValueStore} and {@link org.aion.mcf.trie.SecureTrie}
+     * perfectly or at all (in the case of the former), for the above reasons.
+     *
+     * @param other The repository that will consume the state of this repository.
+     * @param clearStateAfterFlush True if this repository should clear its state after flushing.
      */
+    public void flushCopiesTo(IRepository other, boolean clearStateAfterFlush) {
+        fullyWriteLock();
+        try {
+            // determine which accounts should get stored
+            HashMap<Address, AccountState> cleanedCacheAccounts = new HashMap<>();
+            for (Map.Entry<Address, AccountState> entry : cachedAccounts.entrySet()) {
+                AccountState account = entry.getValue().copy();
+                if (account != null && account.isDirty() && account.isEmpty()) {
+                    // ignore contract state for empty accounts at storage
+                    cachedDetails.remove(entry.getKey());
+                } else {
+                    cleanedCacheAccounts.put(new AionAddress(entry.getKey().toBytes()), account);
+                }
+            }
+            // determine which contracts should get stored
+            for (Map.Entry<Address, IContractDetails> entry : cachedDetails.entrySet()) {
+                IContractDetails ctd = entry.getValue().copy();
+                // TODO: this functionality will be improved with the switch to a
+                // different ContractDetails implementation
+                if (ctd != null && ctd instanceof ContractDetailsCacheImpl) {
+                    ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctd;
+                    contractDetailsCache.commit();
+
+                    if (contractDetailsCache.origContract == null
+                        && other.hasContractDetails(entry.getKey())) {
+                        // in forked block the contract account might not exist thus
+                        // it is created without
+                        // origin, but on the main chain details can contain data
+                        // which should be merged
+                        // into a single storage trie so both branches with
+                        // different stateRoots are valid
+                        contractDetailsCache.origContract =
+                            other.getContractDetails(entry.getKey()).copy();
+                        contractDetailsCache.commit();
+                    }
+                }
+            }
+
+            other.updateBatch(cleanedCacheAccounts, cachedDetails);
+            if (clearStateAfterFlush) {
+                cachedAccounts.clear();
+                cachedDetails.clear();
+            }
+        } finally {
+            fullyWriteUnlock();
+        }
+    }
+
     @Override
-    public void flush() {
+    public void flushTo(IRepository other, boolean clearStateAfterFlush) {
         fullyWriteLock();
         try {
             // determine which accounts should get stored
@@ -71,8 +111,8 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                 }
             }
             // determine which contracts should get stored
-            for (Map.Entry<Address, IContractDetails<IDataWord>> entry : cachedDetails.entrySet()) {
-                IContractDetails<IDataWord> ctd = entry.getValue();
+            for (Map.Entry<Address, IContractDetails> entry : cachedDetails.entrySet()) {
+                IContractDetails ctd = entry.getValue();
                 // TODO: this functionality will be improved with the switch to a
                 // different ContractDetails implementation
                 if (ctd != null && ctd instanceof ContractDetailsCacheImpl) {
@@ -80,7 +120,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                     contractDetailsCache.commit();
 
                     if (contractDetailsCache.origContract == null
-                            && repository.hasContractDetails(entry.getKey())) {
+                        && other.hasContractDetails(entry.getKey())) {
                         // in forked block the contract account might not exist thus
                         // it is created without
                         // origin, but on the main chain details can contain data
@@ -88,24 +128,35 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                         // into a single storage trie so both branches with
                         // different stateRoots are valid
                         contractDetailsCache.origContract =
-                                repository.getContractDetails(entry.getKey());
+                            other.getContractDetails(entry.getKey());
                         contractDetailsCache.commit();
                     }
                 }
             }
 
-            repository.updateBatch(cleanedCacheAccounts, cachedDetails);
-            cachedAccounts.clear();
-            cachedDetails.clear();
+            other.updateBatch(cleanedCacheAccounts, cachedDetails);
+            if (clearStateAfterFlush) {
+                cachedAccounts.clear();
+                cachedDetails.clear();
+            }
         } finally {
             fullyWriteUnlock();
         }
     }
 
+    /**
+     * @implNote To maintain intended functionality this method does not call the parent's {@code
+     *     flush()} method. The changes are propagated to the parent through calling the parent's
+     *     {@code updateBatch()} method.
+     */
+    @Override
+    public void flush() {
+        flushTo(repository, true);
+    }
+
     @Override
     public void updateBatch(
-            Map<Address, AccountState> accounts,
-            final Map<Address, IContractDetails<IDataWord>> details) {
+            Map<Address, AccountState> accounts, final Map<Address, IContractDetails> details) {
         fullyWriteLock();
         try {
 
@@ -113,9 +164,9 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                 this.cachedAccounts.put(accEntry.getKey(), accEntry.getValue());
             }
 
-            for (Map.Entry<Address, IContractDetails<IDataWord>> ctdEntry : details.entrySet()) {
+            for (Map.Entry<Address, IContractDetails> ctdEntry : details.entrySet()) {
                 ContractDetailsCacheImpl contractDetailsCache =
-                        (ContractDetailsCacheImpl) ctdEntry.getValue();
+                        (ContractDetailsCacheImpl) ctdEntry.getValue().copy();
                 if (contractDetailsCache.origContract != null
                         && !(contractDetailsCache.origContract
                                 instanceof AionContractDetailsImpl)) {

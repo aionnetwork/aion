@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.zero.impl;
 
 import java.math.BigInteger;
@@ -34,7 +12,7 @@ import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.Hash256;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
@@ -48,6 +26,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
@@ -55,10 +34,13 @@ import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
 import org.aion.zero.impl.valid.EnergyConsumedRule;
 import org.aion.zero.types.A0BlockHeader;
+import org.aion.zero.types.AionTransaction;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Used mainly for debugging and testing purposes, provides codepaths for easy setup, into standard
@@ -133,6 +115,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
     public static class Builder {
         private A0BCConfig a0Config;
 
+        private boolean enableAvm = false;
+
         // note that this parameter is usually not injected into the blockchain
         // it remains here so we can replace the default validator
         private ChainConfiguration configuration;
@@ -190,6 +174,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             return this;
         }
 
+        public Builder withAvmEnabled() {
+            this.enableAvm = true;
+            return this;
+        }
+
         public Builder withChainConfig(ChainConfiguration chainConfig) {
             if (this.validatorType != null) {
                 throw new IllegalArgumentException("cannot set chainConfig after setting type");
@@ -237,7 +226,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                             ? new A0BCConfig() {
                                 @Override
                                 public Address getCoinbase() {
-                                    return Address.ZERO_ADDRESS();
+                                    return AionAddress.ZERO_ADDRESS();
                                 }
 
                                 @Override
@@ -252,7 +241,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
                                 @Override
                                 public Address getMinerCoinbase() {
-                                    return Address.ZERO_ADDRESS();
+                                    return AionAddress.ZERO_ADDRESS();
                                 }
 
                                 @Override
@@ -268,6 +257,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                                     .getConstants()
                                                     .getEnergyDivisorLimitLong(),
                                             10_000_000L);
+                                }
+
+                                @Override
+                                public boolean isAvmEnabled() {
+                                    return enableAvm;
                                 }
                             }
                             : this.a0Config;
@@ -315,7 +309,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             AionGenesis.Builder genesisBuilder = new AionGenesis.Builder();
             for (Map.Entry<ByteArrayWrapper, AccountState> acc : this.initialState.entrySet()) {
-                genesisBuilder.addPreminedAccount(Address.wrap(acc.getKey()), acc.getValue());
+                genesisBuilder.addPreminedAccount(AionAddress.wrap(acc.getKey()), acc.getValue());
             }
 
             AionGenesis genesis;
@@ -330,10 +324,11 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             track.createAccount(ContractFactory.getTotalCurrencyContractAddress());
 
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
+                // assumes only additions can be made in the genesis
                 track.addStorageRow(
                         ContractFactory.getTotalCurrencyContractAddress(),
-                        new DataWord(key.getKey()),
-                        new DataWord(key.getValue()));
+                        new DataWord(key.getKey()).toWrapper(),
+                        new ByteArrayWrapper(new DataWord(key.getValue()).getNoLeadZeroesData()));
             }
 
             for (Address key : genesis.getPremine().keySet()) {
@@ -386,6 +381,22 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             assert (getCacheTD().equals(tdForHash));
         }
         return result;
+    }
+
+    // TEMPORARY: here to support the ConsensusTest
+    public synchronized Pair<ImportResult, AionBlockSummary> tryToConnectAndFetchSummary(
+            AionBlock block) {
+        return tryToConnectAndFetchSummary(block, System.currentTimeMillis() / 1000, true);
+    }
+
+    /** Uses the createNewBlockInternal functionality to avoid time-stamping issues. */
+    public AionBlock createBlock(
+            AionBlock parent,
+            List<AionTransaction> txs,
+            boolean waitUntilBlockTime,
+            long currTimeSeconds) {
+
+        return createNewBlockInternal(parent, txs, waitUntilBlockTime, currTimeSeconds).block;
     }
 
     /**

@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.valid;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -31,11 +8,11 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.List;
-import org.aion.base.type.Address;
-import org.aion.base.util.ByteUtil;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.blockchain.valid.IValidRule.RuleError;
 import org.aion.mcf.core.IDifficultyCalculator;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
@@ -66,7 +43,7 @@ public class DifficultyRuleTest {
                         (byte) 0x01,
                         1,
                         new byte[32],
-                        Address.ZERO_ADDRESS(),
+                        AionAddress.ZERO_ADDRESS(),
                         new byte[256],
                         ByteUtil.intToBytes(1),
                         null,
@@ -80,7 +57,7 @@ public class DifficultyRuleTest {
                         (byte) 0x01,
                         2,
                         new byte[32],
-                        Address.ZERO_ADDRESS(),
+                        AionAddress.ZERO_ADDRESS(),
                         new byte[256],
                         ByteUtil.intToBytes(1),
                         null,
@@ -103,7 +80,7 @@ public class DifficultyRuleTest {
                         (byte) 0x01,
                         3,
                         new byte[32],
-                        Address.ZERO_ADDRESS(),
+                        AionAddress.ZERO_ADDRESS(),
                         new byte[256],
                         new byte[17],
                         null,
@@ -118,8 +95,7 @@ public class DifficultyRuleTest {
         // generate output
         boolean actual =
                 new AionDifficultyRule(mockChainCfg)
-                        .validate(
-                            grandParentHeader, parentHeader, currentHeader, errors);
+                        .validate(grandParentHeader, parentHeader, currentHeader, errors);
 
         // test output
         assertThat(actual).isFalse();
@@ -137,7 +113,7 @@ public class DifficultyRuleTest {
                         (byte) 0x01,
                         3,
                         new byte[32],
-                        Address.ZERO_ADDRESS(),
+                        AionAddress.ZERO_ADDRESS(),
                         new byte[256],
                         ByteUtil.bigIntegerToBytes(BigInteger.ONE, 16),
                         null,
@@ -156,8 +132,7 @@ public class DifficultyRuleTest {
         // generate output
         boolean actual =
                 new AionDifficultyRule(mockChainCfg)
-                        .validate(
-                            grandParentHeader, parentHeader, currentHeader, errors);
+                        .validate(grandParentHeader, parentHeader, currentHeader, errors);
 
         // test output
         assertThat(actual).isTrue();

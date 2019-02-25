@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.mcf.ds;
 
 import java.io.Closeable;
@@ -60,10 +38,13 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
         src.put(key, bytes);
     }
 
-    /** @apiNote A null value is interpreted as a delete of the key. */
+    /** @apiNote Will throw an exception if the given value is {@code null}. */
     public void putToBatch(byte[] key, V value) {
-        byte[] bytes = value == null ? null : serializer.serialize(value);
-        src.putToBatch(key, bytes);
+        src.putToBatch(key, serializer.serialize(value));
+    }
+
+    public void deleteInBatch(byte[] key) {
+        src.deleteInBatch(key);
     }
 
     public void flushBatch() {
@@ -75,18 +56,12 @@ public class ObjectDataSource<V> implements Flushable, Closeable {
     }
 
     public V get(byte[] key) {
-
-        // Fetch the results from cache or database. Return null if doesn't
-        // exist.
+        // Fetch the results from cache or database. Return null if doesn't exist.
         Optional<byte[]> val = src.get(key);
         return val.map(serializer::deserialize).orElse(null);
     }
 
-    /**
-     * Returns the underlying cache source.
-     *
-     * @return
-     */
+    /** Returns the underlying cache source. */
     protected IByteArrayKeyValueDatabase getSrc() {
         return src;
     }

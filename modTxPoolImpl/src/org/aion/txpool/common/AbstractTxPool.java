@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.txpool.common;
 
 import java.math.BigInteger;
@@ -40,13 +18,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.aion.base.Constant;
-import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
+import org.aion.vm.api.interfaces.Address;
 
 public abstract class AbstractTxPool<TX extends ITransaction> {
 
@@ -187,8 +165,8 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                             Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>> nonceMap;
                             ITransaction replacedTx = null;
                             synchronized (accMap) {
-                                if (accMap.get(tx.getFrom()) != null) {
-                                    nonceMap = accMap.get(tx.getFrom());
+                                if (accMap.get(tx.getSenderAddress()) != null) {
+                                    nonceMap = accMap.get(tx.getSenderAddress());
                                 } else {
                                     nonceMap = Collections.synchronizedSortedMap(new TreeMap<>());
                                 }
@@ -197,7 +175,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                 BigInteger nonce = tx.getNonceBI();
 
                                 BigInteger nrgCharge =
-                                        BigInteger.valueOf(tx.getNrgPrice())
+                                        BigInteger.valueOf(tx.getEnergyPrice())
                                                 .multiply(BigInteger.valueOf(tx.getNrgConsume()));
 
                                 if (LOG.isTraceEnabled()) {
@@ -239,11 +217,11 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                 if (LOG.isTraceEnabled()) {
                                     LOG.trace(
                                             "AbstractTxPool.sortTxn Put tx into accMap: acc:[{}] mapSize[{}] ",
-                                            tx.getFrom().toString(),
+                                            tx.getSenderAddress().toString(),
                                             nonceMap.size());
                                 }
 
-                                accMap.put(tx.getFrom(), nonceMap);
+                                accMap.put(tx.getSenderAddress(), nonceMap);
                             }
 
                             LinkedHashSet<ByteArrayWrapper> lhs;
@@ -271,7 +249,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                         timeMap.get(t)
                                                 .remove(
                                                         ByteArrayWrapper.wrap(
-                                                                replacedTx.getHash()));
+                                                                replacedTx.getTransactionHash()));
                                     }
                                 }
                             }
@@ -281,7 +259,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
 
         if (!updatedTx.isEmpty()) {
             for (Map.Entry<ITransaction, Long> en : updatedTx.entrySet()) {
-                ByteArrayWrapper bw = ByteArrayWrapper.wrap(en.getKey().getHash());
+                ByteArrayWrapper bw = ByteArrayWrapper.wrap(en.getKey().getTransactionHash());
                 if (this.timeView.get(en.getValue()) != null) {
                     this.timeView.get(en.getValue()).remove(bw);
                 }

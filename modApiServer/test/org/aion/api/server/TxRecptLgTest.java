@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.api.server;
 
 import static junit.framework.TestCase.assertEquals;
@@ -30,14 +8,14 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.api.server.types.TxRecptLg;
-import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.vm.types.Log;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -136,7 +114,7 @@ public class TxRecptLgTest {
         result = bc.tryToConnect(context.block);
         assertEquals(result, ImportResult.IMPORTED_BEST);
 
-        AionTxInfo info = bc.getTransactionInfo(tx3.getHash());
+        AionTxInfo info = bc.getTransactionInfo(tx3.getTransactionHash());
         AionTxReceipt receipt = info.getReceipt();
         System.out.println(receipt);
         assertEquals(4, receipt.getLogInfoList().size());
@@ -146,7 +124,7 @@ public class TxRecptLgTest {
         // ======================
         TxRecptLg[] logs = new TxRecptLg[receipt.getLogInfoList().size()];
         for (int i = 0; i < logs.length; i++) {
-            Log logInfo = receipt.getLogInfoList().get(i);
+            IExecutionLog logInfo = receipt.getLogInfoList().get(i);
             logs[i] =
                     new TxRecptLg(
                             logInfo,

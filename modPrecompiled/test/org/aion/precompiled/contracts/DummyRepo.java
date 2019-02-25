@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
@@ -31,15 +9,15 @@ import java.util.Set;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.vm.api.interfaces.Address;
 
-public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> {
+public class DummyRepo implements IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> {
     private Map<Address, AccountState> accounts = new HashMap<>();
     private Map<Address, byte[]> contracts = new HashMap<>();
     private Map<Address, Map<String, byte[]>> storage = new HashMap<>();
@@ -47,7 +25,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     // Made this alterable for testing since this default value is not always what real
     // implementations
     // do ... and don't want to break tests that rely on this value.
-    public IDataWord storageErrorReturn = DoubleDataWord.ZERO;
+    public ByteArrayWrapper storageErrorReturn = DoubleDataWord.ZERO.toWrapper();
 
     public DummyRepo() {}
 
@@ -107,7 +85,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public IContractDetails<IDataWord> getContractDetails(Address addr) {
+    public IContractDetails getContractDetails(Address addr) {
         throw new UnsupportedOperationException();
     }
 
@@ -128,25 +106,35 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public Map<IDataWord, IDataWord> getStorage(Address address, Collection<IDataWord> keys) {
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(
+            Address address, Collection<ByteArrayWrapper> keys) {
         throw new RuntimeException("Not supported");
     }
 
     @Override
-    public void addStorageRow(Address addr, IDataWord key, IDataWord value) {
+    public void addStorageRow(Address addr, ByteArrayWrapper key, ByteArrayWrapper value) {
         Map<String, byte[]> map = storage.computeIfAbsent(addr, k -> new HashMap<>());
         map.put(key.toString(), value.getData());
     }
 
     @Override
-    public IDataWord getStorageValue(Address addr, IDataWord key) {
+    public void removeStorageRow(Address addr, ByteArrayWrapper key) {
+        Map<String, byte[]> map = storage.computeIfAbsent(addr, k -> new HashMap<>());
+        map.put(key.toString(), null);
+    }
+
+    @Override
+    public ByteArrayWrapper getStorageValue(Address addr, ByteArrayWrapper key) {
         Map<String, byte[]> map = storage.get(addr);
         if (map != null && map.containsKey(key.toString())) {
             byte[] res = map.get(key.toString());
-            if (res.length == DataWord.BYTES) {
-                return new DataWord(res);
+            if (res == null) {
+                return null;
+            }
+            if (res.length <= DataWord.BYTES) {
+                return new DataWord(res).toWrapper();
             } else if (res.length == DoubleDataWord.BYTES) {
-                return new DoubleDataWord(res);
+                return new DoubleDataWord(res).toWrapper();
             }
         }
         return storageErrorReturn;
@@ -173,12 +161,15 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     }
 
     @Override
-    public IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> startTracking() {
+    public IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> startTracking() {
         return new DummyRepo(this);
     }
 
     @Override
     public void flush() {}
+
+    @Override
+    public void flushTo(IRepository repo, boolean clearStateAfterFlush) {}
 
     @Override
     public void rollback() {}
@@ -202,7 +193,7 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     @Override
     public void updateBatch(
             Map<Address, AccountState> accountStates,
-            Map<Address, IContractDetails<IDataWord>> contractDetailes) {
+            Map<Address, IContractDetails> contractDetailes) {
         throw new UnsupportedOperationException();
     }
 
@@ -215,12 +206,12 @@ public class DummyRepo implements IRepositoryCache<AccountState, IDataWord, IBlo
     public void loadAccountState(
             Address addr,
             Map<Address, AccountState> cacheAccounts,
-            Map<Address, IContractDetails<IDataWord>> cacheDetails) {
+            Map<Address, IContractDetails> cacheDetails) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public IRepository<AccountState, IDataWord, IBlockStoreBase<?, ?>> getSnapshotTo(byte[] root) {
+    public IRepository<AccountState, IBlockStoreBase<?, ?>> getSnapshotTo(byte[] root) {
         throw new UnsupportedOperationException();
     }
 

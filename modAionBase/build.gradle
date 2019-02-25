@@ -2,6 +2,7 @@ ext.moduleName = 'aion.base'
 
 dependencies {
     compile 'com.google.guava:guava:25.1-jre'
+    compile project(':aion_vm_api')
     testCompile 'junit:junit:4.12'
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
     testCompile 'org.hamcrest:hamcrest-core:1.3'

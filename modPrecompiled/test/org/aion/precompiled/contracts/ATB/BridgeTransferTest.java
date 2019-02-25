@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.contracts.ATB;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -29,14 +6,15 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.List;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
-import org.aion.mcf.vm.types.Log;
-import org.aion.precompiled.contracts.DummyRepo;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.precompiled.PrecompiledUtilities;
-import org.aion.vm.ExecutionContext;
+import org.aion.precompiled.contracts.DummyRepo;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,8 +27,9 @@ public class BridgeTransferTest {
     private ExecutionContext context;
 
     private static final Address CONTRACT_ADDR =
-            new Address(HashUtil.h256("contractAddress".getBytes()));
-    private static final Address OWNER_ADDR = new Address(HashUtil.h256("ownerAddress".getBytes()));
+            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
+    private static final Address OWNER_ADDR =
+            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final ECKey members[] =
             new ECKey[] {
@@ -164,7 +143,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_SIGNATURE_BOUNDS);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
-        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ZERO);
+        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ZERO);
     }
 
     @Test
@@ -202,7 +181,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ZERO);
-        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ONE);
+        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ONE);
     }
 
     @Test
@@ -240,7 +219,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_SIGNATURE_BOUNDS);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
-        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ZERO);
+        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ZERO);
     }
 
     @Test
@@ -276,7 +255,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_TRANSFER);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
-        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ZERO);
+        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ZERO);
     }
 
     static class ResultHashTuple {
@@ -338,15 +317,15 @@ public class BridgeTransferTest {
 
         // check status of result
         assertThat(tuple.results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
-        assertThat(this.context.helper().getLogs().size()).isEqualTo(1);
-        assertThat(this.context.helper().getLogs().get(0).getTopics().get(0))
+        assertThat(this.context.getSideEffects().getExecutionLogs().size()).isEqualTo(1);
+        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getTopics().get(0))
                 .isEqualTo(BridgeEventSig.SUCCESSFUL_TXHASH.getHashed());
-        assertThat(this.context.helper().getLogs().get(0).getTopics().get(1))
+        assertThat(this.context.getSideEffects().getExecutionLogs().get(0).getTopics().get(1))
                 .isEqualTo(aionTransactionHash);
 
         // one transfer should have gone through, second shouldn't
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
-        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ONE);
+        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ONE);
     }
 
     // Transfer 511 times, ONE per transfer
@@ -375,13 +354,13 @@ public class BridgeTransferTest {
 
         assertThat(tuple.results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ZERO);
-        assertThat(this.repo.getBalance(Address.wrap(recipient)))
+        assertThat(this.repo.getBalance(AionAddress.wrap(recipient)))
                 .isEqualTo(transferTotalBigInteger);
 
         // 511 transfer events + 1 distributed event
-        assertThat(this.context.helper().getLogs().size()).isEqualTo(512);
+        assertThat(this.context.getSideEffects().getExecutionLogs().size()).isEqualTo(512);
 
-        List<Log> logs = this.context.helper().getLogs();
+        List<IExecutionLog> logs = this.context.getSideEffects().getExecutionLogs();
         for (int i = 0; i < 511; i++) {
             List<byte[]> topics = logs.get(i).getTopics();
             assertThat(topics.get(0)).isEqualTo(BridgeEventSig.DISTRIBUTED.getHashed());

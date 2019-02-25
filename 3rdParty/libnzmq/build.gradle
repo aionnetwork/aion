@@ -1,0 +1,12 @@
+ext.moduleName = 'libnzmq';
+
+ext.mavenPubArtifactId = "libnzmq";
+ext.mavenPubVersion = "1.0";
+
+sourceSets { 
+    main {
+        java.srcDirs = ['src']
+        resources.srcDirs = ['resources']
+    }
+}
+

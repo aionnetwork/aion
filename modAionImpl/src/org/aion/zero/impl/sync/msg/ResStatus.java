@@ -1,38 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- */
-
 package org.aion.zero.impl.sync.msg;
 
 import java.nio.ByteBuffer;
@@ -46,6 +11,8 @@ public final class ResStatus extends Msg {
 
     private static final int minLen = 8 + 1 + 1 + 32 + 32;
 
+    private static final int minLenNew = minLen + 1 + 2 + 1 + 1 + 4;
+
     private final long bestBlockNumber; // 8
 
     private final byte totalDifficultyLen; // 1
@@ -56,17 +23,37 @@ public final class ResStatus extends Msg {
 
     private final byte[] genesisHash; // 32
 
+    private final byte apiVersion; // 1
+
+    private final short peerCount; // 2
+
+    private final byte pendingTxCountLen; // 1
+
+    private final byte[] pendingTxCount; // 1+n
+
+    private final int latency; // 4
+
+    private int msgLen;
+
     /**
      * @param bestBlockNumber long
      * @param _totalDifficulty byte[]
      * @param _bestHash byte[]
      * @param _genesisHash byte[]
+     * @param _apiVersion byte
+     * @param _peerCount short
+     * @param _pendingTxCount byte[]
+     * @param _latency int
      */
     public ResStatus(
             long bestBlockNumber,
             final byte[] _totalDifficulty,
             final byte[] _bestHash,
-            final byte[] _genesisHash) {
+            final byte[] _genesisHash,
+            final byte _apiVersion,
+            final short _peerCount,
+            final byte[] _pendingTxCount,
+            final int _latency) {
         super(Ver.V0, Ctrl.SYNC, Act.RES_STATUS);
         this.bestBlockNumber = bestBlockNumber;
         this.totalDifficultyLen =
@@ -74,6 +61,13 @@ public final class ResStatus extends Msg {
         this.totalDifficulty = _totalDifficulty;
         this.bestHash = _bestHash;
         this.genesisHash = _genesisHash;
+        this.apiVersion = _apiVersion;
+        this.peerCount = _peerCount;
+        this.pendingTxCountLen =
+                _pendingTxCount.length > Byte.MAX_VALUE ? 1 : (byte) _pendingTxCount.length;
+        this.pendingTxCount = _pendingTxCount;
+        this.latency = _latency;
+        this.msgLen = 8 + 1 + totalDifficultyLen + 32 + 32 + 1 + 2 + 1 + pendingTxCountLen + 4;
     }
 
     /** @return long */
@@ -96,6 +90,26 @@ public final class ResStatus extends Msg {
         return this.totalDifficulty;
     }
 
+    /** @return byte */
+    public byte getApiVersion() {
+        return this.apiVersion;
+    }
+
+    /** @return short */
+    public short getPeerCount() {
+        return this.peerCount;
+    }
+
+    /** @return byte[] */
+    public byte[] getPendingTxCount() {
+        return this.pendingTxCount;
+    }
+
+    /** @return short */
+    public int getLatency() {
+        return this.latency;
+    }
+
     public static ResStatus decode(final byte[] _bytes) {
         if (_bytes == null || _bytes.length < minLen) return null;
         ByteBuffer bb = ByteBuffer.wrap(_bytes);
@@ -108,18 +122,45 @@ public final class ResStatus extends Msg {
         bb.get(_totalDifficulty);
         bb.get(_bestHash);
         bb.get(_genesisHash);
-        return new ResStatus(_bestBlockNumber, _totalDifficulty, _bestHash, _genesisHash);
+
+        int _len = 8 + 1 + _totalDifficultyLen + 32 + 32;
+
+        byte _apiVersion = 0;
+        short _peerCount = 0;
+        byte[] _pendingTxCount = new byte[0];
+        int _latency = 0;
+        if (_bytes.length > Math.max(_len, minLenNew)) {
+            _apiVersion = bb.get();
+            _peerCount = bb.getShort();
+            int _pendingTxCountLen = bb.get();
+            _pendingTxCount = new byte[_pendingTxCountLen];
+            bb.get(_pendingTxCount);
+            _latency = bb.getInt();
+        }
+        return new ResStatus(
+                _bestBlockNumber,
+                _totalDifficulty,
+                _bestHash,
+                _genesisHash,
+                _apiVersion,
+                _peerCount,
+                _pendingTxCount,
+                _latency);
     }
 
     @Override
     public byte[] encode() {
-        int _len = 8 + 1 + totalDifficultyLen + 32 + 32;
-        ByteBuffer bb = ByteBuffer.allocate(_len);
+        ByteBuffer bb = ByteBuffer.allocate(msgLen);
         bb.putLong(this.bestBlockNumber);
         bb.put(this.totalDifficultyLen);
         bb.put(this.totalDifficulty);
         bb.put(this.bestHash);
         bb.put(this.genesisHash);
+        bb.put(this.apiVersion);
+        bb.putShort(this.peerCount);
+        bb.put(this.pendingTxCountLen);
+        bb.put(this.pendingTxCount);
+        bb.putInt(this.latency);
         return bb.array();
     }
 }

@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.p2p.impl.comm;
 
 import java.security.SecureRandom;
@@ -59,6 +36,7 @@ public class NodeMgr implements INodeMgr {
     private final Map<Integer, INode> outboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> inboundNodes = new ConcurrentHashMap<>();
     private final Map<Integer, INode> activeNodes = new ConcurrentHashMap<>();
+    private int avgLatency = 0;
 
     public NodeMgr(IP2pMgr _p2pMgr, int _maxActiveNodes, int _maxTempNodes, Logger _logger) {
         this.maxActiveNodes = _maxActiveNodes;
@@ -271,6 +249,11 @@ public class NodeMgr implements INodeMgr {
     }
 
     @Override
+    public int getAvgLatency() {
+        return this.avgLatency;
+    }
+
+    @Override
     public void timeoutCheck() {
         timeoutInbound();
         timeoutOutBound();
@@ -411,11 +394,11 @@ public class NodeMgr implements INodeMgr {
         long now = System.currentTimeMillis();
         OptionalDouble average =
                 activeNodes.values().stream().mapToLong(n -> now - n.getTimestamp()).average();
-
+        this.avgLatency = (int) average.orElse(0);
         long timeout = ((long) average.orElse(4000)) * 5;
         timeout = Math.max(10000, Math.min(timeout, 60000));
         if (p2pLOG.isDebugEnabled()) {
-            p2pLOG.debug("<average-delay={}ms>", (long) average.orElse(0));
+            p2pLOG.debug("<average-delay={}ms>", this.avgLatency);
         }
 
         try {

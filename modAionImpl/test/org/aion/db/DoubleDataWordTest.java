@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.db;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -33,8 +10,7 @@ import org.aion.base.db.IPruneConfig;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.Address;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
@@ -43,6 +19,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -54,7 +31,7 @@ import org.junit.Test;
 public class DoubleDataWordTest {
     private IRepositoryConfig repoConfig;
     private IRepository repo;
-    private IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
+    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
     private Random rand;
     private Address addr;
 
@@ -89,7 +66,7 @@ public class DoubleDataWordTest {
         this.repo = AionRepositoryImpl.createForTesting(repoConfig);
         this.track = new AionRepositoryCache(repo);
         this.rand = new Random();
-        this.addr = Address.wrap(ECKeyFac.inst().create().getAddress());
+        this.addr = AionAddress.wrap(ECKeyFac.inst().create().getAddress());
     }
 
     @After
@@ -124,18 +101,26 @@ public class DoubleDataWordTest {
         doubleValFirst[0] = (byte) 0x2;
         doubleValLast[0] = (byte) 0x3;
 
-        track.addStorageRow(addr, new DataWord(singleKey), new DataWord(singleVal));
         track.addStorageRow(
-                addr, new DoubleDataWord(doubleKeyFirst), new DoubleDataWord(doubleValFirst));
+                addr, new DataWord(singleKey).toWrapper(), new DataWord(singleVal).toWrapper());
         track.addStorageRow(
-                addr, new DoubleDataWord(doubleKeyLast), new DoubleDataWord(doubleValLast));
+                addr,
+                new DoubleDataWord(doubleKeyFirst).toWrapper(),
+                new DoubleDataWord(doubleValFirst).toWrapper());
+        track.addStorageRow(
+                addr,
+                new DoubleDataWord(doubleKeyLast).toWrapper(),
+                new DoubleDataWord(doubleValLast).toWrapper());
         track.flush();
 
-        byte[] singleRes = track.getStorageValue(addr, new DataWord(singleKey)).getData();
+        byte[] singleRes =
+                track.getStorageValue(addr, new DataWord(singleKey).toWrapper()).getData();
         byte[] doubleResFirst =
-                track.getStorageValue(addr, new DoubleDataWord(doubleKeyFirst)).getData();
+                track.getStorageValue(addr, new DoubleDataWord(doubleKeyFirst).toWrapper())
+                        .getData();
         byte[] doubleResLast =
-                track.getStorageValue(addr, new DoubleDataWord(doubleKeyLast)).getData();
+                track.getStorageValue(addr, new DoubleDataWord(doubleKeyLast).toWrapper())
+                        .getData();
 
         assertArrayEquals(singleVal, singleRes);
         assertArrayEquals(doubleValFirst, doubleResFirst);
@@ -153,7 +138,8 @@ public class DoubleDataWordTest {
 
         byte[] singVal = new byte[DataWord.BYTES];
         singVal[0] = (byte) 0xAC;
-        track.addStorageRow(addr, new DataWord(singKey), new DataWord(singVal));
+        track.addStorageRow(
+                addr, new DataWord(singKey).toWrapper(), new DataWord(singVal).toWrapper());
         track.flush();
 
         byte[] doubleKeyPrefix = new byte[DoubleDataWord.BYTES];
@@ -161,10 +147,10 @@ public class DoubleDataWordTest {
         System.arraycopy(singKey, 0, doubleKeyPrefix, 0, DataWord.BYTES);
         System.arraycopy(singKey, 0, doubleKeySuffix, DataWord.BYTES, DataWord.BYTES);
 
-        byte[] singRes = track.getStorageValue(addr, new DataWord(singKey)).getData();
+        byte[] singRes = track.getStorageValue(addr, new DataWord(singKey).toWrapper()).getData();
         assertArrayEquals(singVal, singRes);
-        assertNull(track.getStorageValue(addr, new DoubleDataWord(doubleKeyPrefix)));
-        assertNull(track.getStorageValue(addr, new DoubleDataWord(doubleKeySuffix)));
+        assertNull(track.getStorageValue(addr, new DoubleDataWord(doubleKeyPrefix).toWrapper()));
+        assertNull(track.getStorageValue(addr, new DoubleDataWord(doubleKeySuffix).toWrapper()));
     }
 
     /**
@@ -182,10 +168,15 @@ public class DoubleDataWordTest {
         rand.nextBytes(val16);
         rand.nextBytes(val32);
 
-        track.addStorageRow(addr, new DataWord(key16), new DoubleDataWord(val32));
-        track.addStorageRow(addr, new DoubleDataWord(key32), new DataWord(val16));
+        track.addStorageRow(
+                addr, new DataWord(key16).toWrapper(), new DoubleDataWord(val32).toWrapper());
+        track.addStorageRow(
+                addr, new DoubleDataWord(key32).toWrapper(), new DataWord(val16).toWrapper());
 
-        assertArrayEquals(val16, track.getStorageValue(addr, new DoubleDataWord(key32)).getData());
-        assertArrayEquals(val32, track.getStorageValue(addr, new DataWord(key16)).getData());
+        assertArrayEquals(
+                val16,
+                track.getStorageValue(addr, new DoubleDataWord(key32).toWrapper()).getData());
+        assertArrayEquals(
+                val32, track.getStorageValue(addr, new DataWord(key16).toWrapper()).getData());
     }
 }

@@ -4,12 +4,16 @@ test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
 dependencies {
+    compile project(':modUtil')
     compile project(':modAionBase')
     compile project(':modLogger')
     compile project(':modP2p')
     compile project(':modCrypto')
     compile project(':modRlp')
     compile project(':modDbImpl')
+    compile 'com.madgag.spongycastle:prov:1.58.0.0'
+    compile 'com.madgag.spongycastle:core:1.58.0.0'
+    compile project(':aion_vm_api')
     compile files('../lib/libnsc.jar')
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile 'com.google.guava:guava:25.1-jre'

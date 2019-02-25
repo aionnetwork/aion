@@ -1,37 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- */
 package org.aion.db.impl.h2;
 
 import java.io.File;
@@ -252,30 +218,35 @@ public class H2MVMap extends AbstractDB {
     }
 
     @Override
-    public byte[] getInternal(byte[] k) {
-        return map.get(k);
+    public byte[] getInternal(byte[] key) {
+        return map.get(key);
     }
 
     @Override
-    public void put(byte[] k, byte[] v) {
-        check(k);
-
-        check();
-
-        if (v == null) {
-            map.remove(k);
-        } else {
-            map.put(k, v);
-        }
+    public void putInternal(byte[] key, byte[] value) {
+        map.put(key, value);
     }
 
     @Override
-    public void delete(byte[] k) {
-        check(k);
+    public void deleteInternal(byte[] key) {
+        map.remove(key);
+    }
 
-        check();
+    @Override
+    public void putToBatchInternal(byte[] key, byte[] value) {
+        // same as put since batch operations are not supported
+        putInternal(key, value);
+    }
 
-        map.remove(k);
+    @Override
+    public void deleteInBatchInternal(byte[] key) {
+        // same as put since batch operations are not supported
+        deleteInternal(key);
+    }
+
+    @Override
+    public void commitBatch() {
+        // nothing to do since batch operations are not supported
     }
 
     /**
@@ -290,18 +261,13 @@ public class H2MVMap extends AbstractDB {
      * <p>Places a batch of key value mappings into the DB, one guarantee that should be made is
      * that this function should execute atomically
      *
-     * @param inputMap
+     * @param input a {@link Map} of key-value pairs to be updated in the database
      */
     @Override
-    public void putBatch(Map<byte[], byte[]> inputMap) {
-        check(inputMap.keySet());
-
-        // this runtime exception should not be caught here
-        check();
-
+    public void putBatchInternal(Map<byte[], byte[]> input) {
         try {
             // doesn't actually have functionality for batch operations
-            for (Map.Entry<byte[], byte[]> e : inputMap.entrySet()) {
+            for (Map.Entry<byte[], byte[]> e : input.entrySet()) {
                 byte[] key = e.getKey();
                 byte[] value = e.getValue();
 
@@ -318,27 +284,11 @@ public class H2MVMap extends AbstractDB {
     }
 
     @Override
-    public void putToBatch(byte[] k, byte[] v) {
-        // same as put since batch operations are not supported
-        put(k, v);
-    }
-
-    @Override
-    public void commitBatch() {
-        // nothing to do since batch operations are not supported
-    }
-
-    @Override
-    public void deleteBatch(Collection<byte[]> keys) {
-        check(keys);
-
-        // this runtime exception should not be caught here
-        check();
-
+    public void deleteBatchInternal(Collection<byte[]> keys) {
         try {
-            for (byte[] k : keys) {
+            for (byte[] key : keys) {
                 // can handle null keys correctly
-                map.remove(k);
+                map.remove(key);
             }
         } catch (Exception e) {
             LOG.error("Unable to execute batch delete operation on " + this.toString() + ".", e);

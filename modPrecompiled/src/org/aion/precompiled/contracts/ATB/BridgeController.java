@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.contracts.ATB;
 
 import static org.aion.precompiled.contracts.ATB.BridgeController.ProcessedResults.processError;
@@ -33,14 +10,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
-import org.aion.base.type.Address;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.mcf.vm.types.Log;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.PrecompiledUtilities;
-import org.aion.vm.ExecutionHelper;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.TransactionSideEffects;
 
 /**
  * Contains the functional components of the Aion Token Bridge, this class is removed from concerns
@@ -49,14 +27,14 @@ import org.aion.vm.ExecutionResult;
 public class BridgeController {
 
     private final BridgeStorageConnector connector;
-    private final ExecutionHelper result;
+    private final TransactionSideEffects result;
     private final Address contractAddress;
     private final Address ownerAddress;
     private Transferable transferable;
 
     public BridgeController(
             @Nonnull final BridgeStorageConnector storageConnector,
-            @Nonnull final ExecutionHelper helper,
+            @Nonnull final TransactionSideEffects helper,
             @Nonnull final Address contractAddress,
             @Nonnull final Address ownerAddress) {
         this.connector = storageConnector;
@@ -277,7 +255,7 @@ public class BridgeController {
         if (signed < minThresh) return processError(ErrCode.NOT_ENOUGH_SIGNATURES);
 
         // otherwise, we're clear to proceed with transfers
-        List<ExecutionResult> results = new ArrayList<>();
+        List<PrecompiledTransactionResult> results = new ArrayList<>();
         for (BridgeTransfer b : transfers) {
 
             if (b.getTransferValue().compareTo(BigInteger.ZERO) == 0)
@@ -296,15 +274,15 @@ public class BridgeController {
              * For how this is documented, check the {@code Transferable}
              * interface documentation.
              */
-            ExecutionResult result;
+            PrecompiledTransactionResult result;
             if ((result = transferable.transfer(b.getRecipient(), b.getTransferValue()))
                             .getResultCode()
-                    == ExecutionResult.ResultCode.FAILURE)
+                    == PrecompiledResultCode.FAILURE)
                 // no need to return list of transactions, since they're all being dropped
                 return processError(ErrCode.INVALID_TRANSFER);
 
             // otherwise if transfer was successful
-            if (result.getResultCode() == ExecutionResult.ResultCode.SUCCESS)
+            if (result.getResultCode() == PrecompiledResultCode.SUCCESS)
                 if (!emitDistributed(
                         b.getSourceTransactionHash(), b.getRecipient(), b.getTransferValue()))
                     return processError(ErrCode.INVALID_TRANSFER);
@@ -368,9 +346,9 @@ public class BridgeController {
 
     static class ProcessedResults {
         final ErrCode controllerResult;
-        final List<ExecutionResult> internalResults;
+        final List<PrecompiledTransactionResult> internalResults;
 
-        private ProcessedResults(ErrCode code, List<ExecutionResult> internalResults) {
+        private ProcessedResults(ErrCode code, List<PrecompiledTransactionResult> internalResults) {
             this.controllerResult = code;
             this.internalResults = internalResults;
         }
@@ -379,7 +357,7 @@ public class BridgeController {
             return new ProcessedResults(code, null);
         }
 
-        static ProcessedResults processSuccess(List<ExecutionResult> results) {
+        static ProcessedResults processSuccess(List<PrecompiledTransactionResult> results) {
             return new ProcessedResults(ErrCode.NO_ERROR, results);
         }
     }

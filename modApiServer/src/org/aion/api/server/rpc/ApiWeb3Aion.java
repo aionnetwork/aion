@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.api.server.rpc;
 
 import static java.util.stream.Collectors.toList;
@@ -35,6 +12,8 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -61,16 +40,14 @@ import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.Tx;
 import org.aion.api.server.types.TxRecpt;
 import org.aion.base.db.IRepository;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.Hash256;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.base.util.FastByteComparisons;
 import org.aion.base.util.TypeConverter;
 import org.aion.base.util.Utils;
-import org.aion.base.vm.IDataWord;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.evtmgr.IEventMgr;
@@ -90,8 +67,9 @@ import org.aion.mcf.config.CfgTx;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.vm.types.DataWord;
-import org.aion.mcf.vm.types.Log;
 import org.aion.p2p.INode;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
@@ -178,7 +156,7 @@ public class ApiWeb3Aion extends ApiAion {
                                             "<filter append, onPendingTransaction fltrSize={} type={} txHash={}>",
                                             f.getSize(),
                                             f.getType().name(),
-                                            TypeConverter.toJsonHex(_tx.getHash()));
+                                            TypeConverter.toJsonHex(_tx.getTransactionHash()));
                                 }
                             });
         }
@@ -270,7 +248,7 @@ public class ApiWeb3Aion extends ApiAion {
                         .build(
                                 new CacheLoader<>() {
                                     public MinerStatsView load(String key) { // no checked exception
-                                        Address miner = new Address(key);
+                                        Address miner = new AionAddress(key);
                                         return new MinerStatsView(
                                                         STRATUM_RECENT_BLK_COUNT, miner.toBytes())
                                                 .update();
@@ -424,7 +402,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        Address address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -463,7 +441,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        Address address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -493,8 +471,7 @@ public class ApiWeb3Aion extends ApiAion {
                             + "State may have been pruned; please check your db pruning settings in the configuration file.");
         }
 
-        @SuppressWarnings("unchecked")
-        IDataWord storageValue = repo.getStorageValue(address, key);
+        ByteArrayWrapper storageValue = repo.getStorageValue(address, key.toWrapper());
         if (storageValue != null) {
             return new RpcMsg(TypeConverter.toJsonHex(storageValue.getData()));
         } else {
@@ -515,7 +492,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        Address address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -602,7 +579,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = new Address(_address);
+        Address address = new AionAddress(_address);
 
         String bnOrId = "latest";
         if (!JSONObject.NULL.equals(_bnOrId)) {
@@ -638,7 +615,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        Address address = Address.wrap(_address);
+        Address address = AionAddress.wrap(_address);
         ECKey key = getAccountKey(address.toString());
         if (key == null) {
             return new RpcMsg(null, RpcError.NOT_ALLOWED, "Account not unlocked.");
@@ -672,7 +649,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
         if (txParams == null)
             return new RpcMsg(
                     null, RpcError.INVALID_PARAMS, "Please check your transaction object.");
@@ -684,14 +661,14 @@ public class ApiWeb3Aion extends ApiAion {
 
             JSONObject txObj = new JSONObject();
             txObj.put("nonce", TypeConverter.toJsonHex(tx.getNonce()));
-            txObj.put("gasPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
-            txObj.put("nrgPrice", TypeConverter.toJsonHex(tx.getNrgPrice()));
-            txObj.put("gas", TypeConverter.toJsonHex(tx.getNrg()));
-            txObj.put("nrg", TypeConverter.toJsonHex(tx.getNrg()));
-            txObj.put("to", TypeConverter.toJsonHex(tx.getTo().toString()));
+            txObj.put("gasPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
+            txObj.put("nrgPrice", TypeConverter.toJsonHex(tx.getEnergyPrice()));
+            txObj.put("gas", TypeConverter.toJsonHex(tx.getEnergyLimit()));
+            txObj.put("nrg", TypeConverter.toJsonHex(tx.getEnergyLimit()));
+            txObj.put("to", TypeConverter.toJsonHex(tx.getDestinationAddress().toString()));
             txObj.put("value", TypeConverter.toJsonHex(tx.getValue()));
             txObj.put("input", TypeConverter.toJsonHex(tx.getData()));
-            txObj.put("hash", TypeConverter.toJsonHex(tx.getHash()));
+            txObj.put("hash", TypeConverter.toJsonHex(tx.getTransactionHash()));
 
             obj.put("tx", txObj);
             return new RpcMsg(obj);
@@ -736,7 +713,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
 
         ApiTxResponse response = sendTransaction(txParams);
 
@@ -777,7 +754,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
 
         if (txParams == null) {
             return new RpcMsg(
@@ -807,7 +784,7 @@ public class ApiWeb3Aion extends ApiAion {
 
         AionTxReceipt receipt = this.ac.callConstant(tx, b);
 
-        return new RpcMsg(TypeConverter.toJsonHex(receipt.getExecutionResult()));
+        return new RpcMsg(TypeConverter.toJsonHex(receipt.getTransactionOutput()));
     }
 
     public RpcMsg eth_estimateGas(Object _params) {
@@ -820,7 +797,8 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getNrgOracle(), getDefaultNrgLimit());
+        ArgTxCall txParams = ArgTxCall.fromJSON(_tx, getRecommendedNrgPrice());
+
         NumericalValue estimate = new NumericalValue(estimateNrg(txParams));
 
         return new RpcMsg(estimate.toHexString());
@@ -859,7 +837,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL); // json rpc spec: 'or null when no block was found'
         }
 
-        if (!FastByteComparisons.equal(block.getHash(), mainchainHash)) {
+        if (!Arrays.equals(block.getHash(), mainchainHash)) {
             LOG.debug("<rpc-server not mainchain>", _hash);
             return new RpcMsg(JSONObject.NULL);
         }
@@ -1064,6 +1042,31 @@ public class ApiWeb3Aion extends ApiAion {
 
         @SuppressWarnings("unchecked")
         Map<String, CompiledContr> compiled = contract_compileSolidity(_contract);
+        JSONObject obj = new JSONObject();
+        for (String key : compiled.keySet()) {
+            CompiledContr cc = compiled.get(key);
+            obj.put(key, cc.toJSON());
+        }
+        return new RpcMsg(obj);
+    }
+
+    public RpcMsg eth_compileSolidityZip(Object _params) {
+        String _zipfile, _entrypoint;
+        if (_params instanceof JSONArray) {
+            _zipfile = ((JSONArray) _params).get(0) + "";
+            _entrypoint = ((JSONArray) _params).get(1) + "";
+        } else if (_params instanceof JSONObject) {
+            _zipfile = ((JSONObject) _params).get("zipfile") + "";
+            _entrypoint = ((JSONObject) _params).get("entrypoint") + "";
+        } else {
+            return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
+        }
+
+        byte[] _zippedBytes = Base64.getDecoder().decode(_zipfile);
+
+        @SuppressWarnings("unchecked")
+        Map<String, CompiledContr> compiled =
+                contract_compileSolidityZip(_zippedBytes, _entrypoint);
         JSONObject obj = new JSONObject();
         for (String key : compiled.keySet()) {
             CompiledContr cc = compiled.get(key);
@@ -1307,7 +1310,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid parameters");
         }
 
-        return new RpcMsg(lockAccount(Address.wrap(_account), _password));
+        return new RpcMsg(lockAccount(AionAddress.wrap(_account), _password));
     }
 
     public RpcMsg personal_newAccount(Object _params) {
@@ -1422,7 +1425,7 @@ public class ApiWeb3Aion extends ApiAion {
             if (fullTx) {
                 arr.put(Tx.AionTransactionToJSON(transactions.get(i), defaultBlock, i));
             } else {
-                arr.put(ByteUtil.toHexString(transactions.get(i).getHash()));
+                arr.put(ByteUtil.toHexString(transactions.get(i).getTransactionHash()));
             }
         }
         return new RpcMsg(arr);
@@ -1811,7 +1814,7 @@ public class ApiWeb3Aion extends ApiAion {
         Address address;
 
         try {
-            address = new Address(_address);
+            address = new AionAddress(_address);
         } catch (Exception e) {
             return new RpcMsg(null, RpcError.INVALID_PARAMS, "Invalid address provided.");
         }
@@ -2006,7 +2009,7 @@ public class ApiWeb3Aion extends ApiAion {
             // get the latest head
             AionBlock blk = getBestBlock();
 
-            if (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getHash())) {
+            if (Arrays.equals(hashQueue.peekFirst(), blk.getHash())) {
                 return this; // nothing to do
             }
 
@@ -2028,7 +2031,7 @@ public class ApiWeb3Aion extends ApiAion {
                     " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
             */
 
-            while (!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
+            while (!Arrays.equals(hashQueue.peekFirst(), blk.getParentHash())
                     && itr < qSize
                     && blk.getNumber() > 2) {
 
@@ -2153,22 +2156,22 @@ public class ApiWeb3Aion extends ApiAion {
 
         JSONObject result = new JSONObject();
         result.put("timestampVal", block.getTimestamp());
-        result.put("transactionHash", TypeConverter.toJsonHex(tx.getHash()));
+        result.put("transactionHash", TypeConverter.toJsonHex(tx.getTransactionHash()));
         result.put("blockNumber", block.getNumber());
         result.put("blockHash", TypeConverter.toJsonHex(block.getHash()));
         result.put("nonce", TypeConverter.toJsonHex(tx.getNonce()));
-        result.put("fromAddr", TypeConverter.toJsonHex(tx.getFrom().toBytes()));
-        result.put("toAddr", TypeConverter.toJsonHex(tx.getTo().toBytes()));
+        result.put("fromAddr", TypeConverter.toJsonHex(tx.getSenderAddress().toBytes()));
+        result.put("toAddr", TypeConverter.toJsonHex(tx.getDestinationAddress().toBytes()));
         result.put("value", TypeConverter.toJsonHex(tx.getValue()));
-        result.put("nrgPrice", tx.getNrgPrice());
+        result.put("nrgPrice", tx.getEnergyPrice());
         result.put("nrgConsumed", txInfo.getReceipt().getEnergyUsed());
         result.put("data", TypeConverter.toJsonHex(tx.getData()));
         result.put("transactionIndex", txInfo.getIndex());
 
         JSONArray logs = new JSONArray();
-        for (Log l : txInfo.getReceipt().getLogInfoList()) {
+        for (IExecutionLog l : txInfo.getReceipt().getLogInfoList()) {
             JSONObject log = new JSONObject();
-            log.put("address", l.getAddress().toString());
+            log.put("address", l.getSourceAddress().toString());
             log.put("data", TypeConverter.toJsonHex(l.getData()));
             JSONArray topics = new JSONArray();
             for (byte[] topic : l.getTopics()) {
@@ -2224,7 +2227,7 @@ public class ApiWeb3Aion extends ApiAion {
             return new RpcMsg(JSONObject.NULL);
         }
 
-        if (!FastByteComparisons.equal(block.getHash(), mainBlock.getHash())) {
+        if (!Arrays.equals(block.getHash(), mainBlock.getHash())) {
             return new RpcMsg(JSONObject.NULL);
         }
 
@@ -2272,9 +2275,9 @@ public class ApiWeb3Aion extends ApiAion {
             for (AionTransaction tx : block.getTransactionsList()) {
                 // transactionHash, fromAddr, toAddr, value, timestampVal, blockNumber, blockHash
                 JSONArray t = new JSONArray();
-                t.put(TypeConverter.toJsonHex(tx.getHash()));
-                t.put(TypeConverter.toJsonHex(tx.getFrom().toBytes()));
-                t.put(TypeConverter.toJsonHex(tx.getTo().toBytes()));
+                t.put(TypeConverter.toJsonHex(tx.getTransactionHash()));
+                t.put(TypeConverter.toJsonHex(tx.getSenderAddress().toBytes()));
+                t.put(TypeConverter.toJsonHex(tx.getDestinationAddress().toBytes()));
                 t.put(TypeConverter.toJsonHex(tx.getValue()));
                 t.put(block.getTimestamp());
                 t.put(block.getNumber());
@@ -2344,7 +2347,7 @@ public class ApiWeb3Aion extends ApiAion {
         AionBlock block = blockCache.get(new ByteArrayWrapper(blockHash));
 
         AionTransaction t = block.getTransactionsList().get(info.getIndex());
-        if (FastByteComparisons.compareTo(t.getHash(), transactionHash) != 0) {
+        if (Arrays.compare(t.getTransactionHash(), transactionHash) != 0) {
             LOG.error("INCONSISTENT STATE: transaction info's transaction index is wrong.");
             return new RpcMsg(null, RpcError.INTERNAL_ERROR, "Database Error");
         }
@@ -2383,7 +2386,8 @@ public class ApiWeb3Aion extends ApiAion {
 
         Function<AionTransaction, JSONObject> extractTxReceipt =
                 t -> {
-                    AionTxInfo info = chain.getTransactionInfoLite(t.getHash(), b.getHash());
+                    AionTxInfo info =
+                            chain.getTransactionInfoLite(t.getTransactionHash(), b.getHash());
                     info.setTransaction(t);
                     return ((new TxRecpt(b, info, 0L, true)).toJson());
                 };
@@ -2689,7 +2693,7 @@ public class ApiWeb3Aion extends ApiAion {
                         lastBlkTimestamp = b.getTimestamp();
                     }
 
-                    if (FastByteComparisons.equal(b.getCoinbase().toBytes(), miner)) {
+                    if (Arrays.equals(b.getCoinbase().toBytes(), miner)) {
                         minedByMiner++;
                     }
 
@@ -2732,7 +2736,7 @@ public class ApiWeb3Aion extends ApiAion {
                 return this;
             }
 
-            if (FastByteComparisons.equal(hashQueue.peekFirst(), blk.getHash())) {
+            if (Arrays.equals(hashQueue.peekFirst(), blk.getHash())) {
                 return this; // nothing to do
             }
 
@@ -2753,7 +2757,7 @@ public class ApiWeb3Aion extends ApiAion {
                     " blkHash: " + TypeConverter.toJsonHex(blk.getHash()));
             */
 
-            while (!FastByteComparisons.equal(hashQueue.peekFirst(), blk.getParentHash())
+            while (!Arrays.equals(hashQueue.peekFirst(), blk.getParentHash())
                     && itr < qSize
                     && blk.getNumber() > 2) {
 

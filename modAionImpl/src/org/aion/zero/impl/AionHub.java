@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl;
 
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
@@ -95,6 +72,8 @@ public class AionHub {
     private AionPoW pow;
 
     private AtomicBoolean start = new AtomicBoolean(true);
+
+    private static final byte apiVersion = 2;
 
     /** Test functionality for checking if the hub has been shut down. */
     public boolean isRunning() {
@@ -188,16 +167,24 @@ public class AionHub {
                 eventMgr,
                 cfg.getSync().getBlocksQueueMax(),
                 cfg.getSync().getShowStatus(),
-                cfg.getSync().getShowStatistics());
+                cfg.getSync().getShowStatistics(),
+                cfg.getSync().getCompactEnabled()
+                        ? cfg.getSync().getSlowImportTime()
+                        : 0, // set to 0 when disabled
+                cfg.getSync().getCompactFrequency(),
+                cfg.getNet().getP2p().getMaxActiveNodes());
 
         ChainConfiguration chainConfig = new ChainConfiguration();
         this.propHandler =
                 new BlockPropagationHandler(
                         1024,
                         this.blockchain,
+                        syncMgr.getSyncStats(),
                         p2pMgr,
                         chainConfig.createBlockHeaderValidator(),
-                        cfg.getNet().getP2p().inSyncOnlyMode());
+                        cfg.getNet().getP2p().inSyncOnlyMode(),
+                        apiVersion,
+                        mempool);
 
         registerCallback();
 
@@ -226,7 +213,14 @@ public class AionHub {
 
     private void registerCallback() {
         List<Handler> cbs = new ArrayList<>();
-        cbs.add(new ReqStatusHandler(syncLOG, blockchain, p2pMgr, cfg.getGenesis().getHash()));
+        cbs.add(
+                new ReqStatusHandler(
+                        syncLOG,
+                        blockchain,
+                        mempool,
+                        p2pMgr,
+                        cfg.getGenesis().getHash(),
+                        apiVersion));
         cbs.add(new ResStatusHandler(syncLOG, p2pMgr, syncMgr));
         boolean inSyncOnlyMode = cfg.getNet().getP2p().inSyncOnlyMode();
         cbs.add(new ReqBlocksHeadersHandler(syncLOG, blockchain, p2pMgr, inSyncOnlyMode));
@@ -540,5 +534,9 @@ public class AionHub {
 
     public AionBlock getStartingBlock() {
         return this.startingBlock;
+    }
+
+    public static byte getApiVersion() {
+        return apiVersion;
     }
 }

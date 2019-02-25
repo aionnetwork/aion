@@ -1,6 +1,6 @@
 module aion.p2p.impl {
     requires aion.p2p;
-    requires aion.base;
+    requires aion.util;
     requires aion.log;
     requires miniupnpc.linux;
     requires slf4j.api;

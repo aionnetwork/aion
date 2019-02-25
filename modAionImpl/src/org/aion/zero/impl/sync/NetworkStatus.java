@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.sync;
 
 import java.math.BigInteger;
@@ -36,22 +13,42 @@ final class NetworkStatus {
 
     private String targetBestBlockHash;
 
+    private int targetApiVersion;
+
+    private short targetPeerCount;
+
+    private int targetPendingTxCount;
+
+    private int targetLatency;
+
     NetworkStatus() {
         this.targetDisplayId = "";
         this.targetTotalDiff = BigInteger.ZERO;
         this.targetBestBlockNumber = 0;
         this.targetBestBlockHash = "";
+        this.targetApiVersion = -1;
+        this.targetPeerCount = 0;
+        this.targetPeerCount = 0;
+        this.targetLatency = 0;
     }
 
     synchronized void update(
             String _targetDisplayId,
             BigInteger _targetTotalDiff,
             long _targetBestBlockNumber,
-            String _targetBestBlockHash) {
+            String _targetBestBlockHash,
+            int _apiVersion,
+            short _peerCount,
+            int _pendingTxCount,
+            int _latency) {
         this.targetDisplayId = _targetDisplayId;
         this.targetTotalDiff = _targetTotalDiff;
         this.targetBestBlockNumber = _targetBestBlockNumber;
         this.targetBestBlockHash = _targetBestBlockHash;
+        this.targetApiVersion = _apiVersion;
+        this.targetPeerCount = _peerCount;
+        this.targetPendingTxCount = _pendingTxCount;
+        this.targetLatency = _latency;
     }
 
     String getTargetDisplayId() {
@@ -68,5 +65,21 @@ final class NetworkStatus {
 
     String getTargetBestBlockHash() {
         return this.targetBestBlockHash;
+    }
+
+    int getTargetApiVersion() {
+        return this.targetApiVersion;
+    }
+
+    short getTargetPeerCount() {
+        return this.targetPeerCount;
+    }
+
+    int getTargetPendingTxCount() {
+        return this.targetPendingTxCount;
+    }
+
+    int getTargetLatency() {
+        return this.targetLatency;
     }
 }

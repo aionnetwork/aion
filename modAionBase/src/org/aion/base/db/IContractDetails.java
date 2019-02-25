@@ -1,56 +1,26 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- */
-
 package org.aion.base.db;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import org.aion.base.type.Address;
+import org.aion.base.util.ByteArrayWrapper;
+import org.aion.vm.api.interfaces.Address;
 
-public interface IContractDetails<DW> {
+public interface IContractDetails {
 
     /**
-     * Inserts key and value as a key-value pair. If the underlying byte array of value consists
-     * only of zero bytes then ay existing key-value pair that has the same key as key will be
-     * deleted.
+     * Inserts a key-value pair containing the given key and the given value.
      *
-     * @param key The key.
-     * @param value The value.
+     * @param key the key to be inserted
+     * @param value the value to be inserted
      */
-    void put(DW key, DW value);
+    void put(ByteArrayWrapper key, ByteArrayWrapper value);
+
+    /**
+     * Deletes any key-value pair that matches the given key.
+     *
+     * @param key the key to be deleted
+     */
+    void delete(ByteArrayWrapper key);
 
     /**
      * Returns the value associated with key.
@@ -60,7 +30,7 @@ public interface IContractDetails<DW> {
      * @return The associated value or some non-value indicator in the case of no such key-value
      *     pair.
      */
-    DW get(DW key);
+    ByteArrayWrapper get(ByteArrayWrapper key);
 
     /**
      * Returns the code of the address associated with this IContractDetails class. This is for
@@ -147,29 +117,21 @@ public interface IContractDetails<DW> {
     byte[] getEncoded();
 
     /**
-     * Returns a mapping of all the key-value pairs who have keys in the collection keys.
+     * Returns a mapping of all the key-value pairs that have keys in the given collection keys.
      *
-     * @param keys The keys to query for.
-     * @return The associated mappings.
+     * @param keys the keys to query for
+     * @return the associated mappings
      */
-    Map<DW, DW> getStorage(Collection<DW> keys);
-
-    /**
-     * Sets the storage to contain the specified keys and values. This method creates pairings of
-     * the keys and values by mapping the i'th key in storageKeys to the i'th value in
-     * storageValues.
-     *
-     * @param storageKeys The keys.
-     * @param storageValues The values.
-     */
-    void setStorage(List<DW> storageKeys, List<DW> storageValues);
+    Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(Collection<ByteArrayWrapper> keys);
 
     /**
      * Sets the storage to contain the specified key-value mappings.
      *
-     * @param storage The specified mappings.
+     * @param storage the specified mappings
+     * @apiNote Used for testing.
+     * @implNote A {@code null} value is interpreted as deletion.
      */
-    void setStorage(Map<DW, DW> storage);
+    void setStorage(Map<ByteArrayWrapper, ByteArrayWrapper> storage);
 
     /**
      * Get the address associated with this IContractDetails.
@@ -203,7 +165,7 @@ public interface IContractDetails<DW> {
      * @param hash The root hash to search for.
      * @return the specified IContractDetails.
      */
-    IContractDetails<DW> getSnapshotTo(byte[] hash);
+    IContractDetails getSnapshotTo(byte[] hash);
 
     /**
      * Sets the data source to dataSource.
@@ -212,4 +174,13 @@ public interface IContractDetails<DW> {
      * @param dataSource The new dataSource.
      */
     void setDataSource(IByteArrayKeyValueStore dataSource);
+
+    /**
+     * Returns a sufficiently deep copy of this object. It is up to all implementations of this
+     * method to declare which original object references are in fact leaked by this copy, if any,
+     * and to provide justification of why, despite this, the copy is nonetheless sufficiently deep.
+     *
+     * @return A copy of this object.
+     */
+    IContractDetails copy();
 }

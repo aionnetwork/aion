@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.db;
 
 import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
@@ -130,7 +107,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
         // check for database persistence requirements
         DBVendor vendor = DBVendor.fromString(local.getProperty(Props.DB_TYPE));
-        if (vendor.getPersistence()) {
+        if (vendor.isFileBased()) {
             File pbFolder =
                     new File(local.getProperty(Props.DB_PATH), local.getProperty(Props.DB_NAME));
 
@@ -625,12 +602,12 @@ public class PendingBlockStore implements Flushable, Closeable {
                 // delete imported blocks
                 for (AionBlock b : blocks.get(q)) {
                     // delete index
-                    indexSource.putToBatch(b.getHash(), null);
+                    indexSource.deleteInBatch(b.getHash());
                     currentQ.remove(b);
                 }
 
                 // delete queue
-                queueSource.putToBatch(q.getData(), null);
+                queueSource.deleteInBatch(q.getData());
 
                 // the queue has been updated since the import read
                 if (!currentQ.isEmpty()) {
@@ -681,7 +658,7 @@ public class PendingBlockStore implements Flushable, Closeable {
 
                 if (updatedLevelData.isEmpty()) {
                     // delete level
-                    levelSource.putToBatch(levelKey, null);
+                    levelSource.deleteInBatch(levelKey);
                 } else {
                     // update level
                     levelSource.putToBatch(levelKey, updatedLevelData);

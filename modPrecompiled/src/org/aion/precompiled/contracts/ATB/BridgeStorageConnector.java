@@ -1,41 +1,18 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.contracts.ATB;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
-import org.aion.base.vm.IDataWord;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledUtilities;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * Storage layout mapping as the following:
@@ -89,11 +66,11 @@ public class BridgeStorageConnector {
         }
     }
 
-    private final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track;
+    private final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
     private final Address contractAddress;
 
     public BridgeStorageConnector(
-            @Nonnull final IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
+            @Nonnull final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             @Nonnull final Address contractAddress) {
         this.track = track;
         this.contractAddress = contractAddress;
@@ -235,26 +212,48 @@ public class BridgeStorageConnector {
     // DWORD helpers
 
     private byte[] getWORD(@Nonnull final DataWord key) {
-        IDataWord word = this.track.getStorageValue(contractAddress, key);
+        ByteArrayWrapper word = this.track.getStorageValue(contractAddress, key.toWrapper());
         // C1
         if (word == null || Arrays.equals(word.getData(), ByteUtil.EMPTY_HALFWORD)) return null;
-        return word.getData();
+        return alignBytes(word.getData());
     }
 
     private void setWORD(@Nonnull final DataWord key, @Nonnull final DataWord word) {
-        this.track.addStorageRow(contractAddress, key, word);
+        if (word.isZero()) {
+            this.track.removeStorageRow(contractAddress, key.toWrapper());
+        } else {
+            this.track.addStorageRow(
+                    contractAddress,
+                    key.toWrapper(),
+                    new ByteArrayWrapper(word.getNoLeadZeroesData()));
+        }
     }
 
     private void setDWORD(@Nonnull final DataWord key, @Nonnull final byte[] dword) {
         assert dword.length > 16;
-        this.track.addStorageRow(contractAddress, key, new DoubleDataWord(dword));
+        DoubleDataWord ddw = new DoubleDataWord(dword);
+        if (ddw.isZero()) {
+            this.track.removeStorageRow(contractAddress, key.toWrapper());
+        } else {
+            this.track.addStorageRow(contractAddress, key.toWrapper(), ddw.toWrapper());
+        }
     }
 
     private byte[] getDWORD(@Nonnull final DataWord key) {
-        IDataWord word = this.track.getStorageValue(contractAddress, key);
+        ByteArrayWrapper word = this.track.getStorageValue(contractAddress, key.toWrapper());
         if (word == null) return null;
 
         if (word.isZero()) return null;
-        return word.getData();
+        return alignBytes(word.getData());
+    }
+
+    private byte[] alignBytes(byte[] unalignedBytes) {
+        if (unalignedBytes == null) {
+            return null;
+        }
+
+        return (unalignedBytes.length > DataWord.BYTES)
+                ? new DoubleDataWord(unalignedBytes).getData()
+                : new DataWord(unalignedBytes).getData();
     }
 }

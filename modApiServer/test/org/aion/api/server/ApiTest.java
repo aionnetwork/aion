@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.api.server;
 
 import static org.junit.Assert.assertEquals;
@@ -35,7 +12,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Map;
 import org.aion.api.server.types.CompiledContr;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.types.AbstractBlock;
@@ -133,9 +110,9 @@ public class ApiTest {
 
     @Test
     public void testLockAndUnlock() {
-        assertFalse(api.unlockAccount(Address.ZERO_ADDRESS(), "testPassword", 0));
-        assertFalse(api.unlockAccount(Address.ZERO_ADDRESS().toString(), "testPassword", 0));
-        assertFalse(api.lockAccount(Address.ZERO_ADDRESS(), "testPassword"));
+        assertFalse(api.unlockAccount(AionAddress.ZERO_ADDRESS(), "testPassword", 0));
+        assertFalse(api.unlockAccount(AionAddress.ZERO_ADDRESS().toString(), "testPassword", 0));
+        assertFalse(api.lockAccount(AionAddress.ZERO_ADDRESS(), "testPassword"));
 
         addr = Keystore.create("testPwd");
         assertTrue(api.unlockAccount(addr, "testPwd", 50000));
@@ -144,10 +121,10 @@ public class ApiTest {
 
     @Test
     public void testAccountRetrieval() {
-        assertNull(api.getAccountKey(Address.ZERO_ADDRESS().toString()));
+        assertNull(api.getAccountKey(AionAddress.ZERO_ADDRESS().toString()));
 
         addr = Keystore.create("testPwd");
-        assertEquals(AccountManager.inst().getKey(Address.wrap(addr)), api.getAccountKey(addr));
+        assertEquals(AccountManager.inst().getKey(AionAddress.wrap(addr)), api.getAccountKey(addr));
 
         assertTrue(api.getAccounts().contains(addr));
         tearDown();

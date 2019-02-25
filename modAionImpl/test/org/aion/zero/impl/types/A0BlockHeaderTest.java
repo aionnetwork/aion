@@ -1,42 +1,8 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- */
 package org.aion.zero.impl.types;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.HashUtil;
 import org.aion.zero.exceptions.HeaderStructureException;
@@ -70,7 +36,7 @@ public class A0BlockHeaderTest {
 
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
         // partial build
-        builder.withCoinbase(Address.wrap(COINBASE))
+        builder.withCoinbase(AionAddress.wrap(COINBASE))
                 .withStateRoot(STATE_ROOT)
                 .withTxTrieRoot(TRIE_ROOT)
                 .withExtraData(EXTRA_DATA)
@@ -80,7 +46,8 @@ public class A0BlockHeaderTest {
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
                 .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+                .withNonce(NONCE_BYTES)
+                .withVersion((byte) 0x01);
 
         A0BlockHeader header = builder.build();
 
@@ -95,6 +62,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getEnergyLimit()).isEqualTo(ENERGY_LIMIT);
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(NONCE_BYTES);
+        assertThat(header.getVersion() == (byte) 0x01);
     }
 
     @Test
@@ -105,7 +73,7 @@ public class A0BlockHeaderTest {
         // partial build
         builder.fromUnsafeSource()
                 .withStateRoot(STATE_ROOT)
-                .withCoinbase(Address.wrap(COINBASE))
+                .withCoinbase(AionAddress.wrap(COINBASE))
                 .withTxTrieRoot(TRIE_ROOT)
                 .withExtraData(EXTRA_DATA)
                 .withReceiptTrieRoot(RECEIPT_ROOT)
@@ -113,7 +81,8 @@ public class A0BlockHeaderTest {
                 .withNumber(NUMBER_BYTES)
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
-                .withParentHash(PARENT_HASH);
+                .withParentHash(PARENT_HASH)
+                .withVersion((byte) 0x01);
 
         A0BlockHeader header = builder.build();
 
@@ -129,6 +98,7 @@ public class A0BlockHeaderTest {
         assertThat(header.getSolution()).isEqualTo(new byte[1408]);
         assertThat(header.getNonce()).isEqualTo(ByteUtil.EMPTY_WORD);
         assertThat(header.getDifficulty()).isEqualTo(ByteUtil.EMPTY_HALFWORD);
+        assertThat(header.getVersion() == (byte) 0x01);
     }
 
     // Test is a self referencing
@@ -139,7 +109,7 @@ public class A0BlockHeaderTest {
         A0BlockHeader.Builder builder = new A0BlockHeader.Builder();
 
         builder.fromUnsafeSource()
-                .withCoinbase(Address.wrap(COINBASE))
+                .withCoinbase(AionAddress.wrap(COINBASE))
                 .withTxTrieRoot(TRIE_ROOT)
                 .withExtraData(EXTRA_DATA)
                 .withReceiptTrieRoot(RECEIPT_ROOT)
@@ -148,7 +118,8 @@ public class A0BlockHeaderTest {
                 .withEnergyConsumed(ENERGY_CONSUMED_BYTES)
                 .withEnergyLimit(ENERGY_LIMIT_BYTES)
                 .withParentHash(PARENT_HASH)
-                .withNonce(NONCE_BYTES);
+                .withNonce(NONCE_BYTES)
+                .withVersion((byte) 0x01);
 
         A0BlockHeader header = builder.build();
         byte[] encoded = header.getEncoded();
@@ -165,6 +136,7 @@ public class A0BlockHeaderTest {
         assertThat(reconstructed.getParentHash()).isEqualTo(header.getParentHash());
         assertThat(reconstructed.getNonce()).isEqualTo(header.getNonce());
         assertThat(reconstructed.getDifficulty()).isEqualTo(header.getDifficulty());
+        assertThat(reconstructed.getVersion() == header.getVersion());
 
         byte[] difficulty = reconstructed.getDifficulty();
     }

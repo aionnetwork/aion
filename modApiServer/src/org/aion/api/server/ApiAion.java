@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.api.server;
 
 import static org.aion.evtmgr.impl.evt.EventTx.STATE.GETSTATE;
@@ -43,7 +20,7 @@ import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.api.server.types.TxRecpt;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
 import org.aion.base.util.ByteArrayWrapper;
@@ -57,8 +34,9 @@ import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.blockchain.TxResponse;
-import org.aion.mcf.vm.Constants;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionGenesis;
+import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
@@ -82,6 +60,8 @@ public abstract class ApiAion extends Api {
     // delegate concurrency to underlying object
     private static NrgOracle NRG_ORACLE;
     protected IAionChain ac; // assumption: blockchainImpl et al. provide concurrency guarantee
+
+    public static final byte JAVAAPI_VAR = AionHub.getApiVersion();
 
     // using java.util.concurrent library objects
     protected AtomicLong fltrIndex; // AtomicLong
@@ -156,7 +136,7 @@ public abstract class ApiAion extends Api {
 
     // General Level
     public byte getApiVersion() {
-        return 2;
+        return JAVAAPI_VAR;
     }
 
     protected Map<Long, Fltr> getInstalledFltrs() {
@@ -266,7 +246,7 @@ public abstract class ApiAion extends Api {
             return null;
         }
 
-        TxRecpt receipt = this.getTransactionReceipt(tx.getHash());
+        TxRecpt receipt = this.getTransactionReceipt(tx.getTransactionHash());
         // @Jay this should not happen!
         // TODO
         if (receipt == null) {
@@ -299,7 +279,7 @@ public abstract class ApiAion extends Api {
             return null;
         }
 
-        TxRecpt receipt = this.getTransactionReceipt(tx.getHash());
+        TxRecpt receipt = this.getTransactionReceipt(tx.getTransactionHash());
         // The receipt shouldn't be null!
         if (receipt == null) {
             throw new NullPointerException();
@@ -344,7 +324,7 @@ public abstract class ApiAion extends Api {
         long cnt = 0;
         List<AionTransaction> txList = pBlk.getTransactionsList();
         for (AionTransaction tx : txList) {
-            if (addr.equals(tx.getFrom())) {
+            if (addr.equals(tx.getSenderAddress())) {
                 cnt++;
             }
         }
@@ -424,7 +404,7 @@ public abstract class ApiAion extends Api {
         for (AionTransaction atx : block.getTransactionsList()) {
 
             // @Jay: This should not happen!
-            byte[] hash = atx.getHash();
+            byte[] hash = atx.getTransactionHash();
             if (hash == null) {
                 throw new NullPointerException();
             }
@@ -453,21 +433,16 @@ public abstract class ApiAion extends Api {
                         _params.getValue().toByteArray(),
                         _params.getData(),
                         _params.getNrg(),
-                        _params.getNrgPrice());
+                        _params.getNrgPrice(),
+                        _params.getType());
         AionTxReceipt rec =
                 this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
-        return rec.getExecutionResult();
+        return rec.getTransactionOutput();
     }
 
     protected long estimateNrg(ArgTxCall params) {
         Address fromAddr =
-                (params.getFrom().isEmptyAddress()) ? Address.ZERO_ADDRESS() : params.getFrom();
-
-        long nrg =
-                (params.getTo().isEmptyAddress())
-                        ? Constants.NRG_TX_CREATE_MAX
-                        : Constants.NRG_TRANSACTION_MAX;
-
+                (params.getFrom().isEmptyAddress()) ? AionAddress.ZERO_ADDRESS() : params.getFrom();
         AionTransaction tx =
                 new AionTransaction(
                         params.getNonce().toByteArray(),
@@ -475,8 +450,9 @@ public abstract class ApiAion extends Api {
                         params.getTo(),
                         params.getValue().toByteArray(),
                         params.getData(),
-                        nrg,
-                        params.getNrgPrice());
+                        params.getNrg(),
+                        params.getNrgPrice(),
+                        params.getType());
 
         AionTxReceipt receipt =
                 this.ac.callConstant(tx, this.ac.getAionHub().getBlockchain().getBestBlock());
@@ -509,7 +485,7 @@ public abstract class ApiAion extends Api {
                         !(_params.getNonce().equals(BigInteger.ZERO))
                                 ? _params.getNonce().toByteArray()
                                 : pendingState
-                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                        .bestPendingStateNonce(AionAddress.wrap(key.getAddress()))
                                         .toByteArray();
 
                 AionTransaction tx =
@@ -520,12 +496,13 @@ public abstract class ApiAion extends Api {
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
-                                _params.getNrgPrice());
+                                _params.getNrgPrice(),
+                                _params.getType());
                 tx.sign(key);
 
                 TxResponse rsp = pendingState.addPendingTransaction(tx);
 
-                return new ApiTxResponse(rsp, tx.getHash(), tx.getContractAddress());
+                return new ApiTxResponse(rsp, tx.getTransactionHash(), tx.getContractAddress());
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.createContract - exception: [{}]", ex.getMessage());
@@ -535,7 +512,7 @@ public abstract class ApiAion extends Api {
 
     // Transaction Level
     public BigInteger getBalance(String _address) {
-        return this.ac.getRepository().getBalance(Address.wrap(_address));
+        return this.ac.getRepository().getBalance(AionAddress.wrap(_address));
     }
 
     public BigInteger getBalance(Address _address) {
@@ -543,7 +520,7 @@ public abstract class ApiAion extends Api {
     }
 
     public BigInteger getNonce(String _address) {
-        return this.ac.getRepository().getNonce(Address.wrap(_address));
+        return this.ac.getRepository().getNonce(AionAddress.wrap(_address));
     }
 
     public BigInteger getNonce(Address _address) {
@@ -576,7 +553,7 @@ public abstract class ApiAion extends Api {
                         (!_params.getNonce().equals(BigInteger.ZERO))
                                 ? _params.getNonce().toByteArray()
                                 : pendingState
-                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                        .bestPendingStateNonce(AionAddress.wrap(key.getAddress()))
                                         .toByteArray();
 
                 AionTransaction tx =
@@ -586,10 +563,12 @@ public abstract class ApiAion extends Api {
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
-                                _params.getNrgPrice());
+                                _params.getNrgPrice(),
+                                _params.getType());
                 tx.sign(key);
 
-                return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getHash()));
+                return (new ApiTxResponse(
+                        pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
             }
         } catch (Exception ex) {
             LOG.error("ApiAion.sendTransaction exception: [{}]", ex.getMessage());
@@ -604,7 +583,8 @@ public abstract class ApiAion extends Api {
 
         AionTransaction tx = new AionTransaction(signedTx);
         try {
-            return (new ApiTxResponse(pendingState.addPendingTransaction(tx), tx.getHash()));
+            return (new ApiTxResponse(
+                    pendingState.addPendingTransaction(tx), tx.getTransactionHash()));
         } catch (Exception ex) {
             LOG.error("<send-transaction exception>", ex);
             return (new ApiTxResponse(TxResponse.EXCEPTION, ex));
@@ -617,7 +597,7 @@ public abstract class ApiAion extends Api {
             LOG.error("<sign-transaction msg=invalid-signing-address>");
             return null;
         } else {
-            address = Address.wrap(_address);
+            address = AionAddress.wrap(_address);
         }
 
         ECKey key = getAccountKey(address.toString());
@@ -632,7 +612,7 @@ public abstract class ApiAion extends Api {
                         (!_params.getNonce().equals(BigInteger.ZERO))
                                 ? _params.getNonce().toByteArray()
                                 : pendingState
-                                        .bestPendingStateNonce(Address.wrap(key.getAddress()))
+                                        .bestPendingStateNonce(AionAddress.wrap(key.getAddress()))
                                         .toByteArray();
 
                 AionTransaction tx =
@@ -642,7 +622,8 @@ public abstract class ApiAion extends Api {
                                 _params.getValue().toByteArray(),
                                 _params.getData(),
                                 _params.getNrg(),
-                                _params.getNrgPrice());
+                                _params.getNrgPrice(),
+                                _params.getType());
                 tx.sign(key);
 
                 return tx;
@@ -670,8 +651,8 @@ public abstract class ApiAion extends Api {
     //    }
 
     //    private synchronized BigInteger getTxNonce(ECKey key, boolean add) {
-    //        return add ? nm.getNonceAndAdd(Address.wrap(key.getAddress())) :
-    // nm.getNonce(Address.wrap(key.getAddress()));
+    //        return add ? nm.getNonceAndAdd(AionAddress.wrap(key.getAddress())) :
+    // nm.getNonce(AionAddress.wrap(key.getAddress()));
     //    }
 
     public boolean isMining() {
@@ -774,15 +755,6 @@ public abstract class ApiAion extends Api {
         } else {
             return CfgAion.inst().getApi().getNrg().getNrgPriceDefault();
         }
-    }
-
-    // leak the oracle instance. NrgOracle is threadsafe, so safe to do this, but bad design
-    protected NrgOracle getNrgOracle() {
-        return NRG_ORACLE;
-    }
-
-    protected long getDefaultNrgLimit() {
-        return 90_000L;
     }
 
     protected void startES(String thName) {

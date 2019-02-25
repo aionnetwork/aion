@@ -13,6 +13,7 @@
 /mod*/.idea/
 /mod*/*.iml
 ij-execution.out
+/3rdParty/*/out/
 /*/out
 
 # build

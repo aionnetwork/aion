@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.db.generic;
 
 import java.util.Collection;
@@ -28,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.base.db.PersistenceMethod;
 import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -135,9 +113,9 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
     }
 
     @Override
-    public boolean isPersistent() {
+    public PersistenceMethod getPersistenceMethod() {
         // no locks because the persistence flag never changes
-        return database.isPersistent();
+        return database.getPersistenceMethod();
     }
 
     @Override
@@ -195,7 +173,9 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
                         + (t2 - t1)
                         + " ns."
                         + "\n\t\t\t\t\tkey = "
-                        + (key != null ? Hex.toHexString(key) : "null"));
+                        + (key != null ? Hex.toHexString(key) : "null")
+                        + "\n\t\t\t\t\treturned value = "
+                        + (value.isPresent() ? Hex.toHexString(value.get()) : "null"));
         return value;
     }
 
@@ -261,6 +241,21 @@ public class TimedDatabase implements IByteArrayKeyValueDatabase {
                         + Hex.toHexString(key)
                         + "\n\t\t\t\t\tvalue = "
                         + (value != null ? Hex.toHexString(value) : "null"));
+    }
+
+    @Override
+    public void deleteInBatch(byte[] key) {
+        long t1 = System.nanoTime();
+        database.deleteInBatch(key);
+        long t2 = System.nanoTime();
+
+        LOG.debug(
+                database.toString()
+                        + " deleteInBatch(key) in "
+                        + (t2 - t1)
+                        + " ns."
+                        + "\n\t\t\t\t\tkey = "
+                        + Hex.toHexString(key));
     }
 
     @Override

@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.mcf.db;
 
 import static org.aion.db.impl.DatabaseFactory.Props;
@@ -38,7 +16,6 @@ import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryConfig;
 import org.aion.base.type.IBlockHeader;
 import org.aion.base.type.ITransaction;
-import org.aion.base.vm.IDataWord;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgDb.Names;
@@ -57,7 +34,7 @@ public abstract class AbstractRepository<
                 BLK extends AbstractBlock<BH, ? extends ITransaction>,
                 BH extends IBlockHeader,
                 BSB extends IBlockStoreBase<?, ?>>
-        implements IRepository<AccountState, IDataWord, BSB> {
+        implements IRepository<AccountState, BSB> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -144,13 +121,12 @@ public abstract class AbstractRepository<
         //         * TODO: this is hack There should be some information on the
         //         * persistence of the DB so that we do not have to manually check.
         //         * Currently this information exists within
-        //         * {@link DBVendor#getPersistence()}, but is not utilized.
+        //         * {@link DBVendor#getPersistenceMethod()}, but is not utilized.
         //         */
         //        if (this.cfg.getActiveVendor().equals(DBVendor.MOCKDB.toValue())) {
         //            LOG.warn("WARNING: Active vendor is set to MockDB, data will not persist");
         //        } else {
 
-        // if persistence is required
         if (Boolean.valueOf(cfg.getDatabaseConfig(Names.DEFAULT).getProperty(Props.PERSISTENT))) {
             // verify user-provided path
             File f = new File(this.cfg.getDbPath());

@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.p2p.impl.comm;
 
 import static org.junit.Assert.assertEquals;
@@ -145,7 +122,13 @@ public class NodeTest {
         String hash = "015d1b31cc93e2ca5807d8da52342e1ef6d295e7a27c3620b24ba367db781321";
         byte[] bestBlockHash = hash.getBytes();
         BigInteger td = BigInteger.valueOf(ThreadLocalRandom.current().nextInt());
-        validNode.updateStatus(bestBlockNum, bestBlockHash, td);
+        byte apiVersion = (byte) ThreadLocalRandom.current().nextInt();
+        short peerCount = (short) ThreadLocalRandom.current().nextInt();
+        int pendingTxCount = ThreadLocalRandom.current().nextInt();
+        int latency = ThreadLocalRandom.current().nextInt();
+
+        validNode.updateStatus(
+                bestBlockNum, bestBlockHash, td, apiVersion, peerCount, pendingTxCount, latency);
 
         assertEquals(bestBlockNum, validNode.getBestBlockNumber());
         assertEquals(bestBlockHash, validNode.getBestBlockHash());

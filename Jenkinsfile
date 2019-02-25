@@ -73,4 +73,5 @@ environment {
 
     GIT_BRANCH = "${env.BRANCH_NAME}"
 
+    DOCKER_HOST = "unix:///var/run/docker.sock"
 }

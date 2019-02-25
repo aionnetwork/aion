@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.cli;
 
 import static org.aion.zero.impl.cli.Cli.ReturnType.ERROR;
@@ -47,6 +24,7 @@ import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
+import org.aion.mcf.config.CfgSync;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.RecoveryUtils;
@@ -101,7 +79,8 @@ public class Cli {
         DUMP_STATE_SIZE,
         DUMP_STATE,
         DUMP_BLOCKS,
-        DB_COMPACT
+        DB_COMPACT,
+        REDO_IMPORT
     }
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
@@ -191,7 +170,98 @@ public class Cli {
             // true means the UUID must be set
             boolean overwrite = cfg.fromXML(configFile);
 
-            // 4. can be influenced by the -d argument above
+            // determine the port configuration, can be combined with the -n, -d, -c, -i arguments
+
+            if (options.getPort() != null) {
+
+                int currentPort = cfg.getNet().getP2p().getPort();
+                int portNumber = currentPort;
+                boolean validPort = true;
+
+                try {
+                    portNumber = Integer.parseInt(options.getPort());
+                } catch (NumberFormatException e) {
+                    validPort = false;
+                    System.out.println("Port must be a positive integer value");
+                }
+
+                if (portNumber < 0 || portNumber > 0xFFFF) {
+                    validPort = false;
+                    System.out.println("Port out of range: " + portNumber);
+                }
+
+                if (validPort && portNumber != currentPort) {
+                    // update port in config
+                    cfg.getNet().getP2p().setPort(portNumber);
+                    overwrite = true;
+                    System.out.println("Port set to: " + portNumber);
+                } else {
+                    System.out.println("Using the current port configuration: " + currentPort);
+                }
+                // no return, allow for other parameters combined with -p
+            }
+
+            // determine the sync compact configuration, can be combined with the -n, -d, -c, -p, -i
+            // arguments
+
+            if (options.getForceCompact() != null) {
+
+                CfgSync cfgSync = cfg.getSync();
+                String[] parameters = options.getForceCompact();
+
+                if (parameters.length == 1) {
+
+                    if (!parameters[0].equalsIgnoreCase("true")
+                            && !parameters[0].equalsIgnoreCase("false")) {
+                        System.out.println("enabled value must be true or false");
+                    }
+                    boolean compactEnabled = Boolean.parseBoolean(parameters[0]);
+                    if (compactEnabled != cfgSync.getCompactEnabled()) {
+                        cfgSync.setCompactEnabled(compactEnabled);
+                        overwrite = true;
+                    }
+                    System.out.println("Compact enabled is set to: " + compactEnabled);
+
+                } else if (options.getForceCompact().length == 2) {
+
+                    int slowImportTime = cfgSync.getSlowImportTime();
+                    int compactFrequency = cfgSync.getCompactFrequency();
+                    boolean validCompact = true;
+
+                    try {
+                        slowImportTime = Integer.parseInt(parameters[0]);
+                        compactFrequency = Integer.parseInt(parameters[1]);
+                    } catch (NumberFormatException e) {
+                        validCompact = false;
+                    }
+
+                    if (slowImportTime <= 0 || compactFrequency <= 0) {
+                        validCompact = false;
+                    }
+
+                    if (!validCompact) {
+                        System.out.println(
+                                "slow_import and frequency values must be positive integers, compact disabled");
+                        if (cfgSync.getCompactEnabled()) {
+                            cfgSync.setCompactEnabled(false);
+                            overwrite = true;
+                        }
+                    } else {
+                        cfgSync.setCompactEnabled(true);
+                        cfgSync.setSlowImportTime(slowImportTime);
+                        cfgSync.setCompactFrequency(compactFrequency);
+                        overwrite = true;
+                        System.out.println(
+                                "Compact enabled using the provided configuration: slow_import="
+                                        + slowImportTime
+                                        + " frequency="
+                                        + compactFrequency);
+                    }
+                }
+                // no return, allow for other parameters combined with --compact
+            }
+
+            // 4. can be influenced by the -n, -d, -p, --compact arguments above
 
             if (options.getConfig() != null) {
                 // network was already set above
@@ -229,15 +299,15 @@ public class Cli {
                 return ReturnType.EXIT;
             }
 
-            // 5. options that can be influenced by the -d and -n arguments
+            // 5. options that can be influenced by the -d, -n, -p and --compact arguments
 
             if (options.isInfo()) {
                 System.out.println(
                         "Reading config file from: "
                                 + getRelativePath(configFile.getAbsolutePath()));
                 if (overwrite) {
-                    // updating the file in case the user id was not set
-                    cfg.toXML(new String[] {"--id=" + cfg.getId()}, configFile);
+                    // updating the file in case the user id was not set; overwrite port
+                    cfg.toXML(null, configFile);
                 }
                 printInfo(cfg);
                 return ReturnType.EXIT;
@@ -247,8 +317,8 @@ public class Cli {
             makeDirs(configFile, forkFile, cfg);
 
             if (overwrite) {
-                // only updating the file in case the user id was not set
-                cfg.toXML(new String[] {"--id=" + cfg.getId()}, cfg.getExecConfigFile());
+                // updating the file in case the user id was not set; overwrite port
+                cfg.toXML(null, cfg.getExecConfigFile());
             }
 
             // set correct keystore directory
@@ -446,11 +516,33 @@ public class Cli {
                 return EXIT;
             }
 
+            if (options.isRedoImport() != null) {
+                long height = 0L;
+                String parameter = options.isRedoImport();
+
+                if (parameter.isEmpty()) {
+                    RecoveryUtils.redoMainChainImport(height);
+                    return EXIT;
+                } else {
+                    try {
+                        height = Long.parseLong(parameter);
+                    } catch (NumberFormatException e) {
+                        System.out.println(
+                                "The given argument «"
+                                        + parameter
+                                        + "» cannot be converted to a number.");
+                        return ERROR;
+                    }
+                    RecoveryUtils.redoMainChainImport(height);
+                    return EXIT;
+                }
+            }
+
             // if no return happened earlier, run the kernel
             return RUN;
         } catch (Exception e) {
             // TODO: should be moved to individual procedures
-            System.out.println("");
+            System.out.println();
             e.printStackTrace();
             return ERROR;
         }
@@ -475,7 +567,9 @@ public class Cli {
         // the command line output has some styling characters in addition to the actual string
         // making the use of a regular expression necessary here
         usage = usage.replaceFirst(" \\[[^ ]*<hostname> <ip>.*]", "]");
-
+        usage =
+                usage.replaceFirst(
+                        "<slow_import>([\\s\\S]*?)]+", "| <slow_import> <frequency>\u001B[0m");
         System.out.println(usage);
     }
 
@@ -841,6 +935,9 @@ public class Cli {
         if (options.isDbCompact()) {
             return TaskPriority.DB_COMPACT;
         }
+        if (options.isRedoImport() != null) {
+            return TaskPriority.REDO_IMPORT;
+        }
         return TaskPriority.NONE;
     }
 
@@ -860,6 +957,12 @@ public class Cli {
             }
             if (options.getDirectory() != null) {
                 skippedTasks.add("--datadir");
+            }
+            if (options.getPort() != null) {
+                skippedTasks.add("--port");
+            }
+            if (options.getForceCompact() != null) {
+                skippedTasks.add("--force-compact");
             }
             if (options.getConfig() != null) {
                 skippedTasks.add("--config");
@@ -913,6 +1016,10 @@ public class Cli {
         }
         if (breakingTaskPriority.compareTo(TaskPriority.DB_COMPACT) < 0 && options.isDbCompact()) {
             skippedTasks.add("--db-compact");
+        }
+        if (breakingTaskPriority.compareTo(TaskPriority.REDO_IMPORT) < 0
+                && options.isRedoImport() != null) {
+            skippedTasks.add("--redo-import");
         }
         return skippedTasks;
     }

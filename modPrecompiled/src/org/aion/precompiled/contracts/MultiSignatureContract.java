@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.precompiled.contracts;
 
 import java.math.BigInteger;
@@ -30,8 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
@@ -40,9 +18,10 @@ import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.interfaces.Address;
 
 /**
  * An N of M implementation of a multi-signature pre-compiled contract.
@@ -80,8 +59,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @throws IllegalArgumentException if track or caller are null.
      */
     public MultiSignatureContract(
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track,
-            Address caller) {
+            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track, Address caller) {
 
         super(track);
         if (caller == null) {
@@ -100,7 +78,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @return a byte array for executing a create-wallet operation.
      */
     public static byte[] constructCreateWalletInput(long threshold, List<Address> owners) {
-        int len = 1 + Long.BYTES + (owners.size() * Address.ADDRESS_LEN);
+        int len = 1 + Long.BYTES + (owners.size() * Address.SIZE);
         byte[] input = new byte[len];
 
         ByteBuffer buffer = ByteBuffer.allocate(len);
@@ -134,19 +112,14 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             long nrgPrice,
             Address to) {
 
-        int len =
-                1
-                        + (Address.ADDRESS_LEN * 2)
-                        + (signatures.size() * SIG_LEN)
-                        + AMOUNT_LEN
-                        + Long.BYTES;
+        int len = 1 + (Address.SIZE * 2) + (signatures.size() * SIG_LEN) + AMOUNT_LEN + Long.BYTES;
         byte[] input = new byte[len];
 
         int index = 0;
         input[index] = (byte) 0x1;
         index++;
-        System.arraycopy(wallet.toBytes(), 0, input, index, Address.ADDRESS_LEN);
-        index += Address.ADDRESS_LEN;
+        System.arraycopy(wallet.toBytes(), 0, input, index, Address.SIZE);
+        index += Address.SIZE;
 
         for (ISignature sig : signatures) {
             byte[] sigBytes = sig.toBytes();
@@ -173,7 +146,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         System.arraycopy(nrg, 0, input, index, Long.BYTES);
         index += Long.BYTES;
 
-        System.arraycopy(to.toBytes(), 0, input, index, Address.ADDRESS_LEN);
+        System.arraycopy(to.toBytes(), 0, input, index, Address.SIZE);
         return input;
     }
 
@@ -199,11 +172,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         byte[] toBytes = to.toBytes();
         byte[] amountBytes = amount.toByteArray();
         int len =
-                Address.ADDRESS_LEN
-                        + nonceBytes.length
-                        + toBytes.length
-                        + amountBytes.length
-                        + Long.BYTES;
+                Address.SIZE + nonceBytes.length + toBytes.length + amountBytes.length + Long.BYTES;
 
         byte[] msg = new byte[len];
         ByteBuffer buffer = ByteBuffer.allocate(len);
@@ -253,15 +222,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * message so that all parties can be sure they are signing identical transactions.
      */
     @Override
-    public ExecutionResult execute(byte[] input, long nrg) {
+    public PrecompiledTransactionResult execute(byte[] input, long nrg) {
         if (nrg < COST) {
-            return new ExecutionResult(ResultCode.OUT_OF_NRG, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
         }
         if (input == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (input.length < 1) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         int operation = input[0];
@@ -272,7 +241,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             case 1:
                 return sendTransaction(input, nrg);
             default:
-                return new ExecutionResult(ResultCode.FAILURE, 0);
+                return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
     }
 
@@ -283,9 +252,9 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param nrg The energy to use.
      * @return the result of the create operation.
      */
-    private ExecutionResult createWallet(byte[] input, long nrg) {
+    private PrecompiledTransactionResult createWallet(byte[] input, long nrg) {
         if (input.length < 1 + Long.BYTES) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         ByteBuffer thresh = ByteBuffer.allocate(Long.BYTES);
@@ -296,22 +265,23 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
                 extractAddresses(Arrays.copyOfRange(input, 1 + Long.BYTES, input.length));
 
         if (!isValidTxNrg(nrg)) {
-            return new ExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INVALID_NRG_LIMIT, nrg);
         }
         if (owners == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if ((owners.size() < MIN_OWNERS) || (owners.size() > MAX_OWNERS)) {
             // sanity check... owners should be null in both these cases really
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if ((threshold < MIN_THRESH) || (threshold > owners.size())) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         Address wallet = initNewWallet(owners, threshold);
         track.flush();
-        return new ExecutionResult(ResultCode.SUCCESS, nrg - COST, wallet.toBytes());
+        return new PrecompiledTransactionResult(
+                PrecompiledResultCode.SUCCESS, nrg - COST, wallet.toBytes());
     }
 
     /**
@@ -321,10 +291,10 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
      * @param nrg The energy to use.
      * @return the result of the send operation.
      */
-    private ExecutionResult sendTransaction(byte[] input, long nrg) {
+    private PrecompiledTransactionResult sendTransaction(byte[] input, long nrg) {
         int length = input.length;
         if (length > 1 + ADDR_LEN + (SIG_LEN * MAX_OWNERS) + AMOUNT_LEN + Long.BYTES + ADDR_LEN) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         int walletStart = 1;
@@ -335,13 +305,13 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
 
         // Ensures input is min expected size except possibly signatures, which is checked below.
         if (sigsStart > amountStart) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
-        Address wallet = new Address(Arrays.copyOfRange(input, walletStart, sigsStart));
+        Address wallet = new AionAddress(Arrays.copyOfRange(input, walletStart, sigsStart));
         List<byte[]> sigs = extractSignatures(Arrays.copyOfRange(input, sigsStart, amountStart));
         BigInteger amount = new BigInteger(Arrays.copyOfRange(input, amountStart, nrgStart));
-        Address recipient = new Address(Arrays.copyOfRange(input, recipientStart, length));
+        Address recipient = new AionAddress(Arrays.copyOfRange(input, recipientStart, length));
 
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(Arrays.copyOfRange(input, nrgStart, recipientStart));
@@ -349,34 +319,34 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         Long nrgPrice = buffer.getLong();
 
         if (!isValidTxNrg(nrg)) {
-            return new ExecutionResult(ResultCode.INVALID_NRG_LIMIT, nrg);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INVALID_NRG_LIMIT, nrg);
         }
-        if (track.getStorageValue(wallet, new DataWord(getMetaDataKey())) == null) {
+        if (track.getStorageValue(wallet, new DataWord(getMetaDataKey()).toWrapper()) == null) {
             // Then wallet is not the address of a multi-sig wallet.
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (sigs == null) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
         byte[] msg = constructMsg(wallet, track.getNonce(wallet), recipient, amount, nrgPrice);
         if (amount.compareTo(BigInteger.ZERO) < 0) {
             // Attempt to transfer negative amount.
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (!areValidSignatures(wallet, sigs, msg)) {
-            return new ExecutionResult(ResultCode.FAILURE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
         if (track.getBalance(wallet).compareTo(amount) < 0) {
             // Attempt to transfer more than available balance.
-            return new ExecutionResult(ResultCode.INSUFFICIENT_BALANCE, 0);
+            return new PrecompiledTransactionResult(PrecompiledResultCode.INSUFFICIENT_BALANCE, 0);
         }
 
         track.incrementNonce(wallet);
         track.addBalance(wallet, amount.negate());
         track.addBalance(recipient, amount);
         track.flush();
-        return new ExecutionResult(ResultCode.SUCCESS, nrg - COST);
+        return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - COST);
     }
 
     /**
@@ -404,11 +374,11 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         Address addr;
         boolean addressIsOwner = false;
         for (int i = 0; i < length; i += ADDR_LEN) {
-            addr = new Address(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
+            addr = new AionAddress(Arrays.copyOfRange(addresses, i, i + ADDR_LEN));
             if (result.contains(addr)) {
                 return null;
             }
-            if (track.getStorageValue(addr, new DataWord(getMetaDataKey())) != null) {
+            if (track.getStorageValue(addr, new DataWord(getMetaDataKey()).toWrapper()) != null) {
                 return null;
             }
             if (addr.equals(this.caller)) {
@@ -484,7 +454,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         byte[] hash = HashUtil.keccak256(content);
         hash[0] = AION_PREFIX;
 
-        Address walletId = new Address(hash);
+        Address walletId = new AionAddress(hash);
         track.createAccount(walletId);
         saveWalletMetaData(walletId, threshold, owners.size());
         saveWalletOwners(walletId, owners);
@@ -518,7 +488,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         data.putLong(numOwners);
         System.arraycopy(data.array(), 0, metaValue, Long.BYTES, Long.BYTES);
 
-        track.addStorageRow(walletId, new DataWord(metaKey), new DataWord(metaValue));
+        track.addStorageRow(
+                walletId, new DataWord(metaKey).toWrapper(), new DataWord(metaValue).toWrapper());
     }
 
     /**
@@ -549,8 +520,14 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             System.arraycopy(owner.toBytes(), 0, firstValue, 0, DataWord.BYTES);
             System.arraycopy(owner.toBytes(), DataWord.BYTES, secondValue, 0, DataWord.BYTES);
 
-            track.addStorageRow(walletId, new DataWord(firstKey), new DataWord(firstValue));
-            track.addStorageRow(walletId, new DataWord(secondKey), new DataWord(secondValue));
+            track.addStorageRow(
+                    walletId,
+                    new DataWord(firstKey).toWrapper(),
+                    new DataWord(firstValue).toWrapper());
+            track.addStorageRow(
+                    walletId,
+                    new DataWord(secondKey).toWrapper(),
+                    new DataWord(secondValue).toWrapper());
             count++;
         }
     }
@@ -581,7 +558,7 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             if (!signatureIsCorrect(sig, msg)) {
                 return false;
             }
-            signer = new Address(AddressSpecs.computeA0Address(Arrays.copyOfRange(sig, 0, 32)));
+            signer = new AionAddress(AddressSpecs.computeA0Address(Arrays.copyOfRange(sig, 0, 32)));
             if (txSigners.contains(signer)) {
                 return false;
             }
@@ -591,7 +568,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
             txSigners.add(signer);
         }
 
-        IDataWord metaValue = track.getStorageValue(wallet, new DataWord(getMetaDataKey()));
+        ByteArrayWrapper metaValue =
+                track.getStorageValue(wallet, new DataWord(getMetaDataKey()).toWrapper());
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(Arrays.copyOfRange(metaValue.getData(), 0, Long.BYTES));
         buffer.flip();
@@ -624,7 +602,8 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
     private Set<Address> getOwners(Address walletId) {
         Set<Address> owners = new HashSet<>();
 
-        IDataWord metaValue = track.getStorageValue(walletId, new DataWord(getMetaDataKey()));
+        ByteArrayWrapper metaValue =
+                track.getStorageValue(walletId, new DataWord(getMetaDataKey()).toWrapper());
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(Arrays.copyOfRange(metaValue.getData(), Long.BYTES, DataWord.BYTES));
         buffer.flip();
@@ -651,14 +630,15 @@ public final class MultiSignatureContract extends StatefulPrecompiledContract {
         byte[] address = new byte[ADDR_LEN];
 
         byte[] ownerDataKey1 = getOwnerDataKey(true, ownerId);
-        IDataWord addrPortion = track.getStorageValue(walletId, new DataWord(ownerDataKey1));
+        ByteArrayWrapper addrPortion =
+                track.getStorageValue(walletId, new DataWord(ownerDataKey1).toWrapper());
         System.arraycopy(addrPortion.getData(), 0, address, 0, DataWord.BYTES);
 
         byte[] ownerDataKey2 = getOwnerDataKey(false, ownerId);
-        addrPortion = track.getStorageValue(walletId, new DataWord(ownerDataKey2));
+        addrPortion = track.getStorageValue(walletId, new DataWord(ownerDataKey2).toWrapper());
         System.arraycopy(addrPortion.getData(), 0, address, DataWord.BYTES, DataWord.BYTES);
 
-        return new Address(address);
+        return new AionAddress(address);
     }
 
     /**

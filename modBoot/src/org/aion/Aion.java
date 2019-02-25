@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion;
 
 import static java.lang.System.exit;
@@ -68,6 +45,7 @@ import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.mine.IMineRunner;
 import org.aion.solidity.Compiler;
 import org.aion.utils.NativeLibrary;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
@@ -217,6 +195,13 @@ public class Aion {
             logo = appendLogo(logo, networkStr);
         }
 
+        // show enabled VMs
+        String vmStr = "using FVM";
+        if (cfg.getVm().isAvmEnabled()) {
+            vmStr += " & AVM";
+        }
+        logo = appendLogo(logo, vmStr);
+
         genLog.info(path);
         genLog.info(logo);
 
@@ -256,6 +241,7 @@ public class Aion {
         /*
          * Start Threads.
          */
+        VirtualMachineProvider.initializeAllVirtualMachines();
         Thread zmqThread = null;
         ProtocolProcessor processor = null;
         if (cfg.getApi().getZmq().getActive()) {
@@ -393,6 +379,9 @@ public class Aion {
 
                                     genLog.info("Shutting down the AionHub...");
                                     ac.getAionHub().close();
+
+                                    genLog.info("Shutting down the virtual machines...");
+                                    VirtualMachineProvider.shutdownAllVirtualMachines();
 
                                     genLog.info("---------------------------------------------");
                                     genLog.info("| Aion kernel graceful shutdown successful! |");

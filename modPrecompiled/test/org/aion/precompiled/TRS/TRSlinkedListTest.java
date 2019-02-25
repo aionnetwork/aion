@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.TRS;
 
 import static org.junit.Assert.assertEquals;
@@ -34,11 +11,12 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
+import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
+import org.aion.vm.api.interfaces.Address;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,7 +57,7 @@ public class TRSlinkedListTest extends TRShelpers {
         Address contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         byte[] input = getDepositInput(contract, BigInteger.ONE);
         TRSuseContract trs = newTRSuseContract(acct);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         checkLinkedListOneDepositor(trs, contract, acct, input);
 
         repo.incrementNonce(acct);
@@ -88,7 +66,7 @@ public class TRSlinkedListTest extends TRShelpers {
         contract = createTRScontract(acct, false, true, 1, BigInteger.ZERO, 0);
         input = getDepositForInput(contract, acct, BigInteger.ONE);
         trs = newTRSuseContract(acct);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         checkLinkedListOneDepositor(trs, contract, acct, input);
     }
 
@@ -207,9 +185,10 @@ public class TRSlinkedListTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+                PrecompiledResultCode.SUCCESS,
+                newTRSuseContract(acct2).execute(input, COST).getResultCode());
 
         checkRemoveHeadOfListWithHeadAndNextOnly(trs, contract, acct, acct2);
 
@@ -220,9 +199,9 @@ public class TRSlinkedListTest extends TRShelpers {
 
         trs = newTRSuseContract(acct);
         input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         input = getDepositForInput(contract, acct2, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         checkRemoveHeadOfListWithHeadAndNextOnly(trs, contract, acct, acct2);
     }
@@ -255,9 +234,10 @@ public class TRSlinkedListTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+                PrecompiledResultCode.SUCCESS,
+                newTRSuseContract(acct2).execute(input, COST).getResultCode());
 
         checkRemoveTailOfSizeTwoList(trs, contract, acct, acct2);
 
@@ -268,9 +248,9 @@ public class TRSlinkedListTest extends TRShelpers {
 
         trs = newTRSuseContract(acct);
         input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         input = getDepositForInput(contract, acct2, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         checkRemoveTailOfSizeTwoList(trs, contract, acct, acct2);
     }
@@ -304,11 +284,13 @@ public class TRSlinkedListTest extends TRShelpers {
 
         byte[] input = getDepositInput(contract, DEFAULT_BALANCE);
         TRSuseContract trs = newTRSuseContract(acct);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct2).execute(input, COST).getResultCode());
+                PrecompiledResultCode.SUCCESS,
+                newTRSuseContract(acct2).execute(input, COST).getResultCode());
         assertEquals(
-                ResultCode.SUCCESS, newTRSuseContract(acct3).execute(input, COST).getResultCode());
+                PrecompiledResultCode.SUCCESS,
+                newTRSuseContract(acct3).execute(input, COST).getResultCode());
 
         checkRemoveInteriorOfSizeThreeList(trs, contract, acct, acct2, acct3);
 
@@ -320,11 +302,11 @@ public class TRSlinkedListTest extends TRShelpers {
 
         trs = newTRSuseContract(acct);
         input = getDepositForInput(contract, acct, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         input = getDepositForInput(contract, acct2, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         input = getDepositForInput(contract, acct3, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         checkRemoveInteriorOfSizeThreeList(trs, contract, acct, acct2, acct3);
     }
@@ -413,14 +395,14 @@ public class TRSlinkedListTest extends TRShelpers {
     private void checkRemoveHeadOfListWithHeadOnly(
             AbstractTRS trs, Address contract, Address acct, byte[] input) {
 
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         assertEquals(acct, getLinkedListHead(trs, contract));
         assertNull(getLinkedListNext(trs, contract, acct));
         assertNull(getLinkedListPrev(trs, contract, acct));
 
         input = getRefundInput(contract, acct, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         assertFalse(accountIsValid(trs, contract, acct));
         assertNull(getLinkedListHead(trs, contract));
@@ -438,7 +420,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
         // We remove acct2, the head. Should have:      null <- acct -> null
         byte[] input = getRefundInput(contract, acct2, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         assertFalse(accountIsValid(trs, contract, acct2));
         assertEquals(acct, getLinkedListHead(trs, contract));
@@ -454,7 +436,7 @@ public class TRSlinkedListTest extends TRShelpers {
         assertNull(getLinkedListPrev(trs, contract, head));
         assertEquals(head, getLinkedListPrev(trs, contract, next));
         byte[] input = getRefundInput(contract, head, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         // We verify next is the new head, its prev is null and that we can advance 8 times before
         // hitting the end of the list.
@@ -487,7 +469,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
         // We remove acct, the tail. Should have:      null <- acct2 -> null
         byte[] input = getRefundInput(contract, acct, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         assertFalse(accountIsValid(trs, contract, acct));
         assertEquals(acct2, getLinkedListHead(trs, contract));
@@ -500,7 +482,7 @@ public class TRSlinkedListTest extends TRShelpers {
         // unique too.
         TRSuseContract trs = newTRSuseContract(owner);
         Address next = getLinkedListHead(trs, contract);
-        Address head = new Address(next.toBytes());
+        Address head = new AionAddress(next.toBytes());
         Set<Address> addressesInList = new HashSet<>();
         for (int i = 0; i < listSize; i++) {
             if (i == listSize - 1) {
@@ -515,7 +497,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
         // Now next should be the tail. Remove it. Iterate over list again.
         byte[] input = getRefundInput(contract, next, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertFalse(accountIsValid(trs, contract, next));
 
         assertEquals(head, getLinkedListHead(trs, contract));
@@ -545,7 +527,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
         // We remove acct2. Should have:      null <- acct3 <-> acct -> null    with acct3 as head.
         byte[] input = getRefundInput(contract, acct2, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
 
         assertFalse(accountIsValid(trs, contract, acct2));
         assertEquals(acct3, getLinkedListHead(trs, contract));
@@ -560,7 +542,7 @@ public class TRSlinkedListTest extends TRShelpers {
         // unique too.
         TRSuseContract trs = newTRSuseContract(owner);
         Address next = getLinkedListHead(trs, contract);
-        Address head = new Address(next.toBytes());
+        Address head = new AionAddress(next.toBytes());
         Address mid = null;
         Set<Address> addressesInList = new HashSet<>();
         for (int i = 0; i < listSize; i++) {
@@ -571,7 +553,7 @@ public class TRSlinkedListTest extends TRShelpers {
                 assertNotNull(next);
                 assertFalse(addressesInList.contains(next));
                 addressesInList.add(next);
-                mid = new Address(next.toBytes());
+                mid = new AionAddress(next.toBytes());
             } else {
                 next = getLinkedListNext(trs, contract, next);
                 assertNotNull(next);
@@ -582,7 +564,7 @@ public class TRSlinkedListTest extends TRShelpers {
 
         // Remove mid. Iterate over list again.
         byte[] input = getRefundInput(contract, mid, DEFAULT_BALANCE);
-        assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+        assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
         assertFalse(accountIsValid(trs, contract, mid));
 
         assertEquals(head, getLinkedListHead(trs, contract));
@@ -622,7 +604,7 @@ public class TRSlinkedListTest extends TRShelpers {
         // Remove all accts in removals. Iterate over list again.
         for (Address rm : removals) {
             byte[] input = getRefundInput(contract, rm, DEFAULT_BALANCE);
-            assertEquals(ResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
+            assertEquals(PrecompiledResultCode.SUCCESS, trs.execute(input, COST).getResultCode());
             assertFalse(accountIsValid(trs, contract, rm));
         }
 

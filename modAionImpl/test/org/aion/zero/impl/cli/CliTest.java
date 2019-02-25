@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.zero.impl.cli;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -74,11 +52,13 @@ public class CliTest {
     private static final String BASE_PATH = System.getProperty("user.dir");
     private static final File MAIN_BASE_PATH = new File(BASE_PATH, "mainnet");
     private static final File TEST_BASE_PATH = new File(BASE_PATH, "mastery");
+    private static final File AVM_TEST_BASE_PATH = new File(BASE_PATH, "avmtestnet");
 
     // config paths
     private static final File CONFIG_PATH = new File(BASE_PATH, "config");
     private static final File MAIN_CONFIG_PATH = new File(CONFIG_PATH, "mainnet");
     private static final File TEST_CONFIG_PATH = new File(CONFIG_PATH, "mastery");
+    private static final File AVM_TEST_CONFIG_PATH = new File(CONFIG_PATH, "avmtestnet");
 
     private static final String module = "modAionImpl";
 
@@ -96,17 +76,26 @@ public class CliTest {
     private static final File oldConfig = new File(CONFIG_PATH, configFileName);
     private static final File mainnetConfig = new File(MAIN_CONFIG_PATH, configFileName);
     private static final File testnetConfig = new File(TEST_CONFIG_PATH, configFileName);
+    private static final File avmtestnetConfig = new File(AVM_TEST_CONFIG_PATH, configFileName);
 
     private static final File genesis = new File(TEST_RESOURCE_DIR, genesisFileName);
     private static final File oldGenesis = new File(CONFIG_PATH, genesisFileName);
     private static final File mainnetGenesis = new File(MAIN_CONFIG_PATH, genesisFileName);
     private static final File testnetGenesis = new File(TEST_CONFIG_PATH, genesisFileName);
+    private static final File avmtestnetGenesis = new File(AVM_TEST_CONFIG_PATH, genesisFileName);
 
     private static final File fork = new File(TEST_RESOURCE_DIR, forkFileName);
 
     private static final File mainnetFork = new File(MAIN_CONFIG_PATH, forkFileName);
     private static final File testnetFork = new File(TEST_CONFIG_PATH, forkFileName);
+    private static final File avmtestnetFork = new File(AVM_TEST_CONFIG_PATH, forkFileName);
 
+    private static final String DEFAULT_PORT = "30303";
+    private static final String TEST_PORT = "12345";
+    private static final String INVALID_PORT = "123450";
+
+    private static final int SLOW_IMPORT_TIME = 1_000; // 1 sec
+    private static final int COMPACT_FREQUENCY = 600_000; // 10 min
     /** @implNote set this to true to enable printing */
     private static final boolean verbose = false;
 
@@ -135,6 +124,15 @@ public class CliTest {
             Cli.copyRecursively(fork, testnetFork);
         }
 
+        if (BASE_PATH.contains(module) && !avmtestnetConfig.exists()) {
+            // save config to disk at expected location for new kernel
+            if (!AVM_TEST_CONFIG_PATH.exists()) {
+                assertThat(AVM_TEST_CONFIG_PATH.mkdir()).isTrue();
+            }
+            Cli.copyRecursively(config, avmtestnetConfig);
+            Cli.copyRecursively(genesis, avmtestnetGenesis);
+            Cli.copyRecursively(fork, avmtestnetFork);
+        }
         cfg.resetInternal();
 
         doReturn("password").when(mockCli).readPassword(any(), any());
@@ -146,6 +144,11 @@ public class CliTest {
         deleteRecursively(path);
         deleteRecursively(alternativePath);
 
+        // in case absolute paths are used
+        deleteRecursively(cfg.getKeystoreDir());
+        deleteRecursively(cfg.getDatabaseDir());
+        deleteRecursively(cfg.getLogDir());
+
         // to avoid deleting config for all tests
         if (BASE_PATH.contains(module)) {
             deleteRecursively(CONFIG_PATH);
@@ -153,6 +156,7 @@ public class CliTest {
 
         deleteRecursively(MAIN_BASE_PATH);
         deleteRecursively(TEST_BASE_PATH);
+        deleteRecursively(AVM_TEST_BASE_PATH);
     }
 
     /**
@@ -239,6 +243,13 @@ public class CliTest {
                 // mastery as parameter
                 parameters.add(new Object[] {new String[] {op, netVal}, RUN, expected});
             }
+        }
+
+        // network alone with avmtestnet
+        expected = AVM_TEST_BASE_PATH.getAbsolutePath();
+        for (String op : net_options) {
+            //avmtestnet as parameter
+            parameters.add(new Object[] {new String[] {op, "avmtestnet"}, RUN, expected});
         }
 
         // network and directory with testnet
@@ -392,6 +403,13 @@ public class CliTest {
             parameters.add(new Object[] {new String[] {op, "mastery"}, testnetConfig, expected});
             // testnet as parameter
             parameters.add(new Object[] {new String[] {op, "testnet"}, testnetConfig, expected});
+        }
+
+        expected = AVM_TEST_BASE_PATH.getAbsolutePath();
+
+        for (String op : options) {
+            // avmtestnet as parameter
+            parameters.add(new Object[] {new String[] {op, "avmtestnet"}, avmtestnetConfig, expected});
         }
 
         // config and directory
@@ -603,6 +621,704 @@ public class CliTest {
         Cli.copyRecursively(config, mainnetConfig);
     }
 
+    /** Parameters for testing {@link #testPort(String[], ReturnType, String, String)}. */
+    @SuppressWarnings("unused")
+    private Object parametersWithPort() {
+        List<Object> parameters = new ArrayList<>();
+
+        String[] portOptions = new String[] {"-p", "--port"};
+        String[] netOptions = new String[] {"-n", "--network"};
+        String[] dirOptions = new String[] {"-d", "--datadir"};
+        String expectedPath = MAIN_BASE_PATH.getAbsolutePath();
+        String expPathOnError = MAIN_BASE_PATH.getAbsolutePath();
+        String expPortOnError = Integer.toString(cfg.getNet().getP2p().getPort());
+
+        // port alone
+        for (String opPort : portOptions) {
+            // without parameter
+            parameters.add(
+                    new Object[] {new String[] {opPort}, ERROR, expPathOnError, expPortOnError});
+            // with two parameters
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, TEST_PORT, TEST_PORT},
+                        ERROR,
+                        expPathOnError,
+                        expPortOnError
+                    });
+            // with invalid parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, INVALID_PORT}, RUN, expPathOnError, expPortOnError
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, "-12345"}, RUN, expPathOnError, expPortOnError
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, "invalid"}, RUN, expPathOnError, expPortOnError
+                    });
+            // with testing port number
+            parameters.add(
+                    new Object[] {new String[] {opPort, TEST_PORT}, RUN, expectedPath, TEST_PORT});
+        }
+
+        // port with help and version
+        for (String opPort : portOptions) {
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, TEST_PORT, "-h"}, EXIT, expectedPath, expPortOnError
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opPort, TEST_PORT, "-v"}, EXIT, expectedPath, expPortOnError
+                    });
+        }
+
+        // network and port
+        String[] netValues = new String[] {"mainnet", "invalid"};
+        for (String opNet : netOptions) {
+            for (String valNet : netValues) {
+                for (String opPort : portOptions) {
+                    // without port parameter
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opNet, valNet, opPort},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, opNet, valNet},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    // with invalid port parameter
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opNet, valNet, opPort, INVALID_PORT},
+                                RUN,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, INVALID_PORT, opNet, valNet},
+                                RUN,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    // with testing port number
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opNet, valNet, opPort, TEST_PORT},
+                                RUN,
+                                expectedPath,
+                                TEST_PORT
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, TEST_PORT, opNet, valNet},
+                                RUN,
+                                expectedPath,
+                                TEST_PORT
+                            });
+                }
+            }
+        }
+
+        // network and port with testnet
+        netValues = new String[] {"mastery", "testnet"};
+        expectedPath = TEST_BASE_PATH.getAbsolutePath();
+        for (String opNet : netOptions) {
+            for (String valNet : netValues) {
+                for (String opPort : portOptions) {
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opNet, valNet, opPort, TEST_PORT},
+                                RUN,
+                                expectedPath,
+                                TEST_PORT
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, TEST_PORT, opNet, valNet},
+                                RUN,
+                                expectedPath,
+                                TEST_PORT
+                            });
+                }
+            }
+        }
+
+        // directory and port
+        String[] dirValues = new String[] {dataDirectory, path.getAbsolutePath()};
+        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        for (String opDir : dirOptions) {
+            for (String valDir : dirValues) {
+                for (String opPort : portOptions) {
+                    // without port parameter
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opDir, valDir, opPort},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, opDir, valDir},
+                                ERROR,
+                                expPathOnError,
+                                expPortOnError
+                            });
+                    // with invalid port parameter
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opDir, valDir, opPort, INVALID_PORT},
+                                RUN,
+                                expectedPath,
+                                expPortOnError
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, INVALID_PORT, opDir, valDir},
+                                RUN,
+                                expectedPath,
+                                expPortOnError
+                            });
+                    // with testing port number
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opDir, valDir, opPort, TEST_PORT},
+                                RUN,
+                                expectedPath,
+                                TEST_PORT
+                            });
+                    parameters.add(
+                            new Object[] {
+                                new String[] {opPort, TEST_PORT, opDir, valDir},
+                                RUN,
+                                expectedPath,
+                                TEST_PORT
+                            });
+                }
+            }
+        }
+
+        // network, directory and port
+        netValues = new String[] {"mainnet", "mastery"};
+        for (String opNet : netOptions) {
+            for (String valNet : netValues) {
+                for (String opDir : dirOptions) {
+                    for (String valDir : dirValues) {
+                        for (String opPort : portOptions) {
+                            expectedPath = new File(path, valNet).getAbsolutePath();
+                            parameters.add(
+                                    new Object[] {
+                                        new String[] {
+                                            opNet, valNet, opDir, valDir, opPort, TEST_PORT
+                                        },
+                                        RUN,
+                                        expectedPath,
+                                        TEST_PORT
+                                    });
+                        }
+                    }
+                }
+            }
+        }
+
+        // directory with subdirectories and port
+        String dir = dataDirectory + File.separator + "subfolder";
+        File testPath = new File(BASE_PATH, dir);
+        expectedPath = new File(testPath, "mainnet").getAbsolutePath();
+        for (String opDir : dirOptions) {
+            for (String opPort : portOptions) {
+                // with relative path with subdirectories
+                parameters.add(
+                        new Object[] {
+                            new String[] {opDir, dir, opPort, TEST_PORT},
+                            RUN,
+                            expectedPath,
+                            TEST_PORT
+                        });
+            }
+        }
+
+        // port with config and directory
+        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        for (String opPort : portOptions) {
+            // with relative path
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            "--datadir", dataDirectory, "--config", "mainnet", opPort, TEST_PORT
+                        },
+                        EXIT,
+                        expectedPath,
+                        TEST_PORT
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            "-c", "mainnet", opPort, TEST_PORT, "--datadir", dataDirectory
+                        },
+                        EXIT,
+                        expectedPath,
+                        TEST_PORT
+                    });
+            // with absolute path
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            opPort, TEST_PORT, "-d", path.getAbsolutePath(), "--config", "mainnet"
+                        },
+                        EXIT,
+                        expectedPath,
+                        TEST_PORT
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            "-c", "mainnet", "-d", path.getAbsolutePath(), opPort, TEST_PORT
+                        },
+                        EXIT,
+                        expectedPath,
+                        TEST_PORT
+                    });
+        }
+
+        return parameters.toArray();
+    }
+
+    @Test
+    @Parameters(method = "parametersWithPort")
+    public void testPort(
+            String[] input, ReturnType expectedReturn, String expectedPath, String expectedPort) {
+
+        cfg.toXML(new String[] {"--p2p=" + "," + DEFAULT_PORT}, cfg.getInitialConfigFile());
+
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getExecConfigFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getExecGenesisFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+        assertThat(cfg.getExecForkFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
+        assertThat(cfg.getLogDir()).isEqualTo(new File(expectedPath, "log"));
+        assertThat(cfg.getKeystoreDir()).isEqualTo(new File(expectedPath, "keystore"));
+        // test port is updated
+        assertThat(Integer.toString(cfg.getNet().getP2p().getPort())).isEqualTo(expectedPort);
+        // test port in initial config is unchanged
+        cfg.resetInternal();
+        cfg.fromXML();
+        assertThat(Integer.toString(cfg.getNet().getP2p().getPort())).isEqualTo(DEFAULT_PORT);
+
+        if (verbose) {
+            printPaths(cfg);
+        }
+    }
+
+    /**
+     * Parameters for testing {@link #testForceCompact(String[], ReturnType, String, boolean, int,
+     * int)}.
+     */
+    @SuppressWarnings("unused")
+    private Object parametersWithForceCompact() {
+        List<Object> parameters = new ArrayList<>();
+
+        String expectedPath = MAIN_BASE_PATH.getAbsolutePath();
+        String expPathOnError = MAIN_BASE_PATH.getAbsolutePath();
+        String opCompact = "--force-compact";
+
+        // Compact alone
+        // without parameter
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact},
+                    ERROR,
+                    expPathOnError,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        // with one parameter
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "123"},
+                    RUN,
+                    expPathOnError,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "invalid"},
+                    RUN,
+                    expPathOnError,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "TRUE"},
+                    RUN,
+                    expectedPath,
+                    true,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "false"},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        // with two parameters
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "a", "b"},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "-1000", "3.14"},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "123", "456"}, RUN, expectedPath, true, 123, 456
+                });
+        // with more than two parameters
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "true", "123", "456"},
+                    ERROR,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+
+        // compact with help and version
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "true", "-h"},
+                    EXIT,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "true", "-v"},
+                    EXIT,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+
+        // compact with network
+        String[] netValues = new String[] {"mainnet", "invalid"};
+        for (String valNet : netValues) {
+            // without compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "-n", valNet},
+                        ERROR,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            // with invalid compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", valNet, opCompact, "-123", "456"},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", valNet, opCompact, "invalid", "123"},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            // with valid compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            opCompact, "true", "-n", valNet,
+                        },
+                        RUN,
+                        expectedPath,
+                        true,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", valNet, opCompact, "123", "456"},
+                        RUN,
+                        expectedPath,
+                        true,
+                        123,
+                        456
+                    });
+        }
+        // compact with network testnet
+        netValues = new String[] {"mastery", "testnet"};
+        expectedPath = TEST_BASE_PATH.getAbsolutePath();
+        for (String valNet : netValues) {
+            parameters.add(
+                    new Object[] {
+                        new String[] {
+                            opCompact, "true", "-n", valNet,
+                        },
+                        RUN,
+                        expectedPath,
+                        true,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {"-n", valNet, opCompact, "123", "456"},
+                        RUN,
+                        expectedPath,
+                        true,
+                        123,
+                        456
+                    });
+        }
+        // compact and directory
+        String[] dirValues = new String[] {dataDirectory, path.getAbsolutePath()};
+        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        for (String valDir : dirValues) {
+            // without compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "-d", valDir},
+                        ERROR,
+                        expPathOnError,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            // with invalid compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "invliad", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "123", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "-123", "1.234", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        false,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            // with valid compact parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "true", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        true,
+                        SLOW_IMPORT_TIME,
+                        COMPACT_FREQUENCY
+                    });
+            parameters.add(
+                    new Object[] {
+                        new String[] {opCompact, "123", "456", "-d", valDir},
+                        RUN,
+                        expectedPath,
+                        true,
+                        123,
+                        456
+                    });
+        }
+
+        // compact and port
+        expectedPath = MAIN_BASE_PATH.getAbsolutePath();
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "invalid", "-p", TEST_PORT},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "-123", "456", "-p", TEST_PORT},
+                    RUN,
+                    expectedPath,
+                    false,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "true", "-p", TEST_PORT},
+                    RUN,
+                    expectedPath,
+                    true,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        parameters.add(
+                new Object[] {
+                    new String[] {opCompact, "123", "456", "-p", TEST_PORT},
+                    RUN,
+                    expectedPath,
+                    true,
+                    123,
+                    456
+                });
+
+        // compact with network, directory and port
+        netValues = new String[] {"mainnet", "mastery"};
+        for (String valNet : netValues) {
+            for (String valDir : dirValues) {
+                expectedPath = new File(path, valNet).getAbsolutePath();
+                parameters.add(
+                        new Object[] {
+                            new String[] {
+                                "-n", valNet, "-d", valDir, "-p", TEST_PORT, opCompact, "true"
+                            },
+                            RUN,
+                            expectedPath,
+                            true,
+                            SLOW_IMPORT_TIME,
+                            COMPACT_FREQUENCY
+                        });
+                parameters.add(
+                        new Object[] {
+                            new String[] {
+                                "-n", valNet, "-d", valDir, "-p", TEST_PORT, opCompact, "123", "456"
+                            },
+                            RUN,
+                            expectedPath,
+                            true,
+                            123,
+                            456
+                        });
+            }
+        }
+
+        // compact with config and directory
+        expectedPath = new File(path, "mainnet").getAbsolutePath();
+        // with relative path
+        parameters.add(
+                new Object[] {
+                    new String[] {
+                        "-d", dataDirectory, "-c", "mainnet", "-p", TEST_PORT, opCompact, "true"
+                    },
+                    EXIT,
+                    expectedPath,
+                    true,
+                    SLOW_IMPORT_TIME,
+                    COMPACT_FREQUENCY
+                });
+        // with absolute path
+        parameters.add(
+                new Object[] {
+                    new String[] {
+                        "-d",
+                        path.getAbsolutePath(),
+                        "-c",
+                        "mainnet",
+                        "-p",
+                        TEST_PORT,
+                        opCompact,
+                        "123",
+                        "456"
+                    },
+                    EXIT,
+                    expectedPath,
+                    true,
+                    123,
+                    456
+                });
+
+        return parameters.toArray();
+    }
+
+    @Test
+    @Parameters(method = "parametersWithForceCompact")
+    public void testForceCompact(
+            String[] input,
+            ReturnType expectedReturn,
+            String expectedPath,
+            boolean expectedCompactEnabled,
+            int expectedSlowImportTime,
+            int expectedCompactFrequency) {
+
+        assertThat(cli.call(input, cfg)).isEqualTo(expectedReturn);
+        assertThat(cfg.getBasePath()).isEqualTo(expectedPath);
+        assertThat(cfg.getExecConfigFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + configFileName));
+        assertThat(cfg.getExecGenesisFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + genesisFileName));
+        assertThat(cfg.getExecForkFile())
+                .isEqualTo(new File(expectedPath, "config" + File.separator + forkFileName));
+        assertThat(cfg.getDatabaseDir()).isEqualTo(new File(expectedPath, "database"));
+        // check compact configurations in exec config are updated
+        assertThat(cfg.getSync().getCompactEnabled()).isEqualTo(expectedCompactEnabled);
+        assertThat(cfg.getSync().getSlowImportTime()).isEqualTo(expectedSlowImportTime);
+        assertThat(cfg.getSync().getCompactFrequency()).isEqualTo(expectedCompactFrequency);
+        // check compact configurations in initial config are unchanged
+        cfg.resetInternal();
+        cfg.fromXML();
+        assertThat(cfg.getSync().getCompactEnabled()).isEqualTo(false);
+        assertThat(cfg.getSync().getSlowImportTime()).isEqualTo(SLOW_IMPORT_TIME);
+        assertThat(cfg.getSync().getCompactFrequency()).isEqualTo(COMPACT_FREQUENCY);
+    }
+
     /** Parameters for testing {@link #testInfo(String[], ReturnType, String)}. */
     @SuppressWarnings("unused")
     private Object parametersWithInfo() {
@@ -654,8 +1370,51 @@ public class CliTest {
                     });
         }
 
+        // with port
+        expected = MAIN_BASE_PATH.getAbsolutePath();
+        for (String op : options) {
+            // test port number as parameter
+            parameters.add(new Object[] {new String[] {op, "-p", TEST_PORT}, EXIT, expected});
+            parameters.add(new Object[] {new String[] {"-p", TEST_PORT, op}, EXIT, expected});
+            // invalid port parameter
+            parameters.add(new Object[] {new String[] {op, "-p", INVALID_PORT}, EXIT, expOnError});
+        }
+
+        // with compact
+        for (String op : options) {
+            // test port number as parameter
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "--force-compact", "invalid"}, EXIT, expOnError
+                    });
+            parameters.add(
+                    new Object[] {new String[] {op, "--force-compact", "true"}, EXIT, expected});
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "--force-compact", "123", "456"}, EXIT, expected
+                    });
+        }
+
+        // with port and directory
+        expected = new File(path, "mainnet").getAbsolutePath();
+        for (String op : options) {
+            // with relative path
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "-d", dataDirectory, "-p", TEST_PORT}, EXIT, expected
+                    });
+            // with absolute path
+            parameters.add(
+                    new Object[] {
+                        new String[] {op, "-p", TEST_PORT, "-d", path.getAbsolutePath()},
+                        EXIT,
+                        expected
+                    });
+        }
+
         // with network and directory
         expected = new File(path, "mastery").getAbsolutePath();
+
         for (String op : options) {
             // with relative path
             parameters.add(
@@ -1150,81 +1909,103 @@ public class CliTest {
         Set<String> skippedTasks;
 
         input = new String[] {"--info"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         parameters.add(new Object[] {input, TaskPriority.INFO, skippedTasks});
 
         input = new String[] {"--account list", "--account create"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--account list");
         parameters.add(new Object[] {input, TaskPriority.CREATE_ACCOUNT, skippedTasks});
 
         input = new String[] {"--info", "--config", "mainnet", "-s create"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--info");
         skippedTasks.add("-s create");
         parameters.add(new Object[] {input, TaskPriority.CONFIG, skippedTasks});
 
+        input = new String[] {"--help", "--port", TEST_PORT};
+        skippedTasks = new HashSet<>();
+        skippedTasks.add("--port");
+        parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
+
+        input = new String[] {"--help", "--force-compact", "true"};
+        skippedTasks = new HashSet<>();
+        skippedTasks.add("--force-compact");
+        parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
+
         input = new String[] {"--help", "--network", "mainnet", "--datadir", dataDirectory};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--network");
         skippedTasks.add("--datadir");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
+        input = new String[] {"--version", "--port", TEST_PORT, "--datadir", dataDirectory};
+        skippedTasks = new HashSet<>();
+        skippedTasks.add("--port");
+        skippedTasks.add("--datadir");
+        parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
+
         input = new String[] {"--version", "-v"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
+        parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
+
+        input = new String[] {"--version", "--port", TEST_PORT, "--force-compact", "123", "456"};
+        skippedTasks = new HashSet<>();
+        skippedTasks.add("--port");
+        skippedTasks.add("--force-compact");
         parameters.add(new Object[] {input, TaskPriority.VERSION, skippedTasks});
 
         input = new String[] {"--dump-blocks", "5", "--dump-state", "5", "--dump-state-size", "5"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--dump-blocks");
         skippedTasks.add("--dump-state");
         parameters.add(new Object[] {input, TaskPriority.DUMP_STATE_SIZE, skippedTasks});
 
         input = new String[] {"ac", "ae", "account"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--account export");
         parameters.add(new Object[] {input, TaskPriority.CREATE_ACCOUNT, skippedTasks});
 
         input = new String[] {"--prune-blocks", "--state", "FULL"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--state");
         parameters.add(new Object[] {input, TaskPriority.PRUNE_BLOCKS, skippedTasks});
 
         input = new String[] {"-h", "-v"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("-v");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
         input = new String[] {"-h", "--version"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--version");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
         input = new String[] {"-h", "-c"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--config");
         parameters.add(new Object[] {input, TaskPriority.HELP, skippedTasks});
 
         input = new String[] {"-i", "ac"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--account create");
         parameters.add(new Object[] {input, TaskPriority.INFO, skippedTasks});
 
         ECKey key = ECKeyFac.inst().create();
         String pKey = Hex.toHexString(key.getPrivKeyBytes());
         input = new String[] {"-c", "ai", pKey};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--account import");
         parameters.add(new Object[] {input, TaskPriority.CONFIG, skippedTasks});
 
         input = new String[] {"-s create", "-r", "100", "pb"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--revert");
         skippedTasks.add("--prune-blocks");
         parameters.add(new Object[] {input, TaskPriority.SSL, skippedTasks});
 
         input = new String[] {"-r", "100", "--state", "FULL", "--dump-state-size", "--db-compact"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--state");
         skippedTasks.add("--dump-state-size");
         skippedTasks.add("--db-compact");
@@ -1234,24 +2015,24 @@ public class CliTest {
                 new String[] {
                     "--state", "FULL", "--db-compact", "--dump-state-size", "--dump-state"
                 };
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--db-compact");
         skippedTasks.add("--dump-state-size");
         skippedTasks.add("--dump-state");
         parameters.add(new Object[] {input, TaskPriority.PRUNE_STATE, skippedTasks});
 
         input = new String[] {"--dump-state-size", "--dump-state"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--dump-state");
         parameters.add(new Object[] {input, TaskPriority.DUMP_STATE_SIZE, skippedTasks});
 
         input = new String[] {"--dump-state", "--dump-blocks"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--dump-blocks");
         parameters.add(new Object[] {input, TaskPriority.DUMP_STATE, skippedTasks});
 
         input = new String[] {"--dump-blocks", "--db-compact"};
-        skippedTasks = new HashSet<String>();
+        skippedTasks = new HashSet<>();
         skippedTasks.add("--db-compact");
         parameters.add(new Object[] {input, TaskPriority.DUMP_BLOCKS, skippedTasks});
 

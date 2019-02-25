@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.contracts;
 
 import static org.junit.Assert.assertEquals;
@@ -36,15 +13,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.mcf.vm.types.DataWord;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.AbstractExecutionResult.ResultCode;
-import org.aion.vm.ExecutionResult;
+import org.aion.vm.api.interfaces.Address;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -86,19 +65,19 @@ public class MultiSignatureContractTest {
 
     // Executes a MSC with input and NRG_LIMIT args, calls it with address caller, and expects
     // code and nrg as results of the execution. Returns the result.
-    private ExecutionResult execute(
-            Address caller, byte[] input, long nrgLimit, ResultCode code, long nrg) {
+    private PrecompiledTransactionResult execute(
+            Address caller, byte[] input, long nrgLimit, PrecompiledResultCode code, long nrg) {
 
         MultiSignatureContract msc = new MultiSignatureContract(repo, caller);
-        ExecutionResult res = msc.execute(input, nrgLimit);
+        PrecompiledTransactionResult res = msc.execute(input, nrgLimit);
         assertEquals(code, res.getResultCode());
-        assertEquals(nrg, res.getNrgLeft());
+        assertEquals(nrg, res.getEnergyRemaining());
         return res;
     }
 
     // Creates a new account with initial balance balance that will be deleted at test end.
     private Address getExistentAddress(BigInteger balance) {
-        Address addr = Address.wrap(ECKeyFac.inst().create().getAddress());
+        Address addr = AionAddress.wrap(ECKeyFac.inst().create().getAddress());
         repo.createAccount(addr);
         repo.addBalance(addr, balance);
         addrsToClean.add(addr);
@@ -158,10 +137,10 @@ public class MultiSignatureContractTest {
     private byte[] toValidSendInput(
             Address wallet, List<ISignature> signatures, BigInteger amount, long nrg, Address to) {
 
-        int walletLen = (wallet == null) ? 0 : Address.ADDRESS_LEN;
+        int walletLen = (wallet == null) ? 0 : Address.SIZE;
         int sigsLen = (signatures == null) ? 0 : (signatures.size() * SIG_SIZE);
         int amtLen = (amount == null) ? 0 : AMT_SIZE;
-        int toLen = (to == null) ? 0 : Address.ADDRESS_LEN;
+        int toLen = (to == null) ? 0 : Address.SIZE;
 
         int len = 1 + walletLen + sigsLen + amtLen + Long.BYTES + toLen;
         byte[] input = new byte[len];
@@ -170,8 +149,8 @@ public class MultiSignatureContractTest {
         input[index] = (byte) 0x1;
         index++;
         if (wallet != null) {
-            System.arraycopy(wallet.toBytes(), 0, input, index, Address.ADDRESS_LEN);
-            index += Address.ADDRESS_LEN;
+            System.arraycopy(wallet.toBytes(), 0, input, index, Address.SIZE);
+            index += Address.SIZE;
         }
 
         if (signatures != null) {
@@ -199,7 +178,7 @@ public class MultiSignatureContractTest {
         index += Long.BYTES;
 
         if (to != null) {
-            System.arraycopy(to.toBytes(), 0, input, index, Address.ADDRESS_LEN);
+            System.arraycopy(to.toBytes(), 0, input, index, Address.SIZE);
         }
         return input;
     }
@@ -211,7 +190,8 @@ public class MultiSignatureContractTest {
         List<Long> values = new ArrayList<>();
         byte[] metaKey = new byte[DataWord.BYTES];
         metaKey[0] = (byte) 0x80;
-        DataWord metaData = (DataWord) repo.getStorageValue(walletId, new DataWord(metaKey));
+        ByteArrayWrapper metaData =
+                repo.getStorageValue(walletId, new DataWord(metaKey).toWrapper());
         if (metaData == null) {
             fail();
         }
@@ -232,28 +212,28 @@ public class MultiSignatureContractTest {
     private Set<Address> getWalletOwners(Address walletId, long numOwners) {
         Set<Address> owners = new HashSet<>();
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-        DataWord portion;
+        ByteArrayWrapper portion;
 
         for (long i = 0; i < numOwners; i++) {
-            byte[] account = new byte[Address.ADDRESS_LEN];
+            byte[] account = new byte[Address.SIZE];
             buffer.putLong(i);
             buffer.flip();
             byte[] request = new byte[DataWord.BYTES];
             buffer.get(request, DataWord.BYTES - Long.BYTES, Long.BYTES);
-            portion = (DataWord) repo.getStorageValue(walletId, new DataWord(request));
+            portion = repo.getStorageValue(walletId, new DataWord(request).toWrapper());
             if (portion == null) {
                 fail();
             }
             System.arraycopy(portion.getData(), 0, account, 0, DataWord.BYTES);
 
             request[0] = (byte) 0x40;
-            portion = (DataWord) repo.getStorageValue(walletId, new DataWord(request));
+            portion = repo.getStorageValue(walletId, new DataWord(request).toWrapper());
             if (portion == null) {
                 fail();
             }
             System.arraycopy(portion.getData(), 0, account, DataWord.BYTES, DataWord.BYTES);
 
-            Address address = new Address(account);
+            Address address = new AionAddress(account);
             if (owners.contains(address)) {
                 fail();
             }
@@ -283,7 +263,7 @@ public class MultiSignatureContractTest {
         List<Address> ownerAddrs = new ArrayList<>();
         Address addr;
         for (ECKeyEd25519 key : owners) {
-            addr = new Address(key.getAddress());
+            addr = new AionAddress(key.getAddress());
             repo.createAccount(addr);
             addrsToClean.add(addr);
             ownerAddrs.add(addr);
@@ -291,9 +271,9 @@ public class MultiSignatureContractTest {
 
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, ownerAddrs);
         MultiSignatureContract msc = new MultiSignatureContract(repo, ownerAddrs.get(0));
-        ExecutionResult res = msc.execute(input, COST);
-        assertEquals(ResultCode.SUCCESS, res.getResultCode());
-        Address wallet = new Address(res.getOutput());
+        PrecompiledTransactionResult res = msc.execute(input, COST);
+        assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
+        Address wallet = new AionAddress(res.getReturnData());
         repo.addBalance(wallet, balance);
         addrsToClean.add(wallet);
         repo.flush();
@@ -319,8 +299,9 @@ public class MultiSignatureContractTest {
 
     // Verifies that the result of a create-wallet operation, res, saves a wallet with threshold
     // threshold and consists of all the owners in owners and no more.
-    private void checkCreateResult(ExecutionResult res, long threshold, List<Address> owners) {
-        Address walletId = new Address(res.getOutput());
+    private void checkCreateResult(
+            PrecompiledTransactionResult res, long threshold, List<Address> owners) {
+        Address walletId = new AionAddress(res.getReturnData());
         addrsToClean.add(walletId);
         assertEquals(BigInteger.ZERO, repo.getBalance(walletId));
         assertEquals(BigInteger.ZERO, repo.getNonce(walletId));
@@ -346,7 +327,7 @@ public class MultiSignatureContractTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testConstructWithNullTrack() {
-        new MultiSignatureContract(null, Address.wrap(ECKeyFac.inst().create().getAddress()));
+        new MultiSignatureContract(null, AionAddress.wrap(ECKeyFac.inst().create().getAddress()));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -364,15 +345,15 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, Long.MIN_VALUE, ResultCode.OUT_OF_NRG, 0);
+        execute(caller, input, Long.MIN_VALUE, PrecompiledResultCode.OUT_OF_NRG, 0);
 
         // Test with max illegal cost.
-        execute(caller, input, COST - 1, ResultCode.OUT_OF_NRG, 0);
+        execute(caller, input, COST - 1, PrecompiledResultCode.OUT_OF_NRG, 0);
 
         // Second test send-tx logic.
         // Test with min illegal cost.
         List<ECKeyEd25519> sendOwners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address sendCaller = new Address(sendOwners.get(0).getAddress());
+        Address sendCaller = new AionAddress(sendOwners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(
                         sendOwners, MultiSignatureContract.MIN_OWNERS - 1, DEFAULT_BALANCE);
@@ -387,7 +368,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, Long.MIN_VALUE, ResultCode.OUT_OF_NRG, 0);
+        execute(sendCaller, input, Long.MIN_VALUE, PrecompiledResultCode.OUT_OF_NRG, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
 
@@ -398,7 +379,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, COST - 1, ResultCode.OUT_OF_NRG, 0);
+        execute(sendCaller, input, COST - 1, PrecompiledResultCode.OUT_OF_NRG, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -415,15 +396,20 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, nrgLimit, ResultCode.INVALID_NRG_LIMIT, nrgLimit);
+        execute(caller, input, nrgLimit, PrecompiledResultCode.INVALID_NRG_LIMIT, nrgLimit);
 
         // Test with max illegal cost.
-        execute(caller, input, Long.MAX_VALUE, ResultCode.INVALID_NRG_LIMIT, Long.MAX_VALUE);
+        execute(
+                caller,
+                input,
+                Long.MAX_VALUE,
+                PrecompiledResultCode.INVALID_NRG_LIMIT,
+                Long.MAX_VALUE);
 
         // Second test send-tx logic.
         // Test with min illegal cost.
         List<ECKeyEd25519> sendOwners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address sendCaller = new Address(sendOwners.get(0).getAddress());
+        Address sendCaller = new AionAddress(sendOwners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(
                         sendOwners, MultiSignatureContract.MIN_OWNERS - 1, DEFAULT_BALANCE);
@@ -438,14 +424,19 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, nrgLimit, ResultCode.INVALID_NRG_LIMIT, nrgLimit);
+        execute(sendCaller, input, nrgLimit, PrecompiledResultCode.INVALID_NRG_LIMIT, nrgLimit);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
 
         // Test with max illegal cost.
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(sendCaller, input, Long.MAX_VALUE, ResultCode.INVALID_NRG_LIMIT, Long.MAX_VALUE);
+        execute(
+                sendCaller,
+                input,
+                Long.MAX_VALUE,
+                PrecompiledResultCode.INVALID_NRG_LIMIT,
+                Long.MAX_VALUE);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -453,20 +444,20 @@ public class MultiSignatureContractTest {
     @Test
     public void testNullInput() {
         Address caller = getExistentAddress(BigInteger.ZERO);
-        execute(caller, null, COST, ResultCode.FAILURE, 0);
+        execute(caller, null, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
     public void testEmptyInput() {
         Address caller = getExistentAddress(BigInteger.ZERO);
-        execute(caller, ByteUtil.EMPTY_BYTE_ARRAY, COST, ResultCode.FAILURE, 0);
+        execute(caller, ByteUtil.EMPTY_BYTE_ARRAY, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
     public void testInputWithOperationOnly() {
         Address caller = getExistentAddress(BigInteger.ZERO);
-        execute(caller, new byte[] {(byte) 0x0}, COST, ResultCode.FAILURE, 0);
-        execute(caller, new byte[] {(byte) 0x1}, COST, ResultCode.FAILURE, 0);
+        execute(caller, new byte[] {(byte) 0x0}, COST, PrecompiledResultCode.FAILURE, 0);
+        execute(caller, new byte[] {(byte) 0x1}, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -481,7 +472,7 @@ public class MultiSignatureContractTest {
         for (int i = Byte.MIN_VALUE; i <= Byte.MAX_VALUE; i++) {
             if ((i != 0) && (i != 1)) {
                 input[0] = (byte) i;
-                execute(caller, input, COST, ResultCode.FAILURE, 0);
+                execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
             }
         }
     }
@@ -495,13 +486,13 @@ public class MultiSignatureContractTest {
         Address caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MIN_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
 
         // Test with max illegal value.
         input =
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH - 1, owners);
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -511,11 +502,11 @@ public class MultiSignatureContractTest {
         Address caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
 
         // Test with smallest illegal value.
         input = MultiSignatureContract.constructCreateWalletInput(owners.size() + 1, owners);
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -526,7 +517,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -535,7 +526,7 @@ public class MultiSignatureContractTest {
         List<Address> owners = getExistentAddresses(1, BigInteger.ZERO);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -545,7 +536,7 @@ public class MultiSignatureContractTest {
         Address caller = owners.get(0);
         byte[] input = MultiSignatureContract.constructCreateWalletInput(Long.MAX_VALUE, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -559,7 +550,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
 
         // Test with min amount of owners
         owners = getExistentAddresses(MultiSignatureContract.MIN_OWNERS - 1, BigInteger.ZERO);
@@ -568,7 +559,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
 
         // Test all owners same
         owners.clear();
@@ -579,7 +570,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -591,7 +582,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -605,14 +596,14 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        byte[] partialAddr = new byte[Address.ADDRESS_LEN - 1];
+        byte[] partialAddr = new byte[Address.SIZE - 1];
         ThreadLocalRandom.current().nextBytes(partialAddr);
 
         byte[] input = new byte[in.length + partialAddr.length];
         System.arraycopy(in, 0, input, 0, in.length);
         System.arraycopy(partialAddr, 0, input, in.length, partialAddr.length);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
 
         // Test on max legal number of owners.
         owners = getExistentAddresses(MultiSignatureContract.MAX_OWNERS - 2, BigInteger.ZERO);
@@ -624,7 +615,7 @@ public class MultiSignatureContractTest {
         System.arraycopy(in, 0, input, 0, in.length);
         System.arraycopy(partialAddr, 0, input, in.length, partialAddr.length);
 
-        execute(caller, input, COST, ResultCode.FAILURE, 0);
+        execute(caller, input, COST, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -637,10 +628,10 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        PrecompiledTransactionResult res =
+                execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
 
-        Address walletCaller = new Address(res.getOutput());
+        Address walletCaller = new AionAddress(res.getReturnData());
         addrsToClean.add(walletCaller);
         checkAccountState(walletCaller, BigInteger.ZERO, BigInteger.ZERO);
 
@@ -652,7 +643,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(walletCaller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(walletCaller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -665,10 +656,10 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        PrecompiledTransactionResult res =
+                execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
 
-        Address wallet = new Address(res.getOutput());
+        Address wallet = new AionAddress(res.getReturnData());
         addrsToClean.add(wallet);
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
 
@@ -682,7 +673,7 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructCreateWalletInput(
                         MultiSignatureContract.MIN_THRESH, owners);
 
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
     }
 
     @Test
@@ -695,10 +686,10 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        PrecompiledTransactionResult res =
+                execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getReturnData()), BigInteger.ZERO, BigInteger.ZERO);
 
         // Test using max legal number of owners.
         owners =
@@ -707,9 +698,9 @@ public class MultiSignatureContractTest {
         threshold = owners.size();
         input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        res = execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getReturnData()), BigInteger.ZERO, BigInteger.ZERO);
     }
 
     @Test
@@ -721,12 +712,12 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
-        Address wallet1 = new Address(res.getOutput());
+        PrecompiledTransactionResult res =
+                execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
+        Address wallet1 = new AionAddress(res.getReturnData());
 
-        res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
-        Address wallet2 = new Address(res.getOutput());
+        res = execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
+        Address wallet2 = new AionAddress(res.getReturnData());
 
         assertEquals(wallet1, wallet2);
     }
@@ -740,9 +731,9 @@ public class MultiSignatureContractTest {
         long threshold = owners.size();
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
-        Address wallet = new Address(res.getOutput());
+        PrecompiledTransactionResult res =
+                execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
+        Address wallet = new AionAddress(res.getReturnData());
         assertTrue(wallet.toString().startsWith("a0"));
     }
 
@@ -756,10 +747,10 @@ public class MultiSignatureContractTest {
         long threshold = MultiSignatureContract.MIN_THRESH;
         byte[] input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        ExecutionResult res =
-                execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        PrecompiledTransactionResult res =
+                execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getReturnData()), BigInteger.ZERO, BigInteger.ZERO);
 
         // Test using max legal number of owners.
         owners =
@@ -768,9 +759,9 @@ public class MultiSignatureContractTest {
         threshold = owners.size();
         input = MultiSignatureContract.constructCreateWalletInput(threshold, owners);
 
-        res = execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        res = execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkCreateResult(res, threshold, owners);
-        checkAccountState(new Address(res.getOutput()), BigInteger.ZERO, BigInteger.ZERO);
+        checkAccountState(new AionAddress(res.getReturnData()), BigInteger.ZERO, BigInteger.ZERO);
     }
 
     // <----------------------------------SEND TRANSACTION TESTS----------------------------------->
@@ -778,7 +769,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWithZeroSignatures() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
 
@@ -791,7 +782,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -800,7 +791,7 @@ public class MultiSignatureContractTest {
     public void testSendTxWithMoreThanMaxOwnersSignatures() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS + 1);
         ECKeyEd25519 extra = owners.remove(0);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
@@ -817,7 +808,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -826,7 +817,7 @@ public class MultiSignatureContractTest {
     public void testSendTxValidSignaturesMeetsThresholdPlusPhonySig() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS + 1);
         ECKeyEd25519 phony = owners.remove(0);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -843,7 +834,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -851,7 +842,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNegativeAmountWithZeroBalance() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, BigInteger.ZERO);
         BigInteger amt = AMOUNT.negate();
@@ -866,7 +857,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -874,7 +865,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNegativeAmountWithActualBalance() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
         BigInteger amt = AMOUNT.negate();
@@ -889,7 +880,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -898,7 +889,7 @@ public class MultiSignatureContractTest {
     public void testSendTxFromRegularAddress() {
         // Our wallet is not a wallet...
         List<ECKeyEd25519> phonies = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address phonyWallet = new Address(phonies.get(0).getAddress());
+        Address phonyWallet = new AionAddress(phonies.get(0).getAddress());
         repo.addBalance(phonyWallet, DEFAULT_BALANCE);
         BigInteger amt = BigInteger.ONE;
 
@@ -913,7 +904,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(phonyWallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(phonyWallet, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(phonyWallet, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(phonyWallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -921,7 +912,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNoSenderInInput() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -935,7 +926,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -943,7 +934,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNoRecipient() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -957,7 +948,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -965,7 +956,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNoAmount() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -979,7 +970,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -987,7 +978,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxNoNrgPrice() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1001,18 +992,17 @@ public class MultiSignatureContractTest {
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
         byte[] noNrgInput = new byte[input.length - Long.BYTES];
-        System.arraycopy(
-                input, 0, noNrgInput, 0, input.length - Address.ADDRESS_LEN - Long.BYTES - 1);
+        System.arraycopy(input, 0, noNrgInput, 0, input.length - Address.SIZE - Long.BYTES - 1);
         System.arraycopy(
                 input,
-                input.length - Address.ADDRESS_LEN,
+                input.length - Address.SIZE,
                 noNrgInput,
-                input.length - Address.ADDRESS_LEN - Long.BYTES,
-                Address.ADDRESS_LEN);
+                input.length - Address.SIZE - Long.BYTES,
+                Address.SIZE);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, noNrgInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, noNrgInput, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1020,7 +1010,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWithSignatureUsingPreviousNonce() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1043,7 +1033,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1051,7 +1041,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWhereSignedMessagesDifferInNonce() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1078,7 +1068,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1086,7 +1076,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWhereSignedMessagesDifferInRecipient() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1108,7 +1098,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1116,7 +1106,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWhereSignedMessagesDifferInAmount() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1141,7 +1131,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1149,7 +1139,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxWhereSignedMessagesDifferInNrgPrice() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1171,7 +1161,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1179,7 +1169,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxAllSignWrongRecipient() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
         Address stranger = getExistentAddress(BigInteger.ZERO);
@@ -1198,7 +1188,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1206,7 +1196,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxAllSignWrongAmount() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1224,7 +1214,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1232,7 +1222,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxAllSignWrongNonce() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
         Address stranger = getExistentAddress(BigInteger.ZERO);
@@ -1251,7 +1241,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1259,7 +1249,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxAllSignWrongNrgPrice() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1277,7 +1267,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1286,7 +1276,7 @@ public class MultiSignatureContractTest {
     public void testSendTxInsufficientBalance() {
         // Create account with zero balance.
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, BigInteger.ZERO);
 
@@ -1301,7 +1291,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.INSUFFICIENT_BALANCE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.INSUFFICIENT_BALANCE, 0);
         checkAccountState(wallet, BigInteger.ZERO, BigInteger.ZERO);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1310,7 +1300,7 @@ public class MultiSignatureContractTest {
     public void testWalletAbleToSendTxToDiffWallet() {
         List<ECKeyEd25519> owners1 = produceKeys(MultiSignatureContract.MIN_OWNERS);
         List<ECKeyEd25519> owners2 = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners1.get(0).getAddress());
+        Address caller = new AionAddress(owners1.get(0).getAddress());
         Address wallet1 =
                 createMultiSigWallet(owners1, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
         Address wallet2 =
@@ -1329,7 +1319,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet1, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(wallet2, BigInteger.ZERO, DEFAULT_BALANCE);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet1, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(wallet2, BigInteger.ZERO, DEFAULT_BALANCE.add(AMOUNT));
     }
@@ -1337,7 +1327,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxLessSignaturesThanThresholdMinOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1354,7 +1344,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1362,7 +1352,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxLessSignaturesThanThresholdMaxOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
@@ -1379,7 +1369,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1387,7 +1377,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxSameSignaturesAsThresholdMinOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
 
@@ -1403,7 +1393,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1411,7 +1401,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxSameSignaturesAsThresholdMaxOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
@@ -1427,7 +1417,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1435,7 +1425,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxMoreSignaturesThanThresholdMinOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(
                         owners, MultiSignatureContract.MIN_OWNERS - 1, DEFAULT_BALANCE);
@@ -1452,7 +1442,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1460,7 +1450,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxMoreSignaturesThanThresholdMaxOwners() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
 
@@ -1476,7 +1466,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1484,7 +1474,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxDuplicateSignee() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
@@ -1502,7 +1492,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1511,7 +1501,7 @@ public class MultiSignatureContractTest {
     public void testSendTxSignatureOneSigneeIsNonOwner() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
         ECKeyEd25519 phony = produceKeys(1).get(0);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MAX_OWNERS, DEFAULT_BALANCE);
 
@@ -1529,7 +1519,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1538,7 +1528,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testSendTxSignedProperlyButNotSignedByOwnerCaller() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MAX_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_THRESH, DEFAULT_BALANCE);
 
@@ -1555,7 +1545,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, input, NRG_LIMIT, ResultCode.SUCCESS, NRG_LIMIT - COST);
+        execute(caller, input, NRG_LIMIT, PrecompiledResultCode.SUCCESS, NRG_LIMIT - COST);
         checkAccountState(wallet, BigInteger.ONE, DEFAULT_BALANCE.subtract(AMOUNT));
         checkAccountState(to, BigInteger.ZERO, AMOUNT);
     }
@@ -1583,7 +1573,12 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(new Address(phony.getAddress()), input, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(
+                new AionAddress(phony.getAddress()),
+                input,
+                NRG_LIMIT,
+                PrecompiledResultCode.FAILURE,
+                0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1591,7 +1586,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialSignature() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1606,12 +1601,12 @@ public class MultiSignatureContractTest {
         byte[] input =
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
-        int amtStart = input.length - Address.ADDRESS_LEN - Long.BYTES - AMT_SIZE;
+        int amtStart = input.length - Address.SIZE - Long.BYTES - AMT_SIZE;
         byte[] shiftedInput = shiftLeftAtIndex(input, amtStart);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1619,7 +1614,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialWalletAddress() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1634,12 +1629,12 @@ public class MultiSignatureContractTest {
         byte[] input =
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
-        int sigsStart = 1 + Address.ADDRESS_LEN;
+        int sigsStart = 1 + Address.SIZE;
         byte[] shiftedInput = shiftLeftAtIndex(input, sigsStart);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1647,7 +1642,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialRecipientAddress() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1667,7 +1662,7 @@ public class MultiSignatureContractTest {
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1675,7 +1670,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialAmount() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1690,12 +1685,12 @@ public class MultiSignatureContractTest {
         byte[] input =
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
-        int nrgStart = input.length - Address.ADDRESS_LEN - Long.BYTES;
+        int nrgStart = input.length - Address.SIZE - Long.BYTES;
         byte[] shiftedInput = shiftLeftAtIndex(input, nrgStart);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -1703,7 +1698,7 @@ public class MultiSignatureContractTest {
     @Test
     public void testPartialNrgPrice() {
         List<ECKeyEd25519> owners = produceKeys(MultiSignatureContract.MIN_OWNERS);
-        Address caller = new Address(owners.get(0).getAddress());
+        Address caller = new AionAddress(owners.get(0).getAddress());
         Address wallet =
                 createMultiSigWallet(owners, MultiSignatureContract.MIN_OWNERS, DEFAULT_BALANCE);
 
@@ -1718,12 +1713,12 @@ public class MultiSignatureContractTest {
         byte[] input =
                 MultiSignatureContract.constructSendTxInput(
                         wallet, signatures, AMOUNT, NRG_PRICE, to);
-        int toStart = input.length - Address.ADDRESS_LEN;
+        int toStart = input.length - Address.SIZE;
         byte[] shiftedInput = shiftLeftAtIndex(input, toStart);
 
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
-        execute(caller, shiftedInput, NRG_LIMIT, ResultCode.FAILURE, 0);
+        execute(caller, shiftedInput, NRG_LIMIT, PrecompiledResultCode.FAILURE, 0);
         checkAccountState(wallet, BigInteger.ZERO, DEFAULT_BALANCE);
         checkAccountState(to, BigInteger.ZERO, BigInteger.ZERO);
     }

@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.db;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -35,23 +12,28 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.base.db.IContractDetails;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
 import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.Address;
+import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.Hex;
-import org.aion.base.vm.IDataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
+import org.aion.mcf.trie.TrieImpl;
+import org.aion.mcf.trie.TrieNodeResult;
+import org.aion.p2p.V1Constants;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.config.CfgAion;
+import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.A0BlockHeader;
@@ -83,6 +65,7 @@ public class AionRepositoryImpl
     private static class AionRepositoryImplHolder {
         // configuration
         private static CfgAion config = CfgAion.inst();
+
         // repository singleton instance
         private static final AionRepositoryImpl inst =
                 new AionRepositoryImpl(
@@ -139,15 +122,14 @@ public class AionRepositoryImpl
 
     @Override
     public void updateBatch(
-            Map<Address, AccountState> stateCache,
-            Map<Address, IContractDetails<IDataWord>> detailsCache) {
+            Map<Address, AccountState> stateCache, Map<Address, IContractDetails> detailsCache) {
         rwLock.writeLock().lock();
 
         try {
             for (Map.Entry<Address, AccountState> entry : stateCache.entrySet()) {
                 Address address = entry.getKey();
                 AccountState accountState = entry.getValue();
-                IContractDetails<IDataWord> contractDetails = detailsCache.get(address);
+                IContractDetails contractDetails = detailsCache.get(address);
 
                 if (accountState.isDeleted()) {
                     // TODO-A: batch operations here
@@ -156,7 +138,9 @@ public class AionRepositoryImpl
                     } catch (Exception e) {
                         LOG.error("key deleted exception [{}]", e.toString());
                     }
-                    LOG.debug("key deleted <key={}>", Hex.toHexString(address.toBytes()));
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("key deleted <key={}>", Hex.toHexString(address.toBytes()));
+                    }
                 } else {
 
                     if (!contractDetails.isDirty()) {
@@ -216,7 +200,9 @@ public class AionRepositoryImpl
                 }
             }
 
-            LOG.trace("updated: detailsCache.size: {}", detailsCache.size());
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("updated: detailsCache.size: {}", detailsCache.size());
+            }
             stateCache.clear();
             detailsCache.clear();
         } finally {
@@ -226,25 +212,34 @@ public class AionRepositoryImpl
 
     /** @implNote The method calling this method must handle the locking. */
     private void updateContractDetails(
-            final Address address, final IContractDetails<IDataWord> contractDetails) {
+            final Address address, final IContractDetails contractDetails) {
         // locked by calling method
         detailsDS.update(address, contractDetails);
     }
 
     @Override
     public void flush() {
-        LOG.debug("------ FLUSH ON " + this.toString());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("------ FLUSH ON " + this.toString());
+        }
         rwLock.writeLock().lock();
         try {
-            LOG.debug("flushing to disk");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("flushing to disk");
+            }
             long s = System.currentTimeMillis();
 
             // First sync worldState.
-            LOG.info("worldState.sync()");
+            if (LOG.isInfoEnabled()) {
+
+                LOG.info("worldState.sync()");
+            }
             worldState.sync();
 
             // Flush all necessary caches.
-            LOG.info("flush all databases");
+            if (LOG.isInfoEnabled()) {
+                LOG.info("flush all databases");
+            }
 
             if (databaseGroup != null) {
                 for (IByteArrayKeyValueDatabase db : databaseGroup) {
@@ -253,10 +248,14 @@ public class AionRepositoryImpl
                     }
                 }
             } else {
-                LOG.warn("databaseGroup is null");
+                if (LOG.isWarnEnabled()) {
+                    LOG.warn("databaseGroup is null");
+                }
             }
 
-            LOG.info("RepositoryImpl.flush took " + (System.currentTimeMillis() - s) + " ms");
+            if (LOG.isInfoEnabled()) {
+                LOG.info("RepositoryImpl.flush took " + (System.currentTimeMillis() - s) + " ms");
+            }
         } finally {
             rwLock.writeLock().unlock();
         }
@@ -318,13 +317,9 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public IDataWord getStorageValue(Address address, IDataWord key) {
-        IContractDetails<IDataWord> details = getContractDetails(address);
-        IDataWord value = (details == null) ? null : details.get(key);
-        if (value == null) {
-            return null;
-        }
-        return (value.isZero()) ? null : value;
+    public ByteArrayWrapper getStorageValue(Address address, ByteArrayWrapper key) {
+        IContractDetails details = getContractDetails(address);
+        return (details == null) ? null : details.get(key);
     }
 
     @Override
@@ -368,8 +363,9 @@ public class AionRepositoryImpl
     }
 
     @Override
-    public Map<IDataWord, IDataWord> getStorage(Address address, Collection<IDataWord> keys) {
-        IContractDetails<IDataWord> details = getContractDetails(address);
+    public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(
+            Address address, Collection<ByteArrayWrapper> keys) {
+        IContractDetails details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
 
@@ -383,7 +379,7 @@ public class AionRepositoryImpl
 
         byte[] codeHash = accountState.getCodeHash();
 
-        IContractDetails<IDataWord> details = getContractDetails(address);
+        IContractDetails details = getContractDetails(address);
         return (details == null) ? EMPTY_BYTE_ARRAY : details.getCode(codeHash);
     }
 
@@ -407,11 +403,11 @@ public class AionRepositoryImpl
      *     or synchronized</b>, depending on the specific use case.
      */
     @Override
-    public IContractDetails<IDataWord> getContractDetails(Address address) {
+    public IContractDetails getContractDetails(Address address) {
         rwLock.readLock().lock();
 
         try {
-            IContractDetails<IDataWord> details;
+            IContractDetails details;
 
             // That part is important cause if we have
             // to sync details storage according the trie root
@@ -460,8 +456,12 @@ public class AionRepositoryImpl
 
             if (accountData.length != 0) {
                 result = new AccountState(accountData);
-                LOG.debug(
-                        "New AccountSate [{}], State [{}]", address.toString(), result.toString());
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug(
+                            "New AccountSate [{}], State [{}]",
+                            address.toString(),
+                            result.toString());
+                }
             }
             return result;
         } finally {
@@ -482,10 +482,10 @@ public class AionRepositoryImpl
     public void loadAccountState(
             Address address,
             Map<Address, AccountState> cacheAccounts,
-            Map<Address, IContractDetails<IDataWord>> cacheDetails) {
+            Map<Address, IContractDetails> cacheDetails) {
 
         AccountState account = getAccountState(address);
-        IContractDetails<IDataWord> details = getContractDetails(address);
+        IContractDetails details = getContractDetails(address);
 
         account = (account == null) ? new AccountState() : new AccountState(account);
         details = new ContractDetailsCacheImpl(details);
@@ -781,6 +781,22 @@ public class AionRepositoryImpl
                 + '}';
     }
 
+    /**
+     * Calls {@link IByteArrayKeyValueDatabase#drop()} on all the current databases except for the
+     * ones given in the list by name.
+     *
+     * @param names the names of the databases that should not be dropped
+     */
+    public void dropDatabasesExcept(List<String> names) {
+        for (IByteArrayKeyValueDatabase db : databaseGroup) {
+            if (!names.contains(db.getName().get())) {
+                LOG.warn("Dropping database " + db.toString() + " ...");
+                db.drop();
+                LOG.warn(db.toString() + " successfully dropped and reopened.");
+            }
+        }
+    }
+
     @Override
     public void compact() {
         rwLock.writeLock().lock();
@@ -803,6 +819,102 @@ public class AionRepositoryImpl
             this.stateDatabase.compact();
         } finally {
             rwLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Retrieves the value for a given node from the database associated with the given type.
+     *
+     * @param key the key of the node to be retrieved
+     * @param dbType the database where the key should be found
+     * @return the {@code byte} array value associated with the given key or {@code null} when the
+     *     key cannot be found in the database.
+     * @throws IllegalArgumentException if the given key is null or the database type is not
+     *     supported
+     */
+    public byte[] getTrieNode(byte[] key, DatabaseType dbType) {
+        IByteArrayKeyValueDatabase db = selectDatabase(dbType);
+
+        Optional<byte[]> value = db.get(key);
+        if (value.isPresent()) {
+            return value.get();
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Retrieves nodes referenced by a trie node value, where the size of the result is bounded by
+     * the given limit.
+     *
+     * @param value a trie node value which may be referencing other nodes
+     * @param limit the maximum number of key-value pairs to be retrieved by this method, which
+     *     limits the search in the trie; zero and negative values for the limit will result in no
+     *     search and an empty map will be returned
+     * @param dbType the database where the value was stored and further keys should be searched for
+     * @return an empty map when the value does not reference other trie nodes or the given limit is
+     *     invalid, or a map containing all the referenced nodes reached while keeping within the
+     *     limit on the result size
+     */
+    public Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(
+            byte[] value, int limit, DatabaseType dbType) {
+        if (limit <= 0) {
+            return Collections.emptyMap();
+        } else {
+            IByteArrayKeyValueDatabase db = selectDatabase(dbType);
+
+            Trie trie = new TrieImpl(db);
+            return trie.getReferencedTrieNodes(value, limit);
+        }
+    }
+
+    /**
+     * Imports a trie node to the indicated blockchain database.
+     *
+     * @param key the hash key of the trie node to be imported
+     * @param value the value of the trie node to be imported
+     * @param dbType the database where the key-value pair should be stored
+     * @throws IllegalArgumentException if the given key is null or the database type is not
+     *     supported
+     * @return a {@link TrieNodeResult} indicating the success or failure of the import operation
+     */
+    public TrieNodeResult importTrieNode(byte[] key, byte[] value, DatabaseType dbType) {
+        // empty keys are not allowed
+        if (key == null || key.length != V1Constants.HASH_SIZE) {
+            return TrieNodeResult.INVALID_KEY;
+        }
+
+        // not allowing deletions to be imported
+        if (value == null || value.length == 0) {
+            return TrieNodeResult.INVALID_VALUE;
+        }
+
+        IByteArrayKeyValueDatabase db = selectDatabase(dbType);
+
+        Optional<byte[]> stored = db.get(key);
+        if (stored.isPresent()) {
+            if (Arrays.equals(stored.get(), value)) {
+                return TrieNodeResult.KNOWN;
+            } else {
+                return TrieNodeResult.INCONSISTENT;
+            }
+        }
+
+        db.put(key, value);
+        return TrieNodeResult.IMPORTED;
+    }
+
+    private IByteArrayKeyValueDatabase selectDatabase(DatabaseType dbType) {
+        switch (dbType) {
+            case DETAILS:
+                return detailsDatabase;
+            case STORAGE:
+                return storageDatabase;
+            case STATE:
+                return stateDatabase;
+            default:
+                throw new IllegalArgumentException(
+                        "The database type " + dbType.toString() + " is not supported.");
         }
     }
 }

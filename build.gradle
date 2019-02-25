@@ -16,7 +16,6 @@ def vmVersion = "0.3.2"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
 allprojects { 
-
     apply plugin: 'java'
     apply plugin: 'idea'
 
@@ -27,19 +26,19 @@ allprojects {
         jcenter()
 
         flatDir {
-            dirs './lib'
+            dirs './lib' // does not recurse, don't make subdirectories in here
+        }
+
+        maven { 
+            url "${rootDir}/lib/maven_repo"
         }
     }
 }
-
-// used only for 3rd_build
-ant.importBuild('build.xml') { antTargetName -> 'ant-' + antTargetName }
 
 task compileNative(type:Exec) {
     // seems kinda hacky, but need big reorganization to fix
     dependsOn 'modCrypto:compileNative'
     dependsOn 'modAionImpl:compileJava'
-
 
     doFirst {
         mkdir "${dirBuildFile}"
@@ -52,7 +51,6 @@ task compileNative(type:Exec) {
             fileset(dir: "./modAionImpl/build/native")
         }
     }
-
 
     commandLine "g++", 
         "-fPIC", 
@@ -83,6 +81,10 @@ task compileNative(type:Exec) {
 }
 
 subprojects {
+    test { 
+        maxHeapSize = "6g"
+    }
+
     sourceSets { 
         main {
             java.srcDirs = ['src']
@@ -119,10 +121,11 @@ subprojects {
     }
 
     afterEvaluate {
+        if(hasProperty('moduleName')) { 
+            ant.echo('moduleName: ' + moduleName);
+        }
 
-ant.echo('moduleName: ' + moduleName);
-
-        if (moduleName.equals("aion.gui")) { 
+        if (hasProperty('moduleName') && moduleName.equals("aion.gui")) { 
         // Override java plug-in behaviour to make JDK9+ module logic work
         // From: https://guides.gradle.org/building-java-9-modules/#step_2_produce_java_9_modules_for_all_subprojects
         compileJava {
@@ -153,7 +156,7 @@ ant.echo('moduleName: ' + moduleName);
         }
   */      
         // Need to comment this out for now, modules-info.java doesn't have 'require' declarations
-        // used by the test code.  The ant build.xml, similarly, uses module-path for build, but 
+        // used by the test code.  The ant build.xml, similarly, used module-path for build, but 
         // classpath for building the tests (at least in modRlp).  Need to sort out how to properly set the module-path
         // for the tests before using the stuff below.
         /*
@@ -243,19 +246,18 @@ task collectDependentJars(type: Copy) {
 }
 
 build { 
-    dependsOn("ant-3rd_build")
     dependsOn("extractVmDepsGit")
     dependsOn("collectDependentJars")
 }
 
 task prePack(type:Exec)  {
-    dependsOn ':aion_api:cleanPack' 
-    dependsOn ':aion_api:build'
-    if (project.hasProperty('noGui')) {
-        environment "noGui", "true"
+    if(findProject(":modGui") != null && gradle.useGui) { 
+        dependsOn ':modGui:setupAionRootProject';
+        environment "useGui", "true"
     }
     commandLine 'bash', 'script/prepack.sh' 
 }
+
 task postPack(type:Exec) { commandLine 'sh', 'script/postpack.sh' }
 
 /** Replaces `ant pack_build` */
@@ -277,9 +279,6 @@ task pack(type: Tar) {
     into('/aion/') { 
         from dirWorkspace
         include 'aion.sh'
-        if (!project.hasProperty('noGui')) {
-            include 'aion_gui.sh'
-        }
     }
     into('/aion/native') {
         from dirNative
@@ -314,8 +313,6 @@ task packDevDocker(type: Exec) {
 }
 
 clean { 
-    dependsOn "ant-3rd_clean"
-    dependsOn ':aion_api:clean' 
     dependsOn 'cleanJars'
     delete dirPack
     delete file('report')
@@ -366,8 +363,84 @@ task fixIdea {
     // this task puts those files where IDEA expects them by running build and test
 
     dependsOn build
-    configure(subprojects.findAll { it.name != 'aion_api' }) {
+    subprojects {
         dependsOn test
     }
 }
 
+
+/** 
+ * Returns the value of the constant src.org.aion.zero.impl.Version.KERNEL_VERSION 
+ * as defined in the Java source (the Java code is not compiled, this just greps it 
+ * out of the file).
+ */
+def kernelVersionFromSrc() {
+    def src = file("./modAionImpl/src/org/aion/zero/impl/Version.java").readLines();
+    def version = src.find { l -> l =~ /KERNEL_VERSION/  }.split("=")[1].trim().replaceAll('[;"]', '')
+    if(version.empty) {
+        throw new GradleException("Could not determine kernel version.");
+    }
+    return version;
+}
+
+subprojects  { 
+	apply plugin: 'maven-publish'
+	publishing {
+		publications {
+			mavenJava(MavenPublication) {
+				groupId = 'network.aion'
+				artifactId = project.hasProperty('mavenPubArtifactId')
+                                ? mavenPubArtifactId
+                                : project.name
+				version = project.hasProperty('mavenPubVersion')
+                                ? mavenPubVersion
+                                : kernelVersionFromSrc();
+
+				from components.java
+			}   
+		}   
+
+        repositories {
+            maven {
+                if(project.hasProperty('publishTarget')) { 
+                    url = publishTarget
+                } else {
+                    url = "$buildDir/repos"
+                }
+            }   
+        }   
+
+        // need to reference the publish-related tasks this way, since they're 
+        // generated during evaluation.
+        // https://docs.gradle.org/current/userguide/publishing_overview.html#sec:configuring_publishing_tasks
+        tasks.withType(PublishToMavenRepository).all { pubTask -> 
+            // tidy up maven output if the task inputted by user contains 'publish'.
+            // this is to get rid of the checksum files .md5, .sha1, etc. since we are
+            // always publishing to a local directory.  if we start publishing to an
+            // actual remote Maven repo, need to detect that and avoid this deletion
+            if(! gradle.startParameter.taskNames.findAll {it.contains('publish')}.empty) {
+                tasks.register("tidyUpMavenOutput", Delete) {
+                    mustRunAfter pubTask
+                    doLast { 
+                        delete.each { 
+                            logger.info('Deleting Maven publish metadata ' + it)
+                        }
+                    }
+                }
+                finalizedBy tidyUpMavenOutput
+                
+                doLast{
+                    file(pubTask.repository.url).eachFileRecurse { 
+                        if(! it.toString().endsWith('jar') 
+                            && ! it.toString().endsWith('pom')
+                            && ! it.isDirectory()) {
+                                logger.info "found Maven metadata: " + it
+                                tidyUpMavenOutput.delete(it.canonicalPath)
+                        }
+                    }
+                }
+            }
+        }
+
+	} //publishing
+}

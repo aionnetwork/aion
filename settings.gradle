@@ -1,5 +1,6 @@
 rootProject.name = 'aion'
 include 'modAionBase', 'modAion', 'modAionImpl',
+    'modUtil',
     'modCrypto',
     'modLogger',
     'modRlp',
@@ -12,13 +13,19 @@ include 'modAionBase', 'modAion', 'modAionImpl',
     'modVM',
     'modApiServer',
     'aion_fastvm/modFastVM',
-    'aion_api',
+    'aion_vm_api',
     'modBoot'
-
-if (!hasProperty('noGui')) {
-    include 'modGui'
-}
 
 project(":aion_fastvm/modFastVM").name = "aion_fastvm"
 
+// only build and distribute modGui only if explicitly specified
+if (hasProperty('modGuiPath') && !modGuiPath.empty) {
+    include modGuiPath
+    project(':' + modGuiPath).name = "modGui"
+    gradle.ext.useGui = true;
+} else {
+    gradle.ext.useGui = false;
+}
 
+include '3rdParty/libnzmq'
+project(":3rdParty/libnzmq").name = "3rdParty.libnzmq"

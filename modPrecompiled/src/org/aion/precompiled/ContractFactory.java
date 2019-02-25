@@ -1,44 +1,20 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.precompiled;
 
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
-import org.aion.base.vm.IDataWord;
+import org.aion.base.type.AionAddress;
 import org.aion.mcf.config.CfgFork;
-import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.precompiled.contracts.ATB.TokenBridgeContract;
 import org.aion.precompiled.contracts.Blake2bHashContract;
 import org.aion.precompiled.contracts.EDVerifyContract;
 import org.aion.precompiled.contracts.TXHashContract;
 import org.aion.precompiled.contracts.TotalCurrencyContract;
-import org.aion.vm.ExecutionContext;
-import org.aion.vm.IContractFactory;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.KernelInterface;
+import org.aion.vm.api.interfaces.TransactionContext;
 
 /** A factory class that produces pre-compiled contract instances. */
-public class ContractFactory implements IContractFactory {
+public class ContractFactory {
 
     private static final String ADDR_OWNER =
             "0000000000000000000000000000000000000000000000000000000000000000";
@@ -57,8 +33,8 @@ public class ContractFactory implements IContractFactory {
     private static final String ADDR_TX_HASH =
             "0000000000000000000000000000000000000000000000000000000000000012";
 
-    private static IPrecompiledContract PC_ED_VERIFY;
-    private static IPrecompiledContract PC_BLAKE2B_HASH;
+    private static PrecompiledContract PC_ED_VERIFY;
+    private static PrecompiledContract PC_BLAKE2B_HASH;
 
     static {
         PC_ED_VERIFY = new EDVerifyContract();
@@ -75,26 +51,28 @@ public class ContractFactory implements IContractFactory {
      * @param track The repo.
      * @return the specified pre-compiled address.
      */
-    @Override
-    public IPrecompiledContract getPrecompiledContract(
-            ExecutionContext context,
-            IRepositoryCache<AccountState, IDataWord, IBlockStoreBase<?, ?>> track) {
+    public PrecompiledContract getPrecompiledContract(
+            TransactionContext context, KernelInterface track) {
 
         CfgFork cfg = new CfgFork();
         String forkProperty = cfg.getProperties().getProperty("fork0.3.2");
-        boolean fork_032 =
-                (forkProperty != null) && (context.blockNumber() >= Long.valueOf(forkProperty));
 
-        switch (context.address().toString()) {
+        boolean fork_032 =
+                (forkProperty != null) && (context.getBlockNumber() >= Long.valueOf(forkProperty));
+
+        // TODO: need to provide a real solution for the repository here ....
+
+        switch (context.getDestinationAddress().toString()) {
             case ADDR_TOKEN_BRIDGE:
                 TokenBridgeContract contract =
                         new TokenBridgeContract(
                                 context,
-                                track,
-                                Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
-                                Address.wrap(ADDR_TOKEN_BRIDGE));
+                                ((KernelInterfaceForFastVM) track).getRepositoryCache(),
+                                AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER),
+                                AionAddress.wrap(ADDR_TOKEN_BRIDGE));
 
-                if (!context.origin().equals(Address.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
+                if (!context.getOriginAddress()
+                                .equals(AionAddress.wrap(ADDR_TOKEN_BRIDGE_INITIAL_OWNER))
                         && !contract.isInitialized()) {
                     return null;
                 }
@@ -110,7 +88,9 @@ public class ContractFactory implements IContractFactory {
                 return fork_032
                         ? null
                         : new TotalCurrencyContract(
-                                track, context.sender(), Address.wrap(ADDR_OWNER));
+                                ((KernelInterfaceForFastVM) track).getRepositoryCache(),
+                                context.getSenderAddress(),
+                                AionAddress.wrap(ADDR_OWNER));
             default:
                 return null;
         }
@@ -141,7 +121,7 @@ public class ContractFactory implements IContractFactory {
      * @return the contract address.
      */
     public static Address getTotalCurrencyContractAddress() {
-        return Address.wrap(ADDR_TOTAL_CURRENCY);
+        return AionAddress.wrap(ADDR_TOTAL_CURRENCY);
     }
 
     /**
@@ -150,7 +130,7 @@ public class ContractFactory implements IContractFactory {
      * @return the contract address
      */
     public static Address getEdVerifyContractAddress() {
-        return Address.wrap(ADDR_ED_VERIFY);
+        return AionAddress.wrap(ADDR_ED_VERIFY);
     }
 
     /**
@@ -159,7 +139,7 @@ public class ContractFactory implements IContractFactory {
      * @return the contract address
      */
     public static Address getTxHashContractAddress() {
-        return Address.wrap(ADDR_TX_HASH);
+        return AionAddress.wrap(ADDR_TX_HASH);
     }
 
     /**
@@ -168,6 +148,6 @@ public class ContractFactory implements IContractFactory {
      * @return the contract address
      */
     public static Address getBlake2bHashContractAddress() {
-        return Address.wrap(ADDR_BLAKE2B_HASH);
+        return AionAddress.wrap(ADDR_BLAKE2B_HASH);
     }
 }

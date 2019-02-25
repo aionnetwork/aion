@@ -1,0 +1,6 @@
+ext.moduleName = 'aion.util'
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+    testCompile 'pl.pragmatists:JUnitParams:1.1.1'
+}

@@ -9,12 +9,13 @@ module aion.boot {
     requires aion.p2p;
     requires aion.fastvm;
     requires aion.txpool.impl;
+    requires libnzmq;
 
     uses org.aion.evtmgr.EventMgrModule;
     uses org.aion.log.AionLoggerFactory;
 
     requires aion.base;
-    requires libnzmq;
+    requires aion.vm;
 
     exports org.aion;
 }

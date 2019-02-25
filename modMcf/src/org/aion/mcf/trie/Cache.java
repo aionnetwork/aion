@@ -1,47 +1,17 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- */
 package org.aion.mcf.trie;
 
 import static org.aion.base.util.ByteArrayWrapper.wrap;
 import static org.aion.rlp.Value.fromRlpEncoded;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import org.aion.base.db.IByteArrayKeyValueStore;
@@ -102,8 +72,7 @@ public class Cache {
             return node.getValue();
         }
         if (this.dataSource != null) {
-            Optional<byte[]> data =
-                    (this.dataSource == null) ? Optional.empty() : this.dataSource.get(key);
+            Optional<byte[]> data = this.dataSource.get(key);
             if (data.isPresent()) {
                 // dbhits++;
                 Value val = fromRlpEncoded(data.get());
@@ -124,10 +93,6 @@ public class Cache {
         }
     }
 
-    public synchronized void commit() {
-        commit(true);
-    }
-
     public synchronized void commit(boolean flushCache) {
         // Don't try to commit if it isn't dirty
         if ((dataSource == null) || !this.isDirty) {
@@ -141,6 +106,7 @@ public class Cache {
         // long start = System.nanoTime();
         // int batchMemorySize = 0;
         Map<byte[], byte[]> batch = new HashMap<>();
+        List<byte[]> deleteBatch = new ArrayList<>();
         for (ByteArrayWrapper nodeKey : this.nodes.keySet()) {
             Node node = this.nodes.get(nodeKey);
 
@@ -160,10 +126,11 @@ public class Cache {
             }
         }
         for (ByteArrayWrapper removedNode : removedNodes) {
-            batch.put(removedNode.getData(), null);
+            deleteBatch.add(removedNode.getData());
         }
 
         this.dataSource.putBatch(batch);
+        this.dataSource.deleteBatch(deleteBatch);
         this.isDirty = false;
         if (flushCache) {
             this.nodes.clear();
@@ -171,22 +138,14 @@ public class Cache {
         this.removedNodes.clear();
     }
 
-    public synchronized void undo() {
-        Iterator<Map.Entry<ByteArrayWrapper, Node>> iter = this.nodes.entrySet().iterator();
-        while (iter.hasNext()) {
-            if (iter.next().getValue().isDirty()) {
-                iter.remove();
-            }
-        }
-        this.isDirty = false;
-    }
+    // not used
+    //    public synchronized void undo() {
+    //        this.nodes.entrySet().removeIf(entry -> entry.getValue().isDirty());
+    //        this.isDirty = false;
+    //    }
 
     public synchronized boolean isDirty() {
         return isDirty;
-    }
-
-    public synchronized void setDirty(boolean isDirty) {
-        this.isDirty = isDirty;
     }
 
     public synchronized Map<ByteArrayWrapper, Node> getNodes() {
@@ -197,22 +156,24 @@ public class Cache {
         return dataSource;
     }
 
-    public String cacheDump() {
-        StringBuffer cacheDump = new StringBuffer();
-        for (ByteArrayWrapper key : nodes.keySet()) {
-            Node node = nodes.get(key);
-            if (node.getValue() != null) {
-                cacheDump
-                        .append(key.toString())
-                        .append(" : ")
-                        .append(node.getValue().toString())
-                        .append("\n");
-            }
-        }
+    // not used
+    //    public String cacheDump() {
+    //        StringBuilder cacheDump = new StringBuilder();
+    //        for (ByteArrayWrapper key : nodes.keySet()) {
+    //            Node node = nodes.get(key);
+    //            if (node.getValue() != null) {
+    //                cacheDump
+    //                        .append(key.toString())
+    //                        .append(" : ")
+    //                        .append(node.getValue().toString())
+    //                        .append("\n");
+    //            }
+    //        }
+    //
+    //        return cacheDump.toString();
+    //    }
 
-        return cacheDump.toString();
-    }
-
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public synchronized void setDB(IByteArrayKeyValueStore kvds) {
         if (this.dataSource == kvds) {
             return;
@@ -248,5 +209,64 @@ public class Cache {
 
     public int getSize() {
         return nodes.size();
+    }
+
+    /**
+     * Returns a copy of this cache.
+     *
+     * <p>The copied cache and this cache will each hold a reference to the same data source, and
+     * each copied {@link Node} object will retain the same reference to its {@link Value} object as
+     * its original.
+     *
+     * @return A copy of this cache.
+     */
+    public Cache copy() {
+        Cache cacheCopy = new Cache(this.dataSource);
+        cacheCopy.isDirty = this.isDirty;
+        cacheCopy.nodes = copyOfNodes();
+        cacheCopy.removedNodes = copyOfRemovedNodes();
+        return cacheCopy;
+    }
+
+    private Map<ByteArrayWrapper, Node> copyOfNodes() {
+        if (this.nodes == null) {
+            return null;
+        }
+
+        Map<ByteArrayWrapper, Node> nodesCopy = new HashMap<>();
+        for (Entry<ByteArrayWrapper, Node> nodesEntry : this.nodes.entrySet()) {
+            ByteArrayWrapper keyWrapper = null;
+
+            if (nodesEntry.getKey() != null) {
+                byte[] keyBytes = nodesEntry.getKey().getData();
+                keyWrapper = new ByteArrayWrapper(Arrays.copyOf(keyBytes, keyBytes.length));
+            }
+
+            nodesCopy.put(
+                    keyWrapper,
+                    (nodesEntry.getValue() == null) ? null : nodesEntry.getValue().copy());
+        }
+        return nodesCopy;
+    }
+
+    private Set<ByteArrayWrapper> copyOfRemovedNodes() {
+        if (this.removedNodes == null) {
+            return null;
+        }
+
+        Set<ByteArrayWrapper> removedNodesCopy = new HashSet<>();
+        for (ByteArrayWrapper removedNode : this.removedNodes) {
+            ByteArrayWrapper removedNodeWrapper = null;
+
+            if (removedNode != null) {
+                byte[] removedNodeBytes = removedNode.toBytes();
+                removedNodeWrapper =
+                        new ByteArrayWrapper(
+                                Arrays.copyOf(removedNodeBytes, removedNodeBytes.length));
+            }
+
+            removedNodesCopy.add(removedNodeWrapper);
+        }
+        return removedNodesCopy;
     }
 }

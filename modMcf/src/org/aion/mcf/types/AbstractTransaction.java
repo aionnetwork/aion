@@ -1,33 +1,12 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
+import org.aion.base.vm.VirtualMachineSpecs;
 import org.aion.crypto.ISignature;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.vm.api.interfaces.Address;
 import org.slf4j.Logger;
 
 public abstract class AbstractTransaction implements ITransaction {
@@ -76,7 +55,7 @@ public abstract class AbstractTransaction implements ITransaction {
         this.value = value;
         this.data = data;
         // default type 0x01; reserve date for multi-type transaction
-        this.type = 0x01;
+        this.type = VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE;
     }
 
     public AbstractTransaction(
@@ -111,9 +90,9 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public abstract byte[] getEncoded();
 
-    public abstract Address getFrom();
+    public abstract Address getSenderAddress();
 
-    public abstract Address getTo();
+    public abstract Address getDestinationAddress();
 
     public abstract byte[] getNonce();
 
@@ -127,7 +106,7 @@ public abstract class AbstractTransaction implements ITransaction {
 
     public abstract void setNrgConsume(long consume);
 
-    public abstract byte getType();
+    public abstract byte getTargetVM();
 
     public abstract BigInteger getNonceBI();
 

@@ -34,6 +34,9 @@ import java.util.Arrays;
  *
  */
 public class ZMQ {
+    static { 
+        new NativeZmqLoader().load();
+    }
 
     // Values for flags in Socket's send and recv functions.
     /**
@@ -432,6 +435,10 @@ public class ZMQ {
      */
     public static class Context implements Closeable {
 
+        static {
+            new NativeZmqLoader().load();
+        }
+
         private final AtomicBoolean closed = new AtomicBoolean(false);
 
         /**
@@ -536,6 +543,7 @@ public class ZMQ {
 //            if (!EmbeddedLibraryTools.LOADED_EMBEDDED_LIBRARY) {
 //                System.loadLibrary("jzmq");
 //            }
+            new NativeZmqLoader().load();
             nativeInit();
         }
 
@@ -2126,6 +2134,10 @@ public class ZMQ {
      */
     public static class Poller {
 
+        static {
+            new NativeZmqLoader().load();
+        }
+
         /**
          * These values can be ORed to specify what we want to poll for.
          */
@@ -2505,6 +2517,7 @@ public class ZMQ {
         private static native void nativeInit();
 
         static {
+            new NativeZmqLoader().load();
             nativeInit();
         }
 
@@ -2572,6 +2585,9 @@ public class ZMQ {
      * Class that interfaces the generation of CURVE key pairs
      */
     public static class Curve {
+        static {
+            new NativeZmqLoader().load();
+        }
 
         /**
          * A container for a public and a corresponding secret key

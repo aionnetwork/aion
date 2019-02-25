@@ -1,26 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.types;
 
 import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -39,6 +16,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
+import org.aion.vm.api.interfaces.IExecutionLog;
 
 /** aion transaction receipt class. */
 public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
@@ -78,7 +56,7 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
         rlpEncoded = rlp;
     }
 
-    public AionTxReceipt(byte[] postTxState, Bloom bloomFilter, List<Log> logInfoList) {
+    public AionTxReceipt(byte[] postTxState, Bloom bloomFilter, List<IExecutionLog> logInfoList) {
         this.postTxState = postTxState;
         this.bloomFilter = bloomFilter;
         this.logInfoList = logInfoList;
@@ -135,7 +113,7 @@ public class AionTxReceipt extends AbstractTxReceipt<AionTransaction> {
             byte[][] logInfoListE = new byte[logInfoList.size()][];
 
             int i = 0;
-            for (Log logInfo : logInfoList) {
+            for (IExecutionLog logInfo : logInfoList) {
                 logInfoListE[i] = logInfo.getEncoded();
                 ++i;
             }

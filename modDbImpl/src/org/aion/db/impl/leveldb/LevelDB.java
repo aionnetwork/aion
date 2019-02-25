@@ -1,37 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- *     The aion network project leverages useful source code from other
- *     open source projects. We greatly appreciate the effort that was
- *     invested in these projects and we thank the individual contributors
- *     for their work. For provenance information and contributors
- *     please see <https://github.com/aionnetwork/aion/wiki/Contributors>.
- *
- * Contributors to the aion source files in decreasing order of code volume:
- *     Aion foundation.
- *     <ether.camp> team through the ethereumJ library.
- *     Ether.Camp Inc. (US) team through Ethereum Harmony.
- *     John Tromp through the Equihash solver.
- *     Samuel Neves through the BLAKE2 implementation.
- *     Zcash project team.
- *     Bitcoinj team.
- */
 package org.aion.db.impl.leveldb;
 
 import java.io.File;
@@ -179,7 +145,11 @@ public class LevelDB extends AbstractDB {
             try {
                 db = JniDBFactory.factory.open(f, options);
             } catch (Exception e2) {
-                LOG.error("Failed second attempt to open the database " + this.toString() + " due to: ", e2);
+                LOG.error(
+                        "Failed second attempt to open the database "
+                                + this.toString()
+                                + " due to: ",
+                        e2);
                 // close the connection and cleanup if needed
                 close();
             }
@@ -346,9 +316,7 @@ public class LevelDB extends AbstractDB {
 
         @Override
         public byte[] next() {
-            byte[] key = iterator.peekNext().getKey();
-            iterator.next();
-            return key;
+            return iterator.next().getKey();
         }
     }
 
@@ -364,73 +332,30 @@ public class LevelDB extends AbstractDB {
     }
 
     @Override
-    public void put(byte[] k, byte[] v) {
-        check(k);
+    public void putInternal(byte[] key, byte[] value) {
+        db.put(key, value);
+    }
 
-        check();
+    @Override
+    public void deleteInternal(byte[] key) {
+        db.delete(key);
+    }
 
-        if (v == null) {
-            db.delete(k);
-        } else {
-            db.put(k, v);
+    @Override
+    public void putToBatchInternal(byte[] key, byte[] value) {
+        if (batch == null) {
+            batch = db.createWriteBatch();
         }
+        batch.put(key, value);
     }
 
     @Override
-    public void delete(byte[] k) {
-        check(k);
-
-        check();
-        db.delete(k);
-    }
-
-    @Override
-    public void putBatch(Map<byte[], byte[]> inputMap) {
-        check(inputMap.keySet());
-
-        check();
-
-        // try-with-resources will automatically close the batch object
-        try (WriteBatch batch = db.createWriteBatch()) {
-            // add put and delete operations to batch
-            for (Map.Entry<byte[], byte[]> e : inputMap.entrySet()) {
-                byte[] key = e.getKey();
-                byte[] value = e.getValue();
-
-                if (value == null) {
-                    batch.delete(key);
-                } else {
-                    batch.put(key, value);
-                }
-            }
-
-            // bulk atomic update
-            db.write(batch);
-        } catch (DBException e) {
-            LOG.error(
-                    "Unable to execute batch put/update operation on " + this.toString() + ".", e);
-        } catch (IOException e) {
-            LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
-        }
-    }
-
-    private WriteBatch batch = null;
-
-    @Override
-    public void putToBatch(byte[] key, byte[] value) {
-        check(key);
-
-        check();
-
+    public void deleteInBatchInternal(byte[] key) {
         if (batch == null) {
             batch = db.createWriteBatch();
         }
 
-        if (value == null) {
-            batch.delete(key);
-        } else {
-            batch.put(key, value);
-        }
+        batch.delete(key);
     }
 
     @Override
@@ -453,11 +378,31 @@ public class LevelDB extends AbstractDB {
     }
 
     @Override
-    public void deleteBatch(Collection<byte[]> keys) {
-        check(keys);
+    public void putBatchInternal(Map<byte[], byte[]> input) {
+        // try-with-resources will automatically close the batch object
+        try (WriteBatch batch = db.createWriteBatch()) {
+            // add put and delete operations to batch
+            for (Map.Entry<byte[], byte[]> e : input.entrySet()) {
+                byte[] key = e.getKey();
+                byte[] value = e.getValue();
 
-        check();
+                batch.put(key, value);
+            }
 
+            // bulk atomic update
+            db.write(batch);
+        } catch (DBException e) {
+            LOG.error(
+                    "Unable to execute batch put/update operation on " + this.toString() + ".", e);
+        } catch (IOException e) {
+            LOG.error("Unable to close WriteBatch object in " + this.toString() + ".", e);
+        }
+    }
+
+    private WriteBatch batch = null;
+
+    @Override
+    public void deleteBatchInternal(Collection<byte[]> keys) {
         try (WriteBatch batch = db.createWriteBatch()) {
             // add delete operations to batch
             for (byte[] k : keys) {

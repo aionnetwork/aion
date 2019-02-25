@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
 package org.aion.txpool.zero;
 
 import java.math.BigInteger;
@@ -38,7 +16,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.TimeInstant;
@@ -47,6 +24,7 @@ import org.aion.txpool.common.AbstractTxPool;
 import org.aion.txpool.common.AccountState;
 import org.aion.txpool.common.TxDependList;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
+import org.aion.vm.api.interfaces.Address;
 
 @SuppressWarnings("unchecked")
 public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implements ITxPool<TX> {
@@ -137,7 +115,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         Map<ByteArrayWrapper, TXState> mainMap = new HashMap<>();
         for (TX tx : txl) {
 
-            ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getHash());
+            ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getTransactionHash());
             if (this.getMainMap().get(bw) != null) {
                 if (LOG.isWarnEnabled()) {
                     LOG.warn(
@@ -157,7 +135,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             mainMap.put(bw, new TXState(tx));
 
             BigInteger txNonce = tx.getNonceBI();
-            BigInteger bn = getBestNonce(tx.getFrom());
+            BigInteger bn = getBestNonce(tx.getSenderAddress());
 
             if (bn != null && txNonce.compareTo(bn) < 1) {
                 if (LOG.isDebugEnabled()) {
@@ -167,7 +145,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             AbstractMap.SimpleEntry<ByteArrayWrapper, BigInteger> entry =
-                    this.getAccView(tx.getFrom()).getMap().get(txNonce);
+                    this.getAccView(tx.getSenderAddress()).getMap().get(txNonce);
             if (entry != null) {
                 if (LOG.isTraceEnabled()) {
                     LOG.trace("repay tx, remove previous tx!");
@@ -187,7 +165,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 newPendingTx.add(tx);
             }
 
-            setBestNonce(tx.getFrom(), txNonce);
+            setBestNonce(tx.getSenderAddress(), txNonce);
         }
 
         this.getMainMap().putAll(mainMap);
@@ -306,7 +284,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
         Set<Address> checkedAddress = Collections.synchronizedSet(new HashSet<>());
 
         for (TX tx : txs) {
-            ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getHash());
+            ByteArrayWrapper bw = ByteArrayWrapper.wrap(tx.getTransactionHash());
             lock.writeLock().lock();
             try {
                 if (this.getMainMap().remove(bw) == null) {
@@ -322,7 +300,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             if (LOG.isTraceEnabled()) {
                 LOG.trace(
                         "TxPoolA0.remove:[{}] nonce:[{}]",
-                        ByteUtils.toHexString(tx.getHash()),
+                        ByteUtils.toHexString(tx.getTransactionHash()),
                         tx.getNonceBI().toString());
             }
 
@@ -336,12 +314,12 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
             }
 
             // remove the all transactions belong to the given address in the feeView
-            Address address = tx.getFrom();
+            Address address = tx.getSenderAddress();
             Set<BigInteger> fee = Collections.synchronizedSet(new HashSet<>());
             if (!checkedAddress.contains(address)) {
 
-                if (this.getPoolStateView(tx.getFrom()) != null) {
-                    this.getPoolStateView(tx.getFrom())
+                if (this.getPoolStateView(tx.getSenderAddress()) != null) {
+                    this.getPoolStateView(tx.getSenderAddress())
                             .parallelStream()
                             .forEach(ps -> fee.add(ps.getFee()));
                 }
@@ -369,7 +347,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                 checkedAddress.add(address);
             }
 
-            AccountState as = this.getAccView(tx.getFrom());
+            AccountState as = this.getAccView(tx.getSenderAddress());
 
             lock.writeLock().lock();
             as.getMap().remove(tx.getNonceBI());
@@ -506,7 +484,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                         if (LOG.isTraceEnabled()) {
                             LOG.trace(
                                     "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
-                                    itx.getFrom().toString(),
+                                    itx.getSenderAddress().toString(),
                                     itx.getNonceBI().toString(),
                                     itx.getEncoded().length,
                                     itx.getNrgConsume());
@@ -553,7 +531,7 @@ public class TxPoolA0<TX extends ITransaction> extends AbstractTxPool<TX> implem
                             if (LOG.isTraceEnabled()) {
                                 LOG.trace(
                                         "from:[{}] nonce:[{}] txSize: txSize[{}] nrgConsume[{}]",
-                                        itx.getFrom().toString(),
+                                        itx.getSenderAddress().toString(),
                                         itx.getNonceBI().toString(),
                                         itx.getEncoded().length,
                                         itx.getNrgConsume());

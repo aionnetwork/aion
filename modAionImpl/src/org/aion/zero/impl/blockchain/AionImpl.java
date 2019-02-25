@@ -1,34 +1,12 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.aion.base.db.IRepository;
 import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
 import org.aion.base.util.ByteArrayWrapper;
 import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
@@ -40,12 +18,14 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
-import org.aion.vm.TransactionExecutor;
+import org.aion.vm.BulkExecutor;
+import org.aion.vm.ExecutionBatch;
+import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
 import org.aion.zero.impl.types.AionBlock;
-import org.aion.zero.impl.vm.AionExecutorProvider;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -104,7 +84,7 @@ public class AionImpl implements IAionChain {
     @Override
     public IMineRunner getBlockMiner() {
 
-        Address minerCoinbase = Address.wrap(this.cfg.getConsensus().getMinerAddress());
+        AionAddress minerCoinbase = AionAddress.wrap(this.cfg.getConsensus().getMinerAddress());
 
         if (minerCoinbase.isEmptyAddress()) {
             LOG_GEN.info("Miner address is not set");
@@ -155,10 +135,17 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            TransactionExecutor executor =
-                    new TransactionExecutor(tx, block, repository, true, LOG_VM);
-            executor.setExecutorProvider(AionExecutorProvider.getInstance());
-            return executor.execute().getReceipt().getEnergyUsed();
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            details,
+                            repository,
+                            true,
+                            true,
+                            block.getNrgLimit(),
+                            LOG_VM,
+                            getPostExecutionWork());
+            return executor.execute().get(0).getReceipt().getEnergyUsed();
         } finally {
             repository.rollback();
         }
@@ -175,13 +162,30 @@ public class AionImpl implements IAionChain {
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
-            TransactionExecutor executor =
-                    new TransactionExecutor(tx, block, repository, true, LOG_VM);
-            executor.setExecutorProvider(AionExecutorProvider.getInstance());
-            return executor.execute().getReceipt();
+            ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            details,
+                            repository,
+                            true,
+                            true,
+                            block.getNrgLimit(),
+                            LOG_VM,
+                            getPostExecutionWork());
+            return executor.execute().get(0).getReceipt();
         } finally {
             repository.rollback();
         }
+    }
+
+    /**
+     * There is no post-execution work to do for any calls in this class to do. In accordance with
+     * the specs, we return zero since we have no meaningful value to return here.
+     */
+    private static PostExecutionWork getPostExecutionWork() {
+        return (r, c, s, t, b) -> {
+            return 0;
+        };
     }
 
     @Override
@@ -190,14 +194,14 @@ public class AionImpl implements IAionChain {
     }
 
     @Override
-    public IRepository<?, ?, ?> getPendingState() {
+    public IRepository<?, ?> getPendingState() {
         return aionHub.getPendingState().getRepository();
     }
 
     @Override
-    public IRepository<?, ?, ?> getSnapshotTo(byte[] root) {
-        IRepository<?, ?, ?> repository = aionHub.getRepository();
-        IRepository<?, ?, ?> snapshot = repository.getSnapshotTo(root);
+    public IRepository<?, ?> getSnapshotTo(byte[] root) {
+        IRepository<?, ?> repository = aionHub.getRepository();
+        IRepository<?, ?> snapshot = repository.getSnapshotTo(root);
 
         return snapshot;
     }

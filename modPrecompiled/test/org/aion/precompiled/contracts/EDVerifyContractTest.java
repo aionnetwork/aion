@@ -1,49 +1,29 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Centrys
- */
-
 package org.aion.precompiled.contracts;
 
+/*
+ * @author Centrys
+ */
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import org.aion.base.type.Address;
-import org.aion.base.type.IExecutionResult;
+import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.ExecutionContext;
-import org.aion.vm.ExecutionResult;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.precompiled.PrecompiledResultCode;
+import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.vm.api.interfaces.Address;
+import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -54,10 +34,10 @@ import org.spongycastle.util.encoders.Hex;
 public class EDVerifyContractTest {
 
     private byte[] txHash = RandomUtils.nextBytes(32);
-    private Address origin = Address.wrap(RandomUtils.nextBytes(32));
+    private Address origin = AionAddress.wrap(RandomUtils.nextBytes(32));
     private Address caller = origin;
 
-    private Address blockCoinbase = Address.wrap(RandomUtils.nextBytes(32));
+    private Address blockCoinbase = AionAddress.wrap(RandomUtils.nextBytes(32));
     private long blockNumber = 2000001;
     private long blockTimestamp = System.currentTimeMillis() / 1000;
     private long blockNrgLimit = 5000000;
@@ -110,6 +90,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -126,12 +107,12 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
-        IExecutionResult result = contract.execute(input, 21000L);
-        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
-        assertThat(Arrays.equals(result.getOutput(), pubKey));
+        TransactionResult result = contract.execute(input, 21000L);
+        assertThat(result.getResultCode().isSuccess());
+        assertThat(Arrays.equals(result.getReturnData(), pubKey));
     }
 
     @Test
@@ -140,6 +121,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -156,12 +138,12 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
-        IExecutionResult result = contract.execute(input, 21000L);
-        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
-        assertThat(Arrays.equals(result.getOutput(), pubKey));
+        TransactionResult result = contract.execute(input, 21000L);
+        assertThat(result.getResultCode().isSuccess());
+        assertThat(Arrays.equals(result.getReturnData(), pubKey));
     }
 
     @Test
@@ -174,6 +156,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -190,12 +173,12 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
         assertNotNull(contract);
-        IExecutionResult result = contract.execute(input, 21000L);
-        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.SUCCESS.toInt());
-        assertThat(Arrays.equals(result.getOutput(), Address.ZERO_ADDRESS().toBytes()));
+        TransactionResult result = contract.execute(input, 21000L);
+        assertThat(result.getResultCode().isSuccess());
+        assertThat(Arrays.equals(result.getReturnData(), AionAddress.ZERO_ADDRESS().toBytes()));
     }
 
     @Test
@@ -205,6 +188,7 @@ public class EDVerifyContractTest {
         byte[] input = setupInput();
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -221,10 +205,11 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
-        IExecutionResult result = contract.execute(input, 2999L);
-        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.OUT_OF_NRG.toInt());
+        TransactionResult result = contract.execute(input, 2999L);
+        assertThat(result.getResultCode().toInt())
+                .isEqualTo(PrecompiledResultCode.OUT_OF_NRG.toInt());
     }
 
     @Test
@@ -234,6 +219,7 @@ public class EDVerifyContractTest {
 
         ExecutionContext ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getEdVerifyContractAddress(),
                         origin,
@@ -250,11 +236,11 @@ public class EDVerifyContractTest {
                         blockTimestamp,
                         blockNrgLimit,
                         blockDifficulty);
-        IPrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
+        PrecompiledContract contract = new ContractFactory().getPrecompiledContract(ctx, null);
 
-        IExecutionResult result = contract.execute(input, 21000L);
+        TransactionResult result = contract.execute(input, 21000L);
 
-        assertThat(result.getCode()).isEqualTo(ExecutionResult.ResultCode.FAILURE.toInt());
+        assertThat(result.getResultCode().toInt()).isEqualTo(PrecompiledResultCode.FAILURE.toInt());
     }
 
     private byte[] setupInput() {

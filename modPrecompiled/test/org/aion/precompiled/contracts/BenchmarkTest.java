@@ -1,38 +1,16 @@
-/*
- * Copyright (c) 2017-2018 Aion foundation.
- *
- *     This file is part of the aion network project.
- *
- *     The aion network project is free software: you can redistribute it
- *     and/or modify it under the terms of the GNU General Public License
- *     as published by the Free Software Foundation, either version 3 of
- *     the License, or any later version.
- *
- *     The aion network project is distributed in the hope that it will
- *     be useful, but WITHOUT ANY WARRANTY; without even the implied
- *     warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *     See the GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with the aion network project source files.
- *     If not, see <https://www.gnu.org/licenses/>.
- *
- * Contributors:
- *     Aion foundation.
- */
-
 package org.aion.precompiled.contracts;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import org.aion.base.type.Address;
+import org.aion.base.type.AionAddress;
+import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
-import org.aion.vm.ExecutionContext;
-import org.aion.vm.IPrecompiledContract;
+import org.aion.precompiled.type.PrecompiledContract;
+import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -59,25 +37,23 @@ public class BenchmarkTest {
 
         new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
         forkFile =
-            new File(
-                System.getProperty("user.dir")
-                    + "/mainnet/config"
-                    + CfgFork.FORK_PROPERTIES_PATH);
+                new File(
+                        System.getProperty("user.dir")
+                                + "/mainnet/config"
+                                + CfgFork.FORK_PROPERTIES_PATH);
         forkFile.createNewFile();
 
         // Open given file in append mode.
-        BufferedWriter out = new BufferedWriter(
-            new FileWriter(forkFile, true));
+        BufferedWriter out = new BufferedWriter(new FileWriter(forkFile, true));
         out.write("fork0.3.2=2000000");
         out.close();
-
 
         cf = new ContractFactory();
         CfgAion.inst();
         txHash = RandomUtils.nextBytes(32);
-        origin = Address.wrap(RandomUtils.nextBytes(32));
+        origin = AionAddress.wrap(RandomUtils.nextBytes(32));
         caller = origin;
-        blockCoinbase = Address.wrap(RandomUtils.nextBytes(32));
+        blockCoinbase = AionAddress.wrap(RandomUtils.nextBytes(32));
         blockNumber = 2000001;
         blockTimestamp = System.currentTimeMillis() / 1000;
         blockNrgLimit = 5000000;
@@ -105,6 +81,7 @@ public class BenchmarkTest {
 
         ctx =
                 new ExecutionContext(
+                        null,
                         txHash,
                         ContractFactory.getBlake2bHashContractAddress(),
                         origin,
@@ -122,17 +99,17 @@ public class BenchmarkTest {
                         blockNrgLimit,
                         blockDifficulty);
 
-        IPrecompiledContract ct;
+        PrecompiledContract ct;
         // warm up
         for (int i = 0; i < WARMUP; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.nrgLimit());
+            ct.execute(txHash, ctx.getTransactionEnergy());
         }
 
         long t1 = System.currentTimeMillis();
         for (int i = 0; i < BENCH; i++) {
             ct = cf.getPrecompiledContract(ctx, null);
-            ct.execute(txHash, ctx.nrgLimit());
+            ct.execute(txHash, ctx.getTransactionEnergy());
         }
         System.out.println(
                 "Bench blake2b: " + String.valueOf(System.currentTimeMillis() - t1) + "ms");
@@ -159,7 +136,7 @@ public class BenchmarkTest {
         //                blockNrgLimit,
         //                blockDifficulty);
         //
-        //        IPrecompiledContract ct;
+        //        PrecompiledContract ct;
         //        // warm up
         //        for (int i = 0; i < WARMUP; i++) {
         //            ct = cf.getPrecompiledContract(ctx, null);
