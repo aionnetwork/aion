@@ -32,7 +32,7 @@ public final class ResponseBlocksHandler extends Handler {
      */
     public ResponseBlocksHandler(
             final Logger log, final FastSyncManager fastSyncMgr, final IP2pMgr p2pMgr) {
-        super(Ver.V1, Ctrl.SYNC, Act.RESPONSE_TRIE_DATA);
+        super(Ver.V1, Ctrl.SYNC, Act.RESPONSE_BLOCKS);
         this.log = log;
         this.fastSyncMgr = fastSyncMgr;
         this.p2pMgr = p2pMgr;

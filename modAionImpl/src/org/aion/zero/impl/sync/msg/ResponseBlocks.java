@@ -81,4 +81,21 @@ public final class ResponseBlocks extends Msg {
     public List<AionBlock> getBlocks() {
         return blocks;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ResponseBlocks that = (ResponseBlocks) o;
+        return Objects.equals(blocks, that.blocks);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(blocks);
+    }
 }

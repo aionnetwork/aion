@@ -34,7 +34,7 @@ public final class RequestBlocksHandler extends Handler {
      * @param p2p peer manager used to submit messages
      */
     public RequestBlocksHandler(final Logger log, final IAionBlockchain chain, final IP2pMgr p2p) {
-        super(Ver.V1, Ctrl.SYNC, Act.REQUEST_TRIE_DATA);
+        super(Ver.V1, Ctrl.SYNC, Act.REQUEST_BLOCKS);
         this.log = log;
         this.chain = chain;
         this.p2p = p2p;
