@@ -245,15 +245,22 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
     /**
      * Returns a range of main chain blocks.
      *
-     * @param first the height of the first block in the requested range
-     * @param last the height of the last block in the requested range
+     * @param first the height of the first block in the requested range; this block must exist in
+     *     the blockchain and be above the genesis to return a non-null output
+     * @param last the height of the last block in the requested range; when requesting blocks in
+     *     ascending order the last element will be substituted with the best block if its height is
+     *     above the best known block
      * @return a list containing consecutive main chain blocks with heights ranging according to the
-     *     given parameters
+     *     given parameters; or {@code null} in case of errors or illegal request
      * @apiNote The blocks must be added to the list in the order that they are requested. If {@code
      *     first > last} the blocks are returned in descending order of their height, otherwise when
      *     {@code first < last} the blocks are returned in ascending order of their height.
      */
     public List<AionBlock> getBlocksByRange(long first, long last) {
+        if (first <= 0L) {
+            return null;
+        }
+
         lock.readLock().lock();
 
         try {
@@ -270,9 +277,13 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                 blocks.add(block);
 
                 for (long i = first - 1; i >= (last > 0 ? last : 1); i--) {
-                    block = this.blocks.get(block.getParentHash());
+                    block = getBlockByHash(block.getParentHash());
                     if (block == null) {
-                        break; // stops at any invalid data
+                        // the block should have been stored but null was returned above
+                        LOG.error(
+                                "Encountered a kernel database corruption: cannot find block at level {} in data store.",
+                                i);
+                        return null; // stops at any invalid data
                     } else {
                         blocks.add(block);
                     }
@@ -287,30 +298,35 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
                     lastBlock = getBestBlock();
                     if (lastBlock == null) {
                         LOG.error(
-                                "Encountered a possible database/kernel corruption: cannot find best block in data store.");
+                                "Encountered a kernel database corruption: cannot find best block in data store.");
                         // invalid data store
                         return null;
                     } else if (last < lastBlock.getNumber()) {
                         // the block should have been stored but null was returned above
                         LOG.error(
-                                "Encountered a possible database/kernel corruption: cannot find block at level {} in data store.",
+                                "Encountered a kernel database corruption: cannot find block at level {} in data store.",
                                 last);
                         // invalid data store
                         return null;
-                    } else { // the block was indeed higher than the best block
-                        // building existing range
+                    }
+                }
+                // the block was not null
+                // or  it was higher than the best block and replaced with the best block
+
+                // building existing range
+                blocks.addFirst(lastBlock);
+                long newLast = lastBlock.getNumber();
+                for (long i = newLast - 1; i > first; i--) {
+                    lastBlock = getBlockByHash(lastBlock.getParentHash());
+                    if (lastBlock == null) {
+                        LOG.error(
+                                "Encountered a kernel database corruption: cannot find block at level {} in data store.",
+                                i);
+                        return null; // stops at any invalid data
+                    } else {
+                        // always adding at the beginning of the list
+                        // to return the expected order of blocks
                         blocks.addFirst(lastBlock);
-                        long newLast = lastBlock.getNumber();
-                        for (long i = newLast - 1; i > first; i--) {
-                            lastBlock = this.blocks.get(lastBlock.getParentHash());
-                            if (lastBlock == null) {
-                                break; // stops at any invalid data
-                            } else {
-                                // always adding at the beginning of the list
-                                // to return the expected order of blocks
-                                blocks.addFirst(lastBlock);
-                            }
-                        }
                     }
                 }
 

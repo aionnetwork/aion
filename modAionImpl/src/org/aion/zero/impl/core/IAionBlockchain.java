@@ -30,10 +30,13 @@ public interface IAionBlockchain
     /**
      * Returns a range of main chain blocks.
      *
-     * @param first the height of the first block in the requested range
-     * @param last the height of the last block in the requested range
+     * @param first the height of the first block in the requested range; this block must exist in
+     *     the blockchain and be above the genesis to return a non-null output
+     * @param last the height of the last block in the requested range; when requesting blocks in
+     *     ascending order the last element will be substituted with the best block if its height is
+     *     above the best known block
      * @return a list containing consecutive main chain blocks with heights ranging according to the
-     *     given parameters
+     *     given parameters; or {@code null} in case of errors or illegal request
      * @apiNote The blocks must be added to the list in the order that they are requested. If {@code
      *     first > last} the blocks are returned in descending order of their height, otherwise when
      *     {@code first < last} the blocks are returned in ascending order of their height.
