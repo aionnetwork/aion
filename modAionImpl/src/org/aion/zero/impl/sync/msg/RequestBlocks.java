@@ -34,7 +34,7 @@ public final class RequestBlocks extends Msg {
     public RequestBlocks(final long start, final int count, final boolean descending) {
         super(Ver.V1, Ctrl.SYNC, Act.REQUEST_BLOCKS);
 
-        this.start = start;
+        this.start = start > 0 ? start : 1; // defaults to 1 when given incorrect values
         this.count = count > 0 ? count : 1; // defaults to 1 when given incorrect values
         this.descending = descending;
     }
@@ -57,15 +57,22 @@ public final class RequestBlocks extends Msg {
             } else {
                 // decode the start block
                 long start = new BigInteger(1, list.get(0).getRLPData()).longValue();
+                if (start <= 0) {
+                    return null;
+                }
 
                 // decode the number of blocks requested
                 int count = new BigInteger(1, list.get(1).getRLPData()).intValue();
-
-                // decode the requested ordering of the block range
-                if (list.get(2).getRLPData().length != 1) {
+                if (count <= 0) {
                     return null;
                 }
-                boolean descending = list.get(2).getRLPData()[0] == 1;
+
+                // decode the requested ordering of the block range
+                byte value = new BigInteger(1, list.get(2).getRLPData()).byteValue();
+                if (value < 0 || value > 1) {
+                    return null;
+                }
+                boolean descending = value == 1;
 
                 return new RequestBlocks(start, count, descending);
             }
