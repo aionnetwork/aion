@@ -24,7 +24,7 @@ public final class ResponseBlocks extends Msg {
     /**
      * Constructor for block range responses.
      *
-     * @param blocks a list of consecutive blocks representing the response to a requested range
+     * @param blocks a list of blocks representing the response to a requested range
      * @implNote The given blocks are purposefully not deep copied to minimize resource
      *     instantiation. This is a reasonable choice given that these objects are created to be
      *     encoded and transmitted over the network and therefore there is the expectation that they
@@ -44,8 +44,7 @@ public final class ResponseBlocks extends Msg {
      *
      * @param message a {@code byte} array representing a response to a block range request.
      * @return the decoded block range response
-     * @implNote The decoder must return {@code null} if any of the component values are {@code
-     *     null} or invalid.
+     * @implNote The decoder returns {@code null} when given an empty message.
      */
     public static ResponseBlocks decode(final byte[] message) {
         if (message == null || message.length == 0) {
@@ -72,5 +71,14 @@ public final class ResponseBlocks extends Msg {
         }
 
         return RLP.encodeList(toEncode);
+    }
+
+    /**
+     * Returns the list of blocks representing the response to a requested block range.
+     *
+     * @return the list of blocks representing the response to a requested block range
+     */
+    public List<AionBlock> getBlocks() {
+        return blocks;
     }
 }
