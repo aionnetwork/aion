@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.types.ByteArrayWrapper;
+import org.aion.zero.impl.sync.msg.ResponseBlocks;
 
 /**
  * Directs behavior for fast sync functionality.
@@ -134,5 +135,10 @@ public final class FastSyncManager {
             // TODO: check for completeness when no requests remain
             ensureCompleteness();
         }
+    }
+
+    /** checks PoW and adds correct blocks to import list */
+    public void validateAndAddBlocks(int peerId, String displayId, ResponseBlocks response) {
+        // TODO: implement
     }
 }
