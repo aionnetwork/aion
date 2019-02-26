@@ -52,4 +52,4 @@ If you are interested in being part of the Aion project, check out our available
 
 ## License
 
-Aion is released under the [GPL-V3 license](https://github.com/aionnetwork/aion/blob/dev/LICENSE)
+Aion is released under the [MIT license](https://github.com/aionnetwork/aion/blob/master/LICENSE)
