@@ -58,13 +58,15 @@ public final class ResponseBlocksHandler extends Handler {
         } else {
             p2pMgr.errCheck(peerId, displayId);
             log.error(
-                    "<response-blocks decode-error msg-bytes={} peer={}>", message.length, peerId);
+                    "<response-blocks decode-error msg-bytes={} peer={}>",
+                    message.length,
+                    displayId);
 
             if (log.isTraceEnabled()) {
                 log.trace(
                         "<response-blocks decode-error for msg={} peer={}>",
                         Arrays.toString(message),
-                        peerId);
+                        displayId);
             }
         }
     }

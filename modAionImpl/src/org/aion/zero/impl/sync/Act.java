@@ -25,5 +25,5 @@ public final class Act {
 
     public static final byte REQUEST_BLOCKS = 12;
 
-    public static final byte RESPONSE_BLOCKS = 12;
+    public static final byte RESPONSE_BLOCKS = 13;
 }
