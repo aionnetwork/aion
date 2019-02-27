@@ -22,6 +22,25 @@ import org.junit.runner.RunWith;
 public class RequestBlocksTest {
 
     @Test
+    public void testHeader_newObject() {
+        RequestBlocks message = new RequestBlocks(10L, 10, true);
+        // check message header
+        assertThat(message.getHeader().getVer()).isEqualTo(Ver.V1);
+        assertThat(message.getHeader().getAction()).isEqualTo(Act.REQUEST_BLOCKS);
+    }
+
+    @Test
+    public void testHeader_decode() {
+        byte[] encoding =
+                RLP.encodeList(RLP.encode(10L), RLP.encodeInt(10), RLP.encodeByte((byte) 0));
+        RequestBlocks message = RequestBlocks.decode(encoding);
+        // check message header
+        assertThat(message).isNotNull();
+        assertThat(message.getHeader().getVer()).isEqualTo(Ver.V1);
+        assertThat(message.getHeader().getAction()).isEqualTo(Act.REQUEST_BLOCKS);
+    }
+
+    @Test
     public void testDecode_nullMessage() {
         assertThat(RequestBlocks.decode(null)).isNull();
     }
@@ -107,6 +126,12 @@ public class RequestBlocksTest {
         assertThat(RequestBlocks.decode(encoding)).isNull();
     }
 
+    @Test
+    public void testDecode_notAList() {
+        // conversion to negative value
+        byte[] encoding = RLP.encode(10L);
+        assertThat(RequestBlocks.decode(encoding)).isNull();
+    }
     /**
      * Parameters for testing:
      *
