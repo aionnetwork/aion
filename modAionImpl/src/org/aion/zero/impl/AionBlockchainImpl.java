@@ -26,13 +26,13 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.aion.interfaces.db.Repository;
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
@@ -557,6 +557,26 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return false;
         }
         return blockNumber < bestBlockNumber.get() - repository.getPruneBlockCount() + 1;
+    }
+
+    /**
+     * Import block without validity checks and creating the state.
+     *
+     * @param block the block to be imported
+     * @return a result describing the status of the attempted import
+     */
+    public synchronized ImportResult tryFastImport(final AionBlock block) {
+        // TODO: implement
+        // TODO: check that the child is stored
+        // TODO: check that the block number corresponds to the child block number
+        // TODO: update both blocks and index databases
+        return null;
+    }
+
+    public ByteArrayWrapper findMissingAncestor(byte[] parentHash) {
+        // TODO: walk though parent blocks to determine what's missing
+        // TODO: return null when complete, i.e. no missing ancestors exist
+        return null;
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {

@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
@@ -23,6 +25,9 @@ public final class FastSyncManager {
     public FastSyncManager() {
         this.enabled = false;
     }
+
+    ExecutorService executors =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     public void addImportedNode(ByteArrayWrapper key, byte[] value, DatabaseType dbType) {
         if (enabled) {
@@ -98,7 +103,10 @@ public final class FastSyncManager {
         complete.set(true);
     }
 
-    private boolean isCompleteBlockData() {
+    public boolean isCompleteBlockData() {
+        // TODO: check for first block for fast fail
+        // TODO: if first block correct, do full check from pivot
+        // TODO: use chain.findMissingAncestor(pivot.getHash());
         // TODO: block requests should be made backwards from pivot
         // TODO: requests need to be based on hash instead of level
         return false;
@@ -140,5 +148,19 @@ public final class FastSyncManager {
     /** checks PoW and adds correct blocks to import list */
     public void validateAndAddBlocks(int peerId, String displayId, ResponseBlocks response) {
         // TODO: implement
+    }
+
+    public BlocksWrapper takeFilteredBlocks(ByteArrayWrapper required) {
+        // TODO: ensure that blocks that are of heights larger than the required are discarded
+        // TODO: the fastSyncMgr ensured the batch cannot be empty
+        // TODO: ensure that the required hash is part of the batch
+        // TODO: if the required hash is not among the known ones, request it from the network
+
+        return null;
+    }
+
+    public ByteArrayWrapper getPivotHash() {
+        // TODO: implement
+        return null;
     }
 }
