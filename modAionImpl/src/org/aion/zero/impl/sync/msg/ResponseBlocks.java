@@ -50,10 +50,19 @@ public final class ResponseBlocks extends Msg {
         if (message == null || message.length == 0) {
             return null;
         } else {
-            RLPList list = (RLPList) RLP.decode2(message).get(0);
+            RLPList list = RLP.decode2(message);
+            if (list.get(0) instanceof RLPList) {
+                list = (RLPList) list.get(0);
+            } else {
+                return null;
+            }
 
             List<AionBlock> blocks = new ArrayList<>();
             for (RLPElement encoded : list) {
+                if (!(encoded instanceof RLPList)) {
+                    // not a block
+                    return null;
+                }
                 blocks.add(new AionBlock(encoded.getRLPData()));
             }
             return new ResponseBlocks(blocks);
