@@ -49,13 +49,14 @@ public final class ResponseTrieDataHandler extends Handler {
 
             states.add(new TrieNodeWrapper(peerId, displayId, response));
         } else {
-            this.log.error("<res-trie decode-error msg-bytes={} peer={}>", message.length, peerId);
+            this.log.error(
+                    "<res-trie decode-error msg-bytes={} peer={}>", message.length, displayId);
 
             if (log.isTraceEnabled()) {
                 this.log.trace(
                         "<res-trie decode-error for msg={} peer={}>",
                         Arrays.toString(message),
-                        peerId);
+                        displayId);
             }
         }
     }

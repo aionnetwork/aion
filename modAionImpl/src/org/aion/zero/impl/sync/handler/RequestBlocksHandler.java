@@ -82,13 +82,15 @@ public final class RequestBlocksHandler extends Handler {
             }
         } else {
             this.log.error(
-                    "<request-blocks decode-error msg-bytes={} peer={}>", message.length, peerId);
+                    "<request-blocks decode-error msg-bytes={} peer={}>",
+                    message.length,
+                    displayId);
 
             if (log.isTraceEnabled()) {
                 this.log.trace(
                         "<request-blocks decode-error for msg={} peer={}>",
                         Arrays.toString(message),
-                        peerId);
+                        displayId);
             }
         }
     }

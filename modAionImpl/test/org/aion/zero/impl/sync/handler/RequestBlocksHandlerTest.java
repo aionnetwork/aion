@@ -96,7 +96,7 @@ public class RequestBlocksHandlerTest {
                 .error(
                         "<request-blocks decode-error msg-bytes={} peer={}>",
                         incorrectEncoding.length,
-                        peerId);
+                        displayId);
         verifyZeroInteractions(chain);
         verifyZeroInteractions(p2p);
     }
@@ -120,12 +120,12 @@ public class RequestBlocksHandlerTest {
                 .error(
                         "<request-blocks decode-error msg-bytes={} peer={}>",
                         incorrectEncoding.length,
-                        peerId);
+                        displayId);
         verify(log, times(1))
                 .trace(
                         "<request-blocks decode-error for msg={} peer={}>",
                         Arrays.toString(incorrectEncoding),
-                        peerId);
+                        displayId);
         verifyZeroInteractions(chain);
         verifyZeroInteractions(p2p);
     }
