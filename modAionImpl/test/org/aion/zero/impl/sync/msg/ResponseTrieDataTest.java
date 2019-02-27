@@ -17,8 +17,10 @@ import java.util.List;
 import java.util.Map;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.types.ByteArrayWrapper;
+import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
+import org.aion.types.ByteArrayWrapper;
+import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -177,6 +179,38 @@ public class ResponseTrieDataTest {
     }
 
     @Test
+    public void testHeader_newObject_3Parameters() {
+        ResponseTrieData message = new ResponseTrieData(wrappedAltNodeKey, leafValue, STATE);
+        // check message header
+        assertThat(message.getHeader().getVer()).isEqualTo(Ver.V1);
+        assertThat(message.getHeader().getAction()).isEqualTo(Act.RESPONSE_TRIE_DATA);
+    }
+
+    @Test
+    public void testHeader_newObject_4Parameters() {
+        ResponseTrieData message =
+                new ResponseTrieData(wrappedAltNodeKey, leafValue, multipleReferences, STATE);
+        // check message header
+        assertThat(message.getHeader().getVer()).isEqualTo(Ver.V1);
+        assertThat(message.getHeader().getAction()).isEqualTo(Act.RESPONSE_TRIE_DATA);
+    }
+
+    @Test
+    public void testHeader_decode() {
+        byte[] encoding =
+                RLP.encodeList(
+                        RLP.encodeElement(nodeKey),
+                        RLP.encodeElement(leafValue),
+                        RLP.encodeList(encodeReferencedNodes(multipleReferences)),
+                        RLP.encodeString(STATE.toString()));
+        ResponseTrieData message = ResponseTrieData.decode(encoding);
+        // check message header
+        assertThat(message).isNotNull();
+        assertThat(message.getHeader().getVer()).isEqualTo(Ver.V1);
+        assertThat(message.getHeader().getAction()).isEqualTo(Act.RESPONSE_TRIE_DATA);
+    }
+
+    @Test
     public void testDecode_nullMessage() {
         assertThat(ResponseTrieData.decode(null)).isNull();
     }
@@ -235,6 +269,12 @@ public class ResponseTrieDataTest {
                         RLP.encodeElement(leafValue),
                         RLP.encodeList(encodeReferencedNodes(multipleReferences)),
                         RLP.encodeString(STATE.toString()));
+        assertThat(ResponseTrieData.decode(encoding)).isNull();
+    }
+
+    @Test
+    public void testDecode_notAList() {
+        byte[] encoding = RLP.encodeElement(nodeKey);
         assertThat(ResponseTrieData.decode(encoding)).isNull();
     }
 
