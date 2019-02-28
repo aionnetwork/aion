@@ -2,17 +2,26 @@ package org.aion.zero.impl.sync;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.types.A0BlockHeader;
+import org.apache.commons.collections4.map.LRUMap;
+import org.slf4j.Logger;
 
 /**
  * Directs behavior for fast sync functionality.
@@ -28,16 +37,29 @@ public final class FastSyncManager {
     private final AtomicBoolean completeBlocks = new AtomicBoolean(false);
 
     private final AionBlockchainImpl chain;
+    private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
+
+    // TODO: consider adding a FAST_SYNC log as well
+    private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     private AionBlock pivot = null;
     private long pivotNumber = -1;
     private ByteArrayWrapper pivotHash = null;
 
+    Map<ByteArrayWrapper, Long> importedBlockHashes =
+            Collections.synchronizedMap(new LRUMap<>(4096));
+    Map<ByteArrayWrapper, ByteArrayWrapper> receivedBlockHashes =
+            Collections.synchronizedMap(new LRUMap<>(1000));
+
+    BlockingQueue<BlocksWrapper> downloadedBlocks = new LinkedBlockingQueue<>();
+
     private final Map<ByteArrayWrapper, byte[]> importedTrieNodes = new ConcurrentHashMap<>();
 
-    public FastSyncManager(AionBlockchainImpl chain) {
+    public FastSyncManager(
+            AionBlockchainImpl chain, BlockHeaderValidator<A0BlockHeader> blockHeaderValidator) {
         this.enabled = true;
         this.chain = chain;
+        this.blockHeaderValidator = blockHeaderValidator;
     }
 
     @VisibleForTesting
@@ -57,6 +79,7 @@ public final class FastSyncManager {
         return pivotHash;
     }
 
+    // TODO: shutdown pool
     ExecutorService executors =
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
@@ -194,9 +217,27 @@ public final class FastSyncManager {
         }
     }
 
-    /** checks PoW and adds correct blocks to import list */
+    /**
+     * Processes a block response by checking the proof-of-work. Adds valid blocks to the import
+     * queue.
+     *
+     * @param peerId the numerical identifier of the peer who sent the response
+     * @param displayId the display identifier of the peer who sent the response
+     * @param response the response with blocks to be processed
+     */
     public void validateAndAddBlocks(int peerId, String displayId, ResponseBlocks response) {
-        // TODO: implement
+        if (!executors.isShutdown()) {
+            executors.submit(
+                    new TaskValidateAndAddBlocks(
+                            peerId,
+                            displayId,
+                            response,
+                            blockHeaderValidator,
+                            downloadedBlocks,
+                            importedBlockHashes,
+                            receivedBlockHashes,
+                            log));
+        }
     }
 
     public BlocksWrapper takeFilteredBlocks(ByteArrayWrapper required) {
