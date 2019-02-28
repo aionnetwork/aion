@@ -1,7 +1,7 @@
 package org.aion.zero.impl.sync;
 
 import java.util.List;
-import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.core.FastImportResult;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -51,7 +51,7 @@ final class TaskFastImportBlocks implements Runnable {
                     List<AionBlock> batch = bw.getBlocks();
 
                     // process batch and update the peer state
-                    ImportResult importResult;
+                    FastImportResult importResult;
                     AionBlock lastImported = null;
 
                     for (AionBlock b : batch) {
@@ -85,9 +85,9 @@ final class TaskFastImportBlocks implements Runnable {
                                 }
                             }
 
-                            if (importResult.isBest()) {
+                            if (importResult.isSuccessful()) {
                                 lastImported = b;
-                            } else if (importResult == ImportResult.EXIST) {
+                            } else if (importResult.isKnown()) {
                                 lastImported = null; // to not update required incorrectly below
                                 required = chain.findMissingAncestor(b.getParentHash());
                                 break; // no need to continue importing
