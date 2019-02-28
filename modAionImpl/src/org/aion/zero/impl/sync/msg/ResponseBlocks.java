@@ -58,12 +58,18 @@ public final class ResponseBlocks extends Msg {
             }
 
             List<AionBlock> blocks = new ArrayList<>();
+            AionBlock current;
             for (RLPElement encoded : list) {
-                if (!(encoded instanceof RLPList)) {
-                    // not a block
+                try { // preventative try-catch: it's unlikely that exceptions can pass up to here
+                    current = AionBlock.fromRLP(encoded.getRLPData(), true);
+                } catch (Exception e) {
                     return null;
                 }
-                blocks.add(new AionBlock(encoded.getRLPData()));
+                if (current == null) {
+                    return null;
+                } else {
+                    blocks.add(current);
+                }
             }
             return new ResponseBlocks(blocks);
         }

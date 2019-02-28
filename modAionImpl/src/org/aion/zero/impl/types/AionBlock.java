@@ -473,6 +473,44 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
         return block;
     }
 
+    public static AionBlock fromRLP(byte[] rlpEncoded, boolean isUnsafe) {
+        RLPList params = RLP.decode2(rlpEncoded);
+
+        // ensuring the expected types list before type casting
+        if (params.get(0) instanceof RLPList) {
+            RLPList blockRLP = (RLPList) params.get(0);
+
+            if (blockRLP.get(0) instanceof RLPList && blockRLP.get(1) instanceof RLPList) {
+
+                // Parse Header
+                RLPList headerRLP = (RLPList) blockRLP.get(0);
+                A0BlockHeader header;
+                try {
+                    header = A0BlockHeader.fromRLP(headerRLP, isUnsafe);
+                } catch (Exception e) {
+                    return null;
+                }
+                if (header == null) {
+                    return null;
+                }
+
+                AionBlock block = new AionBlock();
+                block.header = header;
+                block.parsed = true;
+
+                // Parse Transactions
+                RLPList transactions = (RLPList) blockRLP.get(1);
+                if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
+                    return null;
+                }
+
+                return block;
+            }
+        }
+        // not an AionBlock encoding
+        return null;
+    }
+
     public void setCumulativeDifficulty(BigInteger _td) {
         td = _td;
     }
