@@ -1,11 +1,13 @@
 package org.aion.zero.impl.sync.statistics;
 
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import org.aion.zero.impl.sync.RequestType;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -17,42 +19,33 @@ import org.apache.commons.lang3.tuple.Pair;
  * @author Beidou Zhang
  */
 public class ResponseStatsTracker {
-
-    // tracks status messages
-    private final ResponseStats status;
-    private final Lock lockStatus;
-
-    // track headers messages
-    private final ResponseStats headers;
-    private final Lock lockHeaders;
-
-    // track bodies messages
-    private final ResponseStats bodies;
-    private final Lock lockBodies;
+    // track status, headers and bodes messages
+    private final EnumMap<RequestType, ResponseStats> responseStats =
+            new EnumMap<>(RequestType.class);
+    private final EnumMap<RequestType, Lock> responseLocks = new EnumMap<>(RequestType.class);
 
     public ResponseStatsTracker(int maxActivePeers) {
-        // instantiate objects for gathering stats
-        this.status = new ResponseStats(maxActivePeers);
-        this.headers = new ResponseStats(maxActivePeers);
-        this.bodies = new ResponseStats(maxActivePeers);
-
-        // instantiate locks
-        this.lockStatus = new ReentrantLock();
-        this.lockHeaders = new ReentrantLock();
-        this.lockBodies = new ReentrantLock();
+        for (RequestType type : RequestType.values()) {
+            // instantiate objects for gathering stats
+            this.responseStats.put(type, new ResponseStats(maxActivePeers));
+            // instantiate locks
+            this.responseLocks.put(type, new ReentrantLock());
+        }
     }
 
     public Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
         // acquire lock for all resources
-        lockBodies.lock();
-        lockHeaders.lock();
-        lockStatus.lock();
+        this.responseLocks.get(RequestType.BODIES).lock();
+        this.responseLocks.get(RequestType.HEADERS).lock();
+        this.responseLocks.get(RequestType.STATUS).lock();
 
         try {
-            Map<String, Pair<Double, Integer>> statusStats = this.status.getResponseStatsByPeers();
+            Map<String, Pair<Double, Integer>> statusStats =
+                    this.responseStats.get(RequestType.STATUS).getResponseStatsByPeers();
             Map<String, Pair<Double, Integer>> headersStats =
-                    this.headers.getResponseStatsByPeers();
-            Map<String, Pair<Double, Integer>> bodiesStats = this.bodies.getResponseStatsByPeers();
+                    this.responseStats.get(RequestType.HEADERS).getResponseStatsByPeers();
+            Map<String, Pair<Double, Integer>> bodiesStats =
+                    this.responseStats.get(RequestType.BODIES).getResponseStatsByPeers();
 
             // skip if there's nothing to show
             if (statusStats.isEmpty() && headersStats.isEmpty() && bodiesStats.isEmpty()) {
@@ -165,9 +158,9 @@ public class ResponseStatsTracker {
             return responseStats;
         } finally {
             // unlock in reverse order
-            lockStatus.unlock();
-            lockHeaders.unlock();
-            lockBodies.unlock();
+            this.responseLocks.get(RequestType.STATUS).unlock();
+            this.responseLocks.get(RequestType.HEADERS).unlock();
+            this.responseLocks.get(RequestType.BODIES).unlock();
         }
     }
 
@@ -214,57 +207,23 @@ public class ResponseStatsTracker {
         return sb.toString();
     }
 
-    public void updateStatusRequest(String displayId, long requestTime) {
-        lockStatus.lock();
+    public void updateRequestTime(String displayId, long requestTime, RequestType requestType) {
+        Lock responseLock = responseLocks.get(requestType);
+        responseLock.lock();
         try {
-            status.updateRequestTime(displayId, requestTime);
+            responseStats.get(requestType).updateRequestTime(displayId, requestTime);
         } finally {
-            lockStatus.unlock();
+            responseLock.unlock();
         }
     }
 
-    public void updateHeadersRequest(String displayId, long requestTime) {
-        lockHeaders.lock();
+    public void updateResponseTime(String displayId, long responseTime, RequestType requestType) {
+        Lock responseLock = responseLocks.get(requestType);
+        responseLock.lock();
         try {
-            headers.updateRequestTime(displayId, requestTime);
+            responseStats.get(requestType).updateResponseStats(displayId, responseTime);
         } finally {
-            lockHeaders.unlock();
-        }
-    }
-
-    public void updateBodiesRequest(String displayId, long requestTime) {
-        lockBodies.lock();
-        try {
-            bodies.updateRequestTime(displayId, requestTime);
-        } finally {
-            lockBodies.unlock();
-        }
-    }
-
-    public void updateStatusResponse(String displayId, long responseTime) {
-        lockStatus.lock();
-        try {
-            status.updateResponseTime(displayId, responseTime);
-        } finally {
-            lockStatus.unlock();
-        }
-    }
-
-    public void updateHeadersResponse(String displayId, long responseTime) {
-        lockHeaders.lock();
-        try {
-            headers.updateResponseTime(displayId, responseTime);
-        } finally {
-            lockHeaders.unlock();
-        }
-    }
-
-    public void updateBodiesResponse(String displayId, long responseTime) {
-        lockBodies.lock();
-        try {
-            bodies.updateResponseTime(displayId, responseTime);
-        } finally {
-            lockBodies.unlock();
+            responseLock.unlock();
         }
     }
 }

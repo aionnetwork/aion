@@ -436,18 +436,18 @@ public class SyncStatsTest {
         assertThat(stats.dumpResponseStats()).isEmpty();
 
         // request time is logged but no response is received
-        stats.updateStatusRequest("dummy", System.nanoTime());
-        stats.updateHeadersRequest("dummy", System.nanoTime());
-        stats.updateBodiesRequest("dummy", System.nanoTime());
+        stats.updateRequestTime("dummy", System.nanoTime(), RequestType.STATUS);
+        stats.updateRequestTime("dummy", System.nanoTime(), RequestType.HEADERS);
+        stats.updateRequestTime("dummy", System.nanoTime(), RequestType.BODIES);
         assertThat(stats.getResponseStats()).isNull();
         assertThat(stats.dumpResponseStats()).isEmpty();
 
         stats = new SyncStats(0L, true);
 
         // response time is logged but no request exists
-        stats.updateStatusResponse("dummy", System.nanoTime());
-        stats.updateHeadersResponse("dummy", System.nanoTime());
-        stats.updateBodiesResponse("dummy", System.nanoTime());
+        stats.updateResponseTime("dummy", System.nanoTime(), RequestType.STATUS);
+        stats.updateResponseTime("dummy", System.nanoTime(), RequestType.HEADERS);
+        stats.updateResponseTime("dummy", System.nanoTime(), RequestType.BODIES);
         assertThat(stats.getResponseStats()).isNull();
         assertThat(stats.dumpResponseStats()).isEmpty();
     }
@@ -467,16 +467,16 @@ public class SyncStatsTest {
                 time = System.nanoTime();
 
                 // status -> type of request 1
-                stats.updateStatusRequest(nodeId, time);
-                stats.updateStatusResponse(nodeId, time + 1_000_000);
+                stats.updateRequestTime(nodeId, time, RequestType.STATUS);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.STATUS);
 
                 // headers -> type of request 2
-                stats.updateHeadersRequest(nodeId, time);
-                stats.updateHeadersResponse(nodeId, time + 1_000_000);
+                stats.updateRequestTime(nodeId, time, RequestType.HEADERS);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.HEADERS);
 
                 // bodies -> type of request 3
-                stats.updateBodiesRequest(nodeId, time);
-                stats.updateBodiesResponse(nodeId, time + 1_000_000);
+                stats.updateRequestTime(nodeId, time, RequestType.BODIES);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.BODIES);
 
                 count++;
             }
@@ -535,8 +535,8 @@ public class SyncStatsTest {
                 time = System.nanoTime();
 
                 // status
-                stats.updateStatusRequest(nodeId, time);
-                stats.updateStatusResponse(nodeId, time + 1_000_000);
+                stats.updateRequestTime(nodeId, time, RequestType.STATUS);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.STATUS);
 
                 count++;
             }
@@ -594,8 +594,8 @@ public class SyncStatsTest {
                 time = System.nanoTime();
 
                 // headers
-                stats.updateHeadersRequest(nodeId, time);
-                stats.updateHeadersResponse(nodeId, time + 1_000_000);
+                stats.updateRequestTime(nodeId, time, RequestType.HEADERS);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.HEADERS);
 
                 count++;
             }
@@ -653,8 +653,8 @@ public class SyncStatsTest {
                 time = System.nanoTime();
 
                 // bodies
-                stats.updateBodiesRequest(nodeId, time);
-                stats.updateBodiesResponse(nodeId, time + 1_000_000);
+                stats.updateRequestTime(nodeId, time, RequestType.BODIES);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.BODIES);
 
                 count++;
             }
@@ -710,16 +710,16 @@ public class SyncStatsTest {
             while (count > 0) {
 
                 // status updates
-                stats.updateStatusRequest(nodeId, System.nanoTime());
-                stats.updateStatusResponse(nodeId, System.nanoTime());
+                stats.updateRequestTime(nodeId, System.nanoTime(), RequestType.STATUS);
+                stats.updateResponseTime(nodeId, System.nanoTime(), RequestType.STATUS);
 
                 // headers updates
-                stats.updateHeadersRequest(nodeId, System.nanoTime());
-                stats.updateHeadersResponse(nodeId, System.nanoTime());
+                stats.updateRequestTime(nodeId, System.nanoTime(), RequestType.HEADERS);
+                stats.updateResponseTime(nodeId, System.nanoTime(), RequestType.HEADERS);
 
                 // bodies updates
-                stats.updateBodiesRequest(nodeId, System.nanoTime());
-                stats.updateBodiesResponse(nodeId, System.nanoTime());
+                stats.updateRequestTime(nodeId, System.nanoTime(), RequestType.BODIES);
+                stats.updateResponseTime(nodeId, System.nanoTime(), RequestType.BODIES);
 
                 count--;
             }

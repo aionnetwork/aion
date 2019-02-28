@@ -42,7 +42,7 @@ public class ResponseStats {
      * @param nodeId peer display identifier
      * @param responseTime time when the response was received in nanoseconds
      */
-    public void updateResponseTime(String nodeId, long responseTime) {
+    public void updateResponseStats(String nodeId, long responseTime) {
         if (!requestTimeByPeers.containsKey(nodeId) || requestTimeByPeers.get(nodeId).isEmpty()) {
             return;
         }
