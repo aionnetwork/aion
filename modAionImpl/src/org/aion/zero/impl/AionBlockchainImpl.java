@@ -568,12 +568,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * @return a result describing the status of the attempted import
      */
     public synchronized FastImportResult tryFastImport(final AionBlock block) {
-        // TODO: consider if any other validations are pertinent here
-        if (block == null || block.getHeader() == null) {
+        if (block == null) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug(
-                        "Fast sync import attempted with null block or header {}.",
-                        block.toString());
+                LOG.debug("Fast sync import attempted with null block or header.");
             }
             return FastImportResult.INVALID_BLOCK;
         }

@@ -5,11 +5,16 @@ import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChain;
 import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChainWithoutTransactions;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import org.aion.crypto.ECKey;
+import org.aion.crypto.HashUtil;
 import org.aion.mcf.config.CfgPrune;
+import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.ByteArrayWrapper;
+import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -618,5 +623,95 @@ public class BlockchainImplementationTest {
 
         assertThat(chain.findMissingAncestor(bestHash))
                 .isEqualTo(ByteArrayWrapper.wrap(parentHash));
+    }
+
+    @Test
+    public void tryFastImport_withNullBlock() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChainWithoutTransactions(chain, 1, 1);
+
+        assertThat(chain.tryFastImport(null)).isEqualTo(FastImportResult.INVALID_BLOCK);
+    }
+
+    @Test
+    public void tryFastImport_withIncorrectTimestamp() throws HeaderStructureException {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChainWithoutTransactions(chain, 1, 1);
+
+        AionBlock parent = chain.getBestBlock();
+        A0BlockHeader.Builder headerBuilder =
+                new A0BlockHeader.Builder()
+                        .withVersion((byte) 1)
+                        .withParentHash(parent.getHash())
+                        .withCoinbase(parent.getCoinbase())
+                        .withNumber(parent.getNumber() + 1)
+                        .withTimestamp(2 * System.currentTimeMillis())
+                        .withExtraData(parent.getExtraData())
+                        .withTxTrieRoot(HashUtil.EMPTY_TRIE_HASH)
+                        .withEnergyLimit(parent.getNrgLimit());
+        AionBlock block = new AionBlock(headerBuilder.build(), Collections.emptyList());
+
+        assertThat(chain.tryFastImport(block)).isEqualTo(FastImportResult.INVALID_BLOCK);
+    }
+
+    @Test
+    public void tryFastImport_withKnownBlock() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChainWithoutTransactions(chain, 2, 1);
+        AionBlock best = chain.getBestBlock();
+
+        assertThat(chain.tryFastImport(best)).isEqualTo(FastImportResult.KNOWN);
+    }
+
+    @Test
+    public void tryFastImport_withNoChild() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChainWithoutTransactions(chain, 2, 1);
+        AionBlock best = chain.getBestBlock();
+
+        // delete the block from the db
+        chain.getRepository().getBlockDatabase().delete(best.getHash());
+
+        assertThat(chain.tryFastImport(best)).isEqualTo(FastImportResult.NO_CHILD);
+    }
+
+    @Test
+    public void tryFastImport_withImported() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChainWithoutTransactions(chain, 3, 1);
+        AionBlock best = chain.getBestBlock();
+
+        // save then delete the block from the db
+        AionBlock block = chain.getBlockByHash(best.getParentHash());
+        chain.getRepository().getBlockDatabase().delete(best.getParentHash());
+
+        assertThat(chain.tryFastImport(block)).isEqualTo(FastImportResult.IMPORTED);
+        assertThat(chain.getRepository().getBlockDatabase().get(best.getParentHash()))
+                .isNotEqualTo(Optional.empty());
     }
 }
