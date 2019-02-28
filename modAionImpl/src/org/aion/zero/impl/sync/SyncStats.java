@@ -374,39 +374,15 @@ public final class SyncStats {
         }
     }
 
-    public void updateStatusRequest(String displayId, long requestTime) {
+    public void updateRequestTime(String displayId, long requestTime, RequestType requestType) {
         if (responsesEnabled) {
-            responseTracker.updateStatusRequest(displayId, requestTime);
+            responseTracker.updateRequestTime(displayId, requestTime, requestType);
         }
     }
 
-    public void updateHeadersRequest(String displayId, long requestTime) {
+    public void updateResponseTime(String displayId, long responseTime, RequestType requestType) {
         if (responsesEnabled) {
-            responseTracker.updateHeadersRequest(displayId, requestTime);
-        }
-    }
-
-    public void updateBodiesRequest(String displayId, long requestTime) {
-        if (responsesEnabled) {
-            responseTracker.updateBodiesRequest(displayId, requestTime);
-        }
-    }
-
-    public void updateStatusResponse(String displayId, long responseTime) {
-        if (responsesEnabled) {
-            responseTracker.updateStatusResponse(displayId, responseTime);
-        }
-    }
-
-    public void updateHeadersResponse(String displayId, long responseTime) {
-        if (responsesEnabled) {
-            responseTracker.updateHeadersResponse(displayId, responseTime);
-        }
-    }
-
-    public void updateBodiesResponse(String displayId, long responseTime) {
-        if (responsesEnabled) {
-            responseTracker.updateBodiesResponse(displayId, responseTime);
+            responseTracker.updateResponseTime(displayId, responseTime, requestType);
         }
     }
 

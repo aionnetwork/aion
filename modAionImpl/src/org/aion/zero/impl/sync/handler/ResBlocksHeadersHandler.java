@@ -7,6 +7,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.Act;
+import org.aion.zero.impl.sync.RequestType;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.zero.types.A0BlockHeader;
@@ -35,7 +36,9 @@ public final class ResBlocksHeadersHandler extends Handler {
         ResBlocksHeaders resHeaders = ResBlocksHeaders.decode(_msgBytes);
         if (resHeaders != null) {
 
-            this.syncMgr.getSyncStats().updateHeadersResponse(_displayId, System.nanoTime());
+            this.syncMgr
+                    .getSyncStats()
+                    .updateResponseTime(_displayId, System.nanoTime(), RequestType.HEADERS);
 
             List<A0BlockHeader> headers = resHeaders.getHeaders();
             if (headers != null && headers.size() > 0) {
