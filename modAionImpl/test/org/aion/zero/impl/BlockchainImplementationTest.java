@@ -2,13 +2,14 @@ package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChain;
+import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChainWithoutTransactions;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.ImportResult;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -561,5 +562,61 @@ public class BlockchainImplementationTest {
                 .forEach(h -> hashes.add(ByteArrayWrapper.wrap(h.getHash())));
         assertThat(hashes.size()).isEqualTo(expected.size());
         assertThat(hashes).isEqualTo(expected);
+    }
+
+    @Test
+    public void testFindMissingAncestor_withCompleteChain() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChainWithoutTransactions(chain, 2, 1);
+
+        AionBlock best = chain.getBestBlock();
+        byte[] bestHash = best.getHash();
+
+        assertThat(chain.findMissingAncestor(bestHash)).isNull();
+    }
+
+    @Test
+    public void testFindMissingAncestor_withFirstMissing() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChainWithoutTransactions(chain, 2, 1);
+
+        AionBlock best = chain.getBestBlock();
+        byte[] bestHash = best.getHash();
+
+        // delete the block from the db
+        chain.getRepository().getBlockDatabase().delete(bestHash);
+
+        assertThat(chain.findMissingAncestor(bestHash)).isEqualTo(ByteArrayWrapper.wrap(bestHash));
+    }
+
+    @Test
+    public void testFindMissingAncestor_withParentMissing() {
+        StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+        StandaloneBlockchain.Bundle bundle = builder.withValidatorConfiguration("simple").build();
+
+        StandaloneBlockchain chain = bundle.bc;
+
+        // populate chain at random
+        generateRandomChainWithoutTransactions(chain, 2, 1);
+
+        AionBlock best = chain.getBestBlock();
+        byte[] bestHash = best.getHash();
+        byte[] parentHash = best.getParentHash();
+
+        // delete the block from the db
+        chain.getRepository().getBlockDatabase().delete(parentHash);
+
+        assertThat(chain.findMissingAncestor(bestHash))
+                .isEqualTo(ByteArrayWrapper.wrap(parentHash));
     }
 }

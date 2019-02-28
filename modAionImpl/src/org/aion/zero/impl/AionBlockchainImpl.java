@@ -628,7 +628,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         byte[] currentHash = hash;
         AionBlock known = getBlockStore().getBlockByHash(hash);
 
-        while (known != null && known.getNumber() >= 0) {
+        while (known != null && known.getNumber() > 0) {
             currentHash = known.getParentHash();
             known = getBlockStore().getBlockByHash(currentHash);
         }
