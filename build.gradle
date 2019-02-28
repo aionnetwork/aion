@@ -15,6 +15,7 @@ def javaHome = System.getProperty('java.home')
 def vmVersion = "0.3.2"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
+
 allprojects { 
     apply plugin: 'java'
     apply plugin: 'idea'
@@ -303,13 +304,39 @@ task pack(type: Tar) {
     }
 }
 
-task packDocker(type: Exec) { 
-    dependsOn pack
-    commandLine 'sh', "${dirWorkspace}/script/pack_docker.sh"
+task createPackConfigOverride(type: Copy) { 
+    from "${rootDir}/config"
+    into "${dirPack}/config"
 }
 
-task packDevDocker(type: Exec) { 
-    commandLine 'sh', "${dirWorkspace}/script/pack_dev_docker.sh"
+task overridePackConfigForDocker(type: Exec) { 
+    dependsOn createPackConfigOverride
+    commandLine 'python', 'DockerAutomation/bin/enable-api-servers.py', "${dirPack}/config"
+}
+
+task copyPackForDocker(type: Copy) { 
+    dependsOn pack, overridePackConfigForDocker
+    from "${dirPack}/aion.tar.bz2"
+    from "${rootDir}/DockerAutomation"
+    into "${buildDir}/docker"
+}
+
+task packDocker(type: Exec) { 
+    dependsOn copyPackForDocker 
+    pack.mustRunAfter overridePackConfigForDocker
+
+    def distImageTag = project.findProperty('dist_image_tag') ?: 'aionnetwork/aion:latest'
+    commandLine 'docker', 'build',
+        '--target', 'dist', '-t', distImageTag,
+        "${buildDir}/docker"
+}
+
+task packK8sDocker(type: Exec) { 
+    dependsOn copyPackForDocker 
+    def k8sImageTag = project.findProperty('k8s_image_tag') ?: 'aionnetwork/aion-k8s:latest'
+    commandLine 'docker', 'build', 
+        '--target', 'k8s', '-t', k8sImageTag,
+        "${buildDir}/docker"
 }
 
 clean { 
