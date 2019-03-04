@@ -3,11 +3,10 @@ package org.aion.api.server.types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.aion.base.type.IBlock;
-import org.aion.base.type.IBlockSummary;
-import org.aion.base.type.ITransaction;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.block.BlockSummary;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.vm.types.Bloom;
-import org.aion.mcf.vm.types.Log;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.zero.impl.core.BloomFilter;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -45,14 +44,14 @@ public final class FltrLg extends Fltr {
     // -------------------------------------------------------------------------------
 
     @Override
-    public boolean onBlock(IBlockSummary bs) {
+    public boolean onBlock(BlockSummary bs) {
         List<AionTxReceipt> receipts = ((AionBlockSummary) bs).getReceipts();
-        IBlock blk = bs.getBlock();
+        Block blk = bs.getBlock();
 
         if (matchBloom(new Bloom(((IAionBlock) blk).getLogBloom()))) {
             int txIndex = 0;
             for (AionTxReceipt receipt : receipts) {
-                ITransaction tx = receipt.getTransaction();
+                Transaction tx = receipt.getTransaction();
                 if (matchesContractAddress(tx.getDestinationAddress().toBytes())) {
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
@@ -85,7 +84,7 @@ public final class FltrLg extends Fltr {
     public boolean onBlock(IAionBlock blk, IAionBlockchain chain) {
         if (matchBloom(new Bloom(blk.getLogBloom()))) {
             int txIndex = 0;
-            for (ITransaction txn : blk.getTransactionsList()) {
+            for (Transaction txn : blk.getTransactionsList()) {
                 if (matchesContractAddress(txn.getDestinationAddress().toBytes())) {
                     // now that we know that our filter might match with some logs in this
                     // transaction, go ahead

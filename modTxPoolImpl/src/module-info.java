@@ -1,7 +1,7 @@
 module aion.txpool.impl {
     requires aion.log;
     requires slf4j.api;
-    requires aion.base;
+    requires aion.util;
     requires aion.txpool;
     requires aion.vm.api;
 

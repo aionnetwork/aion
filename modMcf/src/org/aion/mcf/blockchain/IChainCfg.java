@@ -1,14 +1,14 @@
 package org.aion.mcf.blockchain;
 
-import org.aion.base.type.IBlock;
-import org.aion.base.type.ITransaction;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.core.IRewardsCalculator;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 
 /** Chain configuration interface. */
-public interface IChainCfg<Blk extends IBlock<?, ?>, Tx extends ITransaction> {
+public interface IChainCfg<Blk extends Block<?, ?>, Tx extends Transaction> {
 
     boolean acceptTransactionSignature(Tx tx);
 

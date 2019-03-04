@@ -3,7 +3,7 @@ package org.aion.precompiled.encoding;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 
 public class Uint128FVM extends BaseTypeFVM {
 

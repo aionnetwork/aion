@@ -9,8 +9,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.base.db.IRepository;
-import org.aion.base.util.ByteUtil;
+import org.aion.interfaces.db.Repository;
 import org.aion.evtmgr.EventMgrModule;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
@@ -24,6 +23,7 @@ import org.aion.mcf.db.IBlockStorePow;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.impl1.P2pMgr;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -259,8 +259,8 @@ public class AionHub {
         }
     }
 
-    public IRepository getRepository() {
-        return repository;
+    public Repository getRepository() {
+        return (Repository) repository;
     }
 
     public IAionBlockchain getBlockchain() {
@@ -339,7 +339,7 @@ public class AionHub {
                 }
             }
 
-            recovered = this.blockchain.recoverWorldState(this.repository, bestBlock);
+            recovered = this.blockchain.recoverWorldState((Repository) this.repository, bestBlock);
 
             if (!this.repository.isValidRoot(bestBlock.getStateRoot())) {
                 // reverting back one block

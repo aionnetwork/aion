@@ -12,7 +12,7 @@ import java.util.Arrays;
 import org.aion.crypto.hash.Blake2b;
 import org.aion.crypto.hash.Blake2bNative;
 import org.aion.rlp.RLP;
-import org.aion.util.NativeLoader;
+import org.aion.util.file.NativeLoader;
 import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.digests.KeccakDigest;
 import org.spongycastle.crypto.digests.RIPEMD160Digest;

@@ -1,12 +1,12 @@
 package org.aion.mcf.mine;
 
-import org.aion.base.type.IBlock;
+import org.aion.interfaces.block.Block;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /** Abstract Miner. */
-public abstract class AbstractMineRunner<BLK extends IBlock<?, ?>> implements IMineRunner {
+public abstract class AbstractMineRunner<BLK extends Block<?, ?>> implements IMineRunner {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.CONS.name());
 

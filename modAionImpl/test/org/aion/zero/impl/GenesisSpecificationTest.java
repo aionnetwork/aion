@@ -6,11 +6,11 @@ import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteUtil;
+import org.aion.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
-import org.aion.vm.api.interfaces.Address;
+
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.junit.Test;
 
@@ -72,17 +72,17 @@ public class GenesisSpecificationTest {
         AccountState defaultAccountState = new AccountState(overrideValue, overrideValue);
 
         HashSet<Address> accountStateSet = new HashSet<>();
-        accountStateSet.add(AionAddress.wrap(overrideHash));
+        accountStateSet.add(Address.wrap(overrideHash));
 
         genesisBuilder
                 .withParentHash(overrideHash)
-                .withCoinbase(AionAddress.wrap(overrideAddress))
+                .withCoinbase(Address.wrap(overrideAddress))
                 .withDifficulty(overrideValue.toByteArray())
                 .withEnergyLimit(overrideValue.longValue())
                 .withNonce(overrideHash)
                 .withNumber(overrideValue.longValue())
                 .withTimestamp(overrideValue.longValue())
-                .addPreminedAccount(AionAddress.wrap(overrideAddress), defaultAccountState);
+                .addPreminedAccount(Address.wrap(overrideAddress), defaultAccountState);
 
         AionGenesis genesis = genesisBuilder.build();
 

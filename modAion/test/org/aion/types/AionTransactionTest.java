@@ -3,10 +3,8 @@ package org.aion.types;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import org.aion.base.type.AionAddress;
 import org.aion.crypto.ECKeyFac;
-import org.aion.mcf.vm.types.DataWord;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.zero.types.AionTransaction;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
@@ -31,7 +29,7 @@ public class AionTransactionTest {
     @Test
     public void testSerializationZero() {
         byte[] nonce = RandomUtils.nextBytes(16);
-        Address to = AionAddress.wrap(RandomUtils.nextBytes(32));
+        Address to = Address.wrap(RandomUtils.nextBytes(32));
         byte[] value = RandomUtils.nextBytes(16);
         byte[] data = RandomUtils.nextBytes(64);
         long nrg = 0;
@@ -49,7 +47,7 @@ public class AionTransactionTest {
     @Test
     public void testClone() {
         byte[] nonce = RandomUtils.nextBytes(16);
-        Address to = AionAddress.wrap(RandomUtils.nextBytes(32));
+        Address to = Address.wrap(RandomUtils.nextBytes(32));
         byte[] value = RandomUtils.nextBytes(16);
         byte[] data = RandomUtils.nextBytes(64);
         long nrg = RandomUtils.nextLong(0, Long.MAX_VALUE);
@@ -66,16 +64,16 @@ public class AionTransactionTest {
 
     @Test
     public void testTransactionCost() {
-        byte[] nonce = DataWord.ONE.getData();
+        byte[] nonce = DataWordImpl.ONE.getData();
         byte[] from = RandomUtils.nextBytes(20);
         byte[] to = RandomUtils.nextBytes(Address.SIZE);
-        byte[] value = DataWord.ONE.getData();
+        byte[] value = DataWordImpl.ONE.getData();
         byte[] data = RandomUtils.nextBytes(128);
-        long nrg = new DataWord(1000L).longValue();
-        long nrgPrice = DataWord.ONE.longValue();
+        long nrg = new DataWordImpl(1000L).longValue();
+        long nrgPrice = DataWordImpl.ONE.longValue();
 
         AionTransaction tx =
-                new AionTransaction(nonce, AionAddress.wrap(to), value, data, nrg, nrgPrice);
+                new AionTransaction(nonce, Address.wrap(to), value, data, nrg, nrgPrice);
 
         long expected = 21000;
         for (byte b : data) {
@@ -86,13 +84,13 @@ public class AionTransactionTest {
 
     @Test
     public void testTransactionCost2() {
-        byte[] nonce = DataWord.ONE.getData();
+        byte[] nonce = DataWordImpl.ONE.getData();
         byte[] from = RandomUtils.nextBytes(Address.SIZE);
-        Address to = AionAddress.EMPTY_ADDRESS();
-        byte[] value = DataWord.ONE.getData();
+        Address to = null;
+        byte[] value = DataWordImpl.ONE.getData();
         byte[] data = RandomUtils.nextBytes(128);
-        long nrg = new DataWord(1000L).longValue();
-        long nrgPrice = DataWord.ONE.longValue();
+        long nrg = new DataWordImpl(1000L).longValue();
+        long nrgPrice = DataWordImpl.ONE.longValue();
 
         AionTransaction tx = new AionTransaction(nonce, to, value, data, nrg, nrgPrice);
 

@@ -11,8 +11,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteUtil;
+import org.aion.types.Address;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
@@ -21,7 +20,8 @@ import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSuseContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.api.interfaces.Address;
+
+import org.aion.util.bytes.ByteUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -152,7 +152,7 @@ public class TRSuseContractTest extends TRShelpers {
         System.arraycopy(acct.toBytes(), 0, addr, 0, Address.SIZE);
         addr[0] = (byte) 0xC0;
 
-        input = getDepositInput(AionAddress.wrap(addr), BigInteger.TWO);
+        input = getDepositInput(Address.wrap(addr), BigInteger.TWO);
         res = trs.execute(input, COST);
         assertEquals(PrecompiledResultCode.FAILURE, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
@@ -1985,7 +1985,7 @@ public class TRSuseContractTest extends TRShelpers {
         // Test TRS address with TRS prefix, so it looks legit.
         byte[] addr = ECKeyFac.inst().create().getAddress();
         addr[0] = (byte) 0xC0;
-        contract = new AionAddress(addr);
+        contract = new Address(addr);
         tempAddrs.add(contract);
         input = getRefundInput(contract, acct, BigInteger.ZERO);
         res = newTRSuseContract(acct).execute(input, COST);
@@ -2469,7 +2469,7 @@ public class TRSuseContractTest extends TRShelpers {
         Address other = getNewExistentAccount(DEFAULT_BALANCE);
         byte[] addr = Arrays.copyOf(other.toBytes(), other.toBytes().length);
         addr[0] = (byte) 0xC0;
-        Address contract = new AionAddress(addr);
+        Address contract = new Address(addr);
 
         byte[] input = getDepositForInput(contract, other, BigInteger.ONE);
         PrecompiledTransactionResult res = newTRSuseContract(owner).execute(input, COST);

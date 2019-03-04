@@ -1,15 +1,15 @@
 package org.aion.mcf.evt;
 
-import org.aion.base.type.IBlock;
-import org.aion.base.type.ITransaction;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
 
 /** Listener base interface. */
 public interface IListenerBase<
-        BLK extends IBlock<?, ?>,
-        TX extends ITransaction,
+        BLK extends Block<?, ?>,
+        TX extends Transaction,
         TXR extends AbstractTxReceipt<?>,
         BS extends AbstractBlockSummary<?, ?, ?, ?>> {
 

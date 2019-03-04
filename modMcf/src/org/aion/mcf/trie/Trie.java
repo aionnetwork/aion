@@ -2,8 +2,8 @@ package org.aion.mcf.trie;
 
 import java.util.Map;
 import java.util.Set;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.types.ByteArrayWrapper;
 
 /**
  * Trie interface for the main data structure in Ethereum which is used to store both the account
@@ -99,7 +99,7 @@ public interface Trie {
      */
     Map<ByteArrayWrapper, byte[]> getReferencedTrieNodes(byte[] value, int limit);
 
-    long saveFullStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db);
+    long saveFullStateToDatabase(byte[] stateRoot, ByteArrayKeyValueDatabase db);
 
-    long saveDiffStateToDatabase(byte[] stateRoot, IByteArrayKeyValueDatabase db);
+    long saveDiffStateToDatabase(byte[] stateRoot, ByteArrayKeyValueDatabase db);
 }

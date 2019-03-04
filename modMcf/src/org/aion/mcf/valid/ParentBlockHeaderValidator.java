@@ -2,13 +2,13 @@ package org.aion.mcf.valid;
 
 import java.util.LinkedList;
 import java.util.List;
-import org.aion.base.type.IBlockHeader;
+import org.aion.interfaces.block.BlockHeader;
 import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.slf4j.Logger;
 
 /** validation rules depending on parent's block header */
-public class ParentBlockHeaderValidator<BH extends IBlockHeader>
+public class ParentBlockHeaderValidator<BH extends BlockHeader>
         extends AbstractBlockHeaderValidator {
 
     private List<DependentBlockHeaderRule<BH>> rules;

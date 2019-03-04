@@ -9,10 +9,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.vm.IDataWord;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.vm.DataWord;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.db.AionContractDetailsImpl;
@@ -23,7 +23,7 @@ import org.junit.Test;
 
 public class IContractDetailsTest {
     // The two ways of instantiating the cache.
-    private IContractDetails cache1, cache2;
+    private ContractDetails cache1, cache2;
 
     @Before
     public void setup() {
@@ -51,7 +51,7 @@ public class IContractDetailsTest {
 
     @Test
     public void testPutSingleZeroValue() {
-        ByteArrayWrapper key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        ByteArrayWrapper key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         checkGetNonExistentPairing(cache1, key);
         checkGetNonExistentPairing(cache2, key);
 
@@ -62,7 +62,7 @@ public class IContractDetailsTest {
 
     @Test
     public void testPutDoubleZeroValue() {
-        ByteArrayWrapper key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        ByteArrayWrapper key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         checkGetNonExistentPairing(cache1, key);
         checkGetNonExistentPairing(cache2, key);
 
@@ -73,7 +73,7 @@ public class IContractDetailsTest {
 
     @Test
     public void testPutSingleZeroKey() {
-        ByteArrayWrapper value = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        ByteArrayWrapper value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutSingleZeroKeyTest(cache1, value);
         doPutSingleZeroKeyTest(cache2, value);
 
@@ -84,7 +84,7 @@ public class IContractDetailsTest {
 
     @Test
     public void testPutDoubleZeroKey() {
-        ByteArrayWrapper value = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        ByteArrayWrapper value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutDoubleZeroKeyTest(cache1, value);
         doPutDoubleZeroKeyTest(cache2, value);
 
@@ -96,18 +96,18 @@ public class IContractDetailsTest {
     @Test
     public void testPutZeroKeyAndValue() {
         // Try single-single
-        cache1.delete(DataWord.ZERO.toWrapper());
-        ByteArrayWrapper result = cache1.get(DataWord.ZERO.toWrapper());
+        cache1.delete(DataWordImpl.ZERO.toWrapper());
+        ByteArrayWrapper result = cache1.get(DataWordImpl.ZERO.toWrapper());
         assertNull(result);
-        cache2.delete(DataWord.ZERO.toWrapper());
-        assertNull(cache2.get(DataWord.ZERO.toWrapper()));
+        cache2.delete(DataWordImpl.ZERO.toWrapper());
+        assertNull(cache2.get(DataWordImpl.ZERO.toWrapper()));
 
         // Try single-double
-        cache1.delete(DataWord.ZERO.toWrapper());
-        result = cache1.get(DataWord.ZERO.toWrapper());
+        cache1.delete(DataWordImpl.ZERO.toWrapper());
+        result = cache1.get(DataWordImpl.ZERO.toWrapper());
         assertNull(result);
-        cache2.delete(DataWord.ZERO.toWrapper());
-        assertNull(cache2.get(DataWord.ZERO.toWrapper()));
+        cache2.delete(DataWordImpl.ZERO.toWrapper());
+        assertNull(cache2.get(DataWordImpl.ZERO.toWrapper()));
 
         // Try double-single
         cache1.delete(DoubleDataWord.ZERO.toWrapper());
@@ -127,25 +127,25 @@ public class IContractDetailsTest {
     @Test
     public void testPutKeyValueThenOverwriteValueWithZero() {
         // single-single
-        ByteArrayWrapper key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
-        ByteArrayWrapper value = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        ByteArrayWrapper key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        ByteArrayWrapper value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutKeyValueThenOverwriteValueWithZero(cache1, key, value);
         doPutKeyValueThenOverwriteValueWithZero(cache2, key, value);
 
         // single-double
-        value = new DoubleDataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        value = new DoubleDataWord(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutKeyValueThenOverwriteValueWithZero(cache1, key, value);
         doPutKeyValueThenOverwriteValueWithZero(cache2, key, value);
 
         // double-single
-        key = new DoubleDataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
-        value = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        key = new DoubleDataWord(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutKeyValueThenOverwriteValueWithZero(cache1, key, value);
         doPutKeyValueThenOverwriteValueWithZero(cache2, key, value);
 
         // double-double
-        key = new DoubleDataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
-        value = new DoubleDataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        key = new DoubleDataWord(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        value = new DoubleDataWord(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         doPutKeyValueThenOverwriteValueWithZero(cache1, key, value);
         doPutKeyValueThenOverwriteValueWithZero(cache2, key, value);
     }
@@ -316,33 +316,33 @@ public class IContractDetailsTest {
     // <------------------------------------------HELPERS------------------------------------------->
 
     /**
-     * Tests calling get() on a DataWord key that is not in cache -- first on a zero-byte key and
+     * Tests calling get() on a DataWordImpl key that is not in cache -- first on a zero-byte key and
      * then on a random key.
      */
-    private void doGetNoSuchSingleKeyTest(IContractDetails cache) {
-        checkGetNonExistentPairing(cache, DataWord.ZERO.toWrapper());
+    private void doGetNoSuchSingleKeyTest(ContractDetails cache) {
+        checkGetNonExistentPairing(cache, DataWordImpl.ZERO.toWrapper());
         checkGetNonExistentPairing(
-                cache, new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper());
+                cache, new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper());
     }
 
     /**
      * Tests calling get() on a DoubleDataWord key that is not in cache -- first on a zero-byte key
      * and then on a random key.
      */
-    private void doGetNoSuchDoubleKeyTest(IContractDetails cache) {
+    private void doGetNoSuchDoubleKeyTest(ContractDetails cache) {
         checkGetNonExistentPairing(cache, DoubleDataWord.ZERO.toWrapper());
         checkGetNonExistentPairing(
                 cache, new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)).toWrapper());
     }
 
-    /** Tests putting value into cache with a zero-byte DataWord key. */
-    private void doPutSingleZeroKeyTest(IContractDetails cache, ByteArrayWrapper value) {
-        cache.put(DataWord.ZERO.toWrapper(), value);
-        assertEquals(value, cache.get(DataWord.ZERO.toWrapper()));
+    /** Tests putting value into cache with a zero-byte DataWordImpl key. */
+    private void doPutSingleZeroKeyTest(ContractDetails cache, ByteArrayWrapper value) {
+        cache.put(DataWordImpl.ZERO.toWrapper(), value);
+        assertEquals(value, cache.get(DataWordImpl.ZERO.toWrapper()));
     }
 
     /** Tests putting value into cache with a zero-byte DoubleDataWord key. */
-    private void doPutDoubleZeroKeyTest(IContractDetails cache, ByteArrayWrapper value) {
+    private void doPutDoubleZeroKeyTest(ContractDetails cache, ByteArrayWrapper value) {
         cache.put(DoubleDataWord.ZERO.toWrapper(), value);
         assertEquals(value, cache.get(DoubleDataWord.ZERO.toWrapper()));
     }
@@ -352,9 +352,9 @@ public class IContractDetailsTest {
      * key and then calling get() on that key.
      */
     private void doPutKeyValueThenOverwriteValueWithZero(
-            IContractDetails cache, ByteArrayWrapper key, ByteArrayWrapper value) {
+            ContractDetails cache, ByteArrayWrapper key, ByteArrayWrapper value) {
 
-        // Test DataWord.
+        // Test DataWordImpl.
         cache.put(key, value);
         assertEquals(value, cache.get(key));
         cache.delete(key);
@@ -372,7 +372,7 @@ public class IContractDetailsTest {
      * n'th pair was deleted.
      */
     private void checkAllPairs(
-            IContractDetails cache,
+            ContractDetails cache,
             List<ByteArrayWrapper> keys,
             List<ByteArrayWrapper> values,
             int n) {
@@ -395,7 +395,7 @@ public class IContractDetailsTest {
      * keys and values, where it is assumed every n'th pair was deleted.
      */
     private void checkStorage(
-            IContractDetails cache,
+            ContractDetails cache,
             List<ByteArrayWrapper> keys,
             List<ByteArrayWrapper> values,
             int n) {
@@ -422,7 +422,7 @@ public class IContractDetailsTest {
      * Iterates over every key in keys -- which are assumed to exist in cache -- and then deletes
      * any key-value pair in cache for every n'th key in keys.
      */
-    private void deleteEveryNthEntry(IContractDetails cache, List<ByteArrayWrapper> keys, int n) {
+    private void deleteEveryNthEntry(ContractDetails cache, List<ByteArrayWrapper> keys, int n) {
         int count = 1;
         for (ByteArrayWrapper key : keys) {
             if (count % n == 0) {
@@ -434,7 +434,7 @@ public class IContractDetailsTest {
 
     /** Puts all of the key-value pairs in keys and values into cache. */
     private void massPutIntoCache(
-            IContractDetails cache, List<ByteArrayWrapper> keys, List<ByteArrayWrapper> values) {
+            ContractDetails cache, List<ByteArrayWrapper> keys, List<ByteArrayWrapper> values) {
 
         int size = keys.size();
         assertEquals(size, values.size());
@@ -470,10 +470,10 @@ public class IContractDetailsTest {
         return values;
     }
 
-    /** Returns a random DataWord if isSingleWord is true, otherwise a random DoubleDataWord. */
-    private IDataWord getRandomWord(boolean isSingleWord) {
+    /** Returns a random DataWordImpl if isSingleWord is true, otherwise a random DoubleDataWord. */
+    private DataWord getRandomWord(boolean isSingleWord) {
         return (isSingleWord)
-                ? new DataWord(RandomUtils.nextBytes(DataWord.BYTES))
+                ? new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES))
                 : new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
     }
 
@@ -481,9 +481,9 @@ public class IContractDetailsTest {
      * Sets a key-value pair with a zero value via cache.setStorage() and ensures that null is
      * returned when called on that same key.
      */
-    private void doSetZeroValueViaStorageTest(IContractDetails cache) {
+    private void doSetZeroValueViaStorageTest(ContractDetails cache) {
         Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
-        ByteArrayWrapper key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        ByteArrayWrapper key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         storage.put(key, null);
         cache.setStorage(storage);
         checkGetNonExistentPairing(cache, key);
@@ -491,7 +491,7 @@ public class IContractDetailsTest {
 
     /** Checks cache returns the expected values given its storage is storage. */
     private void checkKeyValueMapping(
-            IContractDetails cache, Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
+            ContractDetails cache, Map<ByteArrayWrapper, ByteArrayWrapper> storage) {
 
         for (ByteArrayWrapper key : storage.keySet()) {
             ByteArrayWrapper value = storage.get(key);
@@ -528,7 +528,7 @@ public class IContractDetailsTest {
      * Assumption: key has no valid value mapping in cache. This method calls cache.get(key) and
      * checks its result.
      */
-    private void checkGetNonExistentPairing(IContractDetails cache, ByteArrayWrapper key) {
+    private void checkGetNonExistentPairing(ContractDetails cache, ByteArrayWrapper key) {
         try {
             assertNull(cache.get(key));
         } catch (AssertionError e) {

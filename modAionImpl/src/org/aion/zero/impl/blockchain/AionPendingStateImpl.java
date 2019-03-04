@@ -21,11 +21,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.aion.base.Constant;
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+import org.aion.interfaces.block.Constant;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -43,10 +41,12 @@ import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.txpool.ITxPool;
 import org.aion.txpool.TxPoolModule;
+import org.aion.types.Address;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -95,13 +95,13 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private TransactionStore<AionTransaction, AionTxReceipt, AionTxInfo> transactionStore;
 
-    private IRepository repository;
+    private Repository repository;
 
     private ITxPool<AionTransaction> txPool;
 
     private IEventMgr evtMgr = null;
 
-    private IRepositoryCache pendingState;
+    private RepositoryCache pendingState;
 
     private AtomicReference<AionBlock> best;
 
@@ -283,7 +283,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
 
-        this.repository = _repository;
+        this.repository = (Repository) _repository;
 
         this.isSeed = _cfgAion.getConsensus().isSeed();
 
@@ -401,7 +401,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
     }
 
     @Override
-    public synchronized IRepositoryCache<?, ?> getRepository() {
+    public synchronized RepositoryCache<?, ?> getRepository() {
         // Todo : no class use this method.
         return pendingState;
     }

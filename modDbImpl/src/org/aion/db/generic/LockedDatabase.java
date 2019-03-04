@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.PersistenceMethod;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.PersistenceMethod;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
@@ -20,17 +20,17 @@ import org.slf4j.Logger;
  *
  * @author Alexandra Roatis
  */
-public class LockedDatabase implements IByteArrayKeyValueDatabase {
+public class LockedDatabase implements ByteArrayKeyValueDatabase {
 
     /** Unlocked database. */
-    protected final IByteArrayKeyValueDatabase database;
+    protected final ByteArrayKeyValueDatabase database;
 
     /** Read-write lock allowing concurrent reads and single write operations. */
     protected final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
-    public LockedDatabase(IByteArrayKeyValueDatabase _unlockedDatabase) {
+    public LockedDatabase(ByteArrayKeyValueDatabase _unlockedDatabase) {
         this.database = _unlockedDatabase;
     }
 

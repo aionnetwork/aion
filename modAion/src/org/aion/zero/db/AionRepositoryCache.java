@@ -4,32 +4,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.types.Address;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepositoryCache;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.vm.api.interfaces.Address;
 
 public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase<?, ?>> {
 
-    public AionRepositoryCache(final IRepository trackedRepository) {
+    public AionRepositoryCache(final Repository trackedRepository) {
         this.repository = trackedRepository;
         this.cachedAccounts = new HashMap<>();
         this.cachedDetails = new HashMap<>();
     }
 
     @Override
-    public IRepositoryCache startTracking() {
+    public RepositoryCache startTracking() {
         return new AionRepositoryCache(this);
     }
 
     /**
      * Flushes its state to other in such a manner that other receives sufficiently deep copies of
-     * its {@link AccountState} and {@link IContractDetails} objects.
+     * its {@link AccountState} and {@link ContractDetails} objects.
      *
      * If {@code clearStateAfterFlush == true} then this repository's state will be completely
      * cleared after this method returns, otherwise it will retain all of its state.
@@ -41,13 +41,13 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
      * as type {@link Object} and are cast to their expected types and copied, but will not be copied
      * if they are not in fact their expected types. This is something to be aware of. Most of the
      * imperfection results from the inability to copy
-     * {@link org.aion.base.db.IByteArrayKeyValueStore} and {@link org.aion.mcf.trie.SecureTrie}
+     * {@link ByteArrayKeyValueStore} and {@link org.aion.mcf.trie.SecureTrie}
      * perfectly or at all (in the case of the former), for the above reasons.
      *
      * @param other The repository that will consume the state of this repository.
      * @param clearStateAfterFlush True if this repository should clear its state after flushing.
      */
-    public void flushCopiesTo(IRepository other, boolean clearStateAfterFlush) {
+    public void flushCopiesTo(Repository other, boolean clearStateAfterFlush) {
         fullyWriteLock();
         try {
             // determine which accounts should get stored
@@ -58,12 +58,12 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                     // ignore contract state for empty accounts at storage
                     cachedDetails.remove(entry.getKey());
                 } else {
-                    cleanedCacheAccounts.put(new AionAddress(entry.getKey().toBytes()), account);
+                    cleanedCacheAccounts.put(new Address(entry.getKey().toBytes()), account);
                 }
             }
             // determine which contracts should get stored
-            for (Map.Entry<Address, IContractDetails> entry : cachedDetails.entrySet()) {
-                IContractDetails ctd = entry.getValue().copy();
+            for (Map.Entry<Address, ContractDetails> entry : cachedDetails.entrySet()) {
+                ContractDetails ctd = entry.getValue().copy();
                 // TODO: this functionality will be improved with the switch to a
                 // different ContractDetails implementation
                 if (ctd != null && ctd instanceof ContractDetailsCacheImpl) {
@@ -96,7 +96,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     }
 
     @Override
-    public void flushTo(IRepository other, boolean clearStateAfterFlush) {
+    public void flushTo(Repository other, boolean clearStateAfterFlush) {
         fullyWriteLock();
         try {
             // determine which accounts should get stored
@@ -111,8 +111,8 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                 }
             }
             // determine which contracts should get stored
-            for (Map.Entry<Address, IContractDetails> entry : cachedDetails.entrySet()) {
-                IContractDetails ctd = entry.getValue();
+            for (Map.Entry<Address, ContractDetails> entry : cachedDetails.entrySet()) {
+                ContractDetails ctd = entry.getValue();
                 // TODO: this functionality will be improved with the switch to a
                 // different ContractDetails implementation
                 if (ctd != null && ctd instanceof ContractDetailsCacheImpl) {
@@ -156,7 +156,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
 
     @Override
     public void updateBatch(
-            Map<Address, AccountState> accounts, final Map<Address, IContractDetails> details) {
+            Map<Address, AccountState> accounts, final Map<Address, ContractDetails> details) {
         fullyWriteLock();
         try {
 
@@ -164,7 +164,7 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
                 this.cachedAccounts.put(accEntry.getKey(), accEntry.getValue());
             }
 
-            for (Map.Entry<Address, IContractDetails> ctdEntry : details.entrySet()) {
+            for (Map.Entry<Address, ContractDetails> ctdEntry : details.entrySet()) {
                 ContractDetailsCacheImpl contractDetailsCache =
                         (ContractDetailsCacheImpl) ctdEntry.getValue().copy();
                 if (contractDetailsCache.origContract != null

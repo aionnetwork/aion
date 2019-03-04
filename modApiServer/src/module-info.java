@@ -1,5 +1,4 @@
 module aion.apiserver {
-    requires aion.base;
     requires aion.zero.impl;
     requires aion.log;
     requires aion.p2p;
@@ -20,6 +19,7 @@ module aion.apiserver {
     requires com.google.common;
     requires jdk.unsupported;
     requires aion.vm.api;
+    requires aion.util;
     requires libnzmq;
 
     exports org.aion.api.server.pb;

@@ -14,8 +14,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +26,7 @@ import org.junit.Test;
 public class JournalPruneDataSourceTest {
 
     private static final String dbName = "TestDB";
-    private static final IByteArrayKeyValueDatabase source_db = DatabaseFactory.connect(dbName);
+    private static final ByteArrayKeyValueDatabase source_db = DatabaseFactory.connect(dbName);
     private static JournalPruneDataSource db;
 
     private static final byte[] k1 = "key1".getBytes();

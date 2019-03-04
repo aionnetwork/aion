@@ -9,12 +9,12 @@ import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.NodeEnvironment;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
-import org.aion.base.type.AionAddress;
-import org.aion.base.vm.VirtualMachineSpecs;
+import org.aion.interfaces.vm.VirtualMachineSpecs;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.vm.VirtualMachineProvider;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
 import org.aion.zero.impl.types.AionBlock;
@@ -64,7 +64,7 @@ public class AvmHelloWorldTest {
         byte[] jar = getJarBytes();
         AionTransaction transaction = newTransaction(
             BigInteger.ZERO,
-            AionAddress.wrap(deployerKey.getAddress()),
+            Address.wrap(deployerKey.getAddress()),
             null,
             jar,
             5_000_000);
@@ -86,7 +86,7 @@ public class AvmHelloWorldTest {
         byte[] jar = getJarBytes();
         AionTransaction transaction = newTransaction(
             BigInteger.ZERO,
-            AionAddress.wrap(deployerKey.getAddress()),
+            Address.wrap(deployerKey.getAddress()),
             null,
             jar,
             5_000_000);
@@ -101,11 +101,11 @@ public class AvmHelloWorldTest {
         assertEquals(NodeEnvironment.CONTRACT_PREFIX, receipt.getTransactionOutput()[0]);
         assertTrue(receipt.isSuccessful());
 
-        Address contract = AionAddress.wrap(receipt.getTransactionOutput());
+        Address contract = Address.wrap(receipt.getTransactionOutput());
         byte[] call = getCallArguments();
         transaction = newTransaction(
             BigInteger.ONE,
-            AionAddress.wrap(deployerKey.getAddress()),
+            Address.wrap(deployerKey.getAddress()),
             contract,
             call,
             2_000_000);

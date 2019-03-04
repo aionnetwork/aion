@@ -14,7 +14,9 @@ sourceSets {
 }
 
 dependencies {
-    compile project(':modAionBase')
+    compile 'network.aion:vm-api4j:0.4.0'
+    compile 'network.aion:util4j:0.4.0'
+
     compile project(':modAion')
     compile project(':modAionImpl')
     compile project(':aion_fastvm')

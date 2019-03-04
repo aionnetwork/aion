@@ -1,12 +1,12 @@
 package org.aion.zero.impl.sync.handler;
 
 import java.math.BigInteger;
-import org.aion.base.util.ByteUtil;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResStatus;

@@ -1,7 +1,6 @@
 module aion.mcf {
     requires aion.util;
     requires aion.crypto;
-    requires aion.base;
     requires aion.log;
     requires java.xml;
     requires aion.rlp;
@@ -9,7 +8,6 @@ module aion.mcf {
     requires slf4j.api;
     requires aion.p2p;
     requires com.google.common;
-    // requires libnsc;
     requires commons.collections4;
     requires aion.vm.api;
     requires core;

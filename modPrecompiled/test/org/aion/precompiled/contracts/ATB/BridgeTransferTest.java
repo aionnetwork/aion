@@ -6,14 +6,14 @@ import static org.aion.precompiled.contracts.ATB.BridgeTestUtils.dummyContext;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.List;
-import org.aion.base.type.AionAddress;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.fastvm.ExecutionContext;
 import org.aion.precompiled.PrecompiledUtilities;
 import org.aion.precompiled.contracts.DummyRepo;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,9 +27,9 @@ public class BridgeTransferTest {
     private ExecutionContext context;
 
     private static final Address CONTRACT_ADDR =
-            new AionAddress(HashUtil.h256("contractAddress".getBytes()));
+            new Address(HashUtil.h256("contractAddress".getBytes()));
     private static final Address OWNER_ADDR =
-            new AionAddress(HashUtil.h256("ownerAddress".getBytes()));
+            new Address(HashUtil.h256("ownerAddress".getBytes()));
 
     private static final ECKey members[] =
             new ECKey[] {
@@ -143,7 +143,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_SIGNATURE_BOUNDS);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
-        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ZERO);
+        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ZERO);
     }
 
     @Test
@@ -181,7 +181,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ZERO);
-        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ONE);
+        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ONE);
     }
 
     @Test
@@ -219,7 +219,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_SIGNATURE_BOUNDS);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
-        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ZERO);
+        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ZERO);
     }
 
     @Test
@@ -255,7 +255,7 @@ public class BridgeTransferTest {
         assertThat(results).isNotNull();
         assertThat(results.controllerResult).isEqualTo(ErrCode.INVALID_TRANSFER);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
-        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ZERO);
+        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ZERO);
     }
 
     static class ResultHashTuple {
@@ -325,7 +325,7 @@ public class BridgeTransferTest {
 
         // one transfer should have gone through, second shouldn't
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ONE);
-        assertThat(this.repo.getBalance(new AionAddress(recipient))).isEqualTo(BigInteger.ONE);
+        assertThat(this.repo.getBalance(new Address(recipient))).isEqualTo(BigInteger.ONE);
     }
 
     // Transfer 511 times, ONE per transfer
@@ -354,7 +354,7 @@ public class BridgeTransferTest {
 
         assertThat(tuple.results.controllerResult).isEqualTo(ErrCode.NO_ERROR);
         assertThat(this.repo.getBalance(CONTRACT_ADDR)).isEqualTo(BigInteger.ZERO);
-        assertThat(this.repo.getBalance(AionAddress.wrap(recipient)))
+        assertThat(this.repo.getBalance(Address.wrap(recipient)))
                 .isEqualTo(transferTotalBigInteger);
 
         // 511 transfer events + 1 distributed event

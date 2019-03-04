@@ -39,10 +39,10 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IPruneConfig;
-import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
@@ -231,16 +231,16 @@ public class TaskImportBlocksTest {
                 builder.withValidatorConfiguration("simple")
                         .withDefaultAccounts(accounts)
                         .withRepoConfig(
-                                new IRepositoryConfig() {
+                                new RepositoryConfig() {
                                     @Override
                                     public String getDbPath() {
                                         return "";
                                     }
 
                                     @Override
-                                    public IPruneConfig getPruneConfig() {
+                                    public PruneConfig getPruneConfig() {
                                         // top pruning without archiving
-                                        return new IPruneConfig() {
+                                        return new PruneConfig() {
                                             @Override
                                             public boolean isEnabled() {
                                                 return true;
@@ -264,7 +264,7 @@ public class TaskImportBlocksTest {
                                     }
 
                                     @Override
-                                    public IContractDetails contractDetailsImpl() {
+                                    public ContractDetails contractDetailsImpl() {
                                         return ContractDetailsAion.createForTesting(0, 1000000)
                                                 .getDetails();
                                     }

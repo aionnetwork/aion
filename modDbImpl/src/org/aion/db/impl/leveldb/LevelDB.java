@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.CompressionType;

@@ -11,18 +11,18 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
-import org.aion.base.type.AionAddress;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.crypto.ISignature;
 import org.aion.fastvm.ExecutionContext;
 import org.aion.mcf.config.CfgFork;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.type.PrecompiledContract;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.zero.impl.config.CfgAion;
 import org.apache.commons.lang3.RandomUtils;
@@ -34,18 +34,18 @@ import org.spongycastle.util.encoders.Hex;
 public class EDVerifyContractTest {
 
     private byte[] txHash = RandomUtils.nextBytes(32);
-    private Address origin = AionAddress.wrap(RandomUtils.nextBytes(32));
+    private Address origin = Address.wrap(RandomUtils.nextBytes(32));
     private Address caller = origin;
 
-    private Address blockCoinbase = AionAddress.wrap(RandomUtils.nextBytes(32));
+    private Address blockCoinbase = Address.wrap(RandomUtils.nextBytes(32));
     private long blockNumber = 2000001;
     private long blockTimestamp = System.currentTimeMillis() / 1000;
     private long blockNrgLimit = 5000000;
-    private DataWord blockDifficulty = new DataWord(0x100000000L);
+    private DataWordImpl blockDifficulty = new DataWordImpl(0x100000000L);
 
-    private DataWord nrgPrice;
+    private DataWordImpl nrgPrice;
     private long nrgLimit;
-    private DataWord callValue;
+    private DataWordImpl callValue;
     private byte[] callData;
     private byte[] pubKey;
 
@@ -57,9 +57,9 @@ public class EDVerifyContractTest {
 
     @Before
     public void setup() throws IOException {
-        nrgPrice = DataWord.ONE;
+        nrgPrice = DataWordImpl.ONE;
         nrgLimit = 20000;
-        callValue = DataWord.ZERO;
+        callValue = DataWordImpl.ZERO;
         callData = new byte[0];
 
         new File(System.getProperty("user.dir") + "/mainnet/config").mkdirs();
@@ -178,12 +178,12 @@ public class EDVerifyContractTest {
         assertNotNull(contract);
         TransactionResult result = contract.execute(input, 21000L);
         assertThat(result.getResultCode().isSuccess());
-        assertThat(Arrays.equals(result.getReturnData(), AionAddress.ZERO_ADDRESS().toBytes()));
+        assertThat(Arrays.equals(result.getReturnData(), Address.ZERO_ADDRESS().toBytes()));
     }
 
     @Test
     public void shouldFailIfNotEnoughEnergy() {
-        nrgPrice = DataWord.ONE;
+        nrgPrice = DataWordImpl.ONE;
 
         byte[] input = setupInput();
         ExecutionContext ctx =

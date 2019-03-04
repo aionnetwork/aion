@@ -20,8 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.PersistenceMethod;
 import org.aion.db.impl.h2.H2MVMap;
 import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
@@ -32,6 +30,8 @@ import org.aion.db.utils.repeat.RepeatRule;
 import org.aion.db.utils.slices.Slice;
 import org.aion.db.utils.slices.SliceOutput;
 import org.aion.db.utils.slices.Slices;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.PersistenceMethod;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -82,14 +82,14 @@ public class DriverBenchmarkTest {
                 });
     }
 
-    public IByteArrayKeyValueDatabase db;
+    public ByteArrayKeyValueDatabase db;
     public String testName;
 
     private final RandomGenerator generator;
     private final Random random;
 
     // Every test invocation instantiates a new IByteArrayKeyValueDB
-    public DriverBenchmarkTest(String testName, IByteArrayKeyValueDatabase db) {
+    public DriverBenchmarkTest(String testName, ByteArrayKeyValueDatabase db) {
         this.db = db;
         this.testName = testName;
 

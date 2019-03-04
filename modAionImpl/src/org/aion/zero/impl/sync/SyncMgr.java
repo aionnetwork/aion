@@ -1,5 +1,7 @@
 package org.aion.zero.impl.sync;
 
+import static org.aion.util.string.StringUtils.getNodeIdShort;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,10 +19,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
-import org.aion.base.util.Utils;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventConsensus;
@@ -29,6 +27,9 @@ import org.aion.log.LogEnum;
 import org.aion.mcf.config.StatsType;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.p2p.IP2pMgr;
+import org.aion.types.ByteArrayWrapper;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.types.AionBlock;
@@ -133,9 +134,9 @@ public final class SyncMgr {
                                 _remoteBestBlockNumber,
                                 this.networkStatus.getTargetBestBlockHash().isEmpty()
                                         ? ""
-                                        : Utils.getNodeIdShort(
+                                        : getNodeIdShort(
                                                 this.networkStatus.getTargetBestBlockHash()),
-                                Utils.getNodeIdShort(remoteBestBlockHash),
+                                getNodeIdShort(remoteBestBlockHash),
                                 this.networkStatus.getTargetApiVersion(),
                                 (int) _apiVersion,
                                 this.networkStatus.getTargetPeerCount(),

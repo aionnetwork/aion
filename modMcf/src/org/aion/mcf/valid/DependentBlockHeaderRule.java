@@ -1,12 +1,12 @@
 package org.aion.mcf.valid;
 
 import java.util.List;
-import org.aion.base.type.IBlockHeader;
+import org.aion.interfaces.block.BlockHeader;
 import org.aion.mcf.blockchain.valid.AbstractValidRule;
 import org.aion.mcf.blockchain.valid.IBlockHeaderValidRule;
 
 /** A class of rules that requires memory of the previous block */
-public abstract class DependentBlockHeaderRule<BH extends IBlockHeader> extends AbstractValidRule
+public abstract class DependentBlockHeaderRule<BH extends BlockHeader> extends AbstractValidRule
         implements IBlockHeaderValidRule<BH> {
 
     /**

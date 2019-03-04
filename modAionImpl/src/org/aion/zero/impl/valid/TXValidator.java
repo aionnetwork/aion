@@ -5,12 +5,12 @@ import static org.aion.mcf.valid.TxNrgRule.isValidNrgTx;
 
 import java.util.Collections;
 import java.util.Map;
-import org.aion.base.type.Hash256;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ISignature;
 import org.aion.crypto.SignatureFac;
 import org.aion.log.LogEnum;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Hash256;
 import org.aion.zero.types.AionTransaction;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
@@ -40,7 +40,7 @@ public class TXValidator {
 
     public static boolean isValid0(AionTransaction tx) {
         byte[] check = tx.getNonce();
-        if (check == null || check.length > DataWord.BYTES) {
+        if (check == null || check.length > DataWordImpl.BYTES) {
             LOG.error("invalid tx nonce!");
             return false;
         }
@@ -52,7 +52,7 @@ public class TXValidator {
         }
 
         check = tx.getValue();
-        if (check == null || check.length > DataWord.BYTES) {
+        if (check == null || check.length > DataWordImpl.BYTES) {
             LOG.error("invalid tx value!");
             return false;
         }

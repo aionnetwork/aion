@@ -1,19 +1,14 @@
 package org.aion.mcf.blockchain;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.aion.base.type.IBlock;
-import org.aion.base.util.ByteArrayWrapper;
+import java.util.*;
+
+import org.aion.interfaces.block.Block;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.types.AbstractBlockHeaderWrapper;
 
 /** Abstract SyncQueue Class */
 public abstract class AbstractSyncQueue<
-                BLK extends IBlock<?, ?>, BHW extends AbstractBlockHeaderWrapper<?>>
+                BLK extends Block<?, ?>, BHW extends AbstractBlockHeaderWrapper<?>>
         implements ISyncQueue<BLK, BHW> {
 
     protected static int MAX_CHAIN_LEN = 192;
@@ -58,7 +53,7 @@ public abstract class AbstractSyncQueue<
         }
     }
 
-    public class HeaderElement<BK extends IBlock<?, ?>, BW extends AbstractBlockHeaderWrapper<?>> {
+    public class HeaderElement<BK extends Block<?, ?>, BW extends AbstractBlockHeaderWrapper<?>> {
 
         public BW header;
         public BK block;

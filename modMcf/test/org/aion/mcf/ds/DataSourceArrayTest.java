@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Random;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.mockdb.MockDB;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.junit.After;
 import org.junit.Before;
@@ -28,7 +28,7 @@ public class DataSourceArrayTest {
 
     private static List<AionBlockStore.BlockInfo> infoList;
 
-    private static IByteArrayKeyValueDatabase db;
+    private static ByteArrayKeyValueDatabase db;
     private static DataSourceArray<List<AionBlockStore.BlockInfo>> testIndex;
 
     private static final Random random = new Random();

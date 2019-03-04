@@ -1,16 +1,16 @@
 package org.aion.zero.impl;
 
-import static java.lang.Math.max;
+import static java.lang.Long.max;
 import static java.lang.Runtime.getRuntime;
 import static java.math.BigInteger.ZERO;
 import static java.util.Collections.emptyList;
-import static org.aion.base.util.BIUtil.isMoreThan;
-import static org.aion.base.util.Hex.toHexString;
 import static org.aion.mcf.core.ImportResult.EXIST;
 import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
 import static org.aion.mcf.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.aion.mcf.core.ImportResult.INVALID_BLOCK;
 import static org.aion.mcf.core.ImportResult.NO_PARENT;
+import static org.aion.util.biginteger.BIUtil.isMoreThan;
+import static org.aion.util.conversions.Hex.toHexString;
 
 import java.math.BigInteger;
 import java.util.ArrayDeque;
@@ -26,13 +26,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.type.Hash256;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
@@ -47,16 +42,20 @@ import org.aion.mcf.manager.ChainStatistics;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
-import org.aion.mcf.types.BlockIdentifier;
+import org.aion.mcf.types.BlockIdentifierImpl;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
+import org.aion.types.Hash256;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -108,7 +107,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private long exitOn = Long.MAX_VALUE;
 
     private AionRepositoryImpl repository;
-    private IRepositoryCache track;
+    private RepositoryCache track;
     private TransactionStore<AionTransaction, AionTxReceipt, org.aion.zero.impl.types.AionTxInfo>
             transactionStore;
     private AionBlock bestBlock;
@@ -132,8 +131,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GrandParentBlockHeaderValidator<A0BlockHeader> grandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator<A0BlockHeader> parentHeaderValidator;
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
-    private AtomicReference<BlockIdentifier> bestKnownBlock =
-            new AtomicReference<BlockIdentifier>();
+    private AtomicReference<BlockIdentifierImpl> bestKnownBlock =
+            new AtomicReference<BlockIdentifierImpl>();
 
     private boolean fork = false;
 
@@ -180,7 +179,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             @Override
             public Address getMinerCoinbase() {
-                return AionAddress.wrap(cfgAion.getConsensus().getMinerAddress());
+                return Address.wrap(cfgAion.getConsensus().getMinerAddress());
             }
 
             // TODO: hook up to configuration file
@@ -231,9 +230,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         this.transactionStore = this.repository.getTransactionStore();
 
-        this.minerCoinbase = this.config.getMinerCoinbase();
 
-        if (minerCoinbase.isEmptyAddress()) {
+        this.minerCoinbase = this.config.getMinerCoinbase();
+        if (minerCoinbase == null) {
             LOG.warn("No miner Coinbase!");
         }
 
@@ -1034,7 +1033,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             }
 
             if (txs != null && !txs.isEmpty()) {
-                IRepository parentRepo = repository;
+                Repository parentRepo = repository;
                 if (!Arrays.equals(bestBlock.getHash(), block.getParentHash())) {
                     parentRepo =
                             repository.getSnapshotTo(
@@ -1525,7 +1524,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     //     * @return {@link A0BlockHeader}'s list or empty list if none found
     //     */
     //    @Override
-    //    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip,
+    //    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifierImpl identifier, int skip,
     // int limit,
     //            boolean reverse) {
     //
@@ -1696,7 +1695,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private void updateBestKnownBlock(A0BlockHeader header) {
         if (bestKnownBlock.get() == null || header.getNumber() > bestKnownBlock.get().getNumber()) {
-            bestKnownBlock.set(new BlockIdentifier(header.getHash(), header.getNumber()));
+            bestKnownBlock.set(new BlockIdentifierImpl(header.getHash(), header.getNumber()));
         }
     }
 
@@ -1705,7 +1704,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized boolean recoverWorldState(IRepository repository, AionBlock block) {
+    public synchronized boolean recoverWorldState(Repository repository, AionBlock block) {
         if (block == null) {
             LOG.error("World state recovery attempted with null block.");
             return false;
@@ -1788,7 +1787,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
-    public synchronized boolean recoverIndexEntry(IRepository repository, AionBlock block) {
+    public synchronized boolean recoverIndexEntry(Repository repository, AionBlock block) {
         if (block == null) {
             LOG.error("Index recovery attempted with null block.");
             return false;

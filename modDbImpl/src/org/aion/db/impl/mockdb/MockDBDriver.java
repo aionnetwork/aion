@@ -3,8 +3,8 @@ package org.aion.db.impl.mockdb;
 import static org.aion.db.impl.DatabaseFactory.Props;
 
 import java.util.Properties;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.IDriver;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
@@ -25,7 +25,7 @@ public class MockDBDriver implements IDriver {
 
     /** @inheritDoc */
     @Override
-    public IByteArrayKeyValueDatabase connect(Properties info) {
+    public ByteArrayKeyValueDatabase connect(Properties info) {
 
         String dbType = info.getProperty(Props.DB_TYPE);
         String dbName = info.getProperty(Props.DB_NAME);

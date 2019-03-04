@@ -1,7 +1,6 @@
 package org.aion.db.impl;
 
 import java.util.Properties;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
 import org.aion.db.generic.SpecialLockedDatabase;
@@ -14,12 +13,13 @@ import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.impl.mongodb.MongoDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.slf4j.Logger;
 
 /**
- * Returns an instance of {@link IByteArrayKeyValueDatabase} based on the given properties.
+ * Returns an instance of {@link ByteArrayKeyValueDatabase} based on the given properties.
  *
  * @author Alexandra Roatis
  */
@@ -54,14 +54,14 @@ public abstract class DatabaseFactory {
         public static final String READ_BUFFER_SIZE = "read_buffer_size";
     }
 
-    public static IByteArrayKeyValueDatabase connect(Properties info) {
+    public static ByteArrayKeyValueDatabase connect(Properties info) {
         return connect(info, false);
     }
 
-    public static IByteArrayKeyValueDatabase connect(Properties info, boolean debug) {
+    public static ByteArrayKeyValueDatabase connect(Properties info, boolean debug) {
 
         DBVendor dbType = DBVendor.fromString(info.getProperty(Props.DB_TYPE));
-        IByteArrayKeyValueDatabase db;
+        ByteArrayKeyValueDatabase db;
 
         if (dbType == DBVendor.UNKNOWN) {
             // the driver, if correct should check path and name
@@ -96,7 +96,7 @@ public abstract class DatabaseFactory {
      *
      * @return A database implementation with read-write locks.
      */
-    private static IByteArrayKeyValueDatabase connectWithLocks(Properties info) {
+    private static ByteArrayKeyValueDatabase connectWithLocks(Properties info) {
         boolean enableHeapCache = getBoolean(info, Props.ENABLE_HEAP_CACHE);
         if (enableHeapCache) {
             return new LockedDatabase(connectWithCache(info));
@@ -111,7 +111,7 @@ public abstract class DatabaseFactory {
     }
 
     /** @return A database implementation with a caching layer. */
-    private static IByteArrayKeyValueDatabase connectWithCache(Properties info) {
+    private static ByteArrayKeyValueDatabase connectWithCache(Properties info) {
         boolean enableAutoCommit = getBoolean(info, Props.ENABLE_AUTO_COMMIT);
         return new DatabaseWithCache(
                 connectBasic(info),
@@ -208,7 +208,7 @@ public abstract class DatabaseFactory {
      * @return A database implementation based on a driver implementing the {@link IDriver}
      *     interface.
      */
-    public static IByteArrayKeyValueDatabase connect(String driverName, Properties info) {
+    public static ByteArrayKeyValueDatabase connect(String driverName, Properties info) {
         try {
             // see if the given name is a valid driver
             IDriver driver =
@@ -226,7 +226,7 @@ public abstract class DatabaseFactory {
     }
 
     /** @return A mock database. */
-    public static IByteArrayKeyValueDatabase connect(String _dbName) {
+    public static ByteArrayKeyValueDatabase connect(String _dbName) {
         return new MockDB(_dbName);
     }
 

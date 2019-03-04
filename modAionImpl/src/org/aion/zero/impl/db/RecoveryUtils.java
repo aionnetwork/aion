@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.IBlock;
+import org.aion.interfaces.block.Block;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.config.CfgDb;
 import org.aion.mcf.core.ImportResult;
@@ -78,7 +78,7 @@ public class RecoveryUtils {
 
         IBlockStoreBase store = blockchain.getBlockStore();
 
-        IBlock bestBlock = store.getBestBlock();
+        Block bestBlock = store.getBestBlock();
         if (bestBlock == null) {
             System.out.println("Empty database. Nothing to do.");
             return;
@@ -151,7 +151,7 @@ public class RecoveryUtils {
     public static Status revertTo(IAionBlockchain blockchain, long nbBlock) {
         IBlockStoreBase store = blockchain.getBlockStore();
 
-        IBlock bestBlock = store.getBestBlock();
+        Block bestBlock = store.getBestBlock();
         if (bestBlock == null) {
             System.out.println("Empty database. Nothing to do.");
             return Status.ILLEGAL_ARGUMENT;

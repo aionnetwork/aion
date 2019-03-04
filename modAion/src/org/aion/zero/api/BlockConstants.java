@@ -1,10 +1,9 @@
 package org.aion.zero.api;
 
 import java.math.BigInteger;
-import org.aion.base.type.AionAddress;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.types.AbstractBlockHeader;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
 
 public class BlockConstants implements IBlockConstants {
 
@@ -180,7 +179,7 @@ public class BlockConstants implements IBlockConstants {
      * @return {@code address} of the sk owning this pair. Also referred to as the owner's address.
      */
     public Address getTokenBridgingAddress() {
-        return AionAddress.ZERO_ADDRESS();
+        return Address.ZERO_ADDRESS();
     }
 
     @Override

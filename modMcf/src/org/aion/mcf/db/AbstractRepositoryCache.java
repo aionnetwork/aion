@@ -9,14 +9,14 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /**
@@ -25,20 +25,20 @@ import org.slf4j.Logger;
  * @author Alexandra Roatis
  */
 public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
-        implements IRepositoryCache<AccountState, BSB> {
+        implements RepositoryCache<AccountState, BSB> {
 
     // Logger
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 
     /** the repository being tracked */
-    protected IRepository<AccountState, BSB> repository;
+    protected Repository<AccountState, BSB> repository;
 
     /** local accounts cache */
     protected Map<Address, AccountState> cachedAccounts;
 
     protected ReadWriteLock lockAccounts = new ReentrantReadWriteLock();
     /** local contract details cache */
-    protected Map<Address, IContractDetails> cachedDetails;
+    protected Map<Address, ContractDetails> cachedDetails;
 
     protected ReadWriteLock lockDetails = new ReentrantReadWriteLock();
 
@@ -50,7 +50,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
             cachedAccounts.put(address, accountState);
 
             // TODO: unify contract details initialization from Impl and Track
-            IContractDetails contractDetails = new ContractDetailsCacheImpl(null);
+            ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
             // TODO: refactor to use makeDirty() from AbstractState
             contractDetails.setDirty(true);
             cachedDetails.put(address, contractDetails);
@@ -115,11 +115,11 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public IContractDetails getContractDetails(Address address) {
+    public ContractDetails getContractDetails(Address address) {
         lockDetails.readLock().lock();
 
         try {
-            IContractDetails contractDetails = this.cachedDetails.get(address);
+            ContractDetails contractDetails = this.cachedDetails.get(address);
 
             if (contractDetails == null) {
                 // loads the address into cache
@@ -146,7 +146,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
         lockDetails.readLock().lock();
 
         try {
-            IContractDetails contractDetails = cachedDetails.get(address);
+            ContractDetails contractDetails = cachedDetails.get(address);
 
             if (contractDetails == null) {
                 // ask repository when not cached
@@ -168,13 +168,13 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     public void loadAccountState(
             Address address,
             Map<Address, AccountState> accounts,
-            Map<Address, IContractDetails> details) {
+            Map<Address, ContractDetails> details) {
         fullyReadLock();
 
         try {
             // check if the account is cached locally
             AccountState accountState = this.cachedAccounts.get(address);
-            IContractDetails contractDetails = this.cachedDetails.get(address);
+            ContractDetails contractDetails = this.cachedDetails.get(address);
 
             // when account not cached load from repository
             if (accountState == null) {
@@ -275,7 +275,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
             // save the code
             // TODO: why not create contract here directly? also need to check that there is no
             // preexisting code!
-            IContractDetails contractDetails = getContractDetails(address);
+            ContractDetails contractDetails = getContractDetails(address);
             contractDetails.setCode(code);
             // TODO: ensure that setDirty is done by the class itself
             contractDetails.setDirty(true);
@@ -327,7 +327,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     @Override
     public Map<ByteArrayWrapper, ByteArrayWrapper> getStorage(
             Address address, Collection<ByteArrayWrapper> keys) {
-        IContractDetails details = getContractDetails(address);
+        ContractDetails details = getContractDetails(address);
         return (details == null) ? Collections.emptyMap() : details.getStorage(keys);
     }
 
@@ -343,7 +343,7 @@ public abstract class AbstractRepositoryCache<BSB extends IBlockStoreBase<?, ?>>
     }
 
     @Override
-    public IRepository getSnapshotTo(byte[] root) {
+    public Repository getSnapshotTo(byte[] root) {
         return repository.getSnapshotTo(root);
     }
 

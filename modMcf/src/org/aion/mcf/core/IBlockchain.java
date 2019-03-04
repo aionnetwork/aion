@@ -3,14 +3,14 @@ package org.aion.mcf.core;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.type.IBlock;
-import org.aion.base.type.ITransaction;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.mcf.types.AbstractBlockSummary;
 import org.aion.mcf.types.AbstractTxReceipt;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 
 /**
  * Blockchain interface.
@@ -23,9 +23,9 @@ import org.aion.vm.api.interfaces.Address;
  */
 @SuppressWarnings("rawtypes")
 public interface IBlockchain<
-                BLK extends IBlock,
+                BLK extends Block,
                 BH extends AbstractBlockHeader,
-                TX extends ITransaction,
+                TX extends Transaction,
                 TR extends AbstractTxReceipt,
                 INFO extends AbstractTxInfo>
         extends IPowChain<BLK, BH> {
@@ -124,7 +124,7 @@ public interface IBlockchain<
     //  *  Returns emptyList() for side chain blocks.
     //  */
     // List<BH> getListOfHeadersStartFrom(
-    //         BlockIdentifier identifier, int skip, int limit, boolean reverse);
+    //         BlockIdentifierImpl identifier, int skip, int limit, boolean reverse);
 
     List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
 }

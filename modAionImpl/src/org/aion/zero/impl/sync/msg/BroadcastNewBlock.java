@@ -1,6 +1,6 @@
 package org.aion.zero.impl.sync.msg;
 
-import org.aion.base.type.IBlock;
+import org.aion.interfaces.block.Block;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
@@ -11,9 +11,9 @@ import org.aion.zero.impl.sync.Act;
 public final class BroadcastNewBlock extends Msg {
 
     @SuppressWarnings("rawtypes")
-    private final IBlock block;
+    private final Block block;
 
-    public BroadcastNewBlock(@SuppressWarnings("rawtypes") final IBlock __newblock) {
+    public BroadcastNewBlock(@SuppressWarnings("rawtypes") final Block __newblock) {
         super(Ver.V0, Ctrl.SYNC, Act.BROADCAST_BLOCK);
         this.block = __newblock;
     }

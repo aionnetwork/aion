@@ -10,12 +10,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.PersistenceMethod;
-import org.aion.base.util.ByteArrayWrapper;
 import org.aion.db.impl.AbstractDB;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.PersistenceMethod;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /**
@@ -25,7 +25,7 @@ import org.slf4j.Logger;
  * @author Alexandra Roatis
  * @implNote Assumes persistent database. Overwrite method if this is not the case.
  */
-public class DatabaseWithCache implements IByteArrayKeyValueDatabase {
+public class DatabaseWithCache implements ByteArrayKeyValueDatabase {
 
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
 

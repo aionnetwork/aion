@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.LinkedList;
 import java.util.List;
-import org.aion.base.type.IBlockHeader;
+import org.aion.interfaces.block.BlockHeader;
 import org.aion.mcf.blockchain.valid.IValidRule;
 import org.aion.mcf.valid.TimeStampRule;
 import org.junit.Before;
@@ -20,8 +20,8 @@ import org.mockito.MockitoAnnotations;
  */
 public class TimeStampRuleTest {
 
-    @Mock IBlockHeader mockHeader;
-    @Mock IBlockHeader mockDependency;
+    @Mock BlockHeader mockHeader;
+    @Mock BlockHeader mockDependency;
 
     @Before
     public void setUp() throws Exception {

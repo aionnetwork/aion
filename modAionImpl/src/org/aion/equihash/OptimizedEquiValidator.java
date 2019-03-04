@@ -1,7 +1,7 @@
 package org.aion.equihash;
 
-import static org.aion.base.util.ByteUtil.intToBytesLE;
-import static org.aion.base.util.ByteUtil.merge;
+import static org.aion.util.bytes.ByteUtil.intToBytesLE;
+import static org.aion.util.bytes.ByteUtil.merge;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -183,7 +183,7 @@ public class OptimizedEquiValidator {
 
         // Check out of order indices
         if (indices[index] >= indices[index1]) {
-            LOG.debug("Solution validation failed - indices out of order");
+            LOG.debug("SolutionImpl validation failed - indices out of order");
             return false;
         }
 
@@ -192,13 +192,13 @@ public class OptimizedEquiValidator {
 
         boolean verify0 = verify(blockHeader, nonce, blake, indices, index, hash0, round - 1);
         if (!verify0) {
-            LOG.debug("Solution validation failed - unable to verify left subtree");
+            LOG.debug("SolutionImpl validation failed - unable to verify left subtree");
             return false;
         }
 
         boolean verify1 = verify(blockHeader, nonce, blake, indices, index1, hash1, round - 1);
         if (!verify1) {
-            LOG.debug("Solution validation failed - unable to verify right subtree");
+            LOG.debug("SolutionImpl validation failed - unable to verify right subtree");
             return false;
         }
 
@@ -210,14 +210,14 @@ public class OptimizedEquiValidator {
 
         for (int i = 0; i < bitsDiv8; i++) {
             if (hash[i] != 0) {
-                LOG.debug("Solution validation failed - Non-zero XOR");
+                LOG.debug("SolutionImpl validation failed - Non-zero XOR");
                 return false;
             }
         }
 
         // Check remainder bits
         if ((bitsMod8) > 0 && (hash[bitsDiv8] >> (8 - (bitsMod8))) != 0) {
-            LOG.debug("Solution validation failed - Non-zero XOR");
+            LOG.debug("SolutionImpl validation failed - Non-zero XOR");
             return false;
         }
 
@@ -237,7 +237,7 @@ public class OptimizedEquiValidator {
 
         // Check out of order indices
         if (indices[index] >= indices[index1]) {
-            LOG.debug("Solution validation failed - indices out of order");
+            LOG.debug("SolutionImpl validation failed - indices out of order");
             return false;
         }
 
@@ -246,13 +246,13 @@ public class OptimizedEquiValidator {
 
         boolean verify0 = verifyNative(indices, index, hash0, round - 1, hashes);
         if (!verify0) {
-            LOG.debug("Solution validation failed - unable to verify left subtree");
+            LOG.debug("SolutionImpl validation failed - unable to verify left subtree");
             return false;
         }
 
         boolean verify1 = verifyNative(indices, index1, hash1, round - 1, hashes);
         if (!verify1) {
-            LOG.debug("Solution validation failed - unable to verify right subtree");
+            LOG.debug("SolutionImpl validation failed - unable to verify right subtree");
             return false;
         }
 
@@ -264,14 +264,14 @@ public class OptimizedEquiValidator {
 
         for (int i = 0; i < bitsDiv8; i++) {
             if (hash[i] != 0) {
-                LOG.debug("Solution validation failed - Non-zero XOR");
+                LOG.debug("SolutionImpl validation failed - Non-zero XOR");
                 return false;
             }
         }
 
         // Check remainder bits
         if ((bitsMod8) > 0 && (hash[bitsDiv8] >> (8 - (bitsMod8))) != 0) {
-            LOG.debug("Solution validation failed - Non-zero XOR");
+            LOG.debug("SolutionImpl validation failed - Non-zero XOR");
             return false;
         }
 

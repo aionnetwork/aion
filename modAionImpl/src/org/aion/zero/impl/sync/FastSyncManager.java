@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 
 /**
  * Directs behavior for fast sync functionality.

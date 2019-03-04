@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.util.Properties;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
 import org.aion.db.generic.SpecialLockedDatabase;
@@ -18,6 +17,7 @@ import org.aion.db.impl.mockdb.MockDBDriver;
 import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.impl.rocksdb.RocksDBConstants;
 import org.aion.db.impl.rocksdb.RocksDBWrapper;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.junit.Test;
 
 public class DatabaseFactoryTest {
@@ -36,7 +36,7 @@ public class DatabaseFactoryTest {
 
         // MOCKDB
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName()).isEqualTo(MockDB.class.getSimpleName());
 
@@ -91,7 +91,7 @@ public class DatabaseFactoryTest {
 
         // MOCKDB
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName()).isEqualTo(LockedDatabase.class.getSimpleName());
         assertThat(db.toString()).contains(MockDB.class.getSimpleName());
@@ -154,7 +154,7 @@ public class DatabaseFactoryTest {
 
         // MOCKDB
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName())
                 .isEqualTo(DatabaseWithCache.class.getSimpleName());
@@ -223,7 +223,7 @@ public class DatabaseFactoryTest {
 
         // MOCKDB
         props.setProperty(Props.DB_TYPE, DBVendor.MOCKDB.toValue());
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertThat(db).isNotNull();
         assertThat(db.getClass().getSimpleName())
                 .isEqualTo(DatabaseWithCache.class.getSimpleName());
@@ -283,7 +283,7 @@ public class DatabaseFactoryTest {
 
         // random class that is not an IDriver
         props.setProperty(Props.DB_TYPE, MockDB.class.getName());
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         // System.out.println(db);
         assertNull(db);
     }
@@ -296,7 +296,7 @@ public class DatabaseFactoryTest {
 
         // random string
         props.setProperty(Props.DB_TYPE, "not a class");
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         // System.out.println(db);
         assertNull(db);
     }

@@ -1,19 +1,18 @@
 package org.aion.zero.db;
 
-import static org.aion.base.util.ByteArrayWrapper.wrap;
-import static org.aion.base.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
+import static org.aion.types.ByteArrayWrapper.wrap;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import org.aion.base.db.IByteArrayKeyValueStore;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.types.Address;
 import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.mcf.ds.XorDataSource;
 import org.aion.mcf.trie.SecureTrie;
@@ -21,20 +20,20 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPItem;
 import org.aion.rlp.RLPList;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.ByteArrayWrapper;
 
 public class AionContractDetailsImpl extends AbstractContractDetails {
 
-    private IByteArrayKeyValueStore dataSource;
+    private ByteArrayKeyValueStore dataSource;
 
     private byte[] rlpEncoded;
 
-    private Address address = AionAddress.EMPTY_ADDRESS();
+    private Address address;
 
     private SecureTrie storageTrie = new SecureTrie(null);
 
     public boolean externalStorage;
-    private IByteArrayKeyValueStore externalStorageDataSource;
+    private ByteArrayKeyValueStore externalStorageDataSource;
 
     public AionContractDetailsImpl() {}
 
@@ -71,7 +70,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         Objects.requireNonNull(value);
 
         // The following must be done before making this call:
-        // We strip leading zeros of a DataWord but not a DoubleDataWord so that when we call get
+        // We strip leading zeros of a DataWordImpl but not a DoubleDataWord so that when we call get
         // we can differentiate between the two.
 
         byte[] data = RLP.encodeElement(value.getData());
@@ -92,11 +91,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     }
 
     /**
-     * Returns the value associated with key if it exists, otherwise returns a DataWord consisting
+     * Returns the value associated with key if it exists, otherwise returns a DataWordImpl consisting
      * entirely of zero bytes.
      *
      * @param key The key to query.
-     * @return the corresponding value or a zero-byte DataWord if no such value.
+     * @return the corresponding value or a zero-byte DataWordImpl if no such value.
      */
     @Override
     public ByteArrayWrapper get(ByteArrayWrapper key) {
@@ -152,10 +151,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         RLPItem storageRoot = (RLPItem) rlpList.get(2);
         RLPElement code = rlpList.get(4);
 
-        if (address.getRLPData() == null) {
-            this.address = AionAddress.EMPTY_ADDRESS();
+        if (address.getRLPData() == null || address.getRLPData().length == 0) {
+            this.address = null;
         } else {
-            this.address = AionAddress.wrap(address.getRLPData());
+            this.address = Address.wrap(address.getRLPData());
         }
 
         if (code instanceof RLPList) {
@@ -192,7 +191,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
 
-            byte[] rlpAddress = RLP.encodeElement(address.toBytes());
+            byte[] rlpAddress = RLP.encodeElement(address == null ? null : address.toBytes());
             byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
             byte[] rlpStorageRoot =
                     RLP.encodeElement(
@@ -248,7 +247,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      *
      * @param dataSource The new dataSource.
      */
-    public void setDataSource(IByteArrayKeyValueStore dataSource) {
+    public void setDataSource(ByteArrayKeyValueStore dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -257,7 +256,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      *
      * @return the external storage data source.
      */
-    private IByteArrayKeyValueStore getExternalStorageDataSource() {
+    private ByteArrayKeyValueStore getExternalStorageDataSource() {
         if (externalStorageDataSource == null) {
             externalStorageDataSource =
                     new XorDataSource(
@@ -271,7 +270,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      *
      * @param dataSource The new data source.
      */
-    public void setExternalStorageDataSource(IByteArrayKeyValueStore dataSource) {
+    public void setExternalStorageDataSource(ByteArrayKeyValueStore dataSource) {
         this.externalStorageDataSource = dataSource;
         this.externalStorage = true;
         this.storageTrie = new SecureTrie(getExternalStorageDataSource());
@@ -285,7 +284,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      * @return the specified AionContractDetailsImpl.
      */
     @Override
-    public IContractDetails getSnapshotTo(byte[] hash) {
+    public ContractDetails getSnapshotTo(byte[] hash) {
 
         SecureTrie snapStorage =
                 wrap(hash).equals(wrap(EMPTY_TRIE_HASH))
@@ -328,7 +327,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         aionContractDetailsCopy.setDirty(this.isDirty());
         aionContractDetailsCopy.setDeleted(this.isDeleted());
         aionContractDetailsCopy.address =
-                (this.address == null) ? null : new AionAddress(this.address.toBytes());
+                (this.address == null) ? null : new Address(this.address.toBytes());
         aionContractDetailsCopy.rlpEncoded =
                 (this.rlpEncoded == null)
                         ? null

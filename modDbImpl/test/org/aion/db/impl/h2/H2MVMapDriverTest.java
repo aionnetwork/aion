@@ -6,9 +6,9 @@ import static org.junit.Assert.assertNull;
 
 import java.io.File;
 import java.util.Properties;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.junit.Test;
 
 public class H2MVMapDriverTest {
@@ -28,7 +28,7 @@ public class H2MVMapDriverTest {
         props.setProperty(Props.DB_NAME, dbName);
         props.setProperty(Props.DB_PATH, dbPath);
 
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertNotNull(db);
     }
 
@@ -41,7 +41,7 @@ public class H2MVMapDriverTest {
         props.setProperty(Props.DB_NAME, dbName);
         props.setProperty(Props.DB_PATH, dbPath);
 
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(props);
         assertNull(db);
     }
 

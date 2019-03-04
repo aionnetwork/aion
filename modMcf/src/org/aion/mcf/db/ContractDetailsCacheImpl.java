@@ -5,19 +5,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import org.aion.base.db.IByteArrayKeyValueStore;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 
 /** Contract details cache implementation. */
 public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     private Map<ByteArrayWrapper, ByteArrayWrapper> storage = new HashMap<>();
 
-    public IContractDetails origContract;
+    public ContractDetails origContract;
 
-    public ContractDetailsCacheImpl(IContractDetails origContract) {
+    public ContractDetailsCacheImpl(ContractDetails origContract) {
         this.origContract = origContract;
         if (origContract != null) {
             if (origContract instanceof AbstractContractDetails) {
@@ -184,13 +184,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     /** This method is not supported. */
     @Override
-    public IContractDetails getSnapshotTo(byte[] hash) {
+    public ContractDetails getSnapshotTo(byte[] hash) {
         throw new UnsupportedOperationException("No snapshot option during cache state");
     }
 
     /** This method is not supported. */
     @Override
-    public void setDataSource(IByteArrayKeyValueStore dataSource) {
+    public void setDataSource(ByteArrayKeyValueStore dataSource) {
         throw new UnsupportedOperationException("Can't set datasource in cache implementation.");
     }
 
@@ -220,7 +220,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
                     "Cannot copy a ContractDetailsCacheImpl whose original contract is itself!");
         }
 
-        IContractDetails originalContractCopy =
+        ContractDetails originalContractCopy =
                 (this.origContract == null) ? null : this.origContract.copy();
         ContractDetailsCacheImpl contractDetailsCacheCopy =
                 new ContractDetailsCacheImpl(originalContractCopy);

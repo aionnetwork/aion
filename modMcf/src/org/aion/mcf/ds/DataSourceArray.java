@@ -2,7 +2,7 @@ package org.aion.mcf.ds;
 
 import java.io.Closeable;
 import java.util.Optional;
-import org.aion.base.db.Flushable;
+import org.aion.interfaces.db.Flushable;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 

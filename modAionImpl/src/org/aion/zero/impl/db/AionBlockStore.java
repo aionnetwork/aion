@@ -21,9 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.db.AbstractPowBlockstore;
@@ -33,6 +31,8 @@ import org.aion.mcf.ds.Serializer;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.IAionBlock;
@@ -54,19 +54,19 @@ public class AionBlockStore extends AbstractPowBlockstore<AionBlock, A0BlockHead
             preBranchingBlk = new ArrayDeque<>();
     private long branchingLevel;
 
-    public AionBlockStore(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
+    public AionBlockStore(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks) {
         init(index, blocks);
     }
 
     public AionBlockStore(
-            IByteArrayKeyValueDatabase index,
-            IByteArrayKeyValueDatabase blocks,
+            ByteArrayKeyValueDatabase index,
+            ByteArrayKeyValueDatabase blocks,
             boolean checkIntegrity) {
         this(index, blocks);
         this.checkIntegrity = checkIntegrity;
     }
 
-    private void init(IByteArrayKeyValueDatabase index, IByteArrayKeyValueDatabase blocks) {
+    private void init(ByteArrayKeyValueDatabase index, ByteArrayKeyValueDatabase blocks) {
 
         this.index = new DataSourceArray<>(new ObjectDataSource<>(index, BLOCK_INFO_SERIALIZER));
 

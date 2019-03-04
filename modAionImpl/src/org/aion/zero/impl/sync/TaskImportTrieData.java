@@ -4,9 +4,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.Hex;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.trie.TrieNodeResult;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.slf4j.Logger;
 
