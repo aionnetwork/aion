@@ -10,9 +10,9 @@ sourceSets {
 
 dependencies {
     compile 'network.aion:util4j:0.4.0'
+    compile 'network.aion:log4j:0.4.0'
 
     compile project(':modP2p')
-    compile project(':modLogger')
     compile files('../lib/miniupnpc_linux.jar')
     compile 'org.apache.commons:commons-collections4:4.0'
     compile 'org.slf4j:slf4j-api:1.7.25'

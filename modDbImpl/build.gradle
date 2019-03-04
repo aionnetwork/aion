@@ -16,8 +16,8 @@ sourceSets {
 dependencies {
     compile 'network.aion:vm-api4j:0.4.0'
     compile 'network.aion:util4j:0.4.0'
+    compile 'network.aion:log4j:0.4.0'
 
-    compile project(':modLogger')
     compile 'com.google.guava:guava:25.1-jre'
     compile 'org.slf4j:slf4j-api:1.7.25'
     compile group: 'org.ethereum', name: 'leveldbjni-all', version: '1.18.3'
