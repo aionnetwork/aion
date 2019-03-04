@@ -12,9 +12,9 @@ public class LogUtil {
      * 'http://stackoverflow.com/questions/9655181/how-to-convert-a-byte-array-to-a-hex-string-in-java'>stackoverflow
      * discussion</a> and our benchmark for performance gains
      */
-    protected static final char[] hexArray = "0123456789abcfef".toCharArray();
+    private static final char[] hexArray = "0123456789abcdef".toCharArray();
 
-    protected static String toHex(byte[] bytes) {
+    private static String toHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
@@ -24,16 +24,17 @@ public class LogUtil {
         return new String(hexChars);
     }
 
+
+    private static final String nullString = "";
+
     /**
      * Guarantees a return of at max, first 8 characters, even if data is ill formatted (null,
      * shorter, longer) etc.
      *
-     * @param data
-     * @return
+     * @param data byte array
+     * @return first 8 chars of the input HexString
      */
-    protected static final String nullString = "";
-
-    protected static String toHexF8Internal(byte[] data) {
+    private static String toHexF8Internal(byte[] data) {
         if (data == null || data.length == 0) {
             return nullString;
         }
@@ -49,10 +50,10 @@ public class LogUtil {
      * Guarantees a return of at max, last 8 characters, even if data is ill formatted (null,
      * shorter, longer) etc.
      *
-     * @param data
-     * @return
+     * @param data byte array
+     * @return last 8 chars of the input HexString
      */
-    public static String toHexL8Internal(byte[] data) {
+    private static String toHexL8Internal(byte[] data) {
         if (data == null || data.length == 0) {
             return nullString;
         }
@@ -68,8 +69,8 @@ public class LogUtil {
      * Guarantees a return of at max, first 8 characters, even if data is ill formatted (null,
      * shorter, longer) etc.
      *
-     * @param data
-     * @return
+     * @param data byte array
+     * @return first 8 chars of the input HexString
      */
     public static String toHexF8(byte[] data) {
         int len = 0;
@@ -82,8 +83,8 @@ public class LogUtil {
      * Guarantees a return of at max, last 8 characters, even if data is ill formatted (null,
      * shorter, longer) etc.
      *
-     * @param data
-     * @return
+     * @param data byte array
+     * @return last 8 chars of the input HexString
      */
     public static String toHexL8(byte[] data) {
         int len = 0;
