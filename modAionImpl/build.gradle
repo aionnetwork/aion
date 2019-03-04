@@ -13,12 +13,12 @@ sourceSets {
 dependencies {
     compile 'network.aion:vm-api4j:0.4.0'
     compile 'network.aion:util4j:0.4.0'
+    compile 'network.aion:log4j:0.4.0'
 
     compile project(':modAion')
     compile project(':modRlp')
     compile project(':modCrypto')
     compile project(':modMcf')
-    compile project(':modLogger')
     compile project(':modP2pImpl')
     compile project(':modP2p')
     compile project(':modEvtMgr')

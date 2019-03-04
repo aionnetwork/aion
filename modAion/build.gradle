@@ -13,7 +13,7 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-lang3', version: '3.4'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
 
-    testCompile project(':modLogger')
+    testCompile 'network.aion:log4j:0.4.0'
     testCompile project(':modCrypto')
     testCompile project(':modMcf')
     testCompile project(':modRlp')

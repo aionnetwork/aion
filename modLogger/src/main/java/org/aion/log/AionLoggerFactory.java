@@ -72,9 +72,7 @@ public class AionLoggerFactory {
         Map<String, String> moduleToLevelMap = new HashMap<>();
         if (_moduleToLevelMap != null) {
             _moduleToLevelMap.forEach(
-                    (module, level) -> {
-                        moduleToLevelMap.put(module.toUpperCase(), level);
-                    });
+                    (module, level) -> moduleToLevelMap.put(module.toUpperCase(), level));
         }
 
         Map<LogEnum, Level> modules = new HashMap<>();
@@ -128,7 +126,7 @@ public class AionLoggerFactory {
 
         RollingFileAppender<ILoggingEvent> fileSync = new RollingFileAppender<>();
 
-        SizeBasedTriggeringPolicy tp = new SizeBasedTriggeringPolicy();
+        SizeBasedTriggeringPolicy<ILoggingEvent> tp = new SizeBasedTriggeringPolicy<>();
         tp.setContext(context);
         tp.start();
 

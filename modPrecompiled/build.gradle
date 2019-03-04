@@ -19,7 +19,7 @@ dependencies {
     testCompile project(':modRlp')
     testCompile project(':modPrecompiled')
     testCompile project(':modAionImpl')
-    testCompile project(':modLogger')
+    testCompile 'network.aion:log4j:0.4.0'
     testCompile project(':modDbImpl')
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-all:1.3'
