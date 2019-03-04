@@ -71622,7 +71622,7 @@ public final class Message {
     internal_static_org_aion_api_server_pb_t_BlockDetail_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_t_BlockDetail_descriptor,
-        new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "TotalDifficulty", "ExtraData", "Nonce", "Solution", "Hash", "Size", "Tx", "BlockTime", });
+        new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "TotalDifficulty", "ExtraData", "Nonce", "SolutionImpl", "Hash", "Size", "Tx", "BlockTime", });
     internal_static_org_aion_api_server_pb_t_TxDetail_descriptor =
       getDescriptor().getMessageTypes().get(7);
     internal_static_org_aion_api_server_pb_t_TxDetail_fieldAccessorTable = new
@@ -71640,7 +71640,7 @@ public final class Message {
     internal_static_org_aion_api_server_pb_t_Block_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_t_Block_descriptor,
-        new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "TotalDifficulty", "ExtraData", "Nonce", "Solution", "Hash", "Size", "TxHash", });
+        new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "TotalDifficulty", "ExtraData", "Nonce", "SolutionImpl", "Hash", "Size", "TxHash", });
     internal_static_org_aion_api_server_pb_t_BlockSql_descriptor =
       getDescriptor().getMessageTypes().get(10);
     internal_static_org_aion_api_server_pb_t_BlockSql_fieldAccessorTable = new
@@ -71676,7 +71676,7 @@ public final class Message {
     internal_static_org_aion_api_server_pb_rsp_getBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getBlock_descriptor,
-        new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "TotalDifficulty", "ExtraData", "Nonce", "Solution", "Hash", "Size", "TxHash", });
+        new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "TotalDifficulty", "ExtraData", "Nonce", "SolutionImpl", "Hash", "Size", "TxHash", });
     internal_static_org_aion_api_server_pb_req_getBlockHeaderByNumber_descriptor =
       getDescriptor().getMessageTypes().get(16);
     internal_static_org_aion_api_server_pb_req_getBlockHeaderByNumber_fieldAccessorTable = new
@@ -71688,7 +71688,7 @@ public final class Message {
     internal_static_org_aion_api_server_pb_rsp_getBlockHeader_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_rsp_getBlockHeader_descriptor,
-        new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "ExtraData", "Nonce", "Solution", "Hash", "Size", });
+        new java.lang.String[] { "BlockNumber", "Timestamp", "NrgConsumed", "NrgLimit", "ParentHash", "MinerAddress", "StateRoot", "TxTrieRoot", "ReceiptTrieRoot", "LogsBloom", "Difficulty", "ExtraData", "Nonce", "SolutionImpl", "Hash", "Size", });
     internal_static_org_aion_api_server_pb_req_sendTransaction_descriptor =
       getDescriptor().getMessageTypes().get(18);
     internal_static_org_aion_api_server_pb_req_sendTransaction_fieldAccessorTable = new
@@ -71910,7 +71910,7 @@ public final class Message {
     internal_static_org_aion_api_server_pb_req_submitWork_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_aion_api_server_pb_req_submitWork_descriptor,
-        new java.lang.String[] { "Nonce", "Solution", "Digest", });
+        new java.lang.String[] { "Nonce", "SolutionImpl", "Digest", });
     internal_static_org_aion_api_server_pb_rsp_submitWork_descriptor =
       getDescriptor().getMessageTypes().get(54);
     internal_static_org_aion_api_server_pb_rsp_submitWork_fieldAccessorTable = new

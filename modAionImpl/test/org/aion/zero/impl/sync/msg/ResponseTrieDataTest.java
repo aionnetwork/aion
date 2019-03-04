@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.rlp.RLP;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.junit.Test;

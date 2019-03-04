@@ -17,16 +17,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.base.Constant;
-import org.aion.base.type.ITransaction;
-import org.aion.base.util.ByteArrayWrapper;
+
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.util.bytes.ByteUtil;
 import org.slf4j.Logger;
-import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.interfaces.block.Constant;
 
-public abstract class AbstractTxPool<TX extends ITransaction> {
+public abstract class AbstractTxPool<TX extends Transaction> {
 
     protected static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.TXPOOL.toString());
 
@@ -146,7 +147,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
         SortedMap<Long, LinkedHashSet<ByteArrayWrapper>> timeMap =
                 Collections.synchronizedSortedMap(new TreeMap<>());
 
-        Map<ITransaction, Long> updatedTx = new HashMap<>();
+        Map<Transaction, Long> updatedTx = new HashMap<>();
         this.mainMap
                 .entrySet()
                 .parallelStream()
@@ -157,13 +158,13 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                 return;
                             }
 
-                            ITransaction tx = ts.getTx();
+                            Transaction tx = ts.getTx();
 
                             // Gen temp timeMap
                             long timestamp = tx.getTimeStampBI().longValue() / multiplyM;
 
                             Map<BigInteger, SimpleEntry<ByteArrayWrapper, BigInteger>> nonceMap;
-                            ITransaction replacedTx = null;
+                            Transaction replacedTx = null;
                             synchronized (accMap) {
                                 if (accMap.get(tx.getSenderAddress()) != null) {
                                     nonceMap = accMap.get(tx.getSenderAddress());
@@ -182,7 +183,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                                     LOG.trace(
                                             "AbstractTxPool.sortTxn Put tx into nonceMap: nonce:[{}] ts:[{}] nrgCharge:[{}]",
                                             nonce,
-                                            ByteUtils.toHexString(e.getKey().getData()),
+                                            ByteUtil.toHexString(e.getKey().getData()),
                                             nrgCharge.toString());
                                 }
 
@@ -258,7 +259,7 @@ public abstract class AbstractTxPool<TX extends ITransaction> {
                         });
 
         if (!updatedTx.isEmpty()) {
-            for (Map.Entry<ITransaction, Long> en : updatedTx.entrySet()) {
+            for (Map.Entry<Transaction, Long> en : updatedTx.entrySet()) {
                 ByteArrayWrapper bw = ByteArrayWrapper.wrap(en.getKey().getTransactionHash());
                 if (this.timeView.get(en.getValue()) != null) {
                     this.timeView.get(en.getValue()).remove(bw);

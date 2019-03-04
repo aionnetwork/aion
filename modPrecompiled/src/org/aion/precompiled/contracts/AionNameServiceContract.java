@@ -9,20 +9,19 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.crypto.ed25519.Ed25519Signature;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.api.interfaces.Address;
 import org.apache.commons.collections4.map.LRUMap;
 
 /**
@@ -48,19 +47,19 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     private static final String ALL_ADDR_COUNTER_KEY = "allAddressKey";
 
     private Address activeDomainsAddress =
-            AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000600");
+            Address.wrap("0000000000000000000000000000000000000000000000000000000000000600");
     private Address activeDomainsAddressTime =
-            AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000601");
+            Address.wrap("0000000000000000000000000000000000000000000000000000000000000601");
     private Address activeDomainsAddressValue =
-            AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000603");
+            Address.wrap("0000000000000000000000000000000000000000000000000000000000000603");
     private Address allAddresses =
-            AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000800");
+            Address.wrap("0000000000000000000000000000000000000000000000000000000000000800");
     private Address domainAddressNamePair =
-            AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000802");
+            Address.wrap("0000000000000000000000000000000000000000000000000000000000000802");
     private Address registeredDomainAddressName =
-            AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000803");
+            Address.wrap("0000000000000000000000000000000000000000000000000000000000000803");
     private Address registeredDomainNameAddress =
-            AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000804");
+            Address.wrap("0000000000000000000000000000000000000000000000000000000000000804");
 
     private Address address;
     private Address ownerAddress;
@@ -74,7 +73,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
     /** Construct a new ANS Contract */
     public AionNameServiceContract(
-            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             Address address,
             Address ownerAddress) { // byte
         super(track);
@@ -91,7 +90,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         if (!(getOwnerAddress().equals(ownerAddress))
                 && !(getOwnerAddress()
                         .equals(
-                                AionAddress.wrap(
+                                Address.wrap(
                                         "0000000000000000000000000000000000000000000000000000000000000000")))) {
             throw new IllegalArgumentException(
                     "The owner address of this domain from repository is different than the given"
@@ -184,7 +183,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         }
 
         // verify public key matches owner
-        if (!this.ownerAddress.equals(AionAddress.wrap(sig.getAddress()))) {
+        if (!this.ownerAddress.equals(Address.wrap(sig.getAddress()))) {
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, 0);
         }
 
@@ -231,7 +230,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         // set the key
         byte[] combined = combineTwoBytes(hash1, hash2);
-        this.resolverAddressKey = new AionAddress(combined);
+        this.resolverAddressKey = new Address(combined);
 
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - SET_COST);
     }
@@ -246,7 +245,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
         // set the key
         byte[] combined = combineTwoBytes(hash1, hash2);
-        this.TTLKey = new AionAddress(combined);
+        this.TTLKey = new Address(combined);
 
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - SET_COST);
     }
@@ -257,15 +256,15 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         if (nrg < TRANSFER_COST)
             return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
 
-        if (!isValidOwnerAddress(AionAddress.wrap(combineTwoBytes(addr1, addr2))))
+        if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, nrg);
 
-        AionAddress.wrap(combineTwoBytes(addr1, addr2));
+        Address.wrap(combineTwoBytes(addr1, addr2));
         storeResult(hash1, hash2, addr1, addr2);
 
         // set the key
         byte[] combined = combineTwoBytes(hash1, hash2);
-        this.ownerAddressKey = new AionAddress(combined);
+        this.ownerAddressKey = new Address(combined);
 
         return new PrecompiledTransactionResult(PrecompiledResultCode.SUCCESS, nrg - TRANSFER_COST);
     }
@@ -282,16 +281,16 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         if (nrg < TRANSFER_COST)
             return new PrecompiledTransactionResult(PrecompiledResultCode.OUT_OF_NRG, 0);
 
-        if (!isValidOwnerAddress(AionAddress.wrap(combineTwoBytes(addr1, addr2))))
+        if (!isValidOwnerAddress(Address.wrap(combineTwoBytes(addr1, addr2))))
             return new PrecompiledTransactionResult(PrecompiledResultCode.FAILURE, nrg);
 
-        Address sdAddress = AionAddress.wrap(subdomainAddress);
+        Address sdAddress = Address.wrap(subdomainAddress);
 
         if (isSubdomain(subdomain)) {
             this.track.addStorageRow(
-                    sdAddress, new DataWord(hash1).toWrapper(), new DataWord(addr1).toWrapper());
+                    sdAddress, new DataWordImpl(hash1).toWrapper(), new DataWordImpl(addr1).toWrapper());
             this.track.addStorageRow(
-                    sdAddress, new DataWord(hash2).toWrapper(), new DataWord(addr2).toWrapper());
+                    sdAddress, new DataWordImpl(hash2).toWrapper(), new DataWordImpl(addr2).toWrapper());
             return new PrecompiledTransactionResult(
                     PrecompiledResultCode.SUCCESS, nrg - TRANSFER_COST);
         }
@@ -319,9 +318,9 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         byte[] combined2 = combineTwoBytes(TTLHash1, TTLHash2);
         byte[] combined3 = combineTwoBytes(ownerHash1, ownerHash2);
 
-        this.resolverAddressKey = new AionAddress(combined);
-        this.TTLKey = new AionAddress(combined2);
-        this.ownerAddressKey = new AionAddress(combined3);
+        this.resolverAddressKey = new Address(combined);
+        this.TTLKey = new Address(combined2);
+        this.ownerAddressKey = new Address(combined3);
     }
 
     private byte[] combineTwoBytes(byte[] byte1, byte[] byte2) {
@@ -333,9 +332,9 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
 
     private void storeResult(byte[] hash1, byte[] hash2, byte[] addr1, byte[] addr2) {
         this.track.addStorageRow(
-                this.address, new DataWord(hash1).toWrapper(), new DataWord(addr1).toWrapper());
+                this.address, new DataWordImpl(hash1).toWrapper(), new DataWordImpl(addr1).toWrapper());
         this.track.addStorageRow(
-                this.address, new DataWord(hash2).toWrapper(), new DataWord(addr2).toWrapper());
+                this.address, new DataWordImpl(hash2).toWrapper(), new DataWordImpl(addr2).toWrapper());
     }
 
     private Address getValueFromStorage(Address key) {
@@ -347,15 +346,15 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         System.arraycopy(byteKey, 16, key2, 0, 16);
 
         ByteArrayWrapper data1 =
-                this.track.getStorageValue(this.address, new DataWord(key1).toWrapper());
+                this.track.getStorageValue(this.address, new DataWordImpl(key1).toWrapper());
         ByteArrayWrapper data2 =
-                this.track.getStorageValue(this.address, new DataWord(key2).toWrapper());
+                this.track.getStorageValue(this.address, new DataWordImpl(key2).toWrapper());
 
         byte[] addr1 = data1.getData();
         byte[] addr2 = data2.getData();
 
         byte[] addrCombined = combineTwoBytes(addr1, addr2);
-        return (new AionAddress(addrCombined));
+        return (new Address(addrCombined));
     }
 
     private void addToRegistered(Address domainAddress, String domainName) {
@@ -377,22 +376,22 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         // store name -> address pair
         this.track.addStorageRow(
                 registeredDomainNameAddress,
-                new DataWord(blake128(domainName.getBytes())).toWrapper(),
-                new DataWord(addressFirstPart).toWrapper());
+                new DataWordImpl(blake128(domainName.getBytes())).toWrapper(),
+                new DataWordImpl(addressFirstPart).toWrapper());
         this.track.addStorageRow(
                 registeredDomainNameAddress,
-                new DataWord(blake128(blake128(domainName.getBytes()))).toWrapper(),
-                new DataWord(addressSecondPart).toWrapper());
+                new DataWordImpl(blake128(blake128(domainName.getBytes()))).toWrapper(),
+                new DataWordImpl(addressSecondPart).toWrapper());
 
         // store address -> name pair
         this.track.addStorageRow(
                 registeredDomainAddressName,
-                new DataWord(blake128(domainAddress.toBytes())).toWrapper(),
-                new DataWord(nameFirstPart).toWrapper());
+                new DataWordImpl(blake128(domainAddress.toBytes())).toWrapper(),
+                new DataWordImpl(nameFirstPart).toWrapper());
         this.track.addStorageRow(
                 registeredDomainAddressName,
-                new DataWord(blake128(blake128(domainAddress.toBytes()))).toWrapper(),
-                new DataWord(nameSecondPart).toWrapper());
+                new DataWordImpl(blake128(blake128(domainAddress.toBytes()))).toWrapper(),
+                new DataWordImpl(nameSecondPart).toWrapper());
     }
 
     private boolean isSubdomain(String subdomainName) {
@@ -444,13 +443,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         ByteArrayWrapper addrFirstPart =
                 this.track.getStorageValue(
                         activeDomainsAddress,
-                        new DataWord(blake128(domainAddress.toBytes())).toWrapper());
+                        new DataWordImpl(blake128(domainAddress.toBytes())).toWrapper());
         ByteArrayWrapper addrSecondPart =
                 this.track.getStorageValue(
                         activeDomainsAddress,
-                        new DataWord(blake128(blake128(domainAddress.toBytes()))).toWrapper());
+                        new DataWordImpl(blake128(blake128(domainAddress.toBytes()))).toWrapper());
         Address addrFromRepo =
-                AionAddress.wrap(
+                Address.wrap(
                         combineTwoBytes(addrFirstPart.getData(), addrSecondPart.getData()));
 
         return addrFromRepo.equals(ownerAddress);
@@ -517,11 +516,11 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         ByteArrayWrapper nameFirstPartData =
                 this.track.getStorageValue(
                         domainAddressNamePair,
-                        new DataWord(blake128(domainAddress.toBytes())).toWrapper());
+                        new DataWordImpl(blake128(domainAddress.toBytes())).toWrapper());
         ByteArrayWrapper nameSecondPartData =
                 this.track.getStorageValue(
                         domainAddressNamePair,
-                        new DataWord(blake128(blake128(domainAddress.toBytes()))).toWrapper());
+                        new DataWordImpl(blake128(blake128(domainAddress.toBytes()))).toWrapper());
         byte[] nameData =
                 trimLeadingZeros(
                         combineTwoBytes(nameFirstPartData.getData(), nameSecondPartData.getData()));
@@ -540,7 +539,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
         ByteArrayWrapper numberOfDomainsTotalData =
                 this.track.getStorageValue(
                         allAddresses,
-                        new DataWord(blake128(ALL_ADDR_COUNTER_KEY.getBytes())).toWrapper());
+                        new DataWordImpl(blake128(ALL_ADDR_COUNTER_KEY.getBytes())).toWrapper());
         BigInteger numberOfDomainsTotal = new BigInteger(numberOfDomainsTotalData.getData());
 
         int counter = numberOfDomainsTotal.intValue();
@@ -551,43 +550,43 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
             byte[] secondHash = blake128(blake128((ALL_ADDR_KEY + i).getBytes()));
             byte[] addrFirstPart =
                     this.track
-                            .getStorageValue(allAddresses, new DataWord(firstHash).toWrapper())
+                            .getStorageValue(allAddresses, new DataWordImpl(firstHash).toWrapper())
                             .getData();
             byte[] addrSecondPart =
                     this.track
-                            .getStorageValue(allAddresses, new DataWord(secondHash).toWrapper())
+                            .getStorageValue(allAddresses, new DataWordImpl(secondHash).toWrapper())
                             .getData();
             Address tempDomainAddr =
-                    AionAddress.wrap(combineTwoBytes(addrFirstPart, addrSecondPart));
+                    Address.wrap(combineTwoBytes(addrFirstPart, addrSecondPart));
 
             // if domain exists
             if (!this.track
                     .getStorageValue(
                             activeDomainsAddress,
-                            new DataWord(blake128(tempDomainAddr.toBytes())).toWrapper())
+                            new DataWordImpl(blake128(tempDomainAddr.toBytes())).toWrapper())
                     .equals(DoubleDataWord.ZERO.toWrapper())) {
                 byte[] ownerAddrFirstPart =
                         this.track
                                 .getStorageValue(
                                         activeDomainsAddress,
-                                        new DataWord(blake128(tempDomainAddr.toBytes()))
+                                        new DataWordImpl(blake128(tempDomainAddr.toBytes()))
                                                 .toWrapper())
                                 .getData();
                 byte[] ownerAddrSecondPart =
                         this.track
                                 .getStorageValue(
                                         activeDomainsAddress,
-                                        new DataWord(blake128(blake128(tempDomainAddr.toBytes())))
+                                        new DataWordImpl(blake128(blake128(tempDomainAddr.toBytes())))
                                                 .toWrapper())
                                 .getData();
                 Address tempOwnerAddr =
-                        AionAddress.wrap(combineTwoBytes(ownerAddrFirstPart, ownerAddrSecondPart));
+                        Address.wrap(combineTwoBytes(ownerAddrFirstPart, ownerAddrSecondPart));
 
                 byte[] expireDateData =
                         this.track
                                 .getStorageValue(
                                         activeDomainsAddressTime,
-                                        new DataWord(blake128(tempDomainAddr.toBytes()))
+                                        new DataWordImpl(blake128(tempDomainAddr.toBytes()))
                                                 .toWrapper())
                                 .getData();
                 byte[] trimmedExpireDateData = trimLeadingZeros16(expireDateData);
@@ -603,14 +602,14 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         this.track
                                 .getStorageValue(
                                         domainAddressNamePair,
-                                        new DataWord(blake128(tempDomainAddr.toBytes()))
+                                        new DataWordImpl(blake128(tempDomainAddr.toBytes()))
                                                 .toWrapper())
                                 .getData();
                 byte[] domainNameSecondPart =
                         this.track
                                 .getStorageValue(
                                         domainAddressNamePair,
-                                        new DataWord(blake128(blake128(tempDomainAddr.toBytes())))
+                                        new DataWordImpl(blake128(blake128(tempDomainAddr.toBytes())))
                                                 .toWrapper())
                                 .getData();
                 String tempDomainName = null;
@@ -630,7 +629,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                         this.track
                                 .getStorageValue(
                                         activeDomainsAddressValue,
-                                        new DataWord(blake128(tempDomainAddr.toBytes()))
+                                        new DataWordImpl(blake128(tempDomainAddr.toBytes()))
                                                 .toWrapper())
                                 .getData();
                 BigInteger tempValue = new BigInteger(valueData);
@@ -669,7 +668,7 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
     }
 
     public void displayMyDomains(ECKey key) {
-        Address callerAddress = AionAddress.wrap(key.getAddress());
+        Address callerAddress = Address.wrap(key.getAddress());
         System.out.println(
                 "----------------------------AION NAME SERVICE QUERY: displayMyDomains-----------------------------");
 
@@ -725,13 +724,13 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 this.track
                         .getStorageValue(
                                 domainAddressNamePair,
-                                new DataWord(blake128(domainAddress.toBytes())).toWrapper())
+                                new DataWordImpl(blake128(domainAddress.toBytes())).toWrapper())
                         .getData();
         byte[] domainNameSecondPart =
                 this.track
                         .getStorageValue(
                                 domainAddressNamePair,
-                                new DataWord(blake128(blake128(domainAddress.toBytes())))
+                                new DataWordImpl(blake128(blake128(domainAddress.toBytes())))
                                         .toWrapper())
                         .getData();
         String domainName;
@@ -756,16 +755,16 @@ public class AionNameServiceContract extends StatefulPrecompiledContract {
                 this.track
                         .getStorageValue(
                                 registeredDomainNameAddress,
-                                new DataWord(blake128(domainName.getBytes())).toWrapper())
+                                new DataWordImpl(blake128(domainName.getBytes())).toWrapper())
                         .getData();
         byte[] addressSecondPart =
                 this.track
                         .getStorageValue(
                                 registeredDomainNameAddress,
-                                new DataWord(blake128(blake128(domainName.getBytes()))).toWrapper())
+                                new DataWordImpl(blake128(blake128(domainName.getBytes()))).toWrapper())
                         .getData();
-        AionAddress domainAddress =
-                AionAddress.wrap(combineTwoBytes(addressFirstPart, addressSecondPart));
+        Address domainAddress =
+                Address.wrap(combineTwoBytes(addressFirstPart, addressSecondPart));
         if (domainAddress.isZeroAddress()) return null;
         return domainAddress;
     }

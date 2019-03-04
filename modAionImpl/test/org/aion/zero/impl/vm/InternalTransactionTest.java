@@ -30,16 +30,17 @@ import static org.junit.Assert.assertEquals;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
-import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.vm.api.interfaces.InternalTransactionInterface;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -167,7 +168,7 @@ public class InternalTransactionTest {
                         ByteUtil.merge(
                                 ByteUtil.hexStringToBytes("0x2d7df21a"),
                                 addressB.toBytes(),
-                                new DataWord(80_000).getData()),
+                                new DataWordImpl(80_000).getData()),
                         1_000_000L,
                         1L);
         tx4.sign(deployerAccount);
@@ -194,7 +195,7 @@ public class InternalTransactionTest {
                         ByteUtil.merge(
                                 ByteUtil.hexStringToBytes("0x2d7df21a"),
                                 addressB.toBytes(),
-                                new DataWord(20_000).getData()),
+                                new DataWordImpl(20_000).getData()),
                         1_000_000L,
                         1L);
         tx6.sign(deployerAccount);
@@ -265,7 +266,7 @@ public class InternalTransactionTest {
                         addressA,
                         new byte[0],
                         ByteUtil.merge(
-                                ByteUtil.hexStringToBytes("0xec779964"), new DataWord(2).getData()),
+                                ByteUtil.hexStringToBytes("0xec779964"), new DataWordImpl(2).getData()),
                         1_000_000L,
                         1L);
         tx2.sign(deployerAccount);

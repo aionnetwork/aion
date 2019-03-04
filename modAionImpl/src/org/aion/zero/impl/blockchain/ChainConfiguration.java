@@ -2,6 +2,7 @@ package org.aion.zero.impl.blockchain;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import org.aion.equihash.OptimizedEquiValidator;
 import org.aion.mcf.blockchain.IBlockConstants;
 import org.aion.mcf.blockchain.IChainCfg;
@@ -13,11 +14,12 @@ import org.aion.mcf.valid.BlockNumberRule;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
 import org.aion.mcf.valid.TimeStampRule;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
 import org.aion.zero.api.BlockConstants;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.DiffCalc;
 import org.aion.zero.impl.core.RewardsCalculator;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.valid.AionDifficultyRule;
 import org.aion.zero.impl.valid.AionExtraDataRule;
 import org.aion.zero.impl.valid.AionHeaderVersionRule;
@@ -27,7 +29,6 @@ import org.aion.zero.impl.valid.EnergyLimitRule;
 import org.aion.zero.impl.valid.EquihashSolutionRule;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.IAionBlock;
 
 /**
  * Chain configuration handles the default parameters on a particular chain. Also handles the
@@ -36,7 +37,7 @@ import org.aion.zero.types.IAionBlock;
  *
  * @author yao
  */
-public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction> {
+public class ChainConfiguration implements IChainCfg<AionBlock, AionTransaction> {
 
     protected BlockConstants constants;
     protected IMiner<?, ?> miner;
@@ -123,6 +124,7 @@ public class ChainConfiguration implements IChainCfg<IAionBlock, AionTransaction
     }
 
     public GrandParentBlockHeaderValidator<A0BlockHeader> createGrandParentHeaderValidator() {
-        return new GrandParentBlockHeaderValidator<>(Arrays.asList(new AionDifficultyRule(this)));
+        return new GrandParentBlockHeaderValidator<>(
+            Collections.singletonList(new AionDifficultyRule(this)));
     }
 }

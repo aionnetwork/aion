@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 
 /**
  * A wrapper for the iterator needed by {@link DatabaseWithCache} conforming to the {@link Iterator}

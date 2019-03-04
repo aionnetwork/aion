@@ -1,15 +1,15 @@
 package org.aion.mcf.types;
 
 import java.math.BigInteger;
-import org.aion.base.type.ITransaction;
-import org.aion.base.vm.VirtualMachineSpecs;
 import org.aion.crypto.ISignature;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.types.Address;
 import org.slf4j.Logger;
 
-public abstract class AbstractTransaction implements ITransaction {
+public abstract class AbstractTransaction implements Transaction {
 
     private static final int nrgDigits = 64;
 

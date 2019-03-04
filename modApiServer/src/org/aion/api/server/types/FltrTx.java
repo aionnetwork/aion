@@ -1,6 +1,6 @@
 package org.aion.api.server.types;
 
-import org.aion.base.type.ITransaction;
+import org.aion.interfaces.tx.Transaction;
 
 public class FltrTx extends Fltr {
 
@@ -9,7 +9,7 @@ public class FltrTx extends Fltr {
     }
 
     @Override
-    public boolean onTransaction(ITransaction tx) {
+    public boolean onTransaction(Transaction tx) {
         add(new EvtTx(tx));
         return true;
     }

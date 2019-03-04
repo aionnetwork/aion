@@ -9,19 +9,19 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Properties;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.PersistenceMethod;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.db.impl.DatabaseFactory.Props;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.PersistenceMethod;
 import org.aion.mcf.db.exception.InvalidFilePathException;
 import org.slf4j.Logger;
 
 /** @author Alexandra Roatis */
 public class DatabaseUtils {
 
-    public static IByteArrayKeyValueDatabase connectAndOpen(Properties info, Logger LOG) {
+    public static ByteArrayKeyValueDatabase connectAndOpen(Properties info, Logger LOG) {
         // get the database object
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(info, LOG.isDebugEnabled());
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(info, LOG.isDebugEnabled());
 
         // open the database connection
         db.open();

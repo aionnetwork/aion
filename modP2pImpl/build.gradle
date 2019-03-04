@@ -9,7 +9,8 @@ sourceSets {
 }
 
 dependencies {
-    compile project(':modUtil')
+    compile 'network.aion:util4j:0.4.0'
+
     compile project(':modP2p')
     compile project(':modLogger')
     compile files('../lib/miniupnpc_linux.jar')

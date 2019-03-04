@@ -5,21 +5,17 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Properties;
 import java.util.Random;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IPruneConfig;
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.AionAddress;
+import org.aion.interfaces.db.*;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -29,28 +25,28 @@ import org.junit.Test;
 
 /** Tests the DoubleDataWord class, mainly that it integrates well with the db. */
 public class DoubleDataWordTest {
-    private IRepositoryConfig repoConfig;
-    private IRepository repo;
-    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
+    private RepositoryConfig repoConfig;
+    private Repository repo;
+    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
     private Random rand;
     private Address addr;
 
     @Before
     public void setup() {
         this.repoConfig =
-                new IRepositoryConfig() {
+                new RepositoryConfig() {
                     @Override
                     public String getDbPath() {
                         return "";
                     }
 
                     @Override
-                    public IPruneConfig getPruneConfig() {
+                    public PruneConfig getPruneConfig() {
                         return new CfgPrune(false);
                     }
 
                     @Override
-                    public IContractDetails contractDetailsImpl() {
+                    public ContractDetails contractDetailsImpl() {
                         return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
                     }
 
@@ -66,7 +62,7 @@ public class DoubleDataWordTest {
         this.repo = AionRepositoryImpl.createForTesting(repoConfig);
         this.track = new AionRepositoryCache(repo);
         this.rand = new Random();
-        this.addr = AionAddress.wrap(ECKeyFac.inst().create().getAddress());
+        this.addr = Address.wrap(ECKeyFac.inst().create().getAddress());
     }
 
     @After
@@ -87,14 +83,14 @@ public class DoubleDataWordTest {
     public void testPrefixSuffixAmbiguity() {
         // doubleKeyFirst has its first 16 bytes identical to singleKey
         // doubleKeyLast has its last 16 bytes identical to singleKey
-        byte[] singleKey = new byte[DataWord.BYTES];
+        byte[] singleKey = new byte[DataWordImpl.BYTES];
         byte[] doubleKeyFirst = new byte[DoubleDataWord.BYTES];
         byte[] doubleKeyLast = new byte[DoubleDataWord.BYTES];
         rand.nextBytes(singleKey);
-        System.arraycopy(singleKey, 0, doubleKeyFirst, 0, DataWord.BYTES);
-        System.arraycopy(singleKey, 0, doubleKeyLast, DataWord.BYTES, DataWord.BYTES);
+        System.arraycopy(singleKey, 0, doubleKeyFirst, 0, DataWordImpl.BYTES);
+        System.arraycopy(singleKey, 0, doubleKeyLast, DataWordImpl.BYTES, DataWordImpl.BYTES);
 
-        byte[] singleVal = new byte[DataWord.BYTES];
+        byte[] singleVal = new byte[DataWordImpl.BYTES];
         byte[] doubleValFirst = new byte[DoubleDataWord.BYTES];
         byte[] doubleValLast = new byte[DoubleDataWord.BYTES];
         singleVal[0] = (byte) 0x1;
@@ -102,7 +98,7 @@ public class DoubleDataWordTest {
         doubleValLast[0] = (byte) 0x3;
 
         track.addStorageRow(
-                addr, new DataWord(singleKey).toWrapper(), new DataWord(singleVal).toWrapper());
+                addr, new DataWordImpl(singleKey).toWrapper(), new DataWordImpl(singleVal).toWrapper());
         track.addStorageRow(
                 addr,
                 new DoubleDataWord(doubleKeyFirst).toWrapper(),
@@ -114,7 +110,7 @@ public class DoubleDataWordTest {
         track.flush();
 
         byte[] singleRes =
-                track.getStorageValue(addr, new DataWord(singleKey).toWrapper()).getData();
+                track.getStorageValue(addr, new DataWordImpl(singleKey).toWrapper()).getData();
         byte[] doubleResFirst =
                 track.getStorageValue(addr, new DoubleDataWord(doubleKeyFirst).toWrapper())
                         .getData();
@@ -133,21 +129,21 @@ public class DoubleDataWordTest {
      */
     @Test
     public void testPrefixSuffixAmbiguity2() {
-        byte[] singKey = new byte[DataWord.BYTES];
+        byte[] singKey = new byte[DataWordImpl.BYTES];
         rand.nextBytes(singKey);
 
-        byte[] singVal = new byte[DataWord.BYTES];
+        byte[] singVal = new byte[DataWordImpl.BYTES];
         singVal[0] = (byte) 0xAC;
         track.addStorageRow(
-                addr, new DataWord(singKey).toWrapper(), new DataWord(singVal).toWrapper());
+                addr, new DataWordImpl(singKey).toWrapper(), new DataWordImpl(singVal).toWrapper());
         track.flush();
 
         byte[] doubleKeyPrefix = new byte[DoubleDataWord.BYTES];
         byte[] doubleKeySuffix = new byte[DoubleDataWord.BYTES];
-        System.arraycopy(singKey, 0, doubleKeyPrefix, 0, DataWord.BYTES);
-        System.arraycopy(singKey, 0, doubleKeySuffix, DataWord.BYTES, DataWord.BYTES);
+        System.arraycopy(singKey, 0, doubleKeyPrefix, 0, DataWordImpl.BYTES);
+        System.arraycopy(singKey, 0, doubleKeySuffix, DataWordImpl.BYTES, DataWordImpl.BYTES);
 
-        byte[] singRes = track.getStorageValue(addr, new DataWord(singKey).toWrapper()).getData();
+        byte[] singRes = track.getStorageValue(addr, new DataWordImpl(singKey).toWrapper()).getData();
         assertArrayEquals(singVal, singRes);
         assertNull(track.getStorageValue(addr, new DoubleDataWord(doubleKeyPrefix).toWrapper()));
         assertNull(track.getStorageValue(addr, new DoubleDataWord(doubleKeySuffix).toWrapper()));
@@ -159,9 +155,9 @@ public class DoubleDataWordTest {
      */
     @Test
     public void testMixOfSingleAndDoubleDataWordsInRepo() {
-        byte[] key16 = new byte[DataWord.BYTES];
+        byte[] key16 = new byte[DataWordImpl.BYTES];
         byte[] key32 = new byte[DoubleDataWord.BYTES];
-        byte[] val16 = new byte[DataWord.BYTES];
+        byte[] val16 = new byte[DataWordImpl.BYTES];
         byte[] val32 = new byte[DoubleDataWord.BYTES];
         rand.nextBytes(key16);
         rand.nextBytes(key32);
@@ -169,14 +165,14 @@ public class DoubleDataWordTest {
         rand.nextBytes(val32);
 
         track.addStorageRow(
-                addr, new DataWord(key16).toWrapper(), new DoubleDataWord(val32).toWrapper());
+                addr, new DataWordImpl(key16).toWrapper(), new DoubleDataWord(val32).toWrapper());
         track.addStorageRow(
-                addr, new DoubleDataWord(key32).toWrapper(), new DataWord(val16).toWrapper());
+                addr, new DoubleDataWord(key32).toWrapper(), new DataWordImpl(val16).toWrapper());
 
         assertArrayEquals(
                 val16,
                 track.getStorageValue(addr, new DoubleDataWord(key32).toWrapper()).getData());
         assertArrayEquals(
-                val32, track.getStorageValue(addr, new DataWord(key16).toWrapper()).getData());
+                val32, track.getStorageValue(addr, new DataWordImpl(key16).toWrapper()).getData());
     }
 }

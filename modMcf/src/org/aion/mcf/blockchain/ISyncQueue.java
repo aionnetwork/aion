@@ -2,7 +2,7 @@ package org.aion.mcf.blockchain;
 
 import java.util.Collection;
 import java.util.List;
-import org.aion.base.type.IBlock;
+import org.aion.interfaces.block.Block;
 import org.aion.mcf.types.AbstractBlockHeaderWrapper;
 
 /**
@@ -11,7 +11,7 @@ import org.aion.mcf.types.AbstractBlockHeaderWrapper;
  * @param <BLK>
  * @param <BHW>
  */
-public interface ISyncQueue<BLK extends IBlock<?, ?>, BHW extends AbstractBlockHeaderWrapper<?>> {
+public interface ISyncQueue<BLK extends Block<?, ?>, BHW extends AbstractBlockHeaderWrapper<?>> {
 
     /** Wanted headers */
     interface HeadersRequest {

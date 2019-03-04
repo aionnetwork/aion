@@ -3,16 +3,16 @@ package org.aion.precompiled.contracts.ATB;
 import java.math.BigInteger;
 import java.util.Arrays;
 import javax.annotation.Nonnull;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledUtilities;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.util.bytes.ByteUtil;
 
 /**
  * Storage layout mapping as the following:
@@ -40,17 +40,17 @@ import org.aion.vm.api.interfaces.Address;
 public class BridgeStorageConnector {
 
     private enum S_OFFSET {
-        OWNER(new DataWord(0x0)),
-        NEW_OWNER(new DataWord(0x1)),
-        MEMBER_COUNT(new DataWord(0x2)),
-        MIN_THRESH(new DataWord(0x3)),
-        RING_LOCKED(new DataWord(0x4)),
-        RELAYER(new DataWord(0x5)),
-        INITIALIZED(new DataWord(0x42));
+        OWNER(new DataWordImpl(0x0)),
+        NEW_OWNER(new DataWordImpl(0x1)),
+        MEMBER_COUNT(new DataWordImpl(0x2)),
+        MIN_THRESH(new DataWordImpl(0x3)),
+        RING_LOCKED(new DataWordImpl(0x4)),
+        RELAYER(new DataWordImpl(0x5)),
+        INITIALIZED(new DataWordImpl(0x42));
 
-        private final DataWord offset;
+        private final DataWordImpl offset;
 
-        S_OFFSET(DataWord offset) {
+        S_OFFSET(DataWordImpl offset) {
             this.offset = offset;
         }
     }
@@ -66,18 +66,18 @@ public class BridgeStorageConnector {
         }
     }
 
-    private final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
+    private final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track;
     private final Address contractAddress;
 
     public BridgeStorageConnector(
-            @Nonnull final IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
+            @Nonnull final RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             @Nonnull final Address contractAddress) {
         this.track = track;
         this.contractAddress = contractAddress;
     }
 
     public void setInitialized(final boolean initialized) {
-        DataWord init = initialized ? new DataWord(1) : new DataWord(0);
+        DataWordImpl init = initialized ? new DataWordImpl(1) : new DataWordImpl(0);
         this.setWORD(S_OFFSET.INITIALIZED.offset, init);
     }
 
@@ -115,7 +115,7 @@ public class BridgeStorageConnector {
 
     public void setMemberCount(int amount) {
         assert amount >= 0 : "amount must be positive";
-        this.setWORD(S_OFFSET.MEMBER_COUNT.offset, new DataWord(amount));
+        this.setWORD(S_OFFSET.MEMBER_COUNT.offset, new DataWordImpl(amount));
     }
 
     public int getMemberCount() {
@@ -126,7 +126,7 @@ public class BridgeStorageConnector {
 
     public void setMinThresh(int amount) {
         assert amount >= 0 : "amount must be positive";
-        this.setWORD(S_OFFSET.MIN_THRESH.offset, new DataWord(amount));
+        this.setWORD(S_OFFSET.MIN_THRESH.offset, new DataWordImpl(amount));
     }
 
     public int getMinThresh() {
@@ -138,7 +138,7 @@ public class BridgeStorageConnector {
 
     // TODO: this can be optimized
     public void setRingLocked(boolean value) {
-        DataWord lockedDw = value ? new DataWord(1) : new DataWord(0);
+        DataWordImpl lockedDw = value ? new DataWordImpl(1) : new DataWordImpl(0);
         this.setWORD(S_OFFSET.RING_LOCKED.offset, lockedDw);
     }
 
@@ -154,15 +154,15 @@ public class BridgeStorageConnector {
     public void setActiveMember(@Nonnull final byte[] key, final boolean value) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
-        DataWord hWord = new DataWord(h);
-        DataWord b = value ? new DataWord(1) : new DataWord(0);
+        DataWordImpl hWord = new DataWordImpl(h);
+        DataWordImpl b = value ? new DataWordImpl(1) : new DataWordImpl(0);
         this.setWORD(hWord, b);
     }
 
     public boolean getActiveMember(@Nonnull final byte[] key) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.ACTIVE_MAP.id, key)));
-        DataWord hWord = new DataWord(h);
+        DataWordImpl hWord = new DataWordImpl(h);
 
         // C1 covered by getWORD
         byte[] activeMemberWord = this.getWORD(hWord);
@@ -182,7 +182,7 @@ public class BridgeStorageConnector {
         assert value.length == 32;
 
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
-        DataWord hWord = new DataWord(h);
+        DataWordImpl hWord = new DataWordImpl(h);
         this.setDWORD(hWord, value);
     }
 
@@ -198,7 +198,7 @@ public class BridgeStorageConnector {
     public byte[] getBundle(@Nonnull final byte[] key) {
         assert key.length == 32;
         byte[] h = ByteUtil.chop(HashUtil.h256(ByteUtil.merge(M_ID.BUNDLE_MAP.id, key)));
-        DataWord hWord = new DataWord(h);
+        DataWordImpl hWord = new DataWordImpl(h);
         byte[] bundleDoubleWord = this.getDWORD(hWord);
         if (bundleDoubleWord == null) return ByteUtil.EMPTY_WORD;
 
@@ -211,14 +211,14 @@ public class BridgeStorageConnector {
 
     // DWORD helpers
 
-    private byte[] getWORD(@Nonnull final DataWord key) {
+    private byte[] getWORD(@Nonnull final DataWordImpl key) {
         ByteArrayWrapper word = this.track.getStorageValue(contractAddress, key.toWrapper());
         // C1
         if (word == null || Arrays.equals(word.getData(), ByteUtil.EMPTY_HALFWORD)) return null;
         return alignBytes(word.getData());
     }
 
-    private void setWORD(@Nonnull final DataWord key, @Nonnull final DataWord word) {
+    private void setWORD(@Nonnull final DataWordImpl key, @Nonnull final DataWordImpl word) {
         if (word.isZero()) {
             this.track.removeStorageRow(contractAddress, key.toWrapper());
         } else {
@@ -229,7 +229,7 @@ public class BridgeStorageConnector {
         }
     }
 
-    private void setDWORD(@Nonnull final DataWord key, @Nonnull final byte[] dword) {
+    private void setDWORD(@Nonnull final DataWordImpl key, @Nonnull final byte[] dword) {
         assert dword.length > 16;
         DoubleDataWord ddw = new DoubleDataWord(dword);
         if (ddw.isZero()) {
@@ -239,7 +239,7 @@ public class BridgeStorageConnector {
         }
     }
 
-    private byte[] getDWORD(@Nonnull final DataWord key) {
+    private byte[] getDWORD(@Nonnull final DataWordImpl key) {
         ByteArrayWrapper word = this.track.getStorageValue(contractAddress, key.toWrapper());
         if (word == null) return null;
 
@@ -252,8 +252,8 @@ public class BridgeStorageConnector {
             return null;
         }
 
-        return (unalignedBytes.length > DataWord.BYTES)
+        return (unalignedBytes.length > DataWordImpl.BYTES)
                 ? new DoubleDataWord(unalignedBytes).getData()
-                : new DataWord(unalignedBytes).getData();
+                : new DataWordImpl(unalignedBytes).getData();
     }
 }

@@ -10,8 +10,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import org.aion.api.server.types.CompiContrInfo;
 import org.aion.api.server.types.CompiledContr;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.TypeConverter;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
@@ -22,7 +21,7 @@ import org.aion.solidity.Abi;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.CompilationResult.Contract;
 import org.aion.solidity.Compiler;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.blockchain.AionPendingStateImpl;
 import org.slf4j.Logger;
 
@@ -60,7 +59,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
 
     protected boolean unlockAccount(
             final String _address, final String _password, final int _duration) {
-        return this.ACCOUNT_MANAGER.unlockAccount(AionAddress.wrap(_address), _password, _duration);
+        return this.ACCOUNT_MANAGER.unlockAccount(Address.wrap(_address), _password, _duration);
     }
 
     public boolean unlockAccount(
@@ -77,7 +76,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
     }
 
     protected ECKey getAccountKey(final String _address) {
-        return ACCOUNT_MANAGER.getKey(AionAddress.wrap(_address));
+        return ACCOUNT_MANAGER.getKey(Address.wrap(_address));
     }
 
     @SuppressWarnings("rawtypes")
@@ -136,7 +135,7 @@ public abstract class Api<B extends AbstractBlock<?, ?>> {
         for (Entry<String, Contract> stringContractEntry : result.contracts.entrySet()) {
             CompiledContr ret = new CompiledContr();
             Contract Contract = stringContractEntry.getValue();
-            ret.code = TypeConverter.toJsonHex(Contract.bin);
+            ret.code = StringUtils.toJsonHex(Contract.bin);
             ret.info = new CompiContrInfo();
             ret.info.source = source;
             ret.info.language = "Solidity";

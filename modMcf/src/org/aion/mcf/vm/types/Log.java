@@ -2,7 +2,7 @@ package org.aion.mcf.vm.types;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.base.type.AionAddress;
+import org.aion.types.Address;
 import org.aion.crypto.HashUtil;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
@@ -11,7 +11,6 @@ import org.aion.rlp.RLPList;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.api.interfaces.IBloomFilter;
 import org.aion.vm.api.interfaces.IExecutionLog;
-import org.aion.vm.api.interfaces.Address;
 
 /** A log is emitted by the LOGX vm instruction. It's composed of address, topics and data. */
 public class Log implements IExecutionLog {
@@ -28,7 +27,7 @@ public class Log implements IExecutionLog {
         RLPList topics = (RLPList) logInfo.get(1);
         RLPItem data = (RLPItem) logInfo.get(2);
 
-        this.addr = address.getRLPData() != null ? AionAddress.wrap(address.getRLPData()) : null;
+        this.addr = address.getRLPData() != null ? Address.wrap(address.getRLPData()) : null;
         this.data = data.getRLPData() != null ? data.getRLPData() : new byte[] {};
 
         for (RLPElement topic1 : topics) {

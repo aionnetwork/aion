@@ -10,8 +10,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
@@ -21,10 +22,9 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -50,42 +50,42 @@ public class AionNameServiceContractTest {
     private String notSubdomain = "aion.bion"; // not a subdomain of domainName1
 
     private static final Address AION =
-            AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+            Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     private Address emptyAddress =
-            AionAddress.wrap("0000000000000000000000000000000000000000000000000000000000000000");
+            Address.wrap("0000000000000000000000000000000000000000000000000000000000000000");
     private Address domainAddress1 =
-            AionAddress.wrap("a011111111111111111111111111111101010101010101010101010101010101");
+            Address.wrap("a011111111111111111111111111111101010101010101010101010101010101");
     private Address domainAddress2 =
-            AionAddress.wrap("a022222222222222222222222222222202020202020202020202020202020202");
+            Address.wrap("a022222222222222222222222222222202020202020202020202020202020202");
     private Address domainAddress3 =
-            AionAddress.wrap("a033333333333333333333333333333303030303030303030303030303030303");
+            Address.wrap("a033333333333333333333333333333303030303030303030303030303030303");
     private Address domainAddress4 =
-            AionAddress.wrap("a044444444444444444444444444444404040404040404040404040404040404");
+            Address.wrap("a044444444444444444444444444444404040404040404040404040404040404");
     private Address domainAddress5 =
-            AionAddress.wrap("a055555555555555555555555555555505050505050050505050505050505050");
+            Address.wrap("a055555555555555555555555555555505050505050050505050505050505050");
     private Address domainAddress6 =
-            AionAddress.wrap("a066666666666666666666666666666606060606060606060606060606060060");
+            Address.wrap("a066666666666666666666666666666606060606060606060606060606060060");
     private Address invalidDomainAddress =
-            AionAddress.wrap("b066666666666666666666666666666606060606060606060606060606060606");
+            Address.wrap("b066666666666666666666666666666606060606060606060606060606060606");
 
     private Address newAddress1 =
-            AionAddress.wrap("1000000000000000000000000000000000000000000000000000000000000001");
+            Address.wrap("1000000000000000000000000000000000000000000000000000000000000001");
     private Address newAddress2 =
-            AionAddress.wrap("0100000000000000000000000000000000000000000000000000000000000010");
+            Address.wrap("0100000000000000000000000000000000000000000000000000000000000010");
     private Address newAddress3 =
-            AionAddress.wrap("0010000000000000000000000000000000000000000000000000000000000100");
+            Address.wrap("0010000000000000000000000000000000000000000000000000000000000100");
     private Address newAddress4 =
-            AionAddress.wrap("0001000000000000000000000000000000000000000000000000000000001000");
+            Address.wrap("0001000000000000000000000000000000000000000000000000000000001000");
     private Address newAddress5 =
-            AionAddress.wrap("0000100000000000000000000000000000000000000000000000000000010000");
+            Address.wrap("0000100000000000000000000000000000000000000000000000000000010000");
     private Address newAddress6 =
-            AionAddress.wrap("0000010000000000000000000000000000000000000000000000000000100000");
+            Address.wrap("0000010000000000000000000000000000000000000000000000000000100000");
     private Address newAddress7 =
-            AionAddress.wrap("0000001000000000000000000000000000000000000000000000000001000000");
+            Address.wrap("0000001000000000000000000000000000000000000000000000000001000000");
     private Address newAddress8 =
-            AionAddress.wrap("0000000100000000000000000000000000000000000000000000000010000000");
+            Address.wrap("0000000100000000000000000000000000000000000000000000000010000000");
 
-    private IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
+    private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repo;
     private ECKey defaultKey;
     private ECKey defaultKey2;
     private ECKey k;
@@ -109,31 +109,31 @@ public class AionNameServiceContractTest {
         repo = populateRepo();
         defaultKey = ECKeyFac.inst().create();
         defaultKey2 = ECKeyFac.inst().create();
-        repo.createAccount(AionAddress.wrap(defaultKey.getAddress()));
-        repo.createAccount(AionAddress.wrap(defaultKey2.getAddress()));
-        repo.addBalance(AionAddress.wrap(defaultKey.getAddress()), new BigInteger("10000"));
-        repo.addBalance(AionAddress.wrap(defaultKey2.getAddress()), new BigInteger("10000"));
+        repo.createAccount(Address.wrap(defaultKey.getAddress()));
+        repo.createAccount(Address.wrap(defaultKey2.getAddress()));
+        repo.addBalance(Address.wrap(defaultKey.getAddress()), new BigInteger("10000"));
+        repo.addBalance(Address.wrap(defaultKey2.getAddress()), new BigInteger("10000"));
 
         k = ECKeyFac.inst().create();
         k2 = ECKeyFac.inst().create();
         k3 = ECKeyFac.inst().create();
         k4 = ECKeyFac.inst().create();
         k5 = ECKeyFac.inst().create();
-        repo.createAccount(AionAddress.wrap(k.getAddress()));
-        repo.createAccount(AionAddress.wrap(k2.getAddress()));
-        repo.createAccount(AionAddress.wrap(k3.getAddress()));
-        repo.createAccount(AionAddress.wrap(k4.getAddress()));
-        repo.createAccount(AionAddress.wrap(k5.getAddress()));
-        repo.addBalance(AionAddress.wrap(k.getAddress()), new BigInteger("10000"));
-        repo.addBalance(AionAddress.wrap(k2.getAddress()), new BigInteger("10000"));
-        repo.addBalance(AionAddress.wrap(k3.getAddress()), new BigInteger("10000"));
-        repo.addBalance(AionAddress.wrap(k4.getAddress()), new BigInteger("10000"));
+        repo.createAccount(Address.wrap(k.getAddress()));
+        repo.createAccount(Address.wrap(k2.getAddress()));
+        repo.createAccount(Address.wrap(k3.getAddress()));
+        repo.createAccount(Address.wrap(k4.getAddress()));
+        repo.createAccount(Address.wrap(k5.getAddress()));
+        repo.addBalance(Address.wrap(k.getAddress()), new BigInteger("10000"));
+        repo.addBalance(Address.wrap(k2.getAddress()), new BigInteger("10000"));
+        repo.addBalance(Address.wrap(k3.getAddress()), new BigInteger("10000"));
+        repo.addBalance(Address.wrap(k4.getAddress()), new BigInteger("10000"));
 
         BigInteger amount = new BigInteger("1000");
         byte[] combined =
                 setupInputs(
                         domainName2,
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         amount.toByteArray(),
                         defaultKey);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
@@ -149,7 +149,7 @@ public class AionNameServiceContractTest {
         byte[] combined2 =
                 setupInputs(
                         domainName3,
-                        AionAddress.wrap(defaultKey2.getAddress()),
+                        Address.wrap(defaultKey2.getAddress()),
                         amount2.toByteArray(),
                         defaultKey2);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
@@ -162,8 +162,8 @@ public class AionNameServiceContractTest {
             e.printStackTrace();
         }
 
-        defaultAddress = AionAddress.wrap(result.getReturnData());
-        defaultAddress2 = AionAddress.wrap(result2.getReturnData());
+        defaultAddress = Address.wrap(result.getReturnData());
+        defaultAddress2 = Address.wrap(result2.getReturnData());
     }
 
     @After
@@ -179,14 +179,14 @@ public class AionNameServiceContractTest {
 
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
         AionNameServiceContract ansc2 =
                 new AionNameServiceContract(
-                        repo, defaultAddress2, AionAddress.wrap(defaultKey2.getAddress()));
+                        repo, defaultAddress2, Address.wrap(defaultKey2.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x4,
@@ -196,7 +196,7 @@ public class AionNameServiceContractTest {
                         "aion.aion");
         byte[] combined2 =
                 setupInputs(
-                        AionAddress.wrap(defaultKey2.getAddress()),
+                        Address.wrap(defaultKey2.getAddress()),
                         newAddress2,
                         (byte) 0x0,
                         (byte) 0x4,
@@ -226,7 +226,7 @@ public class AionNameServiceContractTest {
         //  domain addresses must have aion prefix: 0xa0(66char) or a0(64char)
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, invalidDomainAddress, AionAddress.wrap(k.getAddress()));
+                        repo, invalidDomainAddress, Address.wrap(k.getAddress()));
         assertNull(ansc);
     }
 
@@ -250,7 +250,7 @@ public class AionNameServiceContractTest {
 
         // check that the given owner address is the same as the owner address in the repository.
         AionNameServiceContract ansc =
-                new AionNameServiceContract(repo, domainAddress2, AionAddress.wrap(k.getAddress()));
+                new AionNameServiceContract(repo, domainAddress2, Address.wrap(k.getAddress()));
         assertNull(ansc);
     }
 
@@ -258,7 +258,7 @@ public class AionNameServiceContractTest {
     public void testUnavailableDomain() {
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, domainAddress6, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, domainAddress6, Address.wrap(defaultKey.getAddress()));
         assertNull(ansc);
     }
 
@@ -266,10 +266,10 @@ public class AionNameServiceContractTest {
     public void testGetNameAndAddress() {
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
         AionNameServiceContract ansc2 =
                 new AionNameServiceContract(
-                        repo, defaultAddress2, AionAddress.wrap(defaultKey2.getAddress()));
+                        repo, defaultAddress2, Address.wrap(defaultKey2.getAddress()));
 
         assertEquals(domainName2, ansc.getRegisteredDomainName(defaultAddress));
         assertEquals(domainName3, ansc.getRegisteredDomainName(defaultAddress2));
@@ -291,11 +291,11 @@ public class AionNameServiceContractTest {
 
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress5,
                         (byte) 0x0,
                         (byte) 0x4,
@@ -321,11 +321,11 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x1,
@@ -351,11 +351,11 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x2,
@@ -381,7 +381,7 @@ public class AionNameServiceContractTest {
 
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
@@ -408,11 +408,11 @@ public class AionNameServiceContractTest {
         // create ans contracts
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x1,
@@ -440,11 +440,11 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x1,
@@ -476,11 +476,11 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x6,
@@ -506,16 +506,16 @@ public class AionNameServiceContractTest {
         // ECKey k = ECKeyFac.inst().create();
         ECKey notk = ECKeyFac.inst().create();
 
-        repo.createAccount(AionAddress.wrap(notk.getAddress()));
+        repo.createAccount(Address.wrap(notk.getAddress()));
 
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x1,
@@ -543,18 +543,18 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x3,
                         defaultKey);
         byte[] combined2 =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress2,
                         (byte) 0x0,
                         (byte) 0x3,
@@ -587,32 +587,32 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x1,
                         defaultKey);
         byte[] combined2 =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress2,
                         (byte) 0x0,
                         (byte) 0x2,
                         defaultKey);
         byte[] combined3 =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress3,
                         (byte) 0x0,
                         (byte) 0x3,
                         defaultKey);
         byte[] combined4 =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress3,
                         (byte) 0x0,
                         (byte) 0x4,
@@ -677,18 +677,18 @@ public class AionNameServiceContractTest {
         // create ANS contract
         AionNameServiceContract ansc =
                 new AionNameServiceContract(
-                        repo, defaultAddress, AionAddress.wrap(defaultKey.getAddress()));
+                        repo, defaultAddress, Address.wrap(defaultKey.getAddress()));
 
         byte[] combined =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress1,
                         (byte) 0x0,
                         (byte) 0x3,
                         defaultKey);
         byte[] combined2 =
                 setupInputs(
-                        AionAddress.wrap(defaultKey.getAddress()),
+                        Address.wrap(defaultKey.getAddress()),
                         newAddress2,
                         (byte) 0x0,
                         (byte) 0x4,
@@ -726,23 +726,23 @@ public class AionNameServiceContractTest {
         byte[] combined =
                 setupInputs(
                         "cion.bion.aion",
-                        AionAddress.wrap(k.getAddress()),
+                        Address.wrap(k.getAddress()),
                         amount.toByteArray(),
                         k);
         AionAuctionContract aac = new AionAuctionContract(repo, AION, blockchain);
         PrecompiledTransactionResult result = aac.execute(combined, DEFAULT_INPUT_NRG);
-        Address addr = AionAddress.wrap(result.getReturnData());
+        Address addr = Address.wrap(result.getReturnData());
 
         byte[] combined2 =
                 setupInputs(
-                        "aaaa.aion", AionAddress.wrap(k.getAddress()), amount2.toByteArray(), k);
+                        "aaaa.aion", Address.wrap(k.getAddress()), amount2.toByteArray(), k);
         AionAuctionContract aac2 = new AionAuctionContract(repo, AION, blockchain);
         aac2.execute(combined2, DEFAULT_INPUT_NRG);
 
         byte[] combined3 =
                 setupInputs(
                         "bbbb.aaaa.aion",
-                        AionAddress.wrap(k2.getAddress()),
+                        Address.wrap(k2.getAddress()),
                         amount3.toByteArray(),
                         k2);
         AionAuctionContract aac3 = new AionAuctionContract(repo, AION, blockchain);
@@ -756,7 +756,7 @@ public class AionNameServiceContractTest {
 
         // register domain for name service
         AionNameServiceContract ansc =
-                new AionNameServiceContract(repo, addr, AionAddress.wrap(k.getAddress()));
+                new AionNameServiceContract(repo, addr, Address.wrap(k.getAddress()));
 
         System.out.print("");
 
@@ -774,7 +774,7 @@ public class AionNameServiceContractTest {
         byte[] combined4 =
                 setupInputs(
                         "cccc.aaaa.aion",
-                        AionAddress.wrap(k.getAddress()),
+                        Address.wrap(k.getAddress()),
                         amount3.toByteArray(),
                         k);
         AionAuctionContract aac4 = new AionAuctionContract(repo, AION, blockchain);
@@ -783,7 +783,7 @@ public class AionNameServiceContractTest {
         byte[] combined5 =
                 setupInputs(
                         "cccc.aaaa.aion",
-                        AionAddress.wrap(k2.getAddress()),
+                        Address.wrap(k2.getAddress()),
                         amount2.toByteArray(),
                         k2);
         AionAuctionContract aac5 = new AionAuctionContract(repo, AION, blockchain);
@@ -934,13 +934,13 @@ public class AionNameServiceContractTest {
             byte[] value1,
             byte[] value2) {
         repo.addStorageRow(
-                domainAddress, new DataWord(hash1).toWrapper(), new DataWord(value1).toWrapper());
+                domainAddress, new DataWordImpl(hash1).toWrapper(), new DataWordImpl(value1).toWrapper());
         repo.addStorageRow(
-                domainAddress, new DataWord(hash2).toWrapper(), new DataWord(value2).toWrapper());
+                domainAddress, new DataWordImpl(hash2).toWrapper(), new DataWordImpl(value2).toWrapper());
     }
 
     private void createAccounts(DummyRepo repository, ECKey[] accountList) {
-        for (ECKey key : accountList) repository.createAccount(AionAddress.wrap(key.getAddress()));
+        for (ECKey key : accountList) repository.createAccount(Address.wrap(key.getAddress()));
     }
 
     private byte[] setupInputs(String domainName, Address ownerAddress, byte[] amount, ECKey k) {
@@ -993,12 +993,12 @@ public class AionNameServiceContractTest {
             StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
         byte[] ZERO_BYTE = new byte[0];
 
-        BigInteger accountNonce = bc.getRepository().getNonce(new AionAddress(key.getAddress()));
+        BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
         List<AionTransaction> transactions = new ArrayList<>();
 
         // create 100 transactions per bundle
         for (int i = 0; i < 100; i++) {
-            Address destAddr = new AionAddress(HashUtil.h256(accountNonce.toByteArray()));
+            Address destAddr = new Address(HashUtil.h256(accountNonce.toByteArray()));
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),

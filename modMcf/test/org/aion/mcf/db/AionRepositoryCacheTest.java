@@ -7,18 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IPruneConfig;
-import org.aion.base.db.IRepositoryConfig;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.vm.IDataWord;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.interfaces.vm.DataWord;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -32,20 +32,20 @@ public class AionRepositoryCacheTest {
 
     @Before
     public void setup() {
-        IRepositoryConfig repoConfig =
-                new IRepositoryConfig() {
+        RepositoryConfig repoConfig =
+                new RepositoryConfig() {
                     @Override
                     public String getDbPath() {
                         return "";
                     }
 
                     @Override
-                    public IPruneConfig getPruneConfig() {
+                    public PruneConfig getPruneConfig() {
                         return new CfgPrune(false);
                     }
 
                     @Override
-                    public IContractDetails contractDetailsImpl() {
+                    public ContractDetails contractDetailsImpl() {
                         return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
                     }
 
@@ -70,13 +70,13 @@ public class AionRepositoryCacheTest {
         assertNull(
                 cache.getStorageValue(
                         getNewAddress(),
-                        new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper()));
+                        new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper()));
     }
 
     @Test
     public void testGetStorageValueIsSingleZero() {
         Address address = getNewAddress();
-        IDataWord key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES));
+        DataWord key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES));
         cache.removeStorageRow(address, key.toWrapper());
         assertNull(cache.getStorageValue(address, key.toWrapper()));
 
@@ -88,7 +88,7 @@ public class AionRepositoryCacheTest {
     @Test
     public void testGetStorageValueIsDoubleZero() {
         Address address = getNewAddress();
-        IDataWord key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES));
+        DataWord key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES));
         cache.removeStorageRow(address, key.toWrapper());
         assertNull(cache.getStorageValue(address, key.toWrapper()));
 
@@ -100,19 +100,19 @@ public class AionRepositoryCacheTest {
     @Test
     public void testGetStorageValueWithSingleZeroKey() {
         Address address = getNewAddress();
-        ByteArrayWrapper value = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
-        cache.addStorageRow(address, DataWord.ZERO.toWrapper(), value);
-        assertEquals(value, cache.getStorageValue(address, DataWord.ZERO.toWrapper()));
+        ByteArrayWrapper value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
+        cache.addStorageRow(address, DataWordImpl.ZERO.toWrapper(), value);
+        assertEquals(value, cache.getStorageValue(address, DataWordImpl.ZERO.toWrapper()));
 
         value = new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)).toWrapper();
-        cache.addStorageRow(address, DataWord.ZERO.toWrapper(), value);
-        assertEquals(value, cache.getStorageValue(address, DataWord.ZERO.toWrapper()));
+        cache.addStorageRow(address, DataWordImpl.ZERO.toWrapper(), value);
+        assertEquals(value, cache.getStorageValue(address, DataWordImpl.ZERO.toWrapper()));
     }
 
     @Test
     public void testGetStorageValueWithDoubleZeroKey() {
         Address address = getNewAddress();
-        ByteArrayWrapper value = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        ByteArrayWrapper value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         cache.addStorageRow(address, DoubleDataWord.ZERO.toWrapper(), value);
         assertEquals(value, cache.getStorageValue(address, DoubleDataWord.ZERO.toWrapper()));
 
@@ -126,12 +126,12 @@ public class AionRepositoryCacheTest {
         Address address = getNewAddress();
 
         // single-single
-        cache.removeStorageRow(address, DataWord.ZERO.toWrapper());
-        assertNull(cache.getStorageValue(address, DataWord.ZERO.toWrapper()));
+        cache.removeStorageRow(address, DataWordImpl.ZERO.toWrapper());
+        assertNull(cache.getStorageValue(address, DataWordImpl.ZERO.toWrapper()));
 
         // single-double
-        cache.removeStorageRow(address, DataWord.ZERO.toWrapper());
-        assertNull(cache.getStorageValue(address, DataWord.ZERO.toWrapper()));
+        cache.removeStorageRow(address, DataWordImpl.ZERO.toWrapper());
+        assertNull(cache.getStorageValue(address, DataWordImpl.ZERO.toWrapper()));
 
         // double-single
         cache.removeStorageRow(address, DoubleDataWord.ZERO.toWrapper());
@@ -145,7 +145,7 @@ public class AionRepositoryCacheTest {
     @Test
     public void testOverwriteValueWithSingleZero() {
         Address address = getNewAddress();
-        ByteArrayWrapper key = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        ByteArrayWrapper key = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         ByteArrayWrapper value =
                 new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)).toWrapper();
         cache.addStorageRow(address, key, value);
@@ -159,7 +159,7 @@ public class AionRepositoryCacheTest {
         Address address = getNewAddress();
         ByteArrayWrapper key =
                 new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES)).toWrapper();
-        ByteArrayWrapper value = new DataWord(RandomUtils.nextBytes(DataWord.BYTES)).toWrapper();
+        ByteArrayWrapper value = new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES)).toWrapper();
         cache.addStorageRow(address, key, value);
         assertEquals(value, cache.getStorageValue(address, key));
         cache.removeStorageRow(address, key);
@@ -189,7 +189,7 @@ public class AionRepositoryCacheTest {
 
     /** Returns a new random address. */
     private Address getNewAddress() {
-        return new AionAddress(RandomUtils.nextBytes(Address.SIZE));
+        return new Address(RandomUtils.nextBytes(Address.SIZE));
     }
 
     private List<Address> getAddressesInBulk(int num) {
@@ -264,10 +264,10 @@ public class AionRepositoryCacheTest {
         return values;
     }
 
-    /** Returns a random DataWord if isSingleWord is true, otherwise a random DoubleDataWord. */
-    private IDataWord getRandomWord(boolean isSingleWord) {
+    /** Returns a random DataWordImpl if isSingleWord is true, otherwise a random DoubleDataWord. */
+    private DataWord getRandomWord(boolean isSingleWord) {
         return (isSingleWord)
-                ? new DataWord(RandomUtils.nextBytes(DataWord.BYTES))
+                ? new DataWordImpl(RandomUtils.nextBytes(DataWordImpl.BYTES))
                 : new DoubleDataWord(RandomUtils.nextBytes(DoubleDataWord.BYTES));
     }
 }

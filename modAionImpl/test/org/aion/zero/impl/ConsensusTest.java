@@ -7,13 +7,13 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.base.type.AionAddress;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.ImportResult;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
@@ -37,11 +37,11 @@ import org.junit.Test;
  */
 public class ConsensusTest {
     private static final Address CONTRACT =
-            AionAddress.wrap("a04272bb5f935fb170baf2998cb25dd15cc5794e7c5bac7241bec00c4971c7f8");
+            Address.wrap("a04272bb5f935fb170baf2998cb25dd15cc5794e7c5bac7241bec00c4971c7f8");
     private static final Address OWNER =
-            AionAddress.wrap("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1679");
+            Address.wrap("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1679");
     private static final Address OTHER =
-            AionAddress.wrap("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1678");
+            Address.wrap("a05577af5a82aa86bb2f4247e3f809bd0d396d45ec3c4602d5824962d21b1678");
     private static final byte[] PRIVATE_KEY =
             Hex.decode(
                     "81e071e5bf2c155f641641d88b5956af52c768fbb90968979b20858d65d71f32aa935b67ac46480caaefcdd56dd31862e578694a99083e9fad88cb6df89fc7cb");

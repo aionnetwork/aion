@@ -13,8 +13,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.PersistenceMethod;
 import org.aion.db.generic.DatabaseWithCache;
 import org.aion.db.generic.LockedDatabase;
 import org.aion.db.impl.h2.H2MVMap;
@@ -22,6 +20,8 @@ import org.aion.db.impl.leveldb.LevelDB;
 import org.aion.db.impl.mockdb.MockDB;
 import org.aion.db.impl.mockdb.PersistentMockDB;
 import org.aion.db.utils.FileUtils;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.PersistenceMethod;
 import org.aion.log.AionLoggerFactory;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -314,9 +314,9 @@ public class DriverBaseTest {
                 });
     }
 
-    private IByteArrayKeyValueDatabase db;
+    private ByteArrayKeyValueDatabase db;
 
-    private final Constructor<IByteArrayKeyValueDatabase> constructor;
+    private final Constructor<ByteArrayKeyValueDatabase> constructor;
     private final Object[] args;
     private final String dbName;
 
@@ -333,7 +333,7 @@ public class DriverBaseTest {
     public DriverBaseTest(
             String testName,
             boolean[] props,
-            Constructor<IByteArrayKeyValueDatabase> constructor,
+            Constructor<ByteArrayKeyValueDatabase> constructor,
             Object[] args)
             throws InstantiationException, IllegalAccessException, IllegalArgumentException,
                     InvocationTargetException {
@@ -457,7 +457,7 @@ public class DriverBaseTest {
         if (db.getPersistenceMethod() == PersistenceMethod.FILE_BASED
                 && !(db instanceof PersistentMockDB)) {
             // another connection to same DB should fail on open for all persistent KVDBs
-            IByteArrayKeyValueDatabase otherDatabase = this.constructor.newInstance(this.args);
+            ByteArrayKeyValueDatabase otherDatabase = this.constructor.newInstance(this.args);
             assertThat(otherDatabase.open()).isFalse();
 
             // ensuring that new connection did not somehow close old one

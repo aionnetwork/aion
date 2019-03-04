@@ -13,12 +13,12 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.db.IByteArrayKeyValueStore;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.ds.ArchivedDataSource;
+import org.aion.types.ByteArrayWrapper;
 import org.slf4j.Logger;
 
 /**
@@ -28,7 +28,7 @@ import org.slf4j.Logger;
  * submitted to the underlying DataSource with respect to following inserts. E.g. if the key was
  * deleted at block N and then inserted at block N + 10 this delete is not passed.
  */
-public class JournalPruneDataSource implements IByteArrayKeyValueStore {
+public class JournalPruneDataSource implements ByteArrayKeyValueStore {
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
@@ -61,14 +61,14 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
 
     Map<ByteArrayWrapper, Ref> refCount = new HashMap<>();
 
-    private IByteArrayKeyValueStore src;
+    private ByteArrayKeyValueStore src;
     // block hash => updates
     private LinkedHashMap<ByteArrayWrapper, Updates> blockUpdates = new LinkedHashMap<>();
     private Updates currentUpdates = new Updates();
     private AtomicBoolean enabled = new AtomicBoolean(false);
     private final boolean hasArchive;
 
-    public JournalPruneDataSource(IByteArrayKeyValueStore src) {
+    public JournalPruneDataSource(ByteArrayKeyValueStore src) {
         this.src = src;
         this.hasArchive = src instanceof ArchivedDataSource;
     }
@@ -403,11 +403,11 @@ public class JournalPruneDataSource implements IByteArrayKeyValueStore {
         }
     }
 
-    public IByteArrayKeyValueStore getSrc() {
+    public ByteArrayKeyValueStore getSrc() {
         return src;
     }
 
-    public IByteArrayKeyValueDatabase getArchiveSource() {
+    public ByteArrayKeyValueDatabase getArchiveSource() {
         if (!hasArchive) {
             return null;
         } else {

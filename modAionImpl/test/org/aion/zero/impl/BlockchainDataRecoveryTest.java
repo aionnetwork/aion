@@ -7,13 +7,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 import org.aion.crypto.ECKey;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.trie.TrieImpl;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -76,7 +76,7 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        IByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
         // 1: direct recovery call
 
@@ -155,7 +155,7 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        IByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
         // 1: direct recovery call
 
@@ -236,7 +236,7 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        IByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
         // 1: direct recovery call
 
@@ -367,7 +367,7 @@ public class BlockchainDataRecoveryTest {
 
         // delete some world state root entries from the database
         TrieImpl trie = (TrieImpl) repo.getWorldState();
-        IByteArrayKeyValueDatabase database = repo.getStateDatabase();
+        ByteArrayKeyValueDatabase database = repo.getStateDatabase();
 
         // 1: direct recovery call
 
@@ -477,7 +477,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete index entries from the database
-        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -637,7 +637,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getHash()).isEqualTo(mainChainBlock.getHash());
 
         // delete index entries from the database
-        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -769,7 +769,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete index entries from the database
-        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -881,7 +881,7 @@ public class BlockchainDataRecoveryTest {
         AionBlock bestBlock = chain.getBestBlock();
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
-        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -958,7 +958,7 @@ public class BlockchainDataRecoveryTest {
         assertThat(bestBlock.getNumber()).isEqualTo(NUMBER_OF_BLOCKS);
 
         // delete index entries from the database
-        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // 1: direct recovery call
 
@@ -1127,7 +1127,7 @@ public class BlockchainDataRecoveryTest {
         repo.getBlockDatabase().delete(middle.getHash());
 
         // delete index entries from the database
-        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // 1: direct recovery call
 

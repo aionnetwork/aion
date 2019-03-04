@@ -1,9 +1,9 @@
 package org.aion.api.server.nrgprice;
 
-import org.aion.base.type.IBlock;
-import org.aion.base.type.ITransaction;
+import org.aion.interfaces.block.Block;
+import org.aion.interfaces.tx.Transaction;
 
-public interface INrgPriceAdvisor<BLK extends IBlock, TXN extends ITransaction> {
+public interface INrgPriceAdvisor<BLK extends Block, TXN extends Transaction> {
     /* Is the recommendation engine hungry for more data?
      * Recommendations prescribed by engine while hungry are left up to the engine itself
      */

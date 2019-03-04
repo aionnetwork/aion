@@ -24,6 +24,7 @@ allprojects {
 
     repositories {
         jcenter()
+        maven { url "https://oss.sonatype.org/content/groups/staging" }
 
         flatDir {
             dirs './lib' // does not recurse, don't make subdirectories in here

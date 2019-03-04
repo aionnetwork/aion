@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.fastvm.ExecutionContext;
-import org.aion.mcf.vm.types.DataWord;
-import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.ArrayUtils;
@@ -123,10 +122,10 @@ public final class ExecutionBatch {
         Address origin = transaction.getSenderAddress();
         Address caller = transaction.getSenderAddress();
 
-        DataWord nrgPrice = transaction.nrgPrice();
+        DataWordImpl nrgPrice = transaction.nrgPrice();
         long energyLimit = transaction.nrgLimit();
         long nrg = transaction.nrgLimit() - transaction.transactionCost(block.getNumber());
-        DataWord callValue = new DataWord(ArrayUtils.nullToEmpty(transaction.getValue()));
+        DataWordImpl callValue = new DataWordImpl(ArrayUtils.nullToEmpty(transaction.getValue()));
         byte[] callData = ArrayUtils.nullToEmpty(transaction.getData());
 
         int depth = 0;
@@ -146,7 +145,7 @@ public final class ExecutionBatch {
         if (diff.length > 16) {
             diff = Arrays.copyOfRange(diff, diff.length - 16, diff.length);
         }
-        DataWord blockDifficulty = new DataWord(diff);
+        DataWordImpl blockDifficulty = new DataWordImpl(diff);
 
         return new KernelTransactionContext(
                 transaction,

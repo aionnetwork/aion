@@ -10,8 +10,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteUtil;
+import org.aion.types.Address;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledResultCode;
 import org.aion.precompiled.PrecompiledTransactionResult;
@@ -19,7 +18,8 @@ import org.aion.precompiled.contracts.DummyRepo;
 import org.aion.precompiled.contracts.TRS.AbstractTRS;
 import org.aion.precompiled.contracts.TRS.TRSqueryContract;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.api.interfaces.Address;
+
+import org.aion.util.bytes.ByteUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -142,7 +142,7 @@ public class TRSqueryContractTest extends TRShelpers {
         // Test on a contract address that looks real, uses TRS prefix.
         byte[] phony = acct.toBytes();
         phony[0] = (byte) 0xC0;
-        input = getIsLiveInput(new AionAddress(phony));
+        input = getIsLiveInput(new Address(phony));
         res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
@@ -217,7 +217,7 @@ public class TRSqueryContractTest extends TRShelpers {
         // Test on a contract address that looks real, uses TRS prefix.
         byte[] phony = acct.toBytes();
         phony[0] = (byte) 0xC0;
-        input = getIsLockedInput(new AionAddress(phony));
+        input = getIsLockedInput(new Address(phony));
         res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());
@@ -292,7 +292,7 @@ public class TRSqueryContractTest extends TRShelpers {
         // Test on a contract address that looks real, uses TRS prefix.
         byte[] phony = acct.toBytes();
         phony[0] = (byte) 0xC0;
-        input = getIsDirDepoEnabledInput(new AionAddress(phony));
+        input = getIsDirDepoEnabledInput(new Address(phony));
         res = newTRSqueryContract(acct).execute(input, COST);
         assertEquals(PrecompiledResultCode.SUCCESS, res.getResultCode());
         assertEquals(0, res.getEnergyRemaining());

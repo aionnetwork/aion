@@ -4,14 +4,14 @@ import com.google.common.base.Objects;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
-import org.aion.base.db.IPruneConfig;
+import org.aion.interfaces.db.PruneConfig;
 
 /**
  * Configuration for data pruning behavior.
  *
  * @author Alexandra Roatis
  */
-public class CfgPrune implements IPruneConfig {
+public class CfgPrune implements PruneConfig {
 
     private boolean enabled;
     private boolean archived;

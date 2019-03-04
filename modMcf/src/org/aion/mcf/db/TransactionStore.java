@@ -1,6 +1,6 @@
 package org.aion.mcf.db;
 
-import static org.aion.base.util.Utils.dummy;
+import static org.aion.util.others.Utils.dummy;
 
 import java.io.Closeable;
 import java.util.ArrayList;
@@ -8,14 +8,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.base.db.Flushable;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.Flushable;
 import org.aion.mcf.core.AbstractTxInfo;
 import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.ds.Serializer;
 import org.aion.mcf.types.AbstractTransaction;
 import org.aion.mcf.types.AbstractTxReceipt;
+import org.aion.types.ByteArrayWrapper;
 import org.apache.commons.collections4.map.LRUMap;
 
 public class TransactionStore<
@@ -29,7 +29,7 @@ public class TransactionStore<
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     public TransactionStore(
-            IByteArrayKeyValueDatabase src, Serializer<List<INFO>, byte[]> serializer) {
+            ByteArrayKeyValueDatabase src, Serializer<List<INFO>, byte[]> serializer) {
         source = new ObjectDataSource(src, serializer);
     }
 

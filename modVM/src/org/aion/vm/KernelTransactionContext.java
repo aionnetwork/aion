@@ -4,13 +4,12 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import org.aion.avm.core.NodeEnvironment;
-import org.aion.base.type.AionAddress;
-import org.aion.base.vm.IDataWord;
+import org.aion.interfaces.vm.DataWord;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.fastvm.SideEffects;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.vm.api.interfaces.Address;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.vm.api.interfaces.TransactionSideEffects;
 import org.aion.zero.types.AionTransaction;
@@ -18,7 +17,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 public class KernelTransactionContext implements TransactionContext {
     private static final int ENCODE_BASE_LEN =
-            (Address.SIZE * 4) + (DataWord.BYTES * 3) + (Long.BYTES * 4) + (Integer.BYTES * 4);
+            (Address.SIZE * 4) + (DataWordImpl.BYTES * 3) + (Long.BYTES * 4) + (Integer.BYTES * 4);
     public static int CALL = 0;
     public static int DELEGATECALL = 1;
     public static int CALLCODE = 2;
@@ -33,9 +32,9 @@ public class KernelTransactionContext implements TransactionContext {
     public Address address;
     public Address sender;
     private Address blockCoinbase;
-    private IDataWord nrgPrice;
-    private IDataWord callValue;
-    private IDataWord blockDifficulty;
+    private DataWord nrgPrice;
+    private DataWord callValue;
+    private DataWord blockDifficulty;
     private byte[] callData;
     private byte[] txHash;
     private long nrg; // NOTE: nrg = tx_nrg_limit - tx_basic_cost
@@ -74,9 +73,9 @@ public class KernelTransactionContext implements TransactionContext {
             Address destination,
             Address origin,
             Address sender,
-            IDataWord nrgPrice,
+            DataWordImpl nrgPrice,
             long nrg,
-            IDataWord callValue,
+            DataWordImpl callValue,
             byte[] callData,
             int depth,
             int kind,
@@ -85,7 +84,7 @@ public class KernelTransactionContext implements TransactionContext {
             long blockNumber,
             long blockTimestamp,
             long blockNrgLimit,
-            IDataWord blockDifficulty) {
+            DataWord blockDifficulty) {
 
         this.transaction = transaction;
         this.address = destination;
@@ -166,11 +165,10 @@ public class KernelTransactionContext implements TransactionContext {
         return address;
     }
 
-    @Override
     public Address getContractAddress() {
         byte[] rawBytes = this.transaction.getContractAddress().toBytes();
         rawBytes[0] = NodeEnvironment.CONTRACT_PREFIX;
-        return AionAddress.wrap(rawBytes);
+        return Address.wrap(rawBytes);
     }
 
     /** @return the origination address, which is the sender of original transaction. */
@@ -188,8 +186,8 @@ public class KernelTransactionContext implements TransactionContext {
     /** @return the nrg price in current environment. */
     @Override
     public long getTransactionEnergyPrice() {
-        if (this.nrgPrice instanceof DataWord) {
-            return ((DataWord) this.nrgPrice).longValue();
+        if (this.nrgPrice instanceof DataWordImpl) {
+            return ((DataWordImpl) this.nrgPrice).longValue();
         } else {
             return ((DoubleDataWord) this.nrgPrice).longValue();
         }
@@ -257,8 +255,8 @@ public class KernelTransactionContext implements TransactionContext {
     /** @return the block difficulty. */
     @Override
     public long getBlockDifficulty() {
-        if (blockDifficulty instanceof DataWord) {
-            return ((DataWord) blockDifficulty).longValue();
+        if (blockDifficulty instanceof DataWordImpl) {
+            return ((DataWordImpl) blockDifficulty).longValue();
         } else {
             return ((DoubleDataWord) blockDifficulty).longValue();
         }

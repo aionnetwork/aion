@@ -8,12 +8,12 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.util.conversions.Hex;
 
 /** Abstract contract details. */
-public abstract class AbstractContractDetails implements IContractDetails {
+public abstract class AbstractContractDetails implements ContractDetails {
 
     private boolean dirty = false;
     private boolean deleted = false;

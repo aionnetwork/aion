@@ -5,7 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import org.aion.api.server.pb.TxWaitingMappingUpdate;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.TxPendingStatus;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.types.AionTxReceipt;
 
 public interface IApiAion {

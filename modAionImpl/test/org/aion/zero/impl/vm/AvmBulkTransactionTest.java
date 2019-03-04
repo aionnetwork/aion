@@ -11,13 +11,13 @@ import org.aion.avm.api.ABIDecoder;
 import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
-import org.aion.base.type.AionAddress;
-import org.aion.base.vm.VirtualMachineSpecs;
+import org.aion.interfaces.vm.VirtualMachineSpecs;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.ImportResult;
 import org.aion.vm.VirtualMachineProvider;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.impl.types.AionBlock;
@@ -133,7 +133,7 @@ public class AvmBulkTransactionTest {
 
         // Grab the address of the newly deployed contract.
         Address deployedContract =
-                AionAddress.wrap(initialSummary.getReceipts().get(0).getTransactionOutput());
+                Address.wrap(initialSummary.getReceipts().get(0).getTransactionOutput());
 
         int numAvmCreateTransactions = 10;
         int numAvmCallTransactions = 10;
@@ -178,7 +178,7 @@ public class AvmBulkTransactionTest {
             // The first batch are creates, so grab the new contract addresses.
             if (i < numAvmCreateTransactions) {
                 contracts.add(
-                        AionAddress.wrap(
+                        Address.wrap(
                                 blockSummary
                                         .getSummaries()
                                         .get(i)
@@ -210,7 +210,7 @@ public class AvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        AionAddress.wrap(sender.getAddress()),
+                        Address.wrap(sender.getAddress()),
                         null,
                         BigInteger.ZERO,
                         jar,
@@ -226,7 +226,7 @@ public class AvmBulkTransactionTest {
         AionTransaction transaction =
                 newTransaction(
                         nonce,
-                        AionAddress.wrap(sender.getAddress()),
+                        Address.wrap(sender.getAddress()),
                         contract,
                         BigInteger.ZERO,
                         abiEncodeMethodCall("incrementCounter"),
@@ -239,13 +239,13 @@ public class AvmBulkTransactionTest {
 
     private AionTransaction makeValueTransferTransaction(
             ECKey sender, ECKey beneficiary, BigInteger value, BigInteger nonce) {
-        Address senderAddress = AionAddress.wrap(sender.getAddress());
+        Address senderAddress = Address.wrap(sender.getAddress());
 
         AionTransaction transaction =
                 newTransaction(
                         nonce,
                         senderAddress,
-                        AionAddress.wrap(beneficiary.getAddress()),
+                        Address.wrap(beneficiary.getAddress()),
                         value,
                         new byte[0],
                         2_000_000,
@@ -257,7 +257,7 @@ public class AvmBulkTransactionTest {
 
     private int getDeployedStatefulnessCountValue(
             ECKey sender, BigInteger nonce, Address contract) {
-        Address senderAddress = AionAddress.wrap(sender.getAddress());
+        Address senderAddress = Address.wrap(sender.getAddress());
 
         AionTransaction transaction =
                 newTransaction(
@@ -314,7 +314,7 @@ public class AvmBulkTransactionTest {
     }
 
     private BigInteger getNonce(ECKey address) {
-        return getNonce(AionAddress.wrap(address.getAddress()));
+        return getNonce(Address.wrap(address.getAddress()));
     }
 
     private BigInteger getBalance(Address address) {
@@ -322,7 +322,7 @@ public class AvmBulkTransactionTest {
     }
 
     private BigInteger getBalance(ECKey address) {
-        return getBalance(AionAddress.wrap(address.getAddress()));
+        return getBalance(Address.wrap(address.getAddress()));
     }
 
     private ECKey getRandomAccount() {

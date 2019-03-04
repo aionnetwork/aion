@@ -1,22 +1,22 @@
 package org.aion.zero.impl.valid;
 
-import static org.aion.base.util.BIUtil.isEqual;
+import static org.aion.util.biginteger.BIUtil.isEqual;
 
 import java.math.BigInteger;
 import java.util.List;
 import org.aion.mcf.blockchain.IChainCfg;
 import org.aion.mcf.core.IDifficultyCalculator;
 import org.aion.mcf.valid.GrandParentDependantBlockHeaderRule;
+import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
-import org.aion.zero.types.IAionBlock;
 
 /** Checks block's difficulty against calculated difficulty value */
 public class AionDifficultyRule extends GrandParentDependantBlockHeaderRule<A0BlockHeader> {
 
     private IDifficultyCalculator diffCalc;
 
-    public AionDifficultyRule(IChainCfg<IAionBlock, AionTransaction> configuration) {
+    public AionDifficultyRule(IChainCfg<AionBlock, AionTransaction> configuration) {
         this.diffCalc = configuration.getDifficultyCalculator();
     }
 

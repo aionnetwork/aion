@@ -2,7 +2,7 @@ package org.aion.db.generic;
 
 import java.util.Collection;
 import java.util.Map;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 
 /**
  * Implements locking functionality for a database that is mostly thread-safe except for open and
@@ -10,9 +10,9 @@ import org.aion.base.db.IByteArrayKeyValueDatabase;
  *
  * @author Alexandra Roatis
  */
-public class SpecialLockedDatabase extends LockedDatabase implements IByteArrayKeyValueDatabase {
+public class SpecialLockedDatabase extends LockedDatabase implements ByteArrayKeyValueDatabase {
 
-    public SpecialLockedDatabase(IByteArrayKeyValueDatabase _unlockedDatabase) {
+    public SpecialLockedDatabase(ByteArrayKeyValueDatabase _unlockedDatabase) {
         super(_unlockedDatabase);
     }
 

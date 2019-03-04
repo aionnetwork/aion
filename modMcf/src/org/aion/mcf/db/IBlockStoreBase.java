@@ -1,7 +1,7 @@
 package org.aion.mcf.db;
 
 import java.util.List;
-import org.aion.base.type.IBlock;
+import org.aion.interfaces.block.Block;
 import org.aion.mcf.types.AbstractBlockHeader;
 
 /**
@@ -10,7 +10,7 @@ import org.aion.mcf.types.AbstractBlockHeader;
  * @param <BLK>
  * @param <BH>
  */
-public interface IBlockStoreBase<BLK extends IBlock<?, ?>, BH extends AbstractBlockHeader> {
+public interface IBlockStoreBase<BLK extends Block<?, ?>, BH extends AbstractBlockHeader> {
 
     byte[] getBlockHashByNumber(long blockNumber);
 

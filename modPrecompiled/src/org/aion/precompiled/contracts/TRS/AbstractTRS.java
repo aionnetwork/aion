@@ -6,18 +6,17 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.IBlockchain;
 import org.aion.mcf.db.IBlockStoreBase;
-import org.aion.mcf.vm.types.DataWord;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.PrecompiledTransactionResult;
 import org.aion.precompiled.type.StatefulPrecompiledContract;
-import org.aion.vm.api.interfaces.Address;
+import org.aion.util.bytes.ByteUtil;
 
 /**
  * The purpose of this abstract class is mostly as a place to store important constants and methods
@@ -26,7 +25,7 @@ import org.aion.vm.api.interfaces.Address;
 public abstract class AbstractTRS extends StatefulPrecompiledContract {
     // TODO: grab AION from CfgAion later and preferably aion prefix too.
     static final Address AION =
-            AionAddress.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
+            Address.wrap("0xa0eeaeabdbc92953b072afbd21f3e3fd8a4a4f5e6a6e22200db746ab75e9a99a");
     static final long COST = 21000L; // temporary.
     private static final long TEST_DURATION = 1;
     private static final long PERIOD_DURATION = TimeUnit.DAYS.toSeconds(30);
@@ -60,7 +59,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
     private static final byte EXTRA_FUNDS_PREFIX = (byte) 0x92;
 
     private static final int DOUBLE_WORD_SIZE = DoubleDataWord.BYTES;
-    private static final int SINGLE_WORD_SIZE = DataWord.BYTES;
+    private static final int SINGLE_WORD_SIZE = DataWordImpl.BYTES;
     private static final int MAX_DEPOSIT_ROWS = 16;
     private static final byte NULL_BIT = (byte) 0x80;
     private static final byte VALID_BIT = (byte) 0x40;
@@ -101,7 +100,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
 
     // Constructor.
     AbstractTRS(
-            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track,
             Address caller,
             IBlockchain blockchain) {
         super(track);
@@ -196,7 +195,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     public Address getContractOwner(Address contract) {
         ByteArrayWrapper owner = track.getStorageValue(contract, OWNER_KEY);
-        return (owner == null) ? null : new AionAddress(owner.getData());
+        return (owner == null) ? null : new Address(owner.getData());
     }
 
     /**
@@ -739,11 +738,11 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         if (track.getStorageValue(contract, TIMESTAMP) != null) {
             return;
         }
-        byte[] value = new byte[DataWord.BYTES];
+        byte[] value = new byte[DataWordImpl.BYTES];
 
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(timestamp);
-        System.arraycopy(buffer.array(), 0, value, DataWord.BYTES - Long.BYTES, Long.BYTES);
+        System.arraycopy(buffer.array(), 0, value, DataWordImpl.BYTES - Long.BYTES, Long.BYTES);
         track.addStorageRow(contract, TIMESTAMP, toByteArrayWrapper(value));
     }
 
@@ -764,7 +763,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
         }
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.put(
-                Arrays.copyOfRange(value.getData(), DataWord.BYTES - Long.BYTES, DataWord.BYTES));
+                Arrays.copyOfRange(value.getData(), DataWordImpl.BYTES - Long.BYTES, DataWordImpl.BYTES));
         buffer.flip();
         return buffer.getLong();
     }
@@ -1671,7 +1670,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private byte[] makeBalanceKey(Address account, int row) {
         if (account == null) {
-            return DataWord.ZERO.getData();
+            return DataWordImpl.ZERO.getData();
         }
         byte[] balKey = new byte[DOUBLE_WORD_SIZE];
         balKey[0] = (byte) (BALANCE_PREFIX | row);
@@ -1689,7 +1688,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private byte[] makeWithdrawalKey(Address account) {
         if (account == null) {
-            return DataWord.ZERO.getData();
+            return DataWordImpl.ZERO.getData();
         }
         return makeWithdrawalKey(account.toBytes());
     }
@@ -1704,7 +1703,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private byte[] makeWithdrawalKey(byte[] account) {
         if (account == null) {
-            return DataWord.ZERO.getData();
+            return DataWordImpl.ZERO.getData();
         }
         byte[] withKey = new byte[DOUBLE_WORD_SIZE];
         withKey[0] = WITHDRAW_PREFIX;
@@ -1751,7 +1750,7 @@ public abstract class AbstractTRS extends StatefulPrecompiledContract {
      */
     private static ByteArrayWrapper toByteArrayWrapper(byte[] word) {
         if (word.length == SINGLE_WORD_SIZE) {
-            return new DataWord(word).toWrapper();
+            return new DataWordImpl(word).toWrapper();
         } else if (word.length == DOUBLE_WORD_SIZE) {
             return new DoubleDataWord(word).toWrapper();
         } else {

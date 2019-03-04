@@ -2,9 +2,9 @@ package org.aion.zero.impl.core;
 
 import java.util.List;
 import java.util.Map;
-import org.aion.base.db.IRepository;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.IBlockchain;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
@@ -32,14 +32,14 @@ public interface IAionBlockchain
      *
      * @return {@code true} if the recovery was successful, {@code false} otherwise
      */
-    boolean recoverWorldState(IRepository repository, AionBlock block);
+    boolean recoverWorldState(Repository repository, AionBlock block);
 
     /**
      * Recovery functionality for recreating the block info in the index database.
      *
      * @return {@code true} if the recovery was successful, {@code false} otherwise
      */
-    boolean recoverIndexEntry(IRepository repository, AionBlock block);
+    boolean recoverIndexEntry(Repository repository, AionBlock block);
 
     /**
      * Heuristic for skipping the call to tryToConnect with very large or very small block number.

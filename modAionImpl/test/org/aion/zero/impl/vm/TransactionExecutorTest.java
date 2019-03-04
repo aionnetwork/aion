@@ -32,18 +32,18 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.Hex;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
-import org.aion.mcf.vm.types.DataWord;
+import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
@@ -74,7 +74,7 @@ public class TransactionExecutorTest {
                         .build();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
-        deployer = new AionAddress(deployerKey.getAddress());
+        deployer = new Address(deployerKey.getAddress());
     }
 
     @After
@@ -104,7 +104,7 @@ public class TransactionExecutorTest {
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
 
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
                 new BulkExecutor(
@@ -201,7 +201,7 @@ public class TransactionExecutorTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+        RepositoryCache repo = blockchain.getRepository().startTracking();
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
                 new BulkExecutor(
@@ -259,9 +259,9 @@ public class TransactionExecutorTest {
         //        // I'm guessing: first data word is the number of bytes that follows. Then those
         // following
         //        // bytes denote the size of the output, which follows these last bytes.
-        //        int len = new DataWord(Arrays.copyOfRange(output, 0, DataWord.BYTES)).intValue();
+        //        int len = new DataWordImpl(Arrays.copyOfRange(output, 0, DataWordImpl.BYTES)).intValue();
         //        byte[] outputLen = new byte[len];
-        //        System.arraycopy(output, DataWord.BYTES, outputLen, 0, len);
+        //        System.arraycopy(output, DataWordImpl.BYTES, outputLen, 0, len);
         //        int outputSize = new BigInteger(outputLen).intValue();
         //
         //        byte[] expected = new byte[1024];
@@ -269,7 +269,7 @@ public class TransactionExecutorTest {
         //        expected[1023] = 'b';
         //
         //        byte[] out = new byte[outputSize];
-        //        System.arraycopy(output, DataWord.BYTES + len, out, 0, outputSize);
+        //        System.arraycopy(output, DataWordImpl.BYTES + len, out, 0, outputSize);
 
         byte[] expected = new byte[1024];
         expected[0] = 'a';
@@ -299,7 +299,7 @@ public class TransactionExecutorTest {
         BlockContext context =
                 blockchain.createNewBlockContext(
                         blockchain.getBestBlock(), Collections.singletonList(tx), false);
-        IRepositoryCache repo = blockchain.getRepository().startTracking();
+        RepositoryCache repo = blockchain.getRepository().startTracking();
 
         ExecutionBatch details = new ExecutionBatch(context.block, Collections.singletonList(tx));
         BulkExecutor exec =
@@ -349,19 +349,19 @@ public class TransactionExecutorTest {
     }
 
     private Address getNewRecipient(boolean isContractCreation) {
-        return (isContractCreation) ? null : new AionAddress(RandomUtils.nextBytes(Address.SIZE));
+        return (isContractCreation) ? null : new Address(RandomUtils.nextBytes(Address.SIZE));
     }
 
     private byte[] extractActualOutput(byte[] rawOutput) {
         // I'm guessing: first data word is the number of bytes that follows. Then those following
         // bytes denote the size of the output, which follows these last bytes.
-        int len = new DataWord(Arrays.copyOfRange(rawOutput, 0, DataWord.BYTES)).intValue();
+        int len = new DataWordImpl(Arrays.copyOfRange(rawOutput, 0, DataWordImpl.BYTES)).intValue();
         byte[] outputLen = new byte[len];
-        System.arraycopy(rawOutput, DataWord.BYTES, outputLen, 0, len);
+        System.arraycopy(rawOutput, DataWordImpl.BYTES, outputLen, 0, len);
         int outputSize = new BigInteger(outputLen).intValue();
 
         byte[] out = new byte[outputSize];
-        System.arraycopy(rawOutput, DataWord.BYTES + len, out, 0, outputSize);
+        System.arraycopy(rawOutput, DataWordImpl.BYTES + len, out, 0, outputSize);
         return out;
     }
 

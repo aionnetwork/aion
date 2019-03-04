@@ -5,7 +5,7 @@ import static org.aion.precompiled.contracts.ATB.BridgeUtilities.toSignature;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 
 enum BridgeFuncSig {
     SIG_CHANGE_OWNER("changeOwner(address)"),

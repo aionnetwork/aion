@@ -22,11 +22,11 @@ import org.aion.api.server.pb.Message;
 import org.aion.api.server.types.EvtContract;
 import org.aion.api.server.types.Fltr;
 import org.aion.api.server.types.TxPendingStatus;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.config.CfgApiZmq;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.slf4j.Logger;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMQ.Context;
@@ -155,7 +155,7 @@ public class ProtocolProcessor implements Runnable {
     }
 
     private void loadCurveKeyPair() {
-        List<File> files = org.aion.base.io.File.getFiles(PATH);
+        List<File> files = org.aion.util.file.File.getFiles(PATH);
         String nextLoad = "";
         for (File f : files) {
             if (f.getName().contains("zmqCurvePubkey")) {

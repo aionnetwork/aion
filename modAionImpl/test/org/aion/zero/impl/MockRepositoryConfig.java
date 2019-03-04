@@ -1,18 +1,18 @@
 package org.aion.zero.impl;
 
 import java.util.Properties;
-import org.aion.base.db.IContractDetails;
-import org.aion.base.db.IPruneConfig;
-import org.aion.base.db.IRepositoryConfig;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.zero.impl.db.ContractDetailsAion;
 
-public class MockRepositoryConfig implements IRepositoryConfig {
+public class MockRepositoryConfig implements RepositoryConfig {
 
     private DBVendor vendor = DBVendor.MOCKDB;
-    private IPruneConfig pruneConfig = new CfgPrune(false);
+    private PruneConfig pruneConfig = new CfgPrune(false);
 
     @Override
     public String getDbPath() {
@@ -20,12 +20,12 @@ public class MockRepositoryConfig implements IRepositoryConfig {
     }
 
     @Override
-    public IPruneConfig getPruneConfig() {
+    public PruneConfig getPruneConfig() {
         return pruneConfig;
     }
 
     @Override
-    public IContractDetails contractDetailsImpl() {
+    public ContractDetails contractDetailsImpl() {
         return ContractDetailsAion.createForTesting(0, 1000000).getDetails();
     }
 
@@ -41,7 +41,7 @@ public class MockRepositoryConfig implements IRepositoryConfig {
         this.vendor = vendor;
     }
 
-    public MockRepositoryConfig(IPruneConfig _pruneConfig) {
+    public MockRepositoryConfig(PruneConfig _pruneConfig) {
         this.pruneConfig = _pruneConfig;
     }
 }

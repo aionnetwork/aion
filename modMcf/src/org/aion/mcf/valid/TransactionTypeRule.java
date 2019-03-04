@@ -1,6 +1,6 @@
 package org.aion.mcf.valid;
 
-import org.aion.base.vm.VirtualMachineSpecs;
+import org.aion.interfaces.vm.VirtualMachineSpecs;
 
 /**
  * Rules for validating transactions based on allowed types.

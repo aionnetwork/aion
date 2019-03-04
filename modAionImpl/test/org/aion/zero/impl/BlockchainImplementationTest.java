@@ -5,7 +5,7 @@ import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChain;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.base.util.ByteArrayWrapper;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.ImportResult;

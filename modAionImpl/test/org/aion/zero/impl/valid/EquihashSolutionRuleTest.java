@@ -1,6 +1,6 @@
 // package org.aion.zero.impl.valid;
 //
-// import org.aion.base.util.ByteArrayWrapper;
+// import org.aion.types.ByteArrayWrapper;
 // import org.aion.equihash.EquiUtils;
 // import org.aion.equihash.EquiValidator;
 // import org.aion.equihash.Equihash;

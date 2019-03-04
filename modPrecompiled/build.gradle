@@ -3,11 +3,12 @@ test.dependsOn copyNativeLibsForModuleTests
 clean.dependsOn deleteNativeLibs
 
 dependencies {
-    compile project(':modAionBase')
+    compile 'network.aion:vm-api4j:0.4.0'
+    compile 'network.aion:util4j:0.4.0'
+    
     compile project(':modMcf')
     compile project(':modCrypto')
     compile project(':modAion')
-    compile project(':aion_vm_api')
     compile 'com.google.guava:guava:25.1-jre'
     compile 'com.google.code.findbugs:jsr305:3.0.2'
     compile group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'

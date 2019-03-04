@@ -8,12 +8,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.util.ByteUtil;
+
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.ds.DataSourceArray;
 import org.aion.mcf.ds.ObjectDataSource;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.db.AionBlockStore;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -62,7 +63,7 @@ public class BlockchainIndexIntegrityTest {
         chain.getRepository().flush();
 
         AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
-        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // deleting the genesis index
         indexDatabase.delete(ByteUtil.intToBytes(0));
@@ -104,7 +105,7 @@ public class BlockchainIndexIntegrityTest {
         chain.getRepository().flush();
 
         AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
-        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // deleting the level 2 index
         indexDatabase.delete(ByteUtil.intToBytes(2));
@@ -148,7 +149,7 @@ public class BlockchainIndexIntegrityTest {
         chain.getRepository().flush();
 
         AionRepositoryImpl repo = (AionRepositoryImpl) chain.getRepository();
-        IByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
+        ByteArrayKeyValueDatabase indexDatabase = repo.getIndexDatabase();
 
         // corrupting the index at level 2
         DataSourceArray<List<AionBlockStore.BlockInfo>> index =

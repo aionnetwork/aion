@@ -4,13 +4,10 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
-import org.aion.base.type.AionAddress;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
 import org.aion.crypto.ECKeyFac;
 import org.aion.equihash.EquihashMiner;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
@@ -18,10 +15,12 @@ import org.aion.mcf.blockchain.IPowChain;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.mine.IMineRunner;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-import org.aion.vm.api.interfaces.Address;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
@@ -44,14 +43,6 @@ public class AionImpl implements IAionChain {
 
     private TxCollector collector;
 
-    private static class Holder {
-        static final AionImpl INSTANCE = new AionImpl();
-    }
-
-    public static AionImpl inst() {
-        return Holder.INSTANCE;
-    }
-
     private AionImpl() {
         this.cfg = CfgAion.inst();
         aionHub = new AionHub();
@@ -65,6 +56,18 @@ public class AionImpl implements IAionChain {
                         + ">");
 
         collector = new TxCollector(this.aionHub.getP2pMgr(), LOG_TX);
+    }
+
+    public static AionImpl inst() {
+        return Holder.INSTANCE;
+    }
+
+    /**
+     * There is no post-execution work to do for any calls in this class to do. In accordance with
+     * the specs, we return zero since we have no meaningful value to return here.
+     */
+    private static PostExecutionWork getPostExecutionWork() {
+        return (r, c, s, t, b) -> 0;
     }
 
     @Override
@@ -84,14 +87,14 @@ public class AionImpl implements IAionChain {
     @Override
     public IMineRunner getBlockMiner() {
 
-        AionAddress minerCoinbase = AionAddress.wrap(this.cfg.getConsensus().getMinerAddress());
-
-        if (minerCoinbase.isEmptyAddress()) {
+        try {
+            Address.wrap(this.cfg.getConsensus().getMinerAddress());
+            return EquihashMiner.inst();
+        } catch (Exception e) {
             LOG_GEN.info("Miner address is not set");
             return null;
         }
 
-        return EquihashMiner.inst();
     }
 
     @Override
@@ -131,7 +134,7 @@ public class AionImpl implements IAionChain {
             tx.sign(ECKeyFac.inst().fromPrivate(new byte[64]));
         }
 
-        IRepositoryCache repository =
+        RepositoryCache repository =
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
@@ -158,7 +161,7 @@ public class AionImpl implements IAionChain {
             tx.sign(ECKeyFac.inst().fromPrivate(new byte[64]));
         }
 
-        IRepositoryCache repository =
+        RepositoryCache repository =
                 aionHub.getRepository().getSnapshotTo(block.getStateRoot()).startTracking();
 
         try {
@@ -178,30 +181,20 @@ public class AionImpl implements IAionChain {
         }
     }
 
-    /**
-     * There is no post-execution work to do for any calls in this class to do. In accordance with
-     * the specs, we return zero since we have no meaningful value to return here.
-     */
-    private static PostExecutionWork getPostExecutionWork() {
-        return (r, c, s, t, b) -> {
-            return 0;
-        };
-    }
-
     @Override
-    public IRepository getRepository() {
+    public Repository getRepository() {
         return aionHub.getRepository();
     }
 
     @Override
-    public IRepository<?, ?> getPendingState() {
+    public Repository<?, ?> getPendingState() {
         return aionHub.getPendingState().getRepository();
     }
 
     @Override
-    public IRepository<?, ?> getSnapshotTo(byte[] root) {
-        IRepository<?, ?> repository = aionHub.getRepository();
-        IRepository<?, ?> snapshot = repository.getSnapshotTo(root);
+    public Repository<?, ?> getSnapshotTo(byte[] root) {
+        Repository<?, ?> repository = aionHub.getRepository();
+        Repository<?, ?> snapshot = repository.getSnapshotTo(root);
 
         return snapshot;
     }
@@ -356,5 +349,9 @@ public class AionImpl implements IAionChain {
         byte[] code = this.aionHub.getRepository().getCode(address);
         if (code == null) return Optional.empty();
         return Optional.of(new ByteArrayWrapper(code));
+    }
+
+    private static class Holder {
+        static final AionImpl INSTANCE = new AionImpl();
     }
 }

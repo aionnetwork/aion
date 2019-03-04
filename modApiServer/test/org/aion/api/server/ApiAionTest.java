@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Map;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
-import org.aion.base.type.AionAddress;
-import org.aion.base.type.ITransaction;
-import org.aion.base.type.ITxReceipt;
+import org.aion.interfaces.tx.Transaction;
+import org.aion.interfaces.tx.TxReceipt;
+import org.aion.types.Address;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
@@ -26,7 +26,7 @@ import org.aion.evtmgr.impl.evt.EventTx;
 import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.TxResponse;
-import org.aion.vm.api.interfaces.Address;
+
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -54,12 +54,12 @@ public class ApiAionTest {
         }
 
         @Override
-        protected void pendingTxReceived(ITransaction _tx) {
+        protected void pendingTxReceived(Transaction _tx) {
             pendingRcvdFlag = true;
         }
 
         @Override
-        protected void pendingTxUpdate(ITxReceipt _txRcpt, EventTx.STATE _state) {
+        protected void pendingTxUpdate(TxReceipt _txRcpt, EventTx.STATE _state) {
             pendingUpdateFlag = true;
         }
 
@@ -77,7 +77,7 @@ public class ApiAionTest {
         private void addEvents() {
             EventTx pendingRcvd = new EventTx(EventTx.CALLBACK.PENDINGTXRECEIVED0);
             AionTransaction tx = new AionTransaction(null);
-            List l1 = new ArrayList<ITransaction>();
+            List l1 = new ArrayList<Transaction>();
             l1.add(tx);
             l1.add(tx);
             l1.add(tx);
@@ -230,9 +230,9 @@ public class ApiAionTest {
         byte[] msg = "test message".getBytes();
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
-                        AionAddress.ZERO_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
+                        Address.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -261,7 +261,7 @@ public class ApiAionTest {
                 1,
                 api.getTransactionCount(
                         blk.getTransactionsList().get(0).getSenderAddress(), blk.getNumber()));
-        assertEquals(0, api.getTransactionCount(AionAddress.EMPTY_ADDRESS(), blk.getNumber()));
+        assertEquals(0, api.getTransactionCount(null, blk.getNumber()));
 
         assertEquals(tx, api.getTransactionByHash(tx.getTransactionHash()));
     }
@@ -270,14 +270,14 @@ public class ApiAionTest {
     public void testDoCall() {
         byte[] msg = "test message".getBytes();
 
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
                         addr,
-                        AionAddress.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -287,7 +287,7 @@ public class ApiAionTest {
         ArgTxCall txcall =
                 new ArgTxCall(
                         addr,
-                        AionAddress.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         msg,
                         repo.getNonce(addr),
                         BigInteger.ONE,
@@ -302,15 +302,15 @@ public class ApiAionTest {
     public void testEstimates() {
         byte[] msg = "test message".getBytes();
 
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
 
         AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
 
         AionTransaction tx =
                 new AionTransaction(
-                        repo.getNonce(AionAddress.ZERO_ADDRESS()).toByteArray(),
+                        repo.getNonce(Address.ZERO_ADDRESS()).toByteArray(),
                         addr,
-                        AionAddress.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         BigInteger.ONE.toByteArray(),
                         msg,
                         100000,
@@ -320,7 +320,7 @@ public class ApiAionTest {
         ArgTxCall txcall =
                 new ArgTxCall(
                         addr,
-                        AionAddress.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         msg,
                         repo.getNonce(addr),
                         BigInteger.ONE,
@@ -346,7 +346,7 @@ public class ApiAionTest {
         txcall =
                 new ArgTxCall(
                         null,
-                        AionAddress.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         msg,
                         BigInteger.ONE,
                         BigInteger.ONE,
@@ -357,8 +357,8 @@ public class ApiAionTest {
 
         txcall =
                 new ArgTxCall(
-                        AionAddress.EMPTY_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        null,
+                        Address.ZERO_ADDRESS(),
                         msg,
                         BigInteger.ONE,
                         BigInteger.ONE,
@@ -369,12 +369,12 @@ public class ApiAionTest {
 
         // locked account should throw INVALID_ACCOUNT
 
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
 
         txcall =
                 new ArgTxCall(
                         addr,
-                        AionAddress.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         msg,
                         repo.getNonce(addr),
                         BigInteger.ONE,
@@ -387,17 +387,17 @@ public class ApiAionTest {
     @Test
     public void testAccountGetters() {
         assertEquals(
-                repo.getBalance(AionAddress.ZERO_ADDRESS()),
-                api.getBalance(AionAddress.ZERO_ADDRESS()));
+                repo.getBalance(Address.ZERO_ADDRESS()),
+                api.getBalance(Address.ZERO_ADDRESS()));
         assertEquals(
-                repo.getNonce(AionAddress.ZERO_ADDRESS()),
-                api.getNonce(AionAddress.ZERO_ADDRESS()));
+                repo.getNonce(Address.ZERO_ADDRESS()),
+                api.getNonce(Address.ZERO_ADDRESS()));
         assertEquals(
-                repo.getBalance(AionAddress.ZERO_ADDRESS()),
-                api.getBalance(AionAddress.ZERO_ADDRESS().toString()));
+                repo.getBalance(Address.ZERO_ADDRESS()),
+                api.getBalance(Address.ZERO_ADDRESS().toString()));
         assertEquals(
-                repo.getNonce(AionAddress.ZERO_ADDRESS()),
-                api.getNonce(AionAddress.ZERO_ADDRESS().toString()));
+                repo.getNonce(Address.ZERO_ADDRESS()),
+                api.getNonce(Address.ZERO_ADDRESS().toString()));
     }
 
     @Test
@@ -416,7 +416,7 @@ public class ApiAionTest {
         txcall =
                 new ArgTxCall(
                         null,
-                        AionAddress.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         msg,
                         BigInteger.ONE,
                         BigInteger.ONE,
@@ -427,8 +427,8 @@ public class ApiAionTest {
 
         txcall =
                 new ArgTxCall(
-                        AionAddress.EMPTY_ADDRESS(),
-                        AionAddress.ZERO_ADDRESS(),
+                        null,
+                        Address.ZERO_ADDRESS(),
                         msg,
                         BigInteger.ONE,
                         BigInteger.ONE,
@@ -439,12 +439,12 @@ public class ApiAionTest {
 
         // locked account should throw INVALID_ACCOUNT
 
-        Address addr = new AionAddress(Keystore.create("testPwd"));
+        Address addr = new Address(Keystore.create("testPwd"));
 
         txcall =
                 new ArgTxCall(
                         addr,
-                        AionAddress.ZERO_ADDRESS(),
+                        Address.ZERO_ADDRESS(),
                         msg,
                         repo.getNonce(addr),
                         BigInteger.ONE,
@@ -463,7 +463,7 @@ public class ApiAionTest {
 
         assertNotNull(api.getCoinbase());
         assertEquals(
-                repo.getCode(AionAddress.ZERO_ADDRESS()), api.getCode(AionAddress.ZERO_ADDRESS()));
+                repo.getCode(Address.ZERO_ADDRESS()), api.getCode(Address.ZERO_ADDRESS()));
         assertEquals(impl.getBlockMiner().isMining(), api.isMining());
         assertArrayEquals(CfgAion.inst().getNodes(), api.getBootNodes());
         assertEquals(impl.getAionHub().getP2pMgr().getActiveNodes().size(), api.peerCount());

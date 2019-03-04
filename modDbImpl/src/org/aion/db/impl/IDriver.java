@@ -1,6 +1,6 @@
 package org.aion.db.impl;
 
-import org.aion.base.db.IByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 
 public interface IDriver {
 
@@ -10,7 +10,7 @@ public interface IDriver {
      * @param info the parameters for this database, all represented in String.
      * @return HashMapDB, or null.
      */
-    IByteArrayKeyValueDatabase connect(java.util.Properties info);
+    ByteArrayKeyValueDatabase connect(java.util.Properties info);
 
     /**
      * Retrieves the driver's major version number. Initially this should be 1.

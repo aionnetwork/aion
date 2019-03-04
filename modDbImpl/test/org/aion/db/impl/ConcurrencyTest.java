@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.Properties;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
 import org.aion.db.utils.FileUtils;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -76,7 +76,7 @@ public class ConcurrencyTest {
         return size;
     }
 
-    private void addThread4IsEmpty(List<Runnable> threads, IByteArrayKeyValueDatabase db) {
+    private void addThread4IsEmpty(List<Runnable> threads, ByteArrayKeyValueDatabase db) {
         threads.add(
                 () -> {
                     boolean check = db.isEmpty();
@@ -89,7 +89,7 @@ public class ConcurrencyTest {
                 });
     }
 
-    private void addThread4Keys(List<Runnable> threads, IByteArrayKeyValueDatabase db) {
+    private void addThread4Keys(List<Runnable> threads, ByteArrayKeyValueDatabase db) {
         threads.add(
                 () -> {
                     Iterator<byte[]> keys = db.keys();
@@ -100,7 +100,7 @@ public class ConcurrencyTest {
                 });
     }
 
-    private void addThread4Get(List<Runnable> threads, IByteArrayKeyValueDatabase db, String key) {
+    private void addThread4Get(List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
         threads.add(
                 () -> {
                     boolean hasValue = db.get(key.getBytes()).isPresent();
@@ -115,7 +115,7 @@ public class ConcurrencyTest {
                 });
     }
 
-    private void addThread4Put(List<Runnable> threads, IByteArrayKeyValueDatabase db, String key) {
+    private void addThread4Put(List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
         threads.add(
                 () -> {
                     db.put(key.getBytes(), DatabaseTestUtils.randomBytes(32));
@@ -127,7 +127,7 @@ public class ConcurrencyTest {
     }
 
     private void addThread4Delete(
-            List<Runnable> threads, IByteArrayKeyValueDatabase db, String key) {
+            List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
         threads.add(
                 () -> {
                     db.delete(key.getBytes());
@@ -139,7 +139,7 @@ public class ConcurrencyTest {
     }
 
     private void addThread4PutBatch(
-            List<Runnable> threads, IByteArrayKeyValueDatabase db, String key) {
+            List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
         threads.add(
                 () -> {
                     Map<byte[], byte[]> map = new HashMap<>();
@@ -162,7 +162,7 @@ public class ConcurrencyTest {
     }
 
     private void addThread4DeleteBatch(
-            List<Runnable> threads, IByteArrayKeyValueDatabase db, String key) {
+            List<Runnable> threads, ByteArrayKeyValueDatabase db, String key) {
         threads.add(
                 () -> {
                     List<byte[]> list = new ArrayList<>();
@@ -184,7 +184,7 @@ public class ConcurrencyTest {
                 });
     }
 
-    private void addThread4Open(List<Runnable> threads, IByteArrayKeyValueDatabase db) {
+    private void addThread4Open(List<Runnable> threads, ByteArrayKeyValueDatabase db) {
         threads.add(
                 () -> {
                     db.open();
@@ -194,7 +194,7 @@ public class ConcurrencyTest {
                 });
     }
 
-    private void addThread4Close(List<Runnable> threads, IByteArrayKeyValueDatabase db) {
+    private void addThread4Close(List<Runnable> threads, ByteArrayKeyValueDatabase db) {
         threads.add(
                 () -> {
                     db.close();
@@ -204,7 +204,7 @@ public class ConcurrencyTest {
                 });
     }
 
-    private void addThread4Size(List<Runnable> threads, IByteArrayKeyValueDatabase db) {
+    private void addThread4Size(List<Runnable> threads, ByteArrayKeyValueDatabase db) {
         threads.add(
                 () -> {
                     long size = db.approximateSize();
@@ -221,7 +221,7 @@ public class ConcurrencyTest {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
         dbDef.setProperty(ENABLE_LOCKING, "true");
         // open database
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
         // create distinct threads with
@@ -276,7 +276,7 @@ public class ConcurrencyTest {
     public void testConcurrentPut(Properties dbDef) throws InterruptedException {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
         dbDef.setProperty(ENABLE_LOCKING, "true");
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
         // create distinct threads with
@@ -302,7 +302,7 @@ public class ConcurrencyTest {
     public void testConcurrentPutBatch(Properties dbDef) throws InterruptedException {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
         dbDef.setProperty(ENABLE_LOCKING, "true");
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
         // create distinct threads with
@@ -329,7 +329,7 @@ public class ConcurrencyTest {
         dbDef.setProperty(DB_NAME, DatabaseTestUtils.dbName + getNext());
         dbDef.setProperty(ENABLE_LOCKING, "true");
         // open database
-        IByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
+        ByteArrayKeyValueDatabase db = DatabaseFactory.connect(dbDef);
         assertThat(db.open()).isTrue();
 
         // create distinct threads with

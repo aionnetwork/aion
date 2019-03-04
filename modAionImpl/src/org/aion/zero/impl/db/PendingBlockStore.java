@@ -22,11 +22,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.aion.base.db.Flushable;
-import org.aion.base.db.IByteArrayKeyValueDatabase;
-import org.aion.base.util.ByteArrayWrapper;
-import org.aion.base.util.ByteUtil;
-import org.aion.base.util.Hex;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.Flushable;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory.Props;
 import org.aion.log.AionLoggerFactory;
@@ -37,6 +35,8 @@ import org.aion.mcf.ds.Serializer;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.types.AionBlock;
 import org.slf4j.Logger;
 
@@ -79,13 +79,13 @@ public class PendingBlockStore implements Flushable, Closeable {
      */
     private ObjectDataSource<List<byte[]>> levelSource;
 
-    private IByteArrayKeyValueDatabase levelDatabase;
+    private ByteArrayKeyValueDatabase levelDatabase;
     /** Used to map a queue identifier to a list of consecutive blocks. */
     private ObjectDataSource<List<AionBlock>> queueSource;
 
-    private IByteArrayKeyValueDatabase queueDatabase;
+    private ByteArrayKeyValueDatabase queueDatabase;
     /** Used to maps a block hash to its current queue identifier. */
-    private IByteArrayKeyValueDatabase indexSource;
+    private ByteArrayKeyValueDatabase indexSource;
 
     // tracking the status: with access managed by the `internalLock`
     private Map<ByteArrayWrapper, QueueInfo> status;
@@ -531,7 +531,7 @@ public class PendingBlockStore implements Flushable, Closeable {
         }
     }
 
-    private static int countDatabaseKeys(IByteArrayKeyValueDatabase db) {
+    private static int countDatabaseKeys(ByteArrayKeyValueDatabase db) {
         int size = 0;
         Iterator<byte[]> iterator = db.keys();
         while (iterator.hasNext()) {

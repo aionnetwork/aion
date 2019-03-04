@@ -1,15 +1,16 @@
 package org.aion.equihash;
 
-import static org.aion.base.util.ByteUtil.merge;
-import static org.aion.base.util.ByteUtil.toLEByteArray;
-import static org.aion.base.util.Hex.toHexString;
+
+import static org.aion.util.bytes.ByteUtil.merge;
+import static org.aion.util.bytes.ByteUtil.toLEByteArray;
+import static org.aion.util.conversions.Hex.toHexString;
 
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import org.aion.base.util.NativeLoader;
 import org.aion.crypto.HashUtil;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.util.file.NativeLoader;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.IAionBlock;
 import org.slf4j.Logger;
@@ -75,7 +76,7 @@ public class Equihash {
     /*
      * Mine for a single nonce
      */
-    public Solution mine(IAionBlock block, byte[] nonce) {
+    public SolutionImpl mine(IAionBlock block, byte[] nonce) {
 
         A0BlockHeader updateHeader = new A0BlockHeader(block.getHeader());
 
@@ -109,7 +110,7 @@ public class Equihash {
 
             // Found a valid solution
             if (isValidBlock(validationBytes, target)) {
-                return new Solution(block, nonce, minimal);
+                return new SolutionImpl(block, nonce, minimal);
             }
         }
 

@@ -1,5 +1,6 @@
 package org.aion.vm;
 
+import org.aion.avm.core.AvmConfiguration;
 import org.aion.avm.core.AvmImpl;
 import org.aion.avm.core.CommonAvmFactory;
 import org.aion.fastvm.FastVirtualMachine;
@@ -66,7 +67,7 @@ public final class VmFactoryImplementation implements VirtualMachineManager {
         }
 
         // initialize the Avm. This buildAvmInstance method already calls start() for us.
-        this.aionVirtualMachine = CommonAvmFactory.buildAvmInstance(null);
+        this.aionVirtualMachine = CommonAvmFactory.buildAvmInstanceForConfiguration(new AionCapabilities(), new AvmConfiguration());
         this.state = MachineState.ALL_MACHINES_LIVE;
     }
 
@@ -95,11 +96,8 @@ public final class VmFactoryImplementation implements VirtualMachineManager {
 
         switch (request) {
             case FVM:
-                FastVirtualMachine fvm = new FastVirtualMachine();
-                fvm.setKernelInterface(kernel);
-                return fvm;
+                return new FastVirtualMachine();
             case AVM:
-                this.aionVirtualMachine.setKernelInterface(kernel);
                 return this.aionVirtualMachine;
             default:
                 throw new UnsupportedOperationException("Unsupported VM request.");

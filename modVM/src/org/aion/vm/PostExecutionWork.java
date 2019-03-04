@@ -1,7 +1,7 @@
 package org.aion.vm;
 
-import org.aion.base.db.IRepository;
-import org.aion.base.db.IRepositoryCache;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.zero.types.AionTransaction;
@@ -39,8 +39,8 @@ public interface PostExecutionWork {
      * @return The amount of energy that this transaction uses in its block.
      */
     long doPostExecutionWork(
-            IRepository repository,
-            IRepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
+            Repository repository,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
             AionTxExecSummary summary,
             AionTransaction transaction,
             long blockEnergyRemaining);

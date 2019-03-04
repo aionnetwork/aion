@@ -3,7 +3,6 @@ package org.aion.zero.impl;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import org.aion.base.util.ExecutorPipeline;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.types.AionBlock;

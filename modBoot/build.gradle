@@ -1,7 +1,9 @@
 ext.moduleName = 'aion.boot'
 
 dependencies {
-    compile project(':modAionBase')
+    compile 'network.aion:vm-api4j:0.4.0'
+    compile 'network.aion:util4j:0.4.0'
+
     compile project(':modCrypto')
     compile project(':modApiServer')
     compile project(':modAionImpl')
@@ -11,8 +13,6 @@ dependencies {
     compile project(':modMcf')
     compile project(':modTxPoolImpl')
     compile project(':3rdParty.libnzmq')
-    compile 'com.madgag.spongycastle:prov:1.58.0.0'
-    compile 'com.madgag.spongycastle:core:1.58.0.0'
     compile 'org.slf4j:slf4j-api:1.7.25'
     
     testCompile 'junit:junit:4.12'
