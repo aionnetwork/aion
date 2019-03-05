@@ -12,7 +12,7 @@ dependencies {
     compile 'com.madgag.spongycastle:core:1.58.0.0'
 
     testCompile project(':modCrypto')
-    testCompile project(':modRlp')
+    testCompile 'network.aion:rlp4j:0.4.0'
     testCompile project(':modMcf')
     testCompile project(':modAion')
     testCompile 'junit:junit:4.12'

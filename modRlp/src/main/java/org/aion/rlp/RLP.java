@@ -259,27 +259,15 @@ public class RLP {
                 }
             }
         } catch (Exception e) {
-
-            // Only shown first 4K data
-            int length = endPos - startPos;
-            if (length > 4096) {
-                length = 4096;
-            }
-
             throw new RuntimeException(
                     "RLP wrong encoding ("
                             + Hex.toHexString(msgData, startPos, endPos - startPos > 1024 ? 1024 : endPos - startPos)
                             + ")",
                     e);
         } catch (OutOfMemoryError e) {
-            // Only shown first 4K data
-            int length = endPos - startPos;
-            if (length > 4096) {
-                length = 4096;
-            }
             throw new RuntimeException(
                     "Invalid RLP (excessive mem allocation while parsing) ("
-                            + Hex.toHexString(msgData, startPos, length)
+                            + Hex.toHexString(msgData, startPos, endPos - startPos)
                             + ")",
                     e);
         }
@@ -353,7 +341,7 @@ public class RLP {
 
     /**
      * Turn Object into its RLP encoded equivalent of a byte-array Support for String, Integer,
-     * BigInteger and Lists of any of these types.
+     * BigInteger and Lists of any of these type.
      *
      * @param input as object or List of objects
      * @return byte[] RLP encoded
