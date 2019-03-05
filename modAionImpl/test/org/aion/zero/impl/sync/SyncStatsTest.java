@@ -91,12 +91,12 @@ public class SyncStatsTest {
     @Test
     public void testTotalRequestsToPeersStat() {
         List<String> peers = new ArrayList<>(this.peers);
-        while (peers.size() < 4) {
+        while (peers.size() < 7) {
             peers.add(UUID.randomUUID().toString().substring(0, 6));
         }
 
-        // this tests requires at least 3 peers in the list
-        assertThat(peers.size()).isAtLeast(4);
+        // this tests requires at least 6 peers in the list
+        assertThat(peers.size()).isAtLeast(6);
 
         StandaloneBlockchain chain = bundle.bc;
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
@@ -107,24 +107,33 @@ public class SyncStatsTest {
 
         float processedRequests = 0;
 
-        String firstPeer = peers.get(0);
-        String secondPeer = peers.get(1);
-        String thirdPeer = peers.get(2);
-
         for (String peer : peers) {
             // status requests
             stats.updateTotalRequestsToPeer(peer, RequestType.STATUS);
             processedRequests++;
-
-            if (peer == firstPeer || peer == secondPeer) {
-                // header requests
+            // header requests
+            if (peers.subList(0, 5).contains(peer)) {
                 stats.updateTotalRequestsToPeer(peer, RequestType.HEADERS);
                 processedRequests++;
             }
-
             // bodies requests
-            if (peer == firstPeer) {
+            if (peers.subList(0, 4).contains(peer)) {
                 stats.updateTotalRequestsToPeer(peer, RequestType.BODIES);
+                processedRequests++;
+            }
+            // blocks requests
+            if (peers.subList(0, 3).contains(peer)) {
+                stats.updateTotalRequestsToPeer(peer, RequestType.BLOCKS);
+                processedRequests++;
+            }
+            // receipts requests
+            if (peers.subList(0, 2).contains(peer)) {
+                stats.updateTotalRequestsToPeer(peer, RequestType.RECEIPTS);
+                processedRequests++;
+            }
+            // trieData requests
+            if (peer == peers.get(0)) {
+                stats.updateTotalRequestsToPeer(peer, RequestType.TRIE_DATA);
                 processedRequests++;
             }
         }
@@ -134,20 +143,37 @@ public class SyncStatsTest {
         // makes sure no additional peers were created
         assertThat(reqToPeers.size()).isEqualTo(peers.size());
 
+        String firstPeer = peers.get(0);
+        String secondPeer = peers.get(1);
+        String thirdPeer = peers.get(2);
+        String fourthPeer = peers.get(3);
+        String fifthPeer = peers.get(4);
+        String sixthPeer = peers.get(5);
+
         // by design (the updates above are not symmetrical)
+        reqToPeers.get(peers.get(0));
         assertThat(reqToPeers.get(firstPeer)).isGreaterThan(reqToPeers.get(secondPeer));
-        assertThat(reqToPeers.get(firstPeer)).isEqualTo(3 / processedRequests);
+        assertThat(reqToPeers.get(firstPeer)).isEqualTo(6 / processedRequests);
 
         assertThat(reqToPeers.get(secondPeer)).isGreaterThan(reqToPeers.get(thirdPeer));
-        assertThat(reqToPeers.get(secondPeer)).isEqualTo(2 / processedRequests);
+        assertThat(reqToPeers.get(secondPeer)).isEqualTo(5 / processedRequests);
 
-        assertThat(reqToPeers.get(thirdPeer)).isEqualTo(1 / processedRequests);
+        assertThat(reqToPeers.get(thirdPeer)).isGreaterThan(reqToPeers.get(fourthPeer));
+        assertThat(reqToPeers.get(thirdPeer)).isEqualTo(4 / processedRequests);
 
-        for (String otherPeers : peers.subList(3, peers.size())) {
-            assertThat(reqToPeers.get(otherPeers)).isEqualTo(reqToPeers.get(thirdPeer));
+        assertThat(reqToPeers.get(fourthPeer)).isGreaterThan(reqToPeers.get(fifthPeer));
+        assertThat(reqToPeers.get(fourthPeer)).isEqualTo(3 / processedRequests);
+
+        assertThat(reqToPeers.get(fifthPeer)).isGreaterThan(reqToPeers.get(sixthPeer));
+        assertThat(reqToPeers.get(fifthPeer)).isEqualTo(2 / processedRequests);
+
+        assertThat(reqToPeers.get(sixthPeer)).isEqualTo(1 / processedRequests);
+
+        for (String otherPeers : peers.subList(6, peers.size())) {
+            assertThat(reqToPeers.get(otherPeers)).isEqualTo(reqToPeers.get(sixthPeer));
         }
 
-        int blocks = 3;
+        int blocks = 6;
 
         float lastPercentage = (float) 1;
         float diffThreshold = (float) 0.01;
@@ -164,32 +190,39 @@ public class SyncStatsTest {
     @Test
     public void testTotalRequestsToPeersStatDisabled() {
         List<String> peers = new ArrayList<>(this.peers);
-        while (peers.size() < 4) {
+        while (peers.size() < 7) {
             peers.add(UUID.randomUUID().toString().substring(0, 6));
         }
 
         // this tests requires at least 3 peers in the list
-        assertThat(peers.size()).isAtLeast(4);
+        assertThat(peers.size()).isAtLeast(6);
 
         StandaloneBlockchain chain = bundle.bc;
         // disables the stats
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
 
-        String firstPeer = peers.get(0);
-        String secondPeer = peers.get(1);
-
         for (String peer : peers) {
             // status requests
             stats.updateTotalRequestsToPeer(peer, RequestType.STATUS);
-
-            if (peer == firstPeer || peer == secondPeer) {
-                // header requests
+            // header requests
+            if (peers.subList(0, 5).contains(peer)) {
                 stats.updateTotalRequestsToPeer(peer, RequestType.HEADERS);
             }
-
             // bodies requests
-            if (peer == firstPeer) {
+            if (peers.subList(0, 4).contains(peer)) {
                 stats.updateTotalRequestsToPeer(peer, RequestType.BODIES);
+            }
+            // blocks requests
+            if (peers.subList(0, 3).contains(peer)) {
+                stats.updateTotalRequestsToPeer(peer, RequestType.BLOCKS);
+            }
+            // receipts requests
+            if (peers.subList(0, 2).contains(peer)) {
+                stats.updateTotalRequestsToPeer(peer, RequestType.RECEIPTS);
+            }
+            // trieData requests
+            if (peer == peers.get(0)) {
+                stats.updateTotalRequestsToPeer(peer, RequestType.TRIE_DATA);
             }
         }
 
