@@ -778,7 +778,8 @@ public class ApiWeb3Aion extends ApiAion {
                         txParams.getValue().toByteArray(),
                         txParams.getData(),
                         txParams.getNrg(),
-                        txParams.getNrgPrice());
+                        txParams.getNrgPrice(),
+                        txParams.getType());
 
         AionTxReceipt receipt = this.ac.callConstant(tx, b);
 
