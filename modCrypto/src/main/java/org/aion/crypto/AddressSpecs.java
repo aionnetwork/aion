@@ -47,7 +47,6 @@ public class AddressSpecs {
                         b.get(i)
                                 ? Character.toUpperCase(caddr[i])
                                 : Character.toLowerCase(caddr[i]);
-                continue;
             }
         }
         return Optional.of(String.valueOf(caddr));

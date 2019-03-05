@@ -1,4 +1,4 @@
-AION_HOME=../..
+AION_HOME=../../../..
 
 JAVA_HOME=/usr/lib/jvm/jdk-11.0.1
 

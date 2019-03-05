@@ -72,7 +72,7 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class ECKeySecp256k1 implements ECKey, Serializable {
 
-    private static final Logger logger = LoggerFactory.getLogger(ECKeySecp256k1.class);
+    private static final Logger logger = LoggerFactory.getLogger("CRYPTO");
 
     public static final BigInteger ETH_SECP256K1N =
             new BigInteger("fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141", 16);
@@ -85,7 +85,8 @@ public class ECKeySecp256k1 implements ECKey, Serializable {
     /**
      * Equal to CURVE.getN().shiftRight(1), used for canonicalising the S value of a signature.
      * ECDSA signatures are mutable in the sense that for a given (R, S) pair, then both (R, S) and
-     * (R, N - S mod N) are valid signatures. Canonical signatures are those where 1 <= S <= N/2
+     * (R, N - S mod N) are valid signatures. Canonical signatures are those where 1 less equal then
+     * S less equal then N/2
      *
      * <p>See
      * https://github.com/bitcoin/bips/blob/master/bip-0062.mediawiki#Low_S_values_in_signatures
@@ -114,7 +115,7 @@ public class ECKeySecp256k1 implements ECKey, Serializable {
     // TODO: Redesign this class to use consistent internals and more efficient
     // serialization.
     private final PrivateKey privKey;
-    protected final ECPoint pub;
+    private final ECPoint pub;
 
     // the Java Cryptographic Architecture provider to use for Signature
     // this is set along with the PrivateKey privKey and must be compatible
@@ -385,7 +386,7 @@ public class ECKeySecp256k1 implements ECKey, Serializable {
 
     /**
      * Returns public key bytes from the given private key. To convert a byte array into a
-     * BigInteger, use <tt> new BigInteger(1, bytes);</tt>
+     * BigInteger, use <code> new BigInteger(1, bytes);</code>
      *
      * @param privKey -
      * @param compressed -
@@ -810,7 +811,7 @@ public class ECKeySecp256k1 implements ECKey, Serializable {
         }
     }
 
-    /** @TODO: yao Verify from Base64 encoded signature Switch to DER encoding in future */
+    /** TODO: yao Verify from Base64 encoded signature Switch to DER encoding in future */
     public boolean verify(byte[] messageHash, String signatureBase64) throws SignatureException {
         byte[] signatureEncoded;
         try {
@@ -888,18 +889,13 @@ public class ECKeySecp256k1 implements ECKey, Serializable {
     public boolean isPubKeyCanonical(byte[] pubkey) {
         if (pubkey[0] == 0x04) {
             // Uncompressed pubkey
-            if (pubkey.length != 65) {
-                return false;
-            }
+            return pubkey.length == 65;
         } else if (pubkey[0] == 0x02 || pubkey[0] == 0x03) {
             // Compressed pubkey
-            if (pubkey.length != 33) {
-                return false;
-            }
+            return pubkey.length == 33;
         } else {
             return false;
         }
-        return true;
     }
 
     /**

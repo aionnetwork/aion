@@ -4,8 +4,8 @@ dependencies {
     compile 'network.aion:vm-api4j:0.4.0'
     compile 'network.aion:util4j:0.4.0'
     compile 'network.aion:log4j:0.4.0'
+    compile 'network.aion:crypto4j:0.4.0'
 
-    compile project(':modCrypto')
     compile project(':modApiServer')
     compile project(':modAionImpl')
     compile project(':modEvtMgr')

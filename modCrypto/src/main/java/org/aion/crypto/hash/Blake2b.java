@@ -63,7 +63,7 @@ public interface Blake2b {
         /** max tree inner length value */
         int MAX_TREE_INNER_LEN = 0xFF;
 
-        /** initialization values map ref-Spec IV[i] -> slice iv[i*8:i*8+7] */
+        /** initialization values map ref-Spec IV[i] to slice iv[i*8:i*8+7] */
         long[] IV = {
             0x6a09e667f3bcc908L,
             0xbb67ae8584caa73bL,
