@@ -8,5 +8,8 @@ package org.aion.zero.impl.sync;
 public enum RequestType {
     STATUS,
     HEADERS,
-    BODIES
+    BODIES,
+    BLOCKS,
+    RECEIPTS,
+    TRIE_DATA
 }
