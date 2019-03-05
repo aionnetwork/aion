@@ -7,8 +7,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import org.aion.util.conversions.Hex;
 import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
 
 public class ValueTest {
 
