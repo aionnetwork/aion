@@ -472,6 +472,10 @@ public class SyncStatsTest {
         stats.updateRequestTime("dummy", System.nanoTime(), RequestType.STATUS);
         stats.updateRequestTime("dummy", System.nanoTime(), RequestType.HEADERS);
         stats.updateRequestTime("dummy", System.nanoTime(), RequestType.BODIES);
+        stats.updateRequestTime("dummy", System.nanoTime(), RequestType.BLOCKS);
+        stats.updateRequestTime("dummy", System.nanoTime(), RequestType.RECEIPTS);
+        stats.updateRequestTime("dummy", System.nanoTime(), RequestType.TRIE_DATA);
+
         assertThat(stats.getResponseStats()).isNull();
         assertThat(stats.dumpResponseStats()).isEmpty();
 
@@ -481,6 +485,10 @@ public class SyncStatsTest {
         stats.updateResponseTime("dummy", System.nanoTime(), RequestType.STATUS);
         stats.updateResponseTime("dummy", System.nanoTime(), RequestType.HEADERS);
         stats.updateResponseTime("dummy", System.nanoTime(), RequestType.BODIES);
+        stats.updateResponseTime("dummy", System.nanoTime(), RequestType.BLOCKS);
+        stats.updateResponseTime("dummy", System.nanoTime(), RequestType.RECEIPTS);
+        stats.updateResponseTime("dummy", System.nanoTime(), RequestType.TRIE_DATA);
+
         assertThat(stats.getResponseStats()).isNull();
         assertThat(stats.dumpResponseStats()).isEmpty();
     }
@@ -491,7 +499,7 @@ public class SyncStatsTest {
         long time;
         int entries = 3;
         // should be updated if more message types are added
-        int requestTypes = 3;
+        int requestTypes = 6;
 
         for (String nodeId : peers) {
             int count = 1;
@@ -511,14 +519,26 @@ public class SyncStatsTest {
                 stats.updateRequestTime(nodeId, time, RequestType.BODIES);
                 stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.BODIES);
 
+                // bodies -> type of request 4
+                stats.updateRequestTime(nodeId, time, RequestType.BLOCKS);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.BLOCKS);
+
+                // bodies -> type of request 5
+                stats.updateRequestTime(nodeId, time, RequestType.RECEIPTS);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.RECEIPTS);
+
+                // bodies -> type of request 6
+                stats.updateRequestTime(nodeId, time, RequestType.TRIE_DATA);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.TRIE_DATA);
+
                 count++;
             }
         }
 
         Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
         for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
-            // for entries for each: «all» «status» «headers» «bodies»
-            assertThat(e.getValue().size()).isEqualTo(4);
+            // 7 entries for each: «all» «status» «headers» «bodies» «blocks» «receipts» «trie_data»
+            assertThat(e.getValue().size()).isEqualTo(7);
 
             if (e.getKey().equals("overall")) {
                 for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
@@ -577,8 +597,8 @@ public class SyncStatsTest {
 
         Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
         for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
-            // for entries for each: «all» «status» «headers» «bodies»
-            assertThat(e.getValue().size()).isEqualTo(4);
+            // 7 entries for each: «all» «status» «headers» «bodies» «blocks» «receipts» «trie_data»
+            assertThat(e.getValue().size()).isEqualTo(7);
 
             if (e.getKey().equals("overall")) {
                 for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
@@ -636,8 +656,8 @@ public class SyncStatsTest {
 
         Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
         for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
-            // for entries for each: «all» «status» «headers» «bodies»
-            assertThat(e.getValue().size()).isEqualTo(4);
+            // 7 entries for each: «all» «status» «headers» «bodies» «blocks» «receipts» «trie_data»
+            assertThat(e.getValue().size()).isEqualTo(7);
 
             if (e.getKey().equals("overall")) {
                 for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
@@ -695,8 +715,8 @@ public class SyncStatsTest {
 
         Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
         for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
-            // for entries for each: «all» «status» «headers» «bodies»
-            assertThat(e.getValue().size()).isEqualTo(4);
+            // 7 entries for each: «all» «status» «headers» «bodies» «blocks» «receipts» «trie_data»
+            assertThat(e.getValue().size()).isEqualTo(7);
 
             if (e.getKey().equals("overall")) {
                 for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
@@ -715,6 +735,183 @@ public class SyncStatsTest {
             } else {
                 for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
                     if (sub.getKey().equals("all") || sub.getKey().equals("bodies")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            }
+        }
+
+        // System.out.println(stats.dumpResponseStats());
+    }
+
+    @Test
+    public void testResponseStatsByPeersBlocksOnly() {
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+
+        for (String nodeId : peers) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // blocks
+                stats.updateRequestTime(nodeId, time, RequestType.BLOCKS);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.BLOCKS);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // 7 entries for each: «all» «status» «headers» «bodies» «blocks» «receipts» «trie_data»
+            assertThat(e.getValue().size()).isEqualTo(7);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("blocks")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            } else {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("blocks")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            }
+        }
+
+        // System.out.println(stats.dumpResponseStats());
+    }
+
+    @Test
+    public void testResponseStatsByPeersReceiptsOnly() {
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+
+        for (String nodeId : peers) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // blocks
+                stats.updateRequestTime(nodeId, time, RequestType.RECEIPTS);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.RECEIPTS);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // 7 entries for each: «all» «status» «headers» «bodies» «blocks» «receipts» «trie_data»
+            assertThat(e.getValue().size()).isEqualTo(7);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("receipts")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            } else {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("receipts")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            }
+        }
+
+        // System.out.println(stats.dumpResponseStats());
+    }
+
+    @Test
+    public void testResponseStatsByPeersTrieDataOnly() {
+        SyncStats stats = new SyncStats(0L, true);
+        long time;
+        int entries = 3;
+
+        for (String nodeId : peers) {
+            int count = 1;
+
+            while (count <= entries) {
+                time = System.nanoTime();
+
+                // blocks
+                stats.updateRequestTime(nodeId, time, RequestType.TRIE_DATA);
+                stats.updateResponseTime(nodeId, time + 1_000_000, RequestType.TRIE_DATA);
+
+                count++;
+            }
+        }
+
+        Map<String, Map<String, Pair<Double, Integer>>> responseStats = stats.getResponseStats();
+        for (Map.Entry<String, Map<String, Pair<Double, Integer>>> e : responseStats.entrySet()) {
+            // 7 entries for each: «all» «status» «headers» «bodies» «blocks» «receipts» «trie_data»
+            assertThat(e.getValue().size()).isEqualTo(7);
+
+            if (e.getKey().equals("overall")) {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("trieData")) {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(peers.size() * entries);
+                    } else {
+                        // check average
+                        assertThat(sub.getValue().getLeft()).isEqualTo(0d);
+                        // check entries
+                        assertThat(sub.getValue().getRight()).isEqualTo(0);
+                    }
+                }
+            } else {
+                for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("trieData")) {
                         // check average
                         assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
                         // check entries
