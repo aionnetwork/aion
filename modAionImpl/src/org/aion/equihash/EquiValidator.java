@@ -148,14 +148,14 @@ public class EquiValidator {
             for (int i = 0; i < loopLen / 2; i++) {
 
                 if (!hasCollision(X[i * 2], X[i * 2 + 1], collisionByteLength)) {
-                    LOG.error("Invalid SolutionImpl: Collision not present");
+                    LOG.error("Invalid Solution: Collision not present");
                     System.out.println("No collision");
                     return false;
                 }
 
                 if (EquiUtils.indicesBefore(X[i * 2 + 1], X[i * 2], hashLen, lenIndices)) {
                     System.out.println("Incorrect order");
-                    LOG.error("Invalid SolutionImpl: Index tree incorrecly ordered");
+                    LOG.error("Invalid Solution: Index tree incorrecly ordered");
                     return false;
                 }
                 if (!distinctIndices(X[i * 2 + 1], X[i * 2], hashLen, lenIndices)) {

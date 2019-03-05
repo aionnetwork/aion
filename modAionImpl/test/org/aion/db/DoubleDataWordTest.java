@@ -5,7 +5,11 @@ import static org.junit.Assert.assertNull;
 
 import java.util.Properties;
 import java.util.Random;
-import org.aion.interfaces.db.*;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.interfaces.db.Repository;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
 import org.aion.crypto.ECKeyFac;

@@ -134,7 +134,8 @@ public class AionTransaction extends AbstractTransaction {
         this.value = tx.get(RLP_TX_VALUE).getRLPData();
         this.data = tx.get(RLP_TX_DATA).getRLPData();
 
-        if (tx.get(RLP_TX_TO).getRLPData() == null) {
+        byte[] rlpTo = tx.get(RLP_TX_TO).getRLPData();
+        if (rlpTo == null || rlpTo.length == 0) {
             this.to = null;
         } else {
             this.to = Address.wrap(tx.get(RLP_TX_TO).getRLPData());

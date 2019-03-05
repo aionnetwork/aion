@@ -8,6 +8,7 @@ import static org.aion.util.conversions.Hex.toHexString;
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.aion.crypto.HashUtil;
+import org.aion.interfaces.block.Solution;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.util.file.NativeLoader;
@@ -76,7 +77,7 @@ public class Equihash {
     /*
      * Mine for a single nonce
      */
-    public SolutionImpl mine(IAionBlock block, byte[] nonce) {
+    public AionPowSolution mine(IAionBlock block, byte[] nonce) {
 
         A0BlockHeader updateHeader = new A0BlockHeader(block.getHeader());
 
@@ -110,7 +111,7 @@ public class Equihash {
 
             // Found a valid solution
             if (isValidBlock(validationBytes, target)) {
-                return new SolutionImpl(block, nonce, minimal);
+                return new AionPowSolution(block, nonce, minimal);
             }
         }
 

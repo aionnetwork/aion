@@ -283,7 +283,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private AionPendingStateImpl(CfgAion _cfgAion, AionRepositoryImpl _repository) {
 
-        this.repository = (Repository) _repository;
+        this.repository = _repository;
 
         this.isSeed = _cfgAion.getConsensus().isSeed();
 

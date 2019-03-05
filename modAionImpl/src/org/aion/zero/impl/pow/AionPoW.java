@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import org.aion.equihash.SolutionImpl;
+import org.aion.equihash.AionPowSolution;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.IHandler;
@@ -72,7 +72,7 @@ public class AionPoW {
                     createNewBlockTemplate();
                 } else if (e.getEventType() == IHandler.TYPE.CONSENSUS.getValue()
                         && e.getCallbackType() == EventConsensus.CALLBACK.ON_SOLUTION.getValue()) {
-                    processSolution((SolutionImpl) e.getFuncArgs().get(0));
+                    processSolution((AionPowSolution) e.getFuncArgs().get(0));
                 } else if (e.getEventType() == IHandler.TYPE.POISONPILL.getValue()) {
                     go = false;
                 }
@@ -191,7 +191,7 @@ public class AionPoW {
      *
      * @param solution The generated equihash solution
      */
-    protected synchronized void processSolution(SolutionImpl solution) {
+    protected synchronized void processSolution(AionPowSolution solution) {
         if (!shutDown.get()) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Best block num [{}]", blockchain.getBestBlock().getNumber());

@@ -326,7 +326,6 @@ task ciBuild {
     def ciModules = [
             'aion_fastvm',
             'modAion',
-            'modAionBase',
             'modAionImpl',
             'modApiServer',
             'modBoot',

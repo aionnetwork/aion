@@ -260,7 +260,7 @@ public class AionHub {
     }
 
     public Repository getRepository() {
-        return (Repository) repository;
+        return repository;
     }
 
     public IAionBlockchain getBlockchain() {
@@ -339,7 +339,7 @@ public class AionHub {
                 }
             }
 
-            recovered = this.blockchain.recoverWorldState((Repository) this.repository, bestBlock);
+            recovered = this.blockchain.recoverWorldState(this.repository, bestBlock);
 
             if (!this.repository.isValidRoot(bestBlock.getStateRoot())) {
                 // reverting back one block

@@ -9,13 +9,13 @@ import org.aion.zero.types.IAionBlock;
  *
  * @author Ross Kitsis (ross@nuco.io)
  */
-public class SolutionImpl implements Solution {
+public class AionPowSolution implements Solution {
 
     private final IAionBlock block;
     private final byte[] nonce;
     private final byte[] solution;
 
-    public SolutionImpl(IAionBlock block, byte[] nonce, byte[] solution) {
+    public AionPowSolution(IAionBlock block, byte[] nonce, byte[] solution) {
 
         this.block = block;
         this.nonce = nonce;

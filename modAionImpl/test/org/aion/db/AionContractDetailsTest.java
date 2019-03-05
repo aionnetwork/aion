@@ -84,6 +84,7 @@ public class AionContractDetailsTest {
         contractDetails.setCode(code);
         contractDetails.put(new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
         contractDetails.put(new DataWordImpl(key_2).toWrapper(), new DataWordImpl(val_2).toWrapper());
+        contractDetails.setAddress(Address.ZERO_ADDRESS());
 
         byte[] data = contractDetails.getEncoded();
 

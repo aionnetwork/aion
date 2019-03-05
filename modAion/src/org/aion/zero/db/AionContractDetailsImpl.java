@@ -43,7 +43,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
     private AionContractDetailsImpl(
             Address address, SecureTrie storageTrie, Map<ByteArrayWrapper, byte[]> codes) {
-        this.address = address;
+        if (address == null) {
+            throw new IllegalArgumentException("Address can not be null!");
+        } else {
+            this.address = address;
+        }
         this.storageTrie = storageTrie;
         setCodes(codes);
     }
@@ -151,8 +155,8 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         RLPItem storageRoot = (RLPItem) rlpList.get(2);
         RLPElement code = rlpList.get(4);
 
-        if (address.getRLPData() == null || address.getRLPData().length == 0) {
-            this.address = null;
+        if (address == null || address.getRLPData() == null || address.getRLPData().length != Address.SIZE) {
+            throw new IllegalArgumentException("rlp decode error.");
         } else {
             this.address = Address.wrap(address.getRLPData());
         }
@@ -191,7 +195,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
 
-            byte[] rlpAddress = RLP.encodeElement(address == null ? null : address.toBytes());
+            byte[] rlpAddress = RLP.encodeElement(address.toBytes());
             byte[] rlpIsExternalStorage = RLP.encodeByte((byte) (externalStorage ? 1 : 0));
             byte[] rlpStorageRoot =
                     RLP.encodeElement(
@@ -230,6 +234,9 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
      */
     @Override
     public void setAddress(Address address) {
+        if (address == null) {
+            throw new IllegalArgumentException("Address can not be null!");
+        }
         this.address = address;
         this.rlpEncoded = null;
     }
@@ -326,8 +333,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         aionContractDetailsCopy.setCodes(getDeepCopyOfCodes());
         aionContractDetailsCopy.setDirty(this.isDirty());
         aionContractDetailsCopy.setDeleted(this.isDeleted());
-        aionContractDetailsCopy.address =
-                (this.address == null) ? null : new Address(this.address.toBytes());
+        aionContractDetailsCopy.address = new Address(this.address.toBytes());
         aionContractDetailsCopy.rlpEncoded =
                 (this.rlpEncoded == null)
                         ? null
