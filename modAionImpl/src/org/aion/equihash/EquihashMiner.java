@@ -20,6 +20,7 @@ import org.aion.evtmgr.impl.callback.EventCallback;
 import org.aion.evtmgr.impl.es.EventExecuteService;
 import org.aion.evtmgr.impl.evt.EventConsensus;
 import org.aion.evtmgr.impl.evt.EventMiner;
+import org.aion.interfaces.block.Solution;
 import org.aion.mcf.mine.AbstractMineRunner;
 import org.aion.util.others.MAF;
 import org.aion.zero.impl.blockchain.AionImpl;
@@ -192,7 +193,7 @@ public class EquihashMiner extends AbstractMineRunner<AionBlock> {
                 nonce = new byte[32];
                 ThreadLocalRandom.current().nextBytes(nonce);
 
-                SolutionImpl s = miner.mine(block, nonce);
+                Solution s = miner.mine(block, nonce);
                 if (s != null) {
                     IEvent ev = new EventConsensus(EventConsensus.CALLBACK.ON_SOLUTION);
                     ev.setFuncArgs(Collections.singletonList(s));

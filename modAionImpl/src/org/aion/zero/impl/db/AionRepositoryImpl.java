@@ -15,7 +15,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.aion.interfaces.db.*;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
@@ -911,7 +915,7 @@ public class AionRepositoryImpl
                 new AionRepositoryImpl(
                         new RepositoryConfigImpl(
                                 config.getDatabasePath(),
-                                (DetailsProvider) ContractDetailsAion.getInstance(),
+                                ContractDetailsAion.getInstance(),
                                 config.getDb()));
     }
 }

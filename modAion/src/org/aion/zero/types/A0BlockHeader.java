@@ -83,10 +83,10 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
 
         // CoinBase
         byte[] data = rlpHeader.get(RPL_BH_COINBASE).getRLPData();
-        this.coinbase =
-                (data == null)
-                        ? null
-                        : Address.wrap(rlpHeader.get(RPL_BH_COINBASE).getRLPData());
+        if (data == null || data.length != Address.SIZE) {
+            throw new IllegalArgumentException("Coinbase can not be null!");
+        }
+        this.coinbase = Address.wrap(data);
 
         // StateRoot
         this.stateRoot = rlpHeader.get(RPL_BH_STATEROOT).getRLPData();
@@ -156,7 +156,11 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
         System.arraycopy(toCopy.getParentHash(), 0, this.parentHash, 0, this.parentHash.length);
 
         // Copy elements in coinbase
-        this.coinbase = toCopy.coinbase.clone();
+        if (toCopy.coinbase == null) {
+            throw new IllegalArgumentException("Coinbase can not be null!");
+        } else {
+            this.coinbase = toCopy.coinbase.clone();
+        }
 
         // Copy stateroot
         this.stateRoot = new byte[toCopy.getStateRoot().length];
@@ -215,7 +219,11 @@ public class A0BlockHeader extends AbstractBlockHeader implements PowBlockHeader
             byte[] nonce,
             byte[] solution) {
         this.version = version;
-        this.coinbase = (Address) coinbase;
+        if (coinbase == null) {
+            throw new IllegalArgumentException("Coinbase can not be null!");
+        } else {
+            this.coinbase = coinbase;
+        }
         this.parentHash = parentHash;
         this.logsBloom = logsBloom;
         this.difficulty = difficulty;
