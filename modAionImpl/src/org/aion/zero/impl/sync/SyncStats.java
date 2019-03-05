@@ -159,6 +159,15 @@ public final class SyncStats {
                         case BODIES:
                             current.incBodies();
                             break;
+                        case BLOCKS:
+                            current.incBlocks();
+                            break;
+                        case RECEIPTS:
+                            current.incRecepts();
+                            break;
+                        case TRIE_DATA:
+                            current.incTrieData();
+                            break;
                     }
                 }
             } finally {
@@ -175,7 +184,7 @@ public final class SyncStats {
      *     requests made by the node
      */
     Map<String, Float> getPercentageOfRequestsToPeers() {
-        if (responsesEnabled) {
+        if (requestsEnabled) {
             requestsLock.lock();
 
             try {
