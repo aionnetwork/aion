@@ -140,7 +140,7 @@ public class Curve25519 {
      *   h  [in]  signature hash
      *   P  [in]  public key
      */
-    public static final void verify(byte[] Y, byte[] v, byte[] h, byte[] P) {
+    public static void verify(byte[] Y, byte[] v, byte[] h, byte[] P) {
         /* Y = v abs(P) + h G  */
         byte[] d = new byte[32];
         long10[] p = new long10[] {new long10(), new long10()},

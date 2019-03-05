@@ -6,17 +6,18 @@ dependencies {
     compile 'network.aion:vm-api4j:0.4.0'
     compile 'network.aion:util4j:0.4.0'
     compile 'network.aion:log4j:0.4.0'
-
-    compile project(':modTxPool')
     compile 'com.madgag.spongycastle:prov:1.58.0.0'
     compile 'com.madgag.spongycastle:core:1.58.0.0'
 
-    testCompile project(':modCrypto')
+    compile project(':modTxPool')
+
+    testCompile 'network.aion:crypto4j:0.4.0'
     testCompile 'network.aion:rlp4j:0.4.0'
-    testCompile project(':modMcf')
-    testCompile project(':modAion')
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-core:1.3'
+
+    testCompile project(':modMcf')
+    testCompile project(':modAion')
 }
 
 // Skip unit tests when doing build task; unit tests are all mixed up with 

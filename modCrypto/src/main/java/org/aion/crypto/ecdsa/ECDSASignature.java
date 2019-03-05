@@ -61,7 +61,7 @@ public class ECDSASignature implements ISignature {
      * @param r
      * @param s
      */
-    public ECDSASignature(BigInteger r, BigInteger s) {
+    ECDSASignature(BigInteger r, BigInteger s) {
         this.r = r;
         this.s = s;
     }
@@ -136,9 +136,7 @@ public class ECDSASignature implements ISignature {
     }
 
     public static ECDSASignature decodeFromDER(byte[] bytes) {
-        ASN1InputStream decoder = null;
-        try {
-            decoder = new ASN1InputStream(bytes);
+        try (ASN1InputStream decoder = new ASN1InputStream(bytes)) {
             DLSequence seq = (DLSequence) decoder.readObject();
             if (seq == null) {
                 throw new RuntimeException("Reached past end of ASN.1 stream.");
@@ -157,13 +155,6 @@ public class ECDSASignature implements ISignature {
             return new ECDSASignature(r.getPositiveValue(), s.getPositiveValue());
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            if (decoder != null) {
-                try {
-                    decoder.close();
-                } catch (IOException x) {
-                }
-            }
         }
     }
 
@@ -177,7 +168,7 @@ public class ECDSASignature implements ISignature {
      *
      * @return -
      */
-    public ECDSASignature toCanonicalised() {
+    ECDSASignature toCanonicalised() {
         if (s.compareTo(HALF_CURVE_ORDER) > 0) {
             // The order of the curve is the number of valid points that exist
             // on that curve. If S is in the upper

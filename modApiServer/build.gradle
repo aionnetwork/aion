@@ -17,6 +17,7 @@ dependencies {
     compile 'network.aion:vm-api4j:0.4.0'
     compile 'network.aion:util4j:0.4.0'
     compile 'network.aion:log4j:0.4.0'
+    compile 'network.aion:crypto4j:0.4.0'
 
     compile project(':modAion')
     compile project(':modAionImpl')
@@ -25,7 +26,6 @@ dependencies {
     compile project(':modP2p')
     compile project(':modEvtMgr')
     compile project(':modEvtMgrImpl')
-    compile project(':modCrypto')
     compile project(':3rdParty.libnzmq')
     compile 'org.json:json:20180813'
     compile group: 'com.google.protobuf', name: 'protobuf-java', version: '3.5.0'
