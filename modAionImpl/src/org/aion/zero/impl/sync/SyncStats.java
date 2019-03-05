@@ -175,7 +175,7 @@ public final class SyncStats {
      *     requests made by the node
      */
     Map<String, Float> getPercentageOfRequestsToPeers() {
-        if (responsesEnabled) {
+        if (requestsEnabled) {
             requestsLock.lock();
 
             try {
