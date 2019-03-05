@@ -27,9 +27,9 @@
     <net>
         <id>31</id>
         <nodes>
-            <node>p2p://f66d1000-26c8-5ea6-b973-178f246b33b1@138.91.123.106:30303</node>
-            <node>p2p://f66d2000-9805-55be-96a3-f170410a2898@23.100.52.181:30303</node>
-            <node>p2p://f66d3000-2581-5979-bf8a-6196dbcd29b9@13.91.127.35:30303</node>
+            <node>p2p://e66d1001-16c9-4ea7-a974-078f246b33b2@138.91.123.106:30303</node>
+            <node>p2p://e66d2001-8806-45bf-86a4-e170410a2899@23.100.52.181:30303</node>
+            <node>p2p://e66d3001-1582-497a-af8b-5196dbcd29ba@13.91.127.35:30303</node>
         </nodes>
         <p2p>
             <ip>0.0.0.0</ip>
@@ -89,9 +89,6 @@
         <P2P>INFO</P2P>
         <GUI>INFO</GUI>
     </log>
-    <vm>
-        <avm-enabled>true</avm-enabled>
-    </vm>
 </aion>
 
 
