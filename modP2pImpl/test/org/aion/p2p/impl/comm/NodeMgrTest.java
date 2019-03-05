@@ -544,7 +544,7 @@ public class NodeMgrTest {
 
     @Test
     public void testConcurrency() throws InterruptedException {
-        AtomicInteger count = new AtomicInteger(1000);
+        AtomicInteger count = new AtomicInteger(100);
 
         AtomicBoolean start = new AtomicBoolean(false);
 
@@ -562,7 +562,7 @@ public class NodeMgrTest {
                                 e.printStackTrace();
                             }
                             try {
-                                Thread.sleep(r.nextInt(5) + 5);
+                                Thread.sleep(r.nextInt(5) + 20);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -598,7 +598,7 @@ public class NodeMgrTest {
                         () -> {
                             while (start.get()) {
                                 try {
-                                    Thread.sleep(15);
+                                    Thread.sleep(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -623,7 +623,7 @@ public class NodeMgrTest {
                         () -> {
                             while (start.get()) {
                                 try {
-                                    Thread.sleep(15);
+                                    Thread.sleep(100);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -670,7 +670,7 @@ public class NodeMgrTest {
                                 count.getAndDecrement();
 
                                 try {
-                                    Thread.sleep(8);
+                                    Thread.sleep(15);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
