@@ -25,6 +25,7 @@ import org.aion.mcf.config.Cfg;
 import org.aion.mcf.config.CfgSsl;
 import org.aion.mcf.config.CfgSync;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.RecoveryUtils;
@@ -533,7 +534,10 @@ public class Cli {
                                         + "» cannot be converted to a number.");
                         return ERROR;
                     }
+
+                    VirtualMachineProvider.initializeAllVirtualMachines();
                     RecoveryUtils.redoMainChainImport(height);
+                    VirtualMachineProvider.shutdownAllVirtualMachines();
                     return EXIT;
                 }
             }
