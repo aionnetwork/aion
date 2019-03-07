@@ -227,7 +227,7 @@ public class SyncStatsTest {
         }
 
         // ensures still empty
-        assertThat(stats.getPercentageOfRequestsToPeers().isEmpty()).isTrue();
+        assertThat(stats.getPercentageOfRequestsToPeers()).isNull();
     }
 
     @Test

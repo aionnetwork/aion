@@ -9,6 +9,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import org.aion.mcf.config.StatsType;
+import org.aion.zero.impl.sync.statistics.RequestStatsTracker;
 import org.aion.zero.impl.sync.statistics.ResponseStatsTracker;
 import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,9 +24,7 @@ public final class SyncStats {
     private final Lock blockAverageLock = new ReentrantLock();
     private final boolean averageEnabled;
 
-    // Access to this resource is managed by the {@link #requestsLock}.
-    private final Map<String, RequestCounter> requestsToPeers;
-    private final Lock requestsLock;
+    private final RequestStatsTracker requestsTracker;
     private final boolean requestsEnabled;
 
     // Access to these resources is managed by the {@link #seedsLock}.
@@ -68,11 +67,9 @@ public final class SyncStats {
 
         requestsEnabled = showStatistics.contains(StatsType.REQUESTS);
         if (requestsEnabled) {
-            requestsToPeers = new LRUMap<>(maxActivePeers);
-            requestsLock = new ReentrantLock();
+            this.requestsTracker = new RequestStatsTracker(maxActivePeers);
         } else {
-            requestsToPeers = null;
-            requestsLock = null;
+            this.requestsTracker = null;
         }
 
         seedEnabled = showStatistics.contains(StatsType.SEEDS);
@@ -141,81 +138,30 @@ public final class SyncStats {
      */
     public void updateTotalRequestsToPeer(String nodeId, RequestType type) {
         if (requestsEnabled) {
-            requestsLock.lock();
-            try {
-                RequestCounter current = requestsToPeers.get(nodeId);
+            requestsTracker.updateTotalRequestsToPeer(nodeId, type);
+        }
+    }
 
-                if (current == null) {
-                    current = new RequestCounter(type);
-                    requestsToPeers.put(nodeId, current);
-                } else {
-                    switch (type) {
-                        case STATUS:
-                            current.incStatus();
-                            break;
-                        case HEADERS:
-                            current.incHeaders();
-                            break;
-                        case BODIES:
-                            current.incBodies();
-                            break;
-                        case BLOCKS:
-                            current.incBlocks();
-                            break;
-                        case RECEIPTS:
-                            current.incRecepts();
-                            break;
-                        case TRIE_DATA:
-                            current.incTrieData();
-                            break;
-                    }
-                }
-            } finally {
-                requestsLock.unlock();
-            }
+    @VisibleForTesting
+    Map<String, Float> getPercentageOfRequestsToPeers() {
+        if (requestsEnabled) {
+            return requestsTracker.getPercentageOfRequestsToPeers();
+        } else {
+            return null;
         }
     }
 
     /**
-     * Calculates the percentage of requests made to each peer with respect to the total number of
-     * requests made.
+     * Returns a log stream containing statistics about the percentage of requests made to each peer
+     * with respect to the total number of requests made.
      *
-     * @return a hash map in descending order containing peers with underlying percentage of
-     *     requests made by the node
+     * @return log stream with requests statistical data
      */
-    Map<String, Float> getPercentageOfRequestsToPeers() {
+    public String dumpRequestStats() {
         if (requestsEnabled) {
-            requestsLock.lock();
-
-            try {
-                Map<String, Float> percentageReq = new LinkedHashMap<>();
-
-                float totalReq = 0f;
-
-                // if there are any values the total will be != 0 after this
-                for (RequestCounter rc : requestsToPeers.values()) {
-                    totalReq += rc.getTotal();
-                }
-
-                // resources are locked so the requestsToPeers map is unchanged
-                // if we enter this loop the totalReq is not equal to 0
-                for (Map.Entry<String, RequestCounter> entry : requestsToPeers.entrySet()) {
-                    percentageReq.put(entry.getKey(), entry.getValue().getTotal() / totalReq);
-                }
-
-                return percentageReq.entrySet().stream()
-                        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                        .collect(
-                                Collectors.toMap(
-                                        Map.Entry::getKey,
-                                        Map.Entry::getValue,
-                                        (e1, e2) -> e2,
-                                        LinkedHashMap::new));
-            } finally {
-                requestsLock.unlock();
-            }
+            return requestsTracker.dumpRequestStats();
         } else {
-            return Collections.emptyMap();
+            return "";
         }
     }
 
