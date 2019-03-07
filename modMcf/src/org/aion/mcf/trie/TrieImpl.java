@@ -473,7 +473,7 @@ public class TrieImpl implements Trie {
                 || n.length() == 0);
     }
 
-    private Object[] copyNode(Value currentNode) {
+    private static Object[] copyNode(Value currentNode) {
         Object[] itemList = emptyStringSlice(LIST_SIZE);
         for (int i = 0; i < LIST_SIZE; i++) {
             Object cpy = currentNode.get(i).asObj();

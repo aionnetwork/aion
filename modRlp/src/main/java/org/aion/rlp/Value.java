@@ -147,13 +147,14 @@ public class Value {
     public Value get(int index) {
         if (isList()) {
             // Guard for OutOfBounds
-            if (asList().size() <= index) {
+            List<Object> list = asList();
+            if (list.size() <= index) {
                 return new Value(null);
             }
             if (index < 0) {
                 throw new RuntimeException("Negative index not allowed");
             }
-            return new Value(asList().get(index));
+            return new Value(list.get(index));
         }
         // If this wasn't a slice you probably shouldn't be using this function
         return new Value(null);
