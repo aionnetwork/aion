@@ -53,7 +53,7 @@ public final class ResBlocksBodiesHandler extends Handler {
                 p2pMgr.errCheck(_nodeIdHashcode, _displayId);
                 log.error("<res-bodies-empty node={}>", _displayId);
             } else {
-                syncMgr.getSyncStats().updatePeerTotalBlocks(_displayId, bodies.size());
+                syncMgr.getSyncStats().updatePeerReceivedBlocks(_displayId, bodies.size());
                 syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
             }
         }

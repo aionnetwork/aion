@@ -87,7 +87,7 @@ final class TaskShowStatus implements Runnable {
             }
 
             if (showStatistics.contains(StatsType.SEEDS)) {
-                requestedStats = dumpTopSeedsInfo();
+                requestedStats = stats.dumpTopSeedsStats();
                 if (!requestedStats.isEmpty()) {
                     p2pLOG.info(requestedStats);
                 }
@@ -130,7 +130,7 @@ final class TaskShowStatus implements Runnable {
             if (!requestedStats.isEmpty()) {
                 p2pLOG.debug(requestedStats);
             }
-            requestedStats = dumpTopSeedsInfo();
+            requestedStats = stats.dumpTopSeedsStats();
             if (!requestedStats.isEmpty()) {
                 p2pLOG.debug(requestedStats);
             }
@@ -168,43 +168,6 @@ final class TaskShowStatus implements Runnable {
                 + "/"
                 + this.networkStatus.getTargetBestBlockHash()
                 + "";
-    }
-
-
-    /**
-     * Returns a log stream containing a list of peers ordered by the total number of blocks
-     * received from each peer used to determine who is providing the majority of blocks, i.e. top
-     * seeds.
-     *
-     * @return log stream with peers statistical data on seeds
-     */
-    private String dumpTopSeedsInfo() {
-        Map<String, Integer> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
-
-        StringBuilder sb = new StringBuilder();
-
-        if (!totalBlocksByPeer.isEmpty()) {
-
-            sb.append(
-                    "\n============================= sync-top-seeds ==============================\n");
-            sb.append(
-                    String.format(
-                            "   %9s %20s %19s %19s\n",
-                            "peer", "total blocks", "imported blocks", "stored blocks"));
-            sb.append(
-                    "---------------------------------------------------------------------------\n");
-            totalBlocksByPeer.forEach(
-                    (nodeId, totalBlocks) ->
-                            sb.append(
-                                    String.format(
-                                            "   id:%6s %20s %19s %19s\n",
-                                            nodeId,
-                                            totalBlocks,
-                                            this.stats.getImportedBlocksByPeer(nodeId),
-                                            this.stats.getStoredBlocksByPeer(nodeId))));
-        }
-
-        return sb.toString();
     }
 
     /**

@@ -231,7 +231,7 @@ public class SyncStatsTest {
     }
 
     @Test
-    public void testTotalBlocksByPeer() {
+    public void testReceivedBlocksByPeer() {
 
         StandaloneBlockchain chain = bundle.bc;
         generateRandomChain(chain, 1, 1, accounts, 10);
@@ -239,8 +239,8 @@ public class SyncStatsTest {
         SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
 
         // ensures correct behaviour on empty stats
-        Map<String, Integer> emptyTotalBlockReqByPeer = stats.getTotalBlocksByPeer();
-        assertThat(emptyTotalBlockReqByPeer.isEmpty()).isTrue();
+        Map<String, Integer> emptyReceivedBlockReqByPeer = stats.getReceivedBlocksByPeer();
+        assertThat(emptyReceivedBlockReqByPeer.isEmpty()).isTrue();
 
         int peerNo = 0;
         int processedBlocks = 0;
@@ -250,28 +250,28 @@ public class SyncStatsTest {
             while (blocks > 0) {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                stats.updatePeerTotalBlocks(peers.get(peerNo), 1);
+                stats.updatePeerReceivedBlocks(peers.get(peerNo), 1);
                 blocks--;
             }
             peerNo++;
         }
 
-        Map<String, Integer> totalBlockReqByPeer = stats.getTotalBlocksByPeer();
-        assertThat(totalBlockReqByPeer.size()).isEqualTo(peers.size());
+        Map<String, Integer> totalBlockResByPeer = stats.getReceivedBlocksByPeer();
+        assertThat(totalBlockResByPeer.size()).isEqualTo(peers.size());
 
         int total = 3;
         int lastTotalBlocks = processedBlocks;
         for (String nodeId : peers) {
             // ensures desc order
-            assertThat(lastTotalBlocks >= totalBlockReqByPeer.get(nodeId)).isTrue();
-            lastTotalBlocks = totalBlockReqByPeer.get(nodeId);
-            assertThat(totalBlockReqByPeer.get(nodeId)).isEqualTo(total);
+            assertThat(lastTotalBlocks >= totalBlockResByPeer.get(nodeId)).isTrue();
+            lastTotalBlocks = totalBlockResByPeer.get(nodeId);
+            assertThat(totalBlockResByPeer.get(nodeId)).isEqualTo(total);
             total--;
         }
     }
 
     @Test
-    public void testTotalBlocksByPeerDisabled() {
+    public void testReceivedBlocksByPeerDisabled() {
 
         StandaloneBlockchain chain = bundle.bc;
         generateRandomChain(chain, 1, 1, accounts, 10);
@@ -286,14 +286,14 @@ public class SyncStatsTest {
             while (blocks > 0) {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                stats.updatePeerTotalBlocks(peers.get(peerNo), 1);
+                stats.updatePeerReceivedBlocks(peers.get(peerNo), 1);
                 blocks--;
             }
             peerNo++;
         }
 
         // ensures still empty
-        assertThat(stats.getTotalBlocksByPeer().isEmpty()).isTrue();
+        assertThat(stats.getReceivedBlocksByPeer()).isNull();
     }
 
     @Test
