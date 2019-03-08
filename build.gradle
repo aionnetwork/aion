@@ -316,6 +316,8 @@ task overridePackConfigForDocker(type: Exec) {
 
 task copyPackForDocker(type: Copy) { 
     dependsOn pack, overridePackConfigForDocker
+    pack.mustRunAfter overridePackConfigForDocker
+
     from "${dirPack}/aion.tar.bz2"
     from "${rootDir}/DockerAutomation"
     into "${buildDir}/docker"
@@ -323,7 +325,6 @@ task copyPackForDocker(type: Copy) {
 
 task packDocker(type: Exec) { 
     dependsOn copyPackForDocker 
-    pack.mustRunAfter overridePackConfigForDocker
 
     def distImageTag = project.findProperty('dist_image_tag') ?: 'aionnetwork/aion:latest'
     commandLine 'docker', 'build',
@@ -333,6 +334,7 @@ task packDocker(type: Exec) {
 
 task packK8sDocker(type: Exec) { 
     dependsOn copyPackForDocker 
+
     def k8sImageTag = project.findProperty('k8s_image_tag') ?: 'aionnetwork/aion-k8s:latest'
     commandLine 'docker', 'build', 
         '--target', 'k8s', '-t', k8sImageTag,
