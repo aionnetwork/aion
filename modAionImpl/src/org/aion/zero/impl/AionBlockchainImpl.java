@@ -56,6 +56,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.exception.VMException;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -1148,7 +1149,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         block.getNrgLimit(),
                         LOGGER_VM,
                         getPostExecutionWorkForGeneratePreBlock());
-        List<AionTxExecSummary> executionSummaries = executor.execute();
+
+        List<AionTxExecSummary> executionSummaries = null;
+        try {
+            executionSummaries = executor.execute();
+        } catch (VMException e) {
+            LOG.error(e.toString());
+            System.exit(-1);
+        }
 
         for (AionTxExecSummary summary : executionSummaries) {
             if (!summary.isRejected()) {
@@ -1212,7 +1220,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         block.getNrgLimit(),
                         LOGGER_VM,
                         getPostExecutionWorkForApplyBlock());
-        List<AionTxExecSummary> executionSummaries = executor.execute();
+
+        List<AionTxExecSummary> executionSummaries = null;
+        try {
+            executionSummaries = executor.execute();
+        } catch (VMException e) {
+            LOGGER_VM.error(e.toString());
+            System.exit(-1);
+        }
 
         for (AionTxExecSummary summary : executionSummaries) {
             receipts.add(summary.getReceipt());

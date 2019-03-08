@@ -47,6 +47,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -1073,7 +1074,13 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                         bestBlk.getNrgLimit(),
                         LOGGER_VM,
                         getPostExecutionWork());
-        return txExe.execute().get(0);
+        try {
+            return txExe.execute().get(0);
+        } catch (VMException e) {
+            LOGGER_VM.error(e.toString());
+            System.exit(-1);
+            return null;
+        }
     }
 
     /**

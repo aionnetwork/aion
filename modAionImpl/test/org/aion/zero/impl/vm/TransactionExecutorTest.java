@@ -27,12 +27,19 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+
+import org.aion.fastvm.FastVmResultCode;
+import org.aion.fastvm.FastVmTransactionResult;
 import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.tx.Transaction;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
 import org.aion.crypto.ECKey;
@@ -44,6 +51,8 @@ import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 
+import org.aion.vm.api.interfaces.TransactionResult;
+import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.BlockContext;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
@@ -84,8 +93,22 @@ public class TransactionExecutorTest {
         deployer = null;
     }
 
+    @Test(expected = VMException.class)
+    public void testExecutorFatal () throws VMException {
+        BulkExecutor be = mock(BulkExecutor.class);
+        TransactionResult rt = new FastVmTransactionResult(FastVmResultCode.VM_INTERNAL_ERROR , 0);
+        when(be.execute()).thenThrow(new VMException(rt.toString()));
+
+        try {
+        be.execute();
+        } catch (VMException e) {
+            System.out.println(e.toString());
+            throw e;
+        }
+    }
+
     @Test
-    public void testExecutor() throws IOException {
+    public void testExecutor() throws IOException, VMException {
         Address to = getNewRecipient(true);
         byte[] deployCode = ContractUtils.getContractDeployer("ByteArrayMap.sol", "ByteArrayMap");
         long nrg = 1_000_000;
@@ -183,7 +206,7 @@ public class TransactionExecutorTest {
     }
 
     @Test
-    public void testDeployedCodeFunctionality() throws IOException {
+    public void testDeployedCodeFunctionality() throws IOException, VMException {
         Address contract = deployByteArrayContract();
         byte[] callingCode = Hex.decode(f_func);
         BigInteger nonce = blockchain.getRepository().getNonce(deployer);
@@ -281,7 +304,7 @@ public class TransactionExecutorTest {
     }
 
     @Test
-    public void testGfunction() throws IOException {
+    public void testGfunction() throws IOException, VMException {
         Address contract = deployByteArrayContract();
         byte[] callingCode = Hex.decode(g_func);
         BigInteger nonce = blockchain.getRepository().getNonce(deployer);
