@@ -511,7 +511,9 @@ public class AionRepositoryImpl
 
         try {
             worldState.sync();
-            //detailsDS.syncLargeStorage();
+            // Todo: Comment it out cause it should be an redundant call. Need to understand more
+            // the repo structure to confirm.
+            // detailsDS.syncLargeStorage();
 
             if (pruneEnabled) {
                 if (stateDSPrune.isArchiveEnabled() && blockHeader.getNumber() % archiveRate == 0) {
@@ -824,11 +826,7 @@ public class AionRepositoryImpl
         ByteArrayKeyValueDatabase db = selectDatabase(dbType);
 
         Optional<byte[]> value = db.get(key);
-        if (value.isPresent()) {
-            return value.get();
-        } else {
-            return null;
-        }
+        return value.orElse(null);
     }
 
     /**
@@ -862,9 +860,9 @@ public class AionRepositoryImpl
      * @param key the hash key of the trie node to be imported
      * @param value the value of the trie node to be imported
      * @param dbType the database where the key-value pair should be stored
+     * @return a {@link TrieNodeResult} indicating the success or failure of the import operation
      * @throws IllegalArgumentException if the given key is null or the database type is not
      *     supported
-     * @return a {@link TrieNodeResult} indicating the success or failure of the import operation
      */
     public TrieNodeResult importTrieNode(byte[] key, byte[] value, DatabaseType dbType) {
         // empty keys are not allowed
