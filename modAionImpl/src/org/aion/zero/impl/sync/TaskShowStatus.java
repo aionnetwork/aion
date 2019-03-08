@@ -94,7 +94,7 @@ final class TaskShowStatus implements Runnable {
             }
 
             if (showStatistics.contains(StatsType.LEECHES)) {
-                requestedStats = dumpTopLeechesInfo();
+                requestedStats = stats.dumpTopLeechesStats();
                 if (!requestedStats.isEmpty()) {
                     p2pLOG.info(requestedStats);
                 }
@@ -134,7 +134,7 @@ final class TaskShowStatus implements Runnable {
             if (!requestedStats.isEmpty()) {
                 p2pLOG.debug(requestedStats);
             }
-            requestedStats = dumpTopLeechesInfo();
+            requestedStats = stats.dumpTopLeechesStats();
             if (!requestedStats.isEmpty()) {
                 p2pLOG.debug(requestedStats);
             }
@@ -170,30 +170,7 @@ final class TaskShowStatus implements Runnable {
                 + "";
     }
 
-    /**
-     * Obtain log stream containing a list of peers ordered by the total number of blocks requested
-     * by each peer used to determine who is requesting the majority of blocks, i.e. top leeches.
-     *
-     * @return log stream with peers statistical data on leeches
-     */
-    private String dumpTopLeechesInfo() {
-        Map<String, Integer> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
 
-        StringBuilder sb = new StringBuilder();
-
-        if (!totalBlockReqByPeer.isEmpty()) {
-
-            sb.append("\n========= sync-top-leeches =========\n");
-            sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
-            sb.append("------------------------------------\n");
-
-            totalBlockReqByPeer.forEach(
-                    (nodeId, totalBlocks) ->
-                            sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
-        }
-
-        return sb.toString();
-    }
 
     private String dumpPeerStateInfo(Collection<INode> filtered) {
         List<NodeState> sorted = new ArrayList<>();

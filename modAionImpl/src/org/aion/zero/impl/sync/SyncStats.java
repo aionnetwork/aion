@@ -3,16 +3,14 @@ package org.aion.zero.impl.sync;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
 import org.aion.mcf.config.StatsType;
 import org.aion.zero.impl.sync.statistics.RequestStatsTracker;
 import org.aion.zero.impl.sync.statistics.ResponseStatsTracker;
+import org.aion.zero.impl.sync.statistics.TopLeechesStatsTracker;
 import org.aion.zero.impl.sync.statistics.TopSeedsStatsTracker;
-import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.lang3.tuple.Pair;
 
 /** @author chris */
@@ -28,16 +26,14 @@ public final class SyncStats {
     private final RequestStatsTracker requestTracker;
     private final boolean requestEnabled;
 
-    private final TopSeedsStatsTracker seedTracker;
-    private final boolean seedEnabled;
+    private final TopSeedsStatsTracker seedsTracker;
+    private final boolean seedsEnabled;
 
-    // @implNote Access to this resource is managed by the {@link #leechesLock}.
-    private final Map<String, Integer> blockRequestsByPeer;
-    private final Lock leechesLock;
+    private final TopLeechesStatsTracker leechesTracker;
     private final boolean leechesEnabled;
 
     private final ResponseStatsTracker responseTracker;
-    private final boolean responsesEnabled;
+    private final boolean responseEnabled;
 
     /**
      * @param enabled all stats are enabled when {@code true}, all stats are disabled otherwise
@@ -69,24 +65,22 @@ public final class SyncStats {
             this.requestTracker = null;
         }
 
-        seedEnabled = showStatistics.contains(StatsType.SEEDS);
-        if (seedEnabled) {
-            this.seedTracker = new TopSeedsStatsTracker(maxActivePeers);
+        seedsEnabled = showStatistics.contains(StatsType.SEEDS);
+        if (seedsEnabled) {
+            this.seedsTracker = new TopSeedsStatsTracker(maxActivePeers);
         } else {
-            this.seedTracker = null;
+            this.seedsTracker = null;
         }
 
         leechesEnabled = showStatistics.contains(StatsType.LEECHES);
         if (leechesEnabled) {
-            blockRequestsByPeer = new LRUMap<>(maxActivePeers);
-            leechesLock = new ReentrantLock();
+            this.leechesTracker = new TopLeechesStatsTracker(maxActivePeers);
         } else {
-            blockRequestsByPeer = null;
-            leechesLock = null;
+            this.leechesTracker = null;
         }
 
-        this.responsesEnabled = showStatistics.contains(StatsType.RESPONSES);
-        if (this.responsesEnabled) {
+        this.responseEnabled = showStatistics.contains(StatsType.RESPONSES);
+        if (this.responseEnabled) {
             this.responseTracker = new ResponseStatsTracker(maxActivePeers);
         } else {
             this.responseTracker = null;
@@ -164,8 +158,8 @@ public final class SyncStats {
      * @return log stream with peers statistical data on seeds
      */
     public String dumpTopSeedsStats() {
-        if (seedEnabled) {
-            return this.seedTracker.dumpTopSeedsStats();
+        if (seedsEnabled) {
+            return this.seedsTracker.dumpTopSeedsStats();
         } else {
             return "";
         }
@@ -178,15 +172,15 @@ public final class SyncStats {
      * @param receivedBlocks total number of blocks received
      */
     public void updatePeerReceivedBlocks(String nodeId, int receivedBlocks) {
-        if (seedEnabled) {
-            this.seedTracker.updatePeerReceivedBlocks(nodeId, receivedBlocks);
+        if (seedsEnabled) {
+            this.seedsTracker.updatePeerReceivedBlocks(nodeId, receivedBlocks);
         }
     }
 
     @VisibleForTesting
     Map<String, Integer> getReceivedBlocksByPeer() {
-        if (seedEnabled) {
-            return seedTracker.getReceivedBlocksByPeer();
+        if (seedsEnabled) {
+            return seedsTracker.getReceivedBlocksByPeer();
         } else {
             return null;
         }
@@ -199,15 +193,15 @@ public final class SyncStats {
      * @param importedBlocks total number of blocks imported
      */
     public void updatePeerImportedBlocks(String nodeId, int importedBlocks) {
-        if (seedEnabled) {
-            this.seedTracker.updatePeerImportedBlocks(nodeId, importedBlocks);
+        if (seedsEnabled) {
+            this.seedsTracker.updatePeerImportedBlocks(nodeId, importedBlocks);
         }
     }
 
     @VisibleForTesting
     long getImportedBlocksByPeer(String nodeId) {
-        if (seedEnabled) {
-            return this.seedTracker.getImportedBlocksByPeer(nodeId);
+        if (seedsEnabled) {
+            return this.seedsTracker.getImportedBlocksByPeer(nodeId);
         } else {
             return 0L;
         }
@@ -220,17 +214,31 @@ public final class SyncStats {
      * @param storedBlocks total number of blocks stored
      */
     public void updatePeerStoredBlocks(String nodeId, int storedBlocks) {
-        if (seedEnabled) {
-            this.seedTracker.updatePeerStoredBlocks(nodeId, storedBlocks);
+        if (seedsEnabled) {
+            this.seedsTracker.updatePeerStoredBlocks(nodeId, storedBlocks);
         }
     }
 
     @VisibleForTesting
     long getStoredBlocksByPeer(String nodeId) {
-        if (seedEnabled) {
-            return this.seedTracker.getStoredBlocksByPeer(nodeId);
+        if (seedsEnabled) {
+            return this.seedsTracker.getStoredBlocksByPeer(nodeId);
         } else {
             return 0L;
+        }
+    }
+
+    /**
+     * Obtain log stream containing a list of peers ordered by the total number of blocks requested
+     * by each peer used to determine who is requesting the majority of blocks, i.e. top leeches.
+     *
+     * @return log stream with peers statistical data on leeches
+     */
+    public String dumpTopLeechesStats() {
+        if (leechesEnabled) {
+            return this.leechesTracker.dumpTopLeechesStats();
+        } else {
+            return "";
         }
     }
 
@@ -242,61 +250,16 @@ public final class SyncStats {
      */
     public void updateTotalBlockRequestsByPeer(String nodeId, int totalBlocks) {
         if (leechesEnabled) {
-            leechesLock.lock();
-            try {
-                if (blockRequestsByPeer.putIfAbsent(nodeId, totalBlocks) != null) {
-                    blockRequestsByPeer.computeIfPresent(
-                            nodeId, (key, value) -> value + totalBlocks);
-                }
-            } finally {
-                leechesLock.unlock();
-            }
-        }
-    }
-
-    /**
-     * Obtains a map of peers ordered by the total number of requested blocks to the node
-     *
-     * @return map of total requested blocks by peer and sorted in descending order
-     */
-    Map<String, Integer> getTotalBlockRequestsByPeer() {
-        if (leechesEnabled) {
-            leechesLock.lock();
-            try {
-                return blockRequestsByPeer.entrySet().stream()
-                        .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                        .collect(
-                                Collectors.toMap(
-                                        Map.Entry::getKey,
-                                        Map.Entry::getValue,
-                                        (e1, e2) -> e2,
-                                        LinkedHashMap::new));
-            } finally {
-                leechesLock.unlock();
-            }
-        } else {
-            return Collections.emptyMap();
-        }
-    }
-
-    public void updateRequestTime(String displayId, long requestTime, RequestType requestType) {
-        if (responsesEnabled) {
-            responseTracker.updateRequestTime(displayId, requestTime, requestType);
-        }
-    }
-
-    public void updateResponseTime(String displayId, long responseTime, RequestType requestType) {
-        if (responsesEnabled) {
-            responseTracker.updateResponseTime(displayId, responseTime, requestType);
+            this.leechesTracker.updateTotalBlockRequestsByPeer(nodeId, totalBlocks);
         }
     }
 
     @VisibleForTesting
-    Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
-        if (responsesEnabled) {
-            return responseTracker.getResponseStats();
+    Map<String, Integer> getTotalBlockRequestsByPeer() {
+        if (leechesEnabled) {
+            return this.leechesTracker.getTotalBlockRequestsByPeer();
         } else {
-            return null;
+            return Collections.emptyMap();
         }
     }
 
@@ -307,10 +270,46 @@ public final class SyncStats {
      * @return log stream with requests statistical data
      */
     public String dumpResponseStats() {
-        if (responsesEnabled) {
+        if (responseEnabled) {
             return responseTracker.dumpResponseStats();
         } else {
             return "";
+        }
+    }
+
+    /**
+     * Log the time of a request sent to a peer.
+     *
+     * @param displayId peer display identifier
+     * @param requestTime time when the request was sent in nanoseconds
+     * @param requestType type of request
+     */
+    public void updateRequestTime(String displayId, long requestTime, RequestType requestType) {
+        if (responseEnabled) {
+            responseTracker.updateRequestTime(displayId, requestTime, requestType);
+        }
+    }
+
+    /**
+     * Log the time of a response received from a peer and update the computed average time and
+     * number of data points.
+     *
+     * @param displayId peer display identifier
+     * @param responseTime time when the response was received in nanoseconds * @param requestType
+     * @param requestType type of request
+     */
+    public void updateResponseTime(String displayId, long responseTime, RequestType requestType) {
+        if (responseEnabled) {
+            responseTracker.updateResponseTime(displayId, responseTime, requestType);
+        }
+    }
+
+    @VisibleForTesting
+    Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
+        if (responseEnabled) {
+            return responseTracker.getResponseStats();
+        } else {
+            return null;
         }
     }
 }
