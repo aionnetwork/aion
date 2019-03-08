@@ -49,6 +49,7 @@ import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 
 import org.aion.vm.api.interfaces.ResultCode;
+import org.aion.vm.exception.VMException;
 import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
@@ -97,7 +98,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testEmptyContract() throws IOException {
+    public void testEmptyContract() throws IOException, VMException {
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -140,7 +141,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testContractDeployCodeIsEmpty() {
+    public void testContractDeployCodeIsEmpty() throws VMException {
         long nrg = 1_000_000;
         long nrgPrice = 1;
         BigInteger value = BigInteger.ZERO;
@@ -175,7 +176,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testContractDeployCodeIsNonsensical() {
+    public void testContractDeployCodeIsNonsensical() throws VMException {
         byte[] deployCode = new byte[1];
         deployCode[0] = 0x1;
         long nrg = 1_000_000;
@@ -213,7 +214,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testTransferValueToNonPayableConstructor() throws IOException {
+    public void testTransferValueToNonPayableConstructor() throws IOException, VMException {
         String contractName = "EmptyContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -252,7 +253,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testTransferValueToPayableConstructor() throws IOException {
+    public void testTransferValueToPayableConstructor() throws IOException, VMException {
         String contractName = "PayableConstructor";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -286,7 +287,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testTransferValueToPayableConstructorInsufficientFunds() throws IOException {
+    public void testTransferValueToPayableConstructorInsufficientFunds() throws IOException, VMException {
         String contractName = "PayableConstructor";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -324,7 +325,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testConstructorIsCalledOnCodeDeployment() throws IOException {
+    public void testConstructorIsCalledOnCodeDeployment() throws IOException, VMException {
         String contractName = "MultiFeatureContract";
         byte[] deployCode =
                 ContractUtils.getContractDeployer(
@@ -368,7 +369,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testCallFunction() throws IOException {
+    public void testCallFunction() throws IOException, VMException {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -439,7 +440,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testOverWithdrawFromContract() throws IOException {
+    public void testOverWithdrawFromContract() throws IOException, VMException {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -486,7 +487,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testWithdrawFromContract() throws IOException {
+    public void testWithdrawFromContract() throws IOException, VMException {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -530,7 +531,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testSendContractFundsToOtherAddress() throws IOException {
+    public void testSendContractFundsToOtherAddress() throws IOException, VMException {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -581,7 +582,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testSendContractFundsToNonexistentAddress() throws IOException {
+    public void testSendContractFundsToNonexistentAddress() throws IOException, VMException {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -631,7 +632,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testCallContractViaAnotherContract() throws IOException {
+    public void testCallContractViaAnotherContract() throws IOException, VMException {
         // Deploy the MultiFeatureContract.
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
@@ -722,7 +723,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testRecursiveStackoverflow() throws IOException {
+    public void testRecursiveStackoverflow() throws IOException, VMException {
         String contractName = "Recursive";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = Constants.NRG_TRANSACTION_MAX;
@@ -847,7 +848,7 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testRedeployContractAtExistentContractAddress() throws IOException {
+    public void testRedeployContractAtExistentContractAddress() throws IOException, VMException {
         String contractName = "MultiFeatureContract";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -960,7 +961,7 @@ public class ContractIntegTest {
             long nrg,
             long nrgPrice,
             BigInteger nonce)
-            throws IOException {
+            throws IOException, VMException {
 
         tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
