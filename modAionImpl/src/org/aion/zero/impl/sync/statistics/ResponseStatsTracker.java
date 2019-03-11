@@ -279,8 +279,6 @@ public class ResponseStatsTracker {
             }
             for (String nodeId : responseStats.keySet()) {
                 if (nodeId != "overall") {
-                    sb.append(
-                            "----------------------------------------------------------------------------\n");
                     peerStats = responseStats.get(nodeId);
                     for (String type : peerStats.keySet()) {
                         sb.append(
