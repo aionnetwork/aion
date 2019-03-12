@@ -7,6 +7,7 @@ module aion.db.impl {
     requires h2.mvstore;
     requires com.google.common;
     requires mongo.java.driver;
+    requires leveldbjni.all;
 
     exports org.aion.db.impl;
     exports org.aion.db.impl.leveldb;
