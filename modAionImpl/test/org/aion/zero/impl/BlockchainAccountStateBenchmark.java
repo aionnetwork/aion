@@ -7,7 +7,12 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Random;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import org.aion.types.Address;
 import org.aion.crypto.ECKey;
