@@ -92,6 +92,16 @@ public class RequestTrieDataTest {
         new RequestTrieData(nodeKey, STATE, -10);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testConstructor_smallKey() {
+        new RequestTrieData(smallNodeKey, STATE, 10);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConstructor_largeKey() {
+        new RequestTrieData(largeNodeKey, STATE, 10);
+    }
+
     @Test
     public void testHeader_newObject() {
         RequestTrieData message = new RequestTrieData(nodeKey, STATE, 1);
