@@ -28,6 +28,8 @@ dependencies {
     testCompile group: 'commons-codec', name: 'commons-codec', version: '1.10'
     testCompile "org.mockito:mockito-core:2.23.0"
     testCompile 'pl.pragmatists:JUnitParams:1.1.1'
+    testCompile 'network.aion:crypto4j:0.4.0'
+
 }
 
 // Skip unit tests when doing build task; unit tests are all mixed up with 

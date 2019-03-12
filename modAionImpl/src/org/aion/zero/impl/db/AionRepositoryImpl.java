@@ -511,9 +511,6 @@ public class AionRepositoryImpl
 
         try {
             worldState.sync();
-            // Todo: Comment it out cause it should be an redundant call. Need to understand more
-            // the repo structure to confirm.
-            // detailsDS.syncLargeStorage();
 
             if (pruneEnabled) {
                 if (stateDSPrune.isArchiveEnabled() && blockHeader.getNumber() % archiveRate == 0) {
