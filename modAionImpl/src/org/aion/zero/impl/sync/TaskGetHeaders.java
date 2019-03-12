@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqBlocksHeaders;
+import org.aion.zero.impl.sync.statistics.RequestType;
 import org.slf4j.Logger;
 
 /** @author chris */

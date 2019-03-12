@@ -7,7 +7,7 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.RequestType;
+import org.aion.zero.impl.sync.statistics.RequestType;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResBlocksHeaders;
 import org.aion.zero.types.A0BlockHeader;

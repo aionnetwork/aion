@@ -7,7 +7,8 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.RequestType;
+import org.aion.zero.impl.sync.statistics.BlockType;
+import org.aion.zero.impl.sync.statistics.RequestType;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResBlocksBodies;
 import org.slf4j.Logger;
@@ -53,7 +54,7 @@ public final class ResBlocksBodiesHandler extends Handler {
                 p2pMgr.errCheck(_nodeIdHashcode, _displayId);
                 log.error("<res-bodies-empty node={}>", _displayId);
             } else {
-                syncMgr.getSyncStats().updatePeerReceivedBlocks(_displayId, bodies.size());
+                syncMgr.getSyncStats().updatePeerBlocks(_displayId, bodies.size(), BlockType.RECEIVED);
                 syncMgr.validateAndAddBlocks(_nodeIdHashcode, _displayId, bodies);
             }
         }

@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import org.aion.zero.impl.sync.RequestType;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
@@ -20,41 +19,60 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public class ResponseStatsTracker {
     // track status, headers and bodes messages
-    private final EnumMap<RequestType, ResponseStats> responseStats =
-            new EnumMap<>(RequestType.class);
-    private final EnumMap<RequestType, Lock> responseLocks = new EnumMap<>(RequestType.class);
+    private final EnumMap<RequestType, ResponseStats> stats = new EnumMap<>(RequestType.class);
+    private final EnumMap<RequestType, Lock> locks = new EnumMap<>(RequestType.class);
 
     public ResponseStatsTracker(int maxActivePeers) {
         for (RequestType type : RequestType.values()) {
             // instantiate objects for gathering stats
-            this.responseStats.put(type, new ResponseStats(maxActivePeers));
+            this.stats.put(type, new ResponseStats(maxActivePeers));
             // instantiate locks
-            this.responseLocks.put(type, new ReentrantLock());
+            this.locks.put(type, new ReentrantLock());
+        }
+    }
+
+    public void updateRequestTime(String displayId, long requestTime, RequestType requestType) {
+        Lock responseLock = locks.get(requestType);
+        responseLock.lock();
+        try {
+            stats.get(requestType).updateRequestTime(displayId, requestTime);
+        } finally {
+            responseLock.unlock();
+        }
+    }
+
+    public void updateResponseTime(String displayId, long responseTime, RequestType requestType) {
+        Lock responseLock = locks.get(requestType);
+        responseLock.lock();
+        try {
+            stats.get(requestType).updateResponseTime(displayId, responseTime);
+        } finally {
+            responseLock.unlock();
         }
     }
 
     public Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
         // acquire lock for all resources
-        this.responseLocks.get(RequestType.TRIE_DATA).lock();
-        this.responseLocks.get(RequestType.RECEIPTS).lock();
-        this.responseLocks.get(RequestType.BLOCKS).lock();
-        this.responseLocks.get(RequestType.BODIES).lock();
-        this.responseLocks.get(RequestType.HEADERS).lock();
-        this.responseLocks.get(RequestType.STATUS).lock();
+        this.locks.get(RequestType.TRIE_DATA).lock();
+        this.locks.get(RequestType.RECEIPTS).lock();
+        this.locks.get(RequestType.BLOCKS).lock();
+        this.locks.get(RequestType.BODIES).lock();
+        this.locks.get(RequestType.HEADERS).lock();
+        this.locks.get(RequestType.STATUS).lock();
 
         try {
             Map<String, Pair<Double, Integer>> statusStats =
-                    this.responseStats.get(RequestType.STATUS).getResponseStatsByPeers();
+                    this.stats.get(RequestType.STATUS).getResponseStatsByPeers();
             Map<String, Pair<Double, Integer>> headersStats =
-                    this.responseStats.get(RequestType.HEADERS).getResponseStatsByPeers();
+                    this.stats.get(RequestType.HEADERS).getResponseStatsByPeers();
             Map<String, Pair<Double, Integer>> bodiesStats =
-                    this.responseStats.get(RequestType.BODIES).getResponseStatsByPeers();
+                    this.stats.get(RequestType.BODIES).getResponseStatsByPeers();
             Map<String, Pair<Double, Integer>> blocksStats =
-                    this.responseStats.get(RequestType.BLOCKS).getResponseStatsByPeers();
+                    this.stats.get(RequestType.BLOCKS).getResponseStatsByPeers();
             Map<String, Pair<Double, Integer>> receiptsStats =
-                    this.responseStats.get(RequestType.RECEIPTS).getResponseStatsByPeers();
+                    this.stats.get(RequestType.RECEIPTS).getResponseStatsByPeers();
             Map<String, Pair<Double, Integer>> trieDataStats =
-                    this.responseStats.get(RequestType.TRIE_DATA).getResponseStatsByPeers();
+                    this.stats.get(RequestType.TRIE_DATA).getResponseStatsByPeers();
 
             // skip if there's nothing to show
             if (statusStats.isEmpty()
@@ -244,12 +262,12 @@ public class ResponseStatsTracker {
             return responseStats;
         } finally {
             // unlock in reverse order
-            this.responseLocks.get(RequestType.STATUS).unlock();
-            this.responseLocks.get(RequestType.HEADERS).unlock();
-            this.responseLocks.get(RequestType.BODIES).unlock();
-            this.responseLocks.get(RequestType.BLOCKS).unlock();
-            this.responseLocks.get(RequestType.RECEIPTS).unlock();
-            this.responseLocks.get(RequestType.TRIE_DATA).unlock();
+            this.locks.get(RequestType.STATUS).unlock();
+            this.locks.get(RequestType.HEADERS).unlock();
+            this.locks.get(RequestType.BODIES).unlock();
+            this.locks.get(RequestType.BLOCKS).unlock();
+            this.locks.get(RequestType.RECEIPTS).unlock();
+            this.locks.get(RequestType.TRIE_DATA).unlock();
         }
     }
 
@@ -294,25 +312,5 @@ public class ResponseStatsTracker {
             }
         }
         return sb.toString();
-    }
-
-    public void updateRequestTime(String displayId, long requestTime, RequestType requestType) {
-        Lock responseLock = responseLocks.get(requestType);
-        responseLock.lock();
-        try {
-            responseStats.get(requestType).updateRequestTime(displayId, requestTime);
-        } finally {
-            responseLock.unlock();
-        }
-    }
-
-    public void updateResponseTime(String displayId, long responseTime, RequestType requestType) {
-        Lock responseLock = responseLocks.get(requestType);
-        responseLock.lock();
-        try {
-            responseStats.get(requestType).updateResponseStats(displayId, responseTime);
-        } finally {
-            responseLock.unlock();
-        }
     }
 }

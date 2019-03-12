@@ -14,6 +14,8 @@ import java.util.UUID;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
 import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.sync.statistics.BlockType;
+import org.aion.zero.impl.sync.statistics.RequestType;
 import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
@@ -250,7 +252,7 @@ public class SyncStatsTest {
             while (blocks > 0) {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                stats.updatePeerReceivedBlocks(peers.get(peerNo), 1);
+                stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.RECEIVED);
                 blocks--;
             }
             peerNo++;
@@ -286,7 +288,7 @@ public class SyncStatsTest {
             while (blocks > 0) {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                stats.updatePeerReceivedBlocks(peers.get(peerNo), 1);
+                stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.RECEIVED);
                 blocks--;
             }
             peerNo++;
@@ -313,7 +315,7 @@ public class SyncStatsTest {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 ImportResult result = chain.tryToConnect(current);
                 assertTrue(result.isStored());
-                stats.updatePeerImportedBlocks(peers.get(peerNo), 1);
+                stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.IMPORTED);
                 blocks--;
             }
             peerNo++;
@@ -342,7 +344,7 @@ public class SyncStatsTest {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 ImportResult result = chain.tryToConnect(current);
                 assertTrue(result.isStored());
-                stats.updatePeerImportedBlocks(peers.get(peerNo), 1);
+                stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.IMPORTED);
                 blocks--;
             }
             peerNo++;
@@ -371,7 +373,7 @@ public class SyncStatsTest {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 boolean result = chain.storePendingStatusBlock(current);
                 assertTrue(result);
-                stats.updatePeerStoredBlocks(peers.get(peerNo), 1);
+                stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.STORED);
                 blocks--;
             }
             peerNo++;
@@ -400,7 +402,7 @@ public class SyncStatsTest {
                 AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
                 boolean result = chain.storePendingStatusBlock(current);
                 assertTrue(result);
-                stats.updatePeerStoredBlocks(peers.get(peerNo), 1);
+                stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.STORED);
                 blocks--;
             }
             peerNo++;

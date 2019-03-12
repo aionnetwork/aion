@@ -15,6 +15,7 @@ import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.SyncStats;
 import org.aion.zero.impl.sync.msg.BroadcastNewBlock;
 import org.aion.zero.impl.sync.msg.ResStatus;
+import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.apache.commons.collections4.map.LRUMap;
@@ -163,8 +164,8 @@ public class BlockPropagationHandler {
             }
             boolean stored = blockchain.storePendingStatusBlock(block);
             if (stored) {
-                this.syncStats.updatePeerStoredBlocks(displayId, 1);
-                this.syncStats.updatePeerReceivedBlocks(displayId, 1);
+                this.syncStats.updatePeerBlocks(displayId, 1, BlockType.STORED);
+                this.syncStats.updatePeerBlocks(displayId, 1, BlockType.RECEIVED);
             }
 
             if (log.isDebugEnabled()) {
@@ -180,8 +181,8 @@ public class BlockPropagationHandler {
 
             long t2 = System.currentTimeMillis();
             if (result.isStored()) {
-                this.syncStats.updatePeerImportedBlocks(displayId, 1);
-                this.syncStats.updatePeerReceivedBlocks(displayId, 1);
+                this.syncStats.updatePeerBlocks(displayId, 1, BlockType.IMPORTED);
+                this.syncStats.updatePeerBlocks(displayId, 1, BlockType.RECEIVED);
             }
 
             if (log.isInfoEnabled()) {

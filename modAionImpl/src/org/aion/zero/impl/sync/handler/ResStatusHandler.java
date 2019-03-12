@@ -8,7 +8,8 @@ import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.Act;
-import org.aion.zero.impl.sync.RequestType;
+import org.aion.zero.impl.sync.statistics.BlockType;
+import org.aion.zero.impl.sync.statistics.RequestType;
 import org.aion.zero.impl.sync.SyncMgr;
 import org.aion.zero.impl.sync.msg.ResStatus;
 import org.slf4j.Logger;
@@ -45,7 +46,7 @@ public final class ResStatusHandler extends Handler {
         this.syncMgr
                 .getSyncStats()
                 .updateResponseTime(_displayId, System.nanoTime(), RequestType.STATUS);
-        this.syncMgr.getSyncStats().updatePeerReceivedBlocks(_displayId, 1);
+        this.syncMgr.getSyncStats().updatePeerBlocks(_displayId, 1, BlockType.RECEIVED);
 
         INode node = this.p2pMgr.getActiveNodes().get(_nodeIdHashcode);
         if (node != null && rs != null) {

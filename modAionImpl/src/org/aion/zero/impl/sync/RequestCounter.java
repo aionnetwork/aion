@@ -1,5 +1,7 @@
 package org.aion.zero.impl.sync;
 
+import org.aion.zero.impl.sync.statistics.RequestType;
+
 /**
  * Used for tracking different types of requests made to peers.
  *

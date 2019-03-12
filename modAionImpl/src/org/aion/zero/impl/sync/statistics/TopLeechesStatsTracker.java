@@ -18,28 +18,20 @@ public class TopLeechesStatsTracker {
     }
 
     /**
-     * Obtain log stream containing a list of peers ordered by the total number of blocks requested
-     * by each peer used to determine who is requesting the majority of blocks, i.e. top leeches.
+     * Updates the total block requests made by a peer.
      *
-     * @return log stream with peers statistical data on leeches
+     * @param nodeId peer node display Id
+     * @param totalBlocks total number of blocks requested
      */
-    public String dumpTopLeechesStats() {
-        Map<String, Integer> totalBlockReqByPeer = this.getTotalBlockRequestsByPeer();
-
-        StringBuilder sb = new StringBuilder();
-
-        if (!totalBlockReqByPeer.isEmpty()) {
-
-            sb.append("\n========= sync-top-leeches =========\n");
-            sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
-            sb.append("------------------------------------\n");
-
-            totalBlockReqByPeer.forEach(
-                    (nodeId, totalBlocks) ->
-                            sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
+    public void updateTotalBlockRequestsByPeer(String nodeId, int totalBlocks) {
+        leechesLock.lock();
+        try {
+            if (blockRequestsByPeer.putIfAbsent(nodeId, totalBlocks) != null) {
+                blockRequestsByPeer.computeIfPresent(nodeId, (key, value) -> value + totalBlocks);
+            }
+        } finally {
+            leechesLock.unlock();
         }
-
-        return sb.toString();
     }
 
     /**
@@ -64,19 +56,27 @@ public class TopLeechesStatsTracker {
     }
 
     /**
-     * Updates the total block requests made by a peer.
+     * Obtain log stream containing a list of peers ordered by the total number of blocks requested
+     * by each peer used to determine who is requesting the majority of blocks, i.e. top leeches.
      *
-     * @param nodeId peer node display Id
-     * @param totalBlocks total number of blocks requested
+     * @return log stream with peers statistical data on leeches
      */
-    public void updateTotalBlockRequestsByPeer(String nodeId, int totalBlocks) {
-        leechesLock.lock();
-        try {
-            if (blockRequestsByPeer.putIfAbsent(nodeId, totalBlocks) != null) {
-                blockRequestsByPeer.computeIfPresent(nodeId, (key, value) -> value + totalBlocks);
-            }
-        } finally {
-            leechesLock.unlock();
+    public String dumpTopLeechesStats() {
+        Map<String, Integer> totalBlockReqByPeer = this.getTotalBlockRequestsByPeer();
+
+        StringBuilder sb = new StringBuilder();
+
+        if (!totalBlockReqByPeer.isEmpty()) {
+
+            sb.append("\n========= sync-top-leeches =========\n");
+            sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
+            sb.append("------------------------------------\n");
+
+            totalBlockReqByPeer.forEach(
+                (nodeId, totalBlocks) ->
+                    sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
         }
+
+        return sb.toString();
     }
 }

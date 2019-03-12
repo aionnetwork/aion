@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqStatus;
+import org.aion.zero.impl.sync.statistics.RequestType;
 import org.slf4j.Logger;
 
 /** @author chris long run */
