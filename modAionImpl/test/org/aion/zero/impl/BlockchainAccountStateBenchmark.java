@@ -24,6 +24,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.db.AionContractDetailsImpl;
+
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
@@ -268,6 +269,7 @@ public class BlockchainAccountStateBenchmark {
             final AionBlock parentBlock,
             final Address contractAddress,
             final int repeat) {
+
         BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
         List<AionTransaction> transactions = new ArrayList<>();
 
