@@ -6,6 +6,7 @@ import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
 import org.aion.p2p.Ver;
+import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.msg.RequestBlocks;
@@ -50,35 +51,84 @@ public final class RequestBlocksHandler extends Handler {
         RequestBlocks request = RequestBlocks.decode(message);
 
         if (request != null) {
-            long start = request.getStart();
-            int count = request.getCount();
-            boolean descending = request.isDescending();
+            if (request.isNumber()) {
+                // process block requests by number
+                long start = request.getStartHeight();
+                int count = request.getCount();
+                boolean descending = request.isDescending();
 
-            if (log.isDebugEnabled()) {
-                this.log.debug(
-                        "<request-blocks from-block={} count={} order={}>",
-                        start,
-                        count,
-                        descending ? "DESC" : "ASC");
-            }
-
-            List<AionBlock> blockList = null;
-            try {
-                // retrieve blocks from block store depending on requested order
-                if (descending) {
-                    blockList = chain.getBlocksByRange(start, start - count + 1);
-                } else {
-                    blockList = chain.getBlocksByRange(start, start + count - 1);
+                if (log.isDebugEnabled()) {
+                    this.log.debug(
+                            "<request-blocks from-block={} count={} order={}>",
+                            start,
+                            count,
+                            descending ? "DESC" : "ASC");
                 }
-            } catch (Exception e) {
-                this.log.error("<request-blocks value retrieval failed>", e);
-            }
 
-            if (blockList != null) {
-                // generate response with retrieved blocks
-                ResponseBlocks response = new ResponseBlocks(blockList);
-                // reply to request
-                this.p2p.send(peerId, displayId, response);
+                List<AionBlock> blockList = null;
+                try {
+                    // retrieve blocks from block store depending on requested order
+                    if (descending) {
+                        blockList = chain.getBlocksByRange(start, start - count + 1);
+                    } else {
+                        blockList = chain.getBlocksByRange(start, start + count - 1);
+                    }
+                } catch (Exception e) {
+                    this.log.error("<request-blocks value retrieval failed>", e);
+                }
+
+                if (blockList != null) {
+                    // generate response with retrieved blocks
+                    ResponseBlocks response = new ResponseBlocks(blockList);
+                    // reply to request
+                    this.p2p.send(peerId, displayId, response);
+                }
+            } else {
+                // process block requests by hash
+                byte[] startHash = request.getStartHash();
+                int count = request.getCount();
+                boolean descending = request.isDescending();
+
+                if (log.isDebugEnabled()) {
+                    this.log.debug(
+                            "<request-blocks from-block={} count={} order={}>",
+                            Hex.toHexString(startHash),
+                            count,
+                            descending ? "DESC" : "ASC");
+                }
+
+                // check if block exists
+                AionBlock block = chain.getBlockByHash(startHash);
+
+                if (block != null) {
+                    long start = block.getNumber();
+                    List<AionBlock> blockList = null;
+                    try {
+                        // retrieve blocks from block store depending on requested order
+                        if (descending) {
+                            blockList = chain.getBlocksByRange(start, start - count + 1);
+                        } else {
+                            blockList = chain.getBlocksByRange(start, start + count - 1);
+                        }
+                    } catch (Exception e) {
+                        this.log.error("<request-blocks value retrieval failed>", e);
+                    }
+
+                    if (blockList != null && blockList.contains(block)) {
+                        // generate response with retrieved blocks
+                        ResponseBlocks response = new ResponseBlocks(blockList);
+                        // reply to request
+                        this.p2p.send(peerId, displayId, response);
+                    } else {
+                        // retrieving multiple blocks failed
+                        // or the requested block was on a side chain
+
+                        // generate response with single block
+                        ResponseBlocks response = new ResponseBlocks(List.of(block));
+                        // reply to request
+                        this.p2p.send(peerId, displayId, response);
+                    }
+                }
             }
         } else {
             this.log.error(
