@@ -94,13 +94,13 @@ public class TransactionExecutorTest {
     }
 
     @Test(expected = VMException.class)
-    public void testExecutorFatal () throws VMException {
+    public void testExecutorFatal() throws VMException {
         BulkExecutor be = mock(BulkExecutor.class);
-        TransactionResult rt = new FastVmTransactionResult(FastVmResultCode.VM_INTERNAL_ERROR , 0);
+        TransactionResult rt = new FastVmTransactionResult(FastVmResultCode.VM_INTERNAL_ERROR, 0);
         when(be.execute()).thenThrow(new VMException(rt.toString()));
 
         try {
-        be.execute();
+            be.execute();
         } catch (VMException e) {
             System.out.println(e.toString());
             throw e;
@@ -282,7 +282,8 @@ public class TransactionExecutorTest {
         //        // I'm guessing: first data word is the number of bytes that follows. Then those
         // following
         //        // bytes denote the size of the output, which follows these last bytes.
-        //        int len = new DataWordImpl(Arrays.copyOfRange(output, 0, DataWordImpl.BYTES)).intValue();
+        //        int len = new DataWordImpl(Arrays.copyOfRange(output, 0,
+        // DataWordImpl.BYTES)).intValue();
         //        byte[] outputLen = new byte[len];
         //        System.arraycopy(output, DataWordImpl.BYTES, outputLen, 0, len);
         //        int outputSize = new BigInteger(outputLen).intValue();
