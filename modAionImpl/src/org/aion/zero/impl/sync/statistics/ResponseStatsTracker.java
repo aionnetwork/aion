@@ -1,8 +1,11 @@
 package org.aion.zero.impl.sync.statistics;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -52,222 +55,107 @@ public class ResponseStatsTracker {
     }
 
     public Map<String, Map<String, Pair<Double, Integer>>> getResponseStats() {
-        // acquire lock for all resources
-        this.locks.get(RequestType.TRIE_DATA).lock();
-        this.locks.get(RequestType.RECEIPTS).lock();
-        this.locks.get(RequestType.BLOCKS).lock();
-        this.locks.get(RequestType.BODIES).lock();
-        this.locks.get(RequestType.HEADERS).lock();
-        this.locks.get(RequestType.STATUS).lock();
+        // acquire lock for all resources, unlock in reverse order
+        List lockTypes = Arrays.asList(RequestType.values());
+        lockTypes.forEach(type -> locks.get(type).lock());
 
         try {
-            Map<String, Pair<Double, Integer>> statusStats =
-                    this.stats.get(RequestType.STATUS).getResponseStatsByPeers();
-            Map<String, Pair<Double, Integer>> headersStats =
-                    this.stats.get(RequestType.HEADERS).getResponseStatsByPeers();
-            Map<String, Pair<Double, Integer>> bodiesStats =
-                    this.stats.get(RequestType.BODIES).getResponseStatsByPeers();
-            Map<String, Pair<Double, Integer>> blocksStats =
-                    this.stats.get(RequestType.BLOCKS).getResponseStatsByPeers();
-            Map<String, Pair<Double, Integer>> receiptsStats =
-                    this.stats.get(RequestType.RECEIPTS).getResponseStatsByPeers();
-            Map<String, Pair<Double, Integer>> trieDataStats =
-                    this.stats.get(RequestType.TRIE_DATA).getResponseStatsByPeers();
+            boolean empty = true;
+            EnumMap<RequestType, Map<String, Pair<Double, Integer>>> responseStats =
+                    new EnumMap<>(RequestType.class);
+            EnumMap<RequestType, Pair<Double, Integer>> overallStats =
+                    new EnumMap<>(RequestType.class);
+            Set<String> peers = new HashSet<>();
 
-            // skip if there's nothing to show
-            if (statusStats.isEmpty()
-                    && headersStats.isEmpty()
-                    && bodiesStats.isEmpty()
-                    && blocksStats.isEmpty()
-                    && receiptsStats.isEmpty()
-                    && trieDataStats.isEmpty()) {
-                return null;
-            }
+            for (RequestType type : RequestType.values()) {
+                Map<String, Pair<Double, Integer>> stats =
+                        this.stats.get(type).getResponseStatsByPeers();
+                responseStats.put(type, stats);
 
-            Map<String, Map<String, Pair<Double, Integer>>> responseStats = new LinkedHashMap<>();
-
-            Pair<Double, Integer> statusOverall = Pair.of(0d, 0);
-            Pair<Double, Integer> headersOverall = Pair.of(0d, 0);
-            Pair<Double, Integer> bodiesOverall = Pair.of(0d, 0);
-            Pair<Double, Integer> blocksOverall = Pair.of(0d, 0);
-            Pair<Double, Integer> receiptsOverall = Pair.of(0d, 0);
-            Pair<Double, Integer> trieDataOverall = Pair.of(0d, 0);
-
-            // used in computing averages
-            int count;
-
-            // making sure to grab all peers
-            Set<String> peers = new HashSet<>(statusStats.keySet());
-            peers.addAll(headersStats.keySet());
-            peers.addAll(bodiesStats.keySet());
-            peers.addAll(blocksStats.keySet());
-            peers.addAll(receiptsStats.keySet());
-            peers.addAll(trieDataStats.keySet());
-
-            for (String nodeId : peers) {
-
-                Map<String, Pair<Double, Integer>> peerStats = new LinkedHashMap<>();
-                Pair<Double, Integer> status = statusStats.getOrDefault(nodeId, Pair.of(0d, 0));
-                Pair<Double, Integer> headers = headersStats.getOrDefault(nodeId, Pair.of(0d, 0));
-                Pair<Double, Integer> bodies = bodiesStats.getOrDefault(nodeId, Pair.of(0d, 0));
-                Pair<Double, Integer> blocks = blocksStats.getOrDefault(nodeId, Pair.of(0d, 0));
-                Pair<Double, Integer> receipts = receiptsStats.getOrDefault(nodeId, Pair.of(0d, 0));
-                Pair<Double, Integer> trieData = trieDataStats.getOrDefault(nodeId, Pair.of(0d, 0));
-
-                count =
-                        status.getRight()
-                                + headers.getRight()
-                                + bodies.getRight()
-                                + blocks.getRight()
-                                + receipts.getRight()
-                                + trieData.getRight();
-
-                Pair<Double, Integer> avgStats;
-                // ensuring there are entries
-                if (count > 0) {
-                    avgStats =
-                            Pair.of(
-                                    (status.getLeft() * status.getRight()
-                                                    + headers.getLeft() * headers.getRight()
-                                                    + bodies.getLeft() * bodies.getRight()
-                                                    + blocks.getLeft() * blocks.getRight()
-                                                    + receipts.getLeft() * receipts.getRight()
-                                                    + trieData.getLeft() * trieData.getRight())
-                                            / count,
-                                    count);
-                } else {
-                    avgStats = Pair.of(0d, 0);
+                if (!stats.isEmpty()) {
+                    peers.addAll(stats.keySet());
+                    empty = false;
                 }
 
+                // used to calculate overall stats
+                overallStats.put(type, Pair.of(0d, 0));
+            }
+
+            if (empty) return null;
+
+            Map<String, Map<String, Pair<Double, Integer>>> processedStats = new LinkedHashMap<>();
+            Pair<Double, Integer> statOverall;
+            int overallCount;
+
+            for (String nodeId : peers) {
+                Map<String, Pair<Double, Integer>> peerStats = new LinkedHashMap<>();
+                // used in computing averages for each peer
+                int count = 0;
+                Pair<Double, Integer> avgStats = Pair.of(0d, 0); // average for each peer
+
+                for (RequestType type : RequestType.values()) {
+                    Pair<Double, Integer> stat =
+                            responseStats.get(type).getOrDefault(nodeId, Pair.of(0d, 0));
+
+                    // add different types of stats to current peer
+                    peerStats.put(type.toString().toLowerCase(), stat);
+                    // calculate average stats for current peer
+                    count += stat.getRight();
+                    if (count > 0) {
+                        avgStats =
+                                Pair.of(
+                                        (avgStats.getLeft() * avgStats.getRight()
+                                                        + stat.getLeft() * stat.getRight())
+                                                / count,
+                                        count);
+                    } // do nothing if count is 0
+
+                    // update overall stats for current request type
+                    statOverall = overallStats.getOrDefault(type, Pair.of(0d, 0));
+                    overallCount = statOverall.getRight() + stat.getRight();
+                    if (overallCount > 0) {
+                        overallStats.put(
+                                type,
+                                Pair.of(
+                                        (statOverall.getLeft() * statOverall.getRight()
+                                                        + stat.getLeft() * stat.getRight())
+                                                / overallCount,
+                                        overallCount));
+                    } // do nothing if count is 0
+                }
                 peerStats.put("all", avgStats);
-                peerStats.put("status", status);
-                peerStats.put("headers", headers);
-                peerStats.put("bodies", bodies);
-                peerStats.put("blocks", blocks);
-                peerStats.put("receipts", receipts);
-                peerStats.put("trieData", trieData);
-                responseStats.put(nodeId, peerStats);
-
-                // adding to overall status
-                count = statusOverall.getRight() + status.getRight();
-                // ensuring there are entries
-                if (count > 0) {
-                    statusOverall =
-                            Pair.of(
-                                    (statusOverall.getLeft() * statusOverall.getRight()
-                                                    + status.getLeft() * status.getRight())
-                                            / count,
-                                    count);
-                } // nothing to do if count == 0
-
-                // adding to overall headers
-                count = headersOverall.getRight() + headers.getRight();
-                // ensuring there are entries
-                if (count > 0) {
-                    headersOverall =
-                            Pair.of(
-                                    (headersOverall.getLeft() * headersOverall.getRight()
-                                                    + headers.getLeft() * headers.getRight())
-                                            / count,
-                                    count);
-                } // nothing to do if count == 0
-
-                // adding to overall headers
-                count = bodiesOverall.getRight() + bodies.getRight();
-                // ensuring there are entries
-                if (count > 0) {
-                    bodiesOverall =
-                            Pair.of(
-                                    (bodiesOverall.getLeft() * bodiesOverall.getRight()
-                                                    + bodies.getLeft() * bodies.getRight())
-                                            / count,
-                                    count);
-                } // nothing to do if count == 0
-
-                // adding to overall blocks
-                count = blocksOverall.getRight() + blocks.getRight();
-                // ensuring there are entries
-                if (count > 0) {
-                    blocksOverall =
-                            Pair.of(
-                                    (blocksOverall.getLeft() * blocksOverall.getRight()
-                                                    + blocks.getLeft() * blocks.getRight())
-                                            / count,
-                                    count);
-                } // nothing to do if count == 0
-
-                // adding to overall receipts
-                count = receiptsOverall.getRight() + receipts.getRight();
-                // ensuring there are entries
-                if (count > 0) {
-                    receiptsOverall =
-                            Pair.of(
-                                    (receiptsOverall.getLeft() * receiptsOverall.getRight()
-                                                    + receipts.getLeft() * receipts.getRight())
-                                            / count,
-                                    count);
-                } // nothing to do if count == 0
-
-                // adding to overall trie data
-                count = trieDataOverall.getRight() + trieData.getRight();
-                // ensuring there are entries
-                if (count > 0) {
-                    trieDataOverall =
-                            Pair.of(
-                                    (trieDataOverall.getLeft() * trieDataOverall.getRight()
-                                                    + trieData.getLeft() * trieData.getRight())
-                                            / count,
-                                    count);
-                } // nothing to do if count == 0
+                processedStats.put(nodeId, peerStats);
             }
 
-            count =
-                    statusOverall.getRight()
-                            + headersOverall.getRight()
-                            + bodiesOverall.getRight()
-                            + blocksOverall.getRight()
-                            + receiptsOverall.getRight()
-                            + trieDataOverall.getRight();
-            Pair<Double, Integer> avgOverall;
-            // ensuring there are entries
-            if (count > 0) {
-                avgOverall =
-                        Pair.of(
-                                (statusOverall.getLeft() * statusOverall.getRight()
-                                                + headersOverall.getLeft()
-                                                        * headersOverall.getRight()
-                                                + bodiesOverall.getLeft() * bodiesOverall.getRight()
-                                                + blocksOverall.getLeft() * blocksOverall.getRight()
-                                                + receiptsOverall.getLeft()
-                                                        * receiptsOverall.getRight()
-                                                + trieDataOverall.getLeft()
-                                                        * trieDataOverall.getRight())
-                                        / count,
-                                count);
-            } else {
-                avgOverall = Pair.of(0d, 0);
+            Pair<Double, Integer> avgOverall = Pair.of(0d, 0);
+            overallCount = 0;
+            Map<String, Pair<Double, Integer>> overall = new LinkedHashMap<>();
+
+            for (RequestType type : RequestType.values()) {
+                statOverall = overallStats.get(type);
+                overall.put(type.toString().toLowerCase(), statOverall);
+
+                // calculate overall average stats
+                overallCount += statOverall.getRight();
+                if (overallCount > 0) {
+                    avgOverall =
+                            Pair.of(
+                                    (avgOverall.getLeft() * avgOverall.getRight()
+                                                    + statOverall.getLeft()
+                                                            * statOverall.getRight())
+                                            / overallCount,
+                                    overallCount);
+                }
             }
+            overall.put("all", avgOverall);
+            processedStats.put("overall", overall);
 
-            Map<String, Pair<Double, Integer>> overallStats = new LinkedHashMap<>();
-            overallStats.put("all", avgOverall);
-            overallStats.put("status", statusOverall);
-            overallStats.put("headers", headersOverall);
-            overallStats.put("bodies", bodiesOverall);
-            overallStats.put("blocks", blocksOverall);
-            overallStats.put("receipts", receiptsOverall);
-            overallStats.put("trieData", trieDataOverall);
+            return processedStats;
 
-            responseStats.put("overall", overallStats);
-
-            return responseStats;
         } finally {
-            // unlock in reverse order
-            this.locks.get(RequestType.STATUS).unlock();
-            this.locks.get(RequestType.HEADERS).unlock();
-            this.locks.get(RequestType.BODIES).unlock();
-            this.locks.get(RequestType.BLOCKS).unlock();
-            this.locks.get(RequestType.RECEIPTS).unlock();
-            this.locks.get(RequestType.TRIE_DATA).unlock();
+            // unlock all locks in reverse order
+            Collections.reverse(lockTypes);
+            lockTypes.forEach(type -> locks.get(type).unlock());
         }
     }
 
@@ -287,26 +175,47 @@ public class ResponseStatsTracker {
                     "----------------------------------------------------------------------------\n");
 
             Map<String, Pair<Double, Integer>> peerStats = responseStats.get("overall");
+            sb.append(
+                    String.format(
+                            "   «overall» %20s %16s ms %19d\n",
+                            "«all»",
+                            String.format("%.0f", peerStats.get("all").getLeft() / 1_000_000),
+                            peerStats.get("all").getRight()));
             for (String type : peerStats.keySet()) {
-                sb.append(
-                        String.format(
-                                "   «overall» %20s %16s ms %19d\n",
-                                "«" + type + "»",
-                                String.format("%.0f", peerStats.get(type).getLeft() / 1_000_000),
-                                peerStats.get(type).getRight()));
+                if (type != "all") {
+                    sb.append(
+                            String.format(
+                                    "   «overall» %20s %16s ms %19d\n",
+                                    "«" + type + "»",
+                                    String.format(
+                                            "%.0f", peerStats.get(type).getLeft() / 1_000_000),
+                                    peerStats.get(type).getRight()));
+                }
             }
+
             for (String nodeId : responseStats.keySet()) {
                 if (nodeId != "overall") {
                     peerStats = responseStats.get(nodeId);
+                    sb.append(
+                            String.format(
+                                    "   id:%6s %20s %16s ms %19d\n",
+                                    nodeId,
+                                    "«all»",
+                                    String.format(
+                                            "%.0f", peerStats.get("all").getLeft() / 1_000_000),
+                                    peerStats.get("all").getRight()));
                     for (String type : peerStats.keySet()) {
-                        sb.append(
-                                String.format(
-                                        "   id:%6s %20s %16s ms %19d\n",
-                                        nodeId,
-                                        "«" + type + "»",
-                                        String.format(
-                                                "%.0f", peerStats.get(type).getLeft() / 1_000_000),
-                                        peerStats.get(type).getRight()));
+                        if (type != "all") {
+                            sb.append(
+                                    String.format(
+                                            "   id:%6s %20s %16s ms %19d\n",
+                                            nodeId,
+                                            "«" + type + "»",
+                                            String.format(
+                                                    "%.0f",
+                                                    peerStats.get(type).getLeft() / 1_000_000),
+                                            peerStats.get(type).getRight()));
+                        }
                     }
                 }
             }

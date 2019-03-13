@@ -133,7 +133,7 @@ public class SyncStatsTest {
                 stats.updateTotalRequestsToPeer(peer, RequestType.RECEIPTS);
                 processedRequests++;
             }
-            // trieData requests
+            // trie_data requests
             if (peer == peers.get(0)) {
                 stats.updateTotalRequestsToPeer(peer, RequestType.TRIE_DATA);
                 processedRequests++;
@@ -222,7 +222,7 @@ public class SyncStatsTest {
             if (peers.subList(0, 2).contains(peer)) {
                 stats.updateTotalRequestsToPeer(peer, RequestType.RECEIPTS);
             }
-            // trieData requests
+            // trie_data requests
             if (peer == peers.get(0)) {
                 stats.updateTotalRequestsToPeer(peer, RequestType.TRIE_DATA);
             }
@@ -899,7 +899,7 @@ public class SyncStatsTest {
 
             if (e.getKey().equals("overall")) {
                 for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
-                    if (sub.getKey().equals("all") || sub.getKey().equals("trieData")) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("trie_data")) {
                         // check average
                         assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
                         // check entries
@@ -913,7 +913,7 @@ public class SyncStatsTest {
                 }
             } else {
                 for (Map.Entry<String, Pair<Double, Integer>> sub : e.getValue().entrySet()) {
-                    if (sub.getKey().equals("all") || sub.getKey().equals("trieData")) {
+                    if (sub.getKey().equals("all") || sub.getKey().equals("trie_data")) {
                         // check average
                         assertThat(sub.getValue().getLeft()).isEqualTo(1_000_000d);
                         // check entries
