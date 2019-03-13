@@ -136,7 +136,7 @@ public class BlockchainAccountStateBenchmark {
 
     private StandaloneBlockchain.Bundle bundle;
 
-    public BlockchainAccountStateBenchmark(String name, StandaloneBlockchain.Bundle bundle) {
+    public BlockchainAccountStateBenchmark(StandaloneBlockchain.Bundle bundle) {
         this.bundle = bundle;
     }
 
