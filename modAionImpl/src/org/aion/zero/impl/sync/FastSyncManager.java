@@ -3,7 +3,9 @@ package org.aion.zero.impl.sync;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -43,8 +45,6 @@ public final class FastSyncManager {
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
 
     private AionBlock pivot = null;
-    private long pivotNumber = -1;
-    private ByteArrayWrapper pivotHash = null;
 
     Map<ByteArrayWrapper, Long> importedBlockHashes =
             Collections.synchronizedMap(new LRUMap<>(4096));
@@ -52,6 +52,7 @@ public final class FastSyncManager {
             Collections.synchronizedMap(new LRUMap<>(1000));
 
     BlockingQueue<BlocksWrapper> downloadedBlocks = new LinkedBlockingQueue<>();
+    Map<ByteArrayWrapper, BlocksWrapper> receivedBlocks = new HashMap<>();
 
     private final Map<ByteArrayWrapper, byte[]> importedTrieNodes = new ConcurrentHashMap<>();
 
@@ -67,16 +68,10 @@ public final class FastSyncManager {
         Objects.requireNonNull(pivot);
 
         this.pivot = pivot;
-        this.pivotNumber = pivot.getNumber();
-        this.pivotHash = ByteArrayWrapper.wrap(pivot.getHash());
     }
 
-    public long getPivotNumber() {
-        return pivotNumber;
-    }
-
-    public ByteArrayWrapper getPivotHash() {
-        return pivotHash;
+    public AionBlock getPivot() {
+        return pivot;
     }
 
     // TODO: shutdown pool
@@ -161,13 +156,13 @@ public final class FastSyncManager {
         if (completeBlocks.get()) {
             // all checks have already passed
             return true;
-        } else if (pivotHash == null) {
+        } else if (pivot == null) {
             // the pivot was not initialized yet
             return false;
         } else if (chain.getBlockStore().getChainBlockByNumber(1L) == null) {
             // checks for first block for fast fail if incomplete
             return false;
-        } else if (chain.findMissingAncestor(pivotHash.getData()) != null) { // long check done last
+        } else if (chain.findMissingAncestor(pivot) != null) { // long check done last
             // full check from pivot returned block
             // i.e. the chain was incomplete at some point
             return false;
@@ -240,12 +235,70 @@ public final class FastSyncManager {
         }
     }
 
-    public BlocksWrapper takeFilteredBlocks(ByteArrayWrapper required) {
-        // TODO: ensure that blocks that are of heights larger than the required are discarded
-        // TODO: the fastSyncMgr ensured the batch cannot be empty
-        // TODO: ensure that the required hash is part of the batch
-        // TODO: if the required hash is not among the known ones, request it from the network
+    public void addToImportedBlocks(ByteArrayWrapper hash) {
+        this.importedBlockHashes.put(hash, null); // TODO: is there something useful I can add?
+        this.receivedBlockHashes.remove(hash);
+    }
+
+    public BlocksWrapper takeFilteredBlocks(ByteArrayWrapper requiredHash, long requiredLevel) {
+        // first check the map
+        if (receivedBlocks.containsKey(requiredHash)) {
+            return receivedBlocks.remove(requiredHash);
+        } else if (receivedBlockHashes.containsKey(requiredHash)) {
+            // retrieve the batch that contains the block
+            ByteArrayWrapper wrapperHash = receivedBlockHashes.get(requiredHash);
+            return receivedBlocks.remove(wrapperHash);
+        }
+
+        // process queue data
+        try {
+            while (!downloadedBlocks.isEmpty()) {
+                BlocksWrapper wrapper = downloadedBlocks.remove();
+
+                if (wrapper != null) {
+                    wrapper.getBlocks()
+                            .removeIf(
+                                    b ->
+                                            importedBlockHashes.containsKey(
+                                                    ByteArrayWrapper.wrap(b.getHash())));
+                    if (!wrapper.getBlocks().isEmpty()) {
+                        ByteArrayWrapper firstHash =
+                                ByteArrayWrapper.wrap(wrapper.getBlocks().get(0).getHash());
+                        if (firstHash.equals(requiredHash)) {
+                            return wrapper;
+                        } else {
+                            // determine if the block is in the middle of the batch
+                            boolean isRequred = false;
+                            for (AionBlock block : wrapper.getBlocks()) {
+                                ByteArrayWrapper hash = ByteArrayWrapper.wrap(block.getHash());
+                                receivedBlockHashes.put(hash, firstHash);
+                                if (hash.equals(requiredHash)) {
+                                    isRequred = true;
+                                    break;
+                                }
+                            }
+                            if (isRequred) {
+                                return wrapper;
+                            } else {
+                                receivedBlocks.put(firstHash, wrapper);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (NoSuchElementException e) {
+            log.debug("The empty check should have prevented this exception.", e);
+        }
+
+        // couldn't find the data, so need to request it
+        makeBlockRequests(requiredHash, requiredLevel);
 
         return null;
+    }
+
+    private void makeBlockRequests(ByteArrayWrapper requiredHash, long requiredLevel) {
+        // TODO: if the required hash is not among the known ones, request it from the network
+        // TODO: block requests should be made backwards from pivot
+        // TODO: request that level plus further blocks
     }
 }

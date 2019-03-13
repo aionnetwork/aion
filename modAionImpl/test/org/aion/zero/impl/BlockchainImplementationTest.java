@@ -19,6 +19,7 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 /**
@@ -580,9 +581,8 @@ public class BlockchainImplementationTest {
         generateRandomChainWithoutTransactions(chain, 2, 1);
 
         AionBlock best = chain.getBestBlock();
-        byte[] bestHash = best.getHash();
 
-        assertThat(chain.findMissingAncestor(bestHash)).isNull();
+        assertThat(chain.findMissingAncestor(best)).isNull();
     }
 
     @Test
@@ -601,7 +601,9 @@ public class BlockchainImplementationTest {
         // delete the block from the db
         chain.getRepository().getBlockDatabase().delete(bestHash);
 
-        assertThat(chain.findMissingAncestor(bestHash)).isEqualTo(ByteArrayWrapper.wrap(bestHash));
+        Pair<ByteArrayWrapper, Long> pair = chain.findMissingAncestor(best);
+        assertThat(pair.getLeft()).isEqualTo(ByteArrayWrapper.wrap(bestHash));
+        assertThat(pair.getRight()).isEqualTo(best.getNumber());
     }
 
     @Test
@@ -615,14 +617,14 @@ public class BlockchainImplementationTest {
         generateRandomChainWithoutTransactions(chain, 2, 1);
 
         AionBlock best = chain.getBestBlock();
-        byte[] bestHash = best.getHash();
         byte[] parentHash = best.getParentHash();
 
         // delete the block from the db
         chain.getRepository().getBlockDatabase().delete(parentHash);
 
-        assertThat(chain.findMissingAncestor(bestHash))
-                .isEqualTo(ByteArrayWrapper.wrap(parentHash));
+        Pair<ByteArrayWrapper, Long> pair = chain.findMissingAncestor(best);
+        assertThat(pair.getLeft()).isEqualTo(ByteArrayWrapper.wrap(parentHash));
+        assertThat(pair.getRight()).isEqualTo(best.getNumber() - 1);
     }
 
     @Test

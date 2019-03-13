@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
@@ -230,7 +231,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
         this.blockHeaderValidator = this.chainConfiguration.createBlockHeaderValidator();
 
         this.transactionStore = this.repository.getTransactionStore();
-
 
         this.minerCoinbase = this.config.getMinerCoinbase();
         if (minerCoinbase == null) {
@@ -616,22 +616,28 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * ancestor missing from storage. Returns the ancestor's hash if one is found missing or {@code
      * null} when the history is complete, i.e. no missing ancestors exist.
      *
-     * @param hash the first hash to be checked if present in the repository
+     * @param block the first block to be checked if present in the repository
      * @return the ancestor's hash if one is found missing or {@code null} when the history is
      *     complete
+     * @throws NullPointerException when given a null block as input
      */
-    public ByteArrayWrapper findMissingAncestor(byte[] hash) {
+    public Pair<ByteArrayWrapper, Long> findMissingAncestor(AionBlock block) {
+        Objects.requireNonNull(block);
+
         // initialize with given parameter
-        byte[] currentHash = hash;
-        AionBlock known = getBlockStore().getBlockByHash(hash);
+        byte[] currentHash = block.getHash();
+        long currentNumber = block.getNumber();
+
+        AionBlock known = getBlockStore().getBlockByHash(currentHash);
 
         while (known != null && known.getNumber() > 0) {
             currentHash = known.getParentHash();
+            currentNumber--;
             known = getBlockStore().getBlockByHash(currentHash);
         }
 
         if (known == null) {
-            return ByteArrayWrapper.wrap(currentHash);
+            return Pair.of(ByteArrayWrapper.wrap(currentHash), currentNumber);
         } else {
             return null;
         }
