@@ -103,7 +103,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
      */
     @Override
     public byte[] getStorageHash() {
-        return origContract.getStorageHash();
+        return origContract == null ? null : origContract.getStorageHash();
     }
 
     /** This method is not supported. */
