@@ -1077,7 +1077,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
         try {
             return txExe.execute().get(0);
         } catch (VMException e) {
-            LOGGER_VM.error("Shutdown due to a VM fatal error.",e);
+            LOGGER_VM.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);
             return null;
         }

@@ -150,7 +150,7 @@ public class AionImpl implements IAionChain {
                             getPostExecutionWork());
             return executor.execute().get(0).getReceipt().getEnergyUsed();
         } catch (VMException e) {
-            LOG_GEN.error("Shutdown due to a VM fatal error.",e);
+            LOG_GEN.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);
             return 0;
         } finally {
@@ -181,7 +181,7 @@ public class AionImpl implements IAionChain {
                             getPostExecutionWork());
             return executor.execute().get(0).getReceipt();
         } catch (VMException e) {
-            LOG_GEN.error("Shutdown due to a VM fatal error.",e);
+            LOG_GEN.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);
             return null;
         } finally {

@@ -1154,7 +1154,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         try {
             executionSummaries = executor.execute();
         } catch (VMException e) {
-            LOG.error("Shutdown due to a VM fatal error.",e);
+            LOG.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);
         }
 
@@ -1225,7 +1225,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         try {
             executionSummaries = executor.execute();
         } catch (VMException e) {
-            LOG.error("Shutdown due to a VM fatal error.",e);
+            LOG.error("Shutdown due to a VM fatal error.", e);
             System.exit(-1);
         }
 
