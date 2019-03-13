@@ -1,14 +1,18 @@
 package org.aion.zero.impl.sync;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.types.ByteArrayWrapper;
+import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
+import org.aion.zero.impl.types.AionBlock;
 
 /**
  * Directs behavior for fast sync functionality.
@@ -17,13 +21,40 @@ import org.aion.zero.impl.sync.msg.ResponseBlocks;
  */
 public final class FastSyncManager {
 
+    // TODO: ensure correct behavior when disabled
     private boolean enabled;
+    // TODO: ensure correct behavior when complete
     private final AtomicBoolean complete = new AtomicBoolean(false);
+    private final AtomicBoolean completeBlocks = new AtomicBoolean(false);
+
+    private final AionBlockchainImpl chain;
+
+    private AionBlock pivot = null;
+    private long pivotNumber = -1;
+    private ByteArrayWrapper pivotHash = null;
 
     private final Map<ByteArrayWrapper, byte[]> importedTrieNodes = new ConcurrentHashMap<>();
 
-    public FastSyncManager() {
-        this.enabled = false;
+    public FastSyncManager(AionBlockchainImpl chain) {
+        this.enabled = true;
+        this.chain = chain;
+    }
+
+    @VisibleForTesting
+    void setPivot(AionBlock pivot) {
+        Objects.requireNonNull(pivot);
+
+        this.pivot = pivot;
+        this.pivotNumber = pivot.getNumber();
+        this.pivotHash = ByteArrayWrapper.wrap(pivot.getHash());
+    }
+
+    public long getPivotNumber() {
+        return pivotNumber;
+    }
+
+    public ByteArrayWrapper getPivotHash() {
+        return pivotHash;
     }
 
     ExecutorService executors =
@@ -104,12 +135,30 @@ public final class FastSyncManager {
     }
 
     public boolean isCompleteBlockData() {
-        // TODO: check for first block for fast fail
-        // TODO: if first block correct, do full check from pivot
-        // TODO: use chain.findMissingAncestor(pivot.getHash());
-        // TODO: block requests should be made backwards from pivot
-        // TODO: requests need to be based on hash instead of level
-        return false;
+        if (completeBlocks.get()) {
+            // all checks have already passed
+            return true;
+        } else if (pivotHash == null) {
+            // the pivot was not initialized yet
+            return false;
+        } else if (chain.getBlockStore().getChainBlockByNumber(1L) == null) {
+            // checks for first block for fast fail if incomplete
+            return false;
+        } else if (chain.findMissingAncestor(pivotHash.getData()) != null) { // long check done last
+            // full check from pivot returned block
+            // i.e. the chain was incomplete at some point
+            return false;
+        } else {
+            // making the pivot the current best block
+            chain.setBestBlock(pivot);
+
+            // walk through the chain to update the total difficulty
+            chain.getBlockStore().pruneAndCorrect();
+            chain.getBlockStore().flush();
+
+            completeBlocks.set(true);
+            return true;
+        }
     }
 
     private boolean isCompleteReceiptData() {
@@ -156,11 +205,6 @@ public final class FastSyncManager {
         // TODO: ensure that the required hash is part of the batch
         // TODO: if the required hash is not among the known ones, request it from the network
 
-        return null;
-    }
-
-    public ByteArrayWrapper getPivotHash() {
-        // TODO: implement
         return null;
     }
 }
