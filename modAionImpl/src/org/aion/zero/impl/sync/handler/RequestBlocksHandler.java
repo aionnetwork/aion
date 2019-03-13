@@ -5,6 +5,7 @@ import java.util.List;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Handler;
 import org.aion.p2p.IP2pMgr;
+import org.aion.p2p.V1Constants;
 import org.aion.p2p.Ver;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.core.IAionBlockchain;
@@ -54,7 +55,8 @@ public final class RequestBlocksHandler extends Handler {
             if (request.isNumber()) {
                 // process block requests by number
                 long start = request.getStartHeight();
-                int count = request.getCount();
+                int count =
+                        Math.min(request.getCount(), V1Constants.BLOCKS_REQUEST_MAXIMUM_BATCH_SIZE);
                 boolean descending = request.isDescending();
 
                 if (log.isDebugEnabled()) {
@@ -79,6 +81,7 @@ public final class RequestBlocksHandler extends Handler {
 
                 if (blockList != null) {
                     // generate response with retrieved blocks
+                    // TODO: check the message size and ensure that it fits predefined limits
                     ResponseBlocks response = new ResponseBlocks(blockList);
                     // reply to request
                     this.p2p.send(peerId, displayId, response);
@@ -86,7 +89,8 @@ public final class RequestBlocksHandler extends Handler {
             } else {
                 // process block requests by hash
                 byte[] startHash = request.getStartHash();
-                int count = request.getCount();
+                int count =
+                        Math.min(request.getCount(), V1Constants.BLOCKS_REQUEST_MAXIMUM_BATCH_SIZE);
                 boolean descending = request.isDescending();
 
                 if (log.isDebugEnabled()) {
@@ -116,6 +120,7 @@ public final class RequestBlocksHandler extends Handler {
 
                     if (blockList != null && blockList.contains(block)) {
                         // generate response with retrieved blocks
+                        // TODO: check the message size and ensure that it fits predefined limits
                         ResponseBlocks response = new ResponseBlocks(blockList);
                         // reply to request
                         this.p2p.send(peerId, displayId, response);
