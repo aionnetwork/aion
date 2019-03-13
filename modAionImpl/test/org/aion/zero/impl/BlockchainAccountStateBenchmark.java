@@ -40,6 +40,8 @@ public class BlockchainAccountStateBenchmark {
 
     private Random random = new SecureRandom();
 
+    private String name;
+
     private static String baseTestPath = "test_db";
 
     private static String[] dbPaths = {
@@ -136,7 +138,8 @@ public class BlockchainAccountStateBenchmark {
 
     private StandaloneBlockchain.Bundle bundle;
 
-    public BlockchainAccountStateBenchmark(StandaloneBlockchain.Bundle bundle) {
+    public BlockchainAccountStateBenchmark(String name, StandaloneBlockchain.Bundle bundle) {
+        this.name = name;
         this.bundle = bundle;
     }
 
@@ -251,7 +254,8 @@ public class BlockchainAccountStateBenchmark {
                         1);
 
         creationTx.sign(key);
-        AionBlock block = bc.createNewBlock(parentBlock, Collections.singletonList(creationTx), true);
+        AionBlock block =
+                bc.createNewBlock(parentBlock, Collections.singletonList(creationTx), true);
         return Pair.of(block, creationTx.getTransactionHash());
     }
 
@@ -327,19 +331,23 @@ public class BlockchainAccountStateBenchmark {
                     bc.getRepository()
                             .getCode(info.getReceipt().getTransaction().getContractAddress());
 
-
             System.out.println("deployed contract code: " + ByteUtil.toHexString(contractCode));
             System.out.println("deployed at: " + contractAddress);
 
-            AionContractDetailsImpl acdi = new AionContractDetailsImpl(bc.getRepository().getContractDetails(contractAddress).getEncoded());
+            AionContractDetailsImpl acdi =
+                    new AionContractDetailsImpl(
+                            bc.getRepository().getContractDetails(contractAddress).getEncoded());
             assertFalse(acdi.externalStorage);
 
-            // around 350 tx to letting the contract storage from memory switch to the external storage.
+            // around 350 tx to letting the contract storage from memory switch to the external
+            // storage.
             for (int i = 0; i < 9; i++) {
                 createContractBundle(bc, key, bc.getBestBlock(), contractAddress, 50);
             }
 
-             acdi = new AionContractDetailsImpl(bc.getRepository().getContractDetails(contractAddress).getEncoded());
+            acdi =
+                    new AionContractDetailsImpl(
+                            bc.getRepository().getContractDetails(contractAddress).getEncoded());
             assertTrue(acdi.externalStorage);
 
         } catch (Exception e) {
