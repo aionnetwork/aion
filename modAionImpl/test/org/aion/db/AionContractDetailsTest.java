@@ -1,5 +1,6 @@
 package org.aion.db;
 
+import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -11,6 +12,9 @@ import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.log.AionLoggerFactory;
+import org.aion.log.LogEnum;
+import org.aion.mcf.trie.JournalPruneDataSource;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
@@ -24,8 +28,11 @@ import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
+import org.slf4j.Logger;
 
 public class AionContractDetailsTest {
+    private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
+
 
     private static final int IN_MEMORY_STORAGE_LIMIT =
             1000000; // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit();
@@ -275,6 +282,72 @@ public class AionContractDetailsTest {
 
         assertEquals(deserialized.externalStorage, true);
         assertTrue(address.equals(deserialized.getAddress()));
+        assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
+
+        for (DataWordImpl key : elements.keySet()) {
+            assertEquals(
+                    elements.get(key).toWrapper(),
+                    wrapValueFromGet(deserialized.get(key.toWrapper())));
+        }
+
+        DataWordImpl deletedKey = elements.keySet().iterator().next();
+
+        deserialized.delete(deletedKey.toWrapper());
+        deserialized.delete(new DataWordImpl(RandomUtils.nextBytes(16)).toWrapper());
+    }
+
+    @Test
+    public void testContractStorageSwitch() {
+        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        byte[] code = RandomUtils.nextBytes(512);
+        Map<DataWordImpl, DataWordImpl> elements = new HashMap<>();
+
+        int memstoragelimit = 512;
+        AionContractDetailsImpl original = new AionContractDetailsImpl(0, memstoragelimit);
+
+        // getting storage specific properties
+        Properties sharedProps;
+        sharedProps = repoConfig.getDatabaseConfig("storage");
+        sharedProps.setProperty(DatabaseFactory.Props.ENABLE_LOCKING, "false");
+        sharedProps.setProperty(DatabaseFactory.Props.DB_PATH, repoConfig.getDbPath());
+        sharedProps.setProperty(DatabaseFactory.Props.DB_NAME, "storage");
+        ByteArrayKeyValueDatabase storagedb = connectAndOpen(sharedProps, LOG);
+        JournalPruneDataSource jpd = new JournalPruneDataSource(storagedb);
+        original.setDataSource(jpd);
+        original.setAddress(address);
+        original.setCode(code);
+
+        // the first 2 insertion use memory storage
+        for (int i = 0; i < 2; i++) {
+            DataWordImpl key = new DataWordImpl(RandomUtils.nextBytes(16));
+            DataWordImpl value = new DataWordImpl(RandomUtils.nextBytes(16));
+
+            elements.put(key, value);
+            original.put(key.toWrapper(), wrapValueForPut(value));
+        }
+
+        original.decode(original.getEncoded());
+        original.syncStorage();
+        assertTrue(!original.externalStorage);
+
+        // transfer to external storage since 3rd insert
+        DataWordImpl key3rd = new DataWordImpl(RandomUtils.nextBytes(16));
+        DataWordImpl value = new DataWordImpl(RandomUtils.nextBytes(16));
+        elements.put(key3rd, value);
+        original.put(key3rd.toWrapper(), wrapValueForPut(value));
+
+        original.decode(original.getEncoded());
+        original.syncStorage();
+        assertTrue(original.externalStorage);
+
+        byte[] rlp = original.getEncoded();
+
+        AionContractDetailsImpl deserialized = new AionContractDetailsImpl(0, memstoragelimit);
+        deserialized.setDataSource(jpd);
+        deserialized.decode(rlp);
+
+        assertTrue(deserialized.externalStorage);
+        assertEquals(address, deserialized.getAddress());
         assertEquals(ByteUtil.toHexString(code), ByteUtil.toHexString(deserialized.getCode()));
 
         for (DataWordImpl key : elements.keySet()) {

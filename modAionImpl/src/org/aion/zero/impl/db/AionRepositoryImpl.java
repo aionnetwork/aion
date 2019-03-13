@@ -511,7 +511,6 @@ public class AionRepositoryImpl
 
         try {
             worldState.sync();
-            detailsDS.syncLargeStorage();
 
             if (pruneEnabled) {
                 if (stateDSPrune.isArchiveEnabled() && blockHeader.getNumber() % archiveRate == 0) {

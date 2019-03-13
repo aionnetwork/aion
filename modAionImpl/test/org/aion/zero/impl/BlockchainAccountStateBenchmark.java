@@ -1,14 +1,19 @@
 package org.aion.zero.impl;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Random;
+import java.util.ArrayList;
+import java.util.Collections;
+
 import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
@@ -17,6 +22,9 @@ import org.aion.db.utils.FileUtils;
 import org.aion.mcf.core.ImportResult;
 
 import org.aion.util.bytes.ByteUtil;
+import org.aion.util.conversions.Hex;
+import org.aion.zero.db.AionContractDetailsImpl;
+
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.types.AionTransaction;
@@ -30,9 +38,11 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class BlockchainAccountStateBenchmark {
 
-    public static String baseTestPath = "test_db";
+    private Random random = new SecureRandom();
 
-    public static String[] dbPaths = {
+    private static String baseTestPath = "test_db";
+
+    private static String[] dbPaths = {
         "level_db_state_test",
         "level_db_expansion_test",
         "h2_db_state_test",
@@ -41,7 +51,7 @@ public class BlockchainAccountStateBenchmark {
         "rocks_db_expansion_test"
     };
 
-    public static void resetFileState() {
+    private static void resetFileState() {
         File f = new File(baseTestPath);
         if (f.exists()) {
             FileUtils.deleteRecursively(f);
@@ -124,12 +134,9 @@ public class BlockchainAccountStateBenchmark {
                 });
     }
 
-    private String name;
-
     private StandaloneBlockchain.Bundle bundle;
 
-    public BlockchainAccountStateBenchmark(String name, StandaloneBlockchain.Bundle bundle) {
-        this.name = name;
+    public BlockchainAccountStateBenchmark(StandaloneBlockchain.Bundle bundle) {
         this.bundle = bundle;
     }
 
@@ -192,7 +199,7 @@ public class BlockchainAccountStateBenchmark {
     }
 
     private static final String STATE_EXPANSION_BYTECODE =
-            "0x605060405260006001600050909055341561001a5760006000fd5b61001f565b6101688061002e6000396000f30060506040526000356c01000000000000000000000000900463ffffffff16806331e658a514610049578063549262ba1461008957806361bc221a1461009f57610043565b60006000fd5b34156100555760006000fd5b610073600480808060100135903590916020019091929050506100c9565b6040518082815260100191505060405180910390f35b34156100955760006000fd5b61009d6100eb565b005b34156100ab5760006000fd5b6100b3610133565b6040518082815260100191505060405180910390f35b6000600050602052818160005260105260306000209050600091509150505481565b6001600060005060006001600050546000825281601001526020019081526010016000209050600050819090905550600160008181505480929190600101919050909055505b565b600160005054815600a165627a7a72305820c615f3373321aa7e9c05d9a69e49508147861fb2a54f2945fbbaa7d851125fe80029";
+            "605060405234156100105760006000fd5b610015565b610146806100246000396000f30060506040526000356c01000000000000000000000000900463ffffffff16806326121ff0146100335761002d565b60006000fd5b341561003f5760006000fd5b610047610049565b005b6000600050805480600101828161006091906100b3565b91909060005260106000209050906002020160005b7e112233445566778899001122334455667788990011223344556677889900119091929091925091909060001916909091806001018390555550505b565b8154818355818115116100e25760020281600202836000526010600020905091820191016100e191906100e7565b5b505050565b61011791906100f1565b80821115610113576000818150806000905560010160009055506002016100f1565b5090565b905600a165627a7a72305820c4bdcf87b810c9e707e3df169b98d6a37a6e6f3356cc8c120ea06c64696f85c20029";
 
     @Ignore
     @Test
@@ -229,7 +236,7 @@ public class BlockchainAccountStateBenchmark {
         }
     }
 
-    public static Pair<AionBlock, byte[]> createContract(
+    private static Pair<AionBlock, byte[]> createContract(
             StandaloneBlockchain bc, ECKey key, AionBlock parentBlock) {
         BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
 
@@ -244,7 +251,7 @@ public class BlockchainAccountStateBenchmark {
                         1);
 
         creationTx.sign(key);
-        AionBlock block = bc.createNewBlock(parentBlock, Arrays.asList(creationTx), true);
+        AionBlock block = bc.createNewBlock(parentBlock, Collections.singletonList(creationTx), true);
         return Pair.of(block, creationTx.getTransactionHash());
     }
 
@@ -253,22 +260,29 @@ public class BlockchainAccountStateBenchmark {
             final ECKey key,
             final AionBlock parentBlock,
             final Address contractAddress) {
+        return createContractBundle(bc, key, parentBlock, contractAddress, 133);
+    }
+
+    private static AionBlock createContractBundle(
+            final StandaloneBlockchain bc,
+            final ECKey key,
+            final AionBlock parentBlock,
+            final Address contractAddress,
+            final int repeat) {
+
         BigInteger accountNonce = bc.getRepository().getNonce(new Address(key.getAddress()));
         List<AionTransaction> transactions = new ArrayList<>();
 
-        // command
-        ByteBuffer buf = ByteBuffer.allocate(4);
-        buf.put(HashUtil.keccak256("put()".getBytes()), 0, 4);
+        byte[] callData = Hex.decode("26121ff0");
 
-        // create 400 transactions per bundle
         // byte[] nonce, Address to, byte[] value, byte[] data, long nrg, long nrgPrice
-        for (int i = 0; i < 133; i++) {
+        for (int i = 0; i < repeat; i++) {
             AionTransaction sendTransaction =
                     new AionTransaction(
                             accountNonce.toByteArray(),
                             contractAddress,
                             BigInteger.ZERO.toByteArray(),
-                            buf.array(),
+                            callData,
                             200000,
                             1);
             sendTransaction.sign(key);
@@ -278,7 +292,7 @@ public class BlockchainAccountStateBenchmark {
 
         AionBlock block = bc.createNewBlock(parentBlock, transactions, true);
 
-        assertThat(block.getTransactionsList().size()).isEqualTo(133);
+        assertThat(block.getTransactionsList().size()).isEqualTo(repeat);
 
         // clear the trie
         bc.getRepository().flush();
@@ -290,5 +304,49 @@ public class BlockchainAccountStateBenchmark {
 
         assertThat(result).isEqualTo(ImportResult.IMPORTED_BEST);
         return block;
+    }
+
+    @Test
+    public void testExpandContractsStorage() throws InterruptedException {
+        try {
+            StandaloneBlockchain.Bundle bundle = this.bundle;
+
+            StandaloneBlockchain bc = bundle.bc;
+
+            int r = random.nextInt(bundle.privateKeys.size());
+            ECKey key = bundle.privateKeys.get(r);
+            // deploy contract
+            Pair<AionBlock, byte[]> res = createContract(bc, key, bc.getGenesis());
+            bc.tryToConnect(res.getLeft());
+            AionTxInfo info = bc.getTransactionInfo(res.getRight());
+            assertThat(info.getReceipt().isValid()).isTrue();
+
+            Address contractAddress = info.getReceipt().getTransaction().getContractAddress();
+
+            byte[] contractCode =
+                    bc.getRepository()
+                            .getCode(info.getReceipt().getTransaction().getContractAddress());
+
+
+            System.out.println("deployed contract code: " + ByteUtil.toHexString(contractCode));
+            System.out.println("deployed at: " + contractAddress);
+
+            AionContractDetailsImpl acdi = new AionContractDetailsImpl(bc.getRepository().getContractDetails(contractAddress).getEncoded());
+            assertFalse(acdi.externalStorage);
+
+            // around 350 tx to letting the contract storage from memory switch to the external storage.
+            for (int i = 0; i < 9; i++) {
+                createContractBundle(bc, key, bc.getBestBlock(), contractAddress, 50);
+            }
+
+             acdi = new AionContractDetailsImpl(bc.getRepository().getContractDetails(contractAddress).getEncoded());
+            assertTrue(acdi.externalStorage);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            bundle.bc.getRepository().close();
+            Thread.sleep(1000L);
+        }
     }
 }
