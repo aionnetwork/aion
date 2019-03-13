@@ -179,9 +179,10 @@ public class TrieImpl implements Trie {
         if (value.length == 0) {
             throw new IllegalArgumentException("The value should not be empty.");
         }
-        synchronized (cache) {
-            byte[] k = binToNibbles(key);
 
+        byte[] k = binToNibbles(key);
+
+        synchronized (cache) {
             if (isEmptyNode(root)) {
                 cache.markRemoved(getRootHash());
             }
@@ -466,7 +467,7 @@ public class TrieImpl implements Trie {
         return this.cache.put(node);
     }
 
-    private boolean isEmptyNode(Object node) {
+    private static boolean isEmptyNode(Object node) {
         Value n = new Value(node);
         return (node == null
                 || (n.isString() && (n.asString().isEmpty() || n.get(0).isNull()))

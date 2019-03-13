@@ -63,7 +63,7 @@ public final class ExecutionBatch {
      * @param stop The index of the last transaction in the slice, exclusive.
      * @return The sliced version of this BlockDetails object.
      */
-    public ExecutionBatch slice(int start, int stop) {
+    ExecutionBatch slice(int start, int stop) {
         List<AionTransaction> transactions = this.transactions.subList(start, stop);
         List<KernelTransactionContext> contexts = this.contexts.subList(start, stop);
         return new ExecutionBatch(this.block, transactions, contexts);
@@ -92,7 +92,7 @@ public final class ExecutionBatch {
      *
      * @return The contexts.
      */
-    public KernelTransactionContext[] getExecutionContexts() {
+    KernelTransactionContext[] getExecutionContexts() {
         KernelTransactionContext[] contextsAsArray =
                 new KernelTransactionContext[this.contexts.size()];
         this.contexts.toArray(contextsAsArray);
@@ -103,7 +103,7 @@ public final class ExecutionBatch {
         return this.transactions.size();
     }
 
-    private List<KernelTransactionContext> constructTransactionContexts(
+    private static List<KernelTransactionContext> constructTransactionContexts(
             List<AionTransaction> transactions, IAionBlock block) {
         List<KernelTransactionContext> contexts = new ArrayList<>();
         for (AionTransaction transaction : transactions) {
@@ -112,7 +112,7 @@ public final class ExecutionBatch {
         return contexts;
     }
 
-    private KernelTransactionContext constructTransactionContext(
+    private static KernelTransactionContext constructTransactionContext(
             AionTransaction transaction, IAionBlock block) {
         byte[] txHash = transaction.getTransactionHash();
         Address address =
@@ -123,7 +123,6 @@ public final class ExecutionBatch {
         Address caller = transaction.getSenderAddress();
 
         DataWordImpl nrgPrice = transaction.nrgPrice();
-        long energyLimit = transaction.nrgLimit();
         long nrg = transaction.nrgLimit() - transaction.transactionCost(block.getNumber());
         DataWordImpl callValue = new DataWordImpl(ArrayUtils.nullToEmpty(transaction.getValue()));
         byte[] callData = ArrayUtils.nullToEmpty(transaction.getData());

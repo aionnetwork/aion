@@ -67,6 +67,11 @@ public class RLP {
      */
     private static final int OFFSET_LONG_LIST = 0xf7;
 
+    private static final byte[] BYTES_SHORT_ITEM = new byte[] {(byte)0x80};
+    private static final byte[] BYTES_SHORT_LIST = new byte[] {(byte)0xc0};
+
+
+
     // DECODING
 
     public static int decodeInt(byte[] data, int index) {
@@ -404,7 +409,7 @@ public class RLP {
 
     public static byte[] encodeByte(byte singleByte) {
         if ((singleByte & 0xFF) == 0) {
-            return new byte[] {(byte) OFFSET_SHORT_ITEM};
+            return BYTES_SHORT_ITEM;
         } else if ((singleByte & 0xFF) <= 0x7F) {
             return new byte[] {singleByte};
         } else {
@@ -472,7 +477,7 @@ public class RLP {
     public static byte[] encodeElement(byte[] srcData) {
 
         if (isNullOrZeroArray(srcData)) {
-            return new byte[] {(byte) OFFSET_SHORT_ITEM};
+            return BYTES_SHORT_ITEM;
         } else if (isSingleZero(srcData)) {
             return srcData;
         } else if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
@@ -542,14 +547,12 @@ public class RLP {
     public static byte[] encodeListHeader(int size) {
 
         if (size == 0) {
-            return new byte[] {(byte) OFFSET_SHORT_LIST};
+            return BYTES_SHORT_LIST;
         }
 
         byte[] header;
         if (size < SIZE_THRESHOLD) {
-
-            header = new byte[1];
-            header[0] = (byte) (OFFSET_SHORT_LIST + size);
+            header = new byte[] {(byte) (OFFSET_SHORT_LIST + size)};
         } else {
             // length of length = BX
             // prefix = [BX, [length]]
@@ -580,7 +583,7 @@ public class RLP {
         if (length < SIZE_THRESHOLD) {
 
             if (length == 0) {
-                return new byte[] {(byte) 0x80};
+                return BYTES_SHORT_ITEM;
             } else {
                 return new byte[] {(byte) (0x80 + length)};
             }
@@ -609,7 +612,7 @@ public class RLP {
     public static byte[] encodeList(byte[]... elements) {
 
         if (elements == null) {
-            return new byte[] {(byte) OFFSET_SHORT_LIST};
+            return BYTES_SHORT_LIST;
         }
 
         int totalLength = 0;

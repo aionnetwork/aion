@@ -56,6 +56,7 @@ import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.api.interfaces.IBloomFilter;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.config.CfgAion;
@@ -644,14 +645,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (ret.isSuccessful()) {
             if (this.evtMgr != null) {
 
+                List<IEvent> evts = new ArrayList<>();
                 IEvent evtOnBlock = new EventBlock(EventBlock.CALLBACK.ONBLOCK0);
                 evtOnBlock.setFuncArgs(Collections.singletonList(summary));
-                this.evtMgr.newEvent(evtOnBlock);
+                evts.add(evtOnBlock);
 
                 IEvent evtTrace = new EventBlock(EventBlock.CALLBACK.ONTRACE0);
                 String str = String.format("Block chain size: [ %d ]", this.getSizeInternal());
                 evtTrace.setFuncArgs(Collections.singletonList(str));
-                this.evtMgr.newEvent(evtTrace);
+                evts.add(evtTrace);
 
                 if (ret == IMPORTED_BEST) {
                     if (LOG.isTraceEnabled()) {
@@ -659,23 +661,23 @@ public class AionBlockchainImpl implements IAionBlockchain {
                     }
                     IEvent evtOnBest = new EventBlock(EventBlock.CALLBACK.ONBEST0);
                     evtOnBest.setFuncArgs(Arrays.asList(block, summary.getReceipts()));
-                    this.evtMgr.newEvent(evtOnBest);
+                    evts.add(evtOnBest);
                 }
+
+                this.evtMgr.newEvents(evts);
             }
         }
 
         if (ret == IMPORTED_BEST) {
             if (TX_LOG.isDebugEnabled()) {
-                if (summary != null) {
-                    for (AionTxReceipt receipt : summary.getReceipts()) {
-                        if (receipt != null) {
-                            byte[] transactionHash = receipt.getTransaction().getTransactionHash();
-                            TX_LOG.debug(
-                                    "Transaction: "
-                                            + Hex.toHexString(transactionHash)
-                                            + " was sealed into block #"
-                                            + block.getNumber());
-                        }
+                for (AionTxReceipt receipt : summary.getReceipts()) {
+                    if (receipt != null) {
+                        byte[] transactionHash = receipt.getTransaction().getTransactionHash();
+                        TX_LOG.debug(
+                                "Transaction: "
+                                        + Hex.toHexString(transactionHash)
+                                        + " was sealed into block #"
+                                        + block.getNumber());
                     }
                 }
             }
@@ -945,26 +947,23 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     private static byte[] calcReceiptsTrie(List<AionTxReceipt> receipts) {
-        Trie receiptsTrie = new TrieImpl(null);
-
         if (receipts == null || receipts.isEmpty()) {
             return HashUtil.EMPTY_TRIE_HASH;
         }
 
+        Trie receiptsTrie = new TrieImpl(null);
         for (int i = 0; i < receipts.size(); i++) {
             receiptsTrie.update(RLP.encodeInt(i), receipts.get(i).getReceiptTrieEncoded());
         }
         return receiptsTrie.getRootHash();
     }
 
-    private byte[] calcLogBloom(List<AionTxReceipt> receipts) {
-
-        Bloom retBloomFilter = new Bloom();
-
+    private static byte[] calcLogBloom(List<AionTxReceipt> receipts) {
         if (receipts == null || receipts.isEmpty()) {
-            return retBloomFilter.getBloomFilterBytes();
+            return new byte[IBloomFilter.SIZE];
         }
 
+        Bloom retBloomFilter = new Bloom();
         for (AionTxReceipt receipt : receipts) {
             retBloomFilter.or(receipt.getBloomFilter());
         }
@@ -1117,9 +1116,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         } else {
             return new AionBlockSummary(
                     block,
-                    new HashMap<Address, BigInteger>(),
-                    new ArrayList<AionTxReceipt>(),
-                    new ArrayList<AionTxExecSummary>());
+                    new HashMap<>(),
+                    new ArrayList<>(),
+                    new ArrayList<>());
         }
     }
 
@@ -1137,28 +1136,30 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
         List<AionTransaction> transactions = new ArrayList<>();
 
-        ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
-        BulkExecutor executor =
-                new BulkExecutor(
-                        batch,
-                        repository,
-                        track,
-                        false,
-                        true,
-                        block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWorkForGeneratePreBlock());
-        List<AionTxExecSummary> executionSummaries = executor.execute();
+        if (!block.getTransactionsList().isEmpty()) {
+            ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            batch,
+                            repository,
+                            track,
+                            false,
+                            true,
+                            block.getNrgLimit(),
+                            LOGGER_VM,
+                            getPostExecutionWorkForGeneratePreBlock());
+            List<AionTxExecSummary> executionSummaries = executor.execute();
 
-        for (AionTxExecSummary summary : executionSummaries) {
-            if (!summary.isRejected()) {
-                transactions.add(summary.getTransaction());
-                receipts.add(summary.getReceipt());
-                summaries.add(summary);
+            for (AionTxExecSummary summary : executionSummaries) {
+                if (!summary.isRejected()) {
+                    transactions.add(summary.getTransaction());
+                    receipts.add(summary.getReceipt());
+                    summaries.add(summary);
+                }
             }
         }
 
-        Map<Address, BigInteger> rewards = addReward(block, summaries);
+        Map<Address, BigInteger> rewards = addReward(block);
 
         track.flush();
 
@@ -1201,24 +1202,26 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxReceipt> receipts = new ArrayList<>();
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
-        ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
-        BulkExecutor executor =
-                new BulkExecutor(
-                        batch,
-                        repository,
-                        track,
-                        false,
-                        true,
-                        block.getNrgLimit(),
-                        LOGGER_VM,
-                        getPostExecutionWorkForApplyBlock());
-        List<AionTxExecSummary> executionSummaries = executor.execute();
+        if (!block.getTransactionsList().isEmpty()) {
+            ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
+            BulkExecutor executor =
+                    new BulkExecutor(
+                            batch,
+                            repository,
+                            track,
+                            false,
+                            true,
+                            block.getNrgLimit(),
+                            LOGGER_VM,
+                            getPostExecutionWorkForApplyBlock());
+            List<AionTxExecSummary> executionSummaries = executor.execute();
 
-        for (AionTxExecSummary summary : executionSummaries) {
-            receipts.add(summary.getReceipt());
-            summaries.add(summary);
+            for (AionTxExecSummary summary : executionSummaries) {
+                receipts.add(summary.getReceipt());
+                summaries.add(summary);
+            }
         }
-        Map<Address, BigInteger> rewards = addReward(block, summaries);
+        Map<Address, BigInteger> rewards = addReward(block);
 
         long totalTime = System.nanoTime() - saveTime;
         chainStats.addBlockExecTime(totalTime);
@@ -1251,8 +1254,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *
      * @param block object containing the header and uncles
      */
-    private Map<Address, BigInteger> addReward(
-            IAionBlock block, List<AionTxExecSummary> summaries) {
+    private Map<Address, BigInteger> addReward(IAionBlock block) {
 
         Map<Address, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
@@ -1296,14 +1298,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         repository.commitBlock(block.getHeader());
 
-        if (LOG.isDebugEnabled())
+        if (LOG.isDebugEnabled()) {
             LOG.debug(
                     "Block saved: number: {}, hash: {}, TD: {}",
                     block.getNumber(),
                     block.getShortHash(),
                     totalDifficulty);
 
-        if (LOG.isDebugEnabled()) {
             LOG.debug("block added to the blockChain: index: [{}]", block.getNumber());
         }
 
