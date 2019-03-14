@@ -257,20 +257,16 @@ public final class FastSyncManager {
 
                 if (wrapper != null) {
                     wrapper.getBlocks()
-                            .removeIf(
-                                    b ->
-                                            importedBlockHashes.containsKey(
-                                                    ByteArrayWrapper.wrap(b.getHash())));
+                            .removeIf(b -> importedBlockHashes.containsKey(b.getHashWrapper()));
                     if (!wrapper.getBlocks().isEmpty()) {
-                        ByteArrayWrapper firstHash =
-                                ByteArrayWrapper.wrap(wrapper.getBlocks().get(0).getHash());
+                        ByteArrayWrapper firstHash = wrapper.getBlocks().get(0).getHashWrapper();
                         if (firstHash.equals(requiredHash)) {
                             return wrapper;
                         } else {
                             // determine if the block is in the middle of the batch
                             boolean isRequred = false;
                             for (AionBlock block : wrapper.getBlocks()) {
-                                ByteArrayWrapper hash = ByteArrayWrapper.wrap(block.getHash());
+                                ByteArrayWrapper hash = block.getHashWrapper();
                                 receivedBlockHashes.put(hash, firstHash);
                                 if (hash.equals(requiredHash)) {
                                     isRequred = true;

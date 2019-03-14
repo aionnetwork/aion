@@ -13,6 +13,7 @@ import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
 import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.exceptions.HeaderStructureException;
@@ -275,6 +276,38 @@ public class AionBlock extends AbstractBlock<A0BlockHeader, AionTransaction> imp
     public List<AionTransaction> getTransactionsList() {
         parseRLP();
         return transactionsList;
+    }
+
+    // used to reduce the number of times we create equal wrapper objects
+    private ByteArrayWrapper hashWrapper = null;
+    private ByteArrayWrapper parentHashWrapper = null;
+
+    /**
+     * Returns a {@link ByteArrayWrapper} instance of the block's hash.
+     *
+     * @return a {@link ByteArrayWrapper} instance of the block's hash
+     * @implNote Not safe when the block is mutable. Use this only for sync where the block's hash
+     *     cannot change during execution.
+     */
+    public ByteArrayWrapper getHashWrapper() {
+        if (hashWrapper == null) {
+            hashWrapper = ByteArrayWrapper.wrap(getHash());
+        }
+        return hashWrapper;
+    }
+
+    /**
+     * Returns a {@link ByteArrayWrapper} instance of the block's parent hash.
+     *
+     * @return a {@link ByteArrayWrapper} instance of the block's parent hash
+     * @implNote Not safe when the block is mutable. Use this only for sync where the block's parent
+     *     hash cannot change during execution.
+     */
+    public ByteArrayWrapper getParentHashWrapper() {
+        if (parentHashWrapper == null) {
+            parentHashWrapper = ByteArrayWrapper.wrap(getParentHash());
+        }
+        return parentHashWrapper;
     }
 
     /**

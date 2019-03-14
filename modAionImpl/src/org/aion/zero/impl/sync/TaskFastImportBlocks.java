@@ -51,7 +51,7 @@ final class TaskFastImportBlocks implements Runnable {
                     AionBlock pivot = fastSyncMgr.getPivot();
                     if (pivot != null) {
                         requiredLevel = pivot.getNumber();
-                        requiredHash = ByteArrayWrapper.wrap(pivot.getHash());
+                        requiredHash = pivot.getHashWrapper();
                     } else {
                         // wait for pivot to be set
                         try {
@@ -96,7 +96,7 @@ final class TaskFastImportBlocks implements Runnable {
 
                             if (importResult.isSuccessful()) {
                                 lastImported = b;
-                                fastSyncMgr.addToImportedBlocks(ByteArrayWrapper.wrap(b.getHash()));
+                                fastSyncMgr.addToImportedBlocks(b.getHashWrapper());
                             } else if (importResult.isKnown()) {
                                 lastImported = null; // to not update required incorrectly below
 
@@ -131,7 +131,7 @@ final class TaskFastImportBlocks implements Runnable {
                     // update the required hash
                     if (lastImported != null) {
                         requiredLevel = lastImported.getNumber() - 1;
-                        requiredHash = ByteArrayWrapper.wrap(lastImported.getParentHash());
+                        requiredHash = lastImported.getParentHashWrapper();
                     }
                 }
             }

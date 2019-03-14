@@ -70,7 +70,7 @@ public class TaskValidateAndAddBlocks implements Runnable {
 
         A0BlockHeader currentHeader, previousHeader = null;
         for (AionBlock currentBlock : response.getBlocks()) {
-            ByteArrayWrapper hash = ByteArrayWrapper.wrap(currentBlock.getHash());
+            ByteArrayWrapper hash = currentBlock.getHashWrapper();
             if (importedBlockHashes.containsKey(hash)) { // exclude imported
                 previousHeader = currentBlock.getHeader();
                 continue;
