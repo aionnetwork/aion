@@ -5,7 +5,6 @@ import java.util.List;
 import org.aion.avm.core.NodeEnvironment;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.fastvm.FastVirtualMachine;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
 import org.aion.interfaces.tx.TxExecSummary;
@@ -158,17 +157,7 @@ public class BulkExecutor {
                         this.executionBatch.getTransactions().get(currentIndex);
 
                 KernelInterface vmKernel;
-                if (transactionIsForFastVirtualMachine(firstTransactionInNextBatch)) {
-                    vmKernel =
-                            new KernelInterfaceForFastVM(
-                                    this.repositoryChild.startTracking(),
-                                    this.allowNonceIncrement,
-                                    this.isLocalCall);
-                    virtualMachineForNextBatch =
-                            VirtualMachineProvider.getVirtualMachineInstance(VM.FVM, vmKernel);
-                    nextBatchToExecute =
-                            fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
-                } else {
+                if (transactionIsForAionVirtualMachine(firstTransactionInNextBatch)) {
                     vmKernel =
                             new KernelInterfaceForAVM(
                                     this.repositoryChild.startTracking(),
@@ -178,6 +167,16 @@ public class BulkExecutor {
                             VirtualMachineProvider.getVirtualMachineInstance(VM.AVM, vmKernel);
                     nextBatchToExecute =
                             fetchNextBatchOfTransactionsForAionVirtualMachine(currentIndex);
+                } else {
+                    vmKernel =
+                            new KernelInterfaceForFastVM(
+                                    this.repositoryChild.startTracking(),
+                                    this.allowNonceIncrement,
+                                    this.isLocalCall);
+                    virtualMachineForNextBatch =
+                            VirtualMachineProvider.getVirtualMachineInstance(VM.FVM, vmKernel);
+                    nextBatchToExecute =
+                            fetchNextBatchOfTransactionsForFastVirtualMachine(currentIndex);
                 }
 
                 // Execute the next batch of transactions using the specified virtual machine.
@@ -256,7 +255,8 @@ public class BulkExecutor {
             KernelInterface kernelFromVM,
             TransactionResult result) {
 
-        // TODO: Avm should assure us this is not null: need to add this to VM API specifications.
+        // TODO: should Avm assure us that this is always non-null like the fvm does? But in Avm
+        // TODO: a null return value is actually meaningful. Need to figure this out.
         if (result.getReturnData() == null) {
             result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
         }
@@ -346,25 +346,25 @@ public class BulkExecutor {
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> track =
                     this.repositoryChild.startTracking();
 
-            // Refund energy if transaction was successfully or reverted.
-            if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
-                if (!transactionIsForAionVirtualMachine(tx)) {
-                    track.addBalance(tx.getSenderAddress(), summary.getRefund());
-                }
-            }
-
             tx.setNrgConsume(computeEnergyUsed(tx.getEnergyLimit(), result));
 
-            // Pay the miner.
-            track.addBalance(coinbase, summary.getFee());
-
-            // Delete any accounts marked for deletion.
-            if (result.getResultCode().isSuccess()) {
-                for (Address addr : deleteAccounts) {
-                    track.deleteAccount(addr);
+            // Refund energy if transaction was successfully or reverted.
+            if (!transactionIsForAionVirtualMachine(tx)) {
+                if (result.getResultCode().isSuccess() || result.getResultCode().isRevert()) {
+                    track.addBalance(tx.getSenderAddress(), summary.getRefund());
                 }
+
+                // Pay the miner.
+                track.addBalance(coinbase, summary.getFee());
+
+                // Delete any accounts marked for deletion.
+                if (result.getResultCode().isSuccess()) {
+                    for (Address addr : deleteAccounts) {
+                        track.deleteAccount(addr);
+                    }
+                }
+                track.flush();
             }
-            track.flush();
         }
 
         if (this.logger.isDebugEnabled()) {
@@ -377,69 +377,74 @@ public class BulkExecutor {
         return limit - result.getEnergyRemaining();
     }
 
+    /**
+     * Returns a batch of transactions to execute that are destined to be executed by the FVM,
+     * starting with the transaction at index {@code startIndex} (inclusive) up to and including all
+     * subsequent FVM-bound transactions.
+     */
     private ExecutionBatch fetchNextBatchOfTransactionsForFastVirtualMachine(int startIndex) {
-        // Find the index of the next transaction that is not fvm-bound.
         List<AionTransaction> transactions = this.executionBatch.getTransactions();
+
         for (int i = startIndex; i < this.executionBatch.size(); i++) {
-            if (!transactionIsForFastVirtualMachine(transactions.get(i))) {
+            // Find the index of the next transaction that is not fvm-bound, that is where we stop.
+            if (transactionIsForAionVirtualMachine(transactions.get(i))) {
                 return this.executionBatch.slice(startIndex, i);
             }
         }
+
         return this.executionBatch.slice(startIndex, this.executionBatch.size());
     }
 
+    /**
+     * Returns a batch of transactions to execute that are destined to be executed by the AVM,
+     * starting with the transaction at index {@code startIndex} (inclusive) up to and including all
+     * subsequent AVM-bound transactions.
+     */
     private ExecutionBatch fetchNextBatchOfTransactionsForAionVirtualMachine(int startIndex) {
-        // Find the index of the next transaction that is not avm-bound.
         List<AionTransaction> transactions = this.executionBatch.getTransactions();
+
         for (int i = startIndex; i < this.executionBatch.size(); i++) {
+            // Find the index of the next transaction that is not avm-bound, that is where we stop.
             if (!transactionIsForAionVirtualMachine(transactions.get(i))) {
                 return this.executionBatch.slice(startIndex, i);
             }
         }
+
         return this.executionBatch.slice(startIndex, this.executionBatch.size());
     }
 
     /**
-     * A transaction is for the {@link FastVirtualMachine} iff:
+     * A transaction is for the Avm if, and only if, one of the following is true:
      *
-     * <p>- It is a CREATE transaction and its target VM is the FVM - It is a CALL transaction and
-     * the destination is not an AVM contract address
-     *
-     * <p>NOTE: If a transaction is a precompiled contract call it will return true and head into
-     * the Fvm. This is currently what we want, but it will be changed and separated out in the
-     * future.
+     * <p>1. It is a CREATE transaction and its target VM is the AVM 2. It is a CALL transaction and
+     * the destination is an AVM contract address 3. It is a CALL transaction and the destination is
+     * not a contract address.
      */
-    private static boolean transactionIsForFastVirtualMachine(AionTransaction transaction) {
-        // first verify that the AVM is enabled
-        if (avmEnabled) {
-            if (transaction.isContractCreationTransaction()) {
-                return transaction.getTargetVM() != VirtualMachineSpecs.AVM_CREATE_CODE;
-            } else {
-                return transaction.getDestinationAddress().toBytes()[0]
-                        != NodeEnvironment.CONTRACT_PREFIX;
-            }
-        } else {
-            return true;
-        }
-    }
-
-    /**
-     * A transaction is for the Avm iff:
-     *
-     * <p>- It is a CREATE transaction and its target VM is the AVM - It is a CALL transaction and
-     * the destination is an AVM contract address
-     */
-    private static boolean transactionIsForAionVirtualMachine(AionTransaction transaction) {
+    private boolean transactionIsForAionVirtualMachine(AionTransaction transaction) {
         // first verify that the AVM is enabled
         if (avmEnabled) {
             if (transaction.isContractCreationTransaction()) {
                 return transaction.getTargetVM() == VirtualMachineSpecs.AVM_CREATE_CODE;
             } else {
-                return transaction.getDestinationAddress().toBytes()[0]
-                        == NodeEnvironment.CONTRACT_PREFIX;
+                Address destination = transaction.getDestinationAddress();
+                return isAvmContract(destination) || !isContractAddress(destination);
             }
         } else {
             return false;
         }
+    }
+
+    /** Returns true only if address is a contract. */
+    private boolean isContractAddress(Address address) {
+        byte[] code = this.repositoryChild.getCode(address);
+        return (code != null) && (code.length > 0);
+    }
+
+    /**
+     * Returns true only if address is an Avm contract. That is, a contract that was created by
+     * calling into the Avm.
+     */
+    private boolean isAvmContract(Address address) {
+        return address.toBytes()[0] == NodeEnvironment.CONTRACT_PREFIX;
     }
 }
