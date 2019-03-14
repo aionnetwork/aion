@@ -46,6 +46,7 @@ import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 
+import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -83,7 +84,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testCallTransaction() throws IOException {
+    public void testCallTransaction() throws IOException, VMException {
         Compiler.Result r =
                 Compiler.getInstance()
                         .compile(
@@ -134,7 +135,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testCreateTransaction() throws IOException {
+    public void testCreateTransaction() throws IOException, VMException {
         Compiler.Result r =
                 Compiler.getInstance()
                         .compile(
@@ -180,7 +181,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testPerformance() throws IOException {
+    public void testPerformance() throws IOException, VMException {
         Compiler.Result r =
                 Compiler.getInstance()
                         .compile(
@@ -234,7 +235,7 @@ public class OldTxExecutorTest {
     }
 
     @Test
-    public void testBasicTransactionCost() {
+    public void testBasicTransactionCost() throws VMException {
         byte[] txNonce = DataWordImpl.ZERO.getData();
         Address from =
                 Address.wrap(

@@ -12,4 +12,5 @@ module aion.vm {
     requires aion.crypto;
 
     exports org.aion.vm;
+    exports org.aion.vm.exception;
 }
