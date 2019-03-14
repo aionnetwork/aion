@@ -1,5 +1,7 @@
 package org.aion.zero.impl.sync;
 
+import static org.aion.p2p.V1Constants.BLOCKS_REQUEST_MAXIMUM_BATCH_SIZE;
+
 import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,8 +19,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.valid.BlockHeaderValidator;
+import org.aion.p2p.INode;
+import org.aion.p2p.impl1.P2pMgr;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.sync.msg.RequestBlocks;
 import org.aion.zero.impl.sync.msg.ResponseBlocks;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
@@ -40,6 +45,7 @@ public final class FastSyncManager {
 
     private final AionBlockchainImpl chain;
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
+    private final P2pMgr p2pMgr;
 
     // TODO: consider adding a FAST_SYNC log as well
     private static final Logger log = AionLoggerFactory.getLogger(LogEnum.SYNC.name());
@@ -57,10 +63,13 @@ public final class FastSyncManager {
     private final Map<ByteArrayWrapper, byte[]> importedTrieNodes = new ConcurrentHashMap<>();
 
     public FastSyncManager(
-            AionBlockchainImpl chain, BlockHeaderValidator<A0BlockHeader> blockHeaderValidator) {
+            AionBlockchainImpl chain,
+            BlockHeaderValidator<A0BlockHeader> blockHeaderValidator,
+            final P2pMgr p2pMgr) {
         this.enabled = true;
         this.chain = chain;
         this.blockHeaderValidator = blockHeaderValidator;
+        this.p2pMgr = p2pMgr;
     }
 
     @VisibleForTesting
@@ -293,8 +302,25 @@ public final class FastSyncManager {
     }
 
     private void makeBlockRequests(ByteArrayWrapper requiredHash, long requiredLevel) {
-        // TODO: if the required hash is not among the known ones, request it from the network
-        // TODO: block requests should be made backwards from pivot
+        // make request for the needed hash
+        RequestBlocks request =
+                new RequestBlocks(requiredHash.getData(), BLOCKS_REQUEST_MAXIMUM_BATCH_SIZE, true);
+
+        // TODO: improve peer selection
         // TODO: request that level plus further blocks
+        INode peer = p2pMgr.getRandom();
+        p2pMgr.send(peer.getIdHash(), peer.getIdShort(), request);
+
+        // send an extra request ahead of time
+        if (requiredLevel - BLOCKS_REQUEST_MAXIMUM_BATCH_SIZE > 0) {
+            peer = p2pMgr.getRandom();
+            request =
+                    new RequestBlocks(
+                            requiredLevel - BLOCKS_REQUEST_MAXIMUM_BATCH_SIZE,
+                            BLOCKS_REQUEST_MAXIMUM_BATCH_SIZE,
+                            true);
+
+            p2pMgr.send(peer.getIdHash(), peer.getIdShort(), request);
+        }
     }
 }
