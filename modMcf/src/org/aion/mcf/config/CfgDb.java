@@ -26,6 +26,7 @@ public class CfgDb {
         public static final String INDEX = "index";
         public static final String PENDING_BLOCK = "pendingBlock";
 
+        public static final String CONTRACT_INDEX = "contractIndex";
         public static final String DETAILS = "details";
         public static final String STORAGE = "storage";
 
