@@ -49,6 +49,7 @@ import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 
+import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
@@ -78,7 +79,7 @@ public class Benchmark {
 
     private static Logger LOGGER = AionLoggerFactory.getLogger(LogEnum.VM.name());
 
-    private static void prepare() throws IOException {
+    private static void prepare() throws IOException, VMException {
         long t1 = System.currentTimeMillis();
 
         // create owner account
@@ -179,7 +180,7 @@ public class Benchmark {
         return list;
     }
 
-    private static List<AionTxReceipt> executeTransactions(List<AionTransaction> txs) {
+    private static List<AionTxReceipt> executeTransactions(List<AionTransaction> txs) throws VMException {
         long t1 = System.currentTimeMillis();
         List<AionTxReceipt> list = new ArrayList<>();
 
@@ -216,7 +217,7 @@ public class Benchmark {
         timeFlush = t2 - t1;
     }
 
-    private static void verifyState(int num) {
+    private static void verifyState(int num) throws VMException {
         long ownerNonce = repo.getNonce(owner).longValue();
 
         for (int i = 0; i < recipients.size(); i++) {
@@ -248,7 +249,7 @@ public class Benchmark {
         }
     }
 
-    public static void main(String args[]) throws IOException {
+    public static void main(String args[]) throws IOException, VMException {
         int n = 10000;
         prepare();
         List<AionTransaction> list = signTransactions(n);

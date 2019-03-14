@@ -25,6 +25,7 @@ import org.aion.vm.api.interfaces.SimpleFuture;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.vm.api.interfaces.TransactionResult;
 import org.aion.vm.api.interfaces.VirtualMachine;
+import org.aion.vm.exception.VMException;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.aion.zero.types.AionTxReceipt;
@@ -124,7 +125,7 @@ public class BulkExecutor {
      * @param logger The logger.
      * @param work The post-execution work to apply after each transaction is run.
      */
-    public BulkExecutor(
+    public BulkExecutor (
             ExecutionBatch executionBatch,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
             boolean isLocalCall,
@@ -144,7 +145,7 @@ public class BulkExecutor {
                 work);
     }
 
-    public List<AionTxExecSummary> execute() {
+    public List<AionTxExecSummary> execute() throws VMException {
         synchronized (LOCK) {
             List<AionTxExecSummary> summaries = new ArrayList<>();
 
@@ -189,8 +190,8 @@ public class BulkExecutor {
         }
     }
 
-    private List<AionTxExecSummary> executeTransactions(
-            VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel) {
+    private List<AionTxExecSummary> executeTransactions (
+            VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel) throws VMException {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         // Run the transactions.
@@ -204,6 +205,11 @@ public class BulkExecutor {
         int length = resultsAsFutures.length;
         for (int i = 0; i < length; i++) {
             TransactionResult result = resultsAsFutures[i].get();
+
+            if (result.getResultCode().isFatal()) {
+                throw new VMException(result.toString());
+            }
+
             KernelInterface kernelFromVM = result.getKernelInterface();
 
             AionTransaction transaction = transactions.get(i);

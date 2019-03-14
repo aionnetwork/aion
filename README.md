@@ -20,9 +20,9 @@ This repository contains the main (Java) kernel implementation and releases for 
 ## Getting Started
 
 ### Developers
-If you're interested in application development on Aion or make improvements to the Java Implementation of Aion:
+If you're interested in application development on Aion or making improvements to the Java Implementation of Aion:
 
-* Refer to the details in the [Build Your Aion Network](https://github.com/aionnetwork/aion/wiki/Build-your-Aion-network) wiki to determine how to start setting up and building your Aion Network.
+* Refer to the [Build Aion kernel from source](https://github.com/aionnetwork/aion/wiki/Build-Aion-kernel-from-source) wiki for information on building this source code to a native binary or Docker image
 * Refer to the [Installation](https://github.com/aionnetwork/aion/wiki/Installation) wiki for a guide on installing and configuring the kernel.
 * The [Owner's Manual](https://github.com/aionnetwork/aion/wiki/Aion-Owner's-Manual) wiki will include further instructions and details on working with the kernel.
 

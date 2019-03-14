@@ -21,6 +21,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
+import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionHub;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.tx.TxCollector;
@@ -94,7 +95,6 @@ public class AionImpl implements IAionChain {
             LOG_GEN.info("Miner address is not set");
             return null;
         }
-
     }
 
     @Override
@@ -149,6 +149,10 @@ public class AionImpl implements IAionChain {
                             LOG_VM,
                             getPostExecutionWork());
             return executor.execute().get(0).getReceipt().getEnergyUsed();
+        } catch (VMException e) {
+            LOG_GEN.error("Shutdown due to a VM fatal error.", e);
+            System.exit(-1);
+            return 0;
         } finally {
             repository.rollback();
         }
@@ -176,6 +180,10 @@ public class AionImpl implements IAionChain {
                             LOG_VM,
                             getPostExecutionWork());
             return executor.execute().get(0).getReceipt();
+        } catch (VMException e) {
+            LOG_GEN.error("Shutdown due to a VM fatal error.", e);
+            System.exit(-1);
+            return null;
         } finally {
             repository.rollback();
         }
