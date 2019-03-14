@@ -1,34 +1,19 @@
 package org.aion.zero.impl.sync;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.aion.zero.impl.BlockchainTestUtils.generateAccounts;
-import static org.aion.zero.impl.BlockchainTestUtils.generateNewBlock;
-import static org.aion.zero.impl.BlockchainTestUtils.generateRandomChain;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.aion.crypto.ECKey;
-import org.aion.mcf.core.ImportResult;
-import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.sync.statistics.BlockType;
 import org.aion.zero.impl.sync.statistics.RequestType;
-import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class SyncStatsTest {
-
-    private static final List<ECKey> accounts = generateAccounts(10);
-    private final StandaloneBlockchain.Bundle bundle =
-            new StandaloneBlockchain.Builder()
-                    .withValidatorConfiguration("simple")
-                    .withDefaultAccounts(accounts)
-                    .build();
 
     private static final List<String> peers = new ArrayList<>();
 
@@ -42,50 +27,30 @@ public class SyncStatsTest {
 
     @Test
     public void testAvgBlocksPerSecStat() {
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+        SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
         assertThat(stats.getAvgBlocksPerSec()).isEqualTo(0d);
 
-        for (int totalBlocks = 1; totalBlocks <= 3; totalBlocks++) {
-            int count = 0;
-            while (count < totalBlocks) {
-                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                stats.update(current.getNumber());
-                count++;
-            }
+        for (int blocks = 1; blocks <= 3; blocks++) {
+            stats.update(blocks);
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
             }
         }
-
         assertThat(stats.getAvgBlocksPerSec()).isGreaterThan(0d);
-        assertThat(stats.getAvgBlocksPerSec()).isAtMost(3d);
+        assertThat(stats.getAvgBlocksPerSec()).isAtMost(2d);
     }
 
     @Test
     public void testAvgBlocksPerSecStatDisabled() {
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
         // disables the stats
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
+        SyncStats stats = new SyncStats(0L, false);
 
-        for (int totalBlocks = 1; totalBlocks <= 3; totalBlocks++) {
-            int count = 0;
-            while (count < totalBlocks) {
-                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
-                stats.update(current.getNumber());
-                count++;
-            }
+        for (int blocks = 1; blocks <= 3; blocks++) {
+            stats.update(blocks);
         }
-
         // ensures nothing changed
         assertThat(stats.getAvgBlocksPerSec()).isEqualTo(0d);
     }
@@ -100,8 +65,7 @@ public class SyncStatsTest {
         // this tests requires at least 6 peers in the list
         assertThat(peers.size()).isAtLeast(6);
 
-        StandaloneBlockchain chain = bundle.bc;
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+        SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
         Map<String, Float> emptyReqToPeers = stats.getPercentageOfRequestsToPeers();
@@ -199,9 +163,8 @@ public class SyncStatsTest {
         // this tests requires at least 3 peers in the list
         assertThat(peers.size()).isAtLeast(6);
 
-        StandaloneBlockchain chain = bundle.bc;
         // disables the stats
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
+        SyncStats stats = new SyncStats(0L, false);
 
         for (String peer : peers) {
             // status requests
@@ -234,11 +197,7 @@ public class SyncStatsTest {
 
     @Test
     public void testReceivedBlocksByPeer() {
-
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+        SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
         Map<String, Integer> emptyReceivedBlockReqByPeer = stats.getReceivedBlocksByPeer();
@@ -250,8 +209,6 @@ public class SyncStatsTest {
             int blocks = totalBlocks;
             processedBlocks += totalBlocks;
             while (blocks > 0) {
-                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
                 stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.RECEIVED);
                 blocks--;
             }
@@ -274,20 +231,14 @@ public class SyncStatsTest {
 
     @Test
     public void testReceivedBlocksByPeerDisabled() {
-
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
         // disables the stats
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
+        SyncStats stats = new SyncStats(0L, false);
 
         int peerNo = 0;
 
         for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
             int blocks = totalBlocks;
             while (blocks > 0) {
-                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                assertThat(chain.tryToConnect(current)).isEqualTo(ImportResult.IMPORTED_BEST);
                 stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.RECEIVED);
                 blocks--;
             }
@@ -300,10 +251,7 @@ public class SyncStatsTest {
 
     @Test
     public void testImportedBlocksByPeerStats() {
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+        SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
         assertEquals(stats.getImportedBlocksByPeer(peers.get(0)), 0);
@@ -312,9 +260,6 @@ public class SyncStatsTest {
         for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
             int blocks = totalBlocks;
             while (blocks > 0) {
-                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                ImportResult result = chain.tryToConnect(current);
-                assertTrue(result.isStored());
                 stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.IMPORTED);
                 blocks--;
             }
@@ -330,20 +275,13 @@ public class SyncStatsTest {
 
     @Test
     public void testImportedBlocksByPeerDisabled() {
-
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
         // disables the stats
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
+        SyncStats stats = new SyncStats(0L, false);
 
         int peerNo = 0;
         for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
             int blocks = totalBlocks;
             while (blocks > 0) {
-                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                ImportResult result = chain.tryToConnect(current);
-                assertTrue(result.isStored());
                 stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.IMPORTED);
                 blocks--;
             }
@@ -358,10 +296,8 @@ public class SyncStatsTest {
 
     @Test
     public void testStoredBlocksByPeerStats() {
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
 
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), true);
+        SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
         assertEquals(stats.getStoredBlocksByPeer(peers.get(0)), 0);
@@ -370,9 +306,6 @@ public class SyncStatsTest {
         for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
             int blocks = totalBlocks;
             while (blocks > 0) {
-                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                boolean result = chain.storePendingStatusBlock(current);
-                assertTrue(result);
                 stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.STORED);
                 blocks--;
             }
@@ -389,19 +322,13 @@ public class SyncStatsTest {
     @Test
     public void testStoredBlocksByPeerDisabled() {
 
-        StandaloneBlockchain chain = bundle.bc;
-        generateRandomChain(chain, 1, 1, accounts, 10);
-
         // disables the stats
-        SyncStats stats = new SyncStats(chain.getBestBlock().getNumber(), false);
+        SyncStats stats = new SyncStats(0L, false);
 
         int peerNo = 0;
         for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
             int blocks = totalBlocks;
             while (blocks > 0) {
-                AionBlock current = generateNewBlock(chain, chain.getBestBlock(), accounts, 10);
-                boolean result = chain.storePendingStatusBlock(current);
-                assertTrue(result);
                 stats.updatePeerBlocks(peers.get(peerNo), 1, BlockType.STORED);
                 blocks--;
             }
