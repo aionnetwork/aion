@@ -16,6 +16,7 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.mcf.vm.types.Log;
 import org.aion.types.Address;
+import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.VmFactoryImplementation.VM;
 import org.aion.vm.api.interfaces.IExecutionLog;
 import org.aion.vm.api.interfaces.KernelInterface;
@@ -124,7 +125,7 @@ public class BulkExecutor {
      * @param logger The logger.
      * @param work The post-execution work to apply after each transaction is run.
      */
-    public BulkExecutor (
+    public BulkExecutor(
             ExecutionBatch executionBatch,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
             boolean isLocalCall,
@@ -181,7 +182,8 @@ public class BulkExecutor {
 
                 // Execute the next batch of transactions using the specified virtual machine.
                 summaries.addAll(
-                        executeTransactions(virtualMachineForNextBatch, nextBatchToExecute, vmKernel));
+                        executeTransactions(
+                                virtualMachineForNextBatch, nextBatchToExecute, vmKernel));
                 currentIndex += nextBatchToExecute.size();
             }
 
@@ -189,13 +191,14 @@ public class BulkExecutor {
         }
     }
 
-    private List<AionTxExecSummary> executeTransactions (
-            VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel) throws VMException {
+    private List<AionTxExecSummary> executeTransactions(
+            VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel)
+            throws VMException {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         // Run the transactions.
         SimpleFuture<TransactionResult>[] resultsAsFutures =
-                virtualMachine.run(kernel,  details.getExecutionContexts());
+                virtualMachine.run(kernel, details.getExecutionContexts());
 
         // Process the results of the transactions.
         List<AionTransaction> transactions = details.getTransactions();
@@ -218,7 +221,7 @@ public class BulkExecutor {
             long energyUsed = computeEnergyUsed(transaction.getEnergyLimit(), result);
             if (energyUsed > this.blockRemainingEnergy) {
                 result.setResultCode(FastVmResultCode.INVALID_NRG_LIMIT);
-                result.setReturnData(new byte[0]);
+                result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
 
                 if (transactionIsForAionVirtualMachine(transaction)) {
                     ((AvmTransactionResult) result).setEnergyUsed(transaction.getEnergyLimit());
@@ -255,7 +258,7 @@ public class BulkExecutor {
 
         // TODO: Avm should assure us this is not null: need to add this to VM API specifications.
         if (result.getReturnData() == null) {
-            result.setReturnData(new byte[0]);
+            result.setReturnData(ByteUtil.EMPTY_BYTE_ARRAY);
         }
 
         SideEffects sideEffects = new SideEffects();
@@ -312,7 +315,7 @@ public class BulkExecutor {
         return summary;
     }
 
-    private List<IExecutionLog> transferAvmLogsToKernel(List<IExecutionLog> avmLogs) {
+    private static List<IExecutionLog> transferAvmLogsToKernel(List<IExecutionLog> avmLogs) {
         List<IExecutionLog> logs = new ArrayList<>();
         for (IExecutionLog avmLog : avmLogs) {
             logs.add(new Log(avmLog.getSourceAddress(), avmLog.getTopics(), avmLog.getData()));
@@ -320,7 +323,7 @@ public class BulkExecutor {
         return logs;
     }
 
-    private AionTxReceipt makeReceipt(
+    private static AionTxReceipt makeReceipt(
             AionTransaction transaction, List<IExecutionLog> logs, TransactionResult result) {
         AionTxReceipt receipt = new AionTxReceipt();
         receipt.setTransaction(transaction);
@@ -370,7 +373,7 @@ public class BulkExecutor {
         }
     }
 
-    private long computeEnergyUsed(long limit, TransactionResult result) {
+    private static long computeEnergyUsed(long limit, TransactionResult result) {
         return limit - result.getEnergyRemaining();
     }
 
@@ -406,7 +409,7 @@ public class BulkExecutor {
      * the Fvm. This is currently what we want, but it will be changed and separated out in the
      * future.
      */
-    private boolean transactionIsForFastVirtualMachine(AionTransaction transaction) {
+    private static boolean transactionIsForFastVirtualMachine(AionTransaction transaction) {
         // first verify that the AVM is enabled
         if (avmEnabled) {
             if (transaction.isContractCreationTransaction()) {
@@ -426,7 +429,7 @@ public class BulkExecutor {
      * <p>- It is a CREATE transaction and its target VM is the AVM - It is a CALL transaction and
      * the destination is an AVM contract address
      */
-    private boolean transactionIsForAionVirtualMachine(AionTransaction transaction) {
+    private static boolean transactionIsForAionVirtualMachine(AionTransaction transaction) {
         // first verify that the AVM is enabled
         if (avmEnabled) {
             if (transaction.isContractCreationTransaction()) {
