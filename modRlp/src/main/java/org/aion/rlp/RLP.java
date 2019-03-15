@@ -67,10 +67,8 @@ public class RLP {
      */
     private static final int OFFSET_LONG_LIST = 0xf7;
 
-    private static final byte[] BYTES_SHORT_ITEM = new byte[] {(byte)OFFSET_SHORT_ITEM};
-    private static final byte[] BYTES_SHORT_LIST = new byte[] {(byte)OFFSET_SHORT_LIST};
-
-
+    private static final byte[] BYTES_SHORT_ITEM = new byte[] {(byte) OFFSET_SHORT_ITEM};
+    private static final byte[] BYTES_SHORT_LIST = new byte[] {(byte) OFFSET_SHORT_LIST};
 
     // DECODING
 
@@ -266,7 +264,10 @@ public class RLP {
         } catch (Exception e) {
             throw new RuntimeException(
                     "RLP wrong encoding ("
-                            + Hex.toHexString(msgData, startPos, endPos - startPos > 1024 ? 1024 : endPos - startPos)
+                            + Hex.toHexString(
+                                    msgData,
+                                    startPos,
+                                    endPos - startPos > 1024 ? 1024 : endPos - startPos)
                             + ")",
                     e);
         } catch (OutOfMemoryError e) {

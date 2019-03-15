@@ -125,7 +125,7 @@ public class BulkExecutor {
      * @param logger The logger.
      * @param work The post-execution work to apply after each transaction is run.
      */
-    public BulkExecutor (
+    public BulkExecutor(
             ExecutionBatch executionBatch,
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
             boolean isLocalCall,
@@ -182,7 +182,8 @@ public class BulkExecutor {
 
                 // Execute the next batch of transactions using the specified virtual machine.
                 summaries.addAll(
-                        executeTransactions(virtualMachineForNextBatch, nextBatchToExecute, vmKernel));
+                        executeTransactions(
+                                virtualMachineForNextBatch, nextBatchToExecute, vmKernel));
                 currentIndex += nextBatchToExecute.size();
             }
 
@@ -190,13 +191,14 @@ public class BulkExecutor {
         }
     }
 
-    private List<AionTxExecSummary> executeTransactions (
-            VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel) throws VMException {
+    private List<AionTxExecSummary> executeTransactions(
+            VirtualMachine virtualMachine, ExecutionBatch details, KernelInterface kernel)
+            throws VMException {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         // Run the transactions.
         SimpleFuture<TransactionResult>[] resultsAsFutures =
-                virtualMachine.run(kernel,  details.getExecutionContexts());
+                virtualMachine.run(kernel, details.getExecutionContexts());
 
         // Process the results of the transactions.
         List<AionTransaction> transactions = details.getTransactions();

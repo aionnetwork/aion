@@ -232,7 +232,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         this.transactionStore = this.repository.getTransactionStore();
 
-
         this.minerCoinbase = this.config.getMinerCoinbase();
         if (minerCoinbase == null) {
             LOG.warn("No miner Coinbase!");
@@ -1116,10 +1115,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return applyBlock(block);
         } else {
             return new AionBlockSummary(
-                    block,
-                    new HashMap<>(),
-                    new ArrayList<>(),
-                    new ArrayList<>());
+                    block, new HashMap<>(), new ArrayList<>(), new ArrayList<>());
         }
     }
 
@@ -1149,7 +1145,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             block.getNrgLimit(),
                             LOGGER_VM,
                             getPostExecutionWorkForGeneratePreBlock());
-          
+
             List<AionTxExecSummary> executionSummaries = null;
             try {
                 executionSummaries = executor.execute();
@@ -1157,7 +1153,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 LOG.error("Shutdown due to a VM fatal error.", e);
                 System.exit(-1);
             }
-          
+
             for (AionTxExecSummary summary : executionSummaries) {
                 if (!summary.isRejected()) {
                     transactions.add(summary.getTransaction());
@@ -1222,7 +1218,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             block.getNrgLimit(),
                             LOGGER_VM,
                             getPostExecutionWorkForApplyBlock());
-          
+
             List<AionTxExecSummary> executionSummaries = null;
             try {
                 executionSummaries = executor.execute();
@@ -1230,7 +1226,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 LOG.error("Shutdown due to a VM fatal error.", e);
                 System.exit(-1);
             }
-          
+
             for (AionTxExecSummary summary : executionSummaries) {
                 receipts.add(summary.getReceipt());
                 summaries.add(summary);
@@ -1540,7 +1536,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     //     * @return {@link A0BlockHeader}'s list or empty list if none found
     //     */
     //    @Override
-    //    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifierImpl identifier, int skip,
+    //    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifierImpl identifier, int
+    // skip,
     // int limit,
     //            boolean reverse) {
     //
