@@ -316,7 +316,7 @@ public class BlockchainIntegrationTest {
         assertThat(bc.getRepository().getBalance(beneficiary)).isEqualTo(context.baseBlockReward);
 
         // check that the correct amount was calculated
-        assertThat(configuration.getRewardsCalculator().calculateReward(context.block.getHeader()))
+        assertThat(configuration.getRewardsCalculator().calculateReward(context.block.getHeader().getNumber()))
                 .isEqualTo(context.baseBlockReward);
     }
 }
