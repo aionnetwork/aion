@@ -67,8 +67,8 @@ public class RLP {
      */
     private static final int OFFSET_LONG_LIST = 0xf7;
 
-    private static final byte[] BYTES_SHORT_ITEM = new byte[] {(byte)0x80};
-    private static final byte[] BYTES_SHORT_LIST = new byte[] {(byte)0xc0};
+    private static final byte[] BYTES_SHORT_ITEM = new byte[] {(byte)OFFSET_SHORT_ITEM};
+    private static final byte[] BYTES_SHORT_LIST = new byte[] {(byte)OFFSET_SHORT_LIST};
 
 
 
