@@ -21,6 +21,14 @@ public class ContractInformation {
     private byte vmUsed;
     private boolean complete;
 
+    private ContractInformation() {}
+
+    public ContractInformation(long inceptionBlock, byte vmUsed, boolean complete) {
+        this.inceptionBlock = inceptionBlock;
+        this.vmUsed = vmUsed;
+        this.complete = complete;
+    }
+
     public static final Serializer<ContractInformation, byte[]> RLP_SERIALIZER =
             new Serializer<>() {
 

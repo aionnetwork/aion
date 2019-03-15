@@ -5,15 +5,15 @@ import static com.google.common.truth.Truth.assertThat;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-
-import org.aion.interfaces.db.Repository;
-import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.mcf.core.ImportResult;
-
+import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
 import org.junit.Test;
@@ -242,6 +242,15 @@ public class BlockchainIntegrationTest {
         AionBlock block =
                 bc.createNewBlock(bc.getGenesis(), Arrays.asList(contractDeploymentTx), true);
         assertThat(bc.tryToConnect(block)).isEqualTo(ImportResult.IMPORTED_BEST);
+
+        // ensure the contract information was saved
+        ContractInformation ci =
+                bc.getRepository()
+                        .getIndexedContractInformation(contractDeploymentTx.getContractAddress());
+        assertThat(ci).isNotNull();
+        assertThat(ci.getInceptionBlock()).isEqualTo(block.getNumber());
+        assertThat(ci.getVmUsed()).isEqualTo(VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE);
+        assertThat(ci.isComplete()).isEqualTo(true);
     }
 
     /**

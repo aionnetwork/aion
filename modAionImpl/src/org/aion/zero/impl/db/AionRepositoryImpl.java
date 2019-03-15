@@ -19,6 +19,7 @@ import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
+import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
@@ -913,7 +914,25 @@ public class AionRepositoryImpl
      * @return the {@link ContractInformation} stored for the given contract
      */
     public ContractInformation getIndexedContractInformation(Address contract) {
-        return contractInfoSource.get(contract.toBytes());
+        return contract == null ? null : contractInfoSource.get(contract.toBytes());
+    }
+
+    public void saveIndexedContractInformation(
+            Address contract, long inceptionBlock, byte vmUsed, boolean complete) {
+        if (contract != null) {
+            contractInfoSource.put(
+                    contract.toBytes(), new ContractInformation(inceptionBlock, vmUsed, complete));
+        }
+    }
+
+    public byte getVMUsed(Address contract) {
+        ContractInformation ci = getIndexedContractInformation(contract);
+        if (ci == null) {
+            // defaults to FastVM for backwards compatibility
+            return VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE;
+        } else {
+            return ci.getVmUsed();
+        }
     }
 
     private static class AionRepositoryImplHolder {
