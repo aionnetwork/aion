@@ -414,7 +414,11 @@ public class BulkExecutor {
     }
 
     /**
-     * A transaction is for the Avm if, and only if, one of the following is true:
+     * A transaction can only be for the avm if the avm is enabled. If it is not enabled this method
+     * always returns false.
+     *
+     * Otherwise, assuming the avm is enabled, a transaction is for the Avm if, and only if, one of
+     * the following is true:
      *
      * <p>1. It is a CREATE transaction and its target VM is the AVM 2. It is a CALL transaction and
      * the destination is an AVM contract address 3. It is a CALL transaction and the destination is
