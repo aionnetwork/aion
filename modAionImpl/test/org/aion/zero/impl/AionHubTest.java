@@ -19,6 +19,7 @@ import org.aion.zero.types.AionTransaction;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 public class AionHubTest {
 
     private void checkHubNullity(AionHub hub) {
