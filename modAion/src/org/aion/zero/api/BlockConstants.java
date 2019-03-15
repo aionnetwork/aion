@@ -152,6 +152,14 @@ public class BlockConstants implements IBlockConstants {
         return RAMP_UP_UPPER_BOUND;
     }
 
+    public static long getAnnum() {
+        return 3110400L;
+    }
+
+    public static int getInterestBasePoint() {
+        return 100;
+    }
+
     /** The lower bound for energy calculations, energy should not go below this value */
     public long getEnergyLowerBoundLong() {
         return ENERGY_LOWER_BOUND_LONG;

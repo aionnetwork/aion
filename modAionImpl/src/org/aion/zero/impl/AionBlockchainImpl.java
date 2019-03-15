@@ -1,40 +1,15 @@
 package org.aion.zero.impl;
 
-import static java.lang.Long.max;
-import static java.lang.Runtime.getRuntime;
-import static java.math.BigInteger.ZERO;
-import static java.util.Collections.emptyList;
-import static org.aion.mcf.core.ImportResult.EXIST;
-import static org.aion.mcf.core.ImportResult.IMPORTED_BEST;
-import static org.aion.mcf.core.ImportResult.IMPORTED_NOT_BEST;
-import static org.aion.mcf.core.ImportResult.INVALID_BLOCK;
-import static org.aion.mcf.core.ImportResult.NO_PARENT;
-import static org.aion.util.biginteger.BIUtil.isMoreThan;
-import static org.aion.util.conversions.Hex.toHexString;
-
-import java.math.BigInteger;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import org.aion.interfaces.db.Repository;
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.TransactionStore;
@@ -82,6 +57,19 @@ import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.math.BigInteger;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.lang.Long.max;
+import static java.lang.Runtime.getRuntime;
+import static java.math.BigInteger.ZERO;
+import static java.util.Collections.emptyList;
+import static org.aion.mcf.core.ImportResult.*;
+import static org.aion.util.biginteger.BIUtil.isMoreThan;
+import static org.aion.util.conversions.Hex.toHexString;
 
 // TODO: clean and clarify best block
 // bestKnownBlock - block with the highest block number
@@ -161,7 +149,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *     cfgAion
      */
     private static A0BCConfig generateBCConfig(CfgAion cfgAion) {
-        ChainConfiguration config = new ChainConfiguration();
+
+        Long blkNum = monetaryUpdateBlkNum(cfgAion.getFork().getProperties());
+        BigInteger initialSupply = ZERO;
+        for (AccountState as : cfgAion.getGenesis().getPremine().values()) {
+            initialSupply = initialSupply.add(as.getBalance());
+        }
+
+        ChainConfiguration config = new ChainConfiguration(blkNum, initialSupply);
         return new A0BCConfig() {
             @Override
             public Address getCoinbase() {
@@ -203,6 +198,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return cfgAion.getVm().isAvmEnabled();
             }
         };
+    }
+
+    private static Long monetaryUpdateBlkNum(Properties properties) {
+        if (properties == null) {
+            return null;
+        }
+
+        String monetaryForkNum = properties.getProperty("fork0.4.0");
+        return monetaryForkNum == null ? null : Long.valueOf(monetaryForkNum);
     }
 
     private AionBlockchainImpl() {
@@ -817,7 +821,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // derive base block reward
         BigInteger baseBlockReward =
-                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
+                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader().getNumber());
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
 
@@ -1269,7 +1273,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Map<Address, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
-                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
+                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader().getNumber());
         rewards.put(block.getCoinbase(), minerReward);
 
         if (LOG.isTraceEnabled()) {
