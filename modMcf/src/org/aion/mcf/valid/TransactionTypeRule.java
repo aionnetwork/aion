@@ -9,11 +9,22 @@ import org.aion.interfaces.vm.VirtualMachineSpecs;
  */
 public class TransactionTypeRule {
 
+    /**
+     * Compares the given transaction type with all the transaction types allowed by the FastVM.
+     *
+     * @param type the type of a contract creation transaction
+     * @return {@code true} is this is a FastVM transaction, {@code false} otherwise
+     */
     public static boolean isValidFVMTransactionType(byte type) {
-        return type == VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE
-                || type == VirtualMachineSpecs.FVM_ALLOWED_TX_TYPE;
+        return type == VirtualMachineSpecs.FVM_CREATE_CODE;
     }
 
+    /**
+     * Compares the given transaction type with all the transaction types allowed by the AVM.
+     *
+     * @param type the type of a contract creation transaction
+     * @return {@code true} is this is an AVM transaction, {@code false} otherwise
+     */
     public static boolean isValidAVMTransactionType(byte type) {
         return type == VirtualMachineSpecs.AVM_CREATE_CODE;
     }

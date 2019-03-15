@@ -55,7 +55,7 @@ public abstract class AbstractTransaction implements Transaction {
         this.value = value;
         this.data = data;
         // default type 0x01; reserve date for multi-type transaction
-        this.type = VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE;
+        this.type = VirtualMachineSpecs.FVM_CREATE_CODE;
     }
 
     public AbstractTransaction(

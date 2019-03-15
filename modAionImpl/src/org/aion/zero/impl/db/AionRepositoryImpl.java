@@ -571,6 +571,7 @@ public class AionRepositoryImpl
         try {
             AionRepositoryImpl repo = new AionRepositoryImpl();
             repo.blockStore = blockStore;
+            repo.contractInfoSource = contractInfoSource;
             repo.cfg = cfg;
             repo.stateDatabase = this.stateDatabase;
             repo.stateWithArchive = this.stateWithArchive;
@@ -929,7 +930,7 @@ public class AionRepositoryImpl
         ContractInformation ci = getIndexedContractInformation(contract);
         if (ci == null) {
             // defaults to FastVM for backwards compatibility
-            return VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE;
+            return VirtualMachineSpecs.FVM_CREATE_CODE;
         } else {
             return ci.getVmUsed();
         }

@@ -3,12 +3,12 @@ package org.aion.vm;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import org.aion.avm.core.NodeEnvironment;
+import org.aion.crypto.AddressSpecs;
+import org.aion.fastvm.SideEffects;
 import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
-import org.aion.fastvm.SideEffects;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.TransactionContext;
 import org.aion.vm.api.interfaces.TransactionSideEffects;
@@ -167,7 +167,8 @@ public class KernelTransactionContext implements TransactionContext {
 
     public Address getContractAddress() {
         byte[] rawBytes = this.transaction.getContractAddress().toBytes();
-        rawBytes[0] = NodeEnvironment.CONTRACT_PREFIX;
+        // rawBytes[0] = NodeEnvironment.CONTRACT_PREFIX;
+        rawBytes[0] = AddressSpecs.A0_IDENTIFIER;
         return Address.wrap(rawBytes);
     }
 

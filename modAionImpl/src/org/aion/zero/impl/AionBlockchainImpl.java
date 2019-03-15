@@ -921,7 +921,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         block.getNumber(),
                         TransactionTypeRule.isValidAVMTransactionType(tx.getTargetVM())
                                 ? VirtualMachineSpecs.AVM_CREATE_CODE
-                                : VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE,
+                                : VirtualMachineSpecs.FVM_CREATE_CODE,
                         true);
             }
         }

@@ -6,19 +6,18 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.aion.avm.api.ABIEncoder;
-import org.aion.avm.core.NodeEnvironment;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
-import org.aion.interfaces.vm.VirtualMachineSpecs;
-import org.aion.types.Address;
+import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
+import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.mcf.core.ImportResult;
+import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
-
 import org.aion.zero.impl.StandaloneBlockchain;
-import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.RandomUtils;
@@ -73,7 +72,7 @@ public class StatefulnessTest {
         AionTxReceipt receipt = deployContract();
 
         // Check the contract has the Avm prefix, and deployment succeeded.
-        assertEquals(NodeEnvironment.CONTRACT_PREFIX, receipt.getTransactionOutput()[0]);
+        assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
         assertTrue(receipt.isSuccessful());
     }
 
@@ -85,7 +84,7 @@ public class StatefulnessTest {
         AionTxReceipt receipt = deployContract();
 
         // Check the contract has the Avm prefix, and deployment succeeded, and grab the address.
-        assertEquals(NodeEnvironment.CONTRACT_PREFIX, receipt.getTransactionOutput()[0]);
+        assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
         assertTrue(receipt.isSuccessful());
         Address contract = Address.wrap(receipt.getTransactionOutput());
 
@@ -111,7 +110,7 @@ public class StatefulnessTest {
         AionTxReceipt receipt = deployContract();
 
         // Check the contract has the Avm prefix, and deployment succeeded, and grab the address.
-        assertEquals(NodeEnvironment.CONTRACT_PREFIX, receipt.getTransactionOutput()[0]);
+        assertEquals(AddressSpecs.A0_IDENTIFIER, receipt.getTransactionOutput()[0]);
         assertTrue(receipt.isSuccessful());
         Address contract = Address.wrap(receipt.getTransactionOutput());
 

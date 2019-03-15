@@ -2,11 +2,11 @@ package org.aion.vm;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.avm.core.NodeEnvironment;
-import org.aion.interfaces.db.Repository;
-import org.aion.interfaces.db.RepositoryCache;
+import org.aion.crypto.AddressSpecs;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.tx.TxExecSummary;
 import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.kernel.AvmTransactionResult;
@@ -271,8 +271,7 @@ public class BulkExecutor {
         // We have to do this for now, because the kernel uses the log serialization, which is not
         // implemented in the Avm, and this type may become a POD type anyway..
         List<IExecutionLog> logs;
-        if (transactionIsForAionVirtualMachine(transaction)
-                || transaction.getTargetVM() == VirtualMachineSpecs.AVM_CREATE_CODE) {
+        if (transactionIsForAionVirtualMachine(transaction)) {
             logs = transferAvmLogsToKernel(sideEffects.getExecutionLogs());
         } else {
             logs = sideEffects.getExecutionLogs();
@@ -449,6 +448,7 @@ public class BulkExecutor {
      * calling into the Avm.
      */
     private boolean isAvmContract(Address address) {
-        return address.toBytes()[0] == NodeEnvironment.CONTRACT_PREFIX;
+        return address.toBytes()[0] == AddressSpecs.A0_IDENTIFIER
+                && repository.getVMUsed(address) == VirtualMachineSpecs.AVM_CREATE_CODE;
     }
 }

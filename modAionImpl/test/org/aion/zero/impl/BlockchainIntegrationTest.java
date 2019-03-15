@@ -15,7 +15,10 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.AionBlock;
+import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
+import org.aion.zero.types.AionTxReceipt;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 /**
@@ -224,7 +227,7 @@ public class BlockchainIntegrationTest {
                         .withValidatorConfiguration("simple")
                         .withDefaultAccounts()
                         .build();
-        StandaloneBlockchain bc = bundle.bc;
+        StandaloneBlockchain blockchain = bundle.bc;
 
         final ECKey sender = bundle.privateKeys.get(0);
 
@@ -240,16 +243,24 @@ public class BlockchainIntegrationTest {
         contractDeploymentTx.sign(sender);
 
         AionBlock block =
-                bc.createNewBlock(bc.getGenesis(), Arrays.asList(contractDeploymentTx), true);
-        assertThat(bc.tryToConnect(block)).isEqualTo(ImportResult.IMPORTED_BEST);
+                blockchain.createNewBlock(
+                        blockchain.getGenesis(), Arrays.asList(contractDeploymentTx), true);
+
+        Pair<ImportResult, AionBlockSummary> connectResult =
+                blockchain.tryToConnectAndFetchSummary(block);
+        AionTxReceipt receipt = connectResult.getRight().getReceipts().get(0);
+
+        assertThat(connectResult.getLeft()).isEqualTo(ImportResult.IMPORTED_BEST);
+        assertThat(receipt.isSuccessful()).isTrue();
 
         // ensure the contract information was saved
         ContractInformation ci =
-                bc.getRepository()
+                blockchain
+                        .getRepository()
                         .getIndexedContractInformation(contractDeploymentTx.getContractAddress());
         assertThat(ci).isNotNull();
         assertThat(ci.getInceptionBlock()).isEqualTo(block.getNumber());
-        assertThat(ci.getVmUsed()).isEqualTo(VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE);
+        assertThat(ci.getVmUsed()).isEqualTo(VirtualMachineSpecs.FVM_CREATE_CODE);
         assertThat(ci.isComplete()).isEqualTo(true);
     }
 
