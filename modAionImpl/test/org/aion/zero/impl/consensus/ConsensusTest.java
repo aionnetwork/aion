@@ -1,4 +1,4 @@
-package org.aion.zero.impl;
+package org.aion.zero.impl.consensus;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -14,6 +14,9 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 
+import org.aion.zero.impl.StandaloneBlockchain;
+import org.aion.zero.impl.StandaloneBlockchain.Builder;
+import org.aion.zero.impl.StandaloneBlockchain.Bundle;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
@@ -162,8 +165,8 @@ public class ConsensusTest {
 
     @Test
     public void testConsensus() {
-        StandaloneBlockchain.Bundle bundle =
-                new StandaloneBlockchain.Builder()
+        Bundle bundle =
+                new Builder()
                         .withDefaultAccounts(
                                 Collections.singletonList(ECKeyFac.inst().fromPrivate(PRIVATE_KEY)))
                         .withValidatorConfiguration("simple")
