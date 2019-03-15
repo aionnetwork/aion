@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
-import org.aion.zero.impl.sync.RequestCounter;
 import org.apache.commons.collections4.map.LRUMap;
 
 public class RequestStatsTracker {
