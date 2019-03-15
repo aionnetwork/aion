@@ -10,6 +10,7 @@ node {
     // docker tags
     def k8sTag = "k8s-${env.BUILD_NUMBER}"
     def k8sImageName = "aionkuberacr.azurecr.io/aion:${k8sTag}"
+    def k8sImageNameLatest = "aionkuberacr.azurecr.io/aion:latest"
     def distImageName = "aionnetwork/aion-staging:ci-${env.BUILD_NUMBER}"
 
     stage('Clone repository') {
@@ -26,7 +27,7 @@ node {
 	stage('Push k8s image to Azure private registry') {
         docker.withRegistry('https://aionkuberacr.azurecr.io', 'acr') {
             sh("docker push ${k8sImageName}")
-            sh("docker push ${k8sTag}:latest")
+            sh("docker push ${k8sImageNameLatest}")
         }
 	}
 
@@ -35,7 +36,7 @@ node {
 		sh('kubectl get nodes')
 
         withPythonEnv('python3') {
-            sh 'pip install -r k8s/requirements.txt'
+            sh 'pip install -r DockerAutomation/k8s/requirements.txt'
             deployName = sh(script: "python DockerAutomation/k8s/deploy.py ${k8sTag}", 
                 returnStdout: true)
         }
