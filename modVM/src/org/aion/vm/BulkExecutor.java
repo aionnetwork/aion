@@ -1,14 +1,14 @@
 package org.aion.vm;
 
+import static org.aion.mcf.valid.TransactionTypeRule.isValidAVMContractDeployment;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.crypto.AddressSpecs;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.tx.TxExecSummary;
-import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.kernel.AvmTransactionResult;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -427,10 +427,11 @@ public class BulkExecutor {
         // first verify that the AVM is enabled
         if (avmEnabled) {
             if (transaction.isContractCreationTransaction()) {
-                return transaction.getTargetVM() == VirtualMachineSpecs.AVM_CREATE_CODE;
+                return isValidAVMContractDeployment(transaction.getTargetVM());
             } else {
                 Address destination = transaction.getDestinationAddress();
-                return isAvmContract(destination) || !isContractAddress(destination);
+                return isValidAVMContractDeployment(repository.getVMUsed(destination))
+                        || !isContractAddress(destination);
             }
         } else {
             return false;
@@ -441,14 +442,5 @@ public class BulkExecutor {
     private boolean isContractAddress(Address address) {
         byte[] code = this.repositoryChild.getCode(address);
         return (code != null) && (code.length > 0);
-    }
-
-    /**
-     * Returns true only if address is an Avm contract. That is, a contract that was created by
-     * calling into the Avm.
-     */
-    private boolean isAvmContract(Address address) {
-        return address.toBytes()[0] == AddressSpecs.A0_IDENTIFIER
-                && repository.getVMUsed(address) == VirtualMachineSpecs.AVM_CREATE_CODE;
     }
 }

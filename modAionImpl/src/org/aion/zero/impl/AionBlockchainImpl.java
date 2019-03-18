@@ -33,7 +33,6 @@ import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
@@ -47,7 +46,6 @@ import org.aion.mcf.types.BlockIdentifierImpl;
 import org.aion.mcf.valid.BlockHeaderValidator;
 import org.aion.mcf.valid.GrandParentBlockHeaderValidator;
 import org.aion.mcf.valid.ParentBlockHeaderValidator;
-import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.vm.types.Bloom;
 import org.aion.rlp.RLP;
 import org.aion.types.Address;
@@ -75,7 +73,9 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.valid.TXValidator;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -919,9 +919,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 repository.saveIndexedContractInformation(
                         tx.getContractAddress(),
                         block.getNumber(),
-                        TransactionTypeRule.isValidAVMTransactionType(tx.getTargetVM())
-                                ? VirtualMachineSpecs.AVM_CREATE_CODE
-                                : VirtualMachineSpecs.FVM_CREATE_CODE,
+                        TransactionTypeRule.isValidAVMContractDeployment(tx.getTargetVM())
+                                ? TransactionTypes.AVM_CREATE_CODE
+                                : TransactionTypes.FVM_CREATE_CODE,
                         true);
             }
         }

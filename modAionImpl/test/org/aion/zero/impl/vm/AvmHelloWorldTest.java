@@ -9,13 +9,13 @@ import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
-import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -162,6 +162,6 @@ public class AvmHelloWorldTest {
                 data,
                 energyLimit,
                 1,
-                VirtualMachineSpecs.AVM_CREATE_CODE);
+                TransactionTypes.AVM_CREATE_CODE);
     }
 }

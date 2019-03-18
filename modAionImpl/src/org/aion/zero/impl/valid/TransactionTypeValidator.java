@@ -1,7 +1,6 @@
 package org.aion.zero.impl.valid;
 
-// import static org.aion.mcf.valid.TransactionTypeRule.isValidAVMTransactionType;
-// import static org.aion.mcf.valid.TransactionTypeRule.isValidFVMTransactionType;
+import static org.aion.mcf.valid.TransactionTypeRule.isValidTransactionType;
 
 /**
  * Validator for the type field of transactions allowed by the network. The transaction types
@@ -21,11 +20,10 @@ public class TransactionTypeValidator {
     }
 
     public static boolean isValid(byte type) {
-        /* TODO: re-enable when the fork point is established
-        // the type must be either valid for the FVM
-        // or for the AVM when the AVM is enabled
-        return isValidFVMTransactionType(type) || (avmEnabled && isValidAVMTransactionType(type));
-        */
         return true;
+    }
+
+    public static boolean isValidAfterFork(byte type) {
+        return isValidTransactionType(type);
     }
 }

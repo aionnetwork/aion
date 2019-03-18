@@ -2,12 +2,12 @@ package org.aion.mcf.vm.types;
 
 import java.math.BigInteger;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.interfaces.vm.VirtualMachineSpecs;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.valid.TxNrgRule;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.vm.api.interfaces.KernelInterface;
 
 public class KernelInterfaceForFastVM implements KernelInterface {
@@ -180,7 +180,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public boolean destinationAddressIsSafeForThisVM(Address address) {
-        return address.toBytes()[0] != VirtualMachineSpecs.AVM_CREATE_CODE;
+        return TransactionTypeRule.isValidFVMContractDeployment(repositoryCache.getVMUsed(address));
     }
 
     /**

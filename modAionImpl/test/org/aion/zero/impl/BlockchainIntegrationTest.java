@@ -8,7 +8,6 @@ import java.util.Collections;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.interfaces.db.Repository;
-import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
@@ -16,6 +15,7 @@ import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
@@ -260,7 +260,7 @@ public class BlockchainIntegrationTest {
                         .getIndexedContractInformation(contractDeploymentTx.getContractAddress());
         assertThat(ci).isNotNull();
         assertThat(ci.getInceptionBlock()).isEqualTo(block.getNumber());
-        assertThat(ci.getVmUsed()).isEqualTo(VirtualMachineSpecs.FVM_CREATE_CODE);
+        assertThat(ci.getVmUsed()).isEqualTo(TransactionTypes.FVM_CREATE_CODE);
         assertThat(ci.isComplete()).isEqualTo(true);
     }
 

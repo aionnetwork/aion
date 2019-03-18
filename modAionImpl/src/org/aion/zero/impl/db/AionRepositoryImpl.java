@@ -19,7 +19,6 @@ import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
-import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
@@ -38,6 +37,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -930,7 +930,7 @@ public class AionRepositoryImpl
         ContractInformation ci = getIndexedContractInformation(contract);
         if (ci == null) {
             // defaults to FastVM for backwards compatibility
-            return VirtualMachineSpecs.FVM_CREATE_CODE;
+            return TransactionTypes.FVM_CREATE_CODE;
         } else {
             return ci.getVmUsed();
         }

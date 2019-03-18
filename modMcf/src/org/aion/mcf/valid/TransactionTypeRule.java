@@ -1,6 +1,10 @@
 package org.aion.mcf.valid;
 
-import org.aion.interfaces.vm.VirtualMachineSpecs;
+import static org.aion.mcf.tx.TransactionTypes.ALL;
+import static org.aion.mcf.tx.TransactionTypes.AVM;
+import static org.aion.mcf.tx.TransactionTypes.AVM_CREATE_CODE;
+import static org.aion.mcf.tx.TransactionTypes.FVM;
+import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 
 /**
  * Rules for validating transactions based on allowed types.
@@ -10,22 +14,52 @@ import org.aion.interfaces.vm.VirtualMachineSpecs;
 public class TransactionTypeRule {
 
     /**
+     * Compares the given transaction type with all the transaction types allowed.
+     *
+     * @param type the type of a transaction applicable on any of the allowed VMs
+     * @return {@code true} is this is a valid transaction type, {@code false} otherwise
+     */
+    public static boolean isValidTransactionType(byte type) {
+        return ALL.contains(type);
+    }
+
+    /**
      * Compares the given transaction type with all the transaction types allowed by the FastVM.
      *
-     * @param type the type of a contract creation transaction
-     * @return {@code true} is this is a FastVM transaction, {@code false} otherwise
+     * @param type the type of a transaction applicable on the FastVM
+     * @return {@code true} is this is an FastVM transaction, {@code false} otherwise
      */
-    public static boolean isValidFVMTransactionType(byte type) {
-        return type == VirtualMachineSpecs.FVM_CREATE_CODE;
+    public static boolean isValidFVMTransaction(byte type) {
+        return FVM.contains(type);
+    }
+
+    /**
+     * Checks if the given transaction is a valid contract deployment on the FastVM.
+     *
+     * @param type the type of a contract creation transaction
+     * @return {@code true} is this is a valid FastVM contract deployment, {@code false} otherwise
+     */
+    public static boolean isValidFVMContractDeployment(byte type) {
+        return type == FVM_CREATE_CODE || true; // anything is valid here before the fork
     }
 
     /**
      * Compares the given transaction type with all the transaction types allowed by the AVM.
      *
-     * @param type the type of a contract creation transaction
+     * @param type the type of a transaction applicable on the AVM
      * @return {@code true} is this is an AVM transaction, {@code false} otherwise
      */
-    public static boolean isValidAVMTransactionType(byte type) {
-        return type == VirtualMachineSpecs.AVM_CREATE_CODE;
+    public static boolean isValidAVMTransaction(byte type) {
+        return AVM.contains(type);
+    }
+
+    /**
+     * Checks if the given transaction is a valid contract deployment on the AVM.
+     *
+     * @param type the type of a contract creation transaction
+     * @return {@code true} is this is a valid AVM contract deployment, {@code false} otherwise
+     */
+    public static boolean isValidAVMContractDeployment(byte type) {
+        return type == AVM_CREATE_CODE;
     }
 }

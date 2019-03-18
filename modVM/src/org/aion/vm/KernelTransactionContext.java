@@ -166,10 +166,7 @@ public class KernelTransactionContext implements TransactionContext {
     }
 
     public Address getContractAddress() {
-        byte[] rawBytes = this.transaction.getContractAddress().toBytes();
-        // rawBytes[0] = NodeEnvironment.CONTRACT_PREFIX;
-        rawBytes[0] = AddressSpecs.A0_IDENTIFIER;
-        return Address.wrap(rawBytes);
+        return this.transaction.getContractAddress();
     }
 
     /** @return the origination address, which is the sender of original transaction. */
