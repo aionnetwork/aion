@@ -36,7 +36,8 @@ final class TaskFastImportBlocks implements Runnable {
 
     @Override
     public void run() {
-        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+        // TODO: determine correct priority when full fast sync is added
+        Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
         while (!fastSyncMgr.isComplete()) {
             if (fastSyncMgr.isCompleteBlockData()) {
                 // the block data is complete, but fast sync may still fail and reset pivot

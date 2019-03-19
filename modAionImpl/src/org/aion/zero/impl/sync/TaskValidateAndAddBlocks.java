@@ -52,7 +52,7 @@ public class TaskValidateAndAddBlocks implements Runnable {
     @Override
     public void run() {
         // TODO: re-evaluate priority when full functionality is implemented
-        Thread.currentThread().setPriority(Thread.MAX_PRIORITY - 1);
+        Thread.currentThread().setPriority(Thread.NORM_PRIORITY);
         AionBlock firstBlock = response.getBlocks().get(0);
         Thread.currentThread().setName("check-" + displayId + "-" + firstBlock.getShortHash());
 
