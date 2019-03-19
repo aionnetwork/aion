@@ -71,6 +71,7 @@ public class BulkExecutor {
     private boolean isLocalCall;
     private boolean allowNonceIncrement;
     private long blockRemainingEnergy;
+    private boolean fork040enable;
 
     /**
      * Constructs a new bulk executor that will execute the transactions contained in the provided
@@ -87,6 +88,7 @@ public class BulkExecutor {
      * @param isLocalCall Whether or not the call is a network or local call.
      * @param allowNonceIncrement Whether or not to increment the sender's nonce.
      * @param blockRemainingEnergy The amount of energy remaining in the block.
+     * @param fork040Enable the fork logic affect the fvm behavior.
      * @param logger The logger.
      * @param work The post-execution work to apply after each transaction is run.
      */
@@ -97,6 +99,7 @@ public class BulkExecutor {
             boolean isLocalCall,
             boolean allowNonceIncrement,
             long blockRemainingEnergy,
+            boolean fork040Enable,
             Logger logger,
             PostExecutionWork work) {
 
@@ -108,6 +111,7 @@ public class BulkExecutor {
         this.blockRemainingEnergy = blockRemainingEnergy;
         this.logger = logger;
         this.postExecutionWork = work;
+        this.fork040enable = fork040Enable;
     }
 
     /**
@@ -136,11 +140,33 @@ public class BulkExecutor {
 
         this(
                 executionBatch,
+                repositoryChild,
+                isLocalCall,
+                allowNonceIncrement,
+                blockRemainingEnergy,
+                false,
+                logger,
+                work);
+    }
+
+    public BulkExecutor(
+            ExecutionBatch executionBatch,
+            RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild,
+            boolean isLocalCall,
+            boolean allowNonceIncrement,
+            long blockRemainingEnergy,
+            boolean fork040enable,
+            Logger logger,
+            PostExecutionWork work) {
+
+        this(
+                executionBatch,
                 null,
                 repositoryChild,
                 isLocalCall,
                 allowNonceIncrement,
                 blockRemainingEnergy,
+                fork040enable,
                 logger,
                 work);
     }
@@ -173,7 +199,8 @@ public class BulkExecutor {
                             new KernelInterfaceForFastVM(
                                     this.repositoryChild.startTracking(),
                                     this.allowNonceIncrement,
-                                    this.isLocalCall);
+                                    this.isLocalCall,
+                                    fork040enable);
                     virtualMachineForNextBatch =
                             VirtualMachineProvider.getVirtualMachineInstance(VM.FVM, vmKernel);
                     nextBatchToExecute =
@@ -294,7 +321,10 @@ public class BulkExecutor {
         } else {
             kernelFromVM.commitTo(
                     new KernelInterfaceForFastVM(
-                            this.repositoryChild, this.allowNonceIncrement, this.isLocalCall));
+                            this.repositoryChild,
+                            this.allowNonceIncrement,
+                            this.isLocalCall,
+                            this.fork040enable));
         }
 
         if (resultCode.isRejected()) {
@@ -417,8 +447,8 @@ public class BulkExecutor {
      * A transaction can only be for the avm if the avm is enabled. If it is not enabled this method
      * always returns false.
      *
-     * Otherwise, assuming the avm is enabled, a transaction is for the Avm if, and only if, one of
-     * the following is true:
+     * <p>Otherwise, assuming the avm is enabled, a transaction is for the Avm if, and only if, one
+     * of the following is true:
      *
      * <p>1. It is a CREATE transaction and its target VM is the AVM 2. It is a CALL transaction and
      * the destination is an AVM contract address 3. It is a CALL transaction and the destination is
