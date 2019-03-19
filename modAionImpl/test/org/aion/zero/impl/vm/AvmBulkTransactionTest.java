@@ -11,17 +11,16 @@ import org.aion.avm.api.ABIDecoder;
 import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
-import org.aion.interfaces.vm.VirtualMachineSpecs;
-import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.ImportResult;
+import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
-
 import org.aion.zero.impl.StandaloneBlockchain;
-import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
+import org.aion.mcf.tx.TransactionTypes;
+import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
 import org.apache.commons.lang3.RandomUtils;
@@ -216,7 +215,7 @@ public class AvmBulkTransactionTest {
                         jar,
                         5_000_000,
                         this.energyPrice,
-                        VirtualMachineSpecs.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
         return transaction;
     }
@@ -232,7 +231,7 @@ public class AvmBulkTransactionTest {
                         abiEncodeMethodCall("incrementCounter"),
                         2_000_000,
                         this.energyPrice,
-                        VirtualMachineSpecs.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
         return transaction;
     }
@@ -268,7 +267,7 @@ public class AvmBulkTransactionTest {
                         abiEncodeMethodCall("getCount"),
                         2_000_000,
                         this.energyPrice,
-                        VirtualMachineSpecs.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(sender);
 
         AionBlockSummary summary =

@@ -1,7 +1,7 @@
 ext.moduleName = 'aion.boot'
 
 dependencies {
-    compile 'network.aion:vm-api4j:0.4.0'
+    compile project(':aion_vm_api')
     compile 'network.aion:util4j:0.4.0'
     compile 'network.aion:log4j:0.4.0'
     compile 'network.aion:crypto4j:0.4.0'

@@ -1,14 +1,14 @@
 package org.aion.vm;
 
+import static org.aion.mcf.valid.TransactionTypeRule.isValidAVMContractDeployment;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.aion.avm.core.NodeEnvironment;
-import org.aion.interfaces.db.Repository;
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.fastvm.FastVmResultCode;
 import org.aion.fastvm.SideEffects;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.tx.TxExecSummary;
-import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.kernel.AvmTransactionResult;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
@@ -271,8 +271,7 @@ public class BulkExecutor {
         // We have to do this for now, because the kernel uses the log serialization, which is not
         // implemented in the Avm, and this type may become a POD type anyway..
         List<IExecutionLog> logs;
-        if (transactionIsForAionVirtualMachine(transaction)
-                || transaction.getTargetVM() == VirtualMachineSpecs.AVM_CREATE_CODE) {
+        if (transactionIsForAionVirtualMachine(transaction)) {
             logs = transferAvmLogsToKernel(sideEffects.getExecutionLogs());
         } else {
             logs = sideEffects.getExecutionLogs();
@@ -428,10 +427,11 @@ public class BulkExecutor {
         // first verify that the AVM is enabled
         if (avmEnabled) {
             if (transaction.isContractCreationTransaction()) {
-                return transaction.getTargetVM() == VirtualMachineSpecs.AVM_CREATE_CODE;
+                return isValidAVMContractDeployment(transaction.getTargetVM());
             } else {
                 Address destination = transaction.getDestinationAddress();
-                return isAvmContract(destination) || !isContractAddress(destination);
+                return isValidAVMContractDeployment(repository.getVMUsed(destination))
+                        || !isContractAddress(destination);
             }
         } else {
             return false;
@@ -442,13 +442,5 @@ public class BulkExecutor {
     private boolean isContractAddress(Address address) {
         byte[] code = this.repositoryChild.getCode(address);
         return (code != null) && (code.length > 0);
-    }
-
-    /**
-     * Returns true only if address is an Avm contract. That is, a contract that was created by
-     * calling into the Avm.
-     */
-    private boolean isAvmContract(Address address) {
-        return address.toBytes()[0] == NodeEnvironment.CONTRACT_PREFIX;
     }
 }

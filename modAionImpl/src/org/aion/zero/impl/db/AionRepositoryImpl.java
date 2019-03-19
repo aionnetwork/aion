@@ -14,16 +14,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.interfaces.db.RepositoryConfig;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
-import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepository;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.TransactionStore;
+import org.aion.mcf.ds.ObjectDataSource;
 import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
@@ -37,6 +37,7 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -49,6 +50,9 @@ public class AionRepositoryImpl
 
     // pending block store
     private PendingBlockStore pendingStore;
+
+    // inferred contract information not used for consensus
+    private ObjectDataSource<ContractInformation> contractInfoSource;
 
     /**
      * used by getSnapShotTo
@@ -84,6 +88,9 @@ public class AionRepositoryImpl
             this.blockStore = new AionBlockStore(indexDatabase, blockDatabase, checkIntegrity);
 
             this.pendingStore = new PendingBlockStore(pendingStoreProperties);
+            this.contractInfoSource =
+                    new ObjectDataSource<>(
+                            contractIndexDatabase, ContractInformation.RLP_SERIALIZER);
 
             // Setup world trie.
             worldState = createStateTrie();
@@ -564,6 +571,7 @@ public class AionRepositoryImpl
         try {
             AionRepositoryImpl repo = new AionRepositoryImpl();
             repo.blockStore = blockStore;
+            repo.contractInfoSource = contractInfoSource;
             repo.cfg = cfg;
             repo.stateDatabase = this.stateDatabase;
             repo.stateWithArchive = this.stateWithArchive;
@@ -898,6 +906,33 @@ public class AionRepositoryImpl
             default:
                 throw new IllegalArgumentException(
                         "The database type " + dbType.toString() + " is not supported.");
+        }
+    }
+
+    /**
+     * Returns the {@link ContractInformation} stored for the given contract.
+     *
+     * @return the {@link ContractInformation} stored for the given contract
+     */
+    public ContractInformation getIndexedContractInformation(Address contract) {
+        return contract == null ? null : contractInfoSource.get(contract.toBytes());
+    }
+
+    public void saveIndexedContractInformation(
+            Address contract, long inceptionBlock, byte vmUsed, boolean complete) {
+        if (contract != null) {
+            contractInfoSource.put(
+                    contract.toBytes(), new ContractInformation(inceptionBlock, vmUsed, complete));
+        }
+    }
+
+    public byte getVMUsed(Address contract) {
+        ContractInformation ci = getIndexedContractInformation(contract);
+        if (ci == null) {
+            // defaults to FastVM for backwards compatibility
+            return TransactionTypes.FVM_CREATE_CODE;
+        } else {
+            return ci.getVmUsed();
         }
     }
 

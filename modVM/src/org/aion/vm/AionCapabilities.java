@@ -1,9 +1,6 @@
 package org.aion.vm;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import org.aion.avm.core.IExternalCapabilities;
-import org.aion.avm.core.NodeEnvironment;
 import org.aion.crypto.HashUtil;
 import org.aion.types.Address;
 import org.aion.vm.api.interfaces.TransactionInterface;
@@ -32,12 +29,6 @@ public class AionCapabilities implements IExternalCapabilities {
 
     @Override
     public Address generateContractAddress(TransactionInterface tx) {
-        Address sender = tx.getSenderAddress();
-        long nonce = new BigInteger(tx.getNonce()).longValue();
-        ByteBuffer buffer =
-                ByteBuffer.allocate(Address.SIZE + Long.BYTES).put(sender.toBytes()).putLong(nonce);
-        byte[] hash = sha256(buffer.array());
-        hash[0] = NodeEnvironment.CONTRACT_PREFIX;
-        return Address.wrap(hash);
+        return Address.wrap(HashUtil.calcNewAddr(tx.getSenderAddress().toBytes(), tx.getNonce()));
     }
 }

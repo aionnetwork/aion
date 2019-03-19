@@ -26,13 +26,13 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import org.aion.interfaces.db.Repository;
-import org.aion.interfaces.db.RepositoryCache;
 import org.aion.crypto.HashUtil;
 import org.aion.equihash.EquihashMiner;
 import org.aion.evtmgr.IEvent;
 import org.aion.evtmgr.IEventMgr;
 import org.aion.evtmgr.impl.evt.EventBlock;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.ImportResult;
@@ -73,7 +73,9 @@ import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.impl.types.AionTxInfo;
 import org.aion.zero.impl.types.RetValidPreBlock;
 import org.aion.zero.impl.valid.TXValidator;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.zero.impl.valid.TransactionTypeValidator;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -909,6 +911,20 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // update corresponding account with the new balance
         track.flush();
+
+        // save contract creation data
+        for (AionTxReceipt receipt : receipts) {
+            AionTransaction tx = receipt.getTransaction();
+            if (tx.isContractCreationTransaction()) {
+                repository.saveIndexedContractInformation(
+                        tx.getContractAddress(),
+                        block.getNumber(),
+                        TransactionTypeRule.isValidAVMContractDeployment(tx.getTargetVM())
+                                ? TransactionTypes.AVM_CREATE_CODE
+                                : TransactionTypes.FVM_CREATE_CODE,
+                        true);
+            }
+        }
 
         if (rebuild) {
             for (int i = 0; i < receipts.size(); i++) {

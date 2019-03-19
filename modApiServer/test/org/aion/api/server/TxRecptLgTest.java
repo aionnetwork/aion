@@ -11,9 +11,9 @@ import org.aion.api.server.types.TxRecptLg;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.HashUtil;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
-
 import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.api.interfaces.IExecutionLog;
@@ -70,7 +70,8 @@ public class TxRecptLgTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractA),
                         1_000_000L,
-                        1L);
+                        1L,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx1.sign(deployerAccount);
 
         nonce = nonce.add(BigInteger.ONE);
@@ -81,7 +82,8 @@ public class TxRecptLgTest {
                         new byte[0],
                         ByteUtil.hexStringToBytes(contractB),
                         1_000_000L,
-                        1L);
+                        1L,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx2.sign(deployerAccount);
 
         BlockContext context =

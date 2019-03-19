@@ -1,5 +1,5 @@
 ext.moduleName = 'aion.txpool'
 
 dependencies {
-    compile 'network.aion:vm-api4j:0.4.0'
+    compile project(':aion_vm_api')
 }

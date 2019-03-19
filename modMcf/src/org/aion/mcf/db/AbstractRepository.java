@@ -49,6 +49,7 @@ public abstract class AbstractRepository<
     protected static final String INDEX_DB = Names.INDEX;
     protected static final String BLOCK_DB = Names.BLOCK;
     protected static final String PENDING_BLOCK_DB = Names.PENDING_BLOCK;
+    protected static final String CONTRACT_INDEX_DB = Names.CONTRACT_INDEX;
     protected static final String DETAILS_DB = Names.DETAILS;
     protected static final String STORAGE_DB = Names.STORAGE;
     protected static final String STATE_DB = Names.STATE;
@@ -66,6 +67,7 @@ public abstract class AbstractRepository<
     /** ******** Database and Cache parameters ************* */
     protected ByteArrayKeyValueDatabase transactionDatabase;
 
+    protected ByteArrayKeyValueDatabase contractIndexDatabase;
     protected ByteArrayKeyValueDatabase detailsDatabase;
     protected ByteArrayKeyValueDatabase storageDatabase;
     protected ByteArrayKeyValueDatabase indexDatabase;
@@ -183,6 +185,17 @@ public abstract class AbstractRepository<
                 throw newException(TRANSACTION_DB, sharedProps);
             }
             databaseGroup.add(transactionDatabase);
+
+            // getting details specific properties
+            sharedProps = cfg.getDatabaseConfig(CONTRACT_INDEX_DB);
+            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
+            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
+            sharedProps.setProperty(Props.DB_NAME, CONTRACT_INDEX_DB);
+            this.contractIndexDatabase = connectAndOpen(sharedProps, LOG);
+            if (contractIndexDatabase == null || contractIndexDatabase.isClosed()) {
+                throw newException(CONTRACT_INDEX_DB, sharedProps);
+            }
+            databaseGroup.add(contractIndexDatabase);
 
             // getting details specific properties
             sharedProps = cfg.getDatabaseConfig(DETAILS_DB);

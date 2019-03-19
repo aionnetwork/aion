@@ -5,12 +5,12 @@ import static org.aion.mcf.vm.Constants.NRG_TRANSACTION_DEFAULT;
 
 import java.math.BigInteger;
 
-import org.aion.interfaces.vm.VirtualMachineSpecs;
 import org.aion.types.Address;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
+import org.aion.mcf.tx.TransactionTypes;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
@@ -39,15 +39,7 @@ public final class ArgTxCall {
             final BigInteger _value,
             final long _nrg,
             final long _nrgPrice) {
-        this(
-                _from,
-                _to,
-                _data,
-                _nonce,
-                _value,
-                _nrg,
-                _nrgPrice,
-                VirtualMachineSpecs.FVM_DEFAULT_TX_TYPE);
+        this(_from, _to, _data, _nonce, _value, _nrg, _nrgPrice, TransactionTypes.DEFAULT);
     }
 
     public ArgTxCall(

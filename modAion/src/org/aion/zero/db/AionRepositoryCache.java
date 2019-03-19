@@ -8,11 +8,11 @@ import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.types.Address;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.AbstractRepositoryCache;
 import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.types.Address;
 
 public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase<?, ?>> {
 
@@ -250,5 +250,9 @@ public class AionRepositoryCache extends AbstractRepositoryCache<IBlockStoreBase
     public List<byte[]> getCacheTx() {
         throw new UnsupportedOperationException(
                 "getCachelTx should be called on the tracked repository.");
+    }
+
+    public byte getVMUsed(Address contract) {
+        return repository.getVMUsed(contract);
     }
 }
