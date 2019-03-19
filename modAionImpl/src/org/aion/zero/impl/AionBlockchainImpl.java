@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
@@ -85,19 +86,6 @@ import org.aion.zero.types.IAionBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static java.lang.Long.max;
-import static java.lang.Runtime.getRuntime;
-import static java.math.BigInteger.ZERO;
-import static java.util.Collections.emptyList;
-import static org.aion.mcf.core.ImportResult.*;
-import static org.aion.util.biginteger.BIUtil.isMoreThan;
-import static org.aion.util.conversions.Hex.toHexString;
 
 // TODO: clean and clarify best block
 // bestKnownBlock - block with the highest block number
