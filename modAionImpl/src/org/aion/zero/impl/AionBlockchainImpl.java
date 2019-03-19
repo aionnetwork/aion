@@ -575,7 +575,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return FastImportResult.INVALID_BLOCK;
         }
         if (block.getTimestamp()
-                > (System.currentTimeMillis()
+                > (System.currentTimeMillis() / THOUSAND_MS
                         + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug(
@@ -617,8 +617,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
      * null} when the history is complete, i.e. no missing ancestors exist.
      *
      * @param block the first block to be checked if present in the repository
-     * @return the ancestor's hash if one is found missing or {@code null} when the history is
-     *     complete
+     * @return the ancestor's hash and height if one is found missing or {@code null} when the
+     *     history is complete
      * @throws NullPointerException when given a null block as input
      */
     public Pair<ByteArrayWrapper, Long> findMissingAncestor(AionBlock block) {
@@ -1613,7 +1613,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
     //     * @return {@link A0BlockHeader}'s list or empty list if none found
     //     */
     //    @Override
-    //    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifierImpl identifier, int skip,
+    //    public List<A0BlockHeader> getListOfHeadersStartFrom(BlockIdentifierImpl identifier, int
+    // skip,
     // int limit,
     //            boolean reverse) {
     //
