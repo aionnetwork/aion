@@ -30,8 +30,8 @@ public class KernelInterfaceForAVM implements KernelInterface {
     }
 
     @Override
-    public KernelInterfaceForFastVM makeChildKernelInterface() {
-        return new KernelInterfaceForFastVM(
+    public KernelInterfaceForAVM makeChildKernelInterface() {
+        return new KernelInterfaceForAVM(
                 this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall);
     }
 
