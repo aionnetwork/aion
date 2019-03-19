@@ -165,7 +165,6 @@ public class BlockPropagationHandler {
             boolean stored = blockchain.storePendingStatusBlock(block);
             if (stored) {
                 this.syncStats.updatePeerBlocks(displayId, 1, BlockType.STORED);
-                this.syncStats.updatePeerBlocks(displayId, 1, BlockType.RECEIVED);
             }
 
             if (log.isDebugEnabled()) {
@@ -182,7 +181,6 @@ public class BlockPropagationHandler {
             long t2 = System.currentTimeMillis();
             if (result.isStored()) {
                 this.syncStats.updatePeerBlocks(displayId, 1, BlockType.IMPORTED);
-                this.syncStats.updatePeerBlocks(displayId, 1, BlockType.RECEIVED);
             }
 
             if (log.isInfoEnabled()) {
