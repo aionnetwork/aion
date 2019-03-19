@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.aion.fastvm.ExecutionContext;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.Address;
 import org.aion.zero.types.AionTransaction;
@@ -123,7 +124,11 @@ public final class ExecutionBatch {
         Address caller = transaction.getSenderAddress();
 
         DataWordImpl nrgPrice = transaction.nrgPrice();
-        long nrg = transaction.nrgLimit() - transaction.transactionCost(block.getNumber());
+        long nrg =
+                transaction.nrgLimit()
+                        - (TransactionTypes.FVM.contains(transaction.getTargetVM())
+                                ? transaction.transactionCost(block.getNumber())
+                                : 0);
         DataWordImpl callValue = new DataWordImpl(ArrayUtils.nullToEmpty(transaction.getValue()));
         byte[] callData = ArrayUtils.nullToEmpty(transaction.getData());
 
