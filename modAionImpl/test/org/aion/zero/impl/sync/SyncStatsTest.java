@@ -225,6 +225,7 @@ public class SyncStatsTest {
             assertThat(lastTotalBlocks >= totalBlockResByPeer.get(nodeId)).isTrue();
             lastTotalBlocks = totalBlockResByPeer.get(nodeId);
             assertThat(totalBlockResByPeer.get(nodeId)).isEqualTo(total);
+            assertThat(stats.getBlocksByPeer(nodeId, BlockType.RECEIVED)).isEqualTo(total);
             total--;
         }
     }
@@ -254,7 +255,7 @@ public class SyncStatsTest {
         SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
-        assertEquals(stats.getImportedBlocksByPeer(peers.get(0)), 0);
+        assertEquals(stats.getBlocksByPeer(peers.get(0), BlockType.IMPORTED), 0);
 
         int peerNo = 0;
         for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
@@ -268,7 +269,7 @@ public class SyncStatsTest {
 
         int imported = 3;
         for (String nodeId : peers) {
-            assertEquals((long) imported, stats.getImportedBlocksByPeer(nodeId));
+            assertEquals((long) imported, stats.getBlocksByPeer(nodeId, BlockType.IMPORTED));
             imported--;
         }
     }
@@ -290,7 +291,7 @@ public class SyncStatsTest {
 
         // ensures still empty
         for (String nodeId : peers) {
-            assertEquals(0, stats.getImportedBlocksByPeer(nodeId));
+            assertEquals(0, stats.getBlocksByPeer(nodeId, BlockType.IMPORTED));
         }
     }
 
@@ -300,7 +301,7 @@ public class SyncStatsTest {
         SyncStats stats = new SyncStats(0L, true);
 
         // ensures correct behaviour on empty stats
-        assertEquals(stats.getStoredBlocksByPeer(peers.get(0)), 0);
+        assertEquals(stats.getBlocksByPeer(peers.get(0), BlockType.STORED), 0);
 
         int peerNo = 0;
         for (int totalBlocks = peers.size(); totalBlocks > 0; totalBlocks--) {
@@ -314,7 +315,7 @@ public class SyncStatsTest {
 
         int stored = 3;
         for (String nodeId : peers) {
-            assertEquals((long) stored, stats.getStoredBlocksByPeer(nodeId));
+            assertEquals((long) stored, stats.getBlocksByPeer(nodeId, BlockType.STORED));
             stored--;
         }
     }
@@ -337,7 +338,7 @@ public class SyncStatsTest {
 
         // ensures still empty
         for (String nodeId : peers) {
-            assertEquals(0, stats.getStoredBlocksByPeer(nodeId));
+            assertEquals(0, stats.getBlocksByPeer(nodeId, BlockType.STORED));
         }
     }
 

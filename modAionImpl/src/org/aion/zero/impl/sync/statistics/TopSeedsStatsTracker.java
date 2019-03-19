@@ -46,7 +46,7 @@ public class TopSeedsStatsTracker {
     /**
      * Obtains a map of seed peers ordered by the total number of imported blocks
      *
-     * @return map of total blocks receivedby peer and sorted in descending order
+     * @return map of total blocks received by peer and sorted in descending order
      */
     public Map<String, Integer> getReceivedBlocksByPeer() {
         seedsLock.lock();
@@ -66,28 +66,14 @@ public class TopSeedsStatsTracker {
     }
 
     /**
-     * Obtains the total number of blocks imported from the given seed peer
+     * Obtains the total number of blocks received/imported/stored from the given seed peer
      *
-     * @return number of total imported blocks by peer
+     * @return number of total blocks of given type by peer
      */
-    public long getImportedBlocksByPeer(String _nodeId) {
+    public long getBlocksByPeer(String _nodeId, BlockType type) {
         seedsLock.lock();
         try {
-            return blocksByPeer.get(BlockType.IMPORTED).getOrDefault(_nodeId, 0);
-        } finally {
-            seedsLock.unlock();
-        }
-    }
-
-    /**
-     * Obtains the total number of blocks stored from the given seed peer
-     *
-     * @return number of total stored blocks by peer
-     */
-    public long getStoredBlocksByPeer(String nodeId) {
-        seedsLock.lock();
-        try {
-            return blocksByPeer.get(BlockType.STORED).getOrDefault(nodeId, 0);
+            return blocksByPeer.get(type).getOrDefault(_nodeId, 0);
         } finally {
             seedsLock.unlock();
         }
@@ -122,8 +108,8 @@ public class TopSeedsStatsTracker {
                                             "   id:%6s %20s %19s %19s\n",
                                             nodeId,
                                             receivedBlocks,
-                                            this.getImportedBlocksByPeer(nodeId),
-                                            this.getStoredBlocksByPeer(nodeId))));
+                                            this.getBlocksByPeer(nodeId, BlockType.IMPORTED),
+                                            this.getBlocksByPeer(nodeId, BlockType.STORED))));
         }
 
         return sb.toString();

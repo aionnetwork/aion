@@ -187,28 +187,14 @@ public final class SyncStats {
     }
 
     /**
-     * Obtains the total number of blocks imported from the given seed peer
+     * Obtains the total number of blocks received/imported/stored from the given seed peer
      *
-     * @return number of total imported blocks by peer
+     * @return number of total blocks of given type by peer
      */
     @VisibleForTesting
-    long getImportedBlocksByPeer(String nodeId) {
+    long getBlocksByPeer(String nodeId, BlockType type) {
         if (seedsEnabled) {
-            return seedsTracker.getImportedBlocksByPeer(nodeId);
-        } else {
-            return 0L;
-        }
-    }
-
-    /**
-     * Obtains the total number of blocks stored from the given seed peer
-     *
-     * @return number of total stored blocks by peer
-     */
-    @VisibleForTesting
-    long getStoredBlocksByPeer(String nodeId) {
-        if (seedsEnabled) {
-            return seedsTracker.getStoredBlocksByPeer(nodeId);
+            return seedsTracker.getBlocksByPeer(nodeId, type);
         } else {
             return 0L;
         }
