@@ -837,7 +837,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // derive base block reward
         BigInteger baseBlockReward =
-                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader().getNumber());
+                this.chainConfiguration
+                        .getRewardsCalculator()
+                        .calculateReward(block.getHeader().getNumber());
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
 
@@ -1303,7 +1305,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Map<Address, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
-                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader().getNumber());
+                this.chainConfiguration
+                        .getRewardsCalculator()
+                        .calculateReward(block.getHeader().getNumber());
         rewards.put(block.getCoinbase(), minerReward);
 
         if (LOG.isTraceEnabled()) {
