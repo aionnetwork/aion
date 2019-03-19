@@ -13,11 +13,13 @@ import org.aion.vm.api.interfaces.KernelInterface;
 public class KernelInterfaceForFastVM implements KernelInterface {
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
+    private boolean fork040Enable;
 
     public KernelInterfaceForFastVM(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
             boolean allowNonceIncrement,
-            boolean isLocalCall) {
+            boolean isLocalCall,
+            boolean fork040Enable) {
 
         if (repositoryCache == null) {
             throw new NullPointerException("Cannot set null repositoryCache!");
@@ -25,12 +27,13 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         this.repositoryCache = repositoryCache;
         this.allowNonceIncrement = allowNonceIncrement;
         this.isLocalCall = isLocalCall;
+        this.fork040Enable = fork040Enable;
     }
 
     @Override
     public KernelInterfaceForFastVM makeChildKernelInterface() {
         return new KernelInterfaceForFastVM(
-                this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall);
+                this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall, this.fork040Enable);
     }
 
     @Override
@@ -231,5 +234,9 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         } else {
             return new ByteArrayWrapper(new DataWordImpl(data).getData());
         }
+    }
+
+    public boolean isFork040Enable() {
+        return this.fork040Enable;
     }
 }
