@@ -48,7 +48,7 @@ public class RewardsCalculator {
             // No need to calculation if no monetary policy change or start from scratch.
             return initialSupply;
         } else {
-            BigInteger ts = BigInteger.ZERO;
+            BigInteger ts = initialSupply;
             for (long i = 1; i <= monetaryChangeBlkNum; i++) {
                 ts = ts.add(Objects.requireNonNull(calculateRewardInternal(i)));
             }
