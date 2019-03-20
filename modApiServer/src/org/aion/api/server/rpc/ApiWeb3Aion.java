@@ -1978,7 +1978,7 @@ public class ApiWeb3Aion extends ApiAion {
                     ((AionBlockchainImpl) ac.getBlockchain())
                             .getChainConfiguration()
                             .getRewardsCalculator()
-                            .calculateReward(b.getHeader());
+                            .calculateReward(b.getHeader().getNumber());
 
             double blkTime = 0;
             double hashRate = 0;
@@ -2266,7 +2266,7 @@ public class ApiWeb3Aion extends ApiAion {
                 ((AionBlockchainImpl) ac.getBlockchain())
                         .getChainConfiguration()
                         .getRewardsCalculator()
-                        .calculateReward(block.getHeader());
+                        .calculateReward(block.getHeader().getNumber());
         BigInteger totalDiff =
                 this.ac.getAionHub().getBlockStore().getTotalDifficultyForHash(block.getHash());
 

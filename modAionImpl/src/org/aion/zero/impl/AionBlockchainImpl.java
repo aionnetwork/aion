@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
@@ -37,6 +38,7 @@ import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.FastImportResult;
+import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.TransactionStore;
@@ -165,7 +167,14 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *     cfgAion
      */
     private static A0BCConfig generateBCConfig(CfgAion cfgAion) {
-        ChainConfiguration config = new ChainConfiguration();
+
+        Long blkNum = monetaryUpdateBlkNum(cfgAion.getFork().getProperties());
+        BigInteger initialSupply = ZERO;
+        for (AccountState as : cfgAion.getGenesis().getPremine().values()) {
+            initialSupply = initialSupply.add(as.getBalance());
+        }
+
+        ChainConfiguration config = new ChainConfiguration(blkNum, initialSupply);
         return new A0BCConfig() {
             @Override
             public Address getCoinbase() {
@@ -213,6 +222,15 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 return true;
             }
         };
+    }
+
+    private static Long monetaryUpdateBlkNum(Properties properties) {
+        if (properties == null) {
+            return null;
+        }
+
+        String monetaryForkNum = properties.getProperty("fork0.4.0");
+        return monetaryForkNum == null ? null : Long.valueOf(monetaryForkNum);
     }
 
     private AionBlockchainImpl() {
@@ -915,7 +933,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // derive base block reward
         BigInteger baseBlockReward =
-                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
+                this.chainConfiguration
+                        .getRewardsCalculator()
+                        .calculateReward(block.getHeader().getNumber());
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
 
@@ -1381,7 +1401,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Map<Address, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
-                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
+                this.chainConfiguration
+                        .getRewardsCalculator()
+                        .calculateReward(block.getHeader().getNumber());
         rewards.put(block.getCoinbase(), minerReward);
 
         if (LOG.isTraceEnabled()) {
