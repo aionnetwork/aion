@@ -3,6 +3,8 @@ package org.aion.zero.api;
 import com.google.common.annotations.VisibleForTesting;
 
 import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -11,14 +13,13 @@ import java.util.Objects;
  */
 public final class MonetaryCalculator {
 
-    private static BigInteger INITIALSUPPLY;
-    private static BigInteger INFLATIONRATE = null;
-    private static BigInteger DEVIDER = BigInteger.valueOf(10000);
-    private static long BLOCKANNUM;
-    private static long STARTINGBLOCKNUM;
+    private BigInteger initialSupply;
+    private BigInteger inflationRate;
+    private static long BLOCK_ANNUM;
+    private static long STARTING_BLOCK_NUM;
 
-    private static long CURRENTTERM;
-    private static BigInteger CURRENTREWARD = BigInteger.ZERO;
+    private static long CURRENT_TERM;
+    private static BigInteger CURRENT_REWARD = BigInteger.ZERO;
 
     private static class Holder {
         static void setInst(MonetaryCalculator i) {
@@ -27,6 +28,11 @@ public final class MonetaryCalculator {
 
         static MonetaryCalculator inst = null;
     }
+
+    private static int COMPOUND_YEAR_MAX = 128;
+
+    private static Map<Integer, BigInteger> COMPOUND_LOOKUP_TABLE =
+            new HashMap<>(COMPOUND_YEAR_MAX);
 
     /**
      * Initialize the MonetaryCalculator class and store into the holder.
@@ -76,10 +82,14 @@ public final class MonetaryCalculator {
             throw new IllegalArgumentException(s);
         }
 
-        INITIALSUPPLY = initialSupply;
-        BLOCKANNUM = blockAnnum;
-        STARTINGBLOCKNUM = startingBlockNum;
-        INFLATIONRATE = BigInteger.valueOf(10000 + interestBasePoint);
+        this.initialSupply = initialSupply;
+        BLOCK_ANNUM = blockAnnum;
+        STARTING_BLOCK_NUM = startingBlockNum;
+        inflationRate = BigInteger.valueOf(10_000L + interestBasePoint);
+
+        for (int i = 0; i < COMPOUND_YEAR_MAX; i++) {
+            COMPOUND_LOOKUP_TABLE.put(i, calculateCompound(i));
+        }
     }
 
     /**
@@ -90,40 +100,50 @@ public final class MonetaryCalculator {
      * @param blockNum The block number for calculating the reward.
      * @return The current token reward.
      * @exception IllegalArgumentException The blockNum should not less or equal to the targeting
-     *     block number.
-     * @exception Exception the method should be called after the Holder initialized.
+     *     block number or the inputing block number exceed the max compound term (128 yrs).
+     * @exception NullPointerException the method should be called after the Holder initialized.
      */
     public static BigInteger getCurrentReward(final long blockNum) {
         if (Holder.inst == null) {
             throw new NullPointerException(
-                    "No MonetaryCalculator Holder instance, please initial it before the call.");
+                    "No MonetaryCalculator Holder instance, please initialize it before the call.");
         }
 
-        if (blockNum <= STARTINGBLOCKNUM) {
+        if (blockNum <= STARTING_BLOCK_NUM) {
             throw new IllegalArgumentException("Invalid blockNum:" + blockNum);
         }
 
-        long term = (blockNum - STARTINGBLOCKNUM - 1) / BLOCKANNUM + 1;
+        int term = (int) ((blockNum - STARTING_BLOCK_NUM - 1) / BLOCK_ANNUM + 1);
 
-        if (term != CURRENTTERM) {
-            CURRENTREWARD = calculateCompound(term);
-            CURRENTTERM = term;
+        if (term != CURRENT_TERM) {
+            CURRENT_REWARD = COMPOUND_LOOKUP_TABLE.get(term);
+            if (CURRENT_REWARD == null) {
+                throw new IllegalArgumentException(
+                        "Invalid blockNum: "
+                                + blockNum
+                                + " due to the exceed the upper bound "
+                                + COMPOUND_YEAR_MAX
+                                + " of the compound term: "
+                                + term);
+            }
+            CURRENT_TERM = term;
         }
 
-        return CURRENTREWARD;
+        return CURRENT_REWARD;
     }
 
-    private static BigInteger calculateCompound(long term) {
-        BigInteger compound = DEVIDER.multiply(INITIALSUPPLY);
+    private BigInteger calculateCompound(long term) {
+        BigInteger divider = BigInteger.valueOf(10000);
+        BigInteger compound = divider.multiply(initialSupply);
         BigInteger preCompound = compound;
         for (long i = 0; i < term; i++) {
             preCompound = compound;
-            compound = preCompound.multiply(INFLATIONRATE).divide(DEVIDER);
+            compound = preCompound.multiply(inflationRate).divide(divider);
         }
 
         compound = compound.subtract(preCompound);
 
-        return compound.divide(BigInteger.valueOf(BLOCKANNUM)).divide(DEVIDER);
+        return compound.divide(BigInteger.valueOf(BLOCK_ANNUM)).divide(divider);
     }
 
     @VisibleForTesting
