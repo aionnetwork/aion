@@ -1,5 +1,6 @@
 package org.aion.mcf.vm.types;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
@@ -14,6 +15,15 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
     private boolean fork040Enable;
+
+    @VisibleForTesting
+    public KernelInterfaceForFastVM(
+        RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
+        boolean allowNonceIncrement,
+        boolean isLocalCall) {
+
+        this(repositoryCache, allowNonceIncrement, isLocalCall, false);
+    }
 
     public KernelInterfaceForFastVM(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,

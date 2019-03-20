@@ -122,6 +122,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
+    private static long fork040BlockNumber = -1L;
+    private static boolean fork040Enable;
+
     /**
      * This version of the bestBlock is only used for external reference (ex. through {@link
      * #getBestBlock()}), this is done because {@link #bestBlock} can slip into temporarily
@@ -139,8 +142,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GrandParentBlockHeaderValidator<A0BlockHeader> grandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator<A0BlockHeader> parentHeaderValidator;
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
-    private AtomicReference<BlockIdentifierImpl> bestKnownBlock =
-            new AtomicReference<BlockIdentifierImpl>();
+    private AtomicReference<BlockIdentifierImpl> bestKnownBlock = new AtomicReference<>();
 
     private boolean fork = false;
 
@@ -169,6 +171,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private static A0BCConfig generateBCConfig(CfgAion cfgAion) {
 
         Long blkNum = monetaryUpdateBlkNum(cfgAion.getFork().getProperties());
+
+        if (blkNum != null) {
+            fork040BlockNumber = blkNum;
+        }
+
         BigInteger initialSupply = ZERO;
         for (AccountState as : cfgAion.getGenesis().getPremine().values()) {
             initialSupply = initialSupply.add(as.getBalance());
@@ -1266,6 +1273,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTransaction> transactions = new ArrayList<>();
 
         if (!block.getTransactionsList().isEmpty()) {
+
+            if (!fork040Enable && block.getNumber() >= fork040BlockNumber) {
+                fork040Enable = true;
+            }
+
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =
                     new BulkExecutor(
@@ -1275,6 +1287,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             false,
                             true,
                             block.getNrgLimit(),
+                            fork040Enable,
                             LOGGER_VM,
                             getPostExecutionWorkForGeneratePreBlock());
 
@@ -1339,6 +1352,10 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         if (!block.getTransactionsList().isEmpty()) {
+
+            // might apply the block before the 040 fork point.
+            fork040Enable = !fork040Enable && block.getNumber() >= fork040BlockNumber;
+
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =
                     new BulkExecutor(
@@ -1348,6 +1365,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             false,
                             true,
                             block.getNrgLimit(),
+                            fork040Enable,
                             LOGGER_VM,
                             getPostExecutionWorkForApplyBlock());
 
