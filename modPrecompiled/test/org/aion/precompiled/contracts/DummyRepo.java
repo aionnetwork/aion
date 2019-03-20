@@ -173,6 +173,9 @@ public class DummyRepo implements RepositoryCache<AccountState, IBlockStoreBase<
     public void flushTo(Repository repo, boolean clearStateAfterFlush) {}
 
     @Override
+    public void flushCopiesTo(Repository repo, boolean clearStateAfterFlush) {}
+
+    @Override
     public void rollback() {}
 
     @Override
