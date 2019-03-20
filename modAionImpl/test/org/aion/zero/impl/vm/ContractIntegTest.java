@@ -50,7 +50,7 @@ import org.aion.vm.PostExecutionWork;
 
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.db.AionRepositoryCache;
+import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
 import org.aion.zero.impl.types.AionBlock;

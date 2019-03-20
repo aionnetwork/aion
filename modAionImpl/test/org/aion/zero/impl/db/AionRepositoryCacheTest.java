@@ -1,4 +1,4 @@
-package org.aion.mcf.db;
+package org.aion.zero.impl.db;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -19,9 +19,6 @@ import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.vm.types.DoubleDataWord;
 
-import org.aion.zero.db.AionRepositoryCache;
-import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.db.ContractDetailsAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;

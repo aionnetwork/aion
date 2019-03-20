@@ -1,4 +1,4 @@
-package org.aion.db;
+package org.aion.zero.impl.db;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
@@ -20,9 +20,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DoubleDataWord;
 
-import org.aion.zero.db.AionRepositoryCache;
-import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.db.ContractDetailsAion;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

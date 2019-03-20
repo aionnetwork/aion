@@ -1,4 +1,4 @@
-package org.aion.mcf.db;
+package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -15,7 +15,6 @@ import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.db.AionContractDetailsImpl;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;

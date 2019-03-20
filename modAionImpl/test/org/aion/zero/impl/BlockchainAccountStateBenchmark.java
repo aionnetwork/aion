@@ -23,7 +23,7 @@ import org.aion.mcf.core.ImportResult;
 
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
-import org.aion.zero.db.AionContractDetailsImpl;
+import org.aion.zero.impl.db.AionContractDetailsImpl;
 
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;

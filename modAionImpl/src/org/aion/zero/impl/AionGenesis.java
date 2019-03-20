@@ -14,7 +14,7 @@ import org.aion.mcf.trie.Trie;
 import org.aion.mcf.types.AbstractBlockHeader;
 import org.aion.precompiled.ContractFactory;
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.db.AionContractDetailsImpl;
+import org.aion.zero.impl.db.AionContractDetailsImpl;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
