@@ -33,7 +33,6 @@ public final class MonetaryCalculator {
 
     private static Map<Integer, BigInteger> COMPOUND_LOOKUP_TABLE =
             new HashMap<>(COMPOUND_YEAR_MAX);
-
     /**
      * Initialize the MonetaryCalculator class and store into the holder.
      *
@@ -94,8 +93,7 @@ public final class MonetaryCalculator {
 
     /**
      * Given the block number desire to calculate the reward. The basic term will be 1 then
-     * increased by the annum of blocks. Should call {@link MonetaryCalculator.init()} before use
-     * it.
+     * increased by the annum of blocks. Should call {@link #init init} before use it.
      *
      * @param blockNum The block number for calculating the reward.
      * @return The current token reward.
