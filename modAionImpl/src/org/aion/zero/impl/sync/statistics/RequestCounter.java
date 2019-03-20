@@ -1,4 +1,4 @@
-package org.aion.zero.impl.sync;
+package org.aion.zero.impl.sync.statistics;
 
 /**
  * Used for tracking different types of requests made to peers.
@@ -10,6 +10,9 @@ public class RequestCounter {
     private long status = 0;
     private long headers = 0;
     private long bodies = 0;
+    private long blocks = 0;
+    private long receipts = 0;
+    private long trieData = 0;
     private long total = 0;
 
     public RequestCounter(RequestType type) {
@@ -22,6 +25,15 @@ public class RequestCounter {
                 break;
             case BODIES:
                 incBodies();
+                break;
+            case BLOCKS:
+                incBlocks();
+                break;
+            case RECEIPTS:
+                incRecepts();
+                break;
+            case TRIE_DATA:
+                incTrieData();
                 break;
         }
     }
@@ -36,6 +48,18 @@ public class RequestCounter {
 
     public long getBodies() {
         return bodies;
+    }
+
+    public long getBlocks() {
+        return blocks;
+    }
+
+    public long getReceipts() {
+        return receipts;
+    }
+
+    public long getTrieData() {
+        return trieData;
     }
 
     public long getTotal() {
@@ -54,6 +78,21 @@ public class RequestCounter {
 
     public void incBodies() {
         this.bodies++;
+        this.total++;
+    }
+
+    public void incBlocks() {
+        this.blocks++;
+        this.total++;
+    }
+
+    public void incRecepts() {
+        this.receipts++;
+        this.total++;
+    }
+
+    public void incTrieData() {
+        this.trieData++;
         this.total++;
     }
 }

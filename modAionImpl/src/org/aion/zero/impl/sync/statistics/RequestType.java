@@ -1,4 +1,4 @@
-package org.aion.zero.impl.sync;
+package org.aion.zero.impl.sync.statistics;
 
 /**
  * Used for tracking different types of requests made to peers.
@@ -8,5 +8,8 @@ package org.aion.zero.impl.sync;
 public enum RequestType {
     STATUS,
     HEADERS,
-    BODIES
+    BODIES,
+    BLOCKS,
+    RECEIPTS,
+    TRIE_DATA
 }

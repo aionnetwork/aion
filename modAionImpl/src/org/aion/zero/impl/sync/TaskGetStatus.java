@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.aion.p2p.INode;
 import org.aion.p2p.IP2pMgr;
 import org.aion.zero.impl.sync.msg.ReqStatus;
+import org.aion.zero.impl.sync.statistics.RequestType;
 import org.slf4j.Logger;
 
 /** @author chris long run */
@@ -46,7 +47,8 @@ final class TaskGetStatus implements Runnable {
                     // System.out.println("requesting-status from-node=" + n.getIdShort());
                     p2p.send(node.getIdHash(), node.getIdShort(), reqStatus);
                     stats.updateTotalRequestsToPeer(node.getIdShort(), RequestType.STATUS);
-                    stats.updateStatusRequest(node.getIdShort(), System.nanoTime());
+                    stats.updateRequestTime(
+                            node.getIdShort(), System.nanoTime(), RequestType.STATUS);
                 }
                 Thread.sleep(interval);
             } catch (Exception e) {

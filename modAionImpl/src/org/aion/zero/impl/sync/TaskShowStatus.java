@@ -38,6 +38,7 @@ final class TaskShowStatus implements Runnable {
     private final IP2pMgr p2p;
 
     private final Map<Integer, PeerState> peerStates;
+
     private final Set<StatsType> showStatistics;
 
     TaskShowStatus(
@@ -64,7 +65,7 @@ final class TaskShowStatus implements Runnable {
     @Override
     public void run() {
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
-        String requestedInfo;
+        String requestedStats;
 
         while (this.start.get()) {
 
@@ -72,37 +73,37 @@ final class TaskShowStatus implements Runnable {
             p2pLOG.info(status);
 
             if (showStatistics.contains(StatsType.PEER_STATES)) {
-                requestedInfo = dumpPeerStateInfo(p2p.getActiveNodes().values());
-                if (!requestedInfo.isEmpty()) {
-                    p2pLOG.info(requestedInfo);
+                requestedStats = dumpPeerStateInfo(p2p.getActiveNodes().values());
+                if (!requestedStats.isEmpty()) {
+                    p2pLOG.info(requestedStats);
                 }
             }
 
             if (showStatistics.contains(StatsType.REQUESTS)) {
-                requestedInfo = dumpRequestsInfo();
-                if (!requestedInfo.isEmpty()) {
-                    p2pLOG.info(requestedInfo);
+                requestedStats = stats.dumpRequestStats();
+                if (!requestedStats.isEmpty()) {
+                    p2pLOG.info(requestedStats);
                 }
             }
 
             if (showStatistics.contains(StatsType.SEEDS)) {
-                requestedInfo = dumpTopSeedsInfo();
-                if (!requestedInfo.isEmpty()) {
-                    p2pLOG.info(requestedInfo);
+                requestedStats = stats.dumpTopSeedsStats();
+                if (!requestedStats.isEmpty()) {
+                    p2pLOG.info(requestedStats);
                 }
             }
 
             if (showStatistics.contains(StatsType.LEECHES)) {
-                requestedInfo = dumpTopLeechesInfo();
-                if (!requestedInfo.isEmpty()) {
-                    p2pLOG.info(requestedInfo);
+                requestedStats = stats.dumpTopLeechesStats();
+                if (!requestedStats.isEmpty()) {
+                    p2pLOG.info(requestedStats);
                 }
             }
 
             if (showStatistics.contains(StatsType.RESPONSES)) {
-                requestedInfo = stats.dumpResponseStats();
-                if (!requestedInfo.isEmpty()) {
-                    p2pLOG.info(requestedInfo);
+                requestedStats = stats.dumpResponseStats();
+                if (!requestedStats.isEmpty()) {
+                    p2pLOG.info(requestedStats);
                 }
             }
 
@@ -121,25 +122,25 @@ final class TaskShowStatus implements Runnable {
             String status = getStatus();
             p2pLOG.debug(status);
 
-            requestedInfo = dumpPeerStateInfo(p2p.getActiveNodes().values());
-            if (!requestedInfo.isEmpty()) {
-                p2pLOG.debug(requestedInfo);
+            requestedStats = dumpPeerStateInfo(p2p.getActiveNodes().values());
+            if (!requestedStats.isEmpty()) {
+                p2pLOG.debug(requestedStats);
             }
-            requestedInfo = dumpRequestsInfo();
-            if (!requestedInfo.isEmpty()) {
-                p2pLOG.debug(requestedInfo);
+            requestedStats = stats.dumpRequestStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLOG.debug(requestedStats);
             }
-            requestedInfo = dumpTopSeedsInfo();
-            if (!requestedInfo.isEmpty()) {
-                p2pLOG.debug(requestedInfo);
+            requestedStats = stats.dumpTopSeedsStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLOG.debug(requestedStats);
             }
-            requestedInfo = dumpTopLeechesInfo();
-            if (!requestedInfo.isEmpty()) {
-                p2pLOG.debug(requestedInfo);
+            requestedStats = stats.dumpTopLeechesStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLOG.debug(requestedStats);
             }
-            requestedInfo = stats.dumpResponseStats();
-            if (!requestedInfo.isEmpty()) {
-                p2pLOG.debug(requestedInfo);
+            requestedStats = stats.dumpResponseStats();
+            if (!requestedStats.isEmpty()) {
+                p2pLOG.debug(requestedStats);
             }
 
             p2pLOG.debug("sync-ss shutdown");
@@ -169,94 +170,7 @@ final class TaskShowStatus implements Runnable {
                 + "";
     }
 
-    /**
-     * Returns a log stream containing statistics about the percentage of requests made to each peer
-     * with respect to the total number of requests made.
-     *
-     * @return log stream with requests statistical data
-     */
-    private String dumpRequestsInfo() {
-        Map<String, Float> reqToPeers = this.stats.getPercentageOfRequestsToPeers();
 
-        StringBuilder sb = new StringBuilder();
-
-        if (!reqToPeers.isEmpty()) {
-
-            sb.append("\n====== sync-requests-to-peers ======\n");
-            sb.append(String.format("   %9s %20s\n", "peer", "% requests"));
-            sb.append("------------------------------------\n");
-
-            reqToPeers.forEach(
-                    (nodeId, percReq) ->
-                            sb.append(
-                                    String.format(
-                                            "   id:%6s %20s\n",
-                                            nodeId, String.format("%.2f", percReq * 100) + " %")));
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * Returns a log stream containing a list of peers ordered by the total number of blocks
-     * received from each peer used to determine who is providing the majority of blocks, i.e. top
-     * seeds.
-     *
-     * @return log stream with peers statistical data on seeds
-     */
-    private String dumpTopSeedsInfo() {
-        Map<String, Integer> totalBlocksByPeer = this.stats.getTotalBlocksByPeer();
-
-        StringBuilder sb = new StringBuilder();
-
-        if (!totalBlocksByPeer.isEmpty()) {
-
-            sb.append(
-                    "\n============================= sync-top-seeds ==============================\n");
-            sb.append(
-                    String.format(
-                            "   %9s %20s %19s %19s\n",
-                            "peer", "total blocks", "imported blocks", "stored blocks"));
-            sb.append(
-                    "---------------------------------------------------------------------------\n");
-            totalBlocksByPeer.forEach(
-                    (nodeId, totalBlocks) ->
-                            sb.append(
-                                    String.format(
-                                            "   id:%6s %20s %19s %19s\n",
-                                            nodeId,
-                                            totalBlocks,
-                                            this.stats.getImportedBlocksByPeer(nodeId),
-                                            this.stats.getStoredBlocksByPeer(nodeId))));
-        }
-
-        return sb.toString();
-    }
-
-    /**
-     * Obtain log stream containing a list of peers ordered by the total number of blocks requested
-     * by each peer used to determine who is requesting the majority of blocks, i.e. top leeches.
-     *
-     * @return log stream with peers statistical data on leeches
-     */
-    private String dumpTopLeechesInfo() {
-        Map<String, Integer> totalBlockReqByPeer = this.stats.getTotalBlockRequestsByPeer();
-
-        StringBuilder sb = new StringBuilder();
-
-        if (!totalBlockReqByPeer.isEmpty()) {
-
-            sb.append("\n========= sync-top-leeches =========\n");
-            sb.append(String.format("   %9s %20s\n", "peer", "total blocks"));
-            sb.append("------------------------------------\n");
-
-            totalBlockReqByPeer.forEach(
-                    (nodeId, totalBlocks) ->
-                            sb.append(String.format("   id:%6s %20s\n", nodeId, totalBlocks)));
-        }
-
-        return sb.toString();
-    }
 
     private String dumpPeerStateInfo(Collection<INode> filtered) {
         List<NodeState> sorted = new ArrayList<>();
