@@ -42,7 +42,7 @@ public final class RequestBlocks extends Msg {
     public RequestBlocks(final long startHeight, final int count, final boolean isDescending) {
         super(Ver.V1, Ctrl.SYNC, Act.REQUEST_BLOCKS);
 
-        this.startHeight = Long.valueOf(startHeight > 0 ? startHeight : 1); // defaults to 1 when incorrect
+        this.startHeight = startHeight > 0 ? startHeight : 1L; // defaults to 1 when incorrect
         this.isNumber = true;
         this.startHash = null;
         this.count = count > 0 ? count : 1; // defaults to 1 when given incorrect values
@@ -62,8 +62,8 @@ public final class RequestBlocks extends Msg {
      *     </ul>
      *
      * @throws NullPointerException when the startHash parameter is null
-     * @throws IllegalArgumentException when the startHash parameter is not a hash (i.e. has the correct
-     *     number of elements)
+     * @throws IllegalArgumentException when the startHash parameter is not a hash (i.e. has the
+     *     correct number of elements)
      */
     public RequestBlocks(final byte[] startHash, final int count, final boolean isDescending) {
         super(Ver.V1, Ctrl.SYNC, Act.REQUEST_BLOCKS);
@@ -71,7 +71,9 @@ public final class RequestBlocks extends Msg {
         Objects.requireNonNull(startHash);
         if (startHash.length != V1Constants.HASH_SIZE) {
             throw new IllegalArgumentException(
-                    "The given value " + Arrays.toString(startHash) + " is not a correct block hash.");
+                    "The given value "
+                            + Arrays.toString(startHash)
+                            + " is not a correct block hash.");
         }
 
         this.startHeight = null;
@@ -148,8 +150,7 @@ public final class RequestBlocks extends Msg {
         return RLP.encodeList(
                 RLP.encodeByte(isNumber ? (byte) 1 : (byte) 0),
                 isNumber
-                        ? RLP.encode(
-                                startHeight.longValue()) //  encodeLong has non-standard encoding
+                        ? RLP.encode(startHeight) //  encodeLong has non-standard encoding
                         : RLP.encodeElement(startHash),
                 RLP.encodeInt(count),
                 RLP.encodeByte(isDescending ? (byte) 1 : (byte) 0));
@@ -171,9 +172,9 @@ public final class RequestBlocks extends Msg {
     }
 
     /**
-     * Returns the height of the first block in the requested range.
+     * Returns the hash of the first block in the requested range.
      *
-     * @return the height of the first block in the requested range
+     * @return the hash of the first block in the requested range
      * @implNote The hash is set to {@code null} when the height was used in creating the request.
      *     It should only be requested when {@link #isNumber()} is {@code false}.
      */
