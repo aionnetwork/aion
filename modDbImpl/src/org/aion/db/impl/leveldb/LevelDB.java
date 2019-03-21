@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import org.aion.db.impl.AbstractDB;
+import org.aion.db.impl.SystemExitCodes;
 import org.aion.util.types.ByteArrayWrapper;
 import org.fusesource.leveldbjni.JniDBFactory;
 import org.iq80.leveldb.CompressionType;
@@ -126,7 +127,7 @@ public class LevelDB extends AbstractDB {
 
             if (e1.getMessage() != null && e1.getMessage().contains("No space left on device")) {
                 LOG.error("Shutdown due to lack of disk space.");
-                System.exit(0);
+                System.exit(SystemExitCodes.OUT_OF_DISK_SPACE);
             }
 
             try {

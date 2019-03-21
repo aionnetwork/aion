@@ -4,7 +4,6 @@ import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.aion.crypto.HashUtil.h256;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.aion.zero.impl.AionHub.INIT_ERROR_EXIT_CODE;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
@@ -44,6 +43,7 @@ import org.aion.types.AionAddress;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.util.types.ByteArrayWrapper;
+import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionTxInfo;
@@ -106,7 +106,7 @@ public class AionRepositoryImpl
             LOGGEN.error("Shutdown due to failure to initialize repository.");
             // the above message does not get logged without the printStackTrace below
             e.printStackTrace();
-            System.exit(INIT_ERROR_EXIT_CODE);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
     }
 

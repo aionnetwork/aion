@@ -1,6 +1,5 @@
 package org.aion;
 
-import static java.lang.System.exit;
 import static org.aion.crypto.ECKeyFac.ECKeyType.ED25519;
 import static org.aion.crypto.HashUtil.H256Type.BLAKE2B_256;
 import static org.aion.zero.impl.Version.KERNEL_VERSION;
@@ -46,6 +45,7 @@ import org.aion.mcf.mine.IMineRunner;
 import org.aion.solidity.Compiler;
 import org.aion.utils.NativeLibrary;
 import org.aion.vm.LongLivedAvm;
+import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.blockchain.AionFactory;
 import org.aion.zero.impl.blockchain.IAionChain;
 import org.aion.zero.impl.cli.Cli;
@@ -79,7 +79,7 @@ public class Aion {
 
         ReturnType ret = new Cli().call(args, cfg);
         if (ret != ReturnType.RUN) {
-            exit(ret.getValue());
+            System.exit(ret.getValue());
         }
 
         Properties p = cfg.getFork().getProperties();
@@ -101,7 +101,7 @@ public class Aion {
                 checkZmqKeyPair();
             } catch (Exception e) {
                 System.out.println("Check zmq keypair fail! " + e.toString());
-                exit(1);
+                System.exit(SystemExitCodes.INITIALIZATION_ERROR);
             }
         }
 
@@ -109,7 +109,7 @@ public class Aion {
         String UUID = cfg.getId();
         if (!UUID.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")) {
             System.out.println("Invalid UUID; please check <id> setting in config.xml");
-            exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
 
         ServiceLoader.load(EventMgrModule.class);
@@ -395,7 +395,7 @@ public class Aion {
                 System.out.println(
                         "zmq keystore directory could not be created. "
                                 + "Please check user permissions or create directory manually.");
-                System.exit(1);
+                System.exit(SystemExitCodes.INITIALIZATION_ERROR);
             }
             System.out.println();
         }
@@ -481,7 +481,7 @@ public class Aion {
                 System.out.println(
                         "SSL-certificate-use requested with RPC server and no console found. "
                                 + "Please set the ssl password in the config file (insecure) to run kernel non-interactively with this option.");
-                exit(1);
+                System.exit(SystemExitCodes.INITIALIZATION_ERROR);
             } else {
                 console.printf("---------------------------------------------\n");
                 console.printf("----------- INTERACTION REQUIRED ------------\n");

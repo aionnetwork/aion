@@ -27,6 +27,7 @@ import org.aion.mcf.config.CfgTx;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.AionGenesis;
 import org.aion.zero.impl.GenesisBlockLoader;
+import org.aion.zero.impl.SystemExitCodes;
 
 /** @author chris */
 public final class CfgAion extends Cfg {
@@ -112,7 +113,7 @@ public final class CfgAion extends Cfg {
                 fis.close();
             } catch (IOException e) {
                 System.out.println("<error on-close-file-input-stream>");
-                System.exit(1);
+                System.exit(SystemExitCodes.INITIALIZATION_ERROR);
             }
         }
     }
@@ -183,7 +184,7 @@ public final class CfgAion extends Cfg {
             }
         } catch (Exception e) {
             System.out.println("<error on-parsing-config-xml msg=" + e.getLocalizedMessage() + ">");
-            System.exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         } finally {
             closeFileInputStream(fis);
         }
@@ -270,7 +271,7 @@ public final class CfgAion extends Cfg {
             closeFileInputStream(fis);
         } catch (Exception e) {
             System.out.println("<error on-parsing-config-xml msg=" + e.getLocalizedMessage() + ">");
-            System.exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
 
         // checks for absolute path for database
@@ -400,14 +401,14 @@ public final class CfgAion extends Cfg {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("<error on-write-config-xml-to-file>");
-            System.exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         } finally {
             if (sw != null) {
                 try {
                     sw.close();
                 } catch (XMLStreamException e) {
                     System.out.println("<error on-close-stream-writer>");
-                    System.exit(1);
+                    System.exit(SystemExitCodes.INITIALIZATION_ERROR);
                 }
             }
         }

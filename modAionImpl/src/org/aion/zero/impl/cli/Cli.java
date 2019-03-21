@@ -30,6 +30,7 @@ import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.LongLivedAvm;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.config.Network;
 import org.aion.zero.impl.db.DBUtils;
@@ -54,8 +55,8 @@ public class Cli {
 
     public enum ReturnType {
         RUN(2),
-        EXIT(0),
-        ERROR(1);
+        EXIT(SystemExitCodes.NORMAL),
+        ERROR(SystemExitCodes.INITIALIZATION_ERROR);
         private final int value;
 
         ReturnType(int _value) {
@@ -1201,7 +1202,7 @@ public class Cli {
         } catch (IOException e) {
             System.err.println("Error reading from BufferedReader: " + reader);
             e.printStackTrace();
-            System.exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
         return null; // Make compiler happy; never get here.
     }
@@ -1227,7 +1228,7 @@ public class Cli {
                 System.out.println(
                         "Ssl keystore directory could not be created. "
                                 + "Please check user permissions or create directory manually.");
-                System.exit(1);
+                System.exit(SystemExitCodes.INITIALIZATION_ERROR);
             }
             System.out.println();
         }
@@ -1238,7 +1239,7 @@ public class Cli {
         if (console == null) {
             System.out.println(
                     "No console found. This command can only be run interactively in a console environment.");
-            System.exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
     }
 
@@ -1247,7 +1248,7 @@ public class Cli {
         String certName = console.readLine();
         if ((certName == null) || (certName.isEmpty())) {
             System.out.println("Error: no certificate name entered.");
-            System.exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
         return certName;
     }
@@ -1262,13 +1263,13 @@ public class Cli {
                                         + " characters):\n"));
         if (certPass.isEmpty()) {
             System.out.println("Error: no certificate password entered.");
-            System.exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         } else if (certPass.length() < minPassLen) {
             System.out.println(
                     "Error: certificate password must be at least "
                             + minPassLen
                             + " characters long.");
-            System.exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
         return certPass;
     }

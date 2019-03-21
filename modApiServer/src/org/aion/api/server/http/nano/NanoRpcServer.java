@@ -13,6 +13,7 @@ import org.aion.api.server.http.RpcServer;
 import org.aion.api.server.http.RpcServerBuilder;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.zero.impl.SystemExitCodes;
 import org.slf4j.Logger;
 
 public class NanoRpcServer extends RpcServer {
@@ -125,7 +126,7 @@ public class NanoRpcServer extends RpcServer {
         } catch (Exception e) {
             LOG.error("<rpc-server - failed bind on {}:{}>", hostName, port);
             LOG.error("<rpc-server - " + e.getMessage() + ">");
-            System.exit(1);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
     }
 

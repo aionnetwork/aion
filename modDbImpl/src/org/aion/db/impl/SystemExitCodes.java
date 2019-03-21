@@ -1,4 +1,4 @@
-package org.aion.zero.impl;
+package org.aion.db.impl;
 
 /** Error codes to be used when calling {@link System#exit(int)} from the kernel. */
 public class SystemExitCodes {

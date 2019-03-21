@@ -54,6 +54,7 @@ import org.aion.vm.BlockCachingContext;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.IAionBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -1116,7 +1117,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock> {
                     bestBlk.getNumber());
         } catch (VMException e) {
             LOGGER_VM.error("Shutdown due to a VM fatal error.", e);
-            System.exit(-1);
+            System.exit(SystemExitCodes.FATAL_VM_ERROR);
             return null;
         }
     }

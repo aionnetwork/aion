@@ -98,8 +98,6 @@ public class AionHub {
         return Holder.INSTANCE;
     }
 
-    public static final int INIT_ERROR_EXIT_CODE = -1;
-
     public AionHub() {
         initializeHub(CfgAion.inst(), AionBlockchainImpl.inst(), AionRepositoryImpl.inst(), false);
     }
@@ -299,7 +297,7 @@ public class AionHub {
             this.repository.getBlockStore().load();
         } catch (RuntimeException re) {
             genLOG.error("Fatal: can't load blockstore; exiting.", re);
-            System.exit(INIT_ERROR_EXIT_CODE);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
 
         // Note: if block DB corruption, the bestBlock may not match with the indexDB.
@@ -479,7 +477,7 @@ public class AionHub {
                             + "\t3) Reboot with correct genesis and empty database\n",
                     genesisHash == null ? "null" : ByteUtil.toHexString(genesisHash),
                     databaseGenHash == null ? "null" : ByteUtil.toHexString(databaseGenHash));
-            System.exit(INIT_ERROR_EXIT_CODE);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
 
         if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {
@@ -555,7 +553,7 @@ public class AionHub {
             this.eventMgr.registerEvent(evts);
         } else {
             genLOG.error("Event manager is null!");
-            System.exit(INIT_ERROR_EXIT_CODE);
+            System.exit(SystemExitCodes.INITIALIZATION_ERROR);
         }
     }
 }

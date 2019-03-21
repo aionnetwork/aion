@@ -761,7 +761,8 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 LOG.error("Unable to dump heap due to exception:", e);
             }
 
-            System.exit(0);
+            // requested shutdown
+            System.exit(SystemExitCodes.NORMAL);
         }
         return tryToConnectInternal(block, System.currentTimeMillis() / THOUSAND_MS);
     }
@@ -1401,7 +1402,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             } catch (VMException e) {
                 LOG.error("Shutdown due to a VM fatal error.", e);
-                System.exit(-1);
+                System.exit(SystemExitCodes.FATAL_VM_ERROR);
             }
         }
 
@@ -1456,7 +1457,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                 }
             } catch (VMException e) {
                 LOG.error("Shutdown due to a VM fatal error.", e);
-                System.exit(-1);
+                System.exit(SystemExitCodes.FATAL_VM_ERROR);
             }
         }
         Map<AionAddress, BigInteger> rewards = addReward(block);
