@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import org.aion.mcf.core.FastImportResult;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
+import org.aion.zero.impl.SystemExitCodes;
 import org.aion.zero.impl.types.AionBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -46,6 +47,12 @@ final class TaskFastImportBlocks implements Runnable {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
+                    if (!fastSyncMgr.isComplete()) {
+                        log.error(
+                                "Fast import blocks thread interrupted without shutdown request.",
+                                e);
+                    }
+                    return;
                 }
             } else {
                 if (requiredLevel == 0 || requiredHash == null) {
@@ -58,6 +65,12 @@ final class TaskFastImportBlocks implements Runnable {
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
+                            if (!fastSyncMgr.isComplete()) {
+                                log.error(
+                                        "Fast import blocks thread interrupted without shutdown request.",
+                                        e);
+                            }
+                            return;
                         }
                     }
                 } else {
@@ -122,8 +135,8 @@ final class TaskFastImportBlocks implements Runnable {
 
                             if (e.getMessage() != null
                                     && e.getMessage().contains("No space left on device")) {
-                                log.error("Shutdown due to lack of disk space.");
-                                System.exit(0);
+                                log.error("Shutdown due to lack of disk space.", e);
+                                System.exit(SystemExitCodes.OUT_OF_DISK_SPACE);
                             }
                             break;
                         }
