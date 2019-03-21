@@ -21,7 +21,7 @@ import org.slf4j.Logger;
  */
 public class TaskValidateAndAddBlocks implements Runnable {
 
-    private int peerId;
+    private final int peerId;
     private final String displayId;
     private final ResponseBlocks response;
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
@@ -30,7 +30,7 @@ public class TaskValidateAndAddBlocks implements Runnable {
     private final Map<ByteArrayWrapper, ByteArrayWrapper> receivedBlockHashes;
     private final Logger log;
 
-    public TaskValidateAndAddBlocks(
+    TaskValidateAndAddBlocks(
             final int peerId,
             final String displayId,
             final ResponseBlocks response,
@@ -71,10 +71,8 @@ public class TaskValidateAndAddBlocks implements Runnable {
         A0BlockHeader currentHeader, previousHeader = null;
         for (AionBlock currentBlock : response.getBlocks()) {
             ByteArrayWrapper hash = currentBlock.getHashWrapper();
-            if (importedBlockHashes.containsKey(hash)) { // exclude imported
-                previousHeader = currentBlock.getHeader();
-                continue;
-            } else if (receivedBlockHashes.containsKey(hash)) { // exclude known hashes
+            if (importedBlockHashes.containsKey(hash) // exclude imported
+                    || receivedBlockHashes.containsKey(hash)) { // exclude known hashes
                 previousHeader = currentBlock.getHeader();
                 continue;
             }
