@@ -1,4 +1,4 @@
-package org.aion.db;
+package org.aion.zero.impl.db;
 
 import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
 import static org.junit.Assert.assertEquals;
@@ -23,9 +23,6 @@ import org.aion.db.impl.DatabaseFactory;
 import org.aion.mcf.config.CfgPrune;
 
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.db.AionContractDetailsImpl;
-import org.aion.zero.impl.db.AionRepositoryImpl;
-import org.aion.zero.impl.db.ContractDetailsAion;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
 import org.slf4j.Logger;

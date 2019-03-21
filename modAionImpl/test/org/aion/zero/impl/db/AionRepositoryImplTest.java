@@ -24,7 +24,6 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.trie.TrieNodeResult;
 
 import org.aion.util.bytes.ByteUtil;
-import org.aion.zero.db.AionContractDetailsImpl;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.junit.FixMethodOrder;
 import org.junit.Test;

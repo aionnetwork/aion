@@ -13,7 +13,6 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
 
-import org.aion.zero.db.AionRepositoryCache;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
@@ -21,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Tests the {@link org.aion.zero.db.AionRepositoryCache#flushCopiesTo(Repository, boolean)}
+ * Tests the {@link AionRepositoryCache#flushCopiesTo(Repository, boolean)}
  * method.
  */
 public class FlushCopiesTest {

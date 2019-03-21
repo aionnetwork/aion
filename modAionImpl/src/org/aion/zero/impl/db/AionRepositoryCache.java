@@ -1,4 +1,4 @@
-package org.aion.zero.db;
+package org.aion.zero.impl.db;
 
 import java.util.HashMap;
 import java.util.List;
@@ -9,8 +9,6 @@ import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.core.AccountState;
-import org.aion.mcf.db.AbstractRepositoryCache;
-import org.aion.mcf.db.ContractDetailsCacheImpl;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.types.Address;
 
