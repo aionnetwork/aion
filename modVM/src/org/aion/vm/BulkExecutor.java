@@ -430,7 +430,7 @@ public class BulkExecutor {
                 return isValidAVMContractDeployment(transaction.getTargetVM());
             } else {
                 Address destination = transaction.getDestinationAddress();
-                return isValidAVMContractDeployment(repository.getVMUsed(destination))
+                return isValidAVMContractDeployment(repositoryChild.getVMUsed(destination))
                         || !isContractAddress(destination);
             }
         } else {
