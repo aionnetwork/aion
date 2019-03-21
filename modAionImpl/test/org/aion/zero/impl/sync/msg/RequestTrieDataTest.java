@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
+import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -90,6 +92,38 @@ public class RequestTrieDataTest {
         new RequestTrieData(nodeKey, STATE, -10);
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testConstructor_smallKey() {
+        new RequestTrieData(smallNodeKey, STATE, 10);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testConstructor_largeKey() {
+        new RequestTrieData(largeNodeKey, STATE, 10);
+    }
+
+    @Test
+    public void testHeader_newObject() {
+        RequestTrieData message = new RequestTrieData(nodeKey, STATE, 1);
+        // check message header
+        assertThat(message.getHeader().getVer()).isEqualTo(Ver.V1);
+        assertThat(message.getHeader().getAction()).isEqualTo(Act.REQUEST_TRIE_DATA);
+    }
+
+    @Test
+    public void testHeader_decode() {
+        byte[] encoding =
+                RLP.encodeList(
+                        RLP.encodeElement(nodeKey),
+                        RLP.encodeString(STATE.toString()),
+                        RLP.encodeInt(1));
+        RequestTrieData message = RequestTrieData.decode(encoding);
+        // check message header
+        assertThat(message).isNotNull();
+        assertThat(message.getHeader().getVer()).isEqualTo(Ver.V1);
+        assertThat(message.getHeader().getAction()).isEqualTo(Act.REQUEST_TRIE_DATA);
+    }
+
     @Test
     public void testDecode_nullMessage() {
         assertThat(RequestTrieData.decode(null)).isNull();
@@ -127,6 +161,12 @@ public class RequestTrieDataTest {
                         RLP.encodeString(STATE.toString()),
                         RLP.encodeInt(0),
                         RLP.encodeInt(10));
+        assertThat(RequestTrieData.decode(encoding)).isNull();
+    }
+
+    @Test
+    public void testDecode_notAList() {
+        byte[] encoding = RLP.encodeElement(nodeKey);
         assertThat(RequestTrieData.decode(encoding)).isNull();
     }
 

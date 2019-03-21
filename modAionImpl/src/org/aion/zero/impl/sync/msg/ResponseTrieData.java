@@ -9,13 +9,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.aion.types.ByteArrayWrapper;
 import org.aion.p2p.Ctrl;
 import org.aion.p2p.Msg;
 import org.aion.p2p.Ver;
 import org.aion.rlp.RLP;
 import org.aion.rlp.RLPElement;
 import org.aion.rlp.RLPList;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.sync.Act;
 import org.aion.zero.impl.sync.DatabaseType;
 
@@ -97,7 +97,13 @@ public final class ResponseTrieData extends Msg {
         if (message == null || message.length == 0) {
             return null;
         } else {
-            RLPList list = (RLPList) RLP.decode2(message).get(0);
+            RLPList list = RLP.decode2(message);
+            if (list.get(0) instanceof RLPList) {
+                list = (RLPList) list.get(0);
+            } else {
+                return null;
+            }
+
             if (list.size() != TRIE_DATA_RESPONSE_COMPONENTS) {
                 return null;
             } else {

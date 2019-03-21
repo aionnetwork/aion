@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
@@ -35,6 +36,7 @@ import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.TransactionStore;
@@ -322,6 +324,11 @@ public class AionBlockchainImpl implements IAionBlockchain {
     }
 
     @Override
+    public List<AionBlock> getBlocksByRange(long first, long last) {
+        return getBlockStore().getBlocksByRange(first, last);
+    }
+
+    @Override
     /* NOTE: only returns receipts from the main chain
      */
     @SuppressWarnings("Duplicates")
@@ -555,6 +562,89 @@ public class AionBlockchainImpl implements IAionBlockchain {
             return false;
         }
         return blockNumber < bestBlockNumber.get() - repository.getPruneBlockCount() + 1;
+    }
+
+    /**
+     * Import block without validity checks and creating the state. Cannot be used for storing the
+     * pivot which will not have a parent present in the database.
+     *
+     * @param block the block to be imported
+     * @return a result describing the status of the attempted import
+     */
+    public synchronized FastImportResult tryFastImport(final AionBlock block) {
+        if (block == null) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Fast sync import attempted with null block or header.");
+            }
+            return FastImportResult.INVALID_BLOCK;
+        }
+        if (block.getTimestamp()
+                > (System.currentTimeMillis() / THOUSAND_MS
+                        + this.chainConfiguration.getConstants().getClockDriftBufferTime())) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Block {} invalid due to timestamp {}.",
+                        block.getShortHash(),
+                        block.getTimestamp());
+            }
+            return FastImportResult.INVALID_BLOCK;
+        }
+
+        // check that the block is not already known
+        AionBlock known = getBlockStore().getBlockByHash(block.getHash());
+        if (known != null && known.getNumber() == block.getNumber()) {
+            return FastImportResult.KNOWN;
+        }
+
+        // a child must be present to import the parent
+        AionBlock child = getBlockStore().getChainBlockByNumber(block.getNumber() + 1);
+        if (child == null || !Arrays.equals(child.getParentHash(), block.getHash())) {
+            return FastImportResult.NO_CHILD;
+        } else {
+            // the total difficulty will be updated after the chain is complete
+            getBlockStore().saveBlock(block, ZERO, true);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(
+                        "Fast sync block saved: number: {}, hash: {}, child: {}",
+                        block.getNumber(),
+                        block.getShortHash(),
+                        child.getShortHash());
+            }
+            return FastImportResult.IMPORTED;
+        }
+    }
+
+    /**
+     * Walks though the ancestor blocks starting with the given hash to determine if there is an
+     * ancestor missing from storage. Returns the ancestor's hash if one is found missing or {@code
+     * null} when the history is complete, i.e. no missing ancestors exist.
+     *
+     * @param block the first block to be checked if present in the repository
+     * @return the ancestor's hash and height if one is found missing or {@code null} when the
+     *     history is complete
+     * @throws NullPointerException when given a null block as input
+     */
+    public Pair<ByteArrayWrapper, Long> findMissingAncestor(AionBlock block) {
+        Objects.requireNonNull(block);
+
+        // initialize with given parameter
+        byte[] currentHash = block.getHash();
+        long currentNumber = block.getNumber();
+
+        AionBlock known = getBlockStore().getBlockByHash(currentHash);
+
+        while (known != null && known.getNumber() > 0) {
+            currentHash = known.getParentHash();
+            currentNumber--;
+            known = getBlockStore().getBlockByHash(currentHash);
+        }
+
+        if (known == null) {
+            return Pair.of(ByteArrayWrapper.wrap(currentHash), currentNumber);
+        } else {
+            return null;
+        }
     }
 
     public synchronized ImportResult tryToConnect(final AionBlock block) {
