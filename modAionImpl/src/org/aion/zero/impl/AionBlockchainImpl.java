@@ -122,7 +122,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
-    private static long fork040BlockNumber = -1L;
+    static long fork040BlockNumber = -1L;
     private static boolean fork040Enable;
 
     /**
@@ -1274,9 +1274,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         if (!block.getTransactionsList().isEmpty()) {
 
-            if (!fork040Enable && block.getNumber() >= fork040BlockNumber) {
-                fork040Enable = true;
-            }
+            fork040Enable = checkFork040(block.getNumber());
 
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =
@@ -1354,7 +1352,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (!block.getTransactionsList().isEmpty()) {
 
             // might apply the block before the 040 fork point.
-            fork040Enable = !fork040Enable && block.getNumber() >= fork040BlockNumber;
+            fork040Enable = checkFork040(block.getNumber());
 
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =
@@ -2068,5 +2066,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new NullPointerException();
         }
         return this.getBlockStore().getTotalDifficultyForHash(hash.toBytes());
+    }
+
+    private static boolean checkFork040(long blkNum) {
+        if (fork040BlockNumber != -1) {
+            return blkNum >= fork040BlockNumber;
+        } else {
+            return false;
+        }
     }
 }
