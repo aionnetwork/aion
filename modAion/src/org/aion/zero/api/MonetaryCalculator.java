@@ -118,13 +118,8 @@ public final class MonetaryCalculator {
         if (term != CURRENT_TERM) {
             CURRENT_REWARD = COMPOUND_LOOKUP_TABLE.get(term);
             if (CURRENT_REWARD == null) {
-                throw new IllegalArgumentException(
-                        "Invalid blockNum: "
-                                + blockNum
-                                + " due to the exceed the upper bound "
-                                + COMPOUND_YEAR_MAX
-                                + " of the compound term: "
-                                + term);
+                // if the term go over them the max compound yrs then no reward.
+                CURRENT_REWARD = COMPOUND_LOOKUP_TABLE.get(0);
             }
             CURRENT_TERM = term;
         }
