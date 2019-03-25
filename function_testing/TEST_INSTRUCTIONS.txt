@@ -1,0 +1,43 @@
+To test:  Move these resources into the root of the Aion build you want to test
+Run ./setup_test.sh with the private key for the 0xa0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5 account
+Start the kernel
+Run ./test.sh
+This will take a minute or 2 (it requires at least 3 blocks be mined)
+
+
+
+# Import premined account (look up private key for premined 0xa0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5) here: https://aionnetwork.atlassian.net/wiki/spaces/AVM/pages/169377933/AVM+Production+Roadmap
+./aion.sh --network avmtestnet --account import <PRIVATE_KEY>
+
+# Deploy the simple test
+./rpc.sh --deploy 0xa0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5 ./test.jar
+
+# Wait for receipt to include the address
+./rpc.sh --get-receipt
+
+# (the deployment has a known address)
+
+# Check that the the_call shows an empty result (since we start it with an empty byte array)
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_call","params":[{"to":"0xa09cabaec6857e9925787c2e84299910117934c24b3d0fdb77447b79e9337e7b"}],"id":1}' 127.0.0.1:8545
+# (should be: "{"result":"0x","id":1,"jsonrpc":"2.0"}")
+
+# Send the transaction to change the value
+./rpc.sh --call 0xa0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5 0xa09cabaec6857e9925787c2e84299910117934c24b3d0fdb77447b79e9337e7b a
+
+# Wait for the receipt to be populated
+./rpc.sh --get-receipt
+
+# Check that the data shows our update
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_call","params":[{"to":"0xa09cabaec6857e9925787c2e84299910117934c24b3d0fdb77447b79e9337e7b"}],"id":1}' 127.0.0.1:8545
+# (should be: "{"result":"0x21000161","id":1,"jsonrpc":"2.0"}")
+
+# Send the transaction to change the value to something different
+./rpc.sh --call 0xa0d6dec327f522f9c8d342921148a6c42f40a3ce45c1f56baa7bfa752200d9e5 0xa09cabaec6857e9925787c2e84299910117934c24b3d0fdb77447b79e9337e7b ASDF
+
+# Wait for the receipt to be populated
+./rpc.sh --get-receipt
+
+# Check that the data shows our update
+curl -X POST --data '{"jsonrpc":"2.0","method":"eth_call","params":[{"to":"0xa09cabaec6857e9925787c2e84299910117934c24b3d0fdb77447b79e9337e7b"}],"id":1}' 127.0.0.1:8545
+# (should be: "{"result":"0x21000441534446","id":1,"jsonrpc":"2.0"}")
+
