@@ -60,6 +60,6 @@ public class TransactionTypeRule {
      * @return {@code true} is this is a valid AVM contract deployment, {@code false} otherwise
      */
     public static boolean isValidAVMContractDeployment(byte type) {
-        return type == AVM_CREATE_CODE;
+        return type == AVM_CREATE_CODE && false; // allowing only balance transfers on AVM
     }
 }
