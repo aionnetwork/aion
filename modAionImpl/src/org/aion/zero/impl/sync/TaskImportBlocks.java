@@ -3,7 +3,6 @@ package org.aion.zero.impl.sync;
 import static org.aion.p2p.P2pConstant.COEFFICIENT_NORMAL_PEERS;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.MAX_NORMAL_PEERS;
-import static org.aion.p2p.P2pConstant.MIN_NORMAL_PEERS;
 import static org.aion.zero.impl.sync.PeerState.Mode.BACKWARD;
 import static org.aion.zero.impl.sync.PeerState.Mode.FORWARD;
 import static org.aion.zero.impl.sync.PeerState.Mode.LIGHTNING;
@@ -315,13 +314,9 @@ final class TaskImportBlocks implements Runnable {
                             }
                         case NORMAL:
                             {
-                                // requiring a minimum number of normal states
-                                if (countStates(getBestBlockNumber(), NORMAL, peerStates.values())
-                                        > MIN_NORMAL_PEERS) {
-                                    // switch to backward mode
-                                    state.setMode(BACKWARD);
-                                    state.setBase(b.getNumber());
-                                }
+                                // switch to backward mode
+                                state.setMode(BACKWARD);
+                                state.setBase(b.getNumber());
                                 break;
                             }
                         case BACKWARD:
@@ -457,12 +452,10 @@ final class TaskImportBlocks implements Runnable {
                     countStates(best, NORMAL, states) + countStates(best, THUNDER, states);
             long fastStates = countStates(best, LIGHTNING, states);
 
-            // requiring a minimum number of normal states
-            if (normalStates > MIN_NORMAL_PEERS
-                    // the fast vs normal states balance depends on the give coefficient
-                    && (fastStates < COEFFICIENT_NORMAL_PEERS * normalStates
-                            // with a maximum number of normal states
-                            || normalStates > MAX_NORMAL_PEERS)) {
+            // the fast vs normal states balance depends on the give coefficient
+            if (fastStates < COEFFICIENT_NORMAL_PEERS * normalStates
+                    // with a maximum number of normal states
+                    || normalStates > MAX_NORMAL_PEERS) {
 
                 // select the base to be used
                 long nextBase = selectBase(best, state.getLastBestBlock(), baseSet, chain);
