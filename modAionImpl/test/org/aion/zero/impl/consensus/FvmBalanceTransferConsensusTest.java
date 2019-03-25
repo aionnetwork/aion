@@ -1,5 +1,6 @@
 package org.aion.zero.impl.consensus;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -54,6 +56,65 @@ public class FvmBalanceTransferConsensusTest {
     @After
     public void tearDown() {
         this.blockchain = null;
+    }
+
+    @Test
+    public void testTransferToPrecompiledContract() {
+        BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
+        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        assertEquals(SENDER_BALANCE, initialBalance);
+        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+
+        // ensure bridge is viewed as precompiled contract
+        Address bridge =
+                Address.wrap("0000000000000000000000000000000000000000000000000000000000000200");
+        assertThat(ContractFactory.isPrecompiledContract(bridge)).isTrue();
+
+        // Make balance transfer transaction to precompiled contract.
+        ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
+        AionTransaction transaction =
+                new AionTransaction(
+                        BigInteger.ZERO.toByteArray(),
+                        bridge,
+                        amount.toByteArray(),
+                        new byte[] {},
+                        2_000_000,
+                        ENERGY_PRICE);
+        transaction.sign(key);
+
+        // Process the transaction.
+        Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
+
+        // Collect the consensus information from the block & receipt.
+        AionBlockSummary blockSummary = results.getRight();
+        AionTxReceipt receipt = blockSummary.getSummaries().get(0).getReceipt();
+        assertThat(receipt.isSuccessful()).isTrue();
+
+        byte[] stateRoot = blockSummary.getBlock().getStateRoot();
+        byte[] blockReceiptsRoot = blockSummary.getBlock().getReceiptsRoot();
+        byte[] receiptTrieEncoded = receipt.getReceiptTrieEncoded();
+
+        // Verify the consensus information.
+        String expectedRoot = "419F9A4C02612094A9B9A2EAC5CC6DF761214882C35267328297D09246206A9A";
+        String expectedReceiptsRoot =
+                "9A73184E9A5514164D980452E2283892D0487B6833D3F9F782C8686BFDA1B809";
+        String expectedReceiptsTrie =
+                "f90125a034b98e6a317bd93f39959d41cccafec864329cadfb0d8d7bfc5d30df5612e401b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0";
+        assertThat(stateRoot).isEqualTo(Hex.decode(expectedRoot));
+        assertThat(blockReceiptsRoot).isEqualTo(Hex.decode(expectedReceiptsRoot));
+        assertThat(receiptTrieEncoded).isEqualTo(Hex.decode(expectedReceiptsTrie));
+
+        // Verify that the sender has the expected balance.
+        BigInteger expectedBalance = new BigInteger("999999999786407407137135");
+        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+
+        // Verify that the contract has the expected balance.
+        BigInteger contractBalance = getBalance(bridge);
+        assertThat(contractBalance).isEqualTo(amount);
+
+        // Verify that the miner has the expected balance.
+        BigInteger expectedMinerBalance = new BigInteger("749210123854045163");
+        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
     }
 
     private static final String CONTRACT =
