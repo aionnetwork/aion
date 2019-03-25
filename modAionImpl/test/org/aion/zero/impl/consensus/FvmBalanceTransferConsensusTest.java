@@ -62,8 +62,8 @@ public class FvmBalanceTransferConsensusTest {
     public void testTransferToPrecompiledContract() {
         BigInteger amount = BigInteger.TEN.pow(12).add(BigInteger.valueOf(293_865));
         BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
-        assertEquals(SENDER_BALANCE, initialBalance);
-        assertArrayEquals(MINER, this.blockchain.getMinerCoinbase().toBytes());
+        assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
+        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
 
         // ensure bridge is viewed as precompiled contract
         Address bridge =
@@ -89,6 +89,7 @@ public class FvmBalanceTransferConsensusTest {
         AionBlockSummary blockSummary = results.getRight();
         AionTxReceipt receipt = blockSummary.getSummaries().get(0).getReceipt();
         assertThat(receipt.isSuccessful()).isTrue();
+        assertThat(receipt.getEnergyUsed()).isEqualTo(21000);
 
         byte[] stateRoot = blockSummary.getBlock().getStateRoot();
         byte[] blockReceiptsRoot = blockSummary.getBlock().getReceiptsRoot();
@@ -106,7 +107,7 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the sender has the expected balance.
         BigInteger expectedBalance = new BigInteger("999999999786407407137135");
-        assertEquals(expectedBalance, getBalance(Address.wrap(SENDER_ADDR)));
+        assertThat(getBalance(Address.wrap(SENDER_ADDR))).isEqualTo(expectedBalance);
 
         // Verify that the contract has the expected balance.
         BigInteger contractBalance = getBalance(bridge);
@@ -114,7 +115,67 @@ public class FvmBalanceTransferConsensusTest {
 
         // Verify that the miner has the expected balance.
         BigInteger expectedMinerBalance = new BigInteger("749210123854045163");
-        assertEquals(expectedMinerBalance, getBalance(Address.wrap(MINER)));
+        assertThat(getBalance(Address.wrap(MINER))).isEqualTo(expectedMinerBalance);
+    }
+
+    @Test
+    public void testCallToPrecompiledContract() {
+        BigInteger initialBalance = getBalance(Address.wrap(SENDER_ADDR));
+        assertThat(initialBalance).isEqualTo(SENDER_BALANCE);
+        assertThat(this.blockchain.getMinerCoinbase().toBytes()).isEqualTo(MINER);
+
+        // ensure bridge is viewed as precompiled contract
+        Address bridge =
+                Address.wrap("0000000000000000000000000000000000000000000000000000000000000200");
+        assertThat(ContractFactory.isPrecompiledContract(bridge)).isTrue();
+
+        // Make call transaction to precompiled contract.
+        ECKey key = org.aion.crypto.ECKeyFac.inst().fromPrivate(SENDER_KEY);
+        AionTransaction transaction =
+                new AionTransaction(
+                        BigInteger.ZERO.toByteArray(),
+                        bridge,
+                        BigInteger.ZERO.toByteArray(),
+                        Hex.decode(
+                                "a6f9dae1a048613dd3cb89685cb3f9cfa410ecf606c7ec7320e721edacd194050828c6b0"),
+                        2_000_000,
+                        ENERGY_PRICE);
+        transaction.sign(key);
+
+        // Process the transaction.
+        Pair<ImportResult, AionBlockSummary> results = processTransaction(transaction, 1);
+
+        // Collect the consensus information from the block & receipt.
+        AionBlockSummary blockSummary = results.getRight();
+        AionTxReceipt receipt = blockSummary.getSummaries().get(0).getReceipt();
+        assertThat(receipt.isSuccessful()).isTrue();
+        assertThat(receipt.getEnergyUsed()).isEqualTo(23304);
+
+        byte[] stateRoot = blockSummary.getBlock().getStateRoot();
+        byte[] blockReceiptsRoot = blockSummary.getBlock().getReceiptsRoot();
+        byte[] receiptTrieEncoded = receipt.getReceiptTrieEncoded();
+
+        // Verify the consensus information.
+        String expectedRoot = "7D91DD44FC7AABC0291BB6FD9CBCD70BEB3859FDD10E0F2356D2B5947EBC55D7";
+        String expectedReceiptsRoot =
+                "E897C7EB2531B5CC45293AE3EC0CC156B0FACEAEF3046D671A08D6C91BA88827";
+        String expectedReceiptsTrie =
+                "f90125a06ed1cbe0a46be351c90404aaeb7d12d9737d4c8a070e8c63dc1cfc0d7441fbdbb9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0";
+        assertThat(stateRoot).isEqualTo(Hex.decode(expectedRoot));
+        assertThat(blockReceiptsRoot).isEqualTo(Hex.decode(expectedReceiptsRoot));
+        assertThat(receiptTrieEncoded).isEqualTo(Hex.decode(expectedReceiptsTrie));
+
+        // Verify that the sender has the expected balance.
+        BigInteger expectedBalance = new BigInteger("999999999764082962989144");
+        assertThat(getBalance(Address.wrap(SENDER_ADDR))).isEqualTo(expectedBalance);
+
+        // Verify that the contract has the expected balance.
+        BigInteger contractBalance = getBalance(bridge);
+        assertThat(contractBalance).isEqualTo(BigInteger.ZERO);
+
+        // Verify that the miner has the expected balance.
+        BigInteger expectedMinerBalance = new BigInteger("749233448298487019");
+        assertThat(getBalance(Address.wrap(MINER))).isEqualTo(expectedMinerBalance);
     }
 
     private static final String CONTRACT =
