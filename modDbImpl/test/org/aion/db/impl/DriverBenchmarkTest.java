@@ -29,6 +29,7 @@ import org.aion.db.utils.repeat.RepeatRule;
 import org.aion.db.utils.slices.Slice;
 import org.aion.db.utils.slices.SliceOutput;
 import org.aion.db.utils.slices.Slices;
+import org.aion.log.AionLoggerFactory;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -96,6 +97,8 @@ public class DriverBenchmarkTest {
 
         generator = new RandomGenerator(compressionRatio);
         random = new Random(301);
+
+        AionLoggerFactory.initAll();
     }
 
     @BeforeClass
@@ -357,6 +360,7 @@ public class DriverBenchmarkTest {
             for (long i = 0; i < numEntries; i++) {
                 long k = (order == Order.SEQUENTIAL) ? i : random.nextInt(numEntries);
                 byte[] key = formatNumber(k);
+                // TODO: correct test so that it does not count time to generate value
                 db.put(key, generator.generate(valueSize));
                 byteCount += valueSize + key.length;
                 finishedSingleOp();
@@ -368,6 +372,7 @@ public class DriverBenchmarkTest {
                 for (int j = 0; j < entriesPerBatch; j++) {
                     int k = (order == Order.SEQUENTIAL) ? i + j : random.nextInt(numEntries);
                     byte[] key = formatNumber(k);
+                    // TODO: correct test so that it does not count time to generate value
                     batch.put(key, generator.generate(valueSize));
                     byteCount += valueSize + key.length;
                     finishedSingleOp();
@@ -533,11 +538,11 @@ public class DriverBenchmarkTest {
     // =================== Byte Array Generation =====================
     // ---------------------------------------------------------------
 
-    private static class RandomGenerator {
+    public static class RandomGenerator {
         private final Slice data;
         private int position;
 
-        private RandomGenerator(double compressionRatio) {
+        public RandomGenerator(double compressionRatio) {
             // We use a limited amount of data over and over again and ensure
             // that it is larger than the compression window (32KB), and also
             // large enough to serve all typical value sizes we want to write.
@@ -551,7 +556,7 @@ public class DriverBenchmarkTest {
             }
         }
 
-        private byte[] generate(int length) {
+        public byte[] generate(int length) {
             if (position + length > data.length()) {
                 position = 0;
                 assert (length < data.length());

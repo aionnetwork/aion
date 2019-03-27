@@ -66,6 +66,28 @@ public class DatabaseTestUtils {
         return parameters;
     }
 
+    public static List<Properties> unlockedPersistentDatabaseInstanceDefinitionsInternal() {
+
+        Properties sharedProps = new Properties();
+        sharedProps.setProperty(Props.DB_PATH, dbPath);
+
+        List<Properties> parameters = new ArrayList<>();
+
+        sharedProps.setProperty(Props.ENABLE_LOCKING, disabled);
+        sharedProps.setProperty(Props.ENABLE_HEAP_CACHE, disabled);
+
+        // all vendor options
+        for (DBVendor vendor : Set.of(DBVendor.LEVELDB)) { // , DBVendor.ROCKSDB, DBVendor.H2)) {
+            sharedProps.setProperty(Props.DB_TYPE, vendor.toValue());
+            sharedProps.setProperty(Props.ENABLE_DB_COMPRESSION, disabled);
+            parameters.add((Properties) sharedProps.clone());
+            sharedProps.setProperty(Props.ENABLE_DB_COMPRESSION, enabled);
+            parameters.add((Properties) sharedProps.clone());
+        }
+
+        return parameters;
+    }
+
     public static Object databaseInstanceDefinitions() {
 
         List<Object> parameters = new ArrayList<>();
