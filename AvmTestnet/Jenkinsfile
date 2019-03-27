@@ -1,0 +1,48 @@
+properties([[$class: 'jenkins.model.BuildDiscarderProperty', strategy:
+	[$class: 'LogRotator', numToKeepStr: '10', artifactNumToKeepStr: '10']
+	]])
+
+pipeline {
+	agent any
+
+	environment {
+		PRIVATE_KEY = credentials('avm-private-key')
+	}
+
+	stages {
+		stage('Checkout the build branch and update its submodules') {
+			steps {
+				checkout scm
+				sh "git submodule update --init --recursive"
+			}
+		}
+
+		stage('Build the kernel in standalone mode and run the tests') {
+			steps {
+				sh "./clean_before.sh"
+				sh "./toggle_standalone.sh ON"
+				sh "./gradlew clean pack"
+				sh "./toggle_standalone.sh OFF"
+				sh "./run_tests.sh $PRIVATE_KEY"
+			}
+		}
+
+		stage('Build the kernel in non-standalone mode') {
+			steps {
+				sh "./update_configs_and_genesis.sh"
+				sh "./gradlew clean pack"
+			}
+		}
+
+		stage('Produce the release build and the 3 seed builds') {
+			steps {
+				sh "./build_release.sh"
+				sh "./build_seed.sh 1"
+				sh "./build_seed.sh 2"
+				sh "./build_seed.sh 3"
+				sh "./clean_after.sh"
+			}
+		}
+	}
+}
+
