@@ -10,7 +10,6 @@ import static org.aion.mcf.core.ImportResult.NO_PARENT;
 import static org.aion.p2p.P2pConstant.COEFFICIENT_NORMAL_PEERS;
 import static org.aion.p2p.P2pConstant.LARGE_REQUEST_SIZE;
 import static org.aion.p2p.P2pConstant.MAX_NORMAL_PEERS;
-import static org.aion.p2p.P2pConstant.MIN_NORMAL_PEERS;
 import static org.aion.zero.impl.BlockchainTestUtils.generateAccounts;
 import static org.aion.zero.impl.BlockchainTestUtils.generateNewBlock;
 import static org.aion.zero.impl.BlockchainTestUtils.generateNextBlock;
@@ -39,14 +38,14 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
-import org.aion.interfaces.db.ContractDetails;
-import org.aion.interfaces.db.PruneConfig;
-import org.aion.interfaces.db.RepositoryConfig;
-import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.core.ImportResult;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.ContractDetailsAion;
@@ -92,9 +91,7 @@ public class TaskImportBlocksTest {
             parameters.add(new Object[] {0L, 200L, mode, set2});
             List<PeerState> set3 =
                     new ArrayList<>(set2)
-                            .stream()
-                            .filter(s -> s.getMode() != mode)
-                            .collect(Collectors.toList());
+                            .stream().filter(s -> s.getMode() != mode).collect(Collectors.toList());
             parameters.add(new Object[] {0L, -1L, mode, set3});
         }
 
@@ -393,25 +390,6 @@ public class TaskImportBlocksTest {
     @SuppressWarnings("unused")
     private Object allModesExceptLightning() {
         return new Object[] {NORMAL, THUNDER, BACKWARD, FORWARD};
-    }
-
-    @Test
-    @Parameters(method = "allModesExceptLightning")
-    public void testAttemptLightningJump_wMinNormalPeers(Mode mode) {
-        // checking that the test assumptions are met
-        assertThat(MIN_NORMAL_PEERS).isGreaterThan(0);
-
-        // normalStates == MIN_NORMAL_PEERS
-        List<PeerState> states = new ArrayList<>();
-        addStates(states, MIN_NORMAL_PEERS, NORMAL, 100L);
-
-        PeerState input = new PeerState(mode, 100L);
-        PeerState expected = new PeerState(input);
-
-        // expecting no change in the input value
-        SortedSet<Long> baseSet = new TreeSet<>();
-        assertThat(attemptLightningJump(-1L, input, states, baseSet, null)).isEqualTo(expected);
-        assertThat(baseSet.size()).isEqualTo(0);
     }
 
     @Test
