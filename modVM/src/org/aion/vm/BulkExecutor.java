@@ -14,6 +14,7 @@ import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.mcf.vm.types.Log;
+import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.vm.VmFactoryImplementation.VM;
@@ -440,7 +441,11 @@ public class BulkExecutor {
 
     /** Returns true only if address is a contract. */
     private boolean isContractAddress(Address address) {
-        byte[] code = this.repositoryChild.getCode(address);
-        return (code != null) && (code.length > 0);
+        if (ContractFactory.isPrecompiledContract(address)) {
+            return true;
+        } else {
+            byte[] code = this.repositoryChild.getCode(address);
+            return (code != null) && (code.length > 0);
+        }
     }
 }
