@@ -1,6 +1,5 @@
 package org.aion.api.server.pb;
 
-
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.math.BigInteger;
@@ -28,6 +27,8 @@ import org.aion.api.server.IApiAion;
 import org.aion.api.server.pb.Message.Funcs;
 import org.aion.api.server.pb.Message.Retcode;
 import org.aion.api.server.pb.Message.Servs;
+import org.aion.api.server.rpc.RpcError;
+import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.CompiledContr;
 import org.aion.api.server.types.EvtContract;
@@ -877,8 +878,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                             .newBuilder()
                                             .setAddress(
                                                     ByteString.copyFrom(
-                                                            Address.wrap(log.address)
-                                                                    .toBytes()))
+                                                            Address.wrap(log.address).toBytes()))
                                             .setData(
                                                     ByteString.copyFrom(
                                                             ByteUtil.hexStringToBytes(log.data)))
@@ -1377,10 +1377,27 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                     }
 
                     try {
+                        Optional<Long> localBestBlockNumber = this.ac.getLocalBestBlockNumber();
+                        Optional<Long> networkBestBlockNumber = this.ac.getNetworkBestBlockNumber();
+
+                        // Check that we actually have real values in our hands.
+                        if (!localBestBlockNumber.isPresent()) {
+                            LOG.error("Unable to determine the local node's best block number!");
+                            return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_VALUE);
+                        }
+                        if (!networkBestBlockNumber.isPresent()) {
+                            LOG.error("Unable to determine the network's best block number!");
+                            return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_VALUE);
+                        }
+
+                        SyncInfo syncInfo =
+                                this.getSyncInfo(
+                                        localBestBlockNumber.get(), networkBestBlockNumber.get());
+
                         Message.rsp_isSyncing rsp =
                                 Message.rsp_isSyncing
                                         .newBuilder()
-                                        .setSyncing(!this.getSync().done)
+                                        .setSyncing(!syncInfo.done)
                                         .build();
 
                         byte[] retHeader =
@@ -1399,15 +1416,30 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                 getApiVersion(), Retcode.r_fail_service_call_VALUE);
                     }
 
-                    SyncInfo sync = this.getSync();
+                    Optional<Long> localBestBlockNumber = this.ac.getLocalBestBlockNumber();
+                    Optional<Long> networkBestBlockNumber = this.ac.getNetworkBestBlockNumber();
+
+                    // Check that we actually have real values in our hands.
+                    if (!localBestBlockNumber.isPresent()) {
+                        LOG.error("Unable to determine the local node's best block number!");
+                        return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_VALUE);
+                    }
+                    if (!networkBestBlockNumber.isPresent()) {
+                        LOG.error("Unable to determine the network's best block number!");
+                        return ApiUtil.toReturnHeader(getApiVersion(), Retcode.r_fail_VALUE);
+                    }
+
+                    SyncInfo syncInfo =
+                            this.getSyncInfo(
+                                    localBestBlockNumber.get(), networkBestBlockNumber.get());
 
                     try {
                         Message.rsp_syncInfo rsp =
                                 Message.rsp_syncInfo
                                         .newBuilder()
-                                        .setChainBestBlock(sync.chainBestBlkNumber)
-                                        .setNetworkBestBlock(sync.networkBestBlkNumber)
-                                        .setSyncing(!sync.done)
+                                        .setChainBestBlock(syncInfo.chainBestBlkNumber)
+                                        .setNetworkBestBlock(syncInfo.networkBestBlkNumber)
+                                        .setSyncing(!syncInfo.done)
                                         .setMaxImportBlocks(24)
                                         .build();
 
@@ -2447,8 +2479,7 @@ public class ApiAion0 extends ApiAion implements IApiAion {
                                                 a -> {
                                                     BigInteger b =
                                                             this.getBalance(
-                                                                    Address.wrap(
-                                                                            a.toByteArray()));
+                                                                    Address.wrap(a.toByteArray()));
 
                                                     Message.t_AccountDetail.Builder builder =
                                                             Message.t_AccountDetail.newBuilder();

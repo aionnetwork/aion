@@ -50,6 +50,7 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
 public abstract class ApiAion extends Api {
+    public static final int SYNC_TOLERANCE = 5;
 
     // these variables get accessed by the api worker threads.
     // need to guarantee one of:
@@ -217,12 +218,25 @@ public abstract class ApiAion extends Api {
         }
     }
 
-    protected SyncInfo getSync() {
+    /**
+     * Returns a {@link SyncInfo} object that reports whether or not syncing has started.
+     *
+     * <p>Since a node is never really 'done' syncing, we consider a node to be done if it is within
+     * {@value SYNC_TOLERANCE} blocks of the network best block number.
+     *
+     * @param localBestBlockNumber The current block number of the local node.
+     * @param networkBestBlockNumber The current block number of the network.
+     * @return the syncing statistics.
+     */
+    protected SyncInfo getSyncInfo(long localBestBlockNumber, long networkBestBlockNumber) {
         SyncInfo sync = new SyncInfo();
-        sync.done = this.ac.isSyncComplete();
+
+        sync.done = localBestBlockNumber + SYNC_TOLERANCE >= networkBestBlockNumber;
+
         sync.chainStartingBlkNumber = this.ac.getInitialStartingBlockNumber().orElse(0L);
-        sync.networkBestBlkNumber = this.ac.getNetworkBestBlockNumber().orElse(0L);
-        sync.chainBestBlkNumber = this.ac.getLocalBestBlockNumber().orElse(0L);
+        sync.chainBestBlkNumber = localBestBlockNumber;
+        sync.networkBestBlkNumber = networkBestBlockNumber;
+
         return sync;
     }
 
@@ -440,8 +454,7 @@ public abstract class ApiAion extends Api {
     }
 
     protected long estimateNrg(ArgTxCall params) {
-        Address fromAddr =
-                (params.getFrom() == null) ? Address.ZERO_ADDRESS() : params.getFrom();
+        Address fromAddr = (params.getFrom() == null) ? Address.ZERO_ADDRESS() : params.getFrom();
         AionTransaction tx =
                 new AionTransaction(
                         params.getNonce().toByteArray(),

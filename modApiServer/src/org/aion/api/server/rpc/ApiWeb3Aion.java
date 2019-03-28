@@ -20,6 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -95,6 +96,8 @@ import org.json.JSONObject;
  */
 @SuppressWarnings({"Duplicates", "WeakerAccess"})
 public class ApiWeb3Aion extends ApiAion {
+
+    private static final int SYNC_TOLERANCE = 5;
 
     private final int OPS_RECENT_ENTITY_COUNT = 32;
     private final int OPS_RECENT_ENTITY_CACHE_TIME_SECONDS = 4;
@@ -327,23 +330,51 @@ public class ApiWeb3Aion extends ApiAion {
         return new RpcMsg(p2pProtocolVersion());
     }
 
+    /**
+     * Returns an {@link RpcMsg} containing 'false' if the node is done syncing to the network
+     * (since a node is never really 'done' syncing, we consider a node to be done if it is within
+     * {@value SYNC_TOLERANCE} blocks of the network best block number).
+     *
+     * <p>Otherwise, if the sync is still syncing, a {@link RpcMsg} is returned with some basic
+     * statistics relating to the sync: the block number the node was at when syncing began; the
+     * current block number of the node; the current block number of the network.
+     *
+     * <p>If either the local block number or network block number cannot be determined, an {@link
+     * RpcMsg} is returned with an {@link RpcError#INTERNAL_ERROR} code and its 'result' will be a
+     * more descriptive string indicating what went wrong.
+     *
+     * @return the syncing statistics.
+     */
     public RpcMsg eth_syncing() {
-        SyncInfo syncInfo = getSync();
-        if (!syncInfo.done) {
-            JSONObject obj = new JSONObject();
-            // create obj for when syncing is completed
-            obj.put(
-                    "startingBlock",
-                    new NumericalValue(syncInfo.chainStartingBlkNumber).toHexString());
-            obj.put("currentBlock", new NumericalValue(syncInfo.chainBestBlkNumber).toHexString());
-            obj.put(
-                    "highestBlock",
-                    new NumericalValue(syncInfo.networkBestBlkNumber).toHexString());
-            return new RpcMsg(obj);
-        } else {
-            // create obj for when syncing is ongoing
-            return new RpcMsg(false);
+        Optional<Long> localBestBlockNumber = this.ac.getLocalBestBlockNumber();
+        Optional<Long> networkBestBlockNumber = this.ac.getNetworkBestBlockNumber();
+
+        // Check that we actually have real values in our hands.
+        if (!localBestBlockNumber.isPresent()) {
+            return new RpcMsg(
+                    "Unable to determine the local node's best block number!",
+                    RpcError.INTERNAL_ERROR);
         }
+        if (!networkBestBlockNumber.isPresent()) {
+            return new RpcMsg(
+                    "Unable to determine the network's best block number!",
+                    RpcError.INTERNAL_ERROR);
+        }
+
+        SyncInfo syncInfo = getSyncInfo(localBestBlockNumber.get(), networkBestBlockNumber.get());
+
+        return (syncInfo.done) ? new RpcMsg(false) : new RpcMsg(syncInfoToJson(syncInfo));
+    }
+
+    private JSONObject syncInfoToJson(SyncInfo syncInfo) {
+        JSONObject syncInfoAsJson = new JSONObject();
+        syncInfoAsJson.put(
+                "startingBlock", new NumericalValue(syncInfo.chainStartingBlkNumber).toHexString());
+        syncInfoAsJson.put(
+                "currentBlock", new NumericalValue(syncInfo.chainBestBlkNumber).toHexString());
+        syncInfoAsJson.put(
+                "highestBlock", new NumericalValue(syncInfo.networkBestBlkNumber).toHexString());
+        return syncInfoAsJson;
     }
 
     public RpcMsg eth_coinbase() {
