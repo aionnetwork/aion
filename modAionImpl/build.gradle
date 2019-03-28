@@ -40,7 +40,7 @@ dependencies {
 
     testCompile files('../lib/org-aion-avm-rt.jar')
     testCompile files('../lib/org-aion-avm-api.jar')
-
+    testCompile files('../lib/org-aion-avm-userlib.jar')
 
     testCompile 'network.aion:crypto4j:0.4.0'
     testCompile 'junit:junit:4.12'

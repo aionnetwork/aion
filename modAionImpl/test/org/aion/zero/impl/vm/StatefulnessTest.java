@@ -5,9 +5,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
+import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
