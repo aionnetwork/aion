@@ -111,7 +111,7 @@ public class PendingStateTest {
         // Successful transaction
         byte[] jar =
                 new CodeAndArguments(
-                                JarBuilder.buildJarForMainAndClasses(AvmHelloWorld.class),
+                                JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class),
                                 new byte[0])
                         .encodeToBytes();
 
@@ -148,7 +148,7 @@ public class PendingStateTest {
         // Successful transaction
         byte[] jar =
                 new CodeAndArguments(
-                                JarBuilder.buildJarForMainAndClasses(AvmHelloWorld.class),
+                                JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class),
                                 new byte[0])
                         .encodeToBytes();
 

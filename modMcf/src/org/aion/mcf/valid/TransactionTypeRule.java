@@ -6,12 +6,17 @@ import static org.aion.mcf.tx.TransactionTypes.AVM_CREATE_CODE;
 import static org.aion.mcf.tx.TransactionTypes.FVM;
 import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /**
  * Rules for validating transactions based on allowed types.
  *
  * @author Alexandra Roatis
  */
 public class TransactionTypeRule {
+
+    // allowing only balance transfers on AVM when this flag is equal to false.
+    private static boolean DEPLOY_AVM_CONTRACT_ALLOWED = false;
 
     /**
      * Compares the given transaction type with all the transaction types allowed.
@@ -60,6 +65,11 @@ public class TransactionTypeRule {
      * @return {@code true} is this is a valid AVM contract deployment, {@code false} otherwise
      */
     public static boolean isValidAVMContractDeployment(byte type) {
-        return type == AVM_CREATE_CODE && false; // allowing only balance transfers on AVM
+        return type == AVM_CREATE_CODE && DEPLOY_AVM_CONTRACT_ALLOWED;
+    }
+
+    @VisibleForTesting
+    public static void allowAVMContractDeployment() {
+        DEPLOY_AVM_CONTRACT_ALLOWED = true;
     }
 }

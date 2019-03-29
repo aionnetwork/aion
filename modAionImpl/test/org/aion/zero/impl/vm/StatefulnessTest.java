@@ -234,7 +234,7 @@ public class StatefulnessTest {
 
     private byte[] getJarBytes() {
         return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClasses(Statefulness.class), new byte[0])
+                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class), new byte[0])
                 .encodeToBytes();
     }
 

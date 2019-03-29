@@ -74,7 +74,7 @@ public class InvalidBlockTest {
     private List<AionTransaction> makeTransactions(int num, BigInteger initialNonce) {
         List<AionTransaction> transactions = new ArrayList<>();
 
-        byte[] jar = new CodeAndArguments(JarBuilder.buildJarForMainAndClasses(Contract.class), new byte[0]).encodeToBytes();
+        byte[] jar = new CodeAndArguments(JarBuilder.buildJarForMainAndClassesAndUserlib(Contract.class), new byte[0]).encodeToBytes();
         BigInteger nonce = initialNonce;
 
         for (int i = 0; i < num; i++) {
