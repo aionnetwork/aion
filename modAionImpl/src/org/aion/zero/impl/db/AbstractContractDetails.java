@@ -1,4 +1,4 @@
-package org.aion.mcf.db;
+package org.aion.zero.impl.db;
 
 import static org.aion.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.aion.crypto.HashUtil.h256;

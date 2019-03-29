@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
-import org.aion.mcf.db.AbstractContractDetails;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 
