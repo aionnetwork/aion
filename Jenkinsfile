@@ -1,18 +1,15 @@
 //configuration
 properties([[$class: 'jenkins.model.BuildDiscarderProperty', strategy:
-			[$class: 'LogRotator', numToKeepStr: '100', artifactNumToKeepStr: '20']
-			]])
-			
-node {
-  echo "current branch: ${env.BRANCH_NAME}"
-}
-
+      [$class: 'LogRotator', numToKeepStr: '100', artifactNumToKeepStr: '20']
+      ]])
+      
 pipeline {
   agent any
 
   stages {
     stage('Build') {
       steps {
+        echo "Building branch: ${env.BRANCH_NAME}"
         sh "./gradlew pack"
       }
     }
@@ -32,42 +29,49 @@ pipeline {
       }
     }
     
-  	stage('Unit test') {
-		steps {
-  			timeout(60){
-  				sh "./gradlew ciBuild"
-  			}
-  		}
-  		post {
-        	always {
-          		junit "report/**/*.xml"
-        	}
-      	}
-  	}
+    stage('Unit test') {
+      steps {
+        timeout(60) {
+          sh "./gradlew ciBuild"
+        }
+      }
+      post {
+          always {
+              junit "report/**/*.xml"
+          }
+        }
+    }
+
+    stage('Checkout functional tests') { 
+      dir('FunctionalTests') {
+        git url: 'https://github.com/aionnetwork/node_test_harness.git'
+      }
+
+    }
 
     stage('Functional tests') { 
-        steps { 
-            echo 'Coming soon'
-        }
+      steps { 
+          echo 'Coming soon'
+      }
     }
   }
 
   post {
-	always {
-    	cleanWs()
-	}
+    always {
+      cleanWs()
+  }
 
-	success {
-		slackSend channel: '#ci',
-			  color: 'good',
-			  message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. Grab the generated builds at ${env.BUILD_URL}"
-	} 
+  success {
+    slackSend channel: '#ci',
+      color: 'good',
+      message: "The pipeline ${currentBuild.fullDisplayName} completed successfully. Grab the generated builds at ${env.BUILD_URL}"
+  } 
 
-	failure {
-		slackSend channel: '#ci',
-			  color: 'danger', 
-			  message: "The pipeline ${currentBuild.fullDisplayName} failed at ${env.BUILD_URL}"
-	}
+    failure {
+      slackSend channel: '#ci',
+          color: 'danger', 
+          message: "The pipeline ${currentBuild.fullDisplayName} failed at ${env.BUILD_URL}"
+    }
 
   }
 }
