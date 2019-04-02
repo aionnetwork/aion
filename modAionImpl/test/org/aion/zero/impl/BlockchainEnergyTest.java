@@ -9,11 +9,29 @@ import java.util.List;
 import org.aion.types.Address;
 import org.aion.mcf.core.ImportResult;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class BlockchainEnergyTest {
+
+    @Before
+    public void setup() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
+        VirtualMachineProvider.initializeAllVirtualMachines();
+    }
+
+    @After
+    public void shutdown() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
+    }
 
     @Test
     public void testConsistentEnergyUsage() {
@@ -34,8 +52,7 @@ public class BlockchainEnergyTest {
     public void testEnergyUsageRecorded() {
         final int DEFAULT_TX_AMOUNT = 21000;
         final Address RECEIPT_ADDR =
-                Address.wrap(
-                        "CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
+                Address.wrap("CAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFECAFE");
 
         StandaloneBlockchain.Bundle bundle =
                 new StandaloneBlockchain.Builder()

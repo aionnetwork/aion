@@ -46,6 +46,7 @@ import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -76,11 +77,19 @@ public class OldTxExecutorTest {
                         .withValidatorConfiguration("simple")
                         .build();
         blockchain = bundle.bc;
+
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
+        VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @After
     public void tearDown() {
         blockchain = null;
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
     }
 
     @Test

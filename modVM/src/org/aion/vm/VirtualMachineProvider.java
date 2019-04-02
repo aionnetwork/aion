@@ -100,4 +100,14 @@ public final class VirtualMachineProvider {
         }
         factory = vmFactory;
     }
+
+    /**
+     * Check vm init status
+     *
+     * <p>This method only exists for testing purposes and should not be used in production.
+     */
+    @VisibleForTesting
+    public static boolean isMachinesAreLive() {
+        return machinesAreLive;
+    }
 }

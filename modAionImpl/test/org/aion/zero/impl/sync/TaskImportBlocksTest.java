@@ -46,11 +46,14 @@ import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.AionBlockchainImpl;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.ContractDetailsAion;
 import org.aion.zero.impl.sync.PeerState.Mode;
 import org.aion.zero.impl.types.AionBlock;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -60,6 +63,21 @@ public class TaskImportBlocksTest {
 
     private final List<ECKey> accounts = generateAccounts(10);
     private final StandaloneBlockchain.Builder builder = new StandaloneBlockchain.Builder();
+
+    @Before
+    public void setup() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
+        VirtualMachineProvider.initializeAllVirtualMachines();
+    }
+
+    @After
+    public void shutdown() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
+    }
 
     /** @return parameters for {@link #testCountStates(long, long, Mode, Collection)} */
     @SuppressWarnings("unused")

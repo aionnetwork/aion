@@ -32,12 +32,17 @@ public class AvmHelloWorldTest {
 
     @BeforeClass
     public static void setupAvm() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
         VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @AfterClass
     public static void tearDownAvm() {
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
     }
 
     @Before

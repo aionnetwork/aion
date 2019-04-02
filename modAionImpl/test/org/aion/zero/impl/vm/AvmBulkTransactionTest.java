@@ -40,12 +40,17 @@ public class AvmBulkTransactionTest {
 
     @BeforeClass
     public static void setupAvm() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
         VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @AfterClass
     public static void tearDownAvm() {
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
     }
 
     @Before
@@ -58,7 +63,7 @@ public class AvmBulkTransactionTest {
                         .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
-        TransactionTypeRule.allowAVMContractDeployment();
+        TransactionTypeRule.allowAVMContractTransaction();
     }
 
     @After
