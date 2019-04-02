@@ -9,14 +9,10 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.aion.log.AionLoggerFactory;
-import org.aion.log.LogEnum;
-import org.aion.log.LogLevel;
 import org.aion.p2p.Handler;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,10 +30,6 @@ public class TaskRecvTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-
-        Map<String, String> logMap = new HashMap<>();
-        logMap.put(LogEnum.P2P.name(), LogLevel.INFO.name());
-        AionLoggerFactory.init(logMap);
     }
 
     @Test(timeout = 10_000)
