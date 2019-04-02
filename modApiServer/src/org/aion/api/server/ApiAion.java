@@ -50,7 +50,7 @@ import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 
 public abstract class ApiAion extends Api {
-    public static final int SYNC_TOLERANCE = 5;
+    public static final int SYNC_TOLERANCE = 1;
 
     // these variables get accessed by the api worker threads.
     // need to guarantee one of:

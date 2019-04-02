@@ -97,7 +97,7 @@ import org.json.JSONObject;
 @SuppressWarnings({"Duplicates", "WeakerAccess"})
 public class ApiWeb3Aion extends ApiAion {
 
-    private static final int SYNC_TOLERANCE = 5;
+    private static final int SYNC_TOLERANCE = 1;
 
     private final int OPS_RECENT_ENTITY_COUNT = 32;
     private final int OPS_RECENT_ENTITY_CACHE_TIME_SECONDS = 4;
