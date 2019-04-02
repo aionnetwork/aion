@@ -5,9 +5,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
+import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.core.ImportResult;
@@ -111,7 +111,7 @@ public class PendingStateTest {
         // Successful transaction
         byte[] jar =
                 new CodeAndArguments(
-                                JarBuilder.buildJarForMainAndClasses(AvmHelloWorld.class),
+                                JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class),
                                 new byte[0])
                         .encodeToBytes();
 
@@ -148,7 +148,7 @@ public class PendingStateTest {
         // Successful transaction
         byte[] jar =
                 new CodeAndArguments(
-                                JarBuilder.buildJarForMainAndClasses(AvmHelloWorld.class),
+                                JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class),
                                 new byte[0])
                         .encodeToBytes();
 
