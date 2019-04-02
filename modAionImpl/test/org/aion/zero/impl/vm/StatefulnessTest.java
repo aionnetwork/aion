@@ -5,12 +5,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
+import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -59,6 +60,7 @@ public class StatefulnessTest {
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
         this.deployer = Address.wrap(this.deployerKey.getAddress());
+        TransactionTypeRule.allowAVMContractDeployment();
     }
 
     @After
@@ -234,7 +236,7 @@ public class StatefulnessTest {
 
     private byte[] getJarBytes() {
         return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClasses(Statefulness.class), new byte[0])
+                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class), new byte[0])
                 .encodeToBytes();
     }
 

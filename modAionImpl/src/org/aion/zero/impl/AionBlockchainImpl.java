@@ -204,7 +204,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             @Override
             public boolean isAvmEnabled() {
-                return cfgAion.getVm().isAvmEnabled();
+                // TODO: temporarily hack the TransactionTypeRule by the network name. Once avm
+                // ready for the production, this check should be removed.
+                if (cfgAion.getNetwork().equals("avmtestnet")) {
+                    TransactionTypeRule.allowAVMContractDeployment();
+                }
+
+                return true;
             }
         };
     }

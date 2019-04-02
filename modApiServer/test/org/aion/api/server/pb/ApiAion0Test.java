@@ -23,6 +23,7 @@ import org.aion.mcf.account.Keystore;
 
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.Version;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
@@ -113,12 +114,15 @@ public class ApiAion0Test {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
         api = new ApiAion0(AionImpl.inst());
         testStartTime = System.currentTimeMillis();
+        VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @After
     public void tearDown() {
         api.shutDown();
         rsp = null;
+
+        VirtualMachineProvider.shutdownAllVirtualMachines();
 
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
@@ -818,8 +822,6 @@ public class ApiAion0Test {
     @Test
     @Ignore
     public void testProcessGetTxCount() throws Exception {
-        setup();
-
         AionImpl impl = AionImpl.inst();
         AionRepositoryImpl repo = AionRepositoryImpl.inst();
 

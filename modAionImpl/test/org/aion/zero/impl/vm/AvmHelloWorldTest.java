@@ -4,9 +4,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.math.BigInteger;
 import java.util.Collections;
-import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
+import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
@@ -148,7 +148,7 @@ public class AvmHelloWorldTest {
 
     private byte[] getJarBytes() {
         return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClasses(AvmHelloWorld.class), new byte[0])
+                        JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class), new byte[0])
                 .encodeToBytes();
     }
 

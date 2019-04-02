@@ -7,13 +7,14 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.aion.avm.api.ABIDecoder;
-import org.aion.avm.api.ABIEncoder;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.CodeAndArguments;
+import org.aion.avm.userlib.abi.ABIDecoder;
+import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -56,6 +57,7 @@ public class AvmBulkTransactionTest {
                         .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
+        TransactionTypeRule.allowAVMContractDeployment();
     }
 
     @After
@@ -134,7 +136,7 @@ public class AvmBulkTransactionTest {
         Address deployedContract =
                 Address.wrap(initialSummary.getReceipts().get(0).getTransactionOutput());
 
-        int numAvmCreateTransactions = 10;
+        int numAvmCreateTransactions = 2;
         int numAvmCallTransactions = 10;
         int numTransactions = numAvmCreateTransactions + numAvmCallTransactions;
 
@@ -338,7 +340,8 @@ public class AvmBulkTransactionTest {
 
     private byte[] getJarBytes() {
         return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClasses(Statefulness.class), new byte[0])
+                        JarBuilder.buildJarForMainAndClassesAndUserlib(Statefulness.class),
+                        new byte[0])
                 .encodeToBytes();
     }
 

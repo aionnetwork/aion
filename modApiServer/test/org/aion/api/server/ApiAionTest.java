@@ -28,6 +28,7 @@ import org.aion.mcf.account.AccountManager;
 import org.aion.mcf.account.Keystore;
 import org.aion.mcf.blockchain.TxResponse;
 
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.blockchain.AionImpl;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionBlockStore;
@@ -129,10 +130,13 @@ public class ApiAionTest {
         api = new ApiAionImpl(impl);
         repo = AionRepositoryImpl.inst();
         testStartTime = System.currentTimeMillis();
+        VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @After
     public void tearDown() {
+        VirtualMachineProvider.shutdownAllVirtualMachines();
+
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);
 
@@ -333,7 +337,6 @@ public class ApiAionTest {
                         100000);
 
         assertNotNull(api.doCall(txcall));
-        tearDown();
     }
 
     @Test
@@ -366,7 +369,6 @@ public class ApiAionTest {
                         100000);
 
         assertEquals(impl.estimateTxNrg(tx, api.getBestBlock()), api.estimateNrg(txcall));
-        tearDown();
     }
 
     @Test
