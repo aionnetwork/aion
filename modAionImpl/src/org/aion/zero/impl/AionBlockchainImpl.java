@@ -217,17 +217,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         cfgAion.getConsensus().getEnergyStrategy(),
                         config);
             }
-
-            @Override
-            public boolean isAvmEnabled() {
-                // TODO: temporarily hack the TransactionTypeRule by the network name. Once avm
-                // ready for the production, this check should be removed.
-                if (cfgAion.getNetwork().equals("avmtestnet")) {
-                    TransactionTypeRule.allowAVMContractDeployment();
-                }
-
-                return true;
-            }
         };
     }
 
@@ -257,9 +246,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * blockHash and number.
          */
         this.chainConfiguration = chainConfig;
-        TransactionTypeValidator.enableAvmCheck(config.isAvmEnabled());
-        BulkExecutor.enabledAvmCheck(config.isAvmEnabled());
-
         this.grandParentBlockHeaderValidator =
                 this.chainConfiguration.createGrandParentHeaderValidator();
         this.parentHeaderValidator = this.chainConfiguration.createParentHeaderValidator();
@@ -1275,6 +1261,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
         if (!block.getTransactionsList().isEmpty()) {
 
             fork040Enable = checkFork040(block.getNumber());
+            if (fork040Enable) {
+                TransactionTypeRule.allowAVMContractTransaction();
+            }
 
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =
@@ -1353,6 +1342,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
             // might apply the block before the 040 fork point.
             fork040Enable = checkFork040(block.getNumber());
+            if (fork040Enable) {
+                TransactionTypeRule.allowAVMContractTransaction();
+            }
 
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =

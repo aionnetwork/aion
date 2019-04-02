@@ -9,15 +9,6 @@ import javax.xml.stream.XMLStreamReader;
 import org.junit.Test;
 
 public class CfgVmTest {
-    @Test
-    public void setConstructorGetterSetter() {
-        CfgVm unit = new CfgVm();
-        assertThat(unit.isAvmEnabled(), is(false));
-        unit.setAvmEnabled(true);
-        assertThat(unit.isAvmEnabled(), is(true));
-        unit.setAvmEnabled(false);
-        assertThat(unit.isAvmEnabled(), is(false));
-    }
 
     @Test
     public void testFromXML() throws Exception {
@@ -28,7 +19,6 @@ public class CfgVmTest {
                         .createXMLStreamReader(CharSource.wrap(testXml).openStream());
         CfgVm unit = new CfgVm();
         unit.fromXML(xmlStream);
-        assertThat(unit.isAvmEnabled(), is(true));
     }
 
     @Test

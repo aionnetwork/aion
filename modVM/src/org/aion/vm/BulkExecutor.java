@@ -56,13 +56,6 @@ import org.slf4j.Logger;
  */
 public class BulkExecutor {
     private static final Object LOCK = new Object();
-
-    private static boolean avmEnabled = false;
-
-    public static void enabledAvmCheck(boolean isEnabled) {
-        avmEnabled = isEnabled;
-    }
-
     private Repository repository;
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryChild;
     private PostExecutionWork postExecutionWork;
@@ -444,28 +437,20 @@ public class BulkExecutor {
     }
 
     /**
-     * A transaction can only be for the avm if the avm is enabled. If it is not enabled this method
-     * always returns false.
-     *
-     * <p>Otherwise, assuming the avm is enabled, a transaction is for the Avm if, and only if, one
-     * of the following is true:
+     * Otherwise, assuming the avm is enabled, a transaction is for the Avm if, and only if, one of
+     * the following is true:
      *
      * <p>1. It is a CREATE transaction and its target VM is the AVM 2. It is a CALL transaction and
      * the destination is an AVM contract address 3. It is a CALL transaction and the destination is
      * not a contract address.
      */
     private boolean transactionIsForAionVirtualMachine(AionTransaction transaction) {
-        // first verify that the AVM is enabled
-        if (avmEnabled) {
-            if (transaction.isContractCreationTransaction()) {
-                return isValidAVMContractDeployment(transaction.getTargetVM());
-            } else {
-                Address destination = transaction.getDestinationAddress();
-                return isValidAVMContractDeployment(repositoryChild.getVMUsed(destination))
-                        || !isContractAddress(destination);
-            }
+        if (transaction.isContractCreationTransaction()) {
+            return isValidAVMContractDeployment(transaction.getTargetVM());
         } else {
-            return false;
+            Address destination = transaction.getDestinationAddress();
+            return isValidAVMContractDeployment(repositoryChild.getVMUsed(destination))
+                    || !isContractAddress(destination);
         }
     }
 

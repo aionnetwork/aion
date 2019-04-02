@@ -258,11 +258,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                                     .getEnergyDivisorLimitLong(),
                                             10_000_000L);
                                 }
-
-                                @Override
-                                public boolean isAvmEnabled() {
-                                    return enableAvm;
-                                }
                             }
                             : this.a0Config;
 
@@ -287,12 +282,12 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 public BlockHeaderValidator<A0BlockHeader>
                                         createBlockHeaderValidator() {
                                     return new BlockHeaderValidator<>(
-                                        Arrays.asList(
-                                            new AionExtraDataRule(
-                                                this.constants
-                                                    .getMaximumExtraDataSize()),
-                                            new EnergyConsumedRule(),
-                                            new AionHeaderVersionRule()));
+                                            Arrays.asList(
+                                                    new AionExtraDataRule(
+                                                            this.constants
+                                                                    .getMaximumExtraDataSize()),
+                                                    new EnergyConsumedRule(),
+                                                    new AionHeaderVersionRule()));
                                 }
                             };
                 } else {
@@ -328,7 +323,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 track.addStorageRow(
                         ContractFactory.getTotalCurrencyContractAddress(),
                         new DataWordImpl(key.getKey()).toWrapper(),
-                        new ByteArrayWrapper(new DataWordImpl(key.getValue()).getNoLeadZeroesData()));
+                        new ByteArrayWrapper(
+                                new DataWordImpl(key.getValue()).getNoLeadZeroesData()));
             }
 
             for (Address key : genesis.getPremine().keySet()) {
