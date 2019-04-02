@@ -196,11 +196,7 @@ public class Aion {
         }
 
         // show enabled VMs
-        String vmStr = "using FVM";
-        if (cfg.getVm().isAvmEnabled()) {
-            vmStr += " & AVM";
-        }
-        logo = appendLogo(logo, vmStr);
+        logo = appendLogo(logo, "using FVM & AVM");
 
         genLog.info(path);
         genLog.info(logo);

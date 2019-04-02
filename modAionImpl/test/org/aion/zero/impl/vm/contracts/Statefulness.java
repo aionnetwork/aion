@@ -1,15 +1,33 @@
 package org.aion.zero.impl.vm.contracts;
 
 import java.math.BigInteger;
-import org.aion.avm.api.ABIDecoder;
 import org.aion.avm.api.Address;
 import org.aion.avm.api.BlockchainRuntime;
+import org.aion.avm.userlib.abi.ABIDecoder;
+import org.aion.avm.userlib.abi.ABIEncoder;
 
 public class Statefulness {
     private static int counter = 0;
 
     public static byte[] main() {
-        return ABIDecoder.decodeAndRunWithClass(Statefulness.class, BlockchainRuntime.getData());
+        byte[] inputBytes = BlockchainRuntime.getData();
+        String methodName = ABIDecoder.decodeMethodName(inputBytes);
+        if (methodName == null) {
+            return new byte[0];
+        } else {
+            Object[] argValues = ABIDecoder.decodeArguments(inputBytes);
+            if (methodName.equals("transferValue")) {
+                transferValue((byte[]) argValues[0], (long) argValues[1]);
+                return new byte[0];
+            } else if (methodName.equals("getCount")) {
+                return ABIEncoder.encodeOneObject(getCount());
+            } else if (methodName.equals("incrementCounter")) {
+                incrementCounter();
+                return new byte[0];
+            } else {
+                return new byte[0];
+            }
+        }
     }
 
     public static void transferValue(byte[] beneficiary, long amount) {

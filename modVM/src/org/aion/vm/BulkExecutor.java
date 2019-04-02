@@ -444,7 +444,8 @@ public class BulkExecutor {
         if (ContractFactory.isPrecompiledContract(address)) {
             return true;
         } else {
-            byte[] code = this.repositoryChild.getCode(address);
+            RepositoryCache cache = this.repositoryChild.startTracking();
+            byte[] code = cache.getCode(address);
             return (code != null) && (code.length > 0);
         }
     }
