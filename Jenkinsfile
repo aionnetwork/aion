@@ -48,15 +48,24 @@ pipeline {
     stage('Checkout functional tests') { 
       steps { 
         dir('FunctionalTests') {
-          git url: 'https://github.com/aionnetwork/node_test_harness.git'
+          git url: 'https://github.com/aionnetwork/node_test_harness.git', branch: 'gradleize'
         }
       }
 
     }
 
     stage('Functional tests') { 
+      when { 
+        expression { env.CHANGE_ID } 
+      }
       steps { 
-          echo 'Coming soon'
+          echo 'Functional tests / changeId = ' + env.CHANGE_ID;
+
+          sh('cp pack/aion.tar.bz2 FunctionalTests/Tests')
+          dir('FunctionalTests') { 
+            sh('tar -C Tests -xvjf Tests/aion.tar.bz2')
+            sh('./gradlew :Tests:copyCustomConfig :Tests:test')
+          }
       }
     }
   }
