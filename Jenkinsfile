@@ -37,7 +37,6 @@ pipeline {
         }
       }
 
-      
       //post {
       //    always {
       //        junit "report/**/*.xml"
@@ -56,15 +55,13 @@ pipeline {
 
     stage('Functional tests') { 
       when { 
-        expression { env.CHANGE_ID } 
+        expression { env.CHANGE_ID } // null and doesn't pass when commit not in a PR 
       }
       steps { 
-          echo 'Functional tests / changeId = ' + env.CHANGE_ID;
-
           sh('cp pack/aion.tar.bz2 FunctionalTests/Tests')
           dir('FunctionalTests') { 
-            sh('tar -C Tests -xvjf Tests/aion.tar.bz2')
-            sh('./gradlew :Tests:copyCustomConfig :Tests:test')
+            sh('tar -C Tests -xjf Tests/aion.tar.bz2')
+            sh('./gradlew :Tests:copyCustomConfig :Tests:waitForPorts :Tests:test')
           }
       }
     }
@@ -72,6 +69,8 @@ pipeline {
 
   post {
     always {
+      sh('cp -r FunctionalTests/report/FunctionalTests report/')
+      junit "report/**/*.xml"
       cleanWs()
   }
 
