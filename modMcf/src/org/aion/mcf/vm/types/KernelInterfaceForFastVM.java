@@ -73,6 +73,17 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     }
 
     @Override
+    public void putObjectGraph(Address contract, byte[] graph) {
+        //Todo: implement it when avm is ready.
+    }
+
+    @Override
+    public byte[] getObjectGraph(Address contract) {
+        //Todo: implement it when avm is ready.
+        return new byte[0];
+    }
+
+    @Override
     public void putStorage(Address address, byte[] key, byte[] value) {
         ByteArrayWrapper storageKey = alignDataToWordSize(key);
         ByteArrayWrapper storageValue = alignValueToWordSizeForPut(value);
