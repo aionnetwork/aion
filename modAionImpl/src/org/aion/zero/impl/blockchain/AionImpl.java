@@ -253,31 +253,6 @@ public class AionImpl implements IAionChain {
         }
     }
 
-    /**
-     * Returns whether syncing is completed. Note that this implementation is more of a switch than
-     * a guarantee as the syncing system may kick back into action if the network falls behind.
-     *
-     * @return {@code true} if syncing is completed, {@code false} otherwise
-     */
-    @Override
-    public boolean isSyncComplete() {
-        try {
-            long localBestBlockNumber =
-                    this.getAionHub().getBlockchain().getBestBlock().getNumber();
-            long networkBestBlockNumber =
-                    this.getAionHub().getSyncMgr().getNetworkBestBlockNumber();
-            // to prevent unecessary flopping, consider being within 5 blocks of
-            // head to be
-            // block propagation and not syncing.
-            // NOTE: in the future block propagation may not be tied in with
-            // syncing
-            return (localBestBlockNumber + 5) < networkBestBlockNumber;
-        } catch (Exception e) {
-            LOG_GEN.debug("query request failed", e);
-            return false;
-        }
-    }
-
     @Override
     public Optional<Long> getInitialStartingBlockNumber() {
         try {

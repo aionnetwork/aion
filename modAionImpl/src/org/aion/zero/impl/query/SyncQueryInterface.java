@@ -6,6 +6,4 @@ public interface SyncQueryInterface {
     Optional<Long> getLocalBestBlockNumber();
 
     Optional<Long> getNetworkBestBlockNumber();
-
-    boolean isSyncComplete();
 }

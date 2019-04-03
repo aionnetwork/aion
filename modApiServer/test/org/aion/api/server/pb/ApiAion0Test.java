@@ -920,42 +920,6 @@ public class ApiAion0Test {
     }
 
     @Test
-    public void testProcessIsSyncing() throws Exception {
-        rsp = sendRequest(Message.Servs.s_net_VALUE, Message.Funcs.f_isSyncing_VALUE);
-
-        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
-
-        Message.rsp_isSyncing rslt = Message.rsp_isSyncing.parseFrom(stripHeader(rsp));
-        assertNotEquals(AionImpl.inst().isSyncComplete(), rslt.getSyncing());
-
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_isSyncing_VALUE);
-
-        assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-    }
-
-    @Test
-    public void testProcessSyncInfo() throws Exception {
-        AionImpl impl = AionImpl.inst();
-
-        rsp = sendRequest(Message.Servs.s_net_VALUE, Message.Funcs.f_syncInfo_VALUE);
-
-        assertEquals(Message.Retcode.r_success_VALUE, rsp[1]);
-
-        Message.rsp_syncInfo rslt = Message.rsp_syncInfo.parseFrom(stripHeader(rsp));
-        assertNotEquals(impl.isSyncComplete(), rslt.getSyncing());
-        assertEquals(
-                (long) impl.getLocalBestBlockNumber().orElse(0L), rslt.getChainBestBlock());
-        assertEquals(
-                (long) impl.getNetworkBestBlockNumber().orElse(0L),
-                (long) rslt.getNetworkBestBlock());
-        assertEquals(24, rslt.getMaxImportBlocks());
-
-        rsp = sendRequest(Message.Servs.s_hb_VALUE, Message.Funcs.f_syncInfo_VALUE);
-
-        assertEquals(Message.Retcode.r_fail_service_call_VALUE, rsp[1]);
-    }
-
-    @Test
     public void testProcessAccountCreateAndLock() throws Exception {
         Message.req_accountCreate reqBody =
                 Message.req_accountCreate
