@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigInteger;
 import java.util.Arrays;
 import org.aion.avm.core.dappreading.JarBuilder;
+import org.aion.avm.core.util.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.AddressSpecs;
@@ -241,7 +242,7 @@ public class StatefulnessTest {
     }
 
     private byte[] abiEncodeMethodCall(String method, Object... arguments) {
-        return ABIEncoder.encodeMethodArguments(method, arguments);
+        return ABIUtil.encodeMethodArguments(method, arguments);
     }
 
     private AionTransaction newTransaction(

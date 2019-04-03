@@ -143,7 +143,7 @@ public class AvmHelloWorldTest {
     }
 
     private byte[] getCallArguments() {
-        return ABIEncoder.encodeMethodArguments("sayHello");
+        return ABIEncoder.encodeOneString("sayHello");
     }
 
     private byte[] getJarBytes() {

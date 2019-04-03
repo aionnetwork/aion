@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.avm.core.dappreading.JarBuilder;
+import org.aion.avm.core.util.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
 import org.aion.avm.userlib.abi.ABIDecoder;
 import org.aion.avm.userlib.abi.ABIEncoder;
@@ -275,7 +276,7 @@ public class AvmBulkTransactionTest {
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
         return (int)
-                ABIDecoder.decodeOneObject(summary.getReceipts().get(0).getTransactionOutput());
+                ABIUtil.decodeOneObject(summary.getReceipts().get(0).getTransactionOutput());
     }
 
     private AionBlockSummary sendTransactionsInBulkInSingleBlock(
@@ -346,7 +347,7 @@ public class AvmBulkTransactionTest {
     }
 
     private byte[] abiEncodeMethodCall(String method, Object... arguments) {
-        return ABIEncoder.encodeMethodArguments(method, arguments);
+        return ABIUtil.encodeMethodArguments(method, arguments);
     }
 
     private List<BigInteger> getRandomValues(int num, int lowerBound, int upperBound) {

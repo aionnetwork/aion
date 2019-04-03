@@ -10,17 +10,16 @@ public class Statefulness {
     private static int counter = 0;
 
     public static byte[] main() {
-        byte[] inputBytes = BlockchainRuntime.getData();
-        String methodName = ABIDecoder.decodeMethodName(inputBytes);
+        ABIDecoder decoder = new ABIDecoder(BlockchainRuntime.getData());
+        String methodName = decoder.decodeMethodName();
         if (methodName == null) {
             return new byte[0];
         } else {
-            Object[] argValues = ABIDecoder.decodeArguments(inputBytes);
             if (methodName.equals("transferValue")) {
-                transferValue((byte[]) argValues[0], (long) argValues[1]);
+                transferValue(decoder.decodeOneByteArray(), decoder.decodeOneLong());
                 return new byte[0];
             } else if (methodName.equals("getCount")) {
-                return ABIEncoder.encodeOneObject(getCount());
+                return ABIEncoder.encodeOneInteger(getCount());
             } else if (methodName.equals("incrementCounter")) {
                 incrementCounter();
                 return new byte[0];

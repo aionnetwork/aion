@@ -182,7 +182,7 @@ public class PendingStateTest {
 
         Address contract = Address.wrap(receipt.getTransactionOutput());
 
-        byte[] call = ABIEncoder.encodeMethodArguments("sayHello");
+        byte[] call = ABIEncoder.encodeOneString("sayHello");
         transaction =
                 new AionTransaction(
                         BigInteger.ONE.toByteArray(),
