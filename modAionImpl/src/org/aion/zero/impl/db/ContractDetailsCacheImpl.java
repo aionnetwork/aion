@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import org.aion.interfaces.db.ByteArrayKeyValueStore;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 
@@ -31,6 +32,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     public static ContractDetailsCacheImpl copy(ContractDetailsCacheImpl cache) {
         ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(cache.origContract);
         copy.setCodes(new HashMap<>(cache.getCodes()));
+        copy.vmType = cache.vmType;
         copy.storage = new HashMap<>(cache.storage);
         copy.setDirty(cache.isDirty());
         copy.setDeleted(cache.isDeleted());
@@ -94,6 +96,13 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
             }
         }
         return value;
+    }
+
+    public byte getVmType() {
+        if (vmType == TransactionTypes.DEFAULT && origContract != null) {
+            vmType = ((AbstractContractDetails) origContract).getVmType();
+        }
+        return vmType;
     }
 
     /**
@@ -222,15 +231,15 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
         ContractDetails originalContractCopy =
                 (this.origContract == null) ? null : this.origContract.copy();
-        ContractDetailsCacheImpl contractDetailsCacheCopy =
-                new ContractDetailsCacheImpl(originalContractCopy);
-        contractDetailsCacheCopy.storage = getDeepCopyOfStorage();
-        contractDetailsCacheCopy.prune = this.prune;
-        contractDetailsCacheCopy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;
-        contractDetailsCacheCopy.setCodes(getDeepCopyOfCodes());
-        contractDetailsCacheCopy.setDirty(this.isDirty());
-        contractDetailsCacheCopy.setDeleted(this.isDeleted());
-        return contractDetailsCacheCopy;
+        ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(originalContractCopy);
+        copy.vmType = this.vmType;
+        copy.storage = getDeepCopyOfStorage();
+        copy.prune = this.prune;
+        copy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;
+        copy.setCodes(getDeepCopyOfCodes());
+        copy.setDirty(this.isDirty());
+        copy.setDeleted(this.isDeleted());
+        return copy;
     }
 
     private Map<ByteArrayWrapper, byte[]> getDeepCopyOfCodes() {
