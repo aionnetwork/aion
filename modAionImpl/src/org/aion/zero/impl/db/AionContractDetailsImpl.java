@@ -147,10 +147,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
 
         RLPList rlpList = (RLPList) data.get(0);
 
-        if (rlpList.size() == 5) {
-            // compatible with old encoding
-            decodeEncodingWithoutVmType(rlpList, fastCheck);
+        // compatible with old encoding
+        decodeEncodingWithoutVmType(rlpList, fastCheck);
 
+        if (rlpList.size() == 5) {
             // only FVM contracts used the old encoding
             vmType = TransactionTypes.FVM_CREATE_CODE;
 
@@ -158,10 +158,16 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             this.rlpEncoded = null;
             getEncoded();
         } else {
-            // compatible with new encoding
-            decodeEncodingWithVmType(rlpList, fastCheck);
+            // Decodes the new version of encoding which is a list of 6 elements, specifically:<br>
+            //  { 0:address, 1:isExternalStorage, 2:storageRoot, 3:storage, 4:code, 5: vmType }
+            RLPItem vm = (RLPItem) rlpList.get(5);
 
-            // compatible with new encoding that differentiates encoding based on VM used
+            if (vm == null || vm.getRLPData() == null || vm.getRLPData().length == 0) {
+                throw new IllegalArgumentException("rlp decode error: invalid vm code");
+            } else {
+                this.vmType = vm.getRLPData()[0];
+            }
+
             this.rlpEncoded = rlpCode;
         }
     }
@@ -219,67 +225,10 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     }
 
     /**
-     * Decodes the new version of encoding which is a list of 6 elements, specifically:<br>
-     * { 0:address, 1:vmType, 2:isExternalStorage, 3:storageRoot, 4:storage, 5:code }
-     */
-    public void decodeEncodingWithVmType(RLPList rlpList, boolean fastCheck) {
-        RLPItem isExternalStorage = (RLPItem) rlpList.get(2);
-        RLPItem storage = (RLPItem) rlpList.get(4);
-        this.externalStorage = isExternalStorage.getRLPData().length > 0;
-        boolean keepStorageInMem = storage.getRLPData().length <= detailsInMemoryStorageLimit;
-
-        // No externalStorage require.
-        if (fastCheck && !externalStorage && keepStorageInMem) {
-            return;
-        }
-
-        RLPItem address = (RLPItem) rlpList.get(0);
-        RLPItem vm = (RLPItem) rlpList.get(1);
-        RLPItem storageRoot = (RLPItem) rlpList.get(3);
-        RLPElement code = rlpList.get(5);
-
-        if (address == null
-                || address.getRLPData() == null
-                || address.getRLPData().length != Address.SIZE) {
-            throw new IllegalArgumentException("rlp decode error: invalid contract address");
-        } else {
-            this.address = Address.wrap(address.getRLPData());
-        }
-
-        if (vm == null || vm.getRLPData() == null || vm.getRLPData().length == 0) {
-            throw new IllegalArgumentException("rlp decode error: invalid vm code");
-        } else {
-            this.vmType = vm.getRLPData()[0];
-        }
-
-        if (code instanceof RLPList) {
-            for (RLPElement e : ((RLPList) code)) {
-                setCode(e.getRLPData());
-            }
-        } else {
-            setCode(code.getRLPData());
-        }
-
-        // load/deserialize storage trie
-        if (externalStorage) {
-            storageTrie = new SecureTrie(getExternalStorageDataSource(), storageRoot.getRLPData());
-        } else {
-            storageTrie.deserialize(storage.getRLPData());
-        }
-        storageTrie.withPruningEnabled(prune > 0);
-
-        // switch from in-memory to external storage
-        if (!externalStorage && !keepStorageInMem) {
-            externalStorage = true;
-            storageTrie.getCache().setDB(getExternalStorageDataSource());
-        }
-    }
-
-    /**
      * Returns an rlp encoding of this AionContractDetailsImpl object.
      *
      * <p>The encoding is a list of 6 elements:<br>
-     * { 0:address, 1:vmType, 2:isExternalStorage, 3:storageRoot, 4:storage, 5:code }
+     * { 0:address, 1:isExternalStorage, 2:storageRoot, 3:storage, 4:code, 5: vmType }
      *
      * @return an rlp encoding of this.
      */
@@ -307,11 +256,11 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
             this.rlpEncoded =
                     RLP.encodeList(
                             rlpAddress,
-                            rlpVmType,
                             rlpIsExternalStorage,
                             rlpStorageRoot,
                             rlpStorage,
-                            rlpCode);
+                            rlpCode,
+                            rlpVmType);
         }
 
         return rlpEncoded;
