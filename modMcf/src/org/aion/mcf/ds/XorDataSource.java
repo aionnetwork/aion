@@ -92,7 +92,10 @@ public class XorDataSource implements ByteArrayKeyValueStore {
 
     @Override
     public void deleteBatch(Collection<byte[]> keys) {
-        // TODO Auto-generated method stub
+        // NOTE: implementing this method will cause a break in consensus
+        // due to the fact that the serialized storage must have old roots
+        // to enable reverting to a different state for the account in case of a fork
+        // TODO remove this black magic :P
     }
 
     @Override
