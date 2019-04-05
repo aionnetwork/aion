@@ -27,6 +27,7 @@ import org.aion.mcf.trie.SecureTrie;
 import org.aion.mcf.trie.Trie;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.p2p.V1Constants;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
@@ -35,7 +36,6 @@ import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionTxInfo;
-import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
@@ -646,6 +646,17 @@ public class AionRepositoryImpl
                 }
             } catch (Exception e) {
                 LOGGEN.error("Exception occurred while closing the details data source.", e);
+            }
+
+            try {
+                if (contractIndexDatabase != null) {
+                    contractIndexDatabase.close();
+                    LOGGEN.info("contractIndexDatabase store closed.");
+                    contractIndexDatabase = null;
+                }
+            } catch (Exception e) {
+                LOGGEN.error(
+                        "Exception occurred while closing the pendingTxCacheDatabase store.", e);
             }
 
             try {

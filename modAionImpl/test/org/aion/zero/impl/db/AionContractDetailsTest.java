@@ -1,6 +1,8 @@
 package org.aion.zero.impl.db;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -8,20 +10,23 @@ import static org.junit.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import org.aion.db.impl.DBVendor;
+import org.aion.db.impl.DatabaseFactory;
 import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.PruneConfig;
 import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.trie.JournalPruneDataSource;
+import org.aion.mcf.trie.SecureTrie;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.rlp.RLP;
+import org.aion.rlp.RLPList;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
-import org.aion.db.impl.DBVendor;
-import org.aion.db.impl.DatabaseFactory;
-import org.aion.mcf.config.CfgPrune;
-
 import org.aion.util.bytes.ByteUtil;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.Test;
@@ -416,5 +421,122 @@ public class AionContractDetailsTest {
 
     private static ByteArrayWrapper wrapValueFromGet(ByteArrayWrapper value) {
         return new ByteArrayWrapper(new DataWordImpl(value.getData()).getData());
+    }
+
+    @Test
+    public void testEncodingSwitchWithTrie() throws Exception {
+        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        byte[] code = RandomUtils.nextBytes(512);
+
+        // create old encoding
+        byte[] rlpAddress = RLP.encodeElement(address.toBytes());
+        byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 0);
+        byte[] rlpStorageRoot = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+        byte[] rlpStorage = RLP.encodeElement(new SecureTrie(null).serialize());
+        byte[] rlpCode = RLP.encodeList(RLP.encodeElement(code));
+
+        byte[] oldEncoding =
+                RLP.encodeList(
+                        rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
+
+        // create object using encoding
+        AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
+
+        // check that the VM type is correct
+        assertThat(details.getVmType()).isEqualTo(TransactionTypes.FVM_CREATE_CODE);
+
+        // check that the encoding has been updated
+        byte[] newEncoding =
+                RLP.encodeList(
+                        rlpAddress,
+                        rlpIsExternalStorage,
+                        rlpStorageRoot,
+                        rlpStorage,
+                        rlpCode,
+                        RLP.encodeByte(TransactionTypes.FVM_CREATE_CODE));
+        assertThat(details.getEncoded()).isEqualTo(newEncoding);
+    }
+
+    @Test
+    public void testEncodingSwitchWithRoot() throws Exception {
+        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        byte[] code = RandomUtils.nextBytes(512);
+
+        // create old encoding
+        byte[] rlpAddress = RLP.encodeElement(address.toBytes());
+        byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 1);
+        byte[] rlpStorageRoot = RLP.encodeElement(RandomUtils.nextBytes(32));
+        byte[] rlpStorage = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+        byte[] rlpCode = RLP.encodeList(RLP.encodeElement(code));
+
+        byte[] oldEncoding =
+                RLP.encodeList(
+                        rlpAddress, rlpIsExternalStorage, rlpStorageRoot, rlpStorage, rlpCode);
+
+        // create object using encoding
+        AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
+
+        // check that the VM type is correct
+        assertThat(details.getVmType()).isEqualTo(TransactionTypes.FVM_CREATE_CODE);
+
+        // check that the encoding has been updated
+        byte[] newEncoding =
+                RLP.encodeList(
+                        rlpAddress,
+                        rlpIsExternalStorage,
+                        rlpStorageRoot,
+                        rlpStorage,
+                        rlpCode,
+                        RLP.encodeByte(TransactionTypes.FVM_CREATE_CODE));
+        assertThat(details.getEncoded()).isEqualTo(newEncoding);
+    }
+
+    @Test
+    public void testEncodingWithAVM() throws Exception {
+        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        byte[] code = RandomUtils.nextBytes(512);
+
+        // create old encoding
+        byte[] rlpAddress = RLP.encodeElement(address.toBytes());
+        byte[] rlpIsExternalStorage = RLP.encodeByte((byte) 1);
+        byte[] rlpStorageRoot = RLP.encodeElement(RandomUtils.nextBytes(32));
+        byte[] rlpStorage = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+        byte[] rlpCode = RLP.encodeList(RLP.encodeElement(code));
+
+        byte[] oldEncoding =
+                RLP.encodeList(
+                        rlpAddress,
+                        rlpIsExternalStorage,
+                        rlpStorageRoot,
+                        rlpStorage,
+                        rlpCode,
+                        RLP.encodeByte(TransactionTypes.AVM_CREATE_CODE));
+
+        // create object using encoding
+        AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
+
+        // check that the VM type is correct
+        assertThat(details.getVmType()).isEqualTo(TransactionTypes.AVM_CREATE_CODE);
+    }
+
+    @Test
+    public void testEncodingSize() throws Exception {
+        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        byte[] code = RandomUtils.nextBytes(512);
+
+        AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
+        ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
+
+        AionContractDetailsImpl details = new AionContractDetailsImpl(0, 1000000);
+        details.setExternalStorageDataSource(externalStorage);
+        details.setAddress(address);
+        details.setCode(code);
+
+        // ensure correct size after use of other constructor
+        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
+        assertThat(data.size()).isEqualTo(6);
+
+        // check that the VM type is correct
+        assertThat(details.getVmType()).isEqualTo(TransactionTypes.FVM_CREATE_CODE);
     }
 }

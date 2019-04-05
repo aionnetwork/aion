@@ -522,7 +522,9 @@ public class Cli {
                 String parameter = options.isRedoImport();
 
                 if (parameter.isEmpty()) {
+                    VirtualMachineProvider.initializeAllVirtualMachines();
                     RecoveryUtils.redoMainChainImport(height);
+                    VirtualMachineProvider.shutdownAllVirtualMachines();
                     return EXIT;
                 } else {
                     try {

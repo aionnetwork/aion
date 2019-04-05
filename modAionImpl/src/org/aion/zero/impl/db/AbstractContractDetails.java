@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.aion.interfaces.db.ContractDetails;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.util.conversions.Hex;
 
@@ -22,6 +23,8 @@ public abstract class AbstractContractDetails implements ContractDetails {
     protected int detailsInMemoryStorageLimit;
 
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
+    // set to FVM_CREATE_CODE to update encoding for FVM contracts
+    protected byte vmType = TransactionTypes.FVM_CREATE_CODE;
 
     protected AbstractContractDetails() {
         this(0, 64 * 1024);
@@ -70,6 +73,14 @@ public abstract class AbstractContractDetails implements ContractDetails {
 
     public void appendCodes(Map<ByteArrayWrapper, byte[]> codes) {
         this.codes.putAll(codes);
+    }
+
+    public void setVmType(byte vmType) {
+        this.vmType = vmType;
+    }
+
+    public byte getVmType() {
+        return vmType;
     }
 
     @Override
