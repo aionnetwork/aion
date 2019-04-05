@@ -45,7 +45,7 @@ pipeline {
             }
             steps { 
                     dir('FunctionalTests') {
-                        git url: 'https://github.com/aionnetwork/node_test_harness.git', branch: 'automation' //TODO switch to master when it's gradleized
+                        git url: 'https://github.com/aionnetwork/node_test_harness.git', branch: 'master' 
                     }
 
                     sh('cp pack/aion.tar.bz2 FunctionalTests/Tests')
