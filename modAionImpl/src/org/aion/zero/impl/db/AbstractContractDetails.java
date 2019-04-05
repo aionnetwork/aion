@@ -23,8 +23,11 @@ public abstract class AbstractContractDetails implements ContractDetails {
     protected int detailsInMemoryStorageLimit;
 
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
-    // set to FVM_CREATE_CODE to update encoding for FVM contracts
-    protected byte vmType = TransactionTypes.FVM_CREATE_CODE;
+    // classes extending this rely on this value starting off as null
+    protected byte[] objectGraph = null;
+
+    // using the default transaction type to specify undefined VM
+    protected byte vmType = TransactionTypes.DEFAULT;
 
     protected AbstractContractDetails() {
         this(0, 64 * 1024);
@@ -73,14 +76,6 @@ public abstract class AbstractContractDetails implements ContractDetails {
 
     public void appendCodes(Map<ByteArrayWrapper, byte[]> codes) {
         this.codes.putAll(codes);
-    }
-
-    public void setVmType(byte vmType) {
-        this.vmType = vmType;
-    }
-
-    public byte getVmType() {
-        return vmType;
     }
 
     @Override

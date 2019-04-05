@@ -33,6 +33,9 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(cache.origContract);
         copy.setCodes(new HashMap<>(cache.getCodes()));
         copy.vmType = cache.vmType;
+        if (cache.objectGraph != null) {
+            copy.objectGraph = Arrays.copyOf(cache.objectGraph, cache.objectGraph.length);
+        }
         copy.storage = new HashMap<>(cache.storage);
         copy.setDirty(cache.isDirty());
         copy.setDeleted(cache.isDeleted());
@@ -98,11 +101,37 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
         return value;
     }
 
+    public void setVmType(byte vmType) {
+        this.vmType = vmType;
+
+        setDirty(true);
+    }
+
     public byte getVmType() {
         if (vmType == TransactionTypes.DEFAULT && origContract != null) {
-            vmType = ((AbstractContractDetails) origContract).getVmType();
+            vmType = origContract.getVmType();
         }
         return vmType;
+    }
+
+    @Override
+    public byte[] getObjectGraph() {
+        if (objectGraph == null) {
+            if (origContract == null) {
+                return null;
+            } else {
+                objectGraph = origContract.getObjectGraph();
+            }
+        }
+        return objectGraph;
+    }
+
+    @Override
+    public void setObjectGraph(byte[] graph) {
+        Objects.requireNonNull(graph);
+
+        objectGraph = graph;
+        setDirty(true);
     }
 
     /**
@@ -164,9 +193,10 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     }
 
     /**
-     * Puts all of the key-value pairs in this ContractDetailsCacheImple into the original contract
-     * injected into this class' constructor, transfers over any code and sets the original contract
-     * to dirty only if it already is dirty or if this class is dirty, otherwise sets it as clean.
+     * Puts all of the key-value pairs and object graph from this ContractDetailsCacheImpl into the
+     * original contract injected into this class' constructor, transfers over any code and sets the
+     * original contract to dirty only if it already is dirty or if this class is dirty, otherwise
+     * sets it as clean.
      */
     public void commit() {
 
@@ -174,6 +204,17 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
             return;
         }
 
+        // passing on the vm type
+        if (vmType != TransactionTypes.DEFAULT) {
+            origContract.setVmType(vmType);
+        }
+
+        // passing on the object graph
+        if (objectGraph != null) {
+            origContract.setObjectGraph(objectGraph);
+        }
+
+        // passing on the storage keys
         for (ByteArrayWrapper key : storage.keySet()) {
             ByteArrayWrapper value = storage.get(key);
             if (value != null) {
@@ -200,6 +241,12 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     /** This method is not supported. */
     @Override
     public void setDataSource(ByteArrayKeyValueStore dataSource) {
+        throw new UnsupportedOperationException("Can't set datasource in cache implementation.");
+    }
+
+    /** This method is not supported. */
+    @Override
+    public void setObjectGraphSource(ByteArrayKeyValueStore objectGraphSource) {
         throw new UnsupportedOperationException("Can't set datasource in cache implementation.");
     }
 
@@ -233,6 +280,9 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
                 (this.origContract == null) ? null : this.origContract.copy();
         ContractDetailsCacheImpl copy = new ContractDetailsCacheImpl(originalContractCopy);
         copy.vmType = this.vmType;
+        if (this.objectGraph != null) {
+            copy.objectGraph = Arrays.copyOf(this.objectGraph, this.objectGraph.length);
+        }
         copy.storage = getDeepCopyOfStorage();
         copy.prune = this.prune;
         copy.detailsInMemoryStorageLimit = this.detailsInMemoryStorageLimit;

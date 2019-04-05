@@ -9,14 +9,13 @@ import java.util.Set;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.Repository;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
-
 
 public class DummyRepo implements RepositoryCache<AccountState, IBlockStoreBase<?, ?>> {
     private Map<Address, AccountState> accounts = new HashMap<>();
@@ -101,9 +100,29 @@ public class DummyRepo implements RepositoryCache<AccountState, IBlockStoreBase<
     }
 
     @Override
+    public void saveVmType(Address contract, byte vmType) {
+        // does noting since only FVM used this implementation for testing
+    }
+
+    @Override
+    public void saveObjectGraph(Address contract, byte[] graph) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public byte[] getObjectGraph(Address contract) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public byte[] getCode(Address addr) {
         byte[] code = contracts.get(addr);
         return code == null ? ByteUtil.EMPTY_BYTE_ARRAY : code;
+    }
+
+    @Override
+    public byte getVmType(Address contract) {
+        return 0x01;
     }
 
     @Override

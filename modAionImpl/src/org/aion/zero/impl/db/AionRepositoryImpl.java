@@ -377,6 +377,18 @@ public class AionRepositoryImpl
     }
 
     @Override
+    public byte getVmType(Address contract) {
+        ContractDetails details = getContractDetails(contract);
+        return (details == null) ? TransactionTypes.DEFAULT : details.getVmType();
+    }
+
+    @Override
+    public byte[] getObjectGraph(Address contract) {
+        ContractDetails details = getContractDetails(contract);
+        return (details == null) ? EMPTY_BYTE_ARRAY : details.getObjectGraph();
+    }
+
+    @Override
     public BigInteger getNonce(Address address) {
         AccountState account = getAccountState(address);
         return (account == null) ? BigInteger.ZERO : account.getNonce();
@@ -938,8 +950,8 @@ public class AionRepositoryImpl
     public byte getVMUsed(Address contract) {
         ContractInformation ci = getIndexedContractInformation(contract);
         if (ci == null) {
-            // defaults to FastVM for backwards compatibility
-            return TransactionTypes.FVM_CREATE_CODE;
+            // signals that the value is not set
+            return TransactionTypes.DEFAULT;
         } else {
             return ci.getVmUsed();
         }

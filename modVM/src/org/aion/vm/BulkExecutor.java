@@ -12,6 +12,7 @@ import org.aion.interfaces.tx.TxExecSummary;
 import org.aion.kernel.AvmTransactionResult;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.ContractFactory;
@@ -417,8 +418,8 @@ public class BulkExecutor {
      * A transaction can only be for the avm if the avm is enabled. If it is not enabled this method
      * always returns false.
      *
-     * Otherwise, assuming the avm is enabled, a transaction is for the Avm if, and only if, one of
-     * the following is true:
+     * <p>Otherwise, assuming the avm is enabled, a transaction is for the Avm if, and only if, one
+     * of the following is true:
      *
      * <p>1. It is a CREATE transaction and its target VM is the AVM 2. It is a CALL transaction and
      * the destination is an AVM contract address 3. It is a CALL transaction and the destination is
@@ -431,7 +432,7 @@ public class BulkExecutor {
                 return isValidAVMContractDeployment(transaction.getTargetVM());
             } else {
                 Address destination = transaction.getDestinationAddress();
-                return isValidAVMContractDeployment(repositoryChild.getVMUsed(destination))
+                return isValidAVMContractDeployment(getVmType(destination))
                         || !isContractAddress(destination);
             }
         } else {
@@ -447,6 +448,24 @@ public class BulkExecutor {
             RepositoryCache cache = this.repositoryChild.startTracking();
             byte[] code = cache.getCode(address);
             return (code != null) && (code.length > 0);
+        }
+    }
+
+    private byte getVmType(Address destination) {
+        if (ContractFactory.isPrecompiledContract(destination)) {
+            // skip the call to disk
+            return TransactionTypes.FVM_CREATE_CODE;
+        } else {
+            byte storedVmType = repositoryChild.getVMUsed(destination);
+
+            // DEFAULT is returned when there was no contract information stored
+            if (storedVmType == TransactionTypes.DEFAULT) {
+                // will load contract into memory otherwise leading to consensus issues
+                RepositoryCache track = repositoryChild.startTracking();
+                return track.getVmType(destination);
+            } else {
+                return storedVmType;
+            }
         }
     }
 }
