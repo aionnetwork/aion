@@ -12,6 +12,7 @@ import org.aion.interfaces.tx.TxExecSummary;
 import org.aion.kernel.AvmTransactionResult;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.vm.types.KernelInterfaceForFastVM;
 import org.aion.mcf.vm.types.Log;
 import org.aion.precompiled.ContractFactory;
@@ -449,7 +450,7 @@ public class BulkExecutor {
             return isValidAVMContractDeployment(transaction.getTargetVM());
         } else {
             Address destination = transaction.getDestinationAddress();
-            return isValidAVMContractDeployment(repositoryChild.getVMUsed(destination))
+            return isValidAVMContractDeployment(getVmType(destination))
                     || !isContractAddress(destination);
         }
     }
@@ -462,6 +463,24 @@ public class BulkExecutor {
             RepositoryCache cache = this.repositoryChild.startTracking();
             byte[] code = cache.getCode(address);
             return (code != null) && (code.length > 0);
+        }
+    }
+
+    private byte getVmType(Address destination) {
+        if (ContractFactory.isPrecompiledContract(destination)) {
+            // skip the call to disk
+            return TransactionTypes.FVM_CREATE_CODE;
+        } else {
+            byte storedVmType = repositoryChild.getVMUsed(destination);
+
+            // DEFAULT is returned when there was no contract information stored
+            if (storedVmType == TransactionTypes.DEFAULT) {
+                // will load contract into memory otherwise leading to consensus issues
+                RepositoryCache track = repositoryChild.startTracking();
+                return track.getVmType(destination);
+            } else {
+                return storedVmType;
+            }
         }
     }
 }

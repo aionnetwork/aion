@@ -1,5 +1,7 @@
 package org.aion.zero.impl;
 
+import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,23 +10,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import org.aion.interfaces.db.ContractDetails;
-import org.aion.interfaces.db.PruneConfig;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.interfaces.db.RepositoryConfig;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.valid.BlockHeaderValidator;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.precompiled.ContractFactory;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.types.Hash256;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
@@ -317,6 +319,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
 
             RepositoryCache track = bc.getRepository().startTracking();
             track.createAccount(ContractFactory.getTotalCurrencyContractAddress());
+            track.saveVmType(ContractFactory.getTotalCurrencyContractAddress(), FVM_CREATE_CODE);
 
             for (Map.Entry<Integer, BigInteger> key : genesis.getNetworkBalances().entrySet()) {
                 // assumes only additions can be made in the genesis

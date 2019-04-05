@@ -1,5 +1,6 @@
 package org.aion.zero.impl.db;
 
+import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
@@ -7,31 +8,28 @@ import static org.junit.Assert.assertNotSame;
 import java.math.BigInteger;
 import org.aion.interfaces.db.ContractDetails;
 import org.aion.interfaces.db.Repository;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
-
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.apache.commons.lang3.RandomUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Tests the {@link AionRepositoryCache#flushCopiesTo(Repository, boolean)}
- * method.
- */
+/** Tests the {@link AionRepositoryCache#flushCopiesTo(Repository, boolean)} method. */
 public class FlushCopiesTest {
     private Repository repository;
 
     @Before
     public void setup() {
-        StandaloneBlockchain.Bundle bundle = new StandaloneBlockchain.Builder()
-            .withDefaultAccounts()
-            .withValidatorConfiguration("simple")
-            .build();
+        StandaloneBlockchain.Bundle bundle =
+                new StandaloneBlockchain.Builder()
+                        .withDefaultAccounts()
+                        .withValidatorConfiguration("simple")
+                        .build();
         this.repository = bundle.bc.getRepository();
     }
 
@@ -57,6 +55,7 @@ public class FlushCopiesTest {
         repositoryChild.setNonce(account, nonce);
         repositoryChild.addBalance(account, balance);
         repositoryChild.saveCode(account, code);
+        repositoryChild.saveVmType(account, FVM_CREATE_CODE);
         repositoryChild.flushCopiesTo(this.repository, false);
 
         // Compare object references.
@@ -95,6 +94,7 @@ public class FlushCopiesTest {
         repositoryChild.addBalance(account, balance);
         repositoryChild.saveCode(account, code);
         repositoryChild.addStorageRow(account, key, value);
+        repositoryChild.saveVmType(account, FVM_CREATE_CODE);
         repositoryChild.flushCopiesTo(this.repository, false);
 
         // Compare object references.
@@ -133,6 +133,7 @@ public class FlushCopiesTest {
         firstChild.addBalance(account, firstBalance);
         firstChild.saveCode(account, code);
         firstChild.addStorageRow(account, firstKey, firstValue);
+        firstChild.saveVmType(account, FVM_CREATE_CODE);
         firstChild.flushCopiesTo(this.repository, false);
 
         byte[] firstStorageHash = firstChild.getContractDetails(account).getStorageHash();
@@ -152,7 +153,8 @@ public class FlushCopiesTest {
         // Ensure that the first child's state has not been modified by the second.
         assertEquals(firstNonce, firstChild.getNonce(account));
         assertEquals(firstBalance, firstChild.getBalance(account));
-        assertArrayEquals(firstStorageHash, firstChild.getContractDetails(account).getStorageHash());
+        assertArrayEquals(
+                firstStorageHash, firstChild.getContractDetails(account).getStorageHash());
     }
 
     private Address randomAddress() {

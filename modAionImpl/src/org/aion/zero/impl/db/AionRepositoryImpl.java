@@ -29,6 +29,7 @@ import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.p2p.V1Constants;
+import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.util.conversions.Hex;
@@ -141,7 +142,9 @@ public class AionRepositoryImpl
                     }
                 } else {
 
-                    if (!contractDetails.isDirty()) {
+                    if (!contractDetails.isDirty()
+                            || (contractDetails.getVmType() == TransactionTypes.DEFAULT
+                                    && !ContractFactory.isPrecompiledContract(address))) {
                         // code added because contract details are not reliably
                         // marked as dirty at present
                         // TODO: issue above will be solved with the conversion to a
@@ -214,7 +217,7 @@ public class AionRepositoryImpl
         // locked by calling method
         detailsDS.update(address, contractDetails);
 
-        //TODO: add vmtype check after merge PR867
+        // TODO: add vmtype check after merge PR867
         if (contractPerformCodeDatabase != null) {
             Optional<byte[]> code = contractPerformCodeDatabase.get(address.toBytes());
             byte[] tc = contractDetails.getTransformedCode();
@@ -225,12 +228,10 @@ public class AionRepositoryImpl
             } else {
                 if (tc != null) {
                     contractPerformCodeDatabase.put(
-                        address.toBytes(), contractDetails.getTransformedCode());
+                            address.toBytes(), contractDetails.getTransformedCode());
                 }
             }
         }
-
-
     }
 
     @Override
@@ -409,6 +410,18 @@ public class AionRepositoryImpl
 
         ContractDetails details = getContractDetails(address);
         return (details == null) ? null : details.getTransformedCode();
+    }
+
+    @Override
+    public byte getVmType(Address contract) {
+        ContractDetails details = getContractDetails(contract);
+        return (details == null) ? TransactionTypes.DEFAULT : details.getVmType();
+    }
+
+    @Override
+    public byte[] getObjectGraph(Address contract) {
+        ContractDetails details = getContractDetails(contract);
+        return (details == null) ? EMPTY_BYTE_ARRAY : details.getObjectGraph();
     }
 
     @Override
@@ -993,8 +1006,8 @@ public class AionRepositoryImpl
     public byte getVMUsed(Address contract) {
         ContractInformation ci = getIndexedContractInformation(contract);
         if (ci == null) {
-            // defaults to FastVM for backwards compatibility
-            return TransactionTypes.FVM_CREATE_CODE;
+            // signals that the value is not set
+            return TransactionTypes.DEFAULT;
         } else {
             return ci.getVmUsed();
         }

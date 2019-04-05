@@ -31,6 +31,7 @@ public class CfgDb {
 
         public static final String DETAILS = "details";
         public static final String STORAGE = "storage";
+        public static final String GRAPH = "graph";
 
         public static final String STATE = "state";
         public static final String STATE_ARCHIVE = "stateArchive";

@@ -1,12 +1,14 @@
 package org.aion.zero.impl;
 
+import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
+
 import java.math.BigInteger;
 import java.util.Map;
 import org.aion.interfaces.db.RepositoryCache;
 import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
-import org.aion.precompiled.ContractFactory;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 
 /** {@link AionHub} functionality where a full instantiation of the class is not desirable. */
@@ -18,6 +20,8 @@ public class AionHubUtils {
 
         Address networkBalanceAddress = ContractFactory.getTotalCurrencyContractAddress();
         track.createAccount(networkBalanceAddress);
+        // saving FVM type for networkBalance contract
+        track.saveVmType(networkBalanceAddress, FVM_CREATE_CODE);
 
         for (Map.Entry<Integer, BigInteger> addr : genesis.getNetworkBalances().entrySet()) {
             // assumes only additions are performed in the genesis

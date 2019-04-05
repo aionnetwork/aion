@@ -2,6 +2,7 @@ package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.aion.mcf.db.DatabaseUtils.connectAndOpen;
+import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -34,7 +35,6 @@ import org.slf4j.Logger;
 
 public class AionContractDetailsTest {
     private static final Logger LOG = AionLoggerFactory.getLogger(LogEnum.DB.name());
-
 
     private static final int IN_MEMORY_STORAGE_LIMIT =
             1000000; // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit();
@@ -91,8 +91,11 @@ public class AionContractDetailsTest {
                         1000000 // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit()
                         );
         contractDetails.setCode(code);
-        contractDetails.put(new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
-        contractDetails.put(new DataWordImpl(key_2).toWrapper(), new DataWordImpl(val_2).toWrapper());
+        contractDetails.setVmType(FVM_CREATE_CODE);
+        contractDetails.put(
+                new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_2).toWrapper(), new DataWordImpl(val_2).toWrapper());
         contractDetails.setAddress(Address.ZERO_ADDRESS());
 
         byte[] data = contractDetails.getEncoded();
@@ -166,21 +169,34 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails = new AionContractDetailsImpl();
         contractDetails.setCode(code);
+        contractDetails.setVmType(FVM_CREATE_CODE);
         contractDetails.setAddress(address);
-        contractDetails.put(new DataWordImpl(key_0).toWrapper(), new DataWordImpl(val_0).toWrapper());
-        contractDetails.put(new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_0).toWrapper(), new DataWordImpl(val_0).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
         contractDetails.delete(new DataWordImpl(key_2).toWrapper());
-        contractDetails.put(new DataWordImpl(key_3).toWrapper(), new DataWordImpl(val_3).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_3).toWrapper(), new DataWordImpl(val_3).toWrapper());
         contractDetails.delete(new DataWordImpl(key_4).toWrapper());
-        contractDetails.put(new DataWordImpl(key_5).toWrapper(), new DataWordImpl(val_5).toWrapper());
-        contractDetails.put(new DataWordImpl(key_6).toWrapper(), new DataWordImpl(val_6).toWrapper());
-        contractDetails.put(new DataWordImpl(key_7).toWrapper(), new DataWordImpl(val_7).toWrapper());
-        contractDetails.put(new DataWordImpl(key_8).toWrapper(), new DataWordImpl(val_8).toWrapper());
-        contractDetails.put(new DataWordImpl(key_9).toWrapper(), new DataWordImpl(val_9).toWrapper());
-        contractDetails.put(new DataWordImpl(key_10).toWrapper(), new DataWordImpl(val_10).toWrapper());
-        contractDetails.put(new DataWordImpl(key_11).toWrapper(), new DataWordImpl(val_11).toWrapper());
-        contractDetails.put(new DataWordImpl(key_12).toWrapper(), new DataWordImpl(val_12).toWrapper());
-        contractDetails.put(new DataWordImpl(key_13).toWrapper(), new DataWordImpl(val_13).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_5).toWrapper(), new DataWordImpl(val_5).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_6).toWrapper(), new DataWordImpl(val_6).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_7).toWrapper(), new DataWordImpl(val_7).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_8).toWrapper(), new DataWordImpl(val_8).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_9).toWrapper(), new DataWordImpl(val_9).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_10).toWrapper(), new DataWordImpl(val_10).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_11).toWrapper(), new DataWordImpl(val_11).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_12).toWrapper(), new DataWordImpl(val_12).toWrapper());
+        contractDetails.put(
+                new DataWordImpl(key_13).toWrapper(), new DataWordImpl(val_13).toWrapper());
 
         byte[] data = contractDetails.getEncoded();
 
@@ -264,6 +280,7 @@ public class AionContractDetailsTest {
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
+        original.setVmType(FVM_CREATE_CODE);
         original.externalStorage = true;
 
         for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
@@ -318,6 +335,7 @@ public class AionContractDetailsTest {
         original.setDataSource(jpd);
         original.setAddress(address);
         original.setCode(code);
+        original.setVmType(FVM_CREATE_CODE);
 
         // the first 2 insertion use memory storage
         for (int i = 0; i < 2; i++) {
@@ -377,6 +395,7 @@ public class AionContractDetailsTest {
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
+        original.setVmType(FVM_CREATE_CODE);
 
         for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
             DataWordImpl key = new DataWordImpl(RandomUtils.nextBytes(16));
@@ -443,7 +462,7 @@ public class AionContractDetailsTest {
         AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
 
         // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(TransactionTypes.FVM_CREATE_CODE);
+        assertThat(details.getVmType()).isEqualTo(FVM_CREATE_CODE);
 
         // check that the encoding has been updated
         byte[] newEncoding =
@@ -453,7 +472,7 @@ public class AionContractDetailsTest {
                         rlpStorageRoot,
                         rlpStorage,
                         rlpCode,
-                        RLP.encodeByte(TransactionTypes.FVM_CREATE_CODE));
+                        RLP.encodeByte(FVM_CREATE_CODE));
         assertThat(details.getEncoded()).isEqualTo(newEncoding);
     }
 
@@ -477,7 +496,7 @@ public class AionContractDetailsTest {
         AionContractDetailsImpl details = new AionContractDetailsImpl(oldEncoding);
 
         // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(TransactionTypes.FVM_CREATE_CODE);
+        assertThat(details.getVmType()).isEqualTo(FVM_CREATE_CODE);
 
         // check that the encoding has been updated
         byte[] newEncoding =
@@ -487,7 +506,7 @@ public class AionContractDetailsTest {
                         rlpStorageRoot,
                         rlpStorage,
                         rlpCode,
-                        RLP.encodeByte(TransactionTypes.FVM_CREATE_CODE));
+                        RLP.encodeByte(FVM_CREATE_CODE));
         assertThat(details.getEncoded()).isEqualTo(newEncoding);
     }
 
@@ -520,7 +539,29 @@ public class AionContractDetailsTest {
     }
 
     @Test
-    public void testEncodingSize() throws Exception {
+    public void testEncodingSize() {
+        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        byte[] code = RandomUtils.nextBytes(512);
+
+        AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
+        ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
+
+        AionContractDetailsImpl details = new AionContractDetailsImpl(0, 1000000);
+        details.setExternalStorageDataSource(externalStorage);
+        details.setAddress(address);
+        details.setCode(code);
+        details.setVmType(FVM_CREATE_CODE);
+
+        // ensure correct size after VM type is set
+        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
+        assertThat(data.size()).isEqualTo(6);
+
+        // check that the VM type is correct
+        assertThat(details.getVmType()).isEqualTo(FVM_CREATE_CODE);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testEncodingWithoutVM() {
         Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
         byte[] code = RandomUtils.nextBytes(512);
 
@@ -532,11 +573,7 @@ public class AionContractDetailsTest {
         details.setAddress(address);
         details.setCode(code);
 
-        // ensure correct size after use of other constructor
+        // if the VM type is not set the encoding has 5 parameters
         RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
-        assertThat(data.size()).isEqualTo(6);
-
-        // check that the VM type is correct
-        assertThat(details.getVmType()).isEqualTo(TransactionTypes.FVM_CREATE_CODE);
     }
 }
