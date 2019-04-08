@@ -130,6 +130,14 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
     }
 
     @Override
+    public void setCode(byte[] code) {
+        super.setCode(code);
+        if (isDirty()) {
+            rlpEncoded = null;
+        }
+    }
+
+    @Override
     public byte[] getObjectGraph() {
         if (objectGraph == null) {
             // the object graph was not stored yet

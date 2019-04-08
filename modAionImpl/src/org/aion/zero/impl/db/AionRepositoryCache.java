@@ -61,8 +61,6 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
 
             // TODO: unify contract details initialization from Impl and Track
             ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
-            // TODO: refactor to use makeDirty() from AbstractState
-            contractDetails.setDirty(true);
             cachedDetails.put(address, contractDetails);
 
             return accountState;

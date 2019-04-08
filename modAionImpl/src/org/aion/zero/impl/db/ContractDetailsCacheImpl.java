@@ -109,6 +109,7 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
 
     public byte getVmType() {
         if (vmType == TransactionTypes.DEFAULT && origContract != null) {
+            // not necessary to set as dirty
             vmType = origContract.getVmType();
         }
         return vmType;
