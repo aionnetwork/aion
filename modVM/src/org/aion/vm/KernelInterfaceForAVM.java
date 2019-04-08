@@ -80,8 +80,10 @@ public class KernelInterfaceForAVM implements KernelInterface {
 
     @Override
     public void putObjectGraph(Address contract, byte[] graph) {
-        // TODO: should the vm type be saved
         this.repositoryCache.saveObjectGraph(contract, graph);
+        if (this.repositoryCache.getVmType(contract) != AVM_CREATE_CODE) {
+            this.repositoryCache.saveVmType(contract, AVM_CREATE_CODE);
+        }
     }
 
     @Override
