@@ -17,9 +17,7 @@ pipeline {
             when {
                 expression { 
                     GIT_BRANCH == 'master' ||
-                        GIT_BRANCH == 'dev' ||
-                        GIT_BRANCH == 'ci' ||
-                        GIT_BRANCH == 'dev-audit' 
+                        GIT_BRANCH == 'master-pre-merge' 
                 }
             }
 
