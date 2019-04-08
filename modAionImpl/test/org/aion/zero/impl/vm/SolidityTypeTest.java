@@ -22,6 +22,7 @@
  */
 package org.aion.zero.impl.vm;
 
+import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -31,10 +32,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.solidity.Compiler.Options;
@@ -48,12 +48,12 @@ import org.aion.solidity.SolidityType.DynamicArrayType;
 import org.aion.solidity.SolidityType.IntType;
 import org.aion.solidity.SolidityType.StaticArrayType;
 import org.aion.solidity.SolidityType.StringType;
+import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -119,6 +119,7 @@ public class SolidityTypeTest {
                 tx.nrgPrice().value().multiply(BigInteger.valueOf(500_000L)));
         track.createAccount(tx.getDestinationAddress());
         track.saveCode(tx.getDestinationAddress(), Hex.decode(contract));
+        track.saveVmType(tx.getDestinationAddress(), FVM_CREATE_CODE);
         track.flush();
         return track;
     }

@@ -91,6 +91,7 @@ public class AionContractDetailsTest {
                         1000000 // CfgAion.inst().getDb().getDetailsInMemoryStorageLimit()
                         );
         contractDetails.setCode(code);
+        contractDetails.setVmType(FVM_CREATE_CODE);
         contractDetails.put(
                 new DataWordImpl(key_1).toWrapper(), new DataWordImpl(val_1).toWrapper());
         contractDetails.put(
@@ -168,6 +169,7 @@ public class AionContractDetailsTest {
 
         AionContractDetailsImpl contractDetails = new AionContractDetailsImpl();
         contractDetails.setCode(code);
+        contractDetails.setVmType(FVM_CREATE_CODE);
         contractDetails.setAddress(address);
         contractDetails.put(
                 new DataWordImpl(key_0).toWrapper(), new DataWordImpl(val_0).toWrapper());
@@ -278,6 +280,7 @@ public class AionContractDetailsTest {
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
+        original.setVmType(FVM_CREATE_CODE);
         original.externalStorage = true;
 
         for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
@@ -332,6 +335,7 @@ public class AionContractDetailsTest {
         original.setDataSource(jpd);
         original.setAddress(address);
         original.setCode(code);
+        original.setVmType(FVM_CREATE_CODE);
 
         // the first 2 insertion use memory storage
         for (int i = 0; i < 2; i++) {
@@ -391,6 +395,7 @@ public class AionContractDetailsTest {
         original.setExternalStorageDataSource(externalStorage);
         original.setAddress(address);
         original.setCode(code);
+        original.setVmType(FVM_CREATE_CODE);
 
         for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT / 64 + 10; i++) {
             DataWordImpl key = new DataWordImpl(RandomUtils.nextBytes(16));
@@ -545,17 +550,30 @@ public class AionContractDetailsTest {
         details.setExternalStorageDataSource(externalStorage);
         details.setAddress(address);
         details.setCode(code);
-
-        // if the VM type is not set the encoding has 5 parameters
-        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
-        assertThat(data.size()).isEqualTo(5);
+        details.setVmType(FVM_CREATE_CODE);
 
         // ensure correct size after VM type is set
-        details.setVmType(FVM_CREATE_CODE);
-        data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
+        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
         assertThat(data.size()).isEqualTo(6);
 
         // check that the VM type is correct
         assertThat(details.getVmType()).isEqualTo(FVM_CREATE_CODE);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testEncodingWithoutVM() {
+        Address address = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
+        byte[] code = RandomUtils.nextBytes(512);
+
+        AionRepositoryImpl repository = AionRepositoryImpl.createForTesting(repoConfig);
+        ByteArrayKeyValueDatabase externalStorage = repository.getDetailsDatabase();
+
+        AionContractDetailsImpl details = new AionContractDetailsImpl(0, 1000000);
+        details.setExternalStorageDataSource(externalStorage);
+        details.setAddress(address);
+        details.setCode(code);
+
+        // if the VM type is not set the encoding has 5 parameters
+        RLPList data = (RLPList) RLP.decode2(details.getEncoded()).get(0);
     }
 }

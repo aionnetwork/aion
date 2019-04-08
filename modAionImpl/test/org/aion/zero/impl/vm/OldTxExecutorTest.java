@@ -23,6 +23,7 @@
 
 package org.aion.zero.impl.vm;
 
+import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
@@ -30,22 +31,21 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
 import org.aion.crypto.ECKeyFac;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.solidity.CompilationResult;
 import org.aion.solidity.Compiler;
 import org.aion.solidity.Compiler.Options;
+import org.aion.types.Address;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -115,6 +115,8 @@ public class OldTxExecutorTest {
         cache.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
         cache.createAccount(to);
         cache.saveCode(to, Hex.decode(contract));
+        cache.saveVmType(to, FVM_CREATE_CODE);
+
         cache.flush();
 
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
@@ -213,6 +215,7 @@ public class OldTxExecutorTest {
         repo.addBalance(from, BigInteger.valueOf(100_000).multiply(tx.nrgPrice().value()));
         repo.createAccount(to);
         repo.saveCode(to, Hex.decode(contract));
+        repo.saveVmType(to, FVM_CREATE_CODE);
         repo.flush();
 
         long t1 = System.nanoTime();
