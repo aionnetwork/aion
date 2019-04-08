@@ -362,6 +362,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
         details.externalStorage = this.externalStorage;
         details.externalStorageDataSource = this.externalStorageDataSource;
         details.dataSource = dataSource;
+        details.setTransformedCode(this.getTransformedCode());
 
         return details;
     }
@@ -404,6 +405,7 @@ public class AionContractDetailsImpl extends AbstractContractDetails {
                         : Arrays.copyOf(this.rlpEncoded, this.rlpEncoded.length);
         aionContractDetailsCopy.storageTrie =
                 (this.storageTrie == null) ? null : this.storageTrie.copy();
+        aionContractDetailsCopy.setTransformedCode(this.getTransformedCode());
         return aionContractDetailsCopy;
     }
 

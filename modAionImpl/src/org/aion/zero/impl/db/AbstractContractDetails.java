@@ -25,6 +25,7 @@ public abstract class AbstractContractDetails implements ContractDetails {
     private Map<ByteArrayWrapper, byte[]> codes = new HashMap<>();
     // set to FVM_CREATE_CODE to update encoding for FVM contracts
     protected byte vmType = TransactionTypes.FVM_CREATE_CODE;
+    private byte[] performCode;
 
     protected AbstractContractDetails() {
         this(0, 64 * 1024);
@@ -48,6 +49,18 @@ public abstract class AbstractContractDetails implements ContractDetails {
         byte[] code = codes.get(new ByteArrayWrapper(codeHash));
         return code == null ? EMPTY_BYTE_ARRAY : code;
     }
+
+    @Override
+    public byte[] getTransformedCode() {
+        return performCode;
+    }
+
+    @Override
+    public void setTransformedCode(byte[] transformedCode) {
+        performCode = transformedCode;
+        setDirty(true);
+    }
+
 
     @Override
     public void setCode(byte[] code) {

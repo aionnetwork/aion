@@ -17,7 +17,6 @@ import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.util.bytes.ByteUtil;
 
-
 public class DummyRepo implements RepositoryCache<AccountState, IBlockStoreBase<?, ?>> {
     private Map<Address, AccountState> accounts = new HashMap<>();
     private Map<Address, byte[]> contracts = new HashMap<>();
@@ -104,6 +103,11 @@ public class DummyRepo implements RepositoryCache<AccountState, IBlockStoreBase<
     public byte[] getCode(Address addr) {
         byte[] code = contracts.get(addr);
         return code == null ? ByteUtil.EMPTY_BYTE_ARRAY : code;
+    }
+
+    @Override
+    public byte[] getTransformedCode(Address address) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -233,6 +237,11 @@ public class DummyRepo implements RepositoryCache<AccountState, IBlockStoreBase<
     @Override
     public byte getVMUsed(Address contract) {
         return 0x01;
+    }
+
+    @Override
+    public void setTransformedCode(Address address, byte[] code) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

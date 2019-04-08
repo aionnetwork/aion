@@ -193,7 +193,8 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
             } else {
                 // copy the objects if they were cached locally
                 accounts.put(address, new AccountState(accountState));
-                details.put(address, new ContractDetailsCacheImpl(contractDetails));
+                ContractDetails cd = new ContractDetailsCacheImpl(contractDetails);
+                details.put(address, cd);
             }
         } finally {
             fullyReadUnlock();
@@ -222,7 +223,11 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
         fullyWriteLock();
         try {
             getAccountState(address).delete();
-            getContractDetails(address).setDeleted(true);
+            ContractDetails cd = getContractDetails(address);
+            if (cd != null) {
+                cd.setTransformedCode(null);
+                cd.setDeleted(true);
+            }
         } finally {
             fullyWriteUnlock();
         }
@@ -307,6 +312,15 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
 
         // TODO: why use codeHash here? may require refactoring
         return getContractDetails(address).getCode(codeHash);
+    }
+
+    @Override
+    public byte[] getTransformedCode(Address address) {
+        if (!hasAccountState(address)) {
+            return null;
+        }
+
+        return getContractDetails(address).getTransformedCode();
     }
 
     @Override
@@ -623,5 +637,26 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
 
     public byte getVMUsed(Address contract) {
         return repository.getVMUsed(contract);
+    }
+
+    @Override
+    public void setTransformedCode(Address contractAddr, byte[] code) {
+        if (contractAddr == null || code == null) {
+            throw new NullPointerException();
+        }
+
+        if (!hasAccountState(contractAddr)) {
+            LOG.debug("No accountState of the account: {}", contractAddr);
+            return;
+        }
+
+        ContractDetails cd = getContractDetails(contractAddr);
+        if (cd == null) {
+            LOG.debug("No contract detail of account: {}", contractAddr);
+            return;
+        }
+
+        cd.setTransformedCode(code);
+        cd.setDirty(true);
     }
 }
