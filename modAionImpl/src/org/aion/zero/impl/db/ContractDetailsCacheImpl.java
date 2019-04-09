@@ -102,9 +102,11 @@ public class ContractDetailsCacheImpl extends AbstractContractDetails {
     }
 
     public void setVmType(byte vmType) {
-        this.vmType = vmType;
+        if (this.vmType != vmType) {
+            this.vmType = vmType;
 
-        setDirty(true);
+            setDirty(true);
+        }
     }
 
     public byte getVmType() {

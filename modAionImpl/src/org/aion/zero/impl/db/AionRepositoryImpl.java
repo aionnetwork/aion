@@ -29,6 +29,7 @@ import org.aion.mcf.trie.TrieImpl;
 import org.aion.mcf.trie.TrieNodeResult;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.p2p.V1Constants;
+import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 import org.aion.util.conversions.Hex;
@@ -136,7 +137,9 @@ public class AionRepositoryImpl
                     }
                 } else {
 
-                    if (!contractDetails.isDirty()) {
+                    if (!contractDetails.isDirty()
+                            || (contractDetails.getVmType() == TransactionTypes.DEFAULT
+                                    && !ContractFactory.isPrecompiledContract(address))) {
                         // code added because contract details are not reliably
                         // marked as dirty at present
                         // TODO: issue above will be solved with the conversion to a

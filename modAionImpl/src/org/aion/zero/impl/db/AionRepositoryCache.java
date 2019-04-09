@@ -20,6 +20,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
 import org.slf4j.Logger;
@@ -61,6 +62,7 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
 
             // TODO: unify contract details initialization from Impl and Track
             ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
+            contractDetails.setDirty(true);
             cachedDetails.put(address, contractDetails);
 
             return accountState;
@@ -482,7 +484,9 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
                 ContractDetails ctd = entry.getValue().copy();
                 // TODO: this functionality will be improved with the switch to a
                 // different ContractDetails implementation
-                if (ctd != null && ctd instanceof ContractDetailsCacheImpl) {
+                if (ctd != null
+                        && ctd instanceof ContractDetailsCacheImpl
+                        && ctd.getVmType() != TransactionTypes.DEFAULT) {
                     ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl) ctd;
                     contractDetailsCache.commit();
 
