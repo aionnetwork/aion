@@ -60,6 +60,10 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         this.repositoryCache.createAccount(address);
     }
 
+    public void setVmType(Address address) {
+        this.repositoryCache.saveVmType(address, FVM_CREATE_CODE);
+    }
+
     @Override
     public boolean hasAccountState(Address address) {
         return this.repositoryCache.hasAccountState(address);
