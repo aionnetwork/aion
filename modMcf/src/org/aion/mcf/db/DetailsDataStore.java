@@ -84,6 +84,7 @@ public class DetailsDataStore<
     public synchronized void update(Address key, ContractDetails contractDetails) {
 
         contractDetails.setAddress(key);
+        contractDetails.setObjectGraphSource(graphSrc);
         ByteArrayWrapper wrappedKey = wrap(key.toBytes());
 
         // Put into cache.
