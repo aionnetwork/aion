@@ -1,5 +1,7 @@
 package org.aion.api.server.types;
 
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
+
 import java.math.BigInteger;
 import java.util.List;
 
@@ -69,7 +71,12 @@ public class Blk {
                 jsonTx.put("gasPrice", StringUtils.toJsonHex(tx.getEnergyPrice()));
                 jsonTx.put("nonce", ByteUtil.byteArrayToLong(tx.getNonce()));
                 jsonTx.put("from", StringUtils.toJsonHex(tx.getSenderAddress().toString()));
-                jsonTx.put("to", StringUtils.toJsonHex(tx.getDestinationAddress().toString()));
+                jsonTx.put(
+                        "to",
+                        StringUtils.toJsonHex(
+                                tx.getDestinationAddress() == null
+                                        ? EMPTY_BYTE_ARRAY
+                                        : tx.getDestinationAddress().toBytes()));
                 jsonTx.put("timestamp", block.getTimestamp());
                 jsonTx.put("input", StringUtils.toJsonHex(tx.getData()));
                 jsonTx.put("blockNumber", block.getNumber());

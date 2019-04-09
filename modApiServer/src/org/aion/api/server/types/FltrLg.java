@@ -52,11 +52,13 @@ public final class FltrLg extends Fltr {
             int txIndex = 0;
             for (AionTxReceipt receipt : receipts) {
                 Transaction tx = receipt.getTransaction();
-                if (matchesContractAddress(tx.getDestinationAddress().toBytes())) {
+                if (tx.getDestinationAddress() != null
+                        && matchesContractAddress(tx.getDestinationAddress().toBytes())) {
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
                         for (IExecutionLog logInfo : receipt.getLogInfoList()) {
-                            if (matchBloom(logInfo.getBloomFilterForLog()) && matchesExactly(logInfo)) {
+                            if (matchBloom(logInfo.getBloomFilterForLog())
+                                    && matchesExactly(logInfo)) {
                                 add(
                                         new EvtLg(
                                                 new TxRecptLg(
@@ -85,7 +87,8 @@ public final class FltrLg extends Fltr {
         if (matchBloom(new Bloom(blk.getLogBloom()))) {
             int txIndex = 0;
             for (Transaction txn : blk.getTransactionsList()) {
-                if (matchesContractAddress(txn.getDestinationAddress().toBytes())) {
+                if (txn.getDestinationAddress() != null
+                        && matchesContractAddress(txn.getDestinationAddress().toBytes())) {
                     // now that we know that our filter might match with some logs in this
                     // transaction, go ahead
                     // and retrieve the txReceipt from the chain
@@ -94,7 +97,8 @@ public final class FltrLg extends Fltr {
                     if (matchBloom(receipt.getBloomFilter())) {
                         int logIndex = 0;
                         for (IExecutionLog logInfo : receipt.getLogInfoList()) {
-                            if (matchBloom(logInfo.getBloomFilterForLog()) && matchesExactly(logInfo)) {
+                            if (matchBloom(logInfo.getBloomFilterForLog())
+                                    && matchesExactly(logInfo)) {
                                 add(
                                         new EvtLg(
                                                 new TxRecptLg(

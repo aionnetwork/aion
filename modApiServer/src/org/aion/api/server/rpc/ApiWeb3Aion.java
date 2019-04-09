@@ -2,6 +2,7 @@ package org.aion.api.server.rpc;
 
 import static java.util.stream.Collectors.toList;
 import static org.aion.util.HexConvert.hexStringToBytes;
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.aion.util.conversions.Hex.toHexString;
 
 import com.github.benmanes.caffeine.cache.CacheLoader;
@@ -694,7 +695,12 @@ public class ApiWeb3Aion extends ApiAion {
             txObj.put("nrgPrice", StringUtils.toJsonHex(tx.getEnergyPrice()));
             txObj.put("gas", StringUtils.toJsonHex(tx.getEnergyLimit()));
             txObj.put("nrg", StringUtils.toJsonHex(tx.getEnergyLimit()));
-            txObj.put("to", StringUtils.toJsonHex(tx.getDestinationAddress().toString()));
+            txObj.put(
+                    "to",
+                    StringUtils.toJsonHex(
+                            tx.getDestinationAddress() == null
+                                    ? EMPTY_BYTE_ARRAY
+                                    : tx.getDestinationAddress().toBytes()));
             txObj.put("value", StringUtils.toJsonHex(tx.getValue()));
             txObj.put("input", StringUtils.toJsonHex(tx.getData()));
             txObj.put("hash", StringUtils.toJsonHex(tx.getTransactionHash()));
@@ -2190,7 +2196,12 @@ public class ApiWeb3Aion extends ApiAion {
         result.put("blockHash", StringUtils.toJsonHex(block.getHash()));
         result.put("nonce", StringUtils.toJsonHex(tx.getNonce()));
         result.put("fromAddr", StringUtils.toJsonHex(tx.getSenderAddress().toBytes()));
-        result.put("toAddr", StringUtils.toJsonHex(tx.getDestinationAddress().toBytes()));
+        result.put(
+                "toAddr",
+                StringUtils.toJsonHex(
+                        tx.getDestinationAddress() == null
+                                ? EMPTY_BYTE_ARRAY
+                                : tx.getDestinationAddress().toBytes()));
         result.put("value", StringUtils.toJsonHex(tx.getValue()));
         result.put("nrgPrice", tx.getEnergyPrice());
         result.put("nrgConsumed", txInfo.getReceipt().getEnergyUsed());
@@ -2306,7 +2317,11 @@ public class ApiWeb3Aion extends ApiAion {
                 JSONArray t = new JSONArray();
                 t.put(StringUtils.toJsonHex(tx.getTransactionHash()));
                 t.put(StringUtils.toJsonHex(tx.getSenderAddress().toBytes()));
-                t.put(StringUtils.toJsonHex(tx.getDestinationAddress().toBytes()));
+                t.put(
+                        StringUtils.toJsonHex(
+                                tx.getDestinationAddress() == null
+                                        ? EMPTY_BYTE_ARRAY
+                                        : tx.getDestinationAddress().toBytes()));
                 t.put(StringUtils.toJsonHex(tx.getValue()));
                 t.put(block.getTimestamp());
                 t.put(block.getNumber());
@@ -2407,7 +2422,10 @@ public class ApiWeb3Aion extends ApiAion {
             b = blockCache.get(new ByteArrayWrapper(blockHash));
         } catch (Exception e) {
             // Catch errors if send an incorrect tx hash
-            return new RpcMsg(null, RpcError.INVALID_REQUEST, "Invalid Request" + e.getMessage());
+            return new RpcMsg(
+                    null,
+                    RpcError.INVALID_REQUEST,
+                    "Invalid Request " + e + " " + e.getMessage() != null ? e.getMessage() : "");
         }
 
         // cast will cause issues after the PoW refactor goes in

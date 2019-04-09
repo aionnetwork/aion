@@ -1,5 +1,7 @@
 package org.aion.api.server.types;
 
+import static org.aion.util.bytes.ByteUtil.EMPTY_BYTE_ARRAY;
+
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.string.StringUtils;
 import org.aion.zero.impl.types.AionBlock;
@@ -46,7 +48,12 @@ public class Tx {
         json.put("gasPrice", StringUtils.toJsonHex(tx.getEnergyPrice()));
         json.put("nonce", ByteUtil.byteArrayToLong(tx.getNonce()));
         json.put("from", StringUtils.toJsonHex(tx.getSenderAddress().toString()));
-        json.put("to", StringUtils.toJsonHex(tx.getDestinationAddress().toString()));
+        json.put(
+                "to",
+                StringUtils.toJsonHex(
+                        tx.getDestinationAddress() == null
+                                ? EMPTY_BYTE_ARRAY
+                                : tx.getDestinationAddress().toBytes()));
         json.put("timestamp", b.getTimestamp());
         json.put("input", StringUtils.toJsonHex(tx.getData()));
         json.put("blockNumber", StringUtils.toJsonHex(b.getNumber()));
