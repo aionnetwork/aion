@@ -204,7 +204,7 @@ public class StatefulnessTest {
                         abiEncodeMethodCall(method, arguments),
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);

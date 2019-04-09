@@ -10,6 +10,7 @@ import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.AddressSpecs;
 import org.aion.crypto.ECKey;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.StandaloneBlockchain;
@@ -65,6 +66,7 @@ public class AvmHelloWorldTest {
 
     @Test
     public void testDeployContract() {
+        TransactionTypeRule.allowAVMContractTransaction();
         byte[] jar = getJarBytes();
         AionTransaction transaction =
                 newTransaction(
@@ -72,7 +74,9 @@ public class AvmHelloWorldTest {
                         Address.wrap(deployerKey.getAddress()),
                         null,
                         jar,
-                        5_000_000);
+                        5_000_000,
+                    TransactionTypes.AVM_CREATE_CODE);
+
         transaction.sign(this.deployerKey);
 
         AionBlock block =
@@ -96,6 +100,7 @@ public class AvmHelloWorldTest {
 
     @Test
     public void testDeployAndCallContract() {
+        TransactionTypeRule.allowAVMContractTransaction();
         // Deploy the contract.
         byte[] jar = getJarBytes();
         AionTransaction transaction =
@@ -104,7 +109,8 @@ public class AvmHelloWorldTest {
                         Address.wrap(deployerKey.getAddress()),
                         null,
                         jar,
-                        5_000_000);
+                        5_000_000,
+                    TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
         AionBlock block =
@@ -131,7 +137,8 @@ public class AvmHelloWorldTest {
                         Address.wrap(deployerKey.getAddress()),
                         contract,
                         call,
-                        2_000_000);
+                        2_000_000,
+                    TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
 
         block =
@@ -158,7 +165,7 @@ public class AvmHelloWorldTest {
     }
 
     private AionTransaction newTransaction(
-            BigInteger nonce, Address sender, Address destination, byte[] data, long energyLimit) {
+            BigInteger nonce, Address sender, Address destination, byte[] data, long energyLimit, byte type) {
         return new AionTransaction(
                 nonce.toByteArray(),
                 sender,
@@ -167,6 +174,6 @@ public class AvmHelloWorldTest {
                 data,
                 energyLimit,
                 1,
-                TransactionTypes.AVM_CREATE_CODE);
+                type);
     }
 }

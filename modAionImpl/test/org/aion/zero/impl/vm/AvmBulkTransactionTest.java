@@ -239,7 +239,7 @@ public class AvmBulkTransactionTest {
                         abiEncodeMethodCall("incrementCounter"),
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
         return transaction;
     }
@@ -275,7 +275,7 @@ public class AvmBulkTransactionTest {
                         abiEncodeMethodCall("getCount"),
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.DEFAULT);
         transaction.sign(sender);
 
         AionBlockSummary summary =
