@@ -31,6 +31,9 @@ public class AionTransaction extends AbstractTransaction {
             RLP_TX_TYPE = 7,
             RLP_TX_SIG = 8;
 
+    public static byte CALL_KIND = 0;
+    public static byte CREATE_KIND = 3;
+
     /* Tx in encoded form */
     protected byte[] rlpEncoded;
 
@@ -512,6 +515,11 @@ public class AionTransaction extends AbstractTransaction {
     @Override
     public long getTransactionCost() {
         return transactionCost(0);
+    }
+
+    @Override
+    public byte getKind() {
+        return this.isContractCreationTransaction() ? CREATE_KIND : CALL_KIND;
     }
 
     public long transactionCost(long blockNumber) {

@@ -5,6 +5,7 @@ import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigInteger;
 import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.tx.TransactionTypes;
@@ -23,16 +24,40 @@ public class KernelInterfaceForFastVM implements KernelInterface {
     public KernelInterfaceForFastVM(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
             boolean allowNonceIncrement,
-            boolean isLocalCall) {
-
-        this(repositoryCache, allowNonceIncrement, isLocalCall, false);
+            boolean isLocalCall,
+            DataWord blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            Address blockCoinbase) {
+        this(
+                repositoryCache,
+                allowNonceIncrement,
+                isLocalCall,
+                false,
+                blockDifficulty,
+                blockNumber,
+                blockTimestamp,
+                blockNrgLimit,
+                blockCoinbase);
     }
+
+    private DataWord blockDifficulty;
+    private long blockNumber;
+    private long blockTimestamp;
+    private long blockNrgLimit;
+    private Address blockCoinbase;
 
     public KernelInterfaceForFastVM(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
             boolean allowNonceIncrement,
             boolean isLocalCall,
-            boolean fork040Enable) {
+            boolean fork040Enable,
+            DataWord blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            Address blockCoinbase) {
 
         if (repositoryCache == null) {
             throw new NullPointerException("Cannot set null repositoryCache!");
@@ -41,6 +66,11 @@ public class KernelInterfaceForFastVM implements KernelInterface {
         this.allowNonceIncrement = allowNonceIncrement;
         this.isLocalCall = isLocalCall;
         this.fork040Enable = fork040Enable;
+        this.blockDifficulty = blockDifficulty;
+        this.blockNumber = blockNumber;
+        this.blockTimestamp = blockTimestamp;
+        this.blockNrgLimit = blockNrgLimit;
+        this.blockCoinbase = blockCoinbase;
     }
 
     @Override
@@ -49,7 +79,12 @@ public class KernelInterfaceForFastVM implements KernelInterface {
                 this.repositoryCache.startTracking(),
                 this.allowNonceIncrement,
                 this.isLocalCall,
-                this.fork040Enable);
+                this.fork040Enable,
+                this.blockDifficulty,
+                this.blockNumber,
+                this.blockTimestamp,
+                this.blockNrgLimit,
+                this.blockCoinbase);
     }
 
     @Override
@@ -301,5 +336,34 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     public boolean isFork040Enable() {
         return this.fork040Enable;
+    }
+
+    @Override
+    public long getBlockNumber() {
+        return blockNumber;
+    }
+
+    @Override
+    public long getBlockTimestamp() {
+        return blockTimestamp;
+    }
+
+    @Override
+    public long getBlockEnergyLimit() {
+        return blockNrgLimit;
+    }
+
+    @Override
+    public long getBlockDifficulty() {
+        if (blockDifficulty instanceof DataWordImpl) {
+            return ((DataWordImpl) blockDifficulty).longValue();
+        } else {
+            return ((DoubleDataWord) blockDifficulty).longValue();
+        }
+    }
+
+    @Override
+    public Address getMinerAddress() {
+        return blockCoinbase;
     }
 }

@@ -4,11 +4,14 @@ import static org.aion.mcf.tx.TransactionTypes.AVM_CREATE_CODE;
 
 import java.math.BigInteger;
 import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.vm.DataWord;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.valid.TxNrgRule;
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.mcf.vm.types.DoubleDataWord;
 import org.aion.precompiled.ContractFactory;
 import org.aion.types.Address;
 import org.aion.types.ByteArrayWrapper;
@@ -18,10 +21,21 @@ public class KernelInterfaceForAVM implements KernelInterface {
     private RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache;
     private boolean allowNonceIncrement, isLocalCall;
 
+    private DataWord blockDifficulty;
+    private long blockNumber;
+    private long blockTimestamp;
+    private long blockNrgLimit;
+    private Address blockCoinbase;
+
     public KernelInterfaceForAVM(
             RepositoryCache<AccountState, IBlockStoreBase<?, ?>> repositoryCache,
             boolean allowNonceIncrement,
-            boolean isLocalCall) {
+            boolean isLocalCall,
+            DataWord blockDifficulty,
+            long blockNumber,
+            long blockTimestamp,
+            long blockNrgLimit,
+            Address blockCoinbase) {
 
         if (repositoryCache == null) {
             throw new NullPointerException("Cannot set null repositoryCache!");
@@ -29,12 +43,24 @@ public class KernelInterfaceForAVM implements KernelInterface {
         this.repositoryCache = repositoryCache;
         this.allowNonceIncrement = allowNonceIncrement;
         this.isLocalCall = isLocalCall;
+        this.blockDifficulty = blockDifficulty;
+        this.blockNumber = blockNumber;
+        this.blockTimestamp = blockTimestamp;
+        this.blockNrgLimit = blockNrgLimit;
+        this.blockCoinbase = blockCoinbase;
     }
 
     @Override
     public KernelInterfaceForAVM makeChildKernelInterface() {
         return new KernelInterfaceForAVM(
-                this.repositoryCache.startTracking(), this.allowNonceIncrement, this.isLocalCall);
+                this.repositoryCache.startTracking(),
+                this.allowNonceIncrement,
+                this.isLocalCall,
+                this.blockDifficulty,
+                this.blockNumber,
+                this.blockTimestamp,
+                this.blockNrgLimit,
+                this.blockCoinbase);
     }
 
     @Override
@@ -229,5 +255,34 @@ public class KernelInterfaceForAVM implements KernelInterface {
         } else {
             return storedVmType;
         }
+    }
+
+    @Override
+    public long getBlockNumber() {
+        return blockNumber;
+    }
+
+    @Override
+    public long getBlockTimestamp() {
+        return blockTimestamp;
+    }
+
+    @Override
+    public long getBlockEnergyLimit() {
+        return blockNrgLimit;
+    }
+
+    @Override
+    public long getBlockDifficulty() {
+        if (blockDifficulty instanceof DataWordImpl) {
+            return ((DataWordImpl) blockDifficulty).longValue();
+        } else {
+            return ((DoubleDataWord) blockDifficulty).longValue();
+        }
+    }
+
+    @Override
+    public Address getMinerAddress() {
+        return blockCoinbase;
     }
 }
