@@ -43,7 +43,8 @@ public class TransactionTypeRule {
      * @return {@code true} is this is a valid FastVM contract deployment, {@code false} otherwise
      */
     public static boolean isValidFVMContractDeployment(byte type) {
-        return !AVM_CONTRACT_TRANSACTION_ALLOWED || type == FVM_CREATE_CODE; // anything is valid here before the fork
+        return !AVM_CONTRACT_TRANSACTION_ALLOWED
+                || type == FVM_CREATE_CODE; // anything is valid here before the fork
     }
 
     /**
@@ -66,10 +67,13 @@ public class TransactionTypeRule {
         return type == AVM_CREATE_CODE && AVM_CONTRACT_TRANSACTION_ALLOWED;
     }
 
-    /**
-     * It should be triggered by 0.4 hardfork or testing purpose
-     */
+    /** It should be triggered by 0.4 hardfork or testing purpose */
     public static void allowAVMContractTransaction() {
         AVM_CONTRACT_TRANSACTION_ALLOWED = true;
+    }
+
+    /** It should be triggered by 0.4 hardfork or testing purpose */
+    public static void disallowAVMContractTransaction() {
+        AVM_CONTRACT_TRANSACTION_ALLOWED = false;
     }
 }

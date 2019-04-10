@@ -35,6 +35,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import org.aion.interfaces.db.RepositoryCache;
+import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.fastvm.FastVmResultCode;
@@ -82,6 +84,7 @@ public class ContractIntegTest {
     public void setup() {
         StandaloneBlockchain.Bundle bundle =
                 (new Builder()).withValidatorConfiguration("simple").withDefaultAccounts().build();
+        TransactionTypeRule.disallowAVMContractTransaction();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
         deployer = new Address(deployerKey.getAddress());
@@ -296,7 +299,8 @@ public class ContractIntegTest {
     }
 
     @Test
-    public void testTransferValueToPayableConstructorInsufficientFunds() throws IOException, VMException {
+    public void testTransferValueToPayableConstructorInsufficientFunds()
+            throws IOException, VMException {
         String contractName = "PayableConstructor";
         byte[] deployCode = getDeployCode(contractName);
         long nrg = 1_000_000;
@@ -1112,7 +1116,8 @@ public class ContractIntegTest {
      * call to the fastVM and this output is of variable length not predefined length.
      */
     private byte[] extractOutput(byte[] rawOutput) {
-        int headerLen = new DataWordImpl(Arrays.copyOfRange(rawOutput, 0, DataWordImpl.BYTES)).intValue();
+        int headerLen =
+                new DataWordImpl(Arrays.copyOfRange(rawOutput, 0, DataWordImpl.BYTES)).intValue();
         int outputLen =
                 new DataWordImpl(
                                 Arrays.copyOfRange(

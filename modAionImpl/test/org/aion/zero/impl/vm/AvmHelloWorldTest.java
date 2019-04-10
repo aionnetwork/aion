@@ -44,6 +44,7 @@ public class AvmHelloWorldTest {
         if (VirtualMachineProvider.isMachinesAreLive()) {
             VirtualMachineProvider.shutdownAllVirtualMachines();
         }
+        TransactionTypeRule.disallowAVMContractTransaction();
     }
 
     @Before
@@ -75,7 +76,7 @@ public class AvmHelloWorldTest {
                         null,
                         jar,
                         5_000_000,
-                    TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
 
         transaction.sign(this.deployerKey);
 
@@ -110,7 +111,7 @@ public class AvmHelloWorldTest {
                         null,
                         jar,
                         5_000_000,
-                    TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.AVM_CREATE_CODE);
         transaction.sign(this.deployerKey);
 
         AionBlock block =
@@ -138,7 +139,7 @@ public class AvmHelloWorldTest {
                         contract,
                         call,
                         2_000_000,
-                    TransactionTypes.DEFAULT);
+                        TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
 
         block =
@@ -160,12 +161,18 @@ public class AvmHelloWorldTest {
 
     private byte[] getJarBytes() {
         return new CodeAndArguments(
-                        JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class), new byte[0])
+                        JarBuilder.buildJarForMainAndClassesAndUserlib(AvmHelloWorld.class),
+                        new byte[0])
                 .encodeToBytes();
     }
 
     private AionTransaction newTransaction(
-            BigInteger nonce, Address sender, Address destination, byte[] data, long energyLimit, byte type) {
+            BigInteger nonce,
+            Address sender,
+            Address destination,
+            byte[] data,
+            long energyLimit,
+            byte type) {
         return new AionTransaction(
                 nonce.toByteArray(),
                 sender,
