@@ -233,7 +233,7 @@ public class KernelInterfaceForFastVM implements KernelInterface {
 
     @Override
     public boolean destinationAddressIsSafeForThisVM(Address address) {
-        return TransactionTypeRule.isValidFVMContractDeployment(getVmType(address));
+        return TransactionTypeRule.isValidFVMCode(getVmType(address));
     }
 
     private byte getVmType(Address destination) {

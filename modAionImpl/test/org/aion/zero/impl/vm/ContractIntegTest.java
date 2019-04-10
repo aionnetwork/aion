@@ -34,28 +34,27 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.mcf.tx.TransactionTypes;
-import org.aion.mcf.valid.TransactionTypeRule;
-import org.aion.types.Address;
 import org.aion.crypto.ECKey;
 import org.aion.fastvm.FastVmResultCode;
+import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
+import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.mcf.vm.Constants;
 import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
 import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
-
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.exception.VMException;
-import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.StandaloneBlockchain.Builder;
+import org.aion.zero.impl.db.AionRepositoryCache;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.vm.contracts.ContractUtils;
 import org.aion.zero.types.AionTransaction;
@@ -84,7 +83,7 @@ public class ContractIntegTest {
     public void setup() {
         StandaloneBlockchain.Bundle bundle =
                 (new Builder()).withValidatorConfiguration("simple").withDefaultAccounts().build();
-        TransactionTypeRule.disallowAVMContractTransaction();
+        TransactionTypeRule.allowAVMContractTransaction();
         blockchain = bundle.bc;
         deployerKey = bundle.privateKeys.get(0);
         deployer = new Address(deployerKey.getAddress());
@@ -121,7 +120,13 @@ public class ContractIntegTest {
         // to == null  signals that this is contract creation.
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
@@ -162,7 +167,13 @@ public class ContractIntegTest {
         // to == null  signals that this is contract creation.
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), new byte[0], nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        new byte[0],
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
@@ -199,7 +210,13 @@ public class ContractIntegTest {
         // to == null  signals that this is contract creation.
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
@@ -237,7 +254,13 @@ public class ContractIntegTest {
         // to == null  signals that this is contract creation.
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
@@ -276,7 +299,13 @@ public class ContractIntegTest {
         // to == null  signals that this is contract creation.
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
@@ -311,7 +340,13 @@ public class ContractIntegTest {
         // to == null  signals that this is contract creation.
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertTrue(tx.isContractCreationTransaction());
 
@@ -350,7 +385,13 @@ public class ContractIntegTest {
 
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
 
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
@@ -366,7 +407,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         Hex.decode(getMsgFunctionHash),
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -391,7 +433,13 @@ public class ContractIntegTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         Address contract =
@@ -408,7 +456,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -435,7 +484,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -462,7 +512,13 @@ public class ContractIntegTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         Address contract =
@@ -481,7 +537,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -509,7 +566,13 @@ public class ContractIntegTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         Address contract =
@@ -526,7 +589,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -553,7 +617,13 @@ public class ContractIntegTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         Address contract =
@@ -575,7 +645,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -604,7 +675,13 @@ public class ContractIntegTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         Address contract =
@@ -625,7 +702,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -655,7 +733,13 @@ public class ContractIntegTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         Address multiFeatureContract =
@@ -670,11 +754,17 @@ public class ContractIntegTest {
         value = BigInteger.ZERO;
         tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         nonce = nonce.add(BigInteger.ONE);
         Address callerContract =
                 deployContract(repo, tx, contractName, null, value, nrg, nrgPrice, nonce);
-        Address recipient = new Address(RandomUtils.nextBytes(Address.SIZE));
+        Address recipient = Address.wrap(RandomUtils.nextBytes(Address.SIZE));
         deployerBalance = repo.getBalance(deployer);
         deployerNonce = repo.getNonce(deployer);
 
@@ -687,7 +777,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -719,7 +810,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -745,7 +837,13 @@ public class ContractIntegTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
         RepositoryCache repo = blockchain.getRepository().startTracking();
         nonce = nonce.add(BigInteger.ONE);
         Address contract =
@@ -765,7 +863,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -797,7 +896,8 @@ public class ContractIntegTest {
                         BigInteger.ZERO.toByteArray(),
                         input,
                         nrg,
-                        nrgPrice);
+                        nrgPrice,
+                        TransactionTypes.DEFAULT);
         tx.sign(deployerKey);
         assertFalse(tx.isContractCreationTransaction());
 
@@ -870,7 +970,13 @@ public class ContractIntegTest {
         BigInteger nonce = BigInteger.ZERO;
         AionTransaction tx =
                 new AionTransaction(
-                        nonce.toByteArray(), null, value.toByteArray(), deployCode, nrg, nrgPrice);
+                        nonce.toByteArray(),
+                        null,
+                        value.toByteArray(),
+                        deployCode,
+                        nrg,
+                        nrgPrice,
+                        TransactionTypes.FVM_CREATE_CODE);
 
         // Mock up the repo so that the contract address already exists.
         AionRepositoryCache repo = mock(AionRepositoryCache.class);
@@ -1134,7 +1240,14 @@ public class ContractIntegTest {
             AionTransaction tx, IAionBlock block, RepositoryCache repo) {
         ExecutionBatch details = new ExecutionBatch(block, Collections.singletonList(tx));
         return new BulkExecutor(
-                details, repo, false, true, block.getNrgLimit(), LOGGER_VM, getPostExecutionWork());
+                details,
+                repo,
+                false,
+                true,
+                block.getNrgLimit(),
+                true,
+                LOGGER_VM,
+                getPostExecutionWork());
     }
 
     private PostExecutionWork getPostExecutionWork() {

@@ -215,7 +215,7 @@ public class KernelInterfaceForAVM implements KernelInterface {
         }
 
         // Otherwise, it must be an Avm contract address.
-        return TransactionTypeRule.isValidAVMContractDeployment(getVmType(address));
+        return TransactionTypeRule.isValidAVMCode(getVmType(address));
     }
 
     private byte getVmType(Address destination) {
