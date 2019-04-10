@@ -32,18 +32,8 @@ public class TransactionTypeRule {
      * @param type the type of a transaction applicable on the FastVM
      * @return {@code true} is this is an FastVM transaction, {@code false} otherwise
      */
-    public static boolean isValidFVMTransaction(byte type) {
+    public static boolean isValidFVMCode(byte type) {
         return FVM.contains(type);
-    }
-
-    /**
-     * Checks if the given transaction is a valid contract deployment on the FastVM.
-     *
-     * @param type the type of a contract creation transaction
-     * @return {@code true} is this is a valid FastVM contract deployment, {@code false} otherwise
-     */
-    public static boolean isValidFVMContractDeployment(byte type) {
-        return !AVM_CONTRACT_TRANSACTION_ALLOWED || type == FVM_CREATE_CODE; // anything is valid here before the fork
     }
 
     /**
@@ -52,7 +42,7 @@ public class TransactionTypeRule {
      * @param type the type of a transaction applicable on the AVM
      * @return {@code true} is this is an AVM transaction, {@code false} otherwise
      */
-    public static boolean isValidAVMTransaction(byte type) {
+    public static boolean isValidAVMCode(byte type) {
         return AVM.contains(type);
     }
 
@@ -66,10 +56,13 @@ public class TransactionTypeRule {
         return type == AVM_CREATE_CODE && AVM_CONTRACT_TRANSACTION_ALLOWED;
     }
 
-    /**
-     * It should be triggered by 0.4 hardfork or testing purpose
-     */
+    /** It should be triggered by 0.4 hardfork or testing purpose */
     public static void allowAVMContractTransaction() {
         AVM_CONTRACT_TRANSACTION_ALLOWED = true;
+    }
+
+    /** It should be triggered by 0.4 hardfork or testing purpose */
+    public static void disallowAVMContractTransaction() {
+        AVM_CONTRACT_TRANSACTION_ALLOWED = false;
     }
 }

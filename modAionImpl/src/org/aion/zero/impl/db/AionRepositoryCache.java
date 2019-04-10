@@ -324,6 +324,55 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
     }
 
     @Override
+    public void saveVmType(Address contract, byte vmType) {
+        fullyWriteLock();
+        try {
+            getContractDetails(contract).setVmType(vmType);
+        } finally {
+            fullyWriteUnlock();
+        }
+    }
+
+    /** IMPORTNAT: a new cache must be created before calling this method */
+    @Override
+    public byte getVmType(Address contract) {
+        // retrieving the VM type involves updating the contract details values
+        // this requires loading the account and details
+        fullyWriteLock();
+        try {
+            return getContractDetails(contract).getVmType();
+        } finally {
+            fullyWriteUnlock();
+        }
+    }
+
+    @Override
+    public void saveObjectGraph(Address contract, byte[] graph) {
+        // TODO: unsure about impl
+        fullyWriteLock();
+        try {
+            // this change will mark the contract as dirty (requires update in the db)
+            ContractDetails contractDetails = getContractDetails(contract);
+            contractDetails.setObjectGraph(graph);
+
+            // update the storage hash
+            getAccountState(contract).setStateRoot(contractDetails.getStorageHash());
+        } finally {
+            fullyWriteUnlock();
+        }
+    }
+
+    @Override
+    public byte[] getObjectGraph(Address contract) {
+        fullyWriteLock();
+        try {
+            return getContractDetails(contract).getObjectGraph();
+        } finally {
+            fullyWriteUnlock();
+        }
+    }
+
+    @Override
     public void addStorageRow(Address address, ByteArrayWrapper key, ByteArrayWrapper value) {
         lockDetails.writeLock().lock();
         try {

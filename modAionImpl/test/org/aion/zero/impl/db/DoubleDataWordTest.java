@@ -1,25 +1,25 @@
 package org.aion.zero.impl.db;
 
+import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
 
 import java.util.Properties;
 import java.util.Random;
-import org.aion.interfaces.db.ContractDetails;
-import org.aion.interfaces.db.PruneConfig;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.interfaces.db.RepositoryConfig;
-import org.aion.interfaces.db.Repository;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
 import org.aion.crypto.ECKeyFac;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
+import org.aion.mcf.vm.types.DataWordImpl;
 import org.aion.mcf.vm.types.DoubleDataWord;
-
+import org.aion.types.Address;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -99,7 +99,9 @@ public class DoubleDataWordTest {
         doubleValLast[0] = (byte) 0x3;
 
         track.addStorageRow(
-                addr, new DataWordImpl(singleKey).toWrapper(), new DataWordImpl(singleVal).toWrapper());
+                addr,
+                new DataWordImpl(singleKey).toWrapper(),
+                new DataWordImpl(singleVal).toWrapper());
         track.addStorageRow(
                 addr,
                 new DoubleDataWord(doubleKeyFirst).toWrapper(),
@@ -108,6 +110,8 @@ public class DoubleDataWordTest {
                 addr,
                 new DoubleDataWord(doubleKeyLast).toWrapper(),
                 new DoubleDataWord(doubleValLast).toWrapper());
+        track.saveVmType(addr, FVM_CREATE_CODE);
+
         track.flush();
 
         byte[] singleRes =
@@ -137,6 +141,8 @@ public class DoubleDataWordTest {
         singVal[0] = (byte) 0xAC;
         track.addStorageRow(
                 addr, new DataWordImpl(singKey).toWrapper(), new DataWordImpl(singVal).toWrapper());
+        track.saveVmType(addr, FVM_CREATE_CODE);
+
         track.flush();
 
         byte[] doubleKeyPrefix = new byte[DoubleDataWord.BYTES];
@@ -144,7 +150,8 @@ public class DoubleDataWordTest {
         System.arraycopy(singKey, 0, doubleKeyPrefix, 0, DataWordImpl.BYTES);
         System.arraycopy(singKey, 0, doubleKeySuffix, DataWordImpl.BYTES, DataWordImpl.BYTES);
 
-        byte[] singRes = track.getStorageValue(addr, new DataWordImpl(singKey).toWrapper()).getData();
+        byte[] singRes =
+                track.getStorageValue(addr, new DataWordImpl(singKey).toWrapper()).getData();
         assertArrayEquals(singVal, singRes);
         assertNull(track.getStorageValue(addr, new DoubleDataWord(doubleKeyPrefix).toWrapper()));
         assertNull(track.getStorageValue(addr, new DoubleDataWord(doubleKeySuffix).toWrapper()));

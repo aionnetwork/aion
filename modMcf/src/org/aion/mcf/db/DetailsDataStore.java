@@ -25,6 +25,7 @@ public class DetailsDataStore<
 
     private ByteArrayKeyValueDatabase detailsSrc;
     private ByteArrayKeyValueDatabase storageSrc;
+    private ByteArrayKeyValueDatabase graphSrc;
     private Set<ByteArrayWrapper> removes = new HashSet<>();
 
     public DetailsDataStore() {}
@@ -32,16 +33,20 @@ public class DetailsDataStore<
     public DetailsDataStore(
             ByteArrayKeyValueDatabase detailsCache,
             ByteArrayKeyValueDatabase storageCache,
+            ByteArrayKeyValueDatabase graphCache,
             RepositoryConfig repoConfig) {
 
         this.repoConfig = repoConfig;
-        withDb(detailsCache, storageCache);
+        withDb(detailsCache, storageCache, graphCache);
     }
 
     public DetailsDataStore<BLK, BH> withDb(
-            ByteArrayKeyValueDatabase detailsSrc, ByteArrayKeyValueDatabase storageSrc) {
+            ByteArrayKeyValueDatabase detailsSrc,
+            ByteArrayKeyValueDatabase storageSrc,
+            ByteArrayKeyValueDatabase graphSrc) {
         this.detailsSrc = detailsSrc;
         this.storageSrc = storageSrc;
+        this.graphSrc = graphSrc;
         this.storageDSPrune = new JournalPruneDataSource(storageSrc);
         return this;
     }
@@ -69,6 +74,7 @@ public class DetailsDataStore<
         // Found something from cache or database, return it by decoding it.
         ContractDetails detailsImpl = repoConfig.contractDetailsImpl();
         detailsImpl.setDataSource(storageDSPrune);
+        detailsImpl.setObjectGraphSource(graphSrc);
         detailsImpl.decode(rawDetails.get()); // We can safely get as we checked
         // if it is present.
 
@@ -78,6 +84,7 @@ public class DetailsDataStore<
     public synchronized void update(Address key, ContractDetails contractDetails) {
 
         contractDetails.setAddress(key);
+        contractDetails.setObjectGraphSource(graphSrc);
         ByteArrayWrapper wrappedKey = wrap(key.toBytes());
 
         // Put into cache.
@@ -141,6 +148,7 @@ public class DetailsDataStore<
             // Decode the details.
             ContractDetails detailsImpl = repoConfig.contractDetailsImpl();
             detailsImpl.setDataSource(storageDSPrune);
+            detailsImpl.setObjectGraphSource(graphSrc);
             detailsImpl.decode(rawDetails.get(), true);
             // We can safely get as we checked if it is present.
 
@@ -161,6 +169,7 @@ public class DetailsDataStore<
         try {
             detailsSrc.close();
             storageSrc.close();
+            graphSrc.close();
         } catch (Exception e) {
             throw new RuntimeException("error closing db");
         }

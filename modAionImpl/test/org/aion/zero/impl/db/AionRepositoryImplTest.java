@@ -1,28 +1,27 @@
 package org.aion.zero.impl.db;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 
 import java.math.BigInteger;
 import java.util.Optional;
 import java.util.Properties;
-
-import org.aion.interfaces.db.ContractDetails;
-import org.aion.interfaces.db.PruneConfig;
-import org.aion.interfaces.db.RepositoryCache;
-import org.aion.interfaces.db.RepositoryConfig;
-import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
-import org.aion.interfaces.db.Repository;
-import org.aion.mcf.vm.types.DataWordImpl;
-import org.aion.types.Address;
-import org.aion.types.ByteArrayWrapper;
 import org.aion.crypto.HashUtil;
 import org.aion.db.impl.DBVendor;
 import org.aion.db.impl.DatabaseFactory;
+import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
+import org.aion.interfaces.db.ContractDetails;
+import org.aion.interfaces.db.PruneConfig;
+import org.aion.interfaces.db.Repository;
+import org.aion.interfaces.db.RepositoryCache;
+import org.aion.interfaces.db.RepositoryConfig;
 import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.AccountState;
 import org.aion.mcf.db.IBlockStoreBase;
 import org.aion.mcf.trie.TrieNodeResult;
-
+import org.aion.mcf.vm.types.DataWordImpl;
+import org.aion.types.Address;
+import org.aion.types.ByteArrayWrapper;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.zero.impl.sync.DatabaseType;
 import org.junit.FixMethodOrder;
@@ -93,6 +92,7 @@ public class AionRepositoryImplTest {
 
         byte[] originalRoot = repository.getRoot();
         track.saveCode(defaultAccount, defaultAccount.toBytes());
+        track.saveVmType(defaultAccount, FVM_CREATE_CODE);
 
         track.flush();
 
@@ -117,7 +117,10 @@ public class AionRepositoryImplTest {
         byte[] key = HashUtil.blake128("hello".getBytes());
         byte[] value = HashUtil.blake128("world".getBytes());
         track.addStorageRow(
-                defaultAccount, new DataWordImpl(key).toWrapper(), new DataWordImpl(value).toWrapper());
+                defaultAccount,
+                new DataWordImpl(key).toWrapper(),
+                new DataWordImpl(value).toWrapper());
+        track.saveVmType(defaultAccount, FVM_CREATE_CODE);
 
         track.flush();
 
@@ -146,7 +149,10 @@ public class AionRepositoryImplTest {
         byte[] key = HashUtil.blake128("hello".getBytes());
         byte[] value = HashUtil.blake128("world".getBytes());
         track.addStorageRow(
-                defaultAccount, new DataWordImpl(key).toWrapper(), new DataWordImpl(value).toWrapper());
+                defaultAccount,
+                new DataWordImpl(key).toWrapper(),
+                new DataWordImpl(value).toWrapper());
+        track.saveVmType(defaultAccount, FVM_CREATE_CODE);
 
         // does not call parent's flush
         track.flush();
@@ -185,7 +191,10 @@ public class AionRepositoryImplTest {
         final byte[] originalRoot = repository.getRoot();
 
         repoTrack.addStorageRow(
-                defaultAccount, new DataWordImpl(key).toWrapper(), new DataWordImpl(value).toWrapper());
+                defaultAccount,
+                new DataWordImpl(key).toWrapper(),
+                new DataWordImpl(value).toWrapper());
+        repoTrack.saveVmType(defaultAccount, FVM_CREATE_CODE);
 
         ByteArrayWrapper retrievedStorageValue =
                 repoTrack.getStorageValue(defaultAccount, new DataWordImpl(key).toWrapper());

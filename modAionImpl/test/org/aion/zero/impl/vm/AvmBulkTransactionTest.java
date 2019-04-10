@@ -10,18 +10,16 @@ import java.util.List;
 import org.aion.avm.core.dappreading.JarBuilder;
 import org.aion.avm.core.util.ABIUtil;
 import org.aion.avm.core.util.CodeAndArguments;
-import org.aion.avm.userlib.abi.ABIDecoder;
-import org.aion.avm.userlib.abi.ABIEncoder;
 import org.aion.crypto.ECKey;
 import org.aion.crypto.ECKeyFac;
 import org.aion.mcf.core.ImportResult;
+import org.aion.mcf.tx.TransactionTypes;
 import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.StandaloneBlockchain;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
-import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.impl.vm.contracts.Statefulness;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxExecSummary;
@@ -70,6 +68,7 @@ public class AvmBulkTransactionTest {
     public void tearDown() {
         this.blockchain = null;
         this.deployerKey = null;
+        TransactionTypeRule.disallowAVMContractTransaction();
     }
 
     @Test
@@ -280,8 +279,7 @@ public class AvmBulkTransactionTest {
 
         AionBlockSummary summary =
                 sendTransactionsInBulkInSingleBlock(Collections.singletonList(transaction));
-        return (int)
-                ABIUtil.decodeOneObject(summary.getReceipts().get(0).getTransactionOutput());
+        return (int) ABIUtil.decodeOneObject(summary.getReceipts().get(0).getTransactionOutput());
     }
 
     private AionBlockSummary sendTransactionsInBulkInSingleBlock(

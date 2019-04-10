@@ -52,6 +52,7 @@ public abstract class AbstractRepository<
     protected static final String CONTRACT_INDEX_DB = Names.CONTRACT_INDEX;
     protected static final String DETAILS_DB = Names.DETAILS;
     protected static final String STORAGE_DB = Names.STORAGE;
+    protected static final String GRAPH_DB = Names.GRAPH;
     protected static final String STATE_DB = Names.STATE;
     protected static final String STATE_ARCHIVE_DB = Names.STATE_ARCHIVE;
     protected static final String PENDING_TX_POOL_DB = Names.TX_POOL;
@@ -72,6 +73,7 @@ public abstract class AbstractRepository<
     protected ByteArrayKeyValueDatabase contractIndexDatabase;
     protected ByteArrayKeyValueDatabase detailsDatabase;
     protected ByteArrayKeyValueDatabase storageDatabase;
+    protected ByteArrayKeyValueDatabase graphDatabase;
     protected ByteArrayKeyValueDatabase indexDatabase;
     protected ByteArrayKeyValueDatabase blockDatabase;
     protected ByteArrayKeyValueDatabase stateDatabase;
@@ -190,7 +192,8 @@ public abstract class AbstractRepository<
             }
             databaseGroup.add(transactionDatabase);
 
-            // getting details specific properties
+            // getting contract index specific properties
+            // this db will be used only for fast sync
             sharedProps = cfg.getDatabaseConfig(CONTRACT_INDEX_DB);
             sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
             sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
@@ -233,6 +236,17 @@ public abstract class AbstractRepository<
                 throw newException(STORAGE_DB, sharedProps);
             }
             databaseGroup.add(storageDatabase);
+
+            // getting graph specific properties
+            sharedProps = cfg.getDatabaseConfig(GRAPH_DB);
+            sharedProps.setProperty(Props.ENABLE_LOCKING, "false");
+            sharedProps.setProperty(Props.DB_PATH, cfg.getDbPath());
+            sharedProps.setProperty(Props.DB_NAME, GRAPH_DB);
+            this.graphDatabase = connectAndOpen(sharedProps, LOG);
+            if (graphDatabase == null || graphDatabase.isClosed()) {
+                throw newException(GRAPH_DB, sharedProps);
+            }
+            databaseGroup.add(graphDatabase);
 
             // getting index specific properties
             sharedProps = cfg.getDatabaseConfig(INDEX_DB);
@@ -283,7 +297,9 @@ public abstract class AbstractRepository<
             databaseGroup.add(pendingTxCacheDatabase);
 
             // Setup the cache for transaction data source.
-            this.detailsDS = new DetailsDataStore<>(detailsDatabase, storageDatabase, this.cfg);
+            this.detailsDS =
+                    new DetailsDataStore<>(
+                            detailsDatabase, storageDatabase, graphDatabase, this.cfg);
 
             // pruning config
             pruneEnabled = this.cfg.getPruneConfig().isEnabled();
