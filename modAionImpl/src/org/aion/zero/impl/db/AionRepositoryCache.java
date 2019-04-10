@@ -645,18 +645,23 @@ public class AionRepositoryCache implements RepositoryCache<AccountState, IBlock
             throw new NullPointerException();
         }
 
-        if (!hasAccountState(contractAddr)) {
-            LOG.debug("No accountState of the account: {}", contractAddr);
-            return;
-        }
+        fullyWriteLock();
+        try {
+            if (!hasAccountState(contractAddr)) {
+                LOG.debug("No accountState of the account: {}", contractAddr);
+                return;
+            }
 
-        ContractDetails cd = getContractDetails(contractAddr);
-        if (cd == null) {
-            LOG.debug("No contract detail of account: {}", contractAddr);
-            return;
-        }
+            ContractDetails cd = getContractDetails(contractAddr);
+            if (cd == null) {
+                LOG.debug("No contract detail of account: {}", contractAddr);
+                return;
+            }
 
-        cd.setTransformedCode(code);
-        cd.setDirty(true);
+            cd.setTransformedCode(code);
+            cd.setDirty(true);
+        } finally{
+            fullyWriteUnlock();
+        }
     }
 }
