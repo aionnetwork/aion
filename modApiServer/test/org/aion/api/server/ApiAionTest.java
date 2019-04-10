@@ -130,12 +130,18 @@ public class ApiAionTest {
         api = new ApiAionImpl(impl);
         repo = AionRepositoryImpl.inst();
         testStartTime = System.currentTimeMillis();
+
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
         VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @After
     public void tearDown() {
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
 
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);

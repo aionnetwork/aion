@@ -14,6 +14,7 @@ import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.trie.TrieImpl;
 import org.aion.util.bytes.ByteUtil;
 import org.aion.util.conversions.Hex;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.AionTransaction;
@@ -27,6 +28,7 @@ public class BlockchainDataRecoveryTest {
     private static final int NUMBER_OF_BLOCKS = 20;
     private static final int MAX_TX_PER_BLOCK = 60;
 
+
     @BeforeClass
     public static void setup() {
         // logging to see errors
@@ -35,6 +37,11 @@ public class BlockchainDataRecoveryTest {
         cfg.put("CONS", "INFO");
 
         AionLoggerFactory.init(cfg);
+
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
+        VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     /** Test the recovery of the world state with start from the state of an ancestor block. */

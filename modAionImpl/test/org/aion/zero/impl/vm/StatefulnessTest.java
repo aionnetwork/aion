@@ -42,12 +42,17 @@ public class StatefulnessTest {
 
     @BeforeClass
     public static void setupAvm() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
         VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @AfterClass
     public static void tearDownAvm() {
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
     }
 
     @Before
@@ -61,7 +66,7 @@ public class StatefulnessTest {
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
         this.deployer = Address.wrap(this.deployerKey.getAddress());
-        TransactionTypeRule.allowAVMContractDeployment();
+        TransactionTypeRule.allowAVMContractTransaction();
     }
 
     @After
@@ -199,7 +204,7 @@ public class StatefulnessTest {
                         abiEncodeMethodCall(method, arguments),
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
 
         return sendTransactions(transaction);

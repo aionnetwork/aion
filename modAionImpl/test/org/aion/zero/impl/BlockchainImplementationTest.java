@@ -14,12 +14,15 @@ import org.aion.mcf.config.CfgPrune;
 import org.aion.mcf.core.FastImportResult;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.ByteArrayWrapper;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.types.A0BlockHeader;
 import org.aion.zero.types.AionTransaction;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -32,6 +35,21 @@ public class BlockchainImplementationTest {
 
     private static final List<ECKey> accounts = BlockchainTestUtils.generateAccounts(10);
     private static final int MAX_TX_PER_BLOCK = 30;
+
+    @Before
+    public void setup() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
+        VirtualMachineProvider.initializeAllVirtualMachines();
+    }
+
+    @After
+    public void shutdown() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
+    }
 
     /**
      * In TOP mode only the top K blocks have a stored state. Blocks older than the top K are have

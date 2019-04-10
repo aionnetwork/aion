@@ -28,6 +28,7 @@ import org.aion.precompiled.ContractFactory;
 import org.aion.types.Hash256;
 import org.aion.zero.exceptions.HeaderStructureException;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
+import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.core.energy.AbstractEnergyStrategyLimit;
 import org.aion.zero.impl.core.energy.TargetStrategy;
 import org.aion.zero.impl.db.AionRepositoryImpl;
@@ -257,11 +258,6 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                                     .getEnergyDivisorLimitLong(),
                                             10_000_000L);
                                 }
-
-                                @Override
-                                public boolean isAvmEnabled() {
-                                    return enableAvm;
-                                }
                             }
                             : this.a0Config;
 
@@ -285,7 +281,7 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                                 @Override
                                 public BlockHeaderValidator<A0BlockHeader>
                                         createBlockHeaderValidator() {
-                                    return new BlockHeaderValidator<A0BlockHeader>(
+                                    return new BlockHeaderValidator<>(
                                             Arrays.asList(
                                                     new AionExtraDataRule(
                                                             this.constants
@@ -327,7 +323,8 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
                 track.addStorageRow(
                         ContractFactory.getTotalCurrencyContractAddress(),
                         new DataWordImpl(key.getKey()).toWrapper(),
-                        new ByteArrayWrapper(new DataWordImpl(key.getValue()).getNoLeadZeroesData()));
+                        new ByteArrayWrapper(
+                                new DataWordImpl(key.getValue()).getNoLeadZeroesData()));
             }
 
             for (Address key : genesis.getPremine().keySet()) {
@@ -467,5 +464,9 @@ public class StandaloneBlockchain extends AionBlockchainImpl {
             // rethrow as runtime
             throw new RuntimeException(e);
         }
+    }
+
+    public void set040ForkNumber(long n) {
+        fork040BlockNumber = n;
     }
 }

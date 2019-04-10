@@ -3,9 +3,9 @@
     url = https://github.com/aionnetwork/aion_fastvm
     branch = master
 [submodule "aion_gui"]
-	path = aion_gui
-	url = https://github.com/aionnetwork/aion_gui
+    path = aion_gui
+    url = https://github.com/aionnetwork/aion_gui
 [submodule "aion_vm_api"]
-	path = aion_vm_api
-	url = https://github.com/aionnetwork/vm_api.git
-	branch = master
+    path = aion_vm_api
+    url = https://github.com/aionnetwork/vm_api.git
+    branch = master

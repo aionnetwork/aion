@@ -114,15 +114,22 @@ public class ApiAion0Test {
         CfgAion.inst().getDb().setPath(DATABASE_PATH);
         api = new ApiAion0(AionImpl.inst());
         testStartTime = System.currentTimeMillis();
+
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
         VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @After
     public void tearDown() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
+
         api.shutDown();
         rsp = null;
 
-        VirtualMachineProvider.shutdownAllVirtualMachines();
 
         // get a list of all the files in keystore directory
         File folder = new File(KEYSTORE_PATH);

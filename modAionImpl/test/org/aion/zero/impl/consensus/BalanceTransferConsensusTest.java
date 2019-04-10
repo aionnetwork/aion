@@ -50,13 +50,19 @@ public class BalanceTransferConsensusTest {
                         .withAvmEnabled()
                         .build();
         this.blockchain = bundle.bc;
+
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
         VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @After
     public void tearDown() {
         this.blockchain = null;
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
     }
 
     private static final String RECIPIENT1 =

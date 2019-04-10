@@ -47,14 +47,20 @@ public class ChainConfiguration implements IChainCfg<AionBlock, AionTransaction>
 
     protected Address tokenBridgingOwnerAddress;
 
-    public ChainConfiguration() {
-        this(new BlockConstants());
+    public ChainConfiguration(final Long monetaryUpdateBlkNum, final BigInteger initialSupply) {
+        this(new BlockConstants(), monetaryUpdateBlkNum, initialSupply);
     }
 
-    public ChainConfiguration(BlockConstants constants) {
+    public ChainConfiguration() {
+        this(new BlockConstants(), null, BigInteger.ZERO);
+    }
+
+    public ChainConfiguration(BlockConstants constants, Long monetaryUpdateBlkNum, BigInteger initialSupply) {
         this.constants = constants;
         DiffCalc diffCalcInternal = new DiffCalc(constants);
-        RewardsCalculator rewardsCalcInternal = new RewardsCalculator(constants);
+
+
+        RewardsCalculator rewardsCalcInternal = new RewardsCalculator(constants, monetaryUpdateBlkNum, initialSupply);
 
         this.difficultyCalculatorAdapter =
                 (parent, grandParent) -> {

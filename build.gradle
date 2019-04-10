@@ -12,7 +12,7 @@ def dirPack = "./pack"
 def dirLibFile = "lib"
 def dirModFile ="./mod"
 def javaHome = System.getProperty('java.home')
-def vmVersion = "0.3.2"
+def vmVersion = "0.4.0"
 def dirRuntimeJars = 'jars' // we'll store mod and lib stuff in here
 
 

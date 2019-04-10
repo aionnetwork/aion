@@ -12,6 +12,7 @@ import org.aion.interfaces.db.ByteArrayKeyValueDatabase;
 import org.aion.log.AionLoggerFactory;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.trie.TrieImpl;
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.config.CfgAion;
 import org.aion.zero.impl.db.AionRepositoryImpl;
 import org.aion.zero.impl.types.AionBlock;
@@ -19,6 +20,7 @@ import org.aion.zero.types.AionTransaction;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 public class AionHubTest {
 
     private void checkHubNullity(AionHub hub) {
@@ -40,6 +42,10 @@ public class AionHubTest {
         cfg.put("GEN", "INFO");
         cfg.put("CONS", "INFO");
         cfg.put("DB", "ERROR");
+
+        if (!VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.initializeAllVirtualMachines();
+        }
 
         AionLoggerFactory.init(cfg);
     }
@@ -65,6 +71,10 @@ public class AionHubTest {
                     }
                 }
             }
+        }
+
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
         }
     }
 

@@ -34,12 +34,17 @@ public class VMTxStateAlignTest {
 
     @BeforeClass
     public static void setupVM() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
         VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @AfterClass
     public static void tearDownVM() {
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
     }
 
     @Before

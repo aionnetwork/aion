@@ -12,6 +12,7 @@ import org.aion.crypto.ECKey;
 import org.aion.mcf.blockchain.TxResponse;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.tx.TransactionTypes;
+import org.aion.mcf.valid.TransactionTypeRule;
 import org.aion.types.Address;
 import org.aion.vm.VirtualMachineProvider;
 import org.aion.zero.impl.config.CfgAion;
@@ -21,9 +22,27 @@ import org.aion.zero.impl.vm.contracts.AvmHelloWorld;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class PendingStateTest {
+
+    @Before
+    public void setup() {
+
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
+        VirtualMachineProvider.initializeAllVirtualMachines();
+    }
+
+    @After
+    public void shutdown() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
+    }
 
     @Test
     public void testAddPendingTransactionSuccess() {
@@ -93,6 +112,7 @@ public class PendingStateTest {
 
     @Test
     public void testAddPendingTransaction_AVMContractDeploy_Success() {
+        TransactionTypeRule.allowAVMContractTransaction();
         StandaloneBlockchain.Bundle bundle =
                 new StandaloneBlockchain.Builder()
                         .withDefaultAccounts()
@@ -103,7 +123,6 @@ public class PendingStateTest {
         ECKey deployerKey = bundle.privateKeys.get(0);
 
         CfgAion.inst().setGenesis(blockchain.getGenesis());
-        VirtualMachineProvider.initializeAllVirtualMachines();
 
         AionHub hub =
                 AionHub.createForTesting(CfgAion.inst(), blockchain, blockchain.getRepository());
@@ -128,11 +147,11 @@ public class PendingStateTest {
         transaction.sign(deployerKey);
 
         assertEquals(hub.getPendingState().addPendingTransaction(transaction), TxResponse.SUCCESS);
-        VirtualMachineProvider.shutdownAllVirtualMachines();
     }
 
     @Test
     public void testAddPendingTransaction_AVMContractCall_Success() {
+        TransactionTypeRule.allowAVMContractTransaction();
         StandaloneBlockchain.Bundle bundle =
                 new StandaloneBlockchain.Builder()
                         .withDefaultAccounts()
@@ -143,7 +162,6 @@ public class PendingStateTest {
         ECKey deployerKey = bundle.privateKeys.get(0);
 
         CfgAion.inst().setGenesis(blockchain.getGenesis());
-        VirtualMachineProvider.initializeAllVirtualMachines();
 
         // Successful transaction
         byte[] jar =
@@ -197,6 +215,5 @@ public class PendingStateTest {
         transaction.sign(deployerKey);
 
         assertEquals(hub.getPendingState().addPendingTransaction(transaction), TxResponse.SUCCESS);
-        VirtualMachineProvider.shutdownAllVirtualMachines();
     }
 }

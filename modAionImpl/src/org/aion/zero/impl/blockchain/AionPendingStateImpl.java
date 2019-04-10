@@ -35,6 +35,7 @@ import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.blockchain.IPendingStateInternal;
 import org.aion.mcf.blockchain.TxResponse;
+import org.aion.mcf.config.CfgFork;
 import org.aion.mcf.db.TransactionStore;
 import org.aion.mcf.evt.IListenerBase.PendingTransactionState;
 import org.aion.p2p.INode;
@@ -132,6 +133,9 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
     private static long NRGPRICE_MIN = 10_000_000_000L; // 10 PLAT  (10 * 10 ^ -9 AION)
     private static long NRGPRICE_MAX = 9_000_000_000_000_000_000L; //  9 AION
+
+    private long fork040Block = -1;
+    private boolean fork040Enable = false;
 
     class TxBuffTask implements Runnable {
 
@@ -318,6 +322,12 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
 
         } else {
             LOGGER_TX.info("Seed mode is enable");
+        }
+
+        CfgFork cfg = _cfgAion.getFork();
+        String fork040 = cfg.getProperties().getProperty("fork0.4.0");
+        if (fork040 != null) {
+            fork040Block = Long.valueOf(fork040);
         }
     }
 
@@ -1064,6 +1074,10 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
             LOGGER_TX.trace("executeTx: {}", Hex.toHexString(tx.getTransactionHash()));
         }
 
+        if (fork040Block > -1 && !fork040Enable) {
+            fork040Enable = bestBlk.getNumber() >= fork040Block;
+        }
+
         ExecutionBatch details = new ExecutionBatch(bestBlk, Collections.singletonList(tx));
         BulkExecutor txExe =
                 new BulkExecutor(
@@ -1072,6 +1086,7 @@ public class AionPendingStateImpl implements IPendingStateInternal<AionBlock, Ai
                         false,
                         !inPool,
                         bestBlk.getNrgLimit(),
+                        fork040Enable,
                         LOGGER_VM,
                         getPostExecutionWork());
         try {

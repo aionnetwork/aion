@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicLong;
@@ -37,6 +38,7 @@ import org.aion.interfaces.db.RepositoryCache;
 import org.aion.log.AionLoggerFactory;
 import org.aion.log.LogEnum;
 import org.aion.mcf.core.FastImportResult;
+import org.aion.mcf.core.AccountState;
 import org.aion.mcf.core.ImportResult;
 import org.aion.mcf.db.IBlockStorePow;
 import org.aion.mcf.db.TransactionStore;
@@ -120,6 +122,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
     private static final Logger LOGGER_VM = AionLoggerFactory.getLogger(LogEnum.VM.toString());
 
+    static long fork040BlockNumber = -1L;
+    private static boolean fork040Enable;
+
     /**
      * This version of the bestBlock is only used for external reference (ex. through {@link
      * #getBestBlock()}), this is done because {@link #bestBlock} can slip into temporarily
@@ -137,8 +142,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
     private final GrandParentBlockHeaderValidator<A0BlockHeader> grandParentBlockHeaderValidator;
     private final ParentBlockHeaderValidator<A0BlockHeader> parentHeaderValidator;
     private final BlockHeaderValidator<A0BlockHeader> blockHeaderValidator;
-    private AtomicReference<BlockIdentifierImpl> bestKnownBlock =
-            new AtomicReference<BlockIdentifierImpl>();
+    private AtomicReference<BlockIdentifierImpl> bestKnownBlock = new AtomicReference<>();
 
     private boolean fork = false;
 
@@ -165,7 +169,19 @@ public class AionBlockchainImpl implements IAionBlockchain {
      *     cfgAion
      */
     private static A0BCConfig generateBCConfig(CfgAion cfgAion) {
-        ChainConfiguration config = new ChainConfiguration();
+
+        Long blkNum = monetaryUpdateBlkNum(cfgAion.getFork().getProperties());
+
+        if (blkNum != null) {
+            fork040BlockNumber = blkNum;
+        }
+
+        BigInteger initialSupply = ZERO;
+        for (AccountState as : cfgAion.getGenesis().getPremine().values()) {
+            initialSupply = initialSupply.add(as.getBalance());
+        }
+
+        ChainConfiguration config = new ChainConfiguration(blkNum, initialSupply);
         return new A0BCConfig() {
             @Override
             public Address getCoinbase() {
@@ -201,18 +217,16 @@ public class AionBlockchainImpl implements IAionBlockchain {
                         cfgAion.getConsensus().getEnergyStrategy(),
                         config);
             }
-
-            @Override
-            public boolean isAvmEnabled() {
-                // TODO: temporarily hack the TransactionTypeRule by the network name. Once avm
-                // ready for the production, this check should be removed.
-                if (cfgAion.getNetwork().equals("avmtestnet")) {
-                    TransactionTypeRule.allowAVMContractDeployment();
-                }
-
-                return true;
-            }
         };
+    }
+
+    private static Long monetaryUpdateBlkNum(Properties properties) {
+        if (properties == null) {
+            return null;
+        }
+
+        String monetaryForkNum = properties.getProperty("fork0.4.0");
+        return monetaryForkNum == null ? null : Long.valueOf(monetaryForkNum);
     }
 
     private AionBlockchainImpl() {
@@ -232,9 +246,6 @@ public class AionBlockchainImpl implements IAionBlockchain {
          * blockHash and number.
          */
         this.chainConfiguration = chainConfig;
-        TransactionTypeValidator.enableAvmCheck(config.isAvmEnabled());
-        BulkExecutor.enabledAvmCheck(config.isAvmEnabled());
-
         this.grandParentBlockHeaderValidator =
                 this.chainConfiguration.createGrandParentHeaderValidator();
         this.parentHeaderValidator = this.chainConfiguration.createParentHeaderValidator();
@@ -915,7 +926,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         // derive base block reward
         BigInteger baseBlockReward =
-                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
+                this.chainConfiguration
+                        .getRewardsCalculator()
+                        .calculateReward(block.getHeader().getNumber());
         return new BlockContext(block, baseBlockReward, totalTransactionFee);
     }
 
@@ -1246,6 +1259,12 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTransaction> transactions = new ArrayList<>();
 
         if (!block.getTransactionsList().isEmpty()) {
+
+            fork040Enable = checkFork040(block.getNumber());
+            if (fork040Enable) {
+                TransactionTypeRule.allowAVMContractTransaction();
+            }
+
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =
                     new BulkExecutor(
@@ -1255,6 +1274,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             false,
                             true,
                             block.getNrgLimit(),
+                            fork040Enable,
                             LOGGER_VM,
                             getPostExecutionWorkForGeneratePreBlock());
 
@@ -1319,6 +1339,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
         List<AionTxExecSummary> summaries = new ArrayList<>();
 
         if (!block.getTransactionsList().isEmpty()) {
+
+            // might apply the block before the 040 fork point.
+            fork040Enable = checkFork040(block.getNumber());
+            if (fork040Enable) {
+                TransactionTypeRule.allowAVMContractTransaction();
+            }
+
             ExecutionBatch batch = new ExecutionBatch(block, block.getTransactionsList());
             BulkExecutor executor =
                     new BulkExecutor(
@@ -1328,6 +1355,7 @@ public class AionBlockchainImpl implements IAionBlockchain {
                             false,
                             true,
                             block.getNrgLimit(),
+                            fork040Enable,
                             LOGGER_VM,
                             getPostExecutionWorkForApplyBlock());
 
@@ -1381,7 +1409,9 @@ public class AionBlockchainImpl implements IAionBlockchain {
 
         Map<Address, BigInteger> rewards = new HashMap<>();
         BigInteger minerReward =
-                this.chainConfiguration.getRewardsCalculator().calculateReward(block.getHeader());
+                this.chainConfiguration
+                        .getRewardsCalculator()
+                        .calculateReward(block.getHeader().getNumber());
         rewards.put(block.getCoinbase(), minerReward);
 
         if (LOG.isTraceEnabled()) {
@@ -2028,5 +2058,13 @@ public class AionBlockchainImpl implements IAionBlockchain {
             throw new NullPointerException();
         }
         return this.getBlockStore().getTotalDifficultyForHash(hash.toBytes());
+    }
+
+    private static boolean checkFork040(long blkNum) {
+        if (fork040BlockNumber != -1) {
+            return blkNum >= fork040BlockNumber;
+        } else {
+            return false;
+        }
     }
 }

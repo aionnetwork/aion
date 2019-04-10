@@ -11,6 +11,8 @@ import org.aion.interfaces.db.Repository;
 import org.aion.mcf.core.ImportResult;
 import org.aion.types.Address;
 import org.aion.util.bytes.ByteUtil;
+import org.aion.vm.VirtualMachineProvider;
+import org.aion.vm.VmFactoryImplementation;
 import org.aion.zero.impl.blockchain.ChainConfiguration;
 import org.aion.zero.impl.db.ContractInformation;
 import org.aion.zero.impl.types.AionBlock;
@@ -19,6 +21,8 @@ import org.aion.mcf.tx.TransactionTypes;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -31,6 +35,21 @@ public class BlockchainIntegrationTest {
             ByteUtil.hexStringToBytes(
                     "CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3CAF3");
     public static byte[] TEST_EXTRADATA = "One ring to rule them all".getBytes();
+
+    @Before
+    public void setup() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
+        VirtualMachineProvider.initializeAllVirtualMachines();
+    }
+
+    @After
+    public void shutdown() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
+    }
 
     /**
      * Property test, simple test to verify that all variables are set correctly and no null
@@ -336,7 +355,10 @@ public class BlockchainIntegrationTest {
         assertThat(bc.getRepository().getBalance(beneficiary)).isEqualTo(context.baseBlockReward);
 
         // check that the correct amount was calculated
-        assertThat(configuration.getRewardsCalculator().calculateReward(context.block.getHeader()))
+        assertThat(
+                        configuration
+                                .getRewardsCalculator()
+                                .calculateReward(context.block.getHeader().getNumber()))
                 .isEqualTo(context.baseBlockReward);
     }
 }

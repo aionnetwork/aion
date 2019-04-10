@@ -40,12 +40,17 @@ public class AvmBulkTransactionTest {
 
     @BeforeClass
     public static void setupAvm() {
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
         VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @AfterClass
     public static void tearDownAvm() {
-        VirtualMachineProvider.shutdownAllVirtualMachines();
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
     }
 
     @Before
@@ -58,7 +63,7 @@ public class AvmBulkTransactionTest {
                         .build();
         this.blockchain = bundle.bc;
         this.deployerKey = bundle.privateKeys.get(0);
-        TransactionTypeRule.allowAVMContractDeployment();
+        TransactionTypeRule.allowAVMContractTransaction();
     }
 
     @After
@@ -234,7 +239,7 @@ public class AvmBulkTransactionTest {
                         abiEncodeMethodCall("incrementCounter"),
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.DEFAULT);
         transaction.sign(this.deployerKey);
         return transaction;
     }
@@ -270,7 +275,7 @@ public class AvmBulkTransactionTest {
                         abiEncodeMethodCall("getCount"),
                         2_000_000,
                         this.energyPrice,
-                        TransactionTypes.AVM_CREATE_CODE);
+                        TransactionTypes.DEFAULT);
         transaction.sign(sender);
 
         AionBlockSummary summary =

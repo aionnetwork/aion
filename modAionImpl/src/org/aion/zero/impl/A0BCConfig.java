@@ -36,6 +36,4 @@ public interface A0BCConfig {
     /** Retrieves the selected energy strategy algorithm */
     AbstractEnergyStrategyLimit getEnergyLimitStrategy();
 
-    /** Flag for enabling AVM use. */
-    boolean isAvmEnabled();
 }

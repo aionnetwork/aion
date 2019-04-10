@@ -6,8 +6,6 @@ import static org.aion.mcf.tx.TransactionTypes.AVM_CREATE_CODE;
 import static org.aion.mcf.tx.TransactionTypes.FVM;
 import static org.aion.mcf.tx.TransactionTypes.FVM_CREATE_CODE;
 
-import com.google.common.annotations.VisibleForTesting;
-
 /**
  * Rules for validating transactions based on allowed types.
  *
@@ -16,7 +14,7 @@ import com.google.common.annotations.VisibleForTesting;
 public class TransactionTypeRule {
 
     // allowing only balance transfers on AVM when this flag is equal to false.
-    private static boolean DEPLOY_AVM_CONTRACT_ALLOWED = false;
+    private static boolean AVM_CONTRACT_TRANSACTION_ALLOWED = false;
 
     /**
      * Compares the given transaction type with all the transaction types allowed.
@@ -45,7 +43,7 @@ public class TransactionTypeRule {
      * @return {@code true} is this is a valid FastVM contract deployment, {@code false} otherwise
      */
     public static boolean isValidFVMContractDeployment(byte type) {
-        return type == FVM_CREATE_CODE || true; // anything is valid here before the fork
+        return !AVM_CONTRACT_TRANSACTION_ALLOWED || type == FVM_CREATE_CODE; // anything is valid here before the fork
     }
 
     /**
@@ -65,11 +63,13 @@ public class TransactionTypeRule {
      * @return {@code true} is this is a valid AVM contract deployment, {@code false} otherwise
      */
     public static boolean isValidAVMContractDeployment(byte type) {
-        return type == AVM_CREATE_CODE && DEPLOY_AVM_CONTRACT_ALLOWED;
+        return type == AVM_CREATE_CODE && AVM_CONTRACT_TRANSACTION_ALLOWED;
     }
 
-    @VisibleForTesting
-    public static void allowAVMContractDeployment() {
-        DEPLOY_AVM_CONTRACT_ALLOWED = true;
+    /**
+     * It should be triggered by 0.4 hardfork or testing purpose
+     */
+    public static void allowAVMContractTransaction() {
+        AVM_CONTRACT_TRANSACTION_ALLOWED = true;
     }
 }

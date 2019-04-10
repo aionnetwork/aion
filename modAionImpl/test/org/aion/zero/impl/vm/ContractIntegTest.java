@@ -48,6 +48,7 @@ import org.aion.vm.BulkExecutor;
 import org.aion.vm.ExecutionBatch;
 import org.aion.vm.PostExecutionWork;
 
+import org.aion.vm.VirtualMachineProvider;
 import org.aion.vm.api.interfaces.ResultCode;
 import org.aion.vm.exception.VMException;
 import org.aion.zero.impl.db.AionRepositoryCache;
@@ -86,6 +87,11 @@ public class ContractIntegTest {
         deployer = new Address(deployerKey.getAddress());
         deployerBalance = Builder.DEFAULT_BALANCE;
         deployerNonce = BigInteger.ZERO;
+
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            return;
+        }
+        VirtualMachineProvider.initializeAllVirtualMachines();
     }
 
     @After
@@ -95,6 +101,9 @@ public class ContractIntegTest {
         deployer = null;
         deployerBalance = null;
         deployerNonce = null;
+        if (VirtualMachineProvider.isMachinesAreLive()) {
+            VirtualMachineProvider.shutdownAllVirtualMachines();
+        }
     }
 
     @Test
